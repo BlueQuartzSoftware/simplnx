@@ -49,12 +49,12 @@
 #include "SimplnxCore/Filters/FindFeatureCentroidsFilter.hpp"
 #include "SimplnxCore/Filters/FindFeaturePhasesFilter.hpp"
 #include "SimplnxCore/Filters/FindFeaturePhasesBinaryFilter.hpp"
-#include "SimplnxCore/Filters/FindNeighborhoodsFilter.hpp"
-#include "SimplnxCore/Filters/FindNeighborListStatisticsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeNeighborhoodsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeNeighborListStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/FindFeatureNeighborsFilter.hpp"
-#include "SimplnxCore/Filters/FindNumFeaturesFilter.hpp"
-#include "SimplnxCore/Filters/FindSurfaceAreaToVolumeFilter.hpp"
-#include "SimplnxCore/Filters/FindSurfaceFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeNumFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
+#include "SimplnxCore/Filters/ComputeSurfaceFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/FindVolFractionsFilter.hpp"
 #include "SimplnxCore/Filters/GenerateColorTableFilter.hpp"
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
@@ -164,12 +164,12 @@ namespace nx::core
     {nx::core::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {nx::core::FilterTraits<FindFeatureCentroidsFilter>::uuid, &FindFeatureCentroidsFilter::FromSIMPLJson}}, // FindFeatureCentroids
     {nx::core::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {nx::core::FilterTraits<FindFeaturePhasesFilter>::uuid, &FindFeaturePhasesFilter::FromSIMPLJson}}, // FindFeaturePhases
     {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, &FindFeaturePhasesBinaryFilter::FromSIMPLJson}}, // FindFeaturePhasesBinary
-    {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<FindNeighborhoodsFilter>::uuid, &FindNeighborhoodsFilter::FromSIMPLJson}}, // FindNeighborhoods
-    {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<FindNeighborListStatisticsFilter>::uuid, &FindNeighborListStatisticsFilter::FromSIMPLJson}}, // FindNeighborListStatisticsFilter
+    {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<ComputeNeighborhoodsFilter>::uuid, &ComputeNeighborhoodsFilter::FromSIMPLJson}}, // ComputeNeighborhoods
+    {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<ComputeNeighborListStatisticsFilter>::uuid, &ComputeNeighborListStatisticsFilter::FromSIMPLJson}}, // ComputeNeighborListStatisticsFilter
     {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindFeatureNeighborsFilter>::uuid, &FindFeatureNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
-    {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<FindNumFeaturesFilter>::uuid, &FindNumFeaturesFilter::FromSIMPLJson}}, // FindNumFeatures
-    {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid, &FindSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // FindSurfaceAreaToVolume
-    {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<FindSurfaceFeaturesFilter>::uuid, &FindSurfaceFeaturesFilter::FromSIMPLJson}}, // FindSurfaceFeaturesFilter
+    {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<ComputeNumFeaturesFilter>::uuid, &ComputeNumFeaturesFilter::FromSIMPLJson}}, // ComputeNumFeatures
+    {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<ComputeSurfaceAreaToVolumeFilter>::uuid, &ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // ComputeSurfaceAreaToVolume
+    {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<ComputeSurfaceFeaturesFilter>::uuid, &ComputeSurfaceFeaturesFilter::FromSIMPLJson}}, // ComputeSurfaceFeaturesFilter
     {nx::core::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {nx::core::FilterTraits<FindVolFractionsFilter>::uuid, &FindVolFractionsFilter::FromSIMPLJson}}, // FindVolFractions
     {nx::core::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {nx::core::FilterTraits<GenerateColorTableFilter>::uuid, &GenerateColorTableFilter::FromSIMPLJson}}, // GenerateColorTable
     {nx::core::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), {nx::core::FilterTraits<IdentifySampleFilter>::uuid, &IdentifySampleFilter::FromSIMPLJson}}, // IdentifySampleFilter

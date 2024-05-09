@@ -28,9 +28,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindGBPDMetricBasedTest.cpp
   FindKernelAvgMisorientationsTest.cpp
   FindMisorientationsTest.cpp
-  FindSchmidsTest.cpp
-  FindShapesFilterTest.cpp
-  FindSlipTransmissionMetricsTest.cpp
+  ComputeSchmidsTest.cpp
+  ComputeShapesFilterTest.cpp
+  ComputeSlipTransmissionMetricsTest.cpp
   FindTriangleGeomShapesTest.cpp
   GenerateFaceIPFColoringTest.cpp
   GenerateFeatureFaceMisorientationTest.cpp

@@ -58,13 +58,13 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindFeaturePhasesBinaryTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindLargestCrossSectionsTest.cpp
-  FindNeighborhoodsTest.cpp
-  FindNeighborListStatisticsTest.cpp
+  ComputeNeighborhoodsTest.cpp
+  ComputeNeighborListStatisticsTest.cpp
   FindFeatureNeighborsTest.cpp
-  FindNumFeaturesTest.cpp
-  FindSurfaceAreaToVolumeTest.cpp
-  FindSurfaceFeaturesTest.cpp
-  FindTriangleGeomCentroidsTest.cpp
+  ComputeNumFeaturesTest.cpp
+  ComputeSurfaceAreaToVolumeTest.cpp
+  ComputeSurfaceFeaturesTest.cpp
+  ComputeTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
   FindVertexToTriangleDistancesTest.cpp
   FindVolFractionsTest.cpp

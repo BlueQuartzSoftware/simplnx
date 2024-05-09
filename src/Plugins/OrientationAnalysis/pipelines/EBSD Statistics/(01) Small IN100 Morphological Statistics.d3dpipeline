@@ -88,7 +88,7 @@
         "volumes_array_name": "Shape Volumes"
       },
       "filter": {
-        "name": "simplnx::FindShapesFilter",
+        "name": "simplnx::ComputeShapesFilter",
         "uuid": "036b17d5-23bb-4a24-9187-c4a8dd918792"
       },
       "isDisabled": false
@@ -123,7 +123,7 @@
         "input_image_geometry_path": "DataContainer"
       },
       "filter": {
-        "name": "simplnx::FindNeighborhoodsFilter",
+        "name": "simplnx::ComputeNeighborhoodsFilter",
         "uuid": "924c10e3-2f39-4c08-9d7a-7fe029f74f6d"
       },
       "isDisabled": false
@@ -158,7 +158,7 @@
         "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
       },
       "filter": {
-        "name": "simplnx::FindSurfaceAreaToVolumeFilter",
+        "name": "simplnx::ComputeSurfaceAreaToVolumeFilter",
         "uuid": "94e83e4f-797d-4594-b130-3819b7676f01"
       },
       "isDisabled": false

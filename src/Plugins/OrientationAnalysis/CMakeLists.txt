@@ -49,9 +49,9 @@ set(FilterList
   FindGBPDMetricBasedFilter
   FindKernelAvgMisorientationsFilter
   FindMisorientationsFilter
-  FindSchmidsFilter
-  FindShapesFilter
-  FindSlipTransmissionMetricsFilter
+  ComputeSchmidsFilter
+  ComputeShapesFilter
+  ComputeSlipTransmissionMetricsFilter
   FindTriangleGeomShapesFilter
   GenerateFaceIPFColoringFilter
   GenerateFeatureFaceMisorientationFilter
@@ -84,7 +84,7 @@ set(STUB_FILTERS
   FindDistsToCharactGBs
   FindKernelAvgMisorientations
   FindMisorientations
-  FindSchmids
+  ComputeSchmids
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
   GenerateFaceIPFColoring
@@ -180,9 +180,9 @@ set(filter_algorithms
   FindGBPDMetricBased
   FindKernelAvgMisorientations
   FindMisorientations
-  FindSchmids
-  FindShapes
-  FindSlipTransmissionMetrics
+  ComputeSchmids
+  ComputeShapes
+  ComputeSlipTransmissionMetrics
   FindTriangleGeomShapes
   GenerateFaceIPFColoring
   GenerateFeatureFaceMisorientation

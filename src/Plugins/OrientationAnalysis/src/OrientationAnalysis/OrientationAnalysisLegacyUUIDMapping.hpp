@@ -17,7 +17,7 @@
 #include "OrientationAnalysis/Filters/FindFeatureReferenceCAxisMisorientationsFilter.hpp"
 // #include "OrientationAnalysis/Filters/FindGBCDMetricBased.hpp"
 // #include "OrientationAnalysis/Filters/FindGBPDMetricBased.hpp"
-#include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
 // #include "OrientationAnalysis/Filters/FindTwinBoundaries.hpp"
 // #include "OrientationAnalysis/Filters/FindTwinBoundarySchmidFactors.hpp"
 // #include "OrientationAnalysis/Filters/GenerateOrientationMatrixTranspose.hpp"
@@ -48,8 +48,8 @@
 #include "OrientationAnalysis/Filters/FindGBCDFilter.hpp"
 #include "OrientationAnalysis/Filters/FindKernelAvgMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindMisorientationsFilter.hpp"
-#include "OrientationAnalysis/Filters/FindSchmidsFilter.hpp"
-#include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeSchmidsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeShapesFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFeatureFaceMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateFZQuaternionsFilter.hpp"
@@ -70,7 +70,7 @@
 #include "OrientationAnalysis/Filters/FindFeatureNeighborCAxisMisalignmentsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBCDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
-#include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
@@ -88,7 +88,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), {nx::core::FilterTraits<FindMisorientationsFilter>::uuid, &FindMisorientationsFilter::FromSIMPLJson}}, // FindMisorientations
     {nx::core::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), {nx::core::FilterTraits<CreateEnsembleInfoFilter>::uuid, &CreateEnsembleInfoFilter::FromSIMPLJson}}, // CreateEnsembleInfoFilter
     {nx::core::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), {nx::core::FilterTraits<ReadEnsembleInfoFilter>::uuid, &ReadEnsembleInfoFilter::FromSIMPLJson}}, // EnsembleInfoReader
-    {nx::core::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {nx::core::FilterTraits<FindShapesFilter>::uuid, &FindShapesFilter::FromSIMPLJson}}, // FindShapes
+    {nx::core::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {nx::core::FilterTraits<ComputeShapesFilter>::uuid, &ComputeShapesFilter::FromSIMPLJson}}, // ComputeShapes
     {nx::core::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), {nx::core::FilterTraits<ReadH5OimDataFilter>::uuid, &ReadH5OimDataFilter::FromSIMPLJson}}, // ImportH5OimData
     {nx::core::Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value(), {nx::core::FilterTraits<FindFeatureReferenceMisorientationsFilter>::uuid, &FindFeatureReferenceMisorientationsFilter::FromSIMPLJson}}, // FindFeatureReferenceMisorientations
     {nx::core::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), {nx::core::FilterTraits<WriteGBCDTriangleDataFilter>::uuid, &WriteGBCDTriangleDataFilter::FromSIMPLJson}}, // ExportGBCDTriangleDataFilter
@@ -114,7 +114,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("c9af506e-9ea1-5ff5-a882-fa561def5f52").value(), {nx::core::FilterTraits<MergeTwinsFilter>::uuid, &MergeTwinsFilter::FromSIMPLJson}}, // MergeTwins
     {nx::core::Uuid::FromString("d1df969c-0428-53c3-b61d-99ea2bb6da28").value(), {nx::core::FilterTraits<ReadCtfDataFilter>::uuid, &ReadCtfDataFilter::FromSIMPLJson}}, // ReadCtfData
     {nx::core::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), {nx::core::FilterTraits<ConvertOrientationsFilter>::uuid, &ConvertOrientationsFilter::FromSIMPLJson}}, // ConvertOrientations
-    {nx::core::Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value(), {nx::core::FilterTraits<FindSchmidsFilter>::uuid, &FindSchmidsFilter::FromSIMPLJson}}, // FindSchmids
+    {nx::core::Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value(), {nx::core::FilterTraits<ComputeSchmidsFilter>::uuid, &ComputeSchmidsFilter::FromSIMPLJson}}, // ComputeSchmids
     {nx::core::Uuid::FromString("ef9420b2-8c46-55f3-8ae4-f53790639de4").value(), {nx::core::FilterTraits<RotateEulerRefFrameFilter>::uuid, &RotateEulerRefFrameFilter::FromSIMPLJson}}, // RotateEulerRefFrame
     {nx::core::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), {nx::core::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid, &BadDataNeighborOrientationCheckFilter::FromSIMPLJson}}, // BadDataNeighborOrientationCheck
     {nx::core::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), {nx::core::FilterTraits<WriteGBCDGMTFileFilter>::uuid, &WriteGBCDGMTFileFilter::FromSIMPLJson}}, // ExportGBCDGMTFileFilter
@@ -131,7 +131,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value(), {nx::core::FilterTraits<FindBoundaryStrengthsFilter>::uuid, &FindBoundaryStrengthsFilter::FromSIMPLJson}}, // FindBoundaryStrengths
     // {nx::core::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {nx::core::FilterTraits<ImportH5EspritData>::uuid, {}}}, // ImportH5EspritData
     // {nx::core::Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value(), {nx::core::FilterTraits<FindDistsToCharactGBs>::uuid, {}}}, // FindDistsToCharactGBs
-    {nx::core::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), {nx::core::FilterTraits<FindSlipTransmissionMetricsFilter>::uuid, &FindSlipTransmissionMetricsFilter::FromSIMPLJson}}, // FindSlipTransmissionMetrics
+    {nx::core::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), {nx::core::FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid, &ComputeSlipTransmissionMetricsFilter::FromSIMPLJson}}, // ComputeSlipTransmissionMetrics
     // {nx::core::Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value(), {nx::core::FilterTraits<FindTwinBoundaries>::uuid, {}}}, // FindTwinBoundaries
     // {nx::core::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), {nx::core::FilterTraits<WritePoleFigure>::uuid, {}}}, // WritePoleFigure
     // {nx::core::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), {nx::core::FilterTraits<WriteStatsGenOdfAngleFile>::uuid, &WriteStatsGenOdfAngleFileFilter::FromSIMPLJson}}, // WriteStatsGenOdfAngleFile

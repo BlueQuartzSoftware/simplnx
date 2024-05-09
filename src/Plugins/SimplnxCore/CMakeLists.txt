@@ -58,13 +58,13 @@ set(FilterList
   FindFeaturePhasesBinaryFilter
   FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
-  FindNeighborhoodsFilter
-  FindNeighborListStatisticsFilter
+  ComputeNeighborhoodsFilter
+  ComputeNeighborListStatisticsFilter
   FindFeatureNeighborsFilter
-  FindNumFeaturesFilter
-  FindSurfaceAreaToVolumeFilter
-  FindSurfaceFeaturesFilter
-  FindTriangleGeomCentroidsFilter
+  ComputeNumFeaturesFilter
+  ComputeSurfaceAreaToVolumeFilter
+  ComputeSurfaceFeaturesFilter
+  ComputeTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
   FindVertexToTriangleDistancesFilter
   FindVolFractionsFilter
@@ -167,10 +167,10 @@ set(AlgorithmList
   FindFeatureCentroids
   FindFeatureClustering
   FindLargestCrossSections
-  FindNeighborhoods
+  ComputeNeighborhoods
   FindNRingNeighbors
-  FindSurfaceAreaToVolume
-  FindTriangleGeomCentroids
+  ComputeSurfaceAreaToVolume
+  ComputeTriangleGeomCentroids
   FindTriangleGeomSizes
   FindVertexToTriangleDistances
   FlyingEdges3D

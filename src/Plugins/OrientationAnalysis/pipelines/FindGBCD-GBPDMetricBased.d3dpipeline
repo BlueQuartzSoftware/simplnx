@@ -816,7 +816,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindShapesFilter",
+                                                "name": "simplnx::ComputeShapesFilter",
                                                 "uuid": "036b17d5-23bb-4a24-9187-c4a8dd918792"
                                               },
                                               "isDisabled": false
@@ -853,7 +853,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindNeighborhoodsFilter",
+                                                "name": "simplnx::ComputeNeighborhoodsFilter",
                                                 "uuid": "924c10e3-2f39-4c08-9d7a-7fe029f74f6d"
                                               },
                                               "isDisabled": false
@@ -890,7 +890,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindSurfaceAreaToVolumeFilter",
+                                                "name": "simplnx::ComputeSurfaceAreaToVolumeFilter",
                                                 "uuid": "94e83e4f-797d-4594-b130-3819b7676f01"
                                               },
                                               "isDisabled": false
@@ -992,7 +992,7 @@
                                       },
                                       "comments": "",
                                       "filter": {
-                                        "name": "simplnx::FindSchmidsFilter",
+                                        "name": "simplnx::ComputeSchmidsFilter",
                                         "uuid": "b4681855-0a3d-4237-97f2-5aec509115c4"
                                       },
                                       "isDisabled": false
