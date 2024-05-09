@@ -781,7 +781,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindFeatureCentroidsFilter",
+                                                "name": "simplnx::ComputeFeatureCentroidsFilter",
                                                 "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
                                               },
                                               "isDisabled": false
@@ -874,7 +874,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::FindEuclideanDistMapFilter",
+                                                "name": "simplnx::ComputeEuclideanDistMapFilter",
                                                 "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
                                               },
                                               "isDisabled": false

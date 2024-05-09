@@ -51,16 +51,16 @@ set(FilterList
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
-  FindDifferencesMapFilter
-  FindEuclideanDistMapFilter
-  FindFeatureCentroidsFilter
-  FindFeatureClusteringFilter
-  FindFeaturePhasesBinaryFilter
+  ComputeDifferencesMapFilter
+  ComputeEuclideanDistMapFilter
+  ComputeFeatureCentroidsFilter
+  ComputeFeatureClusteringFilter
+  ComputeFeaturePhasesBinaryFilter
   FindFeaturePhasesFilter
   FindLargestCrossSectionsFilter
   ComputeNeighborhoodsFilter
   ComputeNeighborListStatisticsFilter
-  FindFeatureNeighborsFilter
+  ComputeFeatureNeighborsFilter
   ComputeNumFeaturesFilter
   ComputeSurfaceAreaToVolumeFilter
   ComputeSurfaceFeaturesFilter
@@ -163,9 +163,9 @@ set(AlgorithmList
   FindArrayStatistics
   FindBiasedFeatures
   FindBoundaryCells
-  FindEuclideanDistMap
-  FindFeatureCentroids
-  FindFeatureClustering
+  ComputeEuclideanDistMap
+  ComputeFeatureCentroids
+  ComputeFeatureClustering
   FindLargestCrossSections
   ComputeNeighborhoods
   FindNRingNeighbors

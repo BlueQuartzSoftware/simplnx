@@ -18,9 +18,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   EbsdToH5EbsdTest.cpp
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
-  FindBoundaryStrengthsTest.cpp
-  FindCAxisLocationsTest.cpp
-  FindFeatureNeighborCAxisMisalignmentsTest.cpp
+  ComputeBoundaryStrengthsTest.cpp
+  ComputeCAxisLocationsTest.cpp
+  ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDMetricBasedTest.cpp

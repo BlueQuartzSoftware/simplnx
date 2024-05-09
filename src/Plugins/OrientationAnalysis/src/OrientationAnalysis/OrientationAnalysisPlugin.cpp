@@ -21,10 +21,10 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{33a37a47-d002-5c18-b270-86025881fe1e}").value(), Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value()}, /* ReadEnsembleInfo */
     {Uuid::FromString("{c5a9a96c-7570-5279-b383-cc25ebae0046}").value(), Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value()}, /* FindAvgCAxes */
     {Uuid::FromString("{bf7036d8-25bd-540e-b6de-3a5ab0e42c5f}").value(), Uuid::FromString("bf7036d8-25bd-540e-b6de-3a5ab0e42c5f").value()}, /* FindAvgOrientations */
-    {Uuid::FromString("{8071facb-8905-5699-b345-105ae4ac33ff}").value(), Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value()}, /* FindBoundaryStrengths */
-    {Uuid::FromString("{68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e}").value(), Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value()}, /* FindCAxisLocations */
+    {Uuid::FromString("{8071facb-8905-5699-b345-105ae4ac33ff}").value(), Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value()}, /* ComputeBoundaryStrengths */
+    {Uuid::FromString("{68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e}").value(), Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value()}, /* ComputeCAxisLocations */
     {Uuid::FromString("{94f986fc-1295-5e32-9808-752855fa658a}").value(), Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value()}, /* FindDistsToCharactGBs */
-    {Uuid::FromString("{cdd50b83-ea09-5499-b008-4b253cf4c246}").value(), Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value()}, /* FindFeatureNeighborCAxisMisalignments */
+    {Uuid::FromString("{cdd50b83-ea09-5499-b008-4b253cf4c246}").value(), Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value()}, /* ComputeFeatureNeighborCAxisMisalignments */
     {Uuid::FromString("{1a0848da-2edd-52c0-b111-62a4dc6d2886}").value(), Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value()}, /* FindFeatureReferenceCAxisMisorientations */
     {Uuid::FromString("{428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c}").value(), Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value()}, /* FindFeatureReferenceMisorientations */
     {Uuid::FromString("{6e97ff50-48bf-5403-a049-1d271bd72df9}").value(), Uuid::FromString("6e97ff50-48bf-5403-a049-1d271bd72df9").value()}, /* FindGBCD */

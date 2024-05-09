@@ -226,7 +226,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindCAxisLocationsFilter",
+        "name": "nx::core::ComputeCAxisLocationsFilter",
         "uuid": "a51c257a-ddc1-499a-9b21-f2d25a19d098"
       },
       "isDisabled": false
@@ -360,7 +360,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureNeighborCAxisMisalignmentsFilter",
+        "name": "nx::core::ComputeFeatureNeighborCAxisMisalignmentsFilter",
         "uuid": "636ee030-9f07-4f16-a4f3-592eff8ef1ee"
       },
       "isDisabled": false

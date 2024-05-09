@@ -39,9 +39,9 @@ set(FilterList
   EbsdToH5EbsdFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
-  FindBoundaryStrengthsFilter
-  FindCAxisLocationsFilter
-  FindFeatureNeighborCAxisMisalignmentsFilter
+  ComputeBoundaryStrengthsFilter
+  ComputeCAxisLocationsFilter
+  ComputeFeatureNeighborCAxisMisalignmentsFilter
   FindFeatureReferenceCAxisMisorientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -80,7 +80,7 @@ set(FilterList
 set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
-  FindBoundaryStrengths
+  ComputeBoundaryStrengths
   FindDistsToCharactGBs
   FindKernelAvgMisorientations
   FindMisorientations
@@ -170,9 +170,9 @@ set(filter_algorithms
   EbsdToH5Ebsd
   FindAvgCAxes
   FindAvgOrientations
-  FindBoundaryStrengths
-  FindCAxisLocations
-  FindFeatureNeighborCAxisMisalignments
+  ComputeBoundaryStrengths
+  ComputeCAxisLocations
+  ComputeFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
   FindFeatureReferenceMisorientations
   FindGBCD

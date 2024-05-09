@@ -185,7 +185,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureCentroidsFilter",
+        "name": "nx::core::ComputeFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false
@@ -220,13 +220,13 @@
         "phase_number": 2,
         "rdf_array_name": "RDF",
         "remove_biased_features": false,
-        "seed_array_name": "FindFeatureClustering SeedValue",
+        "seed_array_name": "ComputeFeatureClustering SeedValue",
         "seed_value": 5489,
         "set_random_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureClusteringFilter",
+        "name": "nx::core::ComputeFeatureClusteringFilter",
         "uuid": "d6e01678-3a03-433f-89ad-4e9adf1f9a45"
       },
       "isDisabled": false

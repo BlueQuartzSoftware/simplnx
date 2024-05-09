@@ -51,16 +51,16 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
   FindBoundaryElementFractionsTest.cpp
-  FindDifferencesMapTest.cpp
-  FindEuclideanDistMapTest.cpp
-  FindFeatureCentroidsFilterTest.cpp
-  FindFeatureClusteringTest.cpp
-  FindFeaturePhasesBinaryTest.cpp
+  ComputeDifferencesMapTest.cpp
+  ComputeEuclideanDistMapTest.cpp
+  ComputeFeatureCentroidsTest.cpp
+  ComputeFeatureClusteringTest.cpp
+  ComputeFeaturePhasesBinaryTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindLargestCrossSectionsTest.cpp
   ComputeNeighborhoodsTest.cpp
   ComputeNeighborListStatisticsTest.cpp
-  FindFeatureNeighborsTest.cpp
+  ComputeFeatureNeighborsTest.cpp
   ComputeNumFeaturesTest.cpp
   ComputeSurfaceAreaToVolumeTest.cpp
   ComputeSurfaceFeaturesTest.cpp

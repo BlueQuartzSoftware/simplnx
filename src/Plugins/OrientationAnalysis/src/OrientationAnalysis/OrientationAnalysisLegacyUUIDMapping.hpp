@@ -10,10 +10,10 @@
 // #include "OrientationAnalysis/Filters/EbsdToH5Ebsd.hpp"
 // #include "OrientationAnalysis/Filters/EMsoftSO3Sampler.hpp"
 // #include "OrientationAnalysis/Filters/FindAvgCAxes.hpp"
-#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
-// #include "OrientationAnalysis/Filters/FindCAxisLocations.hpp"
+#include "OrientationAnalysis/Filters/ComputeBoundaryStrengthsFilter.hpp"
+// #include "OrientationAnalysis/Filters/ComputeCAxisLocations.hpp"
 // #include "OrientationAnalysis/Filters/FindDistsToCharactGBs.hpp"
-// #include "OrientationAnalysis/Filters/FindFeatureNeighborCAxisMisalignments.hpp"
+// #include "OrientationAnalysis/Filters/ComputeFeatureNeighborCAxisMisalignments.hpp"
 #include "OrientationAnalysis/Filters/FindFeatureReferenceCAxisMisorientationsFilter.hpp"
 // #include "OrientationAnalysis/Filters/FindGBCDMetricBased.hpp"
 // #include "OrientationAnalysis/Filters/FindGBPDMetricBased.hpp"
@@ -66,8 +66,8 @@
 #include "OrientationAnalysis/Filters/RodriguesConvertorFilter.hpp"
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/Filters/WritePoleFigureFilter.hpp"
-#include "OrientationAnalysis/Filters/FindCAxisLocationsFilter.hpp"
-#include "OrientationAnalysis/Filters/FindFeatureNeighborCAxisMisalignmentsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeCAxisLocationsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeFeatureNeighborCAxisMisalignmentsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBCDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
@@ -126,9 +126,9 @@ namespace nx::core
     // {nx::core::Uuid::FromString("3630623e-724b-5154-a060-a5fca4ecfff5").value(), {nx::core::FilterTraits<Stereographic3D>::uuid, {}}}, // Stereographic3D
     // {nx::core::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), {nx::core::FilterTraits<ImportH5OimData>::uuid, {}}}, // ImportH5OimData
     // {nx::core::Uuid::FromString("5af9c1e6-ed6f-5672-9ae0-2b931344d729").value(), {nx::core::FilterTraits<OrientationUtility>::uuid, {}}}, // OrientationUtility
-    {nx::core::Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value(), {nx::core::FilterTraits<FindCAxisLocationsFilter>::uuid, &FindCAxisLocationsFilter::FromSIMPLJson}}, // FindCAxisLocations
+    {nx::core::Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value(), {nx::core::FilterTraits<ComputeCAxisLocationsFilter>::uuid, &ComputeCAxisLocationsFilter::FromSIMPLJson}}, // ComputeCAxisLocations
     // {nx::core::Uuid::FromString("6e332fca-0475-5fec-821e-e01f668ec1d3").value(), {nx::core::FilterTraits<EbsdToH5Ebsd>::uuid, {}}}, // EbsdToH5Ebsd
-    {nx::core::Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value(), {nx::core::FilterTraits<FindBoundaryStrengthsFilter>::uuid, &FindBoundaryStrengthsFilter::FromSIMPLJson}}, // FindBoundaryStrengths
+    {nx::core::Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value(), {nx::core::FilterTraits<ComputeBoundaryStrengthsFilter>::uuid, &ComputeBoundaryStrengthsFilter::FromSIMPLJson}}, // ComputeBoundaryStrengths
     // {nx::core::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {nx::core::FilterTraits<ImportH5EspritData>::uuid, {}}}, // ImportH5EspritData
     // {nx::core::Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value(), {nx::core::FilterTraits<FindDistsToCharactGBs>::uuid, {}}}, // FindDistsToCharactGBs
     {nx::core::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), {nx::core::FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid, &ComputeSlipTransmissionMetricsFilter::FromSIMPLJson}}, // ComputeSlipTransmissionMetrics
@@ -139,7 +139,7 @@ namespace nx::core
     // {nx::core::Uuid::FromString("b78d8825-d3ac-5351-be20-172f07fd2aec").value(), {nx::core::FilterTraits<EMsoftSO3Sampler>::uuid, {}}}, // EMsoftSO3Sampler
     // {nx::core::Uuid::FromString("c4398303-db7d-506e-81ea-08f253895ccb").value(), {nx::core::FilterTraits<CreateLambertSphere>::uuid, {}}}, // CreateLambertSphere
     // {nx::core::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), {nx::core::FilterTraits<FindAvgCAxes>::uuid, {}}}, // FindAvgCAxes
-    {nx::core::Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value(), {nx::core::FilterTraits<FindFeatureNeighborCAxisMisalignmentsFilter>::uuid, &FindFeatureNeighborCAxisMisalignmentsFilter::FromSIMPLJson}}, // FindFeatureNeighborCAxisMisalignments
+    {nx::core::Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value(), {nx::core::FilterTraits<ComputeFeatureNeighborCAxisMisalignmentsFilter>::uuid, &ComputeFeatureNeighborCAxisMisalignmentsFilter::FromSIMPLJson}}, // ComputeFeatureNeighborCAxisMisalignments
     //{nx::core::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), {nx::core::FilterTraits<FindGBCDMetricBased>::uuid, &FindGBCDMetricBasedFilter::FromSIMPLJson}}, // FindGBCDMetricBased
     // {nx::core::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), {nx::core::FilterTraits<ConvertHexGridToSquareGrid>::uuid, {}}}, // ConvertHexGridToSquareGrid
     // {nx::core::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), {nx::core::FilterTraits<GenerateOrientationMatrixTranspose>::uuid, {}}}, // GenerateOrientationMatrixTranspose

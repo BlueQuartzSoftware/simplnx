@@ -174,7 +174,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureCentroidsFilter",
+        "name": "simplnx::ComputeFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false

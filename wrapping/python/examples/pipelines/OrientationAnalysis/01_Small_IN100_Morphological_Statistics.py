@@ -38,7 +38,7 @@ nxtest.check_filter_result(nx_filter, result)
     
 # Filter 3
 # Instantiate Filter
-nx_filter = nx.FindFeatureCentroidsFilter()
+nx_filter = nx.ComputeFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -87,7 +87,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = nx.FindFeatureNeighborsFilter()
+nx_filter = nx.ComputeFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -127,7 +127,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = nx.FindEuclideanDistMapFilter()
+nx_filter = nx.ComputeEuclideanDistMapFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

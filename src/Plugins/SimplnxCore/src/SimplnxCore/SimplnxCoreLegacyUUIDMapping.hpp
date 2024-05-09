@@ -44,14 +44,14 @@
 #include "SimplnxCore/Filters/FindArrayStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/FindBoundaryCellsFilter.hpp"
 #include "SimplnxCore/Filters/FindBiasedFeaturesFilter.hpp"
-#include "SimplnxCore/Filters/FindDifferencesMapFilter.hpp"
-#include "SimplnxCore/Filters/FindEuclideanDistMapFilter.hpp"
-#include "SimplnxCore/Filters/FindFeatureCentroidsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeDifferencesMapFilter.hpp"
+#include "SimplnxCore/Filters/ComputeEuclideanDistMapFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeatureCentroidsFilter.hpp"
 #include "SimplnxCore/Filters/FindFeaturePhasesFilter.hpp"
-#include "SimplnxCore/Filters/FindFeaturePhasesBinaryFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeaturePhasesBinaryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeNeighborhoodsFilter.hpp"
 #include "SimplnxCore/Filters/ComputeNeighborListStatisticsFilter.hpp"
-#include "SimplnxCore/Filters/FindFeatureNeighborsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeatureNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/ComputeNumFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceFeaturesFilter.hpp"
@@ -101,7 +101,7 @@
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
 #include "SimplnxCore/Filters/AppendImageGeometryZSliceFilter.hpp"
-#include "SimplnxCore/Filters/FindFeatureClusteringFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeatureClusteringFilter.hpp"
 #include "SimplnxCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "SimplnxCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
@@ -159,14 +159,14 @@ namespace nx::core
     {nx::core::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), {nx::core::FilterTraits<FindArrayStatisticsFilter>::uuid, &FindArrayStatisticsFilter::FromSIMPLJson}}, // FindArrayStatistics
     {nx::core::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), {nx::core::FilterTraits<FindBoundaryCellsFilter>::uuid, &FindBoundaryCellsFilter::FromSIMPLJson}}, // FindBoundaryCellsFilter
     {nx::core::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {nx::core::FilterTraits<FindBiasedFeaturesFilter>::uuid, &FindBiasedFeaturesFilter::FromSIMPLJson}}, // FindBiasedFeaturesFilter
-    {nx::core::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {nx::core::FilterTraits<FindDifferencesMapFilter>::uuid, &FindDifferencesMapFilter::FromSIMPLJson}}, // FindDifferenceMap
-    {nx::core::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {nx::core::FilterTraits<FindEuclideanDistMapFilter>::uuid, &FindEuclideanDistMapFilter::FromSIMPLJson}}, // FindEuclideanDistMap
-    {nx::core::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {nx::core::FilterTraits<FindFeatureCentroidsFilter>::uuid, &FindFeatureCentroidsFilter::FromSIMPLJson}}, // FindFeatureCentroids
+    {nx::core::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {nx::core::FilterTraits<ComputeDifferencesMapFilter>::uuid, &ComputeDifferencesMapFilter::FromSIMPLJson}}, // FindDifferenceMap
+    {nx::core::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {nx::core::FilterTraits<ComputeEuclideanDistMapFilter>::uuid, &ComputeEuclideanDistMapFilter::FromSIMPLJson}}, // ComputeEuclideanDistMap
+    {nx::core::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {nx::core::FilterTraits<ComputeFeatureCentroidsFilter>::uuid, &ComputeFeatureCentroidsFilter::FromSIMPLJson}}, // ComputeFeatureCentroids
     {nx::core::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {nx::core::FilterTraits<FindFeaturePhasesFilter>::uuid, &FindFeaturePhasesFilter::FromSIMPLJson}}, // FindFeaturePhases
-    {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid, &FindFeaturePhasesBinaryFilter::FromSIMPLJson}}, // FindFeaturePhasesBinary
+    {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<ComputeFeaturePhasesBinaryFilter>::uuid, &ComputeFeaturePhasesBinaryFilter::FromSIMPLJson}}, // ComputeFeaturePhasesBinary
     {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<ComputeNeighborhoodsFilter>::uuid, &ComputeNeighborhoodsFilter::FromSIMPLJson}}, // ComputeNeighborhoods
     {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<ComputeNeighborListStatisticsFilter>::uuid, &ComputeNeighborListStatisticsFilter::FromSIMPLJson}}, // ComputeNeighborListStatisticsFilter
-    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<FindFeatureNeighborsFilter>::uuid, &FindFeatureNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
+    {nx::core::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), {nx::core::FilterTraits<ComputeFeatureNeighborsFilter>::uuid, &ComputeFeatureNeighborsFilter::FromSIMPLJson}}, // FindNeighborsFilter
     {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<ComputeNumFeaturesFilter>::uuid, &ComputeNumFeaturesFilter::FromSIMPLJson}}, // ComputeNumFeatures
     {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<ComputeSurfaceAreaToVolumeFilter>::uuid, &ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // ComputeSurfaceAreaToVolume
     {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<ComputeSurfaceFeaturesFilter>::uuid, &ComputeSurfaceFeaturesFilter::FromSIMPLJson}}, // ComputeSurfaceFeaturesFilter
@@ -227,7 +227,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), {nx::core::FilterTraits<WriteStlFileFilter>::uuid, &WriteStlFileFilter::FromSIMPLJson}}, // WriteStlFile
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData
     {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryZSliceFilter>::uuid, &AppendImageGeometryZSliceFilter::FromSIMPLJson}}, // AppendImageGeometryZSlice
-    {nx::core::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), {nx::core::FilterTraits<FindFeatureClusteringFilter>::uuid, &FindFeatureClusteringFilter::FromSIMPLJson}}, // FindFeatureClustering
+    {nx::core::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), {nx::core::FilterTraits<ComputeFeatureClusteringFilter>::uuid, &ComputeFeatureClusteringFilter::FromSIMPLJson}}, // ComputeFeatureClustering
     {nx::core::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), {nx::core::FilterTraits<WriteAbaqusHexahedronFilter>::uuid, &WriteAbaqusHexahedronFilter::FromSIMPLJson}}, // AbaqusHexahedronWriter
     {nx::core::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), {nx::core::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid, &NearestPointFuseRegularGridsFilter::FromSIMPLJson}}, // NearestPointFuseRegularGrids
     {nx::core::Uuid::FromString("77befd69-4536-5856-9f81-02996d038f73").value(), {nx::core::FilterTraits<ResampleRectGridToImageGeomFilter>::uuid, &ResampleRectGridToImageGeomFilter::FromSIMPLJson}}, // ResampleRectGridToImageGeom
