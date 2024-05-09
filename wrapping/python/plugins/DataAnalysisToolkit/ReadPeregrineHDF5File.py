@@ -121,40 +121,44 @@ class ReadPeregrineHDF5File:
 
     params.insert(nx.Parameters.Separator("Input Parameters"))
     params.insert(nx.FileSystemPathParameter(ReadPeregrineHDF5File.INPUT_FILE_PATH_KEY, 'Input Peregrine HDF5 File', 'The input Peregrine HDF5 file that will be read.', '', {'.hdf5', '.h5'}, nx.FileSystemPathParameter.PathType.InputFile, False))
+
+    params.insert(nx.Parameters.Separator("Slice Data Parameters"))
+    params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
     params.insert(nx.StringParameter(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_KEY, 'Segmentation Results (comma-delimited)', 'The segmentation results numbers that will be read, separated by commas', '0,1,2,3,4,5,6,7,8,9,10,11'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, 'Read Camera Data', 'Specifies whether or not to read the camera data from the input file.', True))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY, 'Camera Data 0 Array Name', 'The name of the camera data 0 array.', 'Camera Data 0'))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY, 'Camera Data 1 Array Name', 'The name of the camera data 1 array.', 'Camera Data 1'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_PART_IDS_KEY, 'Read Part Ids', 'Specifies whether or not to read the part ids from the input file.', True))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, 'Part Ids Array Name', 'The name of the part ids array.', 'Part Ids'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY, 'Read Sample Ids', 'Specifies whether or not to read the sample ids from the input file.', True))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY, 'Read Anomaly Detection', 'Specifies whether or not to read the anomaly detection (part of the registered data) from the input file.', True))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_X_RAY_CT_KEY, 'Read X-Ray CT', 'Specifies whether or not to read the x-ray CT (part of the registered data) from the input file.', True))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY, 'Sample Ids Array Name', 'The name of the sample ids array.', 'Sample Ids'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, 'Read Slices Subvolume', 'Specifies whether or not to read a subvolume of the slices from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, 'Slices Subvolume X Bounds', 'The min/max bounds (inclusive) of the X dimension for the Slices subvolume.', [0, 99], ['X Min', 'X Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, 'Slices Subvolume Y Bounds', 'The min/max bounds (inclusive) of the Y dimension for the Slices subvolume.', [0, 99], ['Y Min', 'Y Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY, 'Slices Subvolume Z Bounds', 'The min/max bounds (inclusive) of the Z dimension for the Slices subvolume.', [0, 99], ['Z Min', 'Z Max']))
+    
+    params.insert(nx.Parameters.Separator("Registered Data Parameters"))
+    params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.REGISTERED_DATA_KEY, 'Registered Data Geometry', 'The path to the newly created Registered Data image geometry', nx.DataPath(['Registered Data'])))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY, 'Registered Data Cell Attribute Matrix Name', 'The name of the Registered Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY, 'Read Anomaly Detection', 'Specifies whether or not to read the anomaly detection (part of the registered data) from the input file.', True))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, 'Anomaly Detection Array Name', 'The name of the Anomaly Detection array.', 'Anomaly Detection'))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_X_RAY_CT_KEY, 'Read X-Ray CT', 'Specifies whether or not to read the x-ray CT (part of the registered data) from the input file.', True))
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.XRAY_CT_ARRAY_NAME_KEY, 'X-Ray CT Array Name', 'The name of the X-Ray CT array.', 'X-Ray CT'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY, 'Read Registered Data Subvolume', 'Specifies whether or not to read a subvolume of the registered data from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY, 'Registered Data Subvolume X Bounds', 'The min/max bounds (inclusive) of the X dimension for the Registered Data subvolume.', [0, 99], ['X Min', 'X Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY, 'Registered Data Subvolume Y Bounds', 'The min/max bounds (inclusive) of the Y dimension for the Registered Data subvolume.', [0, 99], ['Y Min', 'Y Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY, 'Registered Data Subvolume Z Bounds', 'The min/max bounds (inclusive) of the Z dimension for the Registered Data subvolume.', [0, 99], ['Z Min', 'Z Max']))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY, 'Read Scan Data Subvolume', 'Specifies whether or not to read a subvolume of the scan data from the input file.', False))
-    params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, 'Scan Data Slice Bounds', 'The min/max slice bounds (inclusive) for the Scan Data subvolume.', [0, 1], ['Min', 'Max']))
 
-    params.insert(nx.Parameters.Separator("Created Data Objects"))
-    params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY, 'Camera Data 0 Array Name', 'The name of the camera data 0 array.', 'Camera Data 0'))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY, 'Camera Data 1 Array Name', 'The name of the camera data 1 array.', 'Camera Data 1'))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, 'Part Ids Array Name', 'The name of the part ids array.', 'Part Ids'))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY, 'Sample Ids Array Name', 'The name of the sample ids array.', 'Sample Ids'))
-    params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.REGISTERED_DATA_KEY, 'Registered Data Geometry', 'The path to the newly created Registered Data image geometry', nx.DataPath(['Registered Data'])))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY, 'Registered Data Cell Attribute Matrix Name', 'The name of the Registered Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, 'Anomaly Detection Array Name', 'The name of the Anomaly Detection array.', 'Anomaly Detection'))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.XRAY_CT_ARRAY_NAME_KEY, 'X-Ray CT Array Name', 'The name of the X-Ray CT array.', 'X-Ray CT'))
+    params.insert(nx.Parameters.Separator("Scan Data Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SCAN_DATA_KEY, 'Scan Data Geometry', 'The path to the newly created Scan Data edge geometry', nx.DataPath(['Scan Data'])))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_CELL_ATTR_MAT_KEY, 'Scan Data Edge Attribute Matrix Name', 'The name of the Scan Data edge attribute matrix', 'Edge Data')) # EdgeGeom::k_EdgeDataName
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_ATTR_MAT_KEY, 'Scan Data Vertex Attribute Matrix Name', 'The name of the Scan Data vertex attribute matrix', 'Vertex Data')) # EdgeGeom::k_VertexDataName
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY, 'Scan Data Vertex List Array Name', 'The name of the Scan Data vertex list array.', 'Vertices'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY, 'Scan Data Edge List Array Name', 'The name of the Scan Data edge list array.', 'Edges'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME, 'Scan Data Time of Travel Array Name', 'The name of the Scan Data Time of Travel array.', 'Time of Travel'))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY, 'Read Scan Data Subvolume', 'Specifies whether or not to read a subvolume of the scan data from the input file.', False))
+    params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, 'Scan Data Slice Bounds', 'The min/max slice bounds (inclusive) for the Scan Data subvolume.', [0, 1], ['Min', 'Max']))
 
     params.link_parameters(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, True)
@@ -288,7 +292,7 @@ class ReadPeregrineHDF5File:
     actions.append_action(nx.CreateImageGeometryAction(slice_data_image_geom_path, subvolume_dims[::-1] if read_slices_subvolume else dims[::-1], origin, spacing, slice_data_cell_attr_mat_name))
 
     for segmentation_result in segmentation_results_list:
-      segmentation_result_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(segmentation_result)
+      segmentation_result_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path('Segmentation Result ' + segmentation_result)
       actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, subvolume_dims if read_slices_subvolume else dims, [1], segmentation_result_path))
 
     if read_camera_data:
@@ -574,7 +578,7 @@ class ReadPeregrineHDF5File:
       
       segmentation_result = segmentation_results_list[i]
       message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Reading Segmentation Result '{segmentation_result}' ({i + 1}/{len(segmentation_results_list)})..."))
-      segmentation_result_nx_path = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(segmentation_result)
+      segmentation_result_nx_path = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path('Segmentation Result ' + segmentation_result)
       segmentation_result_nx = data_structure[segmentation_result_nx_path].npview()
       segmentation_result_nx = np.squeeze(segmentation_result_nx)
       segmentation_result_h5_path = Path(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_H5_PARENT_PATH) / segmentation_result
