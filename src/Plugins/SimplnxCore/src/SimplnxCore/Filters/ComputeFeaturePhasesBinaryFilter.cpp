@@ -36,13 +36,13 @@ Uuid ComputeFeaturePhasesBinaryFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFeaturePhasesBinaryFilter::humanName() const
 {
-  return "Find Feature Phases Binary";
+  return "Compute Feature Phases Binary";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeaturePhasesBinaryFilter::defaultTags() const
 {
-  return {className(), "Generic", "Morphological"};
+  return {className(), "Generic", "Morphological", "Find"};
 }
 
 //------------------------------------------------------------------------------

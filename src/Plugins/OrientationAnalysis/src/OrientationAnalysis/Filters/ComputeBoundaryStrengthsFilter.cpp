@@ -37,13 +37,13 @@ Uuid ComputeBoundaryStrengthsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeBoundaryStrengthsFilter::humanName() const
 {
-  return "Find Feature Boundary Strength Metrics";
+  return "Compute Feature Boundary Strength Metrics";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeBoundaryStrengthsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography", "Find"};
 }
 
 //------------------------------------------------------------------------------

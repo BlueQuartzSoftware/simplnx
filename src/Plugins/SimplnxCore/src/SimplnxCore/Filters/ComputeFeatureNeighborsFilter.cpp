@@ -40,13 +40,13 @@ Uuid ComputeFeatureNeighborsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFeatureNeighborsFilter::humanName() const
 {
-  return "Find Feature Neighbors";
+  return "Compute Feature Neighbors";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureNeighborsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Neighbors", "Features"};
+  return {className(), "Statistics", "Neighbors", "Features", "Find"};
 }
 
 //------------------------------------------------------------------------------

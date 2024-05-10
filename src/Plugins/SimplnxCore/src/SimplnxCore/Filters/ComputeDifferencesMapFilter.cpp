@@ -153,13 +153,13 @@ Uuid ComputeDifferencesMapFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeDifferencesMapFilter::humanName() const
 {
-  return "Find Differences Map";
+  return "Compute Differences Map";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeDifferencesMapFilter::defaultTags() const
 {
-  return {className(), "Statistics", "SimplnxCore"};
+  return {className(), "Statistics", "SimplnxCore", "Find"};
 }
 
 //------------------------------------------------------------------------------

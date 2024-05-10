@@ -39,13 +39,13 @@ Uuid ComputeEuclideanDistMapFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeEuclideanDistMapFilter::humanName() const
 {
-  return "Find Euclidean Distance Map";
+  return "Compute Euclidean Distance Map";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeEuclideanDistMapFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological", "Find"};
 }
 
 //------------------------------------------------------------------------------

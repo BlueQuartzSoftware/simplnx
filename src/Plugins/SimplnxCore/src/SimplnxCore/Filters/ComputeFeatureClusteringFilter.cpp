@@ -43,13 +43,13 @@ Uuid ComputeFeatureClusteringFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFeatureClusteringFilter::humanName() const
 {
-  return "Find Feature Clustering";
+  return "Compute Feature Clustering";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureClusteringFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological", "Compute"};
 }
 
 //------------------------------------------------------------------------------

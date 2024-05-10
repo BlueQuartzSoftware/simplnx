@@ -8791,7 +8791,7 @@
                     "uuid": "{29086169-20ce-52dc-b13e-824694d759aa}"
                 },
                 {
-                    "name": "FindEuclideanDistMap",
+                    "name": "ComputeEuclideanDistMap",
                     "parameters": [
                         {
                             "name": "CalcManhattanDist",
@@ -8845,7 +8845,7 @@
                     "uuid": "{933e4b2d-dd61-51c3-98be-00548ba783a3}"
                 },
                 {
-                    "name": "FindFeatureClustering",
+                    "name": "ComputeFeatureClustering",
                     "parameters": [
                         {
                             "name": "NumberOfBins",
@@ -11001,7 +11001,7 @@
                     "uuid": "{450c2f00-9ddf-56e1-b4c1-0e74e7ad2349}"
                 },
                 {
-                    "name": "FindFeatureCentroids",
+                    "name": "ComputeFeatureCentroids",
                     "parameters": [
                         {
                             "name": "",
@@ -11049,7 +11049,7 @@
                     "uuid": "{6334ce16-cea5-5643-83b5-9573805873fa}"
                 },
                 {
-                    "name": "FindFeaturePhasesBinary",
+                    "name": "ComputeFeaturePhasesBinary",
                     "parameters": [
                         {
                             "name": "",
@@ -13503,7 +13503,7 @@
                     "uuid": "{bf7036d8-25bd-540e-b6de-3a5ab0e42c5f}"
                 },
                 {
-                    "name": "FindBoundaryStrengths",
+                    "name": "ComputeBoundaryStrengths",
                     "parameters": [
                         {
                             "name": "Loading",
@@ -13561,7 +13561,7 @@
                     "uuid": "{8071facb-8905-5699-b345-105ae4ac33ff}"
                 },
                 {
-                    "name": "FindCAxisLocations",
+                    "name": "ComputeCAxisLocations",
                     "parameters": [
                         {
                             "name": "",
@@ -13641,7 +13641,7 @@
                     "uuid": "{94f986fc-1295-5e32-9808-752855fa658a}"
                 },
                 {
-                    "name": "FindFeatureNeighborCAxisMisalignments",
+                    "name": "ComputeFeatureNeighborCAxisMisalignments",
                     "parameters": [
                         {
                             "name": "FindAvgMisals",

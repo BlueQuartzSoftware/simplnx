@@ -36,13 +36,13 @@ Uuid ComputeCAxisLocationsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeCAxisLocationsFilter::humanName() const
 {
-  return "Find C-Axis Locations";
+  return "Compute C-Axis Locations";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeCAxisLocationsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography", "Find"};
 }
 
 //------------------------------------------------------------------------------

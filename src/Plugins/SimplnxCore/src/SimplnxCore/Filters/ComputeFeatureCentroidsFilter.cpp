@@ -39,13 +39,13 @@ Uuid ComputeFeatureCentroidsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFeatureCentroidsFilter::humanName() const
 {
-  return "Find Feature Centroids";
+  return "Compute Feature Centroids";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureCentroidsFilter::defaultTags() const
 {
-  return {className(), "Generic", "Morphological"};
+  return {className(), "Generic", "Morphological", "Find"};
 }
 
 //------------------------------------------------------------------------------

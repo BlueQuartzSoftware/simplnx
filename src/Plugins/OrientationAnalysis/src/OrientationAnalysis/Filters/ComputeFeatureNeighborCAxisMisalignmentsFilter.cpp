@@ -38,13 +38,13 @@ Uuid ComputeFeatureNeighborCAxisMisalignmentsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFeatureNeighborCAxisMisalignmentsFilter::humanName() const
 {
-  return "Find Feature Neighbor C-Axis Misalignments";
+  return "Compute Feature Neighbor C-Axis Misalignments";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureNeighborCAxisMisalignmentsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography", "Find"};
 }
 
 //------------------------------------------------------------------------------

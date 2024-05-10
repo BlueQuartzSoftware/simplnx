@@ -10,10 +10,11 @@ using namespace nx::core;
 namespace
 {
 
-class FindFeatureCentroidsImpl1
+class ComputeFeatureCentroidsImpl1
 {
 public:
-  FindFeatureCentroidsImpl1(ComputeFeatureCentroids* filter, double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom, const Int32Array& featureIds)
+  ComputeFeatureCentroidsImpl1(ComputeFeatureCentroids* filter, double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom,
+                               const Int32Array& featureIds)
   : m_Filter(filter)
   , m_Sum(sum)
   , m_Center(center)
@@ -23,7 +24,7 @@ public:
   , m_FeatureIds(featureIds.getDataStoreRef())
   {
   }
-  ~FindFeatureCentroidsImpl1() = default;
+  ~ComputeFeatureCentroidsImpl1() = default;
   void compute(int64_t minFeatureId, int64_t maxFeatureId) const
   {
     for(size_t i = 0; i < m_Dims[2]; i++)
@@ -137,7 +138,7 @@ Result<> ComputeFeatureCentroids::operator()()
   // by the total number of cores/threads and do a ParallelTask Algorithm instead
   // we might see some speedup.
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.execute(FindFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
+  dataAlg.execute(ComputeFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
   for(size_t featureId = 0; featureId < totalFeatures; featureId++)
