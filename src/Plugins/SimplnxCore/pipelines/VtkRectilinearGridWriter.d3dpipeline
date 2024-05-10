@@ -255,7 +255,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindAvgOrientationsFilter",
+                "name": "simplnx::ComputeAvgOrientationsFilter",
                 "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
               },
               "isDisabled": false
@@ -444,7 +444,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::GenerateIPFColorsFilter",
+                "name": "simplnx::ComputeIPFColorsFilter",
                 "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
               },
               "isDisabled": false

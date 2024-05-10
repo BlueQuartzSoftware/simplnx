@@ -21,8 +21,27 @@ set(FilterList
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter
+  ComputeDifferencesMapFilter
+  ComputeEuclideanDistMapFilter
+  ComputeFeatureCentroidsFilter
+  ComputeFeatureClusteringFilter
+  ComputeFeatureNeighborsFilter
+  ComputeFeaturePhasesBinaryFilter
+  ComputeFeaturePhasesFilter
   ComputeFeatureRectFilter
+  ComputeKMeansFilter
+  ComputeKMedoidsFilter
+  ComputeLargestCrossSectionsFilter
   ComputeMomentInvariants2DFilter
+  ComputeNeighborhoodsFilter
+  ComputeNeighborListStatisticsFilter
+  ComputeNumFeaturesFilter
+  ComputeSurfaceAreaToVolumeFilter
+  ComputeSurfaceFeaturesFilter
+  ComputeTriangleGeomCentroidsFilter
+  ComputeVectorColorsFilter
+  ComputeVertexToTriangleDistancesFilter
+  ComputeVolumeFractionsFilter
   ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -34,6 +53,7 @@ set(FilterList
   CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
   CreateImageGeometryFilter
+  CreatePythonSkeletonFilter
   CropImageGeometryFilter
   CropVertexGeometryFilter
   DeleteDataFilter
@@ -51,34 +71,14 @@ set(FilterList
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
-  ComputeDifferencesMapFilter
-  ComputeEuclideanDistMapFilter
-  ComputeFeatureCentroidsFilter
-  ComputeFeatureClusteringFilter
-  ComputeFeaturePhasesBinaryFilter
-  ComputeFeaturePhasesFilter
-  ComputeLargestCrossSectionsFilter
-  ComputeNeighborhoodsFilter
-  ComputeNeighborListStatisticsFilter
-  ComputeFeatureNeighborsFilter
-  ComputeNumFeaturesFilter
-  ComputeSurfaceAreaToVolumeFilter
-  ComputeSurfaceFeaturesFilter
-  ComputeTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
-  ComputeVertexToTriangleDistancesFilter
-  ComputeVolumeFractionsFilter
   FlyingEdges3DFilter
   GenerateColorTableFilter
-  CreatePythonSkeletonFilter
-  ComputeVectorColorsFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
-  ComputeKMeansFilter
-  ComputeKMedoidsFilter
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
@@ -98,6 +98,7 @@ set(FilterList
   ReadStlFileFilter
   ReadTextDataArrayFilter
   ReadVolumeGraphicsFileFilter
+  ReadVtkStructuredPointsFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
@@ -131,7 +132,6 @@ set(FilterList
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
-  ReadVtkStructuredPointsFilter
 )
 
 set(ActionList
@@ -148,10 +148,22 @@ set(AlgorithmList
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
+  ComputeEuclideanDistMap
+  ComputeFeatureCentroids
+  ComputeFeatureClustering
   ComputeFeatureRect
+  ComputeKMeans
+  ComputeKMedoids
+  ComputeLargestCrossSections
   ComputeMomentInvariants2D
+  ComputeNeighborhoods
+  ComputeSurfaceAreaToVolume
+  ComputeTriangleGeomCentroids
+  ComputeVectorColors
+  ComputeVertexToTriangleDistances
   ConvertColorToGrayScale
   ConvertData
+  CreatePythonSkeleton
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
@@ -163,22 +175,10 @@ set(AlgorithmList
   FindArrayStatistics
   FindBiasedFeatures
   FindBoundaryCells
-  ComputeEuclideanDistMap
-  ComputeFeatureCentroids
-  ComputeFeatureClustering
-  ComputeLargestCrossSections
-  ComputeNeighborhoods
   FindNRingNeighbors
-  ComputeSurfaceAreaToVolume
-  ComputeTriangleGeomCentroids
   FindTriangleGeomSizes
-  ComputeVertexToTriangleDistances
   FlyingEdges3D
   GenerateColorTable
-  CreatePythonSkeleton
-  ComputeVectorColors
-  ComputeKMeans
-  ComputeKMedoids
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
@@ -190,6 +190,7 @@ set(AlgorithmList
   ReadRawBinary
   ReadStlFile
   ReadVolumeGraphicsFile
+  ReadVtkStructuredPoints
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
@@ -211,7 +212,6 @@ set(AlgorithmList
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
-  ReadVtkStructuredPoints
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}

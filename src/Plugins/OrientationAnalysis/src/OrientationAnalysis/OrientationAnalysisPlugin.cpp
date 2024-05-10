@@ -19,8 +19,8 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{b78d8825-d3ac-5351-be20-172f07fd2aec}").value(), Uuid::FromString("b78d8825-d3ac-5351-be20-172f07fd2aec").value()}, /* EMsoftSO3Sampler */
     {Uuid::FromString("{6e332fca-0475-5fec-821e-e01f668ec1d3}").value(), Uuid::FromString("6e332fca-0475-5fec-821e-e01f668ec1d3").value()}, /* EbsdToH5Ebsd */
     {Uuid::FromString("{33a37a47-d002-5c18-b270-86025881fe1e}").value(), Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value()}, /* ReadEnsembleInfo */
-    {Uuid::FromString("{c5a9a96c-7570-5279-b383-cc25ebae0046}").value(), Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value()}, /* FindAvgCAxes */
-    {Uuid::FromString("{bf7036d8-25bd-540e-b6de-3a5ab0e42c5f}").value(), Uuid::FromString("bf7036d8-25bd-540e-b6de-3a5ab0e42c5f").value()}, /* FindAvgOrientations */
+    {Uuid::FromString("{c5a9a96c-7570-5279-b383-cc25ebae0046}").value(), Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value()}, /* ComputeAvgCAxes */
+    {Uuid::FromString("{bf7036d8-25bd-540e-b6de-3a5ab0e42c5f}").value(), Uuid::FromString("bf7036d8-25bd-540e-b6de-3a5ab0e42c5f").value()}, /* ComputeAvgOrientations */
     {Uuid::FromString("{8071facb-8905-5699-b345-105ae4ac33ff}").value(), Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value()}, /* ComputeBoundaryStrengths */
     {Uuid::FromString("{68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e}").value(), Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value()}, /* ComputeCAxisLocations */
     {Uuid::FromString("{94f986fc-1295-5e32-9808-752855fa658a}").value(), Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value()}, /* FindDistsToCharactGBs */
@@ -36,9 +36,10 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{97523038-5fb2-5e82-9177-ed3e8b24b4bd}").value(), Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value()}, /* ComputeSlipTransmissionMetrics */
     {Uuid::FromString("{a10124f3-05d0-5f49-93a0-e93926f5b48b}").value(), Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value()}, /* FindTwinBoundaries */
     {Uuid::FromString("{b0e30e6d-912d-5a7e-aeed-750134aba86b}").value(), Uuid::FromString("b0e30e6d-912d-5a7e-aeed-750134aba86b").value()}, /* FindTwinBoundarySchmidFactors */
-    {Uuid::FromString("{9a6677a6-b9e5-5fee-afa2-27e868cab8ca}").value(), Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value()}, /* GenerateFZQuaternions */
-    {Uuid::FromString("{0a121e03-3922-5c29-962d-40d88653f4b6}").value(), Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value()}, /* GenerateFaceIPFColoring */
-    {Uuid::FromString("{a50e6532-8075-5de5-ab63-945feb0de7f7}").value(), Uuid::FromString("a50e6532-8075-5de5-ab63-945feb0de7f7").value()}, /* GenerateIPFColors */
+    {Uuid::FromString("{9a6677a6-b9e5-5fee-afa2-27e868cab8ca}").value(), Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value()}, /* ComputeFZQuaternions */
+    {Uuid::FromString("{0a121e03-3922-5c29-962d-40d88653f4b6}").value(), Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value()}, /* ComputeFaceIPFColoring */
+    {Uuid::FromString("{7cd30864-7bcf-5c10-aea7-d107373e2d40}").value(), Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value()}, /* GenerateFaceMisorientation */
+    {Uuid::FromString("{a50e6532-8075-5de5-ab63-945feb0de7f7}").value(), Uuid::FromString("a50e6532-8075-5de5-ab63-945feb0de7f7").value()}, /* ComputeIPFColors */
     {Uuid::FromString("{ec58f4fe-8e51-527e-9536-8b6f185684be}").value(), Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value()}, /* GenerateOrientationMatrixTranspose */
     {Uuid::FromString("{630d7486-75ea-5e04-874c-894460cd7c4d}").value(), Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value()}, /* ComputeQuaternionConjugate */
     {Uuid::FromString("{27c724cc-8b69-5ebe-b90e-29d33858a032}").value(), Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value()}, /* WriteINLFile */

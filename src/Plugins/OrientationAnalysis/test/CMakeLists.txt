@@ -16,8 +16,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
-  FindAvgCAxesTest.cpp
-  FindAvgOrientationsTest.cpp
+  ComputeAvgCAxesTest.cpp
+  ComputeAvgOrientationsTest.cpp
   ComputeBoundaryStrengthsTest.cpp
   ComputeCAxisLocationsTest.cpp
   ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
@@ -31,12 +31,12 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeSchmidsTest.cpp
   ComputeShapesFilterTest.cpp
   ComputeSlipTransmissionMetricsTest.cpp
-  FindTriangleGeomShapesTest.cpp
-  GenerateFaceIPFColoringTest.cpp
-  GenerateFeatureFaceMisorientationTest.cpp
-  GenerateFZQuaternionsTest.cpp
-  GenerateGBCDPoleFigureTest.cpp
-  GenerateIPFColorsTest.cpp
+        ComputeTriangleGeomShapesTest.cpp
+        ComputeFaceIPFColoringTest.cpp
+  ComputeFeatureFaceMisorientationTest.cpp
+  ComputeFZQuaternionsTest.cpp
+  ComputeGBCDPoleFigureTest.cpp
+  ComputeIPFColorsTest.cpp
   ComputeQuaternionConjugateTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp

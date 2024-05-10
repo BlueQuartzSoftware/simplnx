@@ -10548,7 +10548,7 @@
                     "uuid": "{749dc8ae-a402-5ee7-bbca-28d5734c60df}"
                 },
                 {
-                    "name": "FindTriangleGeomShapes",
+                    "name": "ComputeTriangleGeomShapes",
                     "parameters": [
                         {
                             "name": "",
@@ -13461,7 +13461,7 @@
                     "uuid": "{c5a9a96c-7570-5279-b383-cc25ebae0046}"
                 },
                 {
-                    "name": "FindAvgOrientations",
+                    "name": "ComputeAvgOrientations",
                     "parameters": [
                         {
                             "name": "",
@@ -14365,7 +14365,7 @@
                     "uuid": "{b0e30e6d-912d-5a7e-aeed-750134aba86b}"
                 },
                 {
-                    "name": "GenerateFZQuaternions",
+                    "name": "ComputeFZQuaternions",
                     "parameters": [
                         {
                             "name": "UseGoodVoxels",
@@ -14407,7 +14407,7 @@
                     "uuid": "{9a6677a6-b9e5-5fee-afa2-27e868cab8ca}"
                 },
                 {
-                    "name": "GenerateFaceIPFColoring",
+                    "name": "ComputeFaceIPFColoring",
                     "parameters": [
                         {
                             "name": "",
@@ -14495,7 +14495,7 @@
                     "uuid": "{7cd30864-7bcf-5c10-aea7-d107373e2d40}"
                 },
                 {
-                    "name": "GenerateIPFColors",
+                    "name": "ComputeIPFColors",
                     "parameters": [
                         {
                             "name": "ReferenceDir",

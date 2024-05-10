@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
+#include "OrientationAnalysis/Filters/ComputeAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
-#include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/MergeTwinsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
@@ -134,16 +134,16 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
 
   // FindFeatureAverageOrientation filter
   {
-    FindAvgOrientationsFilter filter;
+    ComputeAvgOrientationsFilter filter;
     Arguments args;
 
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(EbsdLib::CellData::EulerAngles));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(EbsdLib::CellData::EulerAngles));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

@@ -117,7 +117,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::ComputeGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false
@@ -140,7 +140,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::ComputeGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false
@@ -163,7 +163,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateGBCDPoleFigureFilter",
+        "name": "simplnx::ComputeGBCDPoleFigureFilter",
         "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
       },
       "isDisabled": false

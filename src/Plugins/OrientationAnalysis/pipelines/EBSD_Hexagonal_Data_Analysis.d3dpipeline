@@ -127,7 +127,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateIPFColorsFilter",
+        "name": "nx::core::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -193,7 +193,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindAvgCAxesFilter",
+        "name": "nx::core::ComputeAvgCAxesFilter",
         "uuid": "453cdb58-7bbb-4576-ad5e-f75a1c54d348"
       },
       "isDisabled": false
@@ -323,7 +323,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindAvgOrientationsFilter",
+        "name": "nx::core::ComputeAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
