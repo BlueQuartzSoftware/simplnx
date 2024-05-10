@@ -64,9 +64,6 @@ Parameters MergeTwinsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "MergeTwins SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors",
-                                                                 "Whether to use a list of non-contiguous or contiguous neighbors for each feature when merging", false));
-
   params.insert(std::make_unique<Float32Parameter>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)",
                                                    "Tolerance allowed when comparing the axis part of the axis-angle representation of the misorientation", 3.0F));
   params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)",
@@ -79,10 +76,6 @@ Parameters MergeTwinsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.",
                                                                  DataPath({"NeighborList2"}), NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NonContiguousNeighborListArrayPath_Key, "Non-Contiguous Neighbor List", "List of non-contiguous neighbors for each Feature.",
-                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
-  params.linkParameters(k_UseNonContiguousNeighbors_Key, k_ContiguousNeighborListArrayPath_Key, false);
-  params.linkParameters(k_UseNonContiguousNeighbors_Key, k_NonContiguousNeighborListArrayPath_Key, true);
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -122,8 +115,6 @@ IFilter::UniquePointer MergeTwinsFilter::clone() const
 IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel) const
 {
-  auto pUseNonContiguousNeighborsValue = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  auto pNonContiguousNeighborListArrayPathValue = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
   auto pContiguousNeighborListArrayPathValue = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
@@ -145,15 +136,6 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   if(contiguousNeighborList == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-6874600, fmt::format("Could not find contiguous neighbor list of type Int32 at path '{}' ", pContiguousNeighborListArrayPathValue.toString())), {}};
-  }
-  if(pUseNonContiguousNeighborsValue)
-  {
-    const auto* nonContiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pNonContiguousNeighborListArrayPathValue);
-    if(nonContiguousNeighborList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-6874601, fmt::format("Could not find non contiguous neighbor list of type Int32 at path '{}' ", pNonContiguousNeighborListArrayPathValue.toString())),
-              {}};
-    }
   }
 
   std::vector<size_t> tDims(1, 0);
@@ -227,8 +209,6 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
 
   MergeTwinsInputValues inputValues;
 
-  inputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  inputValues.NonContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
   inputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
   inputValues.AxisTolerance = filterArgs.value<float32>(k_AxisTolerance_Key);
   inputValues.AngleTolerance = filterArgs.value<float32>(k_AngleTolerance_Key);
@@ -250,8 +230,6 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
-constexpr StringLiteral k_NonContiguousNeighborListArrayPathKey = "NonContiguousNeighborListArrayPath";
 constexpr StringLiteral k_ContiguousNeighborListArrayPathKey = "ContiguousNeighborListArrayPath";
 constexpr StringLiteral k_AxisToleranceKey = "AxisTolerance";
 constexpr StringLiteral k_AngleToleranceKey = "AngleTolerance";
@@ -272,9 +250,6 @@ Result<Arguments> MergeTwinsFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseNonContiguousNeighborsKey, k_UseNonContiguousNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NonContiguousNeighborListArrayPathKey,
-                                                                                                                   k_NonContiguousNeighborListArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_AxisToleranceKey, k_AxisTolerance_Key));

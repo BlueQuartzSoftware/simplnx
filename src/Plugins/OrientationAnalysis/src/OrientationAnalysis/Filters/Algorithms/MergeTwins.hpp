@@ -8,12 +8,9 @@
 
 namespace nx::core
 {
-
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
-  bool UseNonContiguousNeighbors;
   DataPath ContiguousNeighborListArrayPath;
-  DataPath NonContiguousNeighborListArrayPath;
   float32 AxisTolerance;
   float32 AngleTolerance;
   DataPath FeaturePhasesArrayPath;

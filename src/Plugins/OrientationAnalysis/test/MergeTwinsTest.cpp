@@ -199,8 +199,6 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     DataPath nonContiguousNeighborList;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(MergeTwinsFilter::k_UseNonContiguousNeighbors_Key, std::make_any<bool>(false));
-    args.insertOrAssign(MergeTwinsFilter::k_NonContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(nonContiguousNeighborList));
     args.insertOrAssign(MergeTwinsFilter::k_ContiguousNeighborListArrayPath_Key, std::make_any<DataPath>(k_NeighborListPath));
     args.insertOrAssign(MergeTwinsFilter::k_AxisTolerance_Key, std::make_any<float32>(1.0f));
     args.insertOrAssign(MergeTwinsFilter::k_AngleTolerance_Key, std::make_any<float32>(1.0f));

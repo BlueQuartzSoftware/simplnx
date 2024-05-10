@@ -158,22 +158,6 @@ Result<> MergeTwins::operator()()
             }
           }
         }
-        if(m_InputValues->UseNonContiguousNeighbors)
-        {
-          auto& nonContNeighList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NonContiguousNeighborListArrayPath);
-          int32 list2size = nonContNeighList.getListSize(firstFeature);
-          for(int32 l = 0; l < list2size; l++)
-          {
-            neigh = nonContNeighList.getListReference(firstFeature)[l];
-            if(neigh != firstFeature)
-            {
-              if(determineGrouping(firstFeature, neigh, parentCount))
-              {
-                groupList.push_back(neigh);
-              }
-            }
-          }
-        }
       }
 
       parentCount++;
