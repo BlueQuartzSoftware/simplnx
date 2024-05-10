@@ -1,4 +1,4 @@
-#include "KMedoids.hpp"
+#include "ComputeKMedoids.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -14,7 +14,7 @@ template <typename T>
 class KMedoidsTemplate
 {
 public:
-  KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
+  KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
                    KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
@@ -88,7 +88,7 @@ public:
 
 private:
   using DataArrayT = DataArray<T>;
-  KMedoids* m_Filter;
+  ComputeKMedoids* m_Filter;
   const DataArrayT& m_InputArray;
   DataArrayT& m_Medoids;
   const BoolArray& m_Mask;
@@ -180,7 +180,7 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-KMedoids::KMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues)
+ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -189,22 +189,22 @@ KMedoids::KMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& 
 }
 
 // -----------------------------------------------------------------------------
-KMedoids::~KMedoids() noexcept = default;
+ComputeKMedoids::~ComputeKMedoids() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void KMedoids::updateProgress(const std::string& message)
+void ComputeKMedoids::updateProgress(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& KMedoids::getCancel()
+const std::atomic_bool& ComputeKMedoids::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> KMedoids::operator()()
+Result<> ComputeKMedoids::operator()()
 {
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MedoidsArrayPath),

@@ -78,8 +78,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
-  KMeansTest.cpp
-  KMedoidsTest.cpp
+  ComputeKMeansTest.cpp
+  ComputeKMedoidsTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp

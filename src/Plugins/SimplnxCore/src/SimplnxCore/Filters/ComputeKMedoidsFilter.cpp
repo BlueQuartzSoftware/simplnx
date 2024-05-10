@@ -1,6 +1,6 @@
-#include "KMedoidsFilter.hpp"
+#include "ComputeKMedoidsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/KMedoids.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeKMedoids.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -31,37 +31,37 @@ const std::string k_MaskName = "temp_mask";
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string KMedoidsFilter::name() const
+std::string ComputeKMedoidsFilter::name() const
 {
-  return FilterTraits<KMedoidsFilter>::name.str();
+  return FilterTraits<ComputeKMedoidsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string KMedoidsFilter::className() const
+std::string ComputeKMedoidsFilter::className() const
 {
-  return FilterTraits<KMedoidsFilter>::className;
+  return FilterTraits<ComputeKMedoidsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid KMedoidsFilter::uuid() const
+Uuid ComputeKMedoidsFilter::uuid() const
 {
-  return FilterTraits<KMedoidsFilter>::uuid;
+  return FilterTraits<ComputeKMedoidsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string KMedoidsFilter::humanName() const
+std::string ComputeKMedoidsFilter::humanName() const
 {
-  return "K Medoids";
+  return "Compute K Medoids";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> KMedoidsFilter::defaultTags() const
+std::vector<std::string> ComputeKMedoidsFilter::defaultTags() const
 {
   return {className(), "DREAM3D Review", "Clustering"};
 }
 
 //------------------------------------------------------------------------------
-Parameters KMedoidsFilter::parameters() const
+Parameters ComputeKMedoidsFilter::parameters() const
 {
   Parameters params;
 
@@ -69,7 +69,7 @@ Parameters KMedoidsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "KMedoids SeedValue"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "ComputeKMedoids SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
@@ -97,14 +97,14 @@ Parameters KMedoidsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer KMedoidsFilter::clone() const
+IFilter::UniquePointer ComputeKMedoidsFilter::clone() const
 {
-  return std::make_unique<KMedoidsFilter>();
+  return std::make_unique<ComputeKMedoidsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pInitClustersValue = filterArgs.value<uint64>(k_InitClusters_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -161,8 +161,8 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                     const std::atomic_bool& shouldCancel) const
+Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel) const
 {
   auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   if(!filterArgs.value<bool>(k_UseMask_Key))
@@ -193,7 +193,7 @@ Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Argumen
   dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
   inputValues.FeatureIdsArrayPath = fIdsPath;
 
-  return KMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeKMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -213,9 +213,9 @@ constexpr StringLiteral k_MedoidsArrayNameKey = "MedoidsArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> KMedoidsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeKMedoidsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = KMedoidsFilter().getDefaultArguments();
+  Arguments args = ComputeKMedoidsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

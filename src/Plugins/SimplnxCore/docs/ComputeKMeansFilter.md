@@ -1,4 +1,4 @@
-# K Means
+# Compute K Means
 
 ## Group (Subgroup)
 

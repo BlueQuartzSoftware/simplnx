@@ -1,4 +1,4 @@
-#include "KMeans.hpp"
+#include "ComputeKMeans.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -11,11 +11,11 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-class KMeansTemplate
+class ComputeKMeansTemplate
 {
 public:
-  KMeansTemplate(KMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
-                 KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  ComputeKMeansTemplate(ComputeKMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
+                        KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Means(dynamic_cast<DataArrayT&>(meansIDataArray))
@@ -26,10 +26,10 @@ public:
   , m_Seed(seed)
   {
   }
-  ~KMeansTemplate() = default;
+  ~ComputeKMeansTemplate() = default;
 
-  KMeansTemplate(const KMeansTemplate&) = delete; // Copy Constructor Not Implemented
-  void operator=(const KMeansTemplate&) = delete; // Move assignment Not Implemented
+  ComputeKMeansTemplate(const ComputeKMeansTemplate&) = delete; // Copy Constructor Not Implemented
+  void operator=(const ComputeKMeansTemplate&) = delete;        // Move assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void operator()()
@@ -100,7 +100,7 @@ public:
 
 private:
   using DataArrayT = DataArray<T>;
-  KMeans* m_Filter;
+  ComputeKMeans* m_Filter;
   const DataArrayT& m_InputArray;
   DataArrayT& m_Means;
   const BoolArray& m_Mask;
@@ -180,7 +180,7 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-KMeans::KMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMeansInputValues* inputValues)
+ComputeKMeans::ComputeKMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKMeansInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -189,27 +189,27 @@ KMeans::KMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 }
 
 // -----------------------------------------------------------------------------
-KMeans::~KMeans() noexcept = default;
+ComputeKMeans::~ComputeKMeans() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void KMeans::updateProgress(const std::string& message)
+void ComputeKMeans::updateProgress(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& KMeans::getCancel()
+const std::atomic_bool& ComputeKMeans::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> KMeans::operator()()
+Result<> ComputeKMeans::operator()()
 {
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  RunTemplateClass<KMeansTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath),
-                                                         m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), m_InputValues->InitClusters,
-                                                         m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_InputValues->DistanceMetric, m_InputValues->Seed);
+  RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath),
+                                                                m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), m_InputValues->InitClusters,
+                                                                m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_InputValues->DistanceMetric, m_InputValues->Seed);
 
   return {};
 }

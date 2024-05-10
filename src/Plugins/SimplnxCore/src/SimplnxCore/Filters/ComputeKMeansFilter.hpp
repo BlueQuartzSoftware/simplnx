@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class KMeansFilter
+ * @class ComputeKMeansFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT KMeansFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeKMeansFilter : public IFilter
 {
 public:
-  KMeansFilter() = default;
-  ~KMeansFilter() noexcept override = default;
+  ComputeKMeansFilter() = default;
+  ~ComputeKMeansFilter() noexcept override = default;
 
-  KMeansFilter(const KMeansFilter&) = delete;
-  KMeansFilter(KMeansFilter&&) noexcept = delete;
+  ComputeKMeansFilter(const ComputeKMeansFilter&) = delete;
+  ComputeKMeansFilter(ComputeKMeansFilter&&) noexcept = delete;
 
-  KMeansFilter& operator=(const KMeansFilter&) = delete;
-  KMeansFilter& operator=(KMeansFilter&&) noexcept = delete;
+  ComputeKMeansFilter& operator=(const ComputeKMeansFilter&) = delete;
+  ComputeKMeansFilter& operator=(ComputeKMeansFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InitClusters_Key = "init_clusters";
@@ -110,5 +110,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, KMeansFilter, "b8682b04-ccc0-49a2-9ced-32d5f5c512f3");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeKMeansFilter, "b8682b04-ccc0-49a2-9ced-32d5f5c512f3");
 /* LEGACY UUID FOR THIS FILTER b56a04de-0ca0-509d-809f-52219fca9c98 */

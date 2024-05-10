@@ -5,39 +5,35 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/KUtilities.hpp"
 
 namespace nx::core
 {
-
-struct SIMPLNXCORE_EXPORT KMeansInputValues
+struct SIMPLNXCORE_EXPORT KMedoidsInputValues
 {
   uint64 InitClusters;
   KUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
-  DataPath MeansArrayPath;
+  DataPath MedoidsArrayPath;
   uint64 Seed;
 };
 
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT KMeans
+class SIMPLNXCORE_EXPORT ComputeKMedoids
 {
 public:
-  KMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMeansInputValues* inputValues);
-  ~KMeans() noexcept;
+  ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
+  ~ComputeKMedoids() noexcept;
 
-  KMeans(const KMeans&) = delete;
-  KMeans(KMeans&&) noexcept = delete;
-  KMeans& operator=(const KMeans&) = delete;
-  KMeans& operator=(KMeans&&) noexcept = delete;
+  ComputeKMedoids(const ComputeKMedoids&) = delete;
+  ComputeKMedoids(ComputeKMedoids&&) noexcept = delete;
+  ComputeKMedoids& operator=(const ComputeKMedoids&) = delete;
+  ComputeKMedoids& operator=(ComputeKMedoids&&) noexcept = delete;
 
   Result<> operator()();
   void updateProgress(const std::string& message);
@@ -45,7 +41,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const KMeansInputValues* m_InputValues = nullptr;
+  const KMedoidsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

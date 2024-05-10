@@ -5,35 +5,39 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/KUtilities.hpp"
 
 namespace nx::core
 {
-struct SIMPLNXCORE_EXPORT KMedoidsInputValues
+
+struct SIMPLNXCORE_EXPORT ComputeKMeansInputValues
 {
   uint64 InitClusters;
   KUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
-  DataPath MedoidsArrayPath;
+  DataPath MeansArrayPath;
   uint64 Seed;
 };
 
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT KMedoids
+class SIMPLNXCORE_EXPORT ComputeKMeans
 {
 public:
-  KMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
-  ~KMedoids() noexcept;
+  ComputeKMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKMeansInputValues* inputValues);
+  ~ComputeKMeans() noexcept;
 
-  KMedoids(const KMedoids&) = delete;
-  KMedoids(KMedoids&&) noexcept = delete;
-  KMedoids& operator=(const KMedoids&) = delete;
-  KMedoids& operator=(KMedoids&&) noexcept = delete;
+  ComputeKMeans(const ComputeKMeans&) = delete;
+  ComputeKMeans(ComputeKMeans&&) noexcept = delete;
+  ComputeKMeans& operator=(const ComputeKMeans&) = delete;
+  ComputeKMeans& operator=(ComputeKMeans&&) noexcept = delete;
 
   Result<> operator()();
   void updateProgress(const std::string& message);
@@ -41,7 +45,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const KMedoidsInputValues* m_InputValues = nullptr;
+  const ComputeKMeansInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

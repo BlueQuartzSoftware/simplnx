@@ -1,6 +1,6 @@
-#include "KMeansFilter.hpp"
+#include "ComputeKMeansFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/KMeans.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeKMeans.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -31,37 +31,37 @@ const std::string k_MaskName = "temp_mask";
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string KMeansFilter::name() const
+std::string ComputeKMeansFilter::name() const
 {
-  return FilterTraits<KMeansFilter>::name.str();
+  return FilterTraits<ComputeKMeansFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string KMeansFilter::className() const
+std::string ComputeKMeansFilter::className() const
 {
-  return FilterTraits<KMeansFilter>::className;
+  return FilterTraits<ComputeKMeansFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid KMeansFilter::uuid() const
+Uuid ComputeKMeansFilter::uuid() const
 {
-  return FilterTraits<KMeansFilter>::uuid;
+  return FilterTraits<ComputeKMeansFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string KMeansFilter::humanName() const
+std::string ComputeKMeansFilter::humanName() const
 {
-  return "K Means";
+  return "Compute K Means";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> KMeansFilter::defaultTags() const
+std::vector<std::string> ComputeKMeansFilter::defaultTags() const
 {
   return {className(), "DREAM3D Review", "Clustering"};
 }
 
 //------------------------------------------------------------------------------
-Parameters KMeansFilter::parameters() const
+Parameters ComputeKMeansFilter::parameters() const
 {
   Parameters params;
 
@@ -69,7 +69,7 @@ Parameters KMeansFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "KMeans SeedValue"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "ComputeKMeans SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
@@ -100,13 +100,14 @@ Parameters KMeansFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer KMeansFilter::clone() const
+IFilter::UniquePointer ComputeKMeansFilter::clone() const
 {
-  return std::make_unique<KMeansFilter>();
+  return std::make_unique<ComputeKMeansFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult KMeansFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pInitClustersValue = filterArgs.value<uint64>(k_InitClusters_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -163,8 +164,8 @@ IFilter::PreflightResult KMeansFilter::preflightImpl(const DataStructure& dataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> KMeansFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                   const std::atomic_bool& shouldCancel) const
+Result<> ComputeKMeansFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel) const
 {
   auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   if(!filterArgs.value<bool>(k_UseMask_Key))
@@ -182,7 +183,7 @@ Result<> KMeansFilter::executeImpl(DataStructure& dataStructure, const Arguments
   // Store Seed Value in Top Level Array
   dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
-  KMeansInputValues inputValues;
+  ComputeKMeansInputValues inputValues;
 
   inputValues.InitClusters = filterArgs.value<uint64>(k_InitClusters_Key);
   inputValues.DistanceMetric = static_cast<KUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
@@ -195,7 +196,7 @@ Result<> KMeansFilter::executeImpl(DataStructure& dataStructure, const Arguments
   dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
   inputValues.FeatureIdsArrayPath = fIdsPath;
 
-  return KMeans(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeKMeans(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -215,9 +216,9 @@ constexpr StringLiteral k_MeansArrayNameKey = "MeansArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> KMeansFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeKMeansFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = KMeansFilter().getDefaultArguments();
+  Arguments args = ComputeKMeansFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

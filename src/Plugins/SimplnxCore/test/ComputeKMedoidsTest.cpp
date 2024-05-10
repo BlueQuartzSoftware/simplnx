@@ -3,11 +3,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/KMeansFilter.hpp"
+#include "SimplnxCore/Filters/ComputeKMedoidsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 
@@ -25,32 +22,32 @@ const DataPath k_CellPath = k_QuadGeomPath.createChildPath(Constants::k_CellData
 const DataPath k_ClusterDataPathNX = k_QuadGeomPath.createChildPath(k_ClusterDataNX);
 
 const std::string k_ClusterIdsName = "ClusterIds";
-const std::string k_MeansName = "ClusterMeans";
+const std::string k_MedoidsName = "ClusterMedoids";
 const std::string k_ClusterIdsNameNX = k_ClusterIdsName + "NX";
-const std::string k_MeansNameNX = k_MeansName + "NX";
+const std::string k_MedoidsNameNX = k_MedoidsName + "NX";
 
 const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameNX);
 } // namespace
 
-TEST_CASE("SimplnxCore::KMeans: Valid Filter Execution", "[SimplnxCore][KMeans]")
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[SimplnxCore][ComputeKMedoidsFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
-    // Instantiate the filter and an Arguments Object
-    KMeansFilter filter;
+    // Instantiate the filter, a DataStructure object and an Arguments Object
+    ComputeKMedoidsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(KMeansFilter::k_UseSeed_Key, std::make_any<bool>(true));
-    args.insertOrAssign(KMeansFilter::k_SeedValue_Key, std::make_any<uint64>(5489)); // Default Seed
-    args.insertOrAssign(KMeansFilter::k_InitClusters_Key, std::make_any<uint64>(3));
-    args.insertOrAssign(KMeansFilter::k_UseMask_Key, std::make_any<bool>(false));
-    args.insertOrAssign(KMeansFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_CellPath.createChildPath("DAMAGE")));
-    args.insertOrAssign(KMeansFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ClusterIdsNameNX));
-    args.insertOrAssign(KMeansFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_ClusterDataPathNX));
-    args.insertOrAssign(KMeansFilter::k_MeansArrayName_Key, std::make_any<std::string>(k_MeansNameNX));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_SeedValue_Key, std::make_any<uint64>(5489)); // Default Seed
+    args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(3));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_CellPath.createChildPath("DAMAGE")));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ClusterIdsNameNX));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_ClusterDataPathNX));
+    args.insertOrAssign(ComputeKMedoidsFilter::k_MedoidsArrayName_Key, std::make_any<std::string>(k_MedoidsNameNX));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -118,6 +115,6 @@ TEST_CASE("SimplnxCore::KMeans: Valid Filter Execution", "[SimplnxCore][KMeans]"
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_means_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_medoids_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }

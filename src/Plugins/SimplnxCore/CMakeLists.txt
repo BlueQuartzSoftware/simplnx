@@ -77,8 +77,8 @@ set(FilterList
   InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
-  KMeansFilter
-  KMedoidsFilter
+  ComputeKMeansFilter
+  ComputeKMedoidsFilter
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
@@ -177,8 +177,8 @@ set(AlgorithmList
   GenerateColorTable
   CreatePythonSkeleton
   ComputeVectorColors
-  KMeans
-  KMedoids
+  ComputeKMeans
+  ComputeKMedoids
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
