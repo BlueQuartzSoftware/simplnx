@@ -25,13 +25,13 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e}").value(), Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value()}, /* ComputeCAxisLocations */
     {Uuid::FromString("{94f986fc-1295-5e32-9808-752855fa658a}").value(), Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value()}, /* FindDistsToCharactGBs */
     {Uuid::FromString("{cdd50b83-ea09-5499-b008-4b253cf4c246}").value(), Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value()}, /* ComputeFeatureNeighborCAxisMisalignments */
-    {Uuid::FromString("{1a0848da-2edd-52c0-b111-62a4dc6d2886}").value(), Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value()}, /* FindFeatureReferenceCAxisMisorientations */
-    {Uuid::FromString("{428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c}").value(), Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value()}, /* FindFeatureReferenceMisorientations */
-    {Uuid::FromString("{6e97ff50-48bf-5403-a049-1d271bd72df9}").value(), Uuid::FromString("6e97ff50-48bf-5403-a049-1d271bd72df9").value()}, /* FindGBCD */
-    {Uuid::FromString("{d67e9f28-2fe5-5188-b0f8-323a7e603de6}").value(), Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value()}, /* FindGBCDMetricBased */
-    {Uuid::FromString("{00d20627-5b88-56ba-ac7a-fc2a4b337903}").value(), Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value()}, /* FindGBPDMetricBased */
-    {Uuid::FromString("{88d332c1-cf6c-52d3-a38d-22f6eae19fa6}").value(), Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value()}, /* FindKernelAvgMisorientations */
-    {Uuid::FromString("{286dd493-4fea-54f4-b59e-459dd13bbe57}").value(), Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value()}, /* FindMisorientations */
+    {Uuid::FromString("{1a0848da-2edd-52c0-b111-62a4dc6d2886}").value(), Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value()}, /* ComputeFeatureReferenceCAxisMisorientations */
+    {Uuid::FromString("{428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c}").value(), Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value()}, /* ComputeFeatureReferenceMisorientations */
+    {Uuid::FromString("{6e97ff50-48bf-5403-a049-1d271bd72df9}").value(), Uuid::FromString("6e97ff50-48bf-5403-a049-1d271bd72df9").value()}, /* ComputeGBCD */
+    {Uuid::FromString("{d67e9f28-2fe5-5188-b0f8-323a7e603de6}").value(), Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value()}, /* ComputeGBCDMetricBased */
+    {Uuid::FromString("{00d20627-5b88-56ba-ac7a-fc2a4b337903}").value(), Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value()}, /* ComputeGBPDMetricBased */
+    {Uuid::FromString("{88d332c1-cf6c-52d3-a38d-22f6eae19fa6}").value(), Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value()}, /* ComputeKernelAvgMisorientations */
+    {Uuid::FromString("{286dd493-4fea-54f4-b59e-459dd13bbe57}").value(), Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value()}, /* ComputeMisorientations */
     {Uuid::FromString("{e67ca06a-176f-58fc-a676-d6ee5553511a}").value(), Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value()}, /* ComputeSchmids */
     {Uuid::FromString("{97523038-5fb2-5e82-9177-ed3e8b24b4bd}").value(), Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value()}, /* ComputeSlipTransmissionMetrics */
     {Uuid::FromString("{a10124f3-05d0-5f49-93a0-e93926f5b48b}").value(), Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value()}, /* FindTwinBoundaries */

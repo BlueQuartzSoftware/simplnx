@@ -57,24 +57,24 @@ set(PYTHON_TEST_INPUT_DIR "${simplnx_SOURCE_DIR}/wrapping/python/examples/pipeli
 set(SIMPLNX_PYTHON_TESTS
   01_Small_IN100_Archive
 
-  AlignSectionsMutualInformation      # Depends 01_Small_IN100_Archive
-  FindLargestCrossSections            # Depends 01_Small_IN100_Archive
-  08_Small_IN100_Full_Reconstruction  # Depends 01_Small_IN100_Archive
+  AlignSectionsMutualInformation # Depends 01_Small_IN100_Archive
+  ComputeLargestCrossSections # Depends 01_Small_IN100_Archive
+  08_Small_IN100_Full_Reconstruction # Depends 01_Small_IN100_Archive
 
-  FindBoundaryCells                         # Depends on 08_Small_IN100_Full_Reconstruction
-  AvizoWriters                              # Depends on 08_Small_IN100_Full_Reconstruction
-  VtkRectilinearGridWriter                  # Depends on 08_Small_IN100_Full_Reconstruction
-  01_Small_IN100_Morphological_Statistics   # Depends on 08_Small_IN100_Full_Reconstruction Will delete both input and output file
+  FindBoundaryCells # Depends on 08_Small_IN100_Full_Reconstruction
+  AvizoWriters # Depends on 08_Small_IN100_Full_Reconstruction
+  VtkRectilinearGridWriter # Depends on 08_Small_IN100_Full_Reconstruction
+  01_Small_IN100_Morphological_Statistics # Depends on 08_Small_IN100_Full_Reconstruction Will delete both input and output file
 
   05_Small_IN100_Crystallographic_Statistics
 
-  FindBiasedFeatures            # Depends 05_Small_IN100_Crystallographic_Statistics
+  FindBiasedFeatures # Depends 05_Small_IN100_Crystallographic_Statistics
   01_Small_IN100_Quick_Mesh
   02_Small_IN100_Smooth_Mesh
   03_Small_IN100_Mesh_Statistics
 
-  FindGBCD-GBPDMetricBased   # Depends 03_Small_IN100_Mesh_Statistics
-  04_Small_IN100_GBCD        # Depends 03_Small_IN100_Mesh_Statistics 
+  FindGBCD-GBPDMetricBased # Depends 03_Small_IN100_Mesh_Statistics
+  04_Small_IN100_GBCD # Depends 03_Small_IN100_Mesh_Statistics
   05_Small_IN100_GBCD_Metric # Depends 03_Small_IN100_Mesh_Statistics Will delete both input and output file
 )
 

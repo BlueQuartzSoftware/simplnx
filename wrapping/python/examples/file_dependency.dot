@@ -51,7 +51,7 @@ digraph G {
   "01_Small_IN100_Archive" -> "Small_IN100.h5ebsd"
 
   "Small_IN100.h5ebsd" -> AlignSectionsMutualInformation
-  "Small_IN100.h5ebsd" -> FindLargestCrossSections
+  "Small_IN100.h5ebsd" -> ComputeLargestCrossSections
     
   "Small_IN100.h5ebsd" -> "08_Small_IN100_Full_Reconstruction" -> "SmallIN100_Final.dream3d"
 

@@ -144,7 +144,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = nx.FindFeaturePhasesFilter()
+nx_filter = nx.ComputeFeaturePhasesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

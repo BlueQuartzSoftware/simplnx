@@ -122,7 +122,7 @@
         },
         "comments": "",
         "filter": {
-          "name": "simplnx::FindGBCDMetricBasedFilter",
+          "name": "simplnx::ComputeGBCDMetricBasedFilter",
           "uuid": "fc0d695a-e381-4f11-a8fd-26d5b5cda30a"
         },
         "isDisabled": false

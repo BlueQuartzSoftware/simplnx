@@ -20,13 +20,13 @@ const DataPath k_FeatureIDsPath = k_FeatureGeometryPath.createChildPath(ImageGeo
 const DataPath k_CellFeatureAMPath = k_FeatureGeometryPath.createChildPath(Constants::k_CellFeatureData);
 const DataPath k_SurfaceFeaturesExemplaryPath = k_CellFeatureAMPath.createChildPath("Surface Features Exemplary");
 const DataPath k_SurfaceFeaturesArrayPath = k_CellFeatureAMPath.createChildPath(k_SurfaceFeatures);
-const std::string k_FeatureIds2DFileName = "ComputeSurfaceFeaturesTest/FeatureIds_2D.raw";
-const std::string k_SurfaceFeatures2DExemplaryFileName = "ComputeSurfaceFeaturesTest/SurfaceFeatures2D.raw";
+const std::string k_FeatureIds2DFileName = "FindSurfaceFeaturesTest/FeatureIds_2D.raw";
+const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTest/SurfaceFeatures2D.raw";
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ComputeSurfaceFeaturesTest.tar.gz", "ComputeSurfaceFeaturesTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "ComputeSurfaceFeaturesTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeSurfaceFeaturesFilter filter;

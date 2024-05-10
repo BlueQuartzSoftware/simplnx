@@ -117,8 +117,8 @@ const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313
 const Uuid k_AlignSectionsFeatureCentroidFilterId = *Uuid::FromString("b83f9bae-9ccf-4932-96c3-7f2fdb091452");
 const FilterHandle k_AlignSectionsFeatureCentroidFilterHandle(k_AlignSectionsFeatureCentroidFilterId, k_SimplnxCorePluginId);
 
-const Uuid k_FindFeaturePhasesObjectsId = *Uuid::FromString("da5bb20e-4a8e-49d9-9434-fbab7bc434fc");
-const FilterHandle k_FindNFeaturePhasesFilterHandle(k_FindFeaturePhasesObjectsId, k_SimplnxCorePluginId);
+const Uuid k_ComputeFeaturePhasesObjectsId = *Uuid::FromString("da5bb20e-4a8e-49d9-9434-fbab7bc434fc");
+const FilterHandle k_FindNFeaturePhasesFilterHandle(k_ComputeFeaturePhasesObjectsId, k_SimplnxCorePluginId);
 const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("7177e88c-c3ab-4169-abe9-1fdaff20e598");
 const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_SimplnxCorePluginId);
 } // namespace nx::core

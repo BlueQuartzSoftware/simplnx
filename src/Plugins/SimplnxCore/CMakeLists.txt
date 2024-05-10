@@ -56,8 +56,8 @@ set(FilterList
   ComputeFeatureCentroidsFilter
   ComputeFeatureClusteringFilter
   ComputeFeaturePhasesBinaryFilter
-  FindFeaturePhasesFilter
-  FindLargestCrossSectionsFilter
+  ComputeFeaturePhasesFilter
+  ComputeLargestCrossSectionsFilter
   ComputeNeighborhoodsFilter
   ComputeNeighborListStatisticsFilter
   ComputeFeatureNeighborsFilter
@@ -166,7 +166,7 @@ set(AlgorithmList
   ComputeEuclideanDistMap
   ComputeFeatureCentroids
   ComputeFeatureClustering
-  FindLargestCrossSections
+  ComputeLargestCrossSections
   ComputeNeighborhoods
   FindNRingNeighbors
   ComputeSurfaceAreaToVolume

@@ -94,7 +94,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindGBCDFilter",
+        "name": "simplnx::ComputeGBCDFilter",
         "uuid": "0cc592b7-a3d3-4c6a-8894-1533670a31b9"
       },
       "isDisabled": false

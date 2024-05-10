@@ -333,7 +333,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindKernelAvgMisorientationsFilter",
+        "name": "simplnx::ComputeKernelAvgMisorientationsFilter",
         "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
       },
       "isDisabled": false
@@ -388,7 +388,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureReferenceMisorientationsFilter",
+        "name": "simplnx::ComputeFeatureReferenceMisorientationsFilter",
         "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
       },
       "isDisabled": false

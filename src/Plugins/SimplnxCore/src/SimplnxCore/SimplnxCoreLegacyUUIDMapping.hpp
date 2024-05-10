@@ -47,7 +47,7 @@
 #include "SimplnxCore/Filters/ComputeDifferencesMapFilter.hpp"
 #include "SimplnxCore/Filters/ComputeEuclideanDistMapFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureCentroidsFilter.hpp"
-#include "SimplnxCore/Filters/FindFeaturePhasesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeaturePhasesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeaturePhasesBinaryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeNeighborhoodsFilter.hpp"
 #include "SimplnxCore/Filters/ComputeNeighborListStatisticsFilter.hpp"
@@ -97,7 +97,7 @@
 #include "SimplnxCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
-#include "SimplnxCore/Filters/FindLargestCrossSectionsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeLargestCrossSectionsFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
 #include "SimplnxCore/Filters/AppendImageGeometryZSliceFilter.hpp"
@@ -162,7 +162,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {nx::core::FilterTraits<ComputeDifferencesMapFilter>::uuid, &ComputeDifferencesMapFilter::FromSIMPLJson}}, // FindDifferenceMap
     {nx::core::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {nx::core::FilterTraits<ComputeEuclideanDistMapFilter>::uuid, &ComputeEuclideanDistMapFilter::FromSIMPLJson}}, // ComputeEuclideanDistMap
     {nx::core::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {nx::core::FilterTraits<ComputeFeatureCentroidsFilter>::uuid, &ComputeFeatureCentroidsFilter::FromSIMPLJson}}, // ComputeFeatureCentroids
-    {nx::core::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {nx::core::FilterTraits<FindFeaturePhasesFilter>::uuid, &FindFeaturePhasesFilter::FromSIMPLJson}}, // FindFeaturePhases
+    {nx::core::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), {nx::core::FilterTraits<ComputeFeaturePhasesFilter>::uuid, &ComputeFeaturePhasesFilter::FromSIMPLJson}}, // ComputeFeaturePhases
     {nx::core::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), {nx::core::FilterTraits<ComputeFeaturePhasesBinaryFilter>::uuid, &ComputeFeaturePhasesBinaryFilter::FromSIMPLJson}}, // ComputeFeaturePhasesBinary
     {nx::core::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), {nx::core::FilterTraits<ComputeNeighborhoodsFilter>::uuid, &ComputeNeighborhoodsFilter::FromSIMPLJson}}, // ComputeNeighborhoods
     {nx::core::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), {nx::core::FilterTraits<ComputeNeighborListStatisticsFilter>::uuid, &ComputeNeighborListStatisticsFilter::FromSIMPLJson}}, // ComputeNeighborListStatisticsFilter
@@ -223,7 +223,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), {nx::core::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid, &FindVertexToTriangleDistancesFilter::FromSIMPLJson}}, // FindVertexToTriangleDistances
     {nx::core::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {nx::core::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, {}}}, // ApplyTransformationToGeometry
     {nx::core::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), {nx::core::FilterTraits<ComputeFeatureRectFilter>::uuid, &ComputeFeatureRectFilter::FromSIMPLJson}}, // ComputeFeatureRect
-    {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<FindLargestCrossSectionsFilter>::uuid, &FindLargestCrossSectionsFilter::FromSIMPLJson}}, // FindLargestCrossSections
+    {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<ComputeLargestCrossSectionsFilter>::uuid, &ComputeLargestCrossSectionsFilter::FromSIMPLJson}}, // ComputeLargestCrossSections
     {nx::core::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), {nx::core::FilterTraits<WriteStlFileFilter>::uuid, &WriteStlFileFilter::FromSIMPLJson}}, // WriteStlFile
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData
     {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryZSliceFilter>::uuid, &AppendImageGeometryZSliceFilter::FromSIMPLJson}}, // AppendImageGeometryZSlice

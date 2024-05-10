@@ -283,7 +283,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::FindFeaturePhasesFilter",
+                        "name": "simplnx::ComputeFeaturePhasesFilter",
                         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
                       },
                       "isDisabled": false
@@ -701,7 +701,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindMisorientationsFilter",
+        "name": "simplnx::ComputeMisorientationsFilter",
         "uuid": "0b68fe25-b5ef-4805-ae32-20acb8d4e823"
       },
       "isDisabled": false
@@ -756,7 +756,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureReferenceMisorientationsFilter",
+        "name": "simplnx::ComputeFeatureReferenceMisorientationsFilter",
         "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
       },
       "isDisabled": false
@@ -777,7 +777,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindKernelAvgMisorientationsFilter",
+        "name": "simplnx::ComputeKernelAvgMisorientationsFilter",
         "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
       },
       "isDisabled": false

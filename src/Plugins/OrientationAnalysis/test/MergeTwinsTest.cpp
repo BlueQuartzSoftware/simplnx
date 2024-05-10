@@ -108,7 +108,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     REQUIRE(executeResult.result.valid());
   }
 
-  // FindFeaturePhases filter
+  // ComputeFeaturePhases filter
   {
     auto filter = filterList->createFilter(k_FindNFeaturePhasesFilterHandle);
     REQUIRE(nullptr != filter);

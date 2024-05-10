@@ -42,13 +42,13 @@ set(FilterList
   ComputeBoundaryStrengthsFilter
   ComputeCAxisLocationsFilter
   ComputeFeatureNeighborCAxisMisalignmentsFilter
-  FindFeatureReferenceCAxisMisorientationsFilter
-  FindFeatureReferenceMisorientationsFilter
-  FindGBCDFilter
-  FindGBCDMetricBasedFilter
-  FindGBPDMetricBasedFilter
-  FindKernelAvgMisorientationsFilter
-  FindMisorientationsFilter
+  ComputeFeatureReferenceCAxisMisorientationsFilter
+  ComputeFeatureReferenceMisorientationsFilter
+  ComputeGBCDFilter
+  ComputeGBCDMetricBasedFilter
+  ComputeGBPDMetricBasedFilter
+  ComputeKernelAvgMisorientationsFilter
+  ComputeMisorientationsFilter
   ComputeSchmidsFilter
   ComputeShapesFilter
   ComputeSlipTransmissionMetricsFilter
@@ -76,20 +76,21 @@ set(FilterList
   WritePoleFigureFilter
   WriteStatsGenOdfAngleFileFilter
 )
-  
+
 set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
   ComputeBoundaryStrengths
   FindDistsToCharactGBs
-  FindKernelAvgMisorientations
-  FindMisorientations
+  ComputeKernelAvgMisorientations
+  ComputeMisorientations
   ComputeSchmids
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
   GenerateFaceIPFColoring
   GenerateFeatureFaceMisorientation
   GenerateOrientationMatrixTranspose
+
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
 )
 
@@ -173,13 +174,13 @@ set(filter_algorithms
   ComputeBoundaryStrengths
   ComputeCAxisLocations
   ComputeFeatureNeighborCAxisMisalignments
-  FindFeatureReferenceCAxisMisorientations
-  FindFeatureReferenceMisorientations
-  FindGBCD
-  FindGBCDMetricBased
-  FindGBPDMetricBased
-  FindKernelAvgMisorientations
-  FindMisorientations
+  ComputeFeatureReferenceCAxisMisorientations
+  ComputeFeatureReferenceMisorientations
+  ComputeGBCD
+  ComputeGBCDMetricBased
+  ComputeGBPDMetricBased
+  ComputeKernelAvgMisorientations
+  ComputeMisorientations
   ComputeSchmids
   ComputeShapes
   ComputeSlipTransmissionMetrics

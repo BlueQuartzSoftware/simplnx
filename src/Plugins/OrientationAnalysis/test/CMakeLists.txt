@@ -21,13 +21,13 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeBoundaryStrengthsTest.cpp
   ComputeCAxisLocationsTest.cpp
   ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
-  FindFeatureReferenceCAxisMisorientationsTest.cpp
-  FindFeatureReferenceMisorientationsTest.cpp
-  FindGBCDMetricBasedTest.cpp
-  FindGBCDTest.cpp
-  FindGBPDMetricBasedTest.cpp
-  FindKernelAvgMisorientationsTest.cpp
-  FindMisorientationsTest.cpp
+  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
+  ComputeFeatureReferenceMisorientationsTest.cpp
+  ComputeGBCDMetricBasedTest.cpp
+  ComputeGBCDTest.cpp
+  ComputeGBPDMetricBasedTest.cpp
+  ComputeKernelAvgMisorientationsTest.cpp
+  ComputeMisorientationsTest.cpp
   ComputeSchmidsTest.cpp
   ComputeShapesFilterTest.cpp
   ComputeSlipTransmissionMetricsTest.cpp
@@ -59,7 +59,7 @@ set(DISABLED_TESTS
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
   FindDistsToCharactGBsTest.cpp
-  FindFeatureReferenceCAxisMisorientationsTest.cpp
+  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
   FindTwinBoundariesTest.cpp
   FindTwinBoundarySchmidFactorsTest.cpp
   GenerateOrientationMatrixTransposeTest.cpp

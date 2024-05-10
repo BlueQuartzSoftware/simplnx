@@ -260,7 +260,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 17
 # Instantiate Filter
-nx_filter = cxor.FindKernelAvgMisorientationsFilter()
+nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -307,7 +307,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 20
 # Instantiate Filter
-nx_filter = cxor.FindFeatureReferenceMisorientationsFilter()
+nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

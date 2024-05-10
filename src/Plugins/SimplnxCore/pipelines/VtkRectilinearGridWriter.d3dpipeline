@@ -238,7 +238,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindFeaturePhasesFilter",
+                "name": "simplnx::ComputeFeaturePhasesFilter",
                 "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
               },
               "isDisabled": false

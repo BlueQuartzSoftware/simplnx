@@ -212,7 +212,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureReferenceCAxisMisorientationsFilter",
+        "name": "nx::core::ComputeFeatureReferenceCAxisMisorientationsFilter",
         "uuid": "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25"
       },
       "isDisabled": false
@@ -306,7 +306,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeaturePhasesFilter",
+        "name": "nx::core::ComputeFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false

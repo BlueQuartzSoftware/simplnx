@@ -171,7 +171,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeaturePhasesFilter",
+        "name": "nx::core::ComputeFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
