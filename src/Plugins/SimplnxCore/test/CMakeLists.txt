@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
@@ -20,8 +21,27 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   CombineStlFilesTest.cpp
+  ComputeDifferencesMapTest.cpp
+  ComputeEuclideanDistMapTest.cpp
+  ComputeFeatureCentroidsTest.cpp
+  ComputeFeatureClusteringTest.cpp
+  ComputeFeatureNeighborsTest.cpp
+  ComputeFeaturePhasesBinaryTest.cpp
+  ComputeFeaturePhasesFilterTest.cpp
   ComputeFeatureRectTest.cpp
+  ComputeKMeansTest.cpp
+  ComputeKMedoidsTest.cpp
+  ComputeLargestCrossSectionsTest.cpp
   ComputeMomentInvariants2DTest.cpp
+  ComputeNeighborhoodsTest.cpp
+  ComputeNeighborListStatisticsTest.cpp
+  ComputeNumFeaturesTest.cpp
+  ComputeSurfaceAreaToVolumeTest.cpp
+  ComputeSurfaceFeaturesTest.cpp
+  ComputeTriangleGeomCentroidsTest.cpp
+  ComputeVectorColorsTest.cpp
+  ComputeVertexToTriangleDistancesTest.cpp
+  ComputeVolumeFractionsTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp
@@ -33,6 +53,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateFeatureArrayFromElementArrayTest.cpp
   CreateGeometryTest.cpp
   CreateImageGeometryTest.cpp
+  CreatePythonSkeletonTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
   DeleteDataTest.cpp
@@ -51,35 +72,15 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
   FindBoundaryElementFractionsTest.cpp
-  ComputeDifferencesMapTest.cpp
-  ComputeEuclideanDistMapTest.cpp
-  ComputeFeatureCentroidsTest.cpp
-  ComputeFeatureClusteringTest.cpp
-  ComputeFeaturePhasesBinaryTest.cpp
-  ComputeFeaturePhasesFilterTest.cpp
-  ComputeLargestCrossSectionsTest.cpp
-  ComputeNeighborhoodsTest.cpp
-  ComputeNeighborListStatisticsTest.cpp
-  ComputeFeatureNeighborsTest.cpp
-  ComputeNumFeaturesTest.cpp
-  ComputeSurfaceAreaToVolumeTest.cpp
-  ComputeSurfaceFeaturesTest.cpp
-  ComputeTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
-  ComputeVertexToTriangleDistancesTest.cpp
-  ComputeVolumeFractionsTest.cpp
-  GenerateColorTableTest.cpp
-  ComputeVectorColorsTest.cpp
-  CreatePythonSkeletonTest.cpp
-  IdentifySampleTest.cpp
   FlyingEdges3DTest.cpp
+  GenerateColorTableTest.cpp
+  IdentifySampleTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
   InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
-  ComputeKMeansTest.cpp
-  ComputeKMedoidsTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
@@ -93,13 +94,12 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   QuickSurfaceMeshFilterTest.cpp
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
-
-  # ReadDeformKeyFileV12Test.cpp
   ReadHDF5DatasetTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadTextDataArrayTest.cpp
   ReadVolumeGraphicsFileTest.cpp
+  ReadVtkStructuredPointsTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
@@ -131,7 +131,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteLosAlamosFFTTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
-  ReadVtkStructuredPointsTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

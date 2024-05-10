@@ -10,34 +10,34 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
   CAxisSegmentFeaturesTest.cpp
+  ComputeAvgCAxesTest.cpp
+  ComputeAvgOrientationsTest.cpp
+  ComputeBoundaryStrengthsTest.cpp
+  ComputeCAxisLocationsTest.cpp
+  ComputeFaceIPFColoringTest.cpp
+  ComputeFeatureFaceMisorientationTest.cpp
+  ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
+  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
+  ComputeFeatureReferenceMisorientationsTest.cpp
+  ComputeFZQuaternionsTest.cpp
+  ComputeGBCDMetricBasedTest.cpp
+  ComputeGBCDPoleFigureTest.cpp
+  ComputeGBCDTest.cpp
+  ComputeGBPDMetricBasedTest.cpp
+  ComputeIPFColorsTest.cpp
+  ComputeKernelAvgMisorientationsTest.cpp
+  ComputeMisorientationsTest.cpp
+  ComputeQuaternionConjugateTest.cpp
+  ComputeSchmidsTest.cpp
+  ComputeShapesFilterTest.cpp
+  ComputeSlipTransmissionMetricsTest.cpp
+  ComputeTriangleGeomShapesTest.cpp
   ConvertHexGridToSquareGridTest.cpp
   ConvertOrientationsTest.cpp
   ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
-  ComputeAvgCAxesTest.cpp
-  ComputeAvgOrientationsTest.cpp
-  ComputeBoundaryStrengthsTest.cpp
-  ComputeCAxisLocationsTest.cpp
-  ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
-  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
-  ComputeFeatureReferenceMisorientationsTest.cpp
-  ComputeGBCDMetricBasedTest.cpp
-  ComputeGBCDTest.cpp
-  ComputeGBPDMetricBasedTest.cpp
-  ComputeKernelAvgMisorientationsTest.cpp
-  ComputeMisorientationsTest.cpp
-  ComputeSchmidsTest.cpp
-  ComputeShapesFilterTest.cpp
-  ComputeSlipTransmissionMetricsTest.cpp
-        ComputeTriangleGeomShapesTest.cpp
-        ComputeFaceIPFColoringTest.cpp
-  ComputeFeatureFaceMisorientationTest.cpp
-  ComputeFZQuaternionsTest.cpp
-  ComputeGBCDPoleFigureTest.cpp
-  ComputeIPFColorsTest.cpp
-  ComputeQuaternionConjugateTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
