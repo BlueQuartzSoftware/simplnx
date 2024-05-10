@@ -10,7 +10,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ComputeSlipTransmissionMetrics::ComputeSlipTransmissionMetrics(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                         ComputeSlipTransmissionMetricsInputValues* inputValues)
+                                                               ComputeSlipTransmissionMetricsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

@@ -11,7 +11,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ComputeBoundaryStrengths::ComputeBoundaryStrengths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             ComputeBoundaryStrengthsInputValues* inputValues)
+                                                   ComputeBoundaryStrengthsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

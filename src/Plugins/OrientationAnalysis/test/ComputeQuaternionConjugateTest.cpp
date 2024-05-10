@@ -5,7 +5,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace nx::core;
@@ -17,7 +17,7 @@ const std::string k_Exemplar0 = "Exemplar0";
 
 } // namespace
 
-TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugateFilter", "[OrientationAnalysis][GenerateQuaternionConjugateFilter]")
+TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[OrientationAnalysis][ComputeQuaternionConjugateFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -54,14 +54,14 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugateFilter", "[Orientatio
   (*exemplarData)[15] = 15.0F;
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    const GenerateQuaternionConjugateFilter filter;
+    const ComputeQuaternionConjugateFilter filter;
 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_QuatName})));
-    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_ConvertedName));
-    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeQuaternionConjugateFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_QuatName})));
+    args.insertOrAssign(ComputeQuaternionConjugateFilter::k_OutputDataArrayName_Key, std::make_any<std::string>(k_ConvertedName));
+    args.insertOrAssign(ComputeQuaternionConjugateFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

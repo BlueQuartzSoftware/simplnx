@@ -294,7 +294,8 @@ private:
 } // namespace gbpd_metric_based
 
 // -----------------------------------------------------------------------------
-ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBPDMetricBasedInputValues* inputValues)
+ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                               ComputeGBPDMetricBasedInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -735,7 +736,8 @@ void ComputeGBPDMetricBased::AppendSamplePtsFixedZenith(std::vector<float64>& xV
 }
 
 // -----------------------------------------------------------------------------
-void ComputeGBPDMetricBased::AppendSamplePtsFixedAzimuth(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 phi, float64 minTheta, float64 maxTheta, float64 step)
+void ComputeGBPDMetricBased::AppendSamplePtsFixedAzimuth(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 phi, float64 minTheta, float64 maxTheta,
+                                                         float64 step)
 {
   for(double theta = minTheta; theta <= maxTheta; theta += step)
   {

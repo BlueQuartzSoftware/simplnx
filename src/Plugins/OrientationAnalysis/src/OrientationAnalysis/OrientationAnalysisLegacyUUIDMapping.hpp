@@ -55,7 +55,7 @@
 #include "OrientationAnalysis/Filters/GenerateFZQuaternionsFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
-#include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/Filters/ReadH5EspritDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ReadH5OimDataFilter.hpp"
 #include "OrientationAnalysis/Filters/MergeTwinsFilter.hpp"
@@ -96,7 +96,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("4ef7f56b-616e-5a80-9e68-1da8f35ad235").value(), {nx::core::FilterTraits<ReadH5EbsdFilter>::uuid, &ReadH5EbsdFilter::FromSIMPLJson}}, // ReadH5Ebsd
     {nx::core::Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604").value(), {nx::core::FilterTraits<AlignSectionsMisorientationFilter>::uuid, &AlignSectionsMisorientationFilter::FromSIMPLJson}}, // AlignSectionsMisorientation
     {nx::core::Uuid::FromString("61c5519b-5561-58b8-a522-2ce1324e244d").value(), {nx::core::FilterTraits<AlignSectionsMutualInformationFilter>::uuid, &AlignSectionsMutualInformationFilter::FromSIMPLJson}}, // AlignSectionsMutualInformationFilter
-    {nx::core::Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value(), {nx::core::FilterTraits<GenerateQuaternionConjugateFilter>::uuid, &GenerateQuaternionConjugateFilter::FromSIMPLJson}}, // GenerateQuaternionConjugate
+    {nx::core::Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value(), {nx::core::FilterTraits<ComputeQuaternionConjugateFilter>::uuid, &ComputeQuaternionConjugateFilter::FromSIMPLJson}}, // ComputeQuaternionConjugate
     {nx::core::Uuid::FromString("6427cd5e-0ad2-5a24-8847-29f8e0720f4f").value(), {nx::core::FilterTraits<NeighborOrientationCorrelationFilter>::uuid, &NeighborOrientationCorrelationFilter::FromSIMPLJson}}, // NeighborOrientationCorrelation
     {nx::core::Uuid::FromString("6e97ff50-48bf-5403-a049-1d271bd72df9").value(), {nx::core::FilterTraits<ComputeGBCDFilter>::uuid, &ComputeGBCDFilter::FromSIMPLJson}}, // ComputeGBCDFilter
     {nx::core::Uuid::FromString("7861c691-b821-537b-bd25-dc195578e0ea").value(), {nx::core::FilterTraits<EBSDSegmentFeaturesFilter>::uuid, &EBSDSegmentFeaturesFilter::FromSIMPLJson}}, // EBSDSegmentFeatures

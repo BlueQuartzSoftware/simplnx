@@ -58,7 +58,7 @@ set(FilterList
   GenerateFZQuaternionsFilter
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
-  GenerateQuaternionConjugateFilter
+  ComputeQuaternionConjugateFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -189,7 +189,7 @@ set(filter_algorithms
   GenerateFeatureFaceMisorientation
   GenerateGBCDPoleFigure
   GenerateIPFColors
-  GenerateQuaternionConjugate
+  ComputeQuaternionConjugate
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData

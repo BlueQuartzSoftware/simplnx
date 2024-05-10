@@ -66,12 +66,12 @@ set(FilterList
   ComputeSurfaceFeaturesFilter
   ComputeTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
-  FindVertexToTriangleDistancesFilter
-  FindVolFractionsFilter
+  ComputeVertexToTriangleDistancesFilter
+  ComputeVolumeFractionsFilter
   FlyingEdges3DFilter
   GenerateColorTableFilter
-  GeneratePythonSkeletonFilter
-  GenerateVectorColorsFilter
+  CreatePythonSkeletonFilter
+  ComputeVectorColorsFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
@@ -172,11 +172,11 @@ set(AlgorithmList
   ComputeSurfaceAreaToVolume
   ComputeTriangleGeomCentroids
   FindTriangleGeomSizes
-  FindVertexToTriangleDistances
+  ComputeVertexToTriangleDistances
   FlyingEdges3D
   GenerateColorTable
-  GeneratePythonSkeleton
-  GenerateVectorColors
+  CreatePythonSkeleton
+  ComputeVectorColors
   KMeans
   KMedoids
   LabelTriangleGeometry

@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindVolFractionsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeVolumeFractionsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -22,10 +22,10 @@ const DataPath k_VolumeFractionsPathNX = Constants::k_CellEnsembleAttributeMatri
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
-TEST_CASE("SimplnxCore::FindVolFractionsFilter: Valid filter execution", "[SimplnxCore::FindVolFractionsFilter]")
+TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindVolFractionsFilter filter;
+  ComputeVolumeFractionsFilter filter;
   Arguments args;
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
@@ -34,9 +34,9 @@ TEST_CASE("SimplnxCore::FindVolFractionsFilter: Valid filter execution", "[Simpl
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -56,10 +56,10 @@ TEST_CASE("SimplnxCore::FindVolFractionsFilter: Valid filter execution", "[Simpl
   }
 }
 
-TEST_CASE("SimplnxCore::FindVolFractionsFilter: InValid filter execution", "[SimplnxCore::FindVolFractionsFilter]")
+TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindVolFractionsFilter filter;
+  ComputeVolumeFractionsFilter filter;
   Arguments args;
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
@@ -69,9 +69,9 @@ TEST_CASE("SimplnxCore::FindVolFractionsFilter: InValid filter execution", "[Sim
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

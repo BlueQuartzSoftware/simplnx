@@ -9,7 +9,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ComputeSurfaceAreaToVolume::ComputeSurfaceAreaToVolume(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 ComputeSurfaceAreaToVolumeInputValues* inputValues)
+                                                       ComputeSurfaceAreaToVolumeInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

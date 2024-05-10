@@ -11,19 +11,19 @@
 
 /**
 * This is example code to put in the Execute Method of the filter.
-  GenerateQuaternionConjugateInputValues inputValues;
+  ComputeQuaternionConjugateInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_QuaternionDataArrayPath_Key);
   inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
-  return GenerateQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */
 
 namespace nx::core
 {
 
-struct ORIENTATIONANALYSIS_EXPORT GenerateQuaternionConjugateInputValues
+struct ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateInputValues
 {
   DataPath QuaternionDataArrayPath;
   DataPath OutputDataArrayPath;
@@ -33,16 +33,16 @@ struct ORIENTATIONANALYSIS_EXPORT GenerateQuaternionConjugateInputValues
 /**
  * @class
  */
-class ORIENTATIONANALYSIS_EXPORT GenerateQuaternionConjugate
+class ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugate
 {
 public:
-  GenerateQuaternionConjugate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateQuaternionConjugateInputValues* inputValues);
-  ~GenerateQuaternionConjugate() noexcept;
+  ComputeQuaternionConjugate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeQuaternionConjugateInputValues* inputValues);
+  ~ComputeQuaternionConjugate() noexcept;
 
-  GenerateQuaternionConjugate(const GenerateQuaternionConjugate&) = delete;
-  GenerateQuaternionConjugate(GenerateQuaternionConjugate&&) noexcept = delete;
-  GenerateQuaternionConjugate& operator=(const GenerateQuaternionConjugate&) = delete;
-  GenerateQuaternionConjugate& operator=(GenerateQuaternionConjugate&&) noexcept = delete;
+  ComputeQuaternionConjugate(const ComputeQuaternionConjugate&) = delete;
+  ComputeQuaternionConjugate(ComputeQuaternionConjugate&&) noexcept = delete;
+  ComputeQuaternionConjugate& operator=(const ComputeQuaternionConjugate&) = delete;
+  ComputeQuaternionConjugate& operator=(ComputeQuaternionConjugate&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -50,7 +50,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const GenerateQuaternionConjugateInputValues* m_InputValues = nullptr;
+  const ComputeQuaternionConjugateInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

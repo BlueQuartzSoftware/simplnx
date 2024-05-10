@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SimplnxCore/SimplnxCore_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -8,25 +8,25 @@
 namespace nx::core
 {
 /**
- * @class FindVolFractionsFilter
- * @brief This filter will calculate the volume fraction for each Ensemble
+ * @class ComputeQuaternionConjugateFilter
+ * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT FindVolFractionsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateFilter : public IFilter
 {
 public:
-  FindVolFractionsFilter() = default;
-  ~FindVolFractionsFilter() noexcept override = default;
+  ComputeQuaternionConjugateFilter() = default;
+  ~ComputeQuaternionConjugateFilter() noexcept override = default;
 
-  FindVolFractionsFilter(const FindVolFractionsFilter&) = delete;
-  FindVolFractionsFilter(FindVolFractionsFilter&&) noexcept = delete;
+  ComputeQuaternionConjugateFilter(const ComputeQuaternionConjugateFilter&) = delete;
+  ComputeQuaternionConjugateFilter(ComputeQuaternionConjugateFilter&&) noexcept = delete;
 
-  FindVolFractionsFilter& operator=(const FindVolFractionsFilter&) = delete;
-  FindVolFractionsFilter& operator=(FindVolFractionsFilter&&) noexcept = delete;
+  ComputeQuaternionConjugateFilter& operator=(const ComputeQuaternionConjugateFilter&) = delete;
+  ComputeQuaternionConjugateFilter& operator=(ComputeQuaternionConjugateFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
-  static inline constexpr StringLiteral k_VolFractionsArrayName_Key = "vol_fractions_array_name";
+  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_quats_data_path";
+  static inline constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
+  static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -102,5 +102,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindVolFractionsFilter, "340b3433-193a-4287-a7d2-794e1bce061b");
-/* LEGACY UUID FOR THIS FILTER 68246a67-7f32-5c80-815a-bec82008d7bc */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeQuaternionConjugateFilter, "e1653c62-3894-4b95-8449-605400038110");
+/* LEGACY UUID FOR THIS FILTER 630d7486-75ea-5e04-874c-894460cd7c4d */

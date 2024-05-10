@@ -47,7 +47,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceMisorientations
 {
 public:
   ComputeFeatureReferenceMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                      ComputeFeatureReferenceMisorientationsInputValues* inputValues);
+                                         ComputeFeatureReferenceMisorientationsInputValues* inputValues);
   ~ComputeFeatureReferenceMisorientations() noexcept;
 
   ComputeFeatureReferenceMisorientations(const ComputeFeatureReferenceMisorientations&) = delete;

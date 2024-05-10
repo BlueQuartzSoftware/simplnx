@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
+#include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -8,25 +8,27 @@
 namespace nx::core
 {
 /**
- * @class GenerateQuaternionConjugateFilter
+ * @class ComputeVertexToTriangleDistancesFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT GenerateQuaternionConjugateFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeVertexToTriangleDistancesFilter : public IFilter
 {
 public:
-  GenerateQuaternionConjugateFilter() = default;
-  ~GenerateQuaternionConjugateFilter() noexcept override = default;
+  ComputeVertexToTriangleDistancesFilter() = default;
+  ~ComputeVertexToTriangleDistancesFilter() noexcept override = default;
 
-  GenerateQuaternionConjugateFilter(const GenerateQuaternionConjugateFilter&) = delete;
-  GenerateQuaternionConjugateFilter(GenerateQuaternionConjugateFilter&&) noexcept = delete;
+  ComputeVertexToTriangleDistancesFilter(const ComputeVertexToTriangleDistancesFilter&) = delete;
+  ComputeVertexToTriangleDistancesFilter(ComputeVertexToTriangleDistancesFilter&&) noexcept = delete;
 
-  GenerateQuaternionConjugateFilter& operator=(const GenerateQuaternionConjugateFilter&) = delete;
-  GenerateQuaternionConjugateFilter& operator=(GenerateQuaternionConjugateFilter&&) noexcept = delete;
+  ComputeVertexToTriangleDistancesFilter& operator=(const ComputeVertexToTriangleDistancesFilter&) = delete;
+  ComputeVertexToTriangleDistancesFilter& operator=(ComputeVertexToTriangleDistancesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_quats_data_path";
-  static inline constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
-  static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
+  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static inline constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
+  static inline constexpr StringLiteral k_DistancesArrayName_Key = "distances_array_name";
+  static inline constexpr StringLiteral k_ClosestTriangleIdArrayName_Key = "closest_triangle_id_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +84,7 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -92,7 +94,7 @@ protected:
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -102,5 +104,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateQuaternionConjugateFilter, "e1653c62-3894-4b95-8449-605400038110");
-/* LEGACY UUID FOR THIS FILTER 630d7486-75ea-5e04-874c-894460cd7c4d */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeVertexToTriangleDistancesFilter, "af60518e-5fdb-45f2-9028-cd7787016830");
+/* LEGACY UUID FOR THIS FILTER fcdde553-36b4-5731-bc88-fc499806cb4e */

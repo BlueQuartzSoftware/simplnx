@@ -182,7 +182,7 @@ IFilter::UniquePointer ComputeDifferencesMapFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -253,7 +253,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
   auto secondInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));

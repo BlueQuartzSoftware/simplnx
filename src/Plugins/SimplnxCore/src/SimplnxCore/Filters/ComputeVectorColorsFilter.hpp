@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class GenerateVectorColorsFilter
+ * @class ComputeVectorColorsFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT GenerateVectorColorsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeVectorColorsFilter : public IFilter
 {
 public:
-  GenerateVectorColorsFilter() = default;
-  ~GenerateVectorColorsFilter() noexcept override = default;
+  ComputeVectorColorsFilter() = default;
+  ~ComputeVectorColorsFilter() noexcept override = default;
 
-  GenerateVectorColorsFilter(const GenerateVectorColorsFilter&) = delete;
-  GenerateVectorColorsFilter(GenerateVectorColorsFilter&&) noexcept = delete;
+  ComputeVectorColorsFilter(const ComputeVectorColorsFilter&) = delete;
+  ComputeVectorColorsFilter(ComputeVectorColorsFilter&&) noexcept = delete;
 
-  GenerateVectorColorsFilter& operator=(const GenerateVectorColorsFilter&) = delete;
-  GenerateVectorColorsFilter& operator=(GenerateVectorColorsFilter&&) noexcept = delete;
+  ComputeVectorColorsFilter& operator=(const ComputeVectorColorsFilter&) = delete;
+  ComputeVectorColorsFilter& operator=(ComputeVectorColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
@@ -103,5 +103,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GenerateVectorColorsFilter, "1a35650d-a9f5-4ea2-af70-5b9ce894e45f");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeVectorColorsFilter, "1a35650d-a9f5-4ea2-af70-5b9ce894e45f");
 /* LEGACY UUID FOR THIS FILTER ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc */

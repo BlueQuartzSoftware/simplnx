@@ -1,6 +1,6 @@
-#include "FindVertexToTriangleDistancesFilter.hpp"
+#include "ComputeVertexToTriangleDistancesFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/FindVertexToTriangleDistances.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeVertexToTriangleDistances.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -24,37 +24,37 @@ inline constexpr StringLiteral k_TriangleBounds("Triangle Bounds");
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindVertexToTriangleDistancesFilter::name() const
+std::string ComputeVertexToTriangleDistancesFilter::name() const
 {
-  return FilterTraits<FindVertexToTriangleDistancesFilter>::name.str();
+  return FilterTraits<ComputeVertexToTriangleDistancesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindVertexToTriangleDistancesFilter::className() const
+std::string ComputeVertexToTriangleDistancesFilter::className() const
 {
-  return FilterTraits<FindVertexToTriangleDistancesFilter>::className;
+  return FilterTraits<ComputeVertexToTriangleDistancesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindVertexToTriangleDistancesFilter::uuid() const
+Uuid ComputeVertexToTriangleDistancesFilter::uuid() const
 {
-  return FilterTraits<FindVertexToTriangleDistancesFilter>::uuid;
+  return FilterTraits<ComputeVertexToTriangleDistancesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindVertexToTriangleDistancesFilter::humanName() const
+std::string ComputeVertexToTriangleDistancesFilter::humanName() const
 {
-  return "Find Vertex to Triangle Distances";
+  return "Compute Vertex to Triangle Distances";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindVertexToTriangleDistancesFilter::defaultTags() const
+std::vector<std::string> ComputeVertexToTriangleDistancesFilter::defaultTags() const
 {
-  return {className(), "#Sampling", "#Spatial"};
+  return {className(), "#Sampling", "#Spatial", "Find"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindVertexToTriangleDistancesFilter::parameters() const
+Parameters ComputeVertexToTriangleDistancesFilter::parameters() const
 {
   Parameters params;
 
@@ -75,14 +75,14 @@ Parameters FindVertexToTriangleDistancesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindVertexToTriangleDistancesFilter::clone() const
+IFilter::UniquePointer ComputeVertexToTriangleDistancesFilter::clone() const
 {
-  return std::make_unique<FindVertexToTriangleDistancesFilter>();
+  return std::make_unique<ComputeVertexToTriangleDistancesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeVertexToTriangleDistancesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                               const std::atomic_bool& shouldCancel) const
 {
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
@@ -132,10 +132,10 @@ IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(cons
 }
 
 //------------------------------------------------------------------------------
-Result<> FindVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+Result<> ComputeVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
-  FindVertexToTriangleDistancesInputValues inputValues;
+  ComputeVertexToTriangleDistancesInputValues inputValues;
 
   inputValues.VertexDataContainer = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   inputValues.TriangleDataContainer = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
@@ -148,7 +148,7 @@ Result<> FindVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStr
 
   inputValues.TriBoundsDataPath = DataPath({::k_TriangleBounds});
 
-  return FindVertexToTriangleDistances(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeVertexToTriangleDistances(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -163,9 +163,9 @@ constexpr StringLiteral k_ClosestTriangleIdArrayPathKey = "ClosestTriangleIdArra
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindVertexToTriangleDistancesFilter().getDefaultArguments();
+  Arguments args = ComputeVertexToTriangleDistancesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

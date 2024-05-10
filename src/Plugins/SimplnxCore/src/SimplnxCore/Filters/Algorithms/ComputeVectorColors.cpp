@@ -1,4 +1,4 @@
-#include "GenerateVectorColors.hpp"
+#include "ComputeVectorColors.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/RgbColor.hpp"
@@ -17,7 +17,7 @@ typedef Eigen::Map<Eigen::Vector3f> VectorMapType;
 } // namespace
 
 // -----------------------------------------------------------------------------
-GenerateVectorColors::GenerateVectorColors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateVectorColorsInputValues* inputValues)
+ComputeVectorColors::ComputeVectorColors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeVectorColorsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -26,16 +26,16 @@ GenerateVectorColors::GenerateVectorColors(DataStructure& dataStructure, const I
 }
 
 // -----------------------------------------------------------------------------
-GenerateVectorColors::~GenerateVectorColors() noexcept = default;
+ComputeVectorColors::~ComputeVectorColors() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GenerateVectorColors::getCancel()
+const std::atomic_bool& ComputeVectorColors::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GenerateVectorColors::operator()()
+Result<> ComputeVectorColors::operator()()
 {
   std::unique_ptr<MaskCompare> maskCompare;
   try

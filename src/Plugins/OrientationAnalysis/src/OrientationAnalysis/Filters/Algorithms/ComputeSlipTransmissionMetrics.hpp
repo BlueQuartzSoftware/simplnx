@@ -29,7 +29,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeSlipTransmissionMetricsInputValues
 class ORIENTATIONANALYSIS_EXPORT ComputeSlipTransmissionMetrics
 {
 public:
-  ComputeSlipTransmissionMetrics(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSlipTransmissionMetricsInputValues* inputValues);
+  ComputeSlipTransmissionMetrics(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                 ComputeSlipTransmissionMetricsInputValues* inputValues);
   ~ComputeSlipTransmissionMetrics() noexcept;
 
   ComputeSlipTransmissionMetrics(const ComputeSlipTransmissionMetrics&) = delete;

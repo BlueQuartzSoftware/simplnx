@@ -9,7 +9,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ComputeTriangleGeomCentroids::ComputeTriangleGeomCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     ComputeTriangleGeomCentroidsInputValues* inputValues)
+                                                           ComputeTriangleGeomCentroidsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

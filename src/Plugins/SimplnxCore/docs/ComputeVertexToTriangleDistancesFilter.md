@@ -1,4 +1,4 @@
-# Find Vertex to Triangle Distances
+# Compute Vertex to Triangle Distances
 
 ## Group (Subgroup)
 

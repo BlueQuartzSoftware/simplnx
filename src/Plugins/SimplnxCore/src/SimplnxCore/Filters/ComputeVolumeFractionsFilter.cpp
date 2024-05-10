@@ -1,4 +1,4 @@
-#include "FindVolFractionsFilter.hpp"
+#include "ComputeVolumeFractionsFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -16,37 +16,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindVolFractionsFilter::name() const
+std::string ComputeVolumeFractionsFilter::name() const
 {
-  return FilterTraits<FindVolFractionsFilter>::name.str();
+  return FilterTraits<ComputeVolumeFractionsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindVolFractionsFilter::className() const
+std::string ComputeVolumeFractionsFilter::className() const
 {
-  return FilterTraits<FindVolFractionsFilter>::className;
+  return FilterTraits<ComputeVolumeFractionsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindVolFractionsFilter::uuid() const
+Uuid ComputeVolumeFractionsFilter::uuid() const
 {
-  return FilterTraits<FindVolFractionsFilter>::uuid;
+  return FilterTraits<ComputeVolumeFractionsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindVolFractionsFilter::humanName() const
+std::string ComputeVolumeFractionsFilter::humanName() const
 {
-  return "Find Volume Fractions of Ensembles";
+  return "Compute Volume Fractions of Ensembles";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindVolFractionsFilter::defaultTags() const
+std::vector<std::string> ComputeVolumeFractionsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological", "Find"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindVolFractionsFilter::parameters() const
+Parameters ComputeVolumeFractionsFilter::parameters() const
 {
   Parameters params;
 
@@ -66,14 +66,14 @@ Parameters FindVolFractionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindVolFractionsFilter::clone() const
+IFilter::UniquePointer ComputeVolumeFractionsFilter::clone() const
 {
-  return std::make_unique<FindVolFractionsFilter>();
+  return std::make_unique<ComputeVolumeFractionsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindVolFractionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeVolumeFractionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
@@ -99,8 +99,8 @@ IFilter::PreflightResult FindVolFractionsFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> FindVolFractionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+Result<> ComputeVolumeFractionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
@@ -135,9 +135,9 @@ constexpr StringLiteral k_VolFractionsArrayPathKey = "VolFractionsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindVolFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeVolumeFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindVolFractionsFilter().getDefaultArguments();
+  Arguments args = ComputeVolumeFractionsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

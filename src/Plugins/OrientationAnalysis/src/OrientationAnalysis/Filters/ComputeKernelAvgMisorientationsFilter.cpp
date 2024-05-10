@@ -85,7 +85,7 @@ IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel) const
+                                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pKernelSizeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_KernelSize_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -115,7 +115,7 @@ IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(co
 
 //------------------------------------------------------------------------------
 Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+                                                            const std::atomic_bool& shouldCancel) const
 {
   ComputeKernelAvgMisorientationsInputValues inputValues;
 

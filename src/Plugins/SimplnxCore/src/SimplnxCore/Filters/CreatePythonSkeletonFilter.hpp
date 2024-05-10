@@ -8,27 +8,28 @@
 namespace nx::core
 {
 /**
- * @class FindVertexToTriangleDistancesFilter
+ * @class CreatePythonSkeletonFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT FindVertexToTriangleDistancesFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreatePythonSkeletonFilter : public IFilter
 {
 public:
-  FindVertexToTriangleDistancesFilter() = default;
-  ~FindVertexToTriangleDistancesFilter() noexcept override = default;
+  CreatePythonSkeletonFilter() = default;
+  ~CreatePythonSkeletonFilter() noexcept override = default;
 
-  FindVertexToTriangleDistancesFilter(const FindVertexToTriangleDistancesFilter&) = delete;
-  FindVertexToTriangleDistancesFilter(FindVertexToTriangleDistancesFilter&&) noexcept = delete;
+  CreatePythonSkeletonFilter(const CreatePythonSkeletonFilter&) = delete;
+  CreatePythonSkeletonFilter(CreatePythonSkeletonFilter&&) noexcept = delete;
 
-  FindVertexToTriangleDistancesFilter& operator=(const FindVertexToTriangleDistancesFilter&) = delete;
-  FindVertexToTriangleDistancesFilter& operator=(FindVertexToTriangleDistancesFilter&&) noexcept = delete;
+  CreatePythonSkeletonFilter& operator=(const CreatePythonSkeletonFilter&) = delete;
+  CreatePythonSkeletonFilter& operator=(CreatePythonSkeletonFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
-  static inline constexpr StringLiteral k_DistancesArrayName_Key = "distances_array_name";
-  static inline constexpr StringLiteral k_ClosestTriangleIdArrayName_Key = "closest_triangle_id_array_name";
+  static inline constexpr StringLiteral k_UseExistingPlugin_Key = "use_existing_plugin";
+  static inline constexpr StringLiteral k_PluginName_Key = "plugin_name";
+  static inline constexpr StringLiteral k_PluginHumanName_Key = "plugin_human_name";
+  static inline constexpr StringLiteral k_PluginInputDirectory_Key = "plugin_input_directory";
+  static inline constexpr StringLiteral k_PluginOutputDirectory_Key = "plugin_output_directory";
+  static inline constexpr StringLiteral k_PluginFilterNames = "filter_names";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -104,5 +105,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindVertexToTriangleDistancesFilter, "af60518e-5fdb-45f2-9028-cd7787016830");
-/* LEGACY UUID FOR THIS FILTER fcdde553-36b4-5731-bc88-fc499806cb4e */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreatePythonSkeletonFilter, "1a35f50d-a9f5-9ea2-af70-5b9cf894e45f");
+/* LEGACY UUID FOR THIS FILTER ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc */

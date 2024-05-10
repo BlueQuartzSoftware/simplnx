@@ -40,7 +40,7 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{0a121e03-3922-5c29-962d-40d88653f4b6}").value(), Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value()}, /* GenerateFaceIPFColoring */
     {Uuid::FromString("{a50e6532-8075-5de5-ab63-945feb0de7f7}").value(), Uuid::FromString("a50e6532-8075-5de5-ab63-945feb0de7f7").value()}, /* GenerateIPFColors */
     {Uuid::FromString("{ec58f4fe-8e51-527e-9536-8b6f185684be}").value(), Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value()}, /* GenerateOrientationMatrixTranspose */
-    {Uuid::FromString("{630d7486-75ea-5e04-874c-894460cd7c4d}").value(), Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value()}, /* GenerateQuaternionConjugate */
+    {Uuid::FromString("{630d7486-75ea-5e04-874c-894460cd7c4d}").value(), Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value()}, /* ComputeQuaternionConjugate */
     {Uuid::FromString("{27c724cc-8b69-5ebe-b90e-29d33858a032}").value(), Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value()}, /* WriteINLFile */
     {Uuid::FromString("{179b0c7a-4e62-5070-ba49-ae58d5ccbfe8}").value(), Uuid::FromString("179b0c7a-4e62-5070-ba49-ae58d5ccbfe8").value()}, /* ImportEbsdMontage */
     {Uuid::FromString("{8abdea7d-f715-5a24-8165-7f946bbc2fe9}").value(), Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value()}, /* ReadH5EspritData */

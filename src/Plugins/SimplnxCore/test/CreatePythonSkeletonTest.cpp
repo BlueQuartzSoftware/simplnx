@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
-TEST_CASE("SimplnxCore::CreatePythonSkeleton")
+TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 {
 
   // DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));

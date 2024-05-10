@@ -29,7 +29,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 class ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientations
 {
 public:
-  ComputeKernelAvgMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKernelAvgMisorientationsInputValues* inputValues);
+  ComputeKernelAvgMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                  ComputeKernelAvgMisorientationsInputValues* inputValues);
   ~ComputeKernelAvgMisorientations() noexcept;
 
   ComputeKernelAvgMisorientations(const ComputeKernelAvgMisorientations&) = delete;

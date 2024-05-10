@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -18,7 +18,7 @@ inline constexpr StringLiteral k_DistancesNameNX("DistancesNX");
 inline constexpr StringLiteral k_ClosestTriangleIdsNameNX("Closest Triangle Ids");
 } // namespace
 
-TEST_CASE("SimplnxCore::FindVertexToTriangleDistancesFilter", "[SimplnxCore][FindVertexToTriangleDistancesFilter]")
+TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz",
                                                               "6_6_vertex_to_triangle_distances.dream3d");
@@ -35,15 +35,15 @@ TEST_CASE("SimplnxCore::FindVertexToTriangleDistancesFilter", "[SimplnxCore][Fin
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    FindVertexToTriangleDistancesFilter filter;
+    ComputeVertexToTriangleDistancesFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(vertexData));
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleData));
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(normalsPath));
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_DistancesArrayName_Key, std::make_any<std::string>(k_DistancesNameNX));
-    args.insertOrAssign(FindVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key, std::make_any<std::string>(k_ClosestTriangleIdsNameNX));
+    args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(vertexData));
+    args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleData));
+    args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_TriangleNormalsArrayPath_Key, std::make_any<DataPath>(normalsPath));
+    args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_DistancesArrayName_Key, std::make_any<std::string>(k_DistancesNameNX));
+    args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key, std::make_any<std::string>(k_ClosestTriangleIdsNameNX));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

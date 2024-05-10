@@ -12,7 +12,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT GeneratePythonSkeletonInputValues
+struct SIMPLNXCORE_EXPORT CreatePythonSkeletonInputValues
 {
   bool useExistingPlugin;
   std::filesystem::path pluginInputDir;
@@ -25,16 +25,16 @@ struct SIMPLNXCORE_EXPORT GeneratePythonSkeletonInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT GeneratePythonSkeleton
+class SIMPLNXCORE_EXPORT CreatePythonSkeleton
 {
 public:
-  GeneratePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GeneratePythonSkeletonInputValues* inputValues);
-  ~GeneratePythonSkeleton() noexcept;
+  CreatePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreatePythonSkeletonInputValues* inputValues);
+  ~CreatePythonSkeleton() noexcept;
 
-  GeneratePythonSkeleton(const GeneratePythonSkeleton&) = delete;
-  GeneratePythonSkeleton(GeneratePythonSkeleton&&) noexcept = delete;
-  GeneratePythonSkeleton& operator=(const GeneratePythonSkeleton&) = delete;
-  GeneratePythonSkeleton& operator=(GeneratePythonSkeleton&&) noexcept = delete;
+  CreatePythonSkeleton(const CreatePythonSkeleton&) = delete;
+  CreatePythonSkeleton(CreatePythonSkeleton&&) noexcept = delete;
+  CreatePythonSkeleton& operator=(const CreatePythonSkeleton&) = delete;
+  CreatePythonSkeleton& operator=(CreatePythonSkeleton&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -42,7 +42,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const GeneratePythonSkeletonInputValues* m_InputValues = nullptr;
+  const CreatePythonSkeletonInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

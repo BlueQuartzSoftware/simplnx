@@ -1,14 +1,12 @@
-# Generate Vector Colors
+# Compute Volume Fractions of Ensembles
 
 ## Group (Subgroup)
 
-Generic (Coloring)
+Statistics (Morphological)
 
 ## Description
 
-This **Filter** generates a color for each **Element** based on the vector assigned to that **Element** in the input vector data.  The color scheme assigns a unique color to all points on the unit hemisphere using a HSV-like scheme. The color space is approximately represented by the following legend.
-
-![Images/VectorColors](Images/VectorColors.png)
+This **Filter** determines the volume fraction of each **Ensemble**. The **Filter** counts the number of **Cells** belonging to each **Ensemble** and stores the number fraction.
 
 % Auto generated parameter table will be inserted here
 

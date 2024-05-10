@@ -1,5 +1,5 @@
-#include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -26,7 +26,8 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTes
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "ComputeSurfaceFeaturesTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz",
+                                                              "ComputeSurfaceFeaturesTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeSurfaceFeaturesFilter filter;

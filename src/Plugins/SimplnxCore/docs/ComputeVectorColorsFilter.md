@@ -1,12 +1,14 @@
-# Find Volume Fractions of Ensembles
+# Compute Vector Colors
 
 ## Group (Subgroup)
 
-Statistics (Morphological)
+Generic (Coloring)
 
 ## Description
 
-This **Filter** determines the volume fraction of each **Ensemble**. The **Filter** counts the number of **Cells** belonging to each **Ensemble** and stores the number fraction.
+This **Filter** generates a color for each **Element** based on the vector assigned to that **Element** in the input vector data.  The color scheme assigns a unique color to all points on the unit hemisphere using a HSV-like scheme. The color space is approximately represented by the following legend.
+
+![Images/VectorColors](Images/VectorColors.png)
 
 % Auto generated parameter table will be inserted here
 

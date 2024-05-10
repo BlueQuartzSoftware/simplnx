@@ -1,6 +1,6 @@
-#include "GenerateVectorColorsFilter.hpp"
+#include "ComputeVectorColorsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/GenerateVectorColors.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeVectorColors.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -22,37 +22,37 @@ const DataPath k_MaskArrayPath = DataPath({"mask array"});
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string GenerateVectorColorsFilter::name() const
+std::string ComputeVectorColorsFilter::name() const
 {
-  return FilterTraits<GenerateVectorColorsFilter>::name.str();
+  return FilterTraits<ComputeVectorColorsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateVectorColorsFilter::className() const
+std::string ComputeVectorColorsFilter::className() const
 {
-  return FilterTraits<GenerateVectorColorsFilter>::className;
+  return FilterTraits<ComputeVectorColorsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid GenerateVectorColorsFilter::uuid() const
+Uuid ComputeVectorColorsFilter::uuid() const
 {
-  return FilterTraits<GenerateVectorColorsFilter>::uuid;
+  return FilterTraits<ComputeVectorColorsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateVectorColorsFilter::humanName() const
+std::string ComputeVectorColorsFilter::humanName() const
 {
   return "Generate Vector Colors";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> GenerateVectorColorsFilter::defaultTags() const
+std::vector<std::string> ComputeVectorColorsFilter::defaultTags() const
 {
-  return {className(), "Generic", "Coloring"};
+  return {className(), "Generic", "Coloring", "Find"};
 }
 
 //------------------------------------------------------------------------------
-Parameters GenerateVectorColorsFilter::parameters() const
+Parameters ComputeVectorColorsFilter::parameters() const
 {
   Parameters params;
 
@@ -77,14 +77,14 @@ Parameters GenerateVectorColorsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GenerateVectorColorsFilter::clone() const
+IFilter::UniquePointer ComputeVectorColorsFilter::clone() const
 {
-  return std::make_unique<GenerateVectorColorsFilter>();
+  return std::make_unique<ComputeVectorColorsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateVectorColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pVectorsArrayPathValue = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
@@ -112,10 +112,10 @@ IFilter::PreflightResult GenerateVectorColorsFilter::preflightImpl(const DataStr
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateVectorColorsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+Result<> ComputeVectorColorsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
-  GenerateVectorColorsInputValues inputValues;
+  ComputeVectorColorsInputValues inputValues;
 
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.VectorsArrayPath = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
@@ -130,7 +130,7 @@ Result<> GenerateVectorColorsFilter::executeImpl(DataStructure& dataStructure, c
   }
   inputValues.CellVectorColorsArrayPath = inputValues.VectorsArrayPath.replaceName(filterArgs.value<std::string>(k_CellVectorColorsArrayName_Key));
 
-  return GenerateVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -144,9 +144,9 @@ constexpr StringLiteral k_CellVectorColorsArrayNameKey = "CellVectorColorsArrayN
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> GenerateVectorColorsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeVectorColorsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = GenerateVectorColorsFilter().getDefaultArguments();
+  Arguments args = ComputeVectorColorsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

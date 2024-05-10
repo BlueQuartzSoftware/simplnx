@@ -1,4 +1,4 @@
-#include "GenerateQuaternionConjugate.hpp"
+#include "ComputeQuaternionConjugate.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -8,7 +8,7 @@ using namespace nx::core;
 
 namespace
 {
-class GenerateQuaternionConjugateImpl
+class ComputeQuaternionConjugateImpl
 {
 private:
   const Float32Array* m_Input;
@@ -16,18 +16,18 @@ private:
   const std::atomic_bool* m_ShouldCancel;
 
 public:
-  GenerateQuaternionConjugateImpl(const Float32Array* inputQuat, Float32Array* outputQuat, const std::atomic_bool* shouldCancel)
+  ComputeQuaternionConjugateImpl(const Float32Array* inputQuat, Float32Array* outputQuat, const std::atomic_bool* shouldCancel)
   : m_Input(inputQuat)
   , m_Output(outputQuat)
   , m_ShouldCancel(shouldCancel)
   {
   }
-  GenerateQuaternionConjugateImpl(const GenerateQuaternionConjugateImpl&) = default;           // Copy Constructor
-  GenerateQuaternionConjugateImpl(GenerateQuaternionConjugateImpl&&) = delete;                 // Move Constructor Not Implemented
-  GenerateQuaternionConjugateImpl& operator=(const GenerateQuaternionConjugateImpl&) = delete; // Copy Assignment Not Implemented
-  GenerateQuaternionConjugateImpl& operator=(GenerateQuaternionConjugateImpl&&) = delete;      // Move Assignment Not Implemented
+  ComputeQuaternionConjugateImpl(const ComputeQuaternionConjugateImpl&) = default;           // Copy Constructor
+  ComputeQuaternionConjugateImpl(ComputeQuaternionConjugateImpl&&) = delete;                 // Move Constructor Not Implemented
+  ComputeQuaternionConjugateImpl& operator=(const ComputeQuaternionConjugateImpl&) = delete; // Copy Assignment Not Implemented
+  ComputeQuaternionConjugateImpl& operator=(ComputeQuaternionConjugateImpl&&) = delete;      // Move Assignment Not Implemented
 
-  virtual ~GenerateQuaternionConjugateImpl() = default;
+  virtual ~ComputeQuaternionConjugateImpl() = default;
 
   void convert(size_t start, size_t end) const
   {
@@ -52,8 +52,8 @@ public:
 } // namespace
 
 // -----------------------------------------------------------------------------
-GenerateQuaternionConjugate::GenerateQuaternionConjugate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                         GenerateQuaternionConjugateInputValues* inputValues)
+ComputeQuaternionConjugate::ComputeQuaternionConjugate(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                       ComputeQuaternionConjugateInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -62,23 +62,23 @@ GenerateQuaternionConjugate::GenerateQuaternionConjugate(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-GenerateQuaternionConjugate::~GenerateQuaternionConjugate() noexcept = default;
+ComputeQuaternionConjugate::~ComputeQuaternionConjugate() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GenerateQuaternionConjugate::getCancel()
+const std::atomic_bool& ComputeQuaternionConjugate::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GenerateQuaternionConjugate::operator()()
+Result<> ComputeQuaternionConjugate::operator()()
 {
   const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
   auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, input.getNumberOfTuples());
-  dataAlg.execute(GenerateQuaternionConjugateImpl(&input, &output, &m_ShouldCancel));
+  dataAlg.execute(ComputeQuaternionConjugateImpl(&input, &output, &m_ShouldCancel));
 
   return {};
 }

@@ -55,7 +55,7 @@
 #include "SimplnxCore/Filters/ComputeNumFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceFeaturesFilter.hpp"
-#include "SimplnxCore/Filters/FindVolFractionsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeVolumeFractionsFilter.hpp"
 #include "SimplnxCore/Filters/GenerateColorTableFilter.hpp"
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
 #include "SimplnxCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
@@ -94,7 +94,7 @@
 #include "SimplnxCore/Filters/RemoveFlaggedFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeMomentInvariants2DFilter.hpp"
 #include "SimplnxCore/Filters/ExecuteProcessFilter.hpp"
-#include "SimplnxCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeVertexToTriangleDistancesFilter.hpp"
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureRectFilter.hpp"
 #include "SimplnxCore/Filters/ComputeLargestCrossSectionsFilter.hpp"
@@ -115,7 +115,7 @@
 #include "SimplnxCore/Filters/FindBoundaryElementFractionsFilter.hpp"
 #include "SimplnxCore/Filters/ReverseTriangleWindingFilter.hpp"
 #include "SimplnxCore/Filters/WriteLosAlamosFFTFilter.hpp"
-#include "SimplnxCore/Filters/GenerateVectorColorsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeVectorColorsFilter.hpp"
 #include "SimplnxCore/Filters/KMedoidsFilter.hpp"
 #include "SimplnxCore/Filters/KMeansFilter.hpp"
 #include "SimplnxCore/Filters/SilhouetteFilter.hpp"
@@ -170,7 +170,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), {nx::core::FilterTraits<ComputeNumFeaturesFilter>::uuid, &ComputeNumFeaturesFilter::FromSIMPLJson}}, // ComputeNumFeatures
     {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<ComputeSurfaceAreaToVolumeFilter>::uuid, &ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // ComputeSurfaceAreaToVolume
     {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<ComputeSurfaceFeaturesFilter>::uuid, &ComputeSurfaceFeaturesFilter::FromSIMPLJson}}, // ComputeSurfaceFeaturesFilter
-    {nx::core::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {nx::core::FilterTraits<FindVolFractionsFilter>::uuid, &FindVolFractionsFilter::FromSIMPLJson}}, // FindVolFractions
+    {nx::core::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {nx::core::FilterTraits<ComputeVolumeFractionsFilter>::uuid, &ComputeVolumeFractionsFilter::FromSIMPLJson}}, // ComputeVolumeFractions
     {nx::core::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {nx::core::FilterTraits<GenerateColorTableFilter>::uuid, &GenerateColorTableFilter::FromSIMPLJson}}, // GenerateColorTable
     {nx::core::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), {nx::core::FilterTraits<IdentifySampleFilter>::uuid, &IdentifySampleFilter::FromSIMPLJson}}, // IdentifySampleFilter
     {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
@@ -220,7 +220,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("a8463056-3fa7-530b-847f-7f4cb78b8602").value(), {nx::core::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid, &RemoveFlaggedFeaturesFilter::FromSIMPLJson}}, // RemoveFlaggedFeatures
     {nx::core::Uuid::FromString("e0555de5-bdc6-5bea-ba2f-aacfbec0a022").value(), {nx::core::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid, &RemoveFlaggedFeaturesFilter::FromSIMPLJson}}, // ExtractFlaggedFeatures
     {nx::core::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), {nx::core::FilterTraits<ComputeMomentInvariants2DFilter>::uuid, &ComputeMomentInvariants2DFilter::FromSIMPLJson}}, // ComputeMomentInvariants2D
-    {nx::core::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), {nx::core::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid, &FindVertexToTriangleDistancesFilter::FromSIMPLJson}}, // FindVertexToTriangleDistances
+    {nx::core::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), {nx::core::FilterTraits<ComputeVertexToTriangleDistancesFilter>::uuid, &ComputeVertexToTriangleDistancesFilter::FromSIMPLJson}}, // ComputeVertexToTriangleDistances
     {nx::core::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {nx::core::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, {}}}, // ApplyTransformationToGeometry
     {nx::core::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), {nx::core::FilterTraits<ComputeFeatureRectFilter>::uuid, &ComputeFeatureRectFilter::FromSIMPLJson}}, // ComputeFeatureRect
     {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<ComputeLargestCrossSectionsFilter>::uuid, &ComputeLargestCrossSectionsFilter::FromSIMPLJson}}, // ComputeLargestCrossSections
@@ -240,7 +240,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), {nx::core::FilterTraits<FindBoundaryElementFractionsFilter>::uuid, &FindBoundaryElementFractionsFilter::FromSIMPLJson}}, // FindBoundaryElementFractions
     {nx::core::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), {nx::core::FilterTraits<ReverseTriangleWindingFilter>::uuid, &ReverseTriangleWindingFilter::FromSIMPLJson}}, // ReverseTriangleWinding
     {nx::core::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), {nx::core::FilterTraits<WriteLosAlamosFFTFilter>::uuid, &WriteLosAlamosFFTFilter::FromSIMPLJson}}, // LosAlamosFFTWriter
-    {nx::core::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), {nx::core::FilterTraits<GenerateVectorColorsFilter>::uuid, &GenerateVectorColorsFilter::FromSIMPLJson}}, // GenerateVectorColors
+    {nx::core::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), {nx::core::FilterTraits<ComputeVectorColorsFilter>::uuid, &ComputeVectorColorsFilter::FromSIMPLJson}}, // ComputeVectorColors
     {nx::core::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), {nx::core::FilterTraits<ReadDeformKeyFileV12Filter>::uuid, &ReadDeformKeyFileV12Filter::FromSIMPLJson}}, // ImportDeformKeyFileV12Filter
     {nx::core::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), {nx::core::FilterTraits<KMedoidsFilter>::uuid, &KMedoidsFilter::FromSIMPLJson}}, // KMedoids
     {nx::core::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), {nx::core::FilterTraits<KMeansFilter>::uuid, &KMeansFilter::FromSIMPLJson}}, // KMeans

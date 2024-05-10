@@ -1,4 +1,4 @@
-#include "FindVertexToTriangleDistances.hpp"
+#include "ComputeVertexToTriangleDistances.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -300,11 +300,11 @@ float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Ve
   return dist;
 }
 
-class FindVertexToTriangleDistancesImpl
+class ComputeVertexToTriangleDistancesImpl
 {
 public:
-  FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& vertices,
-                                    IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const Float64Array& normals, const RTreeType rtree)
+  ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& vertices,
+                                       IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const Float64Array& normals, const RTreeType rtree)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
@@ -315,7 +315,7 @@ public:
   , m_RTree(rtree)
   {
   }
-  virtual ~FindVertexToTriangleDistancesImpl() = default;
+  virtual ~ComputeVertexToTriangleDistancesImpl() = default;
 
   void operator()(const Range& range) const
   {
@@ -414,7 +414,7 @@ public:
   }
 
 private:
-  FindVertexToTriangleDistances* m_Filter;
+  ComputeVertexToTriangleDistances* m_Filter;
   const IGeometry::SharedTriList& m_SharedTriangleList;
   const IGeometry::SharedVertexList& m_TriangleVertices;
   IGeometry::SharedVertexList& m_SourcePoints;
@@ -426,8 +426,8 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-FindVertexToTriangleDistances::FindVertexToTriangleDistances(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                             FindVertexToTriangleDistancesInputValues* inputValues)
+ComputeVertexToTriangleDistances::ComputeVertexToTriangleDistances(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                   ComputeVertexToTriangleDistancesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -436,16 +436,16 @@ FindVertexToTriangleDistances::FindVertexToTriangleDistances(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-FindVertexToTriangleDistances::~FindVertexToTriangleDistances() noexcept = default;
+ComputeVertexToTriangleDistances::~ComputeVertexToTriangleDistances() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FindVertexToTriangleDistances::getCancel()
+const std::atomic_bool& ComputeVertexToTriangleDistances::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-void FindVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
+void ComputeVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -481,7 +481,7 @@ void GetBoundingBoxAtTri(const IGeometry::SharedTriList& triList, const IGeometr
 }
 
 // -----------------------------------------------------------------------------
-Result<> FindVertexToTriangleDistances::operator()()
+Result<> ComputeVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
   IGeometry::SharedVertexList& sourceVertices = vertexGeom.getVerticesRef();
@@ -511,7 +511,7 @@ Result<> FindVertexToTriangleDistances::operator()()
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree));
+  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree));
 
   return {};
 }

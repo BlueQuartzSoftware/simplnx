@@ -12,7 +12,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT FindVertexToTriangleDistancesInputValues
+struct SIMPLNXCORE_EXPORT ComputeVertexToTriangleDistancesInputValues
 {
   DataPath VertexDataContainer;
   DataPath TriangleDataContainer;
@@ -25,16 +25,17 @@ struct SIMPLNXCORE_EXPORT FindVertexToTriangleDistancesInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT FindVertexToTriangleDistances
+class SIMPLNXCORE_EXPORT ComputeVertexToTriangleDistances
 {
 public:
-  FindVertexToTriangleDistances(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindVertexToTriangleDistancesInputValues* inputValues);
-  ~FindVertexToTriangleDistances() noexcept;
+  ComputeVertexToTriangleDistances(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                   ComputeVertexToTriangleDistancesInputValues* inputValues);
+  ~ComputeVertexToTriangleDistances() noexcept;
 
-  FindVertexToTriangleDistances(const FindVertexToTriangleDistances&) = delete;
-  FindVertexToTriangleDistances(FindVertexToTriangleDistances&&) noexcept = delete;
-  FindVertexToTriangleDistances& operator=(const FindVertexToTriangleDistances&) = delete;
-  FindVertexToTriangleDistances& operator=(FindVertexToTriangleDistances&&) noexcept = delete;
+  ComputeVertexToTriangleDistances(const ComputeVertexToTriangleDistances&) = delete;
+  ComputeVertexToTriangleDistances(ComputeVertexToTriangleDistances&&) noexcept = delete;
+  ComputeVertexToTriangleDistances& operator=(const ComputeVertexToTriangleDistances&) = delete;
+  ComputeVertexToTriangleDistances& operator=(ComputeVertexToTriangleDistances&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -44,7 +45,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const FindVertexToTriangleDistancesInputValues* m_InputValues = nullptr;
+  const ComputeVertexToTriangleDistancesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 

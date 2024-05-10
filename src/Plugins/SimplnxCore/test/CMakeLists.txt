@@ -66,11 +66,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeSurfaceFeaturesTest.cpp
   ComputeTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
-  FindVertexToTriangleDistancesTest.cpp
-  FindVolFractionsTest.cpp
+  ComputeVertexToTriangleDistancesTest.cpp
+  ComputeVolumeFractionsTest.cpp
   GenerateColorTableTest.cpp
-  GenerateVectorColorsTest.cpp
-  GeneratePythonSkeletonTest.cpp
+  ComputeVectorColorsTest.cpp
+  CreatePythonSkeletonTest.cpp
   IdentifySampleTest.cpp
   FlyingEdges3DTest.cpp
   ImageGeomTest.cpp

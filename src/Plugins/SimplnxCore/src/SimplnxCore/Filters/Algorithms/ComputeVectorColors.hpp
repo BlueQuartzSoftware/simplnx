@@ -11,7 +11,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT GenerateVectorColorsInputValues
+struct SIMPLNXCORE_EXPORT ComputeVectorColorsInputValues
 {
   bool UseMask;
   DataPath VectorsArrayPath;
@@ -22,16 +22,16 @@ struct SIMPLNXCORE_EXPORT GenerateVectorColorsInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT GenerateVectorColors
+class SIMPLNXCORE_EXPORT ComputeVectorColors
 {
 public:
-  GenerateVectorColors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateVectorColorsInputValues* inputValues);
-  ~GenerateVectorColors() noexcept;
+  ComputeVectorColors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeVectorColorsInputValues* inputValues);
+  ~ComputeVectorColors() noexcept;
 
-  GenerateVectorColors(const GenerateVectorColors&) = delete;
-  GenerateVectorColors(GenerateVectorColors&&) noexcept = delete;
-  GenerateVectorColors& operator=(const GenerateVectorColors&) = delete;
-  GenerateVectorColors& operator=(GenerateVectorColors&&) noexcept = delete;
+  ComputeVectorColors(const ComputeVectorColors&) = delete;
+  ComputeVectorColors(ComputeVectorColors&&) noexcept = delete;
+  ComputeVectorColors& operator=(const ComputeVectorColors&) = delete;
+  ComputeVectorColors& operator=(ComputeVectorColors&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -39,7 +39,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const GenerateVectorColorsInputValues* m_InputValues = nullptr;
+  const ComputeVectorColorsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

@@ -1241,7 +1241,7 @@
                     "uuid": "{4178c7f9-5f90-5e95-8cf1-a67ca2a98a60}"
                 },
                 {
-                    "name": "FindVertexToTriangleDistances",
+                    "name": "ComputeVertexToTriangleDistances",
                     "parameters": [
                         {
                             "name": "VertexDataContainer",
@@ -9193,7 +9193,7 @@
                     "uuid": "{5d586366-6b59-566e-8de1-57aa9ae8a91c}"
                 },
                 {
-                    "name": "FindVolFractions",
+                    "name": "ComputeVolumeFractions",
                     "parameters": [
                         {
                             "name": "",
@@ -11105,7 +11105,7 @@
                     "uuid": "{d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb}"
                 },
                 {
-                    "name": "GenerateVectorColors",
+                    "name": "ComputeVectorColors",
                     "parameters": [
                         {
                             "name": "UseGoodVoxels",
@@ -14559,7 +14559,7 @@
                     "uuid": "{ec58f4fe-8e51-527e-9536-8b6f185684be}"
                 },
                 {
-                    "name": "GenerateQuaternionConjugate",
+                    "name": "ComputeQuaternionConjugate",
                     "parameters": [
                         {
                             "name": "QuaternionDataArrayPath",

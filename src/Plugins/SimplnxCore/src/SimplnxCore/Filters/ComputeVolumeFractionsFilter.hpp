@@ -8,28 +8,25 @@
 namespace nx::core
 {
 /**
- * @class GeneratePythonSkeletonFilter
- * @brief This filter will ....
+ * @class ComputeVolumeFractionsFilter
+ * @brief This filter will calculate the volume fraction for each Ensemble
  */
-class SIMPLNXCORE_EXPORT GeneratePythonSkeletonFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeVolumeFractionsFilter : public IFilter
 {
 public:
-  GeneratePythonSkeletonFilter() = default;
-  ~GeneratePythonSkeletonFilter() noexcept override = default;
+  ComputeVolumeFractionsFilter() = default;
+  ~ComputeVolumeFractionsFilter() noexcept override = default;
 
-  GeneratePythonSkeletonFilter(const GeneratePythonSkeletonFilter&) = delete;
-  GeneratePythonSkeletonFilter(GeneratePythonSkeletonFilter&&) noexcept = delete;
+  ComputeVolumeFractionsFilter(const ComputeVolumeFractionsFilter&) = delete;
+  ComputeVolumeFractionsFilter(ComputeVolumeFractionsFilter&&) noexcept = delete;
 
-  GeneratePythonSkeletonFilter& operator=(const GeneratePythonSkeletonFilter&) = delete;
-  GeneratePythonSkeletonFilter& operator=(GeneratePythonSkeletonFilter&&) noexcept = delete;
+  ComputeVolumeFractionsFilter& operator=(const ComputeVolumeFractionsFilter&) = delete;
+  ComputeVolumeFractionsFilter& operator=(ComputeVolumeFractionsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseExistingPlugin_Key = "use_existing_plugin";
-  static inline constexpr StringLiteral k_PluginName_Key = "plugin_name";
-  static inline constexpr StringLiteral k_PluginHumanName_Key = "plugin_human_name";
-  static inline constexpr StringLiteral k_PluginInputDirectory_Key = "plugin_input_directory";
-  static inline constexpr StringLiteral k_PluginOutputDirectory_Key = "plugin_output_directory";
-  static inline constexpr StringLiteral k_PluginFilterNames = "filter_names";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
+  static inline constexpr StringLiteral k_VolFractionsArrayName_Key = "vol_fractions_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +82,7 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -95,7 +92,7 @@ protected:
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -105,5 +102,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, GeneratePythonSkeletonFilter, "1a35f50d-a9f5-9ea2-af70-5b9cf894e45f");
-/* LEGACY UUID FOR THIS FILTER ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeVolumeFractionsFilter, "340b3433-193a-4287-a7d2-794e1bce061b");
+/* LEGACY UUID FOR THIS FILTER 68246a67-7f32-5c80-815a-bec82008d7bc */

@@ -1,4 +1,4 @@
-#include "GeneratePythonSkeleton.hpp"
+#include "CreatePythonSkeleton.hpp"
 
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -8,8 +8,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-GeneratePythonSkeleton::GeneratePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               GeneratePythonSkeletonInputValues* inputValues)
+CreatePythonSkeleton::CreatePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreatePythonSkeletonInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -18,16 +17,16 @@ GeneratePythonSkeleton::GeneratePythonSkeleton(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-GeneratePythonSkeleton::~GeneratePythonSkeleton() noexcept = default;
+CreatePythonSkeleton::~CreatePythonSkeleton() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GeneratePythonSkeleton::getCancel()
+const std::atomic_bool& CreatePythonSkeleton::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GeneratePythonSkeleton::operator()()
+Result<> CreatePythonSkeleton::operator()()
 {
   if(m_InputValues->useExistingPlugin)
   {

@@ -1,6 +1,6 @@
-#include "GenerateQuaternionConjugateFilter.hpp"
+#include "ComputeQuaternionConjugateFilter.hpp"
 
-#include "OrientationAnalysis/Filters/Algorithms/GenerateQuaternionConjugate.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeQuaternionConjugate.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -24,37 +24,37 @@ inline constexpr int32 k_MissingInputArray = -7101;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string GenerateQuaternionConjugateFilter::name() const
+std::string ComputeQuaternionConjugateFilter::name() const
 {
-  return FilterTraits<GenerateQuaternionConjugateFilter>::name.str();
+  return FilterTraits<ComputeQuaternionConjugateFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateQuaternionConjugateFilter::className() const
+std::string ComputeQuaternionConjugateFilter::className() const
 {
-  return FilterTraits<GenerateQuaternionConjugateFilter>::className;
+  return FilterTraits<ComputeQuaternionConjugateFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid GenerateQuaternionConjugateFilter::uuid() const
+Uuid ComputeQuaternionConjugateFilter::uuid() const
 {
-  return FilterTraits<GenerateQuaternionConjugateFilter>::uuid;
+  return FilterTraits<ComputeQuaternionConjugateFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateQuaternionConjugateFilter::humanName() const
+std::string ComputeQuaternionConjugateFilter::humanName() const
 {
-  return "Generate Quaternion Conjugate";
+  return "Compute Quaternion Conjugate";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> GenerateQuaternionConjugateFilter::defaultTags() const
+std::vector<std::string> ComputeQuaternionConjugateFilter::defaultTags() const
 {
   return {className(), "Processing", "Crystallography", "Orientation", "Quaternion"};
 }
 
 //------------------------------------------------------------------------------
-Parameters GenerateQuaternionConjugateFilter::parameters() const
+Parameters ComputeQuaternionConjugateFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
@@ -71,14 +71,14 @@ Parameters GenerateQuaternionConjugateFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GenerateQuaternionConjugateFilter::clone() const
+IFilter::UniquePointer ComputeQuaternionConjugateFilter::clone() const
 {
-  return std::make_unique<GenerateQuaternionConjugateFilter>();
+  return std::make_unique<ComputeQuaternionConjugateFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateQuaternionConjugateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeQuaternionConjugateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
@@ -110,16 +110,16 @@ IFilter::PreflightResult GenerateQuaternionConjugateFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateQuaternionConjugateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+Result<> ComputeQuaternionConjugateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
-  GenerateQuaternionConjugateInputValues inputValues;
+  ComputeQuaternionConjugateInputValues inputValues;
 
   inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
-  return GenerateQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -132,9 +132,9 @@ constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> GenerateQuaternionConjugateFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeQuaternionConjugateFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = GenerateQuaternionConjugateFilter().getDefaultArguments();
+  Arguments args = ComputeQuaternionConjugateFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
