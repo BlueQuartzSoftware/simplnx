@@ -28,7 +28,7 @@ using PipelineVersionType = int32;
 inline constexpr int32 k_InvalidPipelineVersion = -404;
 inline constexpr int32 k_InvalidDataStructureVersion = -405;
 inline constexpr int32 k_PipelineGroupUnavailable = -406;
-
+inline constexpr StringLiteral k_CurrentFileVersion = "8.0";
 /**
  * @brief Returns the DREAM3D file version.
  * @param fileReader

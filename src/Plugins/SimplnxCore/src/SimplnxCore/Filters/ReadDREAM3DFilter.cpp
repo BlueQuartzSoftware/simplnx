@@ -95,12 +95,16 @@ Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Argu
 nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
 {
   auto json = IFilter::toJson(args);
-
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
-  Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(importData.FilePath);
-  if(pipelineResult.valid())
+  nx::core::HDF5::FileReader d3dReader(importData.FilePath);
+  auto fileVersion = DREAM3D::GetFileVersion(d3dReader);
+  if(fileVersion == DREAM3D::k_CurrentFileVersion)
   {
-    json[k_ImportedPipeline] = pipelineResult.value().toJson();
+    Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(importData.FilePath);
+    if(pipelineResult.valid())
+    {
+      json[k_ImportedPipeline] = pipelineResult.value().toJson();
+    }
   }
   return json;
 }

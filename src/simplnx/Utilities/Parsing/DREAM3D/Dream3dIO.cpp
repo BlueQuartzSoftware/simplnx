@@ -42,7 +42,6 @@ constexpr StringLiteral k_FileVersionTag = "FileVersion";
 constexpr StringLiteral k_PipelineJsonTag = "Pipeline";
 constexpr StringLiteral k_PipelineNameTag = "Current Pipeline";
 constexpr StringLiteral k_PipelineVersionTag = "Pipeline Version";
-constexpr StringLiteral k_CurrentFileVersion = "8.0";
 
 constexpr int32_t k_CurrentPipelineVersion = 3;
 
@@ -1543,7 +1542,7 @@ Result<> WriteDataStructure(nx::core::HDF5::FileWriter& fileWriter, const DataSt
 Result<> WriteFileVersion(nx::core::HDF5::FileWriter& fileWriter)
 {
   auto fileVersionAttribute = fileWriter.createAttribute(k_FileVersionTag);
-  return fileVersionAttribute.writeString(k_CurrentFileVersion);
+  return fileVersionAttribute.writeString(DREAM3D::k_CurrentFileVersion);
 }
 
 Result<> DREAM3D::WriteFile(nx::core::HDF5::FileWriter& fileWriter, const FileData& fileData)

@@ -26,20 +26,7 @@ IParameter::AcceptedTypes DataObjectNameParameter::acceptedTypes() const
 
 nlohmann::json DataObjectNameParameter::toJson(const std::any& value) const
 {
-  ValueType stringValue;
-  try
-  {
-    stringValue = GetAnyRef<ValueType>(value);
-  } catch(const std::bad_any_cast& e)
-  {
-    static std::string prefix = "FilterParameter 'DataObjectNameParameter' toJson Error: ";
-    //    std::cout << prefix << " The value type was not a string but was something else. There is an error in how the json is being parsed into NX Parameters.\n"
-    //     << "  Parameter Name: " << name() << "\n"
-    //     << "  Parameter Human Name: " << humanName() << "\n";
-    throw std::runtime_error(fmt::format("{}\" The value type was not a 'std::string' as required but was something else. There is an error in how the json is being parsed into NX Parameters. This "
-                                         "may be an error in the 'FromSIMPLJson' of the containing filter. Please report this to the developers.\n  Parameter Name: {}\n  Human Name: {}",
-                                         prefix, name(), humanName()));
-  }
+  const auto& stringValue = GetAnyRef<ValueType>(value);
   nlohmann::json json = stringValue;
   return json;
 }
