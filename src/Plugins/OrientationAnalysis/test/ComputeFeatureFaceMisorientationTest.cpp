@@ -1,5 +1,5 @@
-#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeFeatureFaceMisorientationFilter.hpp"
+#include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"

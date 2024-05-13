@@ -23,8 +23,8 @@ namespace
 class ComputeIPFColorsImpl
 {
 public:
-  ComputeIPFColorsImpl(ComputeIPFColors* filter, FloatVec3Type referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
-                        int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
+  ComputeIPFColorsImpl(ComputeIPFColors* filter, FloatVec3Type referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures, int32_t numPhases,
+                       const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())

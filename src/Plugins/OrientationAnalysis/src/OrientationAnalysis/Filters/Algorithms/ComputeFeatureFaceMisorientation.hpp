@@ -27,7 +27,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientation
 {
 public:
   ComputeFeatureFaceMisorientation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                    ComputeFeatureFaceMisorientationInputValues* inputValues);
+                                   ComputeFeatureFaceMisorientationInputValues* inputValues);
   ~ComputeFeatureFaceMisorientation() noexcept;
 
   ComputeFeatureFaceMisorientation(const ComputeFeatureFaceMisorientation&) = delete;

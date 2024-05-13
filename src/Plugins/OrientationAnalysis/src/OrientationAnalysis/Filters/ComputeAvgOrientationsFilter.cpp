@@ -94,7 +94,7 @@ IFilter::UniquePointer ComputeAvgOrientationsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pCellFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -166,7 +166,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeAvgOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel) const
 {
   ComputeAvgOrientationsInputValues inputValues;
 

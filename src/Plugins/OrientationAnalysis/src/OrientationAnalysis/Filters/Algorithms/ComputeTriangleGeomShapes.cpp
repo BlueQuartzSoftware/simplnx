@@ -430,7 +430,7 @@ void ComputeTriangleGeomShapes::findAxisEulers()
 
 // -----------------------------------------------------------------------------
 ComputeTriangleGeomShapes::ComputeTriangleGeomShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ComputeTriangleGeomShapesInputValues* inputValues)
+                                                     ComputeTriangleGeomShapesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

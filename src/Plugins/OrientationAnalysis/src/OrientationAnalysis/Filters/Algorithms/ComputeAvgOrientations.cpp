@@ -9,7 +9,8 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeAvgOrientations::ComputeAvgOrientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeAvgOrientationsInputValues* inputValues)
+ComputeAvgOrientations::ComputeAvgOrientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                               ComputeAvgOrientationsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

@@ -75,7 +75,7 @@ IFilter::UniquePointer ComputeAvgCAxesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -110,7 +110,7 @@ IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> ComputeAvgCAxesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel) const
 {
   ComputeAvgCAxesInputValues inputValues;
 

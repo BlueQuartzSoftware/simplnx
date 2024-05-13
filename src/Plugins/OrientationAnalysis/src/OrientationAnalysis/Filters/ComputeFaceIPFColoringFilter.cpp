@@ -79,7 +79,7 @@ IFilter::UniquePointer ComputeFaceIPFColoringFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pSurfaceMeshFaceNormalsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
@@ -123,7 +123,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel) const
 {
   ComputeFaceIPFColoringInputValues inputValues;
 

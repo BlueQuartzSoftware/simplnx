@@ -31,8 +31,8 @@ private:
 
 public:
   ComputeGBCDPoleFigureImpl(Float64Array& poleFigureArray, const std::array<int32, 2>& dimensions, const LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
-                             const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const Float64Array& gbcd, int32 phaseOfInterest,
-                             const std::vector<float32>& misorientationRotation)
+                            const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const Float64Array& gbcd, int32 phaseOfInterest,
+                            const std::vector<float32>& misorientationRotation)
   : m_PoleFigure(poleFigureArray)
   , m_Dimensions(dimensions)
   , m_OrientOps(orientOps)
@@ -238,7 +238,7 @@ private:
 
 // -----------------------------------------------------------------------------
 ComputeGBCDPoleFigure::ComputeGBCDPoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ComputeGBCDPoleFigureInputValues* inputValues)
+                                             ComputeGBCDPoleFigureInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -332,8 +332,7 @@ Result<> ComputeGBCDPoleFigure::operator()()
   dataAlg.setRange(0, xPoints, 0, yPoints);
   dataAlg.requireArraysInMemory(algArrays);
 
-  dataAlg.execute(
-      ComputeGBCDPoleFigureImpl(poleFigure, {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcd, m_InputValues->PhaseOfInterest, m_InputValues->MisorientationRotation));
+  dataAlg.execute(ComputeGBCDPoleFigureImpl(poleFigure, {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcd, m_InputValues->PhaseOfInterest, m_InputValues->MisorientationRotation));
 
   return {};
 }
