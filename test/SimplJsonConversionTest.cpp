@@ -2,17 +2,13 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
 #include <filesystem>
-#include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -49,6 +45,7 @@ TEST_CASE("nx::core::Test SIMPL Json Conversion", "[simplnx][Filter]")
       if(std::filesystem::exists({simplJsonFilePath}))
       {
         Result<Pipeline> result = Pipeline::FromSIMPLFile(simplJsonFilePath, filterListPtr);
+        SIMPLNX_RESULT_REQUIRE_VALID(result)
       }
       else
       {

@@ -179,8 +179,7 @@ Result<Arguments> GenerateColorTableFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::GenerateColorTableFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey,
-                                                                                                                     SIMPL::k_SelectedPresetControlPointsKey, k_SelectedPreset_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey, k_SelectedPreset_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RgbArrayNameKey, k_RgbArrayPath_Key));
 

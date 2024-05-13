@@ -594,7 +594,7 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   {
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DestinationArrayNameKey, k_CreatedDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
