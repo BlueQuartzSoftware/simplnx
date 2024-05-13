@@ -10,20 +10,20 @@
 namespace nx::core
 {
 /**
- * @class CalculateFeatureSizesFilter
+ * @class ComputeFeatureSizesFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT CalculateFeatureSizesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeFeatureSizesFilter : public IFilter
 {
 public:
-  CalculateFeatureSizesFilter() = default;
-  ~CalculateFeatureSizesFilter() noexcept override = default;
+  ComputeFeatureSizesFilter() = default;
+  ~ComputeFeatureSizesFilter() noexcept override = default;
 
-  CalculateFeatureSizesFilter(const CalculateFeatureSizesFilter&) = delete;
-  CalculateFeatureSizesFilter(CalculateFeatureSizesFilter&&) noexcept = delete;
+  ComputeFeatureSizesFilter(const ComputeFeatureSizesFilter&) = delete;
+  ComputeFeatureSizesFilter(ComputeFeatureSizesFilter&&) noexcept = delete;
 
-  CalculateFeatureSizesFilter& operator=(const CalculateFeatureSizesFilter&) = delete;
-  CalculateFeatureSizesFilter& operator=(CalculateFeatureSizesFilter&&) noexcept = delete;
+  ComputeFeatureSizesFilter& operator=(const ComputeFeatureSizesFilter&) = delete;
+  ComputeFeatureSizesFilter& operator=(ComputeFeatureSizesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
@@ -108,4 +108,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CalculateFeatureSizesFilter, "c666ee17-ca58-4969-80d0-819986c72485");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeFeatureSizesFilter, "c666ee17-ca58-4969-80d0-819986c72485");

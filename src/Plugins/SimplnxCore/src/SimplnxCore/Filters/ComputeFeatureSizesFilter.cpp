@@ -1,4 +1,4 @@
-#include "CalculateFeatureSizesFilter.hpp"
+#include "ComputeFeatureSizesFilter.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -25,33 +25,33 @@ constexpr nx::core::int32 k_BadFeatureCount = -78231;
 constexpr nx::core::float32 k_PI = numbers::pi_v<nx::core::float32>;
 } // namespace
 
-std::string CalculateFeatureSizesFilter::name() const
+std::string ComputeFeatureSizesFilter::name() const
 {
-  return FilterTraits<CalculateFeatureSizesFilter>::name;
+  return FilterTraits<ComputeFeatureSizesFilter>::name;
 }
 
-std::string CalculateFeatureSizesFilter::className() const
+std::string ComputeFeatureSizesFilter::className() const
 {
-  return FilterTraits<CalculateFeatureSizesFilter>::className;
+  return FilterTraits<ComputeFeatureSizesFilter>::className;
 }
 
-Uuid CalculateFeatureSizesFilter::uuid() const
+Uuid ComputeFeatureSizesFilter::uuid() const
 {
-  return FilterTraits<CalculateFeatureSizesFilter>::uuid;
+  return FilterTraits<ComputeFeatureSizesFilter>::uuid;
 }
 
-std::string CalculateFeatureSizesFilter::humanName() const
+std::string ComputeFeatureSizesFilter::humanName() const
 {
-  return "Find Feature Sizes";
+  return "Compute Feature Sizes";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
+std::vector<std::string> ComputeFeatureSizesFilter::defaultTags() const
 {
   return {className(), "Statistics", "Morphological", "Feature Calculation", "Find Feature Sizes"};
 }
 
-Parameters CalculateFeatureSizesFilter::parameters() const
+Parameters ComputeFeatureSizesFilter::parameters() const
 {
   Parameters params;
 
@@ -77,13 +77,13 @@ Parameters CalculateFeatureSizesFilter::parameters() const
   return params;
 }
 
-IFilter::UniquePointer CalculateFeatureSizesFilter::clone() const
+IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
 {
-  return std::make_unique<CalculateFeatureSizesFilter>();
+  return std::make_unique<ComputeFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
@@ -134,8 +134,8 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
-Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -308,9 +308,9 @@ constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CalculateFeatureSizesFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeFeatureSizesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CalculateFeatureSizesFilter().getDefaultArguments();
+  Arguments args = ComputeFeatureSizesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

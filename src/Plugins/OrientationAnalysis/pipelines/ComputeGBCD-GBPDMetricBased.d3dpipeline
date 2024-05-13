@@ -616,7 +616,7 @@
                                                       },
                                                       "comments": "",
                                                       "filter": {
-                                                        "name": "simplnx::CalculateFeatureSizesFilter",
+                                                        "name": "simplnx::ComputeFeatureSizesFilter",
                                                         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
                                                       },
                                                       "isDisabled": false
@@ -798,7 +798,7 @@
                                               },
                                               "comments": "",
                                               "filter": {
-                                                "name": "simplnx::CalculateFeatureSizesFilter",
+                                                "name": "simplnx::ComputeFeatureSizesFilter",
                                                 "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
                                               },
                                               "isDisabled": false

@@ -1,4 +1,4 @@
-# Find Feature Boundary Element Fractions
+# Compute Feature Boundary Element Fractions
 
 ## Group (Subgroup)
 

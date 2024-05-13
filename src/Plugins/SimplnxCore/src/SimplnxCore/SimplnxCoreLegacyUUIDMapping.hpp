@@ -15,7 +15,7 @@
 #include "SimplnxCore/Filters/ApproximatePointCloudHullFilter.hpp"
 #include "SimplnxCore/Filters/ArrayCalculatorFilter.hpp"
 #include "SimplnxCore/Filters/CalculateArrayHistogramFilter.hpp"
-#include "SimplnxCore/Filters/CalculateFeatureSizesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeFeatureSizesFilter.hpp"
 #include "SimplnxCore/Filters/CalculateTriangleAreasFilter.hpp"
 #include "SimplnxCore/Filters/ChangeAngleRepresentationFilter.hpp"
 #include "SimplnxCore/Filters/CombineAttributeArraysFilter.hpp"
@@ -136,7 +136,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), {nx::core::FilterTraits<ApplyTransformationToGeometryFilter>::uuid, &ApplyTransformationToGeometryFilter::FromSIMPLJson}}, // ApplyTransformationToGeometry
     {nx::core::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), {nx::core::FilterTraits<ApproximatePointCloudHullFilter>::uuid, &ApproximatePointCloudHullFilter::FromSIMPLJson}}, // ApproximatePointCloudHullFilter
     {nx::core::Uuid::FromString("289f0d8c-29ab-5fbc-91bd-08aac01e37c5").value(), {nx::core::FilterTraits<CalculateArrayHistogramFilter>::uuid, &CalculateArrayHistogramFilter::FromSIMPLJson}}, // CalculateArrayHistogram
-    {nx::core::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), {nx::core::FilterTraits<CalculateFeatureSizesFilter>::uuid, &CalculateFeatureSizesFilter::FromSIMPLJson}}, // FindSizes
+    {nx::core::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), {nx::core::FilterTraits<ComputeFeatureSizesFilter>::uuid, &ComputeFeatureSizesFilter::FromSIMPLJson}}, // FindSizes
     {nx::core::Uuid::FromString("a9900cc3-169e-5a1b-bcf4-7569e1950d41").value(), {nx::core::FilterTraits<CalculateTriangleAreasFilter>::uuid, &CalculateTriangleAreasFilter::FromSIMPLJson}}, // TriangleAreaFilter
     {nx::core::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), {nx::core::FilterTraits<ChangeAngleRepresentationFilter>::uuid, &ChangeAngleRepresentationFilter::FromSIMPLJson}}, // ChangeAngleRepresentation
     {nx::core::Uuid::FromString("a6b50fb0-eb7c-5d9b-9691-825d6a4fe772").value(), {nx::core::FilterTraits<CombineAttributeArraysFilter>::uuid, &CombineAttributeArraysFilter::FromSIMPLJson}}, // CombineAttributeArrays

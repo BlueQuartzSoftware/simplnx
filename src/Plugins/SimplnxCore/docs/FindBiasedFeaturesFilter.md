@@ -1,4 +1,4 @@
-# Find Biased Features (Bounding Box)
+# Compute Biased Features (Bounding Box)
 
 ## Group (Subgroup)
 

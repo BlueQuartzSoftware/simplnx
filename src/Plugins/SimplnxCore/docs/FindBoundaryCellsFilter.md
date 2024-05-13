@@ -1,4 +1,4 @@
-# Find Boundary Cells (Image)
+# Compute Boundary Cells (Image)
 
 ## Group (Subgroup)
 

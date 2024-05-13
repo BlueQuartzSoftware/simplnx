@@ -1,4 +1,4 @@
-# Find Feature Volumes from Triangle Geometry
+# Compute Feature Volumes from Triangle Geometry
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# Find Feature Sizes
+# Compute Feature Sizes
 
 ## Group (Subgroup)
 

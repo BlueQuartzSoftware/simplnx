@@ -174,7 +174,7 @@ Uuid FindArrayStatisticsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FindArrayStatisticsFilter::humanName() const
 {
-  return "Find Attribute Array Statistics";
+  return "Compute Attribute Array Statistics";
 }
 
 //------------------------------------------------------------------------------

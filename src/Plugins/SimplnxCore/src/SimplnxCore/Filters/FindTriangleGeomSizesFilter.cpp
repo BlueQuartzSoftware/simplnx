@@ -36,7 +36,7 @@ Uuid FindTriangleGeomSizesFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FindTriangleGeomSizesFilter::humanName() const
 {
-  return "Find Feature Volumes from Triangle Geometry";
+  return "Compute Feature Volumes from Triangle Geometry";
 }
 
 //------------------------------------------------------------------------------

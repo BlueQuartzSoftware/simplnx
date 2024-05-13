@@ -88,9 +88,9 @@ const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_Simpln
 // Make sure we can instantiate the RemoveMinimumSizeFeaturesFilter
 const Uuid k_RemoveMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
 const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFeaturesFilterId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the CalculateFeatureSizesFilter
-const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
-const FilterHandle k_CalculateFeatureSizesFilterHandle(k_CalculateFeatureSizesFilterId, k_SimplnxCorePluginId);
+// Make sure we can instantiate the ComputeFeatureSizesFilter
+const Uuid k_ComputeFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
+const FilterHandle k_ComputeFeatureSizesFilterHandle(k_ComputeFeatureSizesFilterId, k_SimplnxCorePluginId);
 const Uuid k_ReadCSVFileFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
 const FilterHandle k_ReadCSVFileFilterHandle(k_ReadCSVFileFilterId, k_SimplnxCorePluginId);
 

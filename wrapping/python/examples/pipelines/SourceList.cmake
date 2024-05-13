@@ -61,19 +61,19 @@ set(SIMPLNX_PYTHON_TESTS
   ComputeLargestCrossSections # Depends 01_Small_IN100_Archive
   08_Small_IN100_Full_Reconstruction # Depends 01_Small_IN100_Archive
 
-  FindBoundaryCells # Depends on 08_Small_IN100_Full_Reconstruction
+  ComputeBoundaryCells # Depends on 08_Small_IN100_Full_Reconstruction
   AvizoWriters # Depends on 08_Small_IN100_Full_Reconstruction
   VtkRectilinearGridWriter # Depends on 08_Small_IN100_Full_Reconstruction
   01_Small_IN100_Morphological_Statistics # Depends on 08_Small_IN100_Full_Reconstruction Will delete both input and output file
 
   05_Small_IN100_Crystallographic_Statistics
 
-  FindBiasedFeatures # Depends 05_Small_IN100_Crystallographic_Statistics
+  ComputeBiasedFeatures # Depends 05_Small_IN100_Crystallographic_Statistics
   01_Small_IN100_Quick_Mesh
   02_Small_IN100_Smooth_Mesh
   03_Small_IN100_Mesh_Statistics
 
-  FindGBCD-GBPDMetricBased # Depends 03_Small_IN100_Mesh_Statistics
+  ComputeGBCD-GBPDMetricBased # Depends 03_Small_IN100_Mesh_Statistics
   04_Small_IN100_GBCD # Depends 03_Small_IN100_Mesh_Statistics
   05_Small_IN100_GBCD_Metric # Depends 03_Small_IN100_Mesh_Statistics Will delete both input and output file
 )

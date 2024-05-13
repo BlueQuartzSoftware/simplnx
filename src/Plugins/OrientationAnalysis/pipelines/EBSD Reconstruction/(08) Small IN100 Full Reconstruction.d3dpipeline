@@ -281,7 +281,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::CalculateFeatureSizesFilter",
+        "name": "nx::core::ComputeFeatureSizesFilter",
         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
       },
       "isDisabled": false

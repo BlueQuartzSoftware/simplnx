@@ -38,7 +38,7 @@ Uuid FeatureFaceCurvatureFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FeatureFaceCurvatureFilter::humanName() const
 {
-  return "Find Feature Face Curvature";
+  return "Compute Feature Face Curvature";
 }
 
 //------------------------------------------------------------------------------

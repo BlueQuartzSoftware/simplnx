@@ -16,7 +16,7 @@ set(FilterList
   ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
   CalculateArrayHistogramFilter
-  CalculateFeatureSizesFilter
+  ComputeFeatureSizesFilter
   CalculateTriangleAreasFilter
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter

@@ -39,7 +39,7 @@ Uuid FindBoundaryCellsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FindBoundaryCellsFilter::humanName() const
 {
-  return "Find Boundary Cells (Image)";
+  return "Compute Boundary Cells (Image)";
 }
 
 //------------------------------------------------------------------------------

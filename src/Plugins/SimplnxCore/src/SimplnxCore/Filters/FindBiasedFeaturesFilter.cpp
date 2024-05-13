@@ -38,7 +38,7 @@ Uuid FindBiasedFeaturesFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FindBiasedFeaturesFilter::humanName() const
 {
-  return "Find Biased Features (Bounding Box)";
+  return "Compute Biased Features (Bounding Box)";
 }
 
 //------------------------------------------------------------------------------

@@ -16,7 +16,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
   CalculateArrayHistogramTest.cpp
-  CalculateFeatureSizesTest.cpp
+  ComputeFeatureSizesTest.cpp
   CalculateTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp

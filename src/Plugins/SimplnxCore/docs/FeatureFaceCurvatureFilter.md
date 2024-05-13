@@ -1,4 +1,4 @@
-# Find Feature Face Curvature
+# Compute Feature Face Curvature
 
 ## Group (Subgroup)
 

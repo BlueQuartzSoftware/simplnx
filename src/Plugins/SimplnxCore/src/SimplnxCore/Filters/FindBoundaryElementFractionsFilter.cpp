@@ -36,7 +36,7 @@ Uuid FindBoundaryElementFractionsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string FindBoundaryElementFractionsFilter::humanName() const
 {
-  return "Find Feature Boundary Element Fractions";
+  return "Compute Feature Boundary Element Fractions";
 }
 
 //------------------------------------------------------------------------------
