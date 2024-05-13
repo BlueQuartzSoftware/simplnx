@@ -16,6 +16,4 @@ PYBIND11_MODULE(itkimageprocessing, mod)
   auto* plugin = internals.addPlugin<ITKImageProcessingPlugin>();
 
   ITKImageProcessing::BindFilters(mod, internals);
-
-  internals.registerPluginPyFilters(*plugin);
 }

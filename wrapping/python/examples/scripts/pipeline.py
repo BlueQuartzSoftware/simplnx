@@ -52,9 +52,7 @@ data_structure = nx.DataStructure()
 
 pipeline = nx.Pipeline().from_file(nxtest.get_simplnx_source_dir() / 'src/Plugins/OrientationAnalysis/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline')
 
-pipeline.to_file( "test pipeline", nxtest.get_test_temp_directory() / "python_pipeline.d3dpipeline")
-
-
+pipeline.to_file(nxtest.get_test_temp_directory() / "python_pipeline.d3dpipeline")
 
 # pipeline.append(nx.CreateDataArrayFilter(), {'numeric_type_index': nx.NumericType.int32})
 # pipeline[0].set_args({'numeric_type_index': nx.NumericType.int32})
@@ -62,5 +60,3 @@ pipeline.to_file( "test pipeline", nxtest.get_test_temp_directory() / "python_pi
 # did_execute = pipeline.execute(data_structure)
 
 # print('Pipeline Execute: {}'.format(did_execute))
-
-
