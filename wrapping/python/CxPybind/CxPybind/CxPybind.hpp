@@ -234,25 +234,6 @@ public:
     return addPlugin(std::make_shared<T>());
   }
 
-  void registerPluginPyFilters(const AbstractPlugin& plugin)
-  {
-    // Must be called after all types are registered
-    std::vector<py::type> list;
-    for(auto handle : plugin.getFilterHandles())
-    {
-      py::object filter = py::cast(plugin.createFilter(handle.getFilterId()));
-      py::type filterType = py::type::of(filter);
-      list.push_back(filterType);
-    }
-
-    m_PluginFilterMap.insert({plugin.getId(), list});
-  }
-
-  const std::vector<py::type>& getPluginPyFilters(const Uuid& pluginUuid)
-  {
-    return m_PluginFilterMap.at(pluginUuid);
-  }
-
   void loadPythonPlugin(py::module_& mod);
 
   PythonPlugin* getPythonPlugin(const Uuid& id)
@@ -281,7 +262,6 @@ public:
 
 private:
   std::unordered_map<Uuid, PyParameterInfo> m_ParameterConversionMap;
-  std::unordered_map<Uuid, std::vector<py::type>> m_PluginFilterMap;
   std::unordered_map<Uuid, std::shared_ptr<PythonPlugin>> m_PythonPlugins;
   std::shared_ptr<Application> m_App;
 };
@@ -394,6 +374,16 @@ inline IFilter::MessageHandler CreatePyMessageHandler()
   return IFilter::MessageHandler{&PyPrintMessage};
 }
 
+template <class T>
+void CreatePythonCleanupCallback(py::handle object, std::unique_ptr<T> holder)
+{
+  py::cpp_function nameCleanupCallback([holder = std::move(holder)](py::handle weakref) mutable {
+    holder.reset();
+    weakref.dec_ref();
+  });
+  py::weakref(object, nameCleanupCallback).release();
+}
+
 template <class FilterT>
 auto BindFilter(py::handle scope, const Internals& internals)
 {
@@ -407,7 +397,7 @@ auto BindFilter(py::handle scope, const Internals& internals)
     options.disable_function_signatures();
 
     std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
-    std::string executeDocString = fmt::format("{}\n\nExecutes the filter\n", executeSig);
+    auto executeDocStringHolder = std::make_unique<std::string>(fmt::format("{}\n\nExecutes the filter\n", executeSig));
     filter.def_static("human_name", [&internals]() {
       FilterT filter;
       return filter.humanName();
@@ -441,7 +431,8 @@ auto BindFilter(py::handle scope, const Internals& internals)
           IFilter::ExecuteResult result = filter.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
           return result;
         },
-        "data_structure"_a, executeDocString.c_str());
+        "data_structure"_a, executeDocStringHolder->c_str());
+    CreatePythonCleanupCallback(filter, std::move(executeDocStringHolder));
 
     // std::string preflightSig = MakePythonSignature<FilterT>("preflight", internals);
     // std::string preflightDocString = fmt::format("{}\n\nExecutes the filter\n", sig);

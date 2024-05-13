@@ -493,6 +493,7 @@ PYBIND11_MODULE(simplnx, mod)
   });
 
   py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
+  abstractPipelineNode.def("to_json_str", [](const AbstractPipelineNode& self) { return self.toJson().dump(); });
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
   py::class_<IParameter> parameter(mod, "IParameter");
@@ -1341,13 +1342,22 @@ PYBIND11_MODULE(simplnx, mod)
       "path"_a);
   pipeline.def(
       "to_file",
-      [](Pipeline& self, const std::string& name, const std::filesystem::path& path) {
+      [](const Pipeline& self, const std::filesystem::path& path) {
         nlohmann::json pipelineJson = self.toJson();
-        pipelineJson["name"] = name;
-        std::ofstream file(path, std::ios_base::binary);
-        file << pipelineJson;
+        std::ofstream file(path);
+        if(!file.is_open())
+        {
+          throw std::runtime_error(fmt::format("Failed to open '{}'", path.string()));
+        }
+        file << pipelineJson.dump(2) << "\n";
+        file.flush();
+        if(!file)
+        {
+          throw std::runtime_error(fmt::format("Failed to write pipeline json to '{}'", path.string()));
+        }
       },
-      "name"_a, "path"_a);
+      "path"_a);
+  pipeline.def_property("name", &Pipeline::getName, &Pipeline::setName);
   pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
       "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
@@ -1394,6 +1404,7 @@ PYBIND11_MODULE(simplnx, mod)
         return filter->humanName();
       },
       "Returns the human facing name of the filter");
+  pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
@@ -1451,13 +1462,21 @@ PYBIND11_MODULE(simplnx, mod)
 
   SimplnxCore::BindFilters(mod, *internals);
 
-  internals->registerPluginPyFilters(*corePlugin);
-
   mod.def("get_all_data_types", &GetAllDataTypes);
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
 
-  mod.def("get_filters", [internals, corePlugin]() { return internals->getPluginPyFilters(corePlugin->getId()); });
+  mod.def("get_filters", [corePlugin]() {
+    auto filterHandles = corePlugin->getFilterHandles();
+    std::vector<py::type> filterList;
+    for(const auto& handle : filterHandles)
+    {
+      py::object filter = py::cast(corePlugin->createFilter(handle.getFilterId()));
+      py::type filterType = py::type::of(filter);
+      filterList.push_back(filterType);
+    }
+    return filterList;
+  });
 
   mod.def("test_filter", [](const IFilter& filter) { return py::make_tuple(filter.uuid(), filter.name(), filter.humanName(), filter.className(), filter.defaultTags()); });
 

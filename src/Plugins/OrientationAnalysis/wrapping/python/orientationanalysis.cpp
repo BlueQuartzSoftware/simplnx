@@ -53,6 +53,4 @@ PYBIND11_MODULE(orientationanalysis, mod)
   internals.addConversion<OEMEbsdScanSelectionParameter>();
 
   OrientationAnalysis::BindFilters(mod, internals);
-
-  internals.registerPluginPyFilters(*plugin);
 }
