@@ -45,7 +45,7 @@ Result<> EBSDSegmentFeatures::operator()()
 
   execute(gridGeom);
 
-  IDataArray* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->activeArrayPath);
+  auto* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->activeArrayPath);
   auto totalFeatures = activeArray->getNumberOfTuples();
   if(totalFeatures < 2)
   {
@@ -57,15 +57,7 @@ Result<> EBSDSegmentFeatures::operator()()
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->shouldRandomizeFeatureIds)
   {
-    auto totalPoints = m_QuatsArray->getNumberOfTuples();
-
-    const int64 rangeMin = 0;
-    const auto rangeMax = static_cast<int64>(totalPoints - 1);
-    Int64Distribution distribution;
-    initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-
-    totalPoints = gridGeom->getNumberOfCells();
-    randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
+    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
   }
 
   return {};
@@ -81,29 +73,29 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 
   int64 seed = -1;
   // start with the next voxel after the last seed
-  usize randpoint = static_cast<usize>(nextSeed);
-  while(seed == -1 && randpoint < totalPoints)
+  auto randPoint = static_cast<usize>(nextSeed);
+  while(seed == -1 && randPoint < totalPoints)
   {
-    if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
+    if(featureIds->getValue(randPoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->useGoodVoxels || m_GoodVoxelsArray->isTrue(randpoint)) && cellPhases->getValue(randpoint) > 0)
+      if((!m_InputValues->useGoodVoxels || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases->getValue(randPoint) > 0)
       {
-        seed = static_cast<int64>(randpoint);
+        seed = static_cast<int64>(randPoint);
       }
       else
       {
-        randpoint += 1;
+        randPoint += 1;
       }
     }
     else
     {
-      randpoint += 1;
+      randPoint += 1;
     }
   }
   if(seed >= 0)
   {
-    UInt8Array& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->activeArrayPath);
-    AttributeMatrix& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrixPath);
+    auto& activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->activeArrayPath)->getDataStoreRef();
+    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrixPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
     std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
     cellFeatureAM.resizeTuples(tDims); // This will resize the actives array
@@ -113,15 +105,15 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 }
 
 // -----------------------------------------------------------------------------
-bool EBSDSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
+bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const
 {
   bool group = false;
 
   // Get the phases for each voxel
   nx::core::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
 
-  int32_t phase1 = (*m_CrystalStructures)[(*cellPhases)[referencepoint]];
-  int32_t phase2 = (*m_CrystalStructures)[(*cellPhases)[neighborpoint]];
+  int32_t phase1 = (*m_CrystalStructures)[(*cellPhases)[referencePoint]];
+  int32_t phase2 = (*m_CrystalStructures)[(*cellPhases)[neighborPoint]];
   // If either of the phases is 999 then we bail out now.
   if(phase1 >= m_OrientationOps.size() || phase2 >= m_OrientationOps.size())
   {
@@ -133,16 +125,16 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbor
   bool neighborPointIsGood = false;
   if(m_GoodVoxelsArray != nullptr)
   {
-    neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborpoint);
+    neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborPoint);
   }
 
-  if(featureIds[neighborpoint] == 0 && (m_GoodVoxelsArray == nullptr || neighborPointIsGood))
+  if(featureIds[neighborPoint] == 0 && (m_GoodVoxelsArray == nullptr || neighborPointIsGood))
   {
     float w = std::numeric_limits<float>::max();
-    QuatF q1(currentQuatPtr[referencepoint * 4], currentQuatPtr[referencepoint * 4 + 1], currentQuatPtr[referencepoint * 4 + 2], currentQuatPtr[referencepoint * 4 + 3]);
-    QuatF q2(currentQuatPtr[neighborpoint * 4 + 0], currentQuatPtr[neighborpoint * 4 + 1], currentQuatPtr[neighborpoint * 4 + 2], currentQuatPtr[neighborpoint * 4 + 3]);
+    QuatF q1(currentQuatPtr[referencePoint * 4], currentQuatPtr[referencePoint * 4 + 1], currentQuatPtr[referencePoint * 4 + 2], currentQuatPtr[referencePoint * 4 + 3]);
+    QuatF q2(currentQuatPtr[neighborPoint * 4 + 0], currentQuatPtr[neighborPoint * 4 + 1], currentQuatPtr[neighborPoint * 4 + 2], currentQuatPtr[neighborPoint * 4 + 3]);
 
-    if((*cellPhases)[referencepoint] == (*cellPhases)[neighborpoint])
+    if((*cellPhases)[referencePoint] == (*cellPhases)[neighborPoint])
     {
       OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
       w = axisAngle[3];
@@ -150,7 +142,7 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbor
     if(w < m_InputValues->misorientationTolerance)
     {
       group = true;
-      featureIds[neighborpoint] = gnum;
+      featureIds[neighborPoint] = gnum;
     }
   }
 

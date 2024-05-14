@@ -20,7 +20,6 @@ class SIMPLNX_EXPORT SegmentFeatures
 
 public:
   using SeedGenerator = std::mt19937_64;
-  using Int64Distribution = std::uniform_int_distribution<int64>;
 
   SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
@@ -62,20 +61,16 @@ public:
   /**
    * @brief
    * @param featureIds
-   * @param totalPoints
    * @param totalFeatures
    * @param distribution
    */
-  virtual void randomizeFeatureIds(Int32Array* featureIds, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const;
+  virtual void randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures) const;
 
   /**
    * @brief
-   * @param distribution
-   * @param rangeMin
-   * @param rangeMax
    * @return
    */
-  virtual SeedGenerator initializeStaticVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax) const;
+  virtual SeedGenerator initializeStaticVoxelSeedGenerator() const;
 
   /* from http://www.newty.de/fpt/functor.html */
   /**

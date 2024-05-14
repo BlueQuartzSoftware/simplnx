@@ -1,6 +1,5 @@
 #pragma once
 
-#include "OrientationAnalysis/Filters/Algorithms/GroupFeatures.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -9,11 +8,8 @@
 
 namespace nx::core
 {
-
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
-  bool UseNonContiguousNeighbors;
-  DataPath NonContiguousNeighborListArrayPath;
   DataPath ContiguousNeighborListArrayPath;
   float32 AxisTolerance;
   float32 AngleTolerance;
@@ -21,22 +17,20 @@ struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
   DataPath AvgQuatsArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath CrystalStructuresArrayPath;
-  DataPath CellParentIdsArrayName;
-  DataPath NewCellFeatureAttributeMatrixName;
-  DataPath FeatureParentIdsArrayName;
-  DataPath ActiveArrayName;
-  bool RandomizeParentIds = true;
+  DataPath CellParentIdsArrayPath;
+  DataPath NewCellFeatureAttributeMatrixPath;
+  DataPath FeatureParentIdsArrayPath;
+  DataPath ActiveArrayPath;
   uint64 Seed;
 };
 
 /**
  * @class
  */
-class ORIENTATIONANALYSIS_EXPORT MergeTwins : public GroupFeatures
+class ORIENTATIONANALYSIS_EXPORT MergeTwins
 {
 public:
-  MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeTwinsInputValues* inputValues,
-             GroupFeaturesInputValues* groupInputValues);
+  MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeTwinsInputValues* inputValues);
   ~MergeTwins() noexcept;
 
   MergeTwins(const MergeTwins&) = delete;
@@ -48,12 +42,14 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void characterize_twins();
-  int getSeed(int32 newFid) override;
-  bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid) override;
+  int getSeed(int32 newFid) const;
+  bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid);
 
 private:
+  DataStructure& m_DataStructure;
   const MergeTwinsInputValues* m_InputValues = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
+  const IFilter::MessageHandler& m_MessageHandler;
 };
 
 } // namespace nx::core

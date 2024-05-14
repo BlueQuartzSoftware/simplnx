@@ -239,8 +239,8 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
     feature_parent_ids_array_name="ParentIds",
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
-    created_feature_attribute_matrix_name="NewGrain Data",
-    use_non_contiguous_neighbors=False
+    created_feature_attribute_matrix_name="NewGrain Data"
+    # use_non_contiguous_neighbors=False
     # non_contiguous_neighbor_list_array_path: DataPath = ...,  # Not currently part of the code
 )
 nxtest.check_filter_result(nx_filter, result)
