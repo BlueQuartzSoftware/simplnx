@@ -396,8 +396,6 @@ class CliReaderFilter:
             return Result(errors=coords_result.errors)
           coords: np.ndarray = coords_result.value
           n = coords.size // 4
-          # if not (coords==masked_coords).all():
-          #   print(f"{hatches_z_height}: Masked coords")
         start_xvals = coords[0::4] * units
         start_yvals = coords[1::4] * units
         end_xvals   = coords[2::4] * units
