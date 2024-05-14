@@ -34,8 +34,6 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
 class SIMPLNXCORE_EXPORT ScalarSegmentFeatures : public SegmentFeatures
 {
 public:
-  using SeedGenerator = std::mt19937_64;
-  using Int64Distribution = std::uniform_int_distribution<int64>;
   using FeatureIdsArrayType = Int32Array;
   using GoodVoxelsArrayType = BoolArray;
 
@@ -64,8 +62,8 @@ protected:
    * @brief
    * @param data
    * @param args
-   * @param referencepoint
-   * @param neighborpoint
+   * @param referencePoint
+   * @param neighborPoint
    * @param gnum
    * @return bool
    */

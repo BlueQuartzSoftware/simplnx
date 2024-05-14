@@ -24,8 +24,6 @@ public:
   MergeTwinsFilter& operator=(MergeTwinsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseNonContiguousNeighbors_Key = "use_non_contiguous_neighbors";
-  static inline constexpr StringLiteral k_NonContiguousNeighborListArrayPath_Key = "non_contiguous_neighbor_list_array_path";
   static inline constexpr StringLiteral k_ContiguousNeighborListArrayPath_Key = "contiguous_neighbor_list_array_path";
   static inline constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
   static inline constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";

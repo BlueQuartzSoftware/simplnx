@@ -64,11 +64,6 @@ Result<> CAxisSegmentFeatures::operator()()
   active->fill(1);
 
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
-  constexpr int64 rangeMin = 0;
-  const int64 rangeMax = m_FeatureIdsArray->getNumberOfTuples() - 1;
-  Int64Distribution distribution;
-  initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
-
   execute(imageGeometry);
 
   const auto totalFeatures = static_cast<int64>(active->getNumberOfTuples());
@@ -80,7 +75,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // By default we randomize grains
   if(m_InputValues->RandomizeFeatureIds)
   {
-    randomizeFeatureIds(m_FeatureIdsArray, imageGeometry->getNumberOfCells(), totalFeatures, distribution);
+    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
   }
 
   return {};
