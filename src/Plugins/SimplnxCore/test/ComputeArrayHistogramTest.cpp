@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CalculateArrayHistogramFilter.hpp"
+#include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -36,10 +36,10 @@ void fillArray(DataArray<T>& data, const std::vector<T>& values)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::CalculateArrayHistogram: Valid Filter Execution", "[SimplnxCore][CalculateArrayHistogram]")
+TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[SimplnxCore][ComputeArrayHistogram]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  CalculateArrayHistogramFilter filter;
+  ComputeArrayHistogramFilter filter;
   DataStructure dataStruct;
   Arguments args;
 
@@ -54,12 +54,12 @@ TEST_CASE("SimplnxCore::CalculateArrayHistogram: Valid Filter Execution", "[Simp
   auto dataGPath = parentPath.createChildPath("HistogramDataGroup");
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(4));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(dataPaths));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(dataGPath));
-  args.insertOrAssign(CalculateArrayHistogramFilter::k_HistoName_Key, std::make_any<std::string>("Histogram"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NumberOfBins_Key, std::make_any<int32>(4));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_UserDefinedRange_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(dataPaths));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(dataGPath));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoName_Key, std::make_any<std::string>("Histogram"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStruct, args);

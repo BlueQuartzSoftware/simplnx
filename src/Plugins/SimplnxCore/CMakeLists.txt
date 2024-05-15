@@ -15,7 +15,7 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
-  CalculateArrayHistogramFilter
+  ComputeArrayHistogramFilter
   ComputeFeatureSizesFilter
   ComputeTriangleAreasFilter
   ChangeAngleRepresentationFilter
@@ -144,7 +144,7 @@ set(AlgorithmList
   AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
-  CalculateArrayHistogram
+  ComputeArrayHistogram
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles

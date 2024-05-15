@@ -1,6 +1,6 @@
-#include "CalculateArrayHistogram.hpp"
+#include "ComputeArrayHistogram.hpp"
 
-#include "SimplnxCore/Filters/CalculateArrayHistogramFilter.hpp"
+#include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -19,7 +19,7 @@ template <typename DataArrayType>
 class GenerateHistogramFromData
 {
 public:
-  GenerateHistogramFromData(CalculateArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
+  GenerateHistogramFromData(ComputeArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
                             std::tuple<bool, float64, float64>& range, size_t progressIncrement)
   : m_Filter(filter)
   , m_NumBins(numBins)
@@ -92,7 +92,7 @@ public:
   }
 
 private:
-  CalculateArrayHistogram& m_Filter;
+  ComputeArrayHistogram& m_Filter;
   const int32 m_NumBins = 1;
   std::tuple<bool, float64, float64>& m_Range;
   const IDataArray& m_InputArray;
@@ -103,8 +103,8 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-CalculateArrayHistogram::CalculateArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 CalculateArrayHistogramInputValues* inputValues)
+ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                 ComputeArrayHistogramInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -113,15 +113,15 @@ CalculateArrayHistogram::CalculateArrayHistogram(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-CalculateArrayHistogram::~CalculateArrayHistogram() noexcept = default;
+ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void CalculateArrayHistogram::updateProgress(const std::string& progressMessage)
+void ComputeArrayHistogram::updateProgress(const std::string& progressMessage)
 {
   m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
 }
 // -----------------------------------------------------------------------------
-void CalculateArrayHistogram::updateThreadSafeProgress(size_t counter)
+void ComputeArrayHistogram::updateThreadSafeProgress(size_t counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -138,13 +138,13 @@ void CalculateArrayHistogram::updateThreadSafeProgress(size_t counter)
 }
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& CalculateArrayHistogram::getCancel()
+const std::atomic_bool& ComputeArrayHistogram::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> CalculateArrayHistogram::operator()()
+Result<> ComputeArrayHistogram::operator()()
 {
   const auto numBins = m_InputValues->NumberOfBins;
   const auto selectedArrayPaths = m_InputValues->SelectedArrayPaths;
@@ -173,7 +173,7 @@ Result<> CalculateArrayHistogram::operator()()
     if(overflow > 0)
     {
       const std::string arrayName = inputData.getName();
-      CalculateArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow.load(), arrayName));
+      ComputeArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow.load(), arrayName));
     }
   }
 

@@ -1,4 +1,4 @@
-# Calculate Frequency Histogram
+# Compute Frequency Histogram
 
 ## Group (Subgroup)
 

@@ -13,7 +13,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT CalculateArrayHistogramInputValues
+struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
 {
   int32 NumberOfBins = 0;
   bool UserDefinedRange = false;
@@ -24,20 +24,20 @@ struct SIMPLNXCORE_EXPORT CalculateArrayHistogramInputValues
 };
 
 /**
- * @class CalculateArrayHistogram
+ * @class ComputeArrayHistogram
  * @brief This filter calculates a Histogram according to user specification and stores it accordingly
  */
 
-class SIMPLNXCORE_EXPORT CalculateArrayHistogram
+class SIMPLNXCORE_EXPORT ComputeArrayHistogram
 {
 public:
-  CalculateArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CalculateArrayHistogramInputValues* inputValues);
-  ~CalculateArrayHistogram() noexcept;
+  ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeArrayHistogramInputValues* inputValues);
+  ~ComputeArrayHistogram() noexcept;
 
-  CalculateArrayHistogram(const CalculateArrayHistogram&) = delete;
-  CalculateArrayHistogram(CalculateArrayHistogram&&) noexcept = delete;
-  CalculateArrayHistogram& operator=(const CalculateArrayHistogram&) = delete;
-  CalculateArrayHistogram& operator=(CalculateArrayHistogram&&) noexcept = delete;
+  ComputeArrayHistogram(const ComputeArrayHistogram&) = delete;
+  ComputeArrayHistogram(ComputeArrayHistogram&&) noexcept = delete;
+  ComputeArrayHistogram& operator=(const ComputeArrayHistogram&) = delete;
+  ComputeArrayHistogram& operator=(ComputeArrayHistogram&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -47,7 +47,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const CalculateArrayHistogramInputValues* m_InputValues = nullptr;
+  const ComputeArrayHistogramInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 

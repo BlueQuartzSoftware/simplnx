@@ -339,7 +339,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 22
 # Instantiate Filter
-nx_filter = nx.CalculateArrayHistogramFilter()
+nx_filter = nx.ComputeArrayHistogramFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

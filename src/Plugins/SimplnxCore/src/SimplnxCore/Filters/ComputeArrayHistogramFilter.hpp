@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class CalculateArrayHistogram
+ * @class ComputeArrayHistogram
  * @brief This filter calculate the frequency histogram of a data structure
  */
-class SIMPLNXCORE_EXPORT CalculateArrayHistogramFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeArrayHistogramFilter : public IFilter
 {
 public:
-  CalculateArrayHistogramFilter() = default;
-  ~CalculateArrayHistogramFilter() noexcept override = default;
+  ComputeArrayHistogramFilter() = default;
+  ~ComputeArrayHistogramFilter() noexcept override = default;
 
-  CalculateArrayHistogramFilter(const CalculateArrayHistogramFilter&) = delete;
-  CalculateArrayHistogramFilter(CalculateArrayHistogramFilter&&) noexcept = delete;
+  ComputeArrayHistogramFilter(const ComputeArrayHistogramFilter&) = delete;
+  ComputeArrayHistogramFilter(ComputeArrayHistogramFilter&&) noexcept = delete;
 
-  CalculateArrayHistogramFilter& operator=(const CalculateArrayHistogramFilter&) = delete;
-  CalculateArrayHistogramFilter& operator=(CalculateArrayHistogramFilter&&) noexcept = delete;
+  ComputeArrayHistogramFilter& operator=(const ComputeArrayHistogramFilter&) = delete;
+  ComputeArrayHistogramFilter& operator=(ComputeArrayHistogramFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
@@ -108,4 +108,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CalculateArrayHistogramFilter, "c6b6d9e5-301d-4767-abf7-530f5ef5007d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeArrayHistogramFilter, "c6b6d9e5-301d-4767-abf7-530f5ef5007d");

@@ -1,5 +1,5 @@
-#include "CalculateArrayHistogramFilter.hpp"
-#include "Algorithms/CalculateArrayHistogram.hpp"
+#include "ComputeArrayHistogramFilter.hpp"
+#include "Algorithms/ComputeArrayHistogram.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -18,37 +18,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string CalculateArrayHistogramFilter::name() const
+std::string ComputeArrayHistogramFilter::name() const
 {
-  return FilterTraits<CalculateArrayHistogramFilter>::name.str();
+  return FilterTraits<ComputeArrayHistogramFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string CalculateArrayHistogramFilter::className() const
+std::string ComputeArrayHistogramFilter::className() const
 {
-  return FilterTraits<CalculateArrayHistogramFilter>::className;
+  return FilterTraits<ComputeArrayHistogramFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CalculateArrayHistogramFilter::uuid() const
+Uuid ComputeArrayHistogramFilter::uuid() const
 {
-  return FilterTraits<CalculateArrayHistogramFilter>::uuid;
+  return FilterTraits<ComputeArrayHistogramFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CalculateArrayHistogramFilter::humanName() const
+std::string ComputeArrayHistogramFilter::humanName() const
 {
   return "Calculate Frequency Histogram";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CalculateArrayHistogramFilter::defaultTags() const
+std::vector<std::string> ComputeArrayHistogramFilter::defaultTags() const
 {
   return {className(), "Statistics", "Ensemble"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CalculateArrayHistogramFilter::parameters() const
+Parameters ComputeArrayHistogramFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
@@ -79,13 +79,13 @@ Parameters CalculateArrayHistogramFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CalculateArrayHistogramFilter::clone() const
+IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
 {
-  return std::make_unique<CalculateArrayHistogramFilter>();
+  return std::make_unique<ComputeArrayHistogramFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CalculateArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
@@ -129,10 +129,10 @@ IFilter::PreflightResult CalculateArrayHistogramFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> CalculateArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel) const
 {
-  CalculateArrayHistogramInputValues inputValues;
+  ComputeArrayHistogramInputValues inputValues;
 
   inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
   inputValues.UserDefinedRange = filterArgs.value<bool>(k_UserDefinedRange_Key);
@@ -161,7 +161,7 @@ Result<> CalculateArrayHistogramFilter::executeImpl(DataStructure& dataStructure
 
   inputValues.CreatedHistogramDataPaths = createdDataPaths;
 
-  return CalculateArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -180,9 +180,9 @@ constexpr StringLiteral k_NewDataArrayNameKey = "NewDataArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CalculateArrayHistogramFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeArrayHistogramFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CalculateArrayHistogramFilter().getDefaultArguments();
+  Arguments args = ComputeArrayHistogramFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

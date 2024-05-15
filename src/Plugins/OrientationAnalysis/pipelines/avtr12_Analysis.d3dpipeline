@@ -423,7 +423,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateArrayHistogramFilter",
+        "name": "simplnx::ComputeArrayHistogramFilter",
         "uuid": "c6b6d9e5-301d-4767-abf7-530f5ef5007d"
       },
       "isDisabled": false

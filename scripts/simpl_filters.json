@@ -8641,7 +8641,7 @@
         {
             "filters": [
                 {
-                    "name": "CalculateArrayHistogram",
+                    "name": "ComputeArrayHistogramFilter",
                     "parameters": [
                         {
                             "name": "NumberOfBins",
