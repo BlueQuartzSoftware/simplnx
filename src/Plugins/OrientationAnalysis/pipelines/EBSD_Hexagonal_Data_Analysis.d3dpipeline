@@ -277,7 +277,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateColorTableFilter",
+        "name": "nx::core::ComputeColorTableFilter",
         "uuid": "d1731177-4d70-41c0-9334-566a0b482796"
       },
       "isDisabled": false

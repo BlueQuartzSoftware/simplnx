@@ -12,22 +12,22 @@ namespace nx::core
 {
 /**
  * @brief This FilterParameter represents a color preset, and works specifically
- * with the GenerateColorTable filter. The data is held in an nlohmann::json object.
+ * with the ComputeColorTable filter. The data is held in an nlohmann::json object.
  */
-class SIMPLNX_EXPORT GenerateColorTableParameter : public ValueParameter
+class SIMPLNX_EXPORT ComputeColorTableParameter : public ValueParameter
 {
 public:
   using ValueType = std::string;
 
-  GenerateColorTableParameter() = delete;
-  GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
-  ~GenerateColorTableParameter() override = default;
+  ComputeColorTableParameter() = delete;
+  ComputeColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ~ComputeColorTableParameter() override = default;
 
-  GenerateColorTableParameter(const GenerateColorTableParameter&) = delete;
-  GenerateColorTableParameter(GenerateColorTableParameter&&) noexcept = delete;
+  ComputeColorTableParameter(const ComputeColorTableParameter&) = delete;
+  ComputeColorTableParameter(ComputeColorTableParameter&&) noexcept = delete;
 
-  GenerateColorTableParameter& operator=(const GenerateColorTableParameter&) = delete;
-  GenerateColorTableParameter& operator=(GenerateColorTableParameter&&) noexcept = delete;
+  ComputeColorTableParameter& operator=(const ComputeColorTableParameter&) = delete;
+  ComputeColorTableParameter& operator=(ComputeColorTableParameter&&) noexcept = delete;
 
   /**
    * @brief
@@ -83,4 +83,4 @@ private:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GenerateColorTableParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0");
+SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ComputeColorTableParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0");

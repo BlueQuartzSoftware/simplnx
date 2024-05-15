@@ -1,4 +1,4 @@
-#include "GenerateColorTable.hpp"
+#include "ComputeColorTable.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -33,14 +33,14 @@ usize findRightBinIndex(float32 nValue, const std::vector<float32>& binPoints)
 }
 
 /**
- * @brief The GenerateColorTableImpl class implements a threaded algorithm that computes the RGB values
+ * @brief The ComputeColorTableImpl class implements a threaded algorithm that computes the RGB values
  * for each element in a given array of data
  */
 template <typename T>
-class GenerateColorTableImpl
+class ComputeColorTableImpl
 {
 public:
-  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8Array& colorArray,
+  ComputeColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8Array& colorArray,
                          const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayPtr(arrayPtr)
   , m_BinPoints(binPoints)
@@ -64,12 +64,12 @@ public:
       }
     }
   }
-  virtual ~GenerateColorTableImpl() = default;
+  virtual ~ComputeColorTableImpl() = default;
 
-  GenerateColorTableImpl(const GenerateColorTableImpl&) = default;
-  GenerateColorTableImpl(GenerateColorTableImpl&&) noexcept = delete;
-  GenerateColorTableImpl& operator=(const GenerateColorTableImpl&) = delete;
-  GenerateColorTableImpl& operator=(GenerateColorTableImpl&&) noexcept = delete;
+  ComputeColorTableImpl(const ComputeColorTableImpl&) = default;
+  ComputeColorTableImpl(ComputeColorTableImpl&&) noexcept = delete;
+  ComputeColorTableImpl& operator=(const ComputeColorTableImpl&) = delete;
+  ComputeColorTableImpl& operator=(ComputeColorTableImpl&&) noexcept = delete;
 
   template <typename K>
   void convert(size_t start, size_t end) const
@@ -174,7 +174,7 @@ private:
 struct GenerateColorArrayFunctor
 {
   template <typename ScalarType>
-  Result<> operator()(DataStructure& dataStructure, const GenerateColorTableInputValues* inputValues, const std::vector<float32>& controlPoints)
+  Result<> operator()(DataStructure& dataStructure, const ComputeColorTableInputValues* inputValues, const std::vector<float32>& controlPoints)
   {
     // Control Points is a flattened 2D array with an unknown tuple count and a component size of 4
     const usize numControlColors = controlPoints.size() / k_ControlPointCompSize;
@@ -211,14 +211,14 @@ struct GenerateColorArrayFunctor
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, arrayRef.getNumberOfTuples());
-    dataAlg.execute(GenerateColorTableImpl(arrayRef, binPoints, controlPoints, numControlColors, colorArray, goodVoxelsArray, inputValues->InvalidColor));
+    dataAlg.execute(ComputeColorTableImpl(arrayRef, binPoints, controlPoints, numControlColors, colorArray, goodVoxelsArray, inputValues->InvalidColor));
     return {};
   }
 };
 } // namespace
 
 // -----------------------------------------------------------------------------
-GenerateColorTable::GenerateColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, GenerateColorTableInputValues* inputValues)
+ComputeColorTable::ComputeColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeColorTableInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -227,16 +227,16 @@ GenerateColorTable::GenerateColorTable(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-GenerateColorTable::~GenerateColorTable() noexcept = default;
+ComputeColorTable::~ComputeColorTable() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& GenerateColorTable::getCancel()
+const std::atomic_bool& ComputeColorTable::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> GenerateColorTable::operator()()
+Result<> ComputeColorTable::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
 

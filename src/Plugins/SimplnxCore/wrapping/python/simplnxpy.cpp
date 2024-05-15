@@ -65,7 +65,7 @@
 #include <simplnx/Parameters/DynamicTableParameter.hpp>
 #include <simplnx/Parameters/EnsembleInfoParameter.hpp>
 #include <simplnx/Parameters/FileSystemPathParameter.hpp>
-#include <simplnx/Parameters/GenerateColorTableParameter.hpp>
+#include <simplnx/Parameters/ComputeColorTableParameter.hpp>
 #include <simplnx/Parameters/GeneratedFileListParameter.hpp>
 #include <simplnx/Parameters/GeometrySelectionParameter.hpp>
 #include <simplnx/Parameters/MultiArraySelectionParameter.hpp>
@@ -1033,7 +1033,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto dynamicTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
   auto ensembleInfoParameter = SIMPLNX_PY_BIND_PARAMETER(mod, EnsembleInfoParameter);
   auto fileSystemPathParameter = SIMPLNX_PY_BIND_PARAMETER(mod, FileSystemPathParameter);
-  auto generateColorTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, GenerateColorTableParameter);
+  auto computeColorTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ComputeColorTableParameter);
   auto generatedFileListParameter = SIMPLNX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
   auto geometrySelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
   auto importTextDataParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadCSVFileParameter);
@@ -1189,7 +1189,7 @@ PYBIND11_MODULE(simplnx, mod)
                                        FileSystemPathParameter::PathType, bool>(),
                               "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "extensions_type"_a, "path_type"_a, "accept_all_extensions"_a = false);
 
-  BindParameterConstructor(generateColorTableParameter);
+  BindParameterConstructor(computeColorTableParameter);
 
   BindParameterConstructor(generatedFileListParameter);
 
@@ -1429,7 +1429,7 @@ PYBIND11_MODULE(simplnx, mod)
   internals->addConversion<DynamicTableParameter>();
   internals->addConversion<EnsembleInfoParameter>();
   internals->addConversion<FileSystemPathParameter>();
-  internals->addConversion<GenerateColorTableParameter>();
+  internals->addConversion<ComputeColorTableParameter>();
   internals->addConversion<GeneratedFileListParameter>();
   internals->addConversion<GeometrySelectionParameter>();
   internals->addConversion<ReadCSVFileParameter>();

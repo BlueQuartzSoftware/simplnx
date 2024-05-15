@@ -156,11 +156,11 @@ nxtest.check_filter_result(nxitk.ITKImageWriterFilter, result)
 #------------------------------------------------------------------------------
 # Generate a Colorized Version of the Confidence Index
 #------------------------------------------------------------------------------
-result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
+result = nx.ComputeColorTableFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
                                               input_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset="Rainbow Desaturated")
-nxtest.check_filter_result(nx.GenerateColorTableFilter, result)
+nxtest.check_filter_result(nx.ComputeColorTableFilter, result)
 
 
 #------------------------------------------------------------------------------

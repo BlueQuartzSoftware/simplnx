@@ -73,7 +73,7 @@ set(FilterList
   FindBoundaryElementFractionsFilter
   FindTriangleGeomSizesFilter
   FlyingEdges3DFilter
-  GenerateColorTableFilter
+  ComputeColorTableFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
@@ -178,7 +178,7 @@ set(AlgorithmList
   FindNRingNeighbors
   FindTriangleGeomSizes
   FlyingEdges3D
-  GenerateColorTable
+  ComputeColorTable
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids

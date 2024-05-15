@@ -12299,11 +12299,11 @@
                     "uuid": "{8ec1fc8e-6484-5412-a898-8079986c0a26}"
                 },
                 {
-                    "name": "GenerateColorTable",
+                    "name": "ComputeColorTable",
                     "parameters": [
                         {
                             "name": "SelectedPresetName",
-                            "type": "GenerateColorTableFilterParameter"
+                            "type": "ComputeColorTableFilterParameter"
                         },
                         {
                             "name": "SelectedDataArrayPath",

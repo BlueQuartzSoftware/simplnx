@@ -19,7 +19,7 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/EnsembleInfoParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Parameters/GenerateColorTableParameter.hpp"
+#include "simplnx/Parameters/ComputeColorTableParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -1676,9 +1676,9 @@ struct EnsembleInfoFilterParameterConverter
   }
 };
 
-struct GenerateColorTableFilterParameterConverter
+struct ComputeColorTableFilterParameterConverter
 {
-  using ParameterType = GenerateColorTableParameter;
+  using ParameterType = ComputeColorTableParameter;
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_SelectedPresetKey = "SelectedPresetName";
@@ -1689,11 +1689,11 @@ struct GenerateColorTableFilterParameterConverter
   {
     if(!json1.is_string())
     {
-      return MakeErrorResult<ValueType>(-2, fmt::format("GenerateColorTableFilterParameterConverter json1 '{}' is not a string", json2.dump()));
+      return MakeErrorResult<ValueType>(-2, fmt::format("ComputeColorTableFilterParameterConverter json1 '{}' is not a string", json2.dump()));
     }
     if(!json2.is_array())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("GenerateColorTableFilterParameterConverter json2 '{}' is not an array", json1.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("ComputeColorTableFilterParameterConverter json2 '{}' is not an array", json1.dump()));
     }
 
     auto presetName = json1.get<std::string>();
