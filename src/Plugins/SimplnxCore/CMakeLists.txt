@@ -68,7 +68,7 @@ set(FilterList
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   ComputeArrayStatisticsFilter
-  FindBiasedFeaturesFilter
+  ComputeBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
   FindTriangleGeomSizesFilter
@@ -173,7 +173,7 @@ set(AlgorithmList
   FeatureFaceCurvature
   FillBadData
   ComputeArrayStatistics
-  FindBiasedFeatures
+  ComputeBiasedFeatures
   FindBoundaryCells
   FindNRingNeighbors
   FindTriangleGeomSizes

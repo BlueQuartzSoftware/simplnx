@@ -1,4 +1,4 @@
-#include "FindBiasedFeatures.hpp"
+#include "ComputeBiasedFeatures.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -6,7 +6,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-FindBiasedFeatures::FindBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBiasedFeaturesInputValues* inputValues)
+ComputeBiasedFeatures::ComputeBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBiasedFeaturesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -15,16 +15,16 @@ FindBiasedFeatures::FindBiasedFeatures(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-FindBiasedFeatures::~FindBiasedFeatures() noexcept = default;
+ComputeBiasedFeatures::~ComputeBiasedFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FindBiasedFeatures::getCancel()
+const std::atomic_bool& ComputeBiasedFeatures::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> FindBiasedFeatures::operator()()
+Result<> ComputeBiasedFeatures::operator()()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();
@@ -41,7 +41,7 @@ Result<> FindBiasedFeatures::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void FindBiasedFeatures::findBoundingBoxFeatures()
+void ComputeBiasedFeatures::findBoundingBoxFeatures()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
@@ -189,7 +189,7 @@ void FindBiasedFeatures::findBoundingBoxFeatures()
 }
 
 // -----------------------------------------------------------------------------
-void FindBiasedFeatures::findBoundingBoxFeatures2D()
+void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();

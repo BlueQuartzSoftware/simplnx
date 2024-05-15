@@ -9,7 +9,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT FindBiasedFeaturesInputValues
+struct SIMPLNXCORE_EXPORT ComputeBiasedFeaturesInputValues
 {
   bool CalcByPhase;
   DataPath ImageGeometryPath;
@@ -20,20 +20,20 @@ struct SIMPLNXCORE_EXPORT FindBiasedFeaturesInputValues
 };
 
 /**
- * @class FindBiasedFeatures
+ * @class ComputeBiasedFeatures
  * @brief This filter determines which Features are biased by the outer surfaces of the sample.
  */
 
-class SIMPLNXCORE_EXPORT FindBiasedFeatures
+class SIMPLNXCORE_EXPORT ComputeBiasedFeatures
 {
 public:
-  FindBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBiasedFeaturesInputValues* inputValues);
-  ~FindBiasedFeatures() noexcept;
+  ComputeBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBiasedFeaturesInputValues* inputValues);
+  ~ComputeBiasedFeatures() noexcept;
 
-  FindBiasedFeatures(const FindBiasedFeatures&) = delete;
-  FindBiasedFeatures(FindBiasedFeatures&&) noexcept = delete;
-  FindBiasedFeatures& operator=(const FindBiasedFeatures&) = delete;
-  FindBiasedFeatures& operator=(FindBiasedFeatures&&) noexcept = delete;
+  ComputeBiasedFeatures(const ComputeBiasedFeatures&) = delete;
+  ComputeBiasedFeatures(ComputeBiasedFeatures&&) noexcept = delete;
+  ComputeBiasedFeatures& operator=(const ComputeBiasedFeatures&) = delete;
+  ComputeBiasedFeatures& operator=(ComputeBiasedFeatures&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -45,7 +45,7 @@ protected:
 
 private:
   DataStructure& m_DataStructure;
-  const FindBiasedFeaturesInputValues* m_InputValues = nullptr;
+  const ComputeBiasedFeaturesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

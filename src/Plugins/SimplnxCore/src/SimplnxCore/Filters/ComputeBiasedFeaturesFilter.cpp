@@ -1,6 +1,6 @@
-#include "FindBiasedFeaturesFilter.hpp"
+#include "ComputeBiasedFeaturesFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/FindBiasedFeatures.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeBiasedFeatures.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -18,37 +18,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindBiasedFeaturesFilter::name() const
+std::string ComputeBiasedFeaturesFilter::name() const
 {
-  return FilterTraits<FindBiasedFeaturesFilter>::name.str();
+  return FilterTraits<ComputeBiasedFeaturesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindBiasedFeaturesFilter::className() const
+std::string ComputeBiasedFeaturesFilter::className() const
 {
-  return FilterTraits<FindBiasedFeaturesFilter>::className;
+  return FilterTraits<ComputeBiasedFeaturesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindBiasedFeaturesFilter::uuid() const
+Uuid ComputeBiasedFeaturesFilter::uuid() const
 {
-  return FilterTraits<FindBiasedFeaturesFilter>::uuid;
+  return FilterTraits<ComputeBiasedFeaturesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindBiasedFeaturesFilter::humanName() const
+std::string ComputeBiasedFeaturesFilter::humanName() const
 {
   return "Compute Biased Features (Bounding Box)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindBiasedFeaturesFilter::defaultTags() const
+std::vector<std::string> ComputeBiasedFeaturesFilter::defaultTags() const
 {
   return {className(), "Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindBiasedFeaturesFilter::parameters() const
+Parameters ComputeBiasedFeaturesFilter::parameters() const
 {
   Parameters params;
 
@@ -73,13 +73,13 @@ Parameters FindBiasedFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindBiasedFeaturesFilter::clone() const
+IFilter::UniquePointer ComputeBiasedFeaturesFilter::clone() const
 {
-  return std::make_unique<FindBiasedFeaturesFilter>();
+  return std::make_unique<ComputeBiasedFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pCalcByPhaseValue = filterArgs.value<bool>(k_CalcByPhase_Key);
@@ -112,10 +112,10 @@ IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel) const
 {
-  FindBiasedFeaturesInputValues inputValues;
+  ComputeBiasedFeaturesInputValues inputValues;
 
   inputValues.CalcByPhase = filterArgs.value<bool>(k_CalcByPhase_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -124,7 +124,7 @@ Result<> FindBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
   inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.replaceName(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
-  return FindBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -139,9 +139,9 @@ constexpr StringLiteral k_BiasedFeaturesArrayNameKey = "BiasedFeaturesArrayName"
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindBiasedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeBiasedFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindBiasedFeaturesFilter().getDefaultArguments();
+  Arguments args = ComputeBiasedFeaturesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

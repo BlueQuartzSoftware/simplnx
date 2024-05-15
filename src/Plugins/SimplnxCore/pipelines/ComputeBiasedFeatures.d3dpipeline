@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "FindBiasedFeatures.d3dpipeline",
+  "name": "ComputeBiasedFeatures.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -122,7 +122,7 @@
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/FindBiasedFeatures.dream3d",
+        "export_file_path": "Data/Output/Examples/ComputeBiasedFeatures.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",

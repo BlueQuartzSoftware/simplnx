@@ -95,7 +95,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = nx.FindBiasedFeaturesFilter()
+nx_filter = nx.ComputeBiasedFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -110,7 +110,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Output file path for Filter 4
-output_file_path = nxtest.get_data_directory() / "Output/FindBiasedFeatures/FindBiasedFeatures.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ComputeBiasedFeatures/ComputeBiasedFeatures.dream3d"
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

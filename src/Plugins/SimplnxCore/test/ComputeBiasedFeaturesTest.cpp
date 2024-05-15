@@ -2,7 +2,7 @@
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/FindBiasedFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeBiasedFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
@@ -26,7 +26,7 @@ const DataPath k_ComputedBiasedFeatures2DPath({Constants::k_SmallIN1002, Constan
 const DataPath k_WrongSurfaceFeaturePath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
 } // namespace
 
-TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Valid filter execution", "[FindBiasedFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
                                                               "6_6_find_biased_features.dream3d");
@@ -36,18 +36,18 @@ TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Valid filter execution", "[Fin
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindBiasedFeaturesFilter filter;
+  ComputeBiasedFeaturesFilter filter;
   Arguments args;
 
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_CalcByPhase_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>(k_ComputedBiasedFeaturesName));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CalcByPhase_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>(k_ComputedBiasedFeaturesName));
 
   SECTION("3D")
   {
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -61,10 +61,10 @@ TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Valid filter execution", "[Fin
   }
   SECTION("2D")
   {
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_Geometry2DPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_Centroids2DPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeatures2DPath));
-    args.insertOrAssign(FindBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_Phases2DPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_Geometry2DPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_Centroids2DPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeatures2DPath));
+    args.insertOrAssign(ComputeBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_Phases2DPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Valid filter execution", "[Fin
   }
 }
 
-TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Invalid filter execution", "[FindBiasedFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
                                                               "6_6_find_biased_features.dream3d");
@@ -88,16 +88,16 @@ TEST_CASE("SimplnxCore::FindBiasedFeaturesFilter: Invalid filter execution", "[F
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindBiasedFeaturesFilter filter;
+  ComputeBiasedFeaturesFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_CalcByPhase_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsPath));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_WrongSurfaceFeaturePath));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
-  args.insertOrAssign(FindBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>(k_ComputedBiasedFeaturesName));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CalcByPhase_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsPath));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_WrongSurfaceFeaturePath));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_PhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>(k_ComputedBiasedFeaturesName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

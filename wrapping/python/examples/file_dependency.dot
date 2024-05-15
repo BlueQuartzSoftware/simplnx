@@ -39,7 +39,7 @@ digraph G {
 "SmallIN100_Final.vtk" [shape=record  fillcolor="#23882A"]
 "SmallIN100_CrystalStats.dream3d" [shape=record  fillcolor="#23882A"]
 "SmallIN100_Mesh.dream3d" [shape=record  fillcolor="#23882A"]
-"FindBiasedFeatures.dream3d" [shape=record  fillcolor="#23882A"]
+"ComputeBiasedFeatures.dream3d" [shape=record  fillcolor="#23882A"]
 "SmallIN100_Smoothed.dream3d" [shape=record  fillcolor="#23882A"]
 "SmallIN100_MeshStats.dream3d" [shape=record  fillcolor="#23882A"]
 "SmallIN100_GBCD.dream3d" [shape=record  fillcolor="#23882A"]
@@ -63,7 +63,7 @@ digraph G {
   "SmallIN100_Morph.dream3d" -> "05_Small_IN100_Crystallographic_Statistics" -> "SmallIN100_CrystalStats.dream3d"
   
   "SmallIN100_CrystalStats.dream3d"->"01_Small_IN100_Quick_Mesh"-> "SmallIN100_Mesh.dream3d"
-  "SmallIN100_CrystalStats.dream3d" -> "FindBiasedFeatures" -> "FindBiasedFeatures.dream3d"
+  "SmallIN100_CrystalStats.dream3d" -> "ComputeBiasedFeatures" -> "ComputeBiasedFeatures.dream3d"
 
   "SmallIN100_Mesh.dream3d" -> "02_Small_IN100_Smooth_Mesh" -> "SmallIN100_Smoothed.dream3d"
   "SmallIN100_Smoothed.dream3d" -> "03_Small_IN100_Mesh_Statistics" -> "SmallIN100_MeshStats.dream3d"

@@ -20,13 +20,13 @@ By definition of the box, no **Feature** that intersects an outer surface of the
 *Note:* This **Filter** is a modification of an algorithm from Dave Rowenhorst (Naval Research Laboratory).
 
 The images below show the feature ids before and after running this filter. The image on the right shows the biased features colored in red, the unbiased features colored by their feature id, the bounding box (described in step 3 of the algorithm above), and the feature centroids (white for unbiased and purple for biased).
-![2D Before and After Biased Features](Images/FindBiasedFeaturesBeforeAndAfter.png)
+![2D Before and After Biased Features](Images/ComputeBiasedFeaturesBeforeAndAfter.png)
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ FindBiasedFeatures.d3dpipeline
++ ComputeBiasedFeatures.d3dpipeline
 
 ## License & Copyright
 

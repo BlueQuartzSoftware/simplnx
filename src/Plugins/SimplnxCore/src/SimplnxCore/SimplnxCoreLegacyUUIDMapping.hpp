@@ -43,7 +43,7 @@
 #include "SimplnxCore/Filters/FillBadDataFilter.hpp"
 #include "SimplnxCore/Filters/ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/FindBoundaryCellsFilter.hpp"
-#include "SimplnxCore/Filters/FindBiasedFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeBiasedFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeDifferencesMapFilter.hpp"
 #include "SimplnxCore/Filters/ComputeEuclideanDistMapFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureCentroidsFilter.hpp"
@@ -158,7 +158,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), {nx::core::FilterTraits<WriteFeatureDataCSVFilter>::uuid, &WriteFeatureDataCSVFilter::FromSIMPLJson}}, // FeatureDataCSVWriter
     {nx::core::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), {nx::core::FilterTraits<ComputeArrayStatisticsFilter>::uuid, &ComputeArrayStatisticsFilter::FromSIMPLJson}}, // ComputeArrayStatistics
     {nx::core::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), {nx::core::FilterTraits<FindBoundaryCellsFilter>::uuid, &FindBoundaryCellsFilter::FromSIMPLJson}}, // FindBoundaryCellsFilter
-    {nx::core::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {nx::core::FilterTraits<FindBiasedFeaturesFilter>::uuid, &FindBiasedFeaturesFilter::FromSIMPLJson}}, // FindBiasedFeaturesFilter
+    {nx::core::Uuid::FromString("450c2f00-9ddf-56e1-b4c1-0e74e7ad2349").value(), {nx::core::FilterTraits<ComputeBiasedFeaturesFilter>::uuid, &ComputeBiasedFeaturesFilter::FromSIMPLJson}}, // ComputeBiasedFeaturesFilter
     {nx::core::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), {nx::core::FilterTraits<ComputeDifferencesMapFilter>::uuid, &ComputeDifferencesMapFilter::FromSIMPLJson}}, // FindDifferenceMap
     {nx::core::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), {nx::core::FilterTraits<ComputeEuclideanDistMapFilter>::uuid, &ComputeEuclideanDistMapFilter::FromSIMPLJson}}, // ComputeEuclideanDistMap
     {nx::core::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), {nx::core::FilterTraits<ComputeFeatureCentroidsFilter>::uuid, &ComputeFeatureCentroidsFilter::FromSIMPLJson}}, // ComputeFeatureCentroids
