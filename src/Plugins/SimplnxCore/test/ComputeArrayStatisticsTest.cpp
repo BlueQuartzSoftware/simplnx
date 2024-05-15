@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindArrayStatisticsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -19,7 +19,7 @@ bool VectorContains(const std::vector<T>& vector, T value)
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][FindArrayStatisticsFilter]")
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -70,43 +70,43 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCor
 
   // Execute the Find Array Statistics Filter
   {
-    FindArrayStatisticsFilter filter;
+    ComputeArrayStatisticsFilter filter;
     Arguments args;
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(false));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>());
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>());
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -208,7 +208,7 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm", "[SimplnxCor
   }
 }
 
-TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][FindArrayStatisticsFilter]")
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -275,43 +275,43 @@ TEST_CASE("SimplnxCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[S
 
   // Execute the Find Array Statistics Filter
   {
-    FindArrayStatisticsFilter filter;
+    ComputeArrayStatisticsFilter filter;
     Arguments args;
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "FeatureIds"})));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
-    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "FeatureIds"})));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(mean));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(median));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModeArrayName_Key, std::make_any<std::string>(mode));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

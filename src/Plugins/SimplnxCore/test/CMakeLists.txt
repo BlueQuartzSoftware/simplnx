@@ -68,7 +68,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
-  FindArrayStatisticsTest.cpp
+  ComputeArrayStatisticsTest.cpp
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
   FindBoundaryElementFractionsTest.cpp

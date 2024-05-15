@@ -1,6 +1,6 @@
 #include "AppendImageGeometryZSliceFilter.hpp"
 
-#include "FindArrayStatisticsFilter.hpp"
+#include "ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/Algorithms/AppendImageGeometryZSlice.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"

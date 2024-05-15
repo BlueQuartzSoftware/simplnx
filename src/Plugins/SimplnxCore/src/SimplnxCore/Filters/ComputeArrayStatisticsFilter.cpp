@@ -1,6 +1,6 @@
-#include "FindArrayStatisticsFilter.hpp"
+#include "ComputeArrayStatisticsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/FindArrayStatistics.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeArrayStatistics.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -34,22 +34,22 @@ struct IsIntegerType
 
 OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args, usize numBins, std::vector<usize> tupleDims)
 {
-  auto findLength = args.value<bool>(FindArrayStatisticsFilter::k_FindLength_Key);
-  auto findMin = args.value<bool>(FindArrayStatisticsFilter::k_FindMin_Key);
-  auto findMax = args.value<bool>(FindArrayStatisticsFilter::k_FindMax_Key);
-  auto findMean = args.value<bool>(FindArrayStatisticsFilter::k_FindMean_Key);
-  auto findMedian = args.value<bool>(FindArrayStatisticsFilter::k_FindMedian_Key);
-  auto findMode = args.value<bool>(FindArrayStatisticsFilter::k_FindMode_Key);
-  auto findModalBinRanges = args.value<bool>(FindArrayStatisticsFilter::k_FindModalBinRanges_Key);
-  auto findStdDeviation = args.value<bool>(FindArrayStatisticsFilter::k_FindStdDeviation_Key);
-  auto findSummation = args.value<bool>(FindArrayStatisticsFilter::k_FindSummation_Key);
-  auto findHistogramValue = args.value<bool>(FindArrayStatisticsFilter::k_FindHistogram_Key);
-  auto pFindNumUniqueValuesValue = args.value<bool>(FindArrayStatisticsFilter::k_FindUniqueValues_Key);
-  auto computeByIndexValue = args.value<bool>(FindArrayStatisticsFilter::k_ComputeByIndex_Key);
-  auto standardizeDataValue = args.value<bool>(FindArrayStatisticsFilter::k_StandardizeData_Key);
-  auto inputArrayPath = args.value<DataPath>(FindArrayStatisticsFilter::k_SelectedArrayPath_Key);
+  auto findLength = args.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
+  auto findMin = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);
+  auto findMax = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMax_Key);
+  auto findMean = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMean_Key);
+  auto findMedian = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMedian_Key);
+  auto findMode = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMode_Key);
+  auto findModalBinRanges = args.value<bool>(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key);
+  auto findStdDeviation = args.value<bool>(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key);
+  auto findSummation = args.value<bool>(ComputeArrayStatisticsFilter::k_FindSummation_Key);
+  auto findHistogramValue = args.value<bool>(ComputeArrayStatisticsFilter::k_FindHistogram_Key);
+  auto pFindNumUniqueValuesValue = args.value<bool>(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key);
+  auto computeByIndexValue = args.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key);
+  auto standardizeDataValue = args.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key);
+  auto inputArrayPath = args.value<DataPath>(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key);
   auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
-  auto destinationAttributeMatrixValue = args.value<DataPath>(FindArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
+  auto destinationAttributeMatrixValue = args.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 
   size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
@@ -61,87 +61,87 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   if(computeByIndexValue)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
 
   if(findLength)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_LengthArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_LengthArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MinimumArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MaximumArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MeanArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MeanArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MedianArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MedianArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findMode)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_ModeArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModeArrayName_Key);
     auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_StdDeviationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_SummationArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_SummationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findHistogramValue)
   {
     {
-      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_HistogramArrayName_Key);
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key);
       auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
     {
-      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
       auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
     if(findModalBinRanges)
     {
-      auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_ModalBinArrayName_Key);
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key);
       auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
   }
   if(standardizeDataValue)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_StandardizedArrayName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.replaceName(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(pFindNumUniqueValuesValue)
   {
-    auto arrayPath = args.value<std::string>(FindArrayStatisticsFilter::k_NumUniqueValuesName_Key);
+    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_NumUniqueValuesName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
@@ -154,37 +154,37 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindArrayStatisticsFilter::name() const
+std::string ComputeArrayStatisticsFilter::name() const
 {
-  return FilterTraits<FindArrayStatisticsFilter>::name.str();
+  return FilterTraits<ComputeArrayStatisticsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindArrayStatisticsFilter::className() const
+std::string ComputeArrayStatisticsFilter::className() const
 {
-  return FilterTraits<FindArrayStatisticsFilter>::className;
+  return FilterTraits<ComputeArrayStatisticsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindArrayStatisticsFilter::uuid() const
+Uuid ComputeArrayStatisticsFilter::uuid() const
 {
-  return FilterTraits<FindArrayStatisticsFilter>::uuid;
+  return FilterTraits<ComputeArrayStatisticsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindArrayStatisticsFilter::humanName() const
+std::string ComputeArrayStatisticsFilter::humanName() const
 {
   return "Compute Attribute Array Statistics";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindArrayStatisticsFilter::defaultTags() const
+std::vector<std::string> ComputeArrayStatisticsFilter::defaultTags() const
 {
   return {className(), "SimplnxCore", "Statistics"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindArrayStatisticsFilter::parameters() const
+Parameters ComputeArrayStatisticsFilter::parameters() const
 {
   Parameters params;
 
@@ -283,14 +283,14 @@ Parameters FindArrayStatisticsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindArrayStatisticsFilter::clone() const
+IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
 {
-  return std::make_unique<FindArrayStatisticsFilter>();
+  return std::make_unique<ComputeArrayStatisticsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pFindHistogramValue = filterArgs.value<bool>(k_FindHistogram_Key);
   auto pNumBinsValue = filterArgs.value<int32>(k_NumBins_Key);
@@ -413,10 +413,10 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
-  FindArrayStatisticsInputValues inputValues;
+  ComputeArrayStatisticsInputValues inputValues;
 
   inputValues.FindHistogram = filterArgs.value<bool>(k_FindHistogram_Key);
   inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
@@ -455,7 +455,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.replaceName(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
 
-  return FindArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -493,9 +493,9 @@ constexpr StringLiteral k_StandardizedArrayNameKey = "StandardizedArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindArrayStatisticsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindArrayStatisticsFilter().getDefaultArguments();
+  Arguments args = ComputeArrayStatisticsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -67,7 +67,7 @@ set(FilterList
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
-  FindArrayStatisticsFilter
+  ComputeArrayStatisticsFilter
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
@@ -172,7 +172,7 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
-  FindArrayStatistics
+  ComputeArrayStatistics
   FindBiasedFeatures
   FindBoundaryCells
   FindNRingNeighbors

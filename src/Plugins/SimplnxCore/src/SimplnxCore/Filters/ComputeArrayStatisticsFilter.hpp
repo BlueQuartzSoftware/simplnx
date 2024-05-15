@@ -9,20 +9,20 @@
 namespace nx::core
 {
 /**
- * @class FindArrayStatisticsFilter
+ * @class ComputeArrayStatisticsFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT FindArrayStatisticsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeArrayStatisticsFilter : public IFilter
 {
 public:
-  FindArrayStatisticsFilter() = default;
-  ~FindArrayStatisticsFilter() noexcept override = default;
+  ComputeArrayStatisticsFilter() = default;
+  ~ComputeArrayStatisticsFilter() noexcept override = default;
 
-  FindArrayStatisticsFilter(const FindArrayStatisticsFilter&) = delete;
-  FindArrayStatisticsFilter(FindArrayStatisticsFilter&&) noexcept = delete;
+  ComputeArrayStatisticsFilter(const ComputeArrayStatisticsFilter&) = delete;
+  ComputeArrayStatisticsFilter(ComputeArrayStatisticsFilter&&) noexcept = delete;
 
-  FindArrayStatisticsFilter& operator=(const FindArrayStatisticsFilter&) = delete;
-  FindArrayStatisticsFilter& operator=(FindArrayStatisticsFilter&&) noexcept = delete;
+  ComputeArrayStatisticsFilter& operator=(const ComputeArrayStatisticsFilter&) = delete;
+  ComputeArrayStatisticsFilter& operator=(ComputeArrayStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FindHistogram_Key = "find_histogram";
@@ -136,4 +136,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindArrayStatisticsFilter, "645ecae2-cb30-4b53-8165-c9857dfa754f");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeArrayStatisticsFilter, "645ecae2-cb30-4b53-8165-c9857dfa754f");

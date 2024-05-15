@@ -13,7 +13,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT FindArrayStatisticsInputValues
+struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
   bool FindHistogram;
   float64 MinRange;
@@ -57,16 +57,16 @@ struct SIMPLNXCORE_EXPORT FindArrayStatisticsInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT FindArrayStatistics
+class SIMPLNXCORE_EXPORT ComputeArrayStatistics
 {
 public:
-  FindArrayStatistics(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, FindArrayStatisticsInputValues* inputValues);
-  ~FindArrayStatistics() noexcept;
+  ComputeArrayStatistics(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeArrayStatisticsInputValues* inputValues);
+  ~ComputeArrayStatistics() noexcept;
 
-  FindArrayStatistics(const FindArrayStatistics&) = delete;
-  FindArrayStatistics(FindArrayStatistics&&) noexcept = delete;
-  FindArrayStatistics& operator=(const FindArrayStatistics&) = delete;
-  FindArrayStatistics& operator=(FindArrayStatistics&&) noexcept = delete;
+  ComputeArrayStatistics(const ComputeArrayStatistics&) = delete;
+  ComputeArrayStatistics(ComputeArrayStatistics&&) noexcept = delete;
+  ComputeArrayStatistics& operator=(const ComputeArrayStatistics&) = delete;
+  ComputeArrayStatistics& operator=(ComputeArrayStatistics&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -77,7 +77,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const FindArrayStatisticsInputValues* m_InputValues = nullptr;
+  const ComputeArrayStatisticsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
