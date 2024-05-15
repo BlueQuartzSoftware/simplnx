@@ -55,6 +55,7 @@
 #include <simplnx/Parameters/BoolParameter.hpp>
 #include <simplnx/Parameters/CalculatorParameter.hpp>
 #include <simplnx/Parameters/ChoicesParameter.hpp>
+#include <simplnx/Parameters/ComputeColorTableParameter.hpp>
 #include <simplnx/Parameters/DataGroupCreationParameter.hpp>
 #include <simplnx/Parameters/DataGroupSelectionParameter.hpp>
 #include <simplnx/Parameters/DataObjectNameParameter.hpp>
@@ -65,7 +66,6 @@
 #include <simplnx/Parameters/DynamicTableParameter.hpp>
 #include <simplnx/Parameters/EnsembleInfoParameter.hpp>
 #include <simplnx/Parameters/FileSystemPathParameter.hpp>
-#include <simplnx/Parameters/ComputeColorTableParameter.hpp>
 #include <simplnx/Parameters/GeneratedFileListParameter.hpp>
 #include <simplnx/Parameters/GeometrySelectionParameter.hpp>
 #include <simplnx/Parameters/MultiArraySelectionParameter.hpp>

@@ -68,7 +68,7 @@ Parameters ComputeColorTableFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ComputeColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array",
-                                                              ColorTableUtilities::GetDefaultRGBPresetName()));
+                                                             ColorTableUtilities::GetDefaultRGBPresetName()));
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
@@ -99,7 +99,7 @@ IFilter::UniquePointer ComputeColorTableFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   auto pRgbArrayPathValue = pSelectedDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_RgbArrayPath_Key));
@@ -148,7 +148,7 @@ IFilter::PreflightResult ComputeColorTableFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> ComputeColorTableFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel) const
 {
   ComputeColorTableInputValues inputValues;
 
@@ -179,8 +179,8 @@ Result<Arguments> ComputeColorTableFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::ComputeColorTableFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey,
-                                                                                                                     SIMPL::k_SelectedPresetControlPointsKey, k_SelectedPreset_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::ComputeColorTableFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey, SIMPL::k_SelectedPresetControlPointsKey,
+                                                                                                                    k_SelectedPreset_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RgbArrayNameKey, k_RgbArrayPath_Key));
 

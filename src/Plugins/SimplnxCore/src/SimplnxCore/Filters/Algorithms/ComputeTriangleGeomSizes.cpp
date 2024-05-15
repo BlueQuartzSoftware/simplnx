@@ -40,7 +40,7 @@ T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const DataArray<T>&
 
 // -----------------------------------------------------------------------------
 ComputeTriangleGeomSizes::ComputeTriangleGeomSizes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             ComputeTriangleGeomSizesInputValues* inputValues)
+                                                   ComputeTriangleGeomSizesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

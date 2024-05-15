@@ -104,7 +104,7 @@ private:
 
 // -----------------------------------------------------------------------------
 ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 ComputeArrayHistogramInputValues* inputValues)
+                                             ComputeArrayHistogramInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

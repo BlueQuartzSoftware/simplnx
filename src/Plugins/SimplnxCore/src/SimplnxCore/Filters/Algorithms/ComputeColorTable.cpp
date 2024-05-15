@@ -41,7 +41,7 @@ class ComputeColorTableImpl
 {
 public:
   ComputeColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8Array& colorArray,
-                         const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
+                        const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayPtr(arrayPtr)
   , m_BinPoints(binPoints)
   , m_NumControlColors(numControlColors)

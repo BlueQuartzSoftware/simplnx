@@ -86,7 +86,7 @@ IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
   auto pUserDefinedRangeValue = filterArgs.value<bool>(k_UserDefinedRange_Key); // verify and calculate range values here if false
@@ -130,7 +130,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   ComputeArrayHistogramInputValues inputValues;
 
