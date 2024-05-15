@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class CalculateTriangleAreasFilter
+ * @class ComputeTriangleAreasFilter
  * @brief This filter will compute the area for each triangle within a TriangleGeometry
  */
-class SIMPLNXCORE_EXPORT CalculateTriangleAreasFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeTriangleAreasFilter : public IFilter
 {
 public:
-  CalculateTriangleAreasFilter() = default;
-  ~CalculateTriangleAreasFilter() noexcept override = default;
+  ComputeTriangleAreasFilter() = default;
+  ~ComputeTriangleAreasFilter() noexcept override = default;
 
-  CalculateTriangleAreasFilter(const CalculateTriangleAreasFilter&) = delete;
-  CalculateTriangleAreasFilter(CalculateTriangleAreasFilter&&) noexcept = delete;
+  ComputeTriangleAreasFilter(const ComputeTriangleAreasFilter&) = delete;
+  ComputeTriangleAreasFilter(ComputeTriangleAreasFilter&&) noexcept = delete;
 
-  CalculateTriangleAreasFilter& operator=(const CalculateTriangleAreasFilter&) = delete;
-  CalculateTriangleAreasFilter& operator=(CalculateTriangleAreasFilter&&) noexcept = delete;
+  ComputeTriangleAreasFilter& operator=(const ComputeTriangleAreasFilter&) = delete;
+  ComputeTriangleAreasFilter& operator=(ComputeTriangleAreasFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
@@ -101,4 +101,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CalculateTriangleAreasFilter, "b149addd-c0c8-4010-a264-596005eaf2a5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeTriangleAreasFilter, "b149addd-c0c8-4010-a264-596005eaf2a5");

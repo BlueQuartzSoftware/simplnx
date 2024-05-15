@@ -17,7 +17,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ArrayCalculatorTest.cpp
   CalculateArrayHistogramTest.cpp
   ComputeFeatureSizesTest.cpp
-  CalculateTriangleAreasFilterTest.cpp
+  ComputeTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   CombineStlFilesTest.cpp

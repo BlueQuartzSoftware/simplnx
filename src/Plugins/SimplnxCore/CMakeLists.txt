@@ -17,7 +17,7 @@ set(FilterList
   ArrayCalculatorFilter
   CalculateArrayHistogramFilter
   ComputeFeatureSizesFilter
-  CalculateTriangleAreasFilter
+  ComputeTriangleAreasFilter
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter

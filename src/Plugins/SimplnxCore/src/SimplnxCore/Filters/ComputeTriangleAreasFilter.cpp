@@ -1,4 +1,4 @@
-#include "CalculateTriangleAreasFilter.hpp"
+#include "ComputeTriangleAreasFilter.hpp"
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -70,37 +70,37 @@ private:
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string CalculateTriangleAreasFilter::name() const
+std::string ComputeTriangleAreasFilter::name() const
 {
-  return FilterTraits<CalculateTriangleAreasFilter>::name.str();
+  return FilterTraits<ComputeTriangleAreasFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string CalculateTriangleAreasFilter::className() const
+std::string ComputeTriangleAreasFilter::className() const
 {
-  return FilterTraits<CalculateTriangleAreasFilter>::className;
+  return FilterTraits<ComputeTriangleAreasFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid CalculateTriangleAreasFilter::uuid() const
+Uuid ComputeTriangleAreasFilter::uuid() const
 {
-  return FilterTraits<CalculateTriangleAreasFilter>::uuid;
+  return FilterTraits<ComputeTriangleAreasFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string CalculateTriangleAreasFilter::humanName() const
+std::string ComputeTriangleAreasFilter::humanName() const
 {
-  return "Calculate Triangle Areas";
+  return "Compute Triangle Areas";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> CalculateTriangleAreasFilter::defaultTags() const
+std::vector<std::string> ComputeTriangleAreasFilter::defaultTags() const
 {
   return {className(), "Surface Meshing", "Misc", "Triangle Geometry"};
 }
 
 //------------------------------------------------------------------------------
-Parameters CalculateTriangleAreasFilter::parameters() const
+Parameters ComputeTriangleAreasFilter::parameters() const
 {
   Parameters params;
 
@@ -115,14 +115,14 @@ Parameters CalculateTriangleAreasFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CalculateTriangleAreasFilter::clone() const
+IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
 {
-  return std::make_unique<CalculateTriangleAreasFilter>();
+  return std::make_unique<ComputeTriangleAreasFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
@@ -154,8 +154,8 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
@@ -182,9 +182,9 @@ constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTri
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> CalculateTriangleAreasFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = CalculateTriangleAreasFilter().getDefaultArguments();
+  Arguments args = ComputeTriangleAreasFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

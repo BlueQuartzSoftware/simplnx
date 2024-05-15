@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/CalculateTriangleAreasFilter.hpp"
+#include "SimplnxCore/Filters/ComputeTriangleAreasFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::CalculateTriangleAreasFilter", "[SimplnxCore][CalculateTriangleAreasFilter]")
+TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTriangleAreasFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
@@ -52,15 +52,15 @@ TEST_CASE("SimplnxCore::CalculateTriangleAreasFilter", "[SimplnxCore][CalculateT
   }
 
   {
-    CalculateTriangleAreasFilter filter;
+    ComputeTriangleAreasFilter filter;
     Arguments args;
     std::string triangleAreasName = "Triangle Areas";
 
     DataPath geometryPath = DataPath({triangleGeometryName});
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
+    args.insertOrAssign(ComputeTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ComputeTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
