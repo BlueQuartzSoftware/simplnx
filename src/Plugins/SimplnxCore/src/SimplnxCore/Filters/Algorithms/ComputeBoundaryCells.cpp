@@ -1,4 +1,4 @@
-#include "FindBoundaryCells.hpp"
+#include "ComputeBoundaryCells.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -6,7 +6,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-FindBoundaryCells::FindBoundaryCells(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBoundaryCellsInputValues* inputValues)
+ComputeBoundaryCells::ComputeBoundaryCells(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -15,16 +15,16 @@ FindBoundaryCells::FindBoundaryCells(DataStructure& dataStructure, const IFilter
 }
 
 // -----------------------------------------------------------------------------
-FindBoundaryCells::~FindBoundaryCells() noexcept = default;
+ComputeBoundaryCells::~ComputeBoundaryCells() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FindBoundaryCells::getCancel()
+const std::atomic_bool& ComputeBoundaryCells::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> FindBoundaryCells::operator()()
+Result<> ComputeBoundaryCells::operator()()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();

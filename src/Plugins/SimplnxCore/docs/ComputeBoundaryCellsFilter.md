@@ -15,13 +15,13 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 
 | Small IN100 Feature Ids Input | Small IN100 Boundary Cells Output |
 |--|--|
-| ![Feature Ids](Images/FindBoundaryCellsInput.png) | ![Boundary Cells](Images/FindBoundaryCellsOutput.png) |
+| ![Feature Ids](Images/ComputeBoundaryCellsInput.png) | ![Boundary Cells](Images/ComputeBoundaryCellsOutput.png) |
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ FindBoundaryCells.d3dpipeline
++ ComputeBoundaryCells.d3dpipeline
 
 ## License & Copyright
 

@@ -56,7 +56,7 @@ digraph G {
   "Small_IN100.h5ebsd" -> "08_Small_IN100_Full_Reconstruction" -> "SmallIN100_Final.dream3d"
 
   "SmallIN100_Final.dream3d" -> "01_Small_IN100_Morphological_Statistics" -> "SmallIN100_Morph.dream3d"
-  "SmallIN100_Final.dream3d" -> "FindBoundaryCells" -> "SmallIN100_BoundaryCells.dream3d"
+  "SmallIN100_Final.dream3d" -> "ComputeBoundaryCells" -> "SmallIN100_BoundaryCells.dream3d"
   "SmallIN100_Final.dream3d" -> "AvizoWriters" -> "SmallIN100_AvizoRectilinear.am"
   "SmallIN100_Final.dream3d" -> "VtkRectilinearGridWriter" -> "SmallIN100_Final.vtk"
   

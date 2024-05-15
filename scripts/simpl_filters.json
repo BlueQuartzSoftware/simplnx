@@ -10937,7 +10937,7 @@
         {
             "filters": [
                 {
-                    "name": "FindBoundaryCells",
+                    "name": "ComputeBoundaryCells",
                     "parameters": [
                         {
                             "name": "IgnoreFeatureZero",

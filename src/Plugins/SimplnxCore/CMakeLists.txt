@@ -69,7 +69,7 @@ set(FilterList
   FillBadDataFilter
   ComputeArrayStatisticsFilter
   ComputeBiasedFeaturesFilter
-  FindBoundaryCellsFilter
+  ComputeBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
   FindTriangleGeomSizesFilter
   FlyingEdges3DFilter
@@ -174,7 +174,7 @@ set(AlgorithmList
   FillBadData
   ComputeArrayStatistics
   ComputeBiasedFeatures
-  FindBoundaryCells
+  ComputeBoundaryCells
   FindNRingNeighbors
   FindTriangleGeomSizes
   FlyingEdges3D

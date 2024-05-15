@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "FindBoundaryCells.d3dpipeline",
+  "name": "ComputeBoundaryCells.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -64,7 +64,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindBoundaryCellsFilter",
+        "name": "simplnx::ComputeBoundaryCellsFilter",
         "uuid": "a1dd1c29-9152-4648-836c-3b6967e32600"
       },
       "isDisabled": false

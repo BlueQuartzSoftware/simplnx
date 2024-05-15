@@ -70,7 +70,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FillBadDataTest.cpp
   ComputeArrayStatisticsTest.cpp
   ComputeBiasedFeaturesTest.cpp
-  FindBoundaryCellsTest.cpp
+  ComputeBoundaryCellsTest.cpp
   FindBoundaryElementFractionsTest.cpp
   FindTriangleGeomSizesTest.cpp
   FlyingEdges3DTest.cpp
@@ -260,7 +260,7 @@ set(PREBUILT_PIPELINE_NAMES
 
   # These depend on files that are output from OrientationAnalysis Plugin
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBiasedFeatures.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBoundaryCells.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_Text_Data.d3dpipeline"
 
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"

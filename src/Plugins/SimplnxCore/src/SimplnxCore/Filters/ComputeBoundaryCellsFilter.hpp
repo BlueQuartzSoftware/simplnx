@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class FindBoundaryCellsFilter
+ * @class ComputeBoundaryCellsFilter
  * @brief This filter will determine, for each Cell, the number of neighboring Cells that are owned by a different Feature.
  */
-class SIMPLNXCORE_EXPORT FindBoundaryCellsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeBoundaryCellsFilter : public IFilter
 {
 public:
-  FindBoundaryCellsFilter() = default;
-  ~FindBoundaryCellsFilter() noexcept override = default;
+  ComputeBoundaryCellsFilter() = default;
+  ~ComputeBoundaryCellsFilter() noexcept override = default;
 
-  FindBoundaryCellsFilter(const FindBoundaryCellsFilter&) = delete;
-  FindBoundaryCellsFilter(FindBoundaryCellsFilter&&) noexcept = delete;
+  ComputeBoundaryCellsFilter(const ComputeBoundaryCellsFilter&) = delete;
+  ComputeBoundaryCellsFilter(ComputeBoundaryCellsFilter&&) noexcept = delete;
 
-  FindBoundaryCellsFilter& operator=(const FindBoundaryCellsFilter&) = delete;
-  FindBoundaryCellsFilter& operator=(FindBoundaryCellsFilter&&) noexcept = delete;
+  ComputeBoundaryCellsFilter& operator=(const ComputeBoundaryCellsFilter&) = delete;
+  ComputeBoundaryCellsFilter& operator=(ComputeBoundaryCellsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_IgnoreFeatureZero_Key = "ignore_feature_zero";
@@ -104,5 +104,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindBoundaryCellsFilter, "a1dd1c29-9152-4648-836c-3b6967e32600");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeBoundaryCellsFilter, "a1dd1c29-9152-4648-836c-3b6967e32600");
 /* LEGACY UUID FOR THIS FILTER 8a1106d4-c67f-5e09-a02a-b2e9b99d031e */

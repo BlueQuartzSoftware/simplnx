@@ -1,6 +1,6 @@
-#include "FindBoundaryCellsFilter.hpp"
+#include "ComputeBoundaryCellsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/FindBoundaryCells.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeBoundaryCells.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -19,37 +19,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindBoundaryCellsFilter::name() const
+std::string ComputeBoundaryCellsFilter::name() const
 {
-  return FilterTraits<FindBoundaryCellsFilter>::name.str();
+  return FilterTraits<ComputeBoundaryCellsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundaryCellsFilter::className() const
+std::string ComputeBoundaryCellsFilter::className() const
 {
-  return FilterTraits<FindBoundaryCellsFilter>::className;
+  return FilterTraits<ComputeBoundaryCellsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindBoundaryCellsFilter::uuid() const
+Uuid ComputeBoundaryCellsFilter::uuid() const
 {
-  return FilterTraits<FindBoundaryCellsFilter>::uuid;
+  return FilterTraits<ComputeBoundaryCellsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundaryCellsFilter::humanName() const
+std::string ComputeBoundaryCellsFilter::humanName() const
 {
   return "Compute Boundary Cells (Image)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindBoundaryCellsFilter::defaultTags() const
+std::vector<std::string> ComputeBoundaryCellsFilter::defaultTags() const
 {
   return {className(), "Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindBoundaryCellsFilter::parameters() const
+Parameters ComputeBoundaryCellsFilter::parameters() const
 {
   Parameters params;
 
@@ -71,13 +71,13 @@ Parameters FindBoundaryCellsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindBoundaryCellsFilter::clone() const
+IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
 {
-  return std::make_unique<FindBoundaryCellsFilter>();
+  return std::make_unique<ComputeBoundaryCellsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -108,10 +108,10 @@ IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
-  FindBoundaryCellsInputValues inputValues;
+  ComputeBoundaryCellsInputValues inputValues;
 
   inputValues.IgnoreFeatureZero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
   inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
@@ -119,7 +119,7 @@ Result<> FindBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
-  return FindBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -133,9 +133,9 @@ constexpr StringLiteral k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindBoundaryCellsFilter().getDefaultArguments();
+  Arguments args = ComputeBoundaryCellsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

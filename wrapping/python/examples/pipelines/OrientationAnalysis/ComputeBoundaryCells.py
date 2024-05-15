@@ -25,7 +25,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-nx_filter = nx.FindBoundaryCellsFilter()
+nx_filter = nx.ComputeBoundaryCellsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -39,7 +39,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Output file path for Filter 3
-output_file_path = nxtest.get_data_directory() / "Output/FindBoundaryCells/SmallIN100_BoundaryCells.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/ComputeBoundaryCells/SmallIN100_BoundaryCells.dream3d"
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

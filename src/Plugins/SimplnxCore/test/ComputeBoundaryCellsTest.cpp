@@ -2,7 +2,7 @@
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/FindBoundaryCellsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeBoundaryCellsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
@@ -17,25 +17,25 @@ const DataPath k_ExemplarBoundaryCellsPath({k_ExemplarDataContainer, Constants::
 const DataPath k_ComputedBoundaryCellsPath({k_ExemplarDataContainer, Constants::k_CellData, k_ComputedBoundaryCellsName});
 } // namespace
 
-TEST_CASE("SimplnxCore::FindBoundaryCellsFilter: Valid filter execution", "[FindBoundaryCellsFilter]")
+TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[ComputeBoundaryCellsFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz",
-                                                              "6_6_FindBoundaryCellsExemplar.dream3d");
+                                                              "6_6_ComputeBoundaryCellsExemplar.dream3d");
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ComputeBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindBoundaryCellsFilter filter;
+  ComputeBoundaryCellsFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -48,12 +48,12 @@ TEST_CASE("SimplnxCore::FindBoundaryCellsFilter: Valid filter execution", "[Find
   UnitTest::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_ComputedBoundaryCellsPath);
 }
 
-TEST_CASE("SimplnxCore::FindBoundaryCellsFilter: Invalid filter execution", "[FindBoundaryCellsFilter]")
+TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "[ComputeBoundaryCellsFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz",
-                                                              "6_6_FindBoundaryCellsExemplar.dream3d");
+                                                              "6_6_ComputeBoundaryCellsExemplar.dream3d");
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ComputeBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
@@ -64,15 +64,15 @@ TEST_CASE("SimplnxCore::FindBoundaryCellsFilter: Invalid filter execution", "[Fi
   const DataPath k_WrongGeometryPath({Constants::k_ImageGeometry});
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindBoundaryCellsFilter filter;
+  ComputeBoundaryCellsFilter filter;
   Arguments args;
 
   // test mismatching geometry & featureId dimensions
-  args.insertOrAssign(FindBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_WrongGeometryPath));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(FindBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_WrongGeometryPath));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
