@@ -70,7 +70,7 @@ set(FilterList
   ComputeArrayStatisticsFilter
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
-  FindBoundaryElementFractionsFilter
+  ComputeBoundaryElementFractionsFilter
   FindTriangleGeomSizesFilter
   FlyingEdges3DFilter
   ComputeColorTableFilter

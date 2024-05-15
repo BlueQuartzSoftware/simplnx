@@ -112,7 +112,7 @@
 #include "SimplnxCore/Filters/WriteVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
-#include "SimplnxCore/Filters/FindBoundaryElementFractionsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeBoundaryElementFractionsFilter.hpp"
 #include "SimplnxCore/Filters/ReverseTriangleWindingFilter.hpp"
 #include "SimplnxCore/Filters/WriteLosAlamosFFTFilter.hpp"
 #include "SimplnxCore/Filters/ComputeVectorColorsFilter.hpp"
@@ -237,7 +237,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), {nx::core::FilterTraits<WriteVtkRectilinearGridFilter>::uuid, &WriteVtkRectilinearGridFilter::FromSIMPLJson}}, // VtkRectilinearGridWriter
     {nx::core::Uuid::FromString("0df3da89-9106-538e-b1a9-6bbf1cf0aa92").value(), {nx::core::FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid, &RegularGridSampleSurfaceMeshFilter::FromSIMPLJson}}, // RegularGridSampleSurfaceMesh
     {nx::core::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), {nx::core::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid, &UncertainRegularGridSampleSurfaceMeshFilter::FromSIMPLJson}}, // UncertainRegularGridSampleSurfaceMesh
-    {nx::core::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), {nx::core::FilterTraits<FindBoundaryElementFractionsFilter>::uuid, &FindBoundaryElementFractionsFilter::FromSIMPLJson}}, // FindBoundaryElementFractions
+    {nx::core::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), {nx::core::FilterTraits<ComputeBoundaryElementFractionsFilter>::uuid, &ComputeBoundaryElementFractionsFilter::FromSIMPLJson}}, // ComputeBoundaryElementFractions
     {nx::core::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), {nx::core::FilterTraits<ReverseTriangleWindingFilter>::uuid, &ReverseTriangleWindingFilter::FromSIMPLJson}}, // ReverseTriangleWinding
     {nx::core::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), {nx::core::FilterTraits<WriteLosAlamosFFTFilter>::uuid, &WriteLosAlamosFFTFilter::FromSIMPLJson}}, // LosAlamosFFTWriter
     {nx::core::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), {nx::core::FilterTraits<ComputeVectorColorsFilter>::uuid, &ComputeVectorColorsFilter::FromSIMPLJson}}, // ComputeVectorColors

@@ -1,4 +1,4 @@
-#include "FindBoundaryElementFractionsFilter.hpp"
+#include "ComputeBoundaryElementFractionsFilter.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -16,37 +16,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string FindBoundaryElementFractionsFilter::name() const
+std::string ComputeBoundaryElementFractionsFilter::name() const
 {
-  return FilterTraits<FindBoundaryElementFractionsFilter>::name.str();
+  return FilterTraits<ComputeBoundaryElementFractionsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundaryElementFractionsFilter::className() const
+std::string ComputeBoundaryElementFractionsFilter::className() const
 {
-  return FilterTraits<FindBoundaryElementFractionsFilter>::className;
+  return FilterTraits<ComputeBoundaryElementFractionsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindBoundaryElementFractionsFilter::uuid() const
+Uuid ComputeBoundaryElementFractionsFilter::uuid() const
 {
-  return FilterTraits<FindBoundaryElementFractionsFilter>::uuid;
+  return FilterTraits<ComputeBoundaryElementFractionsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundaryElementFractionsFilter::humanName() const
+std::string ComputeBoundaryElementFractionsFilter::humanName() const
 {
   return "Compute Feature Boundary Element Fractions";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindBoundaryElementFractionsFilter::defaultTags() const
+std::vector<std::string> ComputeBoundaryElementFractionsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindBoundaryElementFractionsFilter::parameters() const
+Parameters ComputeBoundaryElementFractionsFilter::parameters() const
 {
   Parameters params;
 
@@ -71,13 +71,13 @@ Parameters FindBoundaryElementFractionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindBoundaryElementFractionsFilter::clone() const
+IFilter::UniquePointer ComputeBoundaryElementFractionsFilter::clone() const
 {
-  return std::make_unique<FindBoundaryElementFractionsFilter>();
+  return std::make_unique<ComputeBoundaryElementFractionsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindBoundaryElementFractionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeBoundaryElementFractionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureDataAMPathValue = filterArgs.value<DataPath>(k_FeatureDataAMPath_Key);
@@ -98,7 +98,7 @@ IFilter::PreflightResult FindBoundaryElementFractionsFilter::preflightImpl(const
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel) const
 {
   auto& featureIds = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
@@ -138,9 +138,9 @@ constexpr StringLiteral k_BoundaryCellFractionsArrayPathKey = "BoundaryCellFract
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> FindBoundaryElementFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeBoundaryElementFractionsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = FindBoundaryElementFractionsFilter().getDefaultArguments();
+  Arguments args = ComputeBoundaryElementFractionsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

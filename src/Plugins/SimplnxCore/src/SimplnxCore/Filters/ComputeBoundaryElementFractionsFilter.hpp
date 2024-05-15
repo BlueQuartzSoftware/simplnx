@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class FindBoundaryElementFractionsFilter
+ * @class ComputeBoundaryElementFractionsFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT FindBoundaryElementFractionsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeBoundaryElementFractionsFilter : public IFilter
 {
 public:
-  FindBoundaryElementFractionsFilter() = default;
-  ~FindBoundaryElementFractionsFilter() noexcept override = default;
+  ComputeBoundaryElementFractionsFilter() = default;
+  ~ComputeBoundaryElementFractionsFilter() noexcept override = default;
 
-  FindBoundaryElementFractionsFilter(const FindBoundaryElementFractionsFilter&) = delete;
-  FindBoundaryElementFractionsFilter(FindBoundaryElementFractionsFilter&&) noexcept = delete;
+  ComputeBoundaryElementFractionsFilter(const ComputeBoundaryElementFractionsFilter&) = delete;
+  ComputeBoundaryElementFractionsFilter(ComputeBoundaryElementFractionsFilter&&) noexcept = delete;
 
-  FindBoundaryElementFractionsFilter& operator=(const FindBoundaryElementFractionsFilter&) = delete;
-  FindBoundaryElementFractionsFilter& operator=(FindBoundaryElementFractionsFilter&&) noexcept = delete;
+  ComputeBoundaryElementFractionsFilter& operator=(const ComputeBoundaryElementFractionsFilter&) = delete;
+  ComputeBoundaryElementFractionsFilter& operator=(ComputeBoundaryElementFractionsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
@@ -103,5 +103,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, FindBoundaryElementFractionsFilter, "f268dab6-9a31-498e-8502-338cd7a549b4");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeBoundaryElementFractionsFilter, "f268dab6-9a31-498e-8502-338cd7a549b4");
 /* LEGACY UUID FOR THIS FILTER 6357243e-41a6-52c4-be2d-2f6894c39fcc */

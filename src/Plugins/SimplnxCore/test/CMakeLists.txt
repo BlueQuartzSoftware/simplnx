@@ -71,7 +71,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeArrayStatisticsTest.cpp
   ComputeBiasedFeaturesTest.cpp
   ComputeBoundaryCellsTest.cpp
-  FindBoundaryElementFractionsTest.cpp
+  ComputeBoundaryElementFractionsTest.cpp
   FindTriangleGeomSizesTest.cpp
   FlyingEdges3DTest.cpp
   ComputeColorTableTest.cpp

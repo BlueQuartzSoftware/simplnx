@@ -2,7 +2,7 @@
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/FindBoundaryElementFractionsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeBoundaryElementFractionsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
@@ -17,7 +17,7 @@ const DataPath k_ExemplarBCFPath = k_FeatureDataAMPath.createChildPath(" Surface
 const DataPath k_GeneratedBCFPath = k_FeatureDataAMPath.createChildPath(k_BCFName);
 } // namespace
 
-TEST_CASE("SimplnxCore::FindBoundaryElementFractionsFilter: Valid Filter Execution", "[SimplnxCore][FindBoundaryElementFractionsFilter]")
+TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Execution", "[SimplnxCore][ComputeBoundaryElementFractionsFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz",
                                                               "6_6_find_feature_boundary_element_fractions");
@@ -27,15 +27,15 @@ TEST_CASE("SimplnxCore::FindBoundaryElementFractionsFilter: Valid Filter Executi
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    FindBoundaryElementFractionsFilter filter;
+    ComputeBoundaryElementFractionsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(FindBoundaryElementFractionsFilter::k_FeatureIdsArrayPath_Key,
+    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_FeatureIdsArrayPath_Key,
                         std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-    args.insertOrAssign(FindBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BoundaryCells"})));
-    args.insertOrAssign(FindBoundaryElementFractionsFilter::k_FeatureDataAMPath_Key, std::make_any<DataPath>(k_FeatureDataAMPath));
-    args.insertOrAssign(FindBoundaryElementFractionsFilter::k_BoundaryCellFractionsArrayName_Key, std::make_any<std::string>(::k_BCFName));
+    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BoundaryCells"})));
+    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_FeatureDataAMPath_Key, std::make_any<DataPath>(k_FeatureDataAMPath));
+    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_BoundaryCellFractionsArrayName_Key, std::make_any<std::string>(::k_BCFName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
