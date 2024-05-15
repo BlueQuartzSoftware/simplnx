@@ -10598,7 +10598,7 @@
                     "uuid": "{26765457-89fb-5686-87f6-878ca549f0df}"
                 },
                 {
-                    "name": "FindTriangleGeomSizes",
+                    "name": "ComputeTriangleGeomSizes",
                     "parameters": [
                         {
                             "name": "",

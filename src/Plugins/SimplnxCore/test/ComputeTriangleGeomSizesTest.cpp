@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/FindTriangleGeomSizesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeTriangleGeomSizesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -11,7 +11,7 @@
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-namespace FindTriangleGeomSizesFilterTest
+namespace ComputeTriangleGeomSizesFilterTest
 {
 const std::string k_TriangleGeometryName = "TriangleDataContainer";
 const std::string k_FaceLabelsName = "FaceLabels";
@@ -23,11 +23,11 @@ const DataPath k_GeometryPath = DataPath({k_TriangleGeometryName});
 const DataPath k_FeatureAttributeMatrixPath = k_GeometryPath.createChildPath(k_FaceFeatureName);
 const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceDataName).createChildPath(k_FaceLabelsName);
 
-} // namespace FindTriangleGeomSizesFilterTest
+} // namespace ComputeTriangleGeomSizesFilterTest
 
-using namespace FindTriangleGeomSizesFilterTest;
+using namespace ComputeTriangleGeomSizesFilterTest;
 
-TEST_CASE("SimplnxCore::FindTriangleGeomSizes", "[SimplnxCore][FindTriangleGeomSizes]")
+TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangleGeomSizes]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
@@ -37,15 +37,15 @@ TEST_CASE("SimplnxCore::FindTriangleGeomSizes", "[SimplnxCore][FindTriangleGeomS
 
   {
     // Instantiate the filter and an Arguments Object
-    FindTriangleGeomSizesFilter filter;
+    ComputeTriangleGeomSizesFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(FindTriangleGeomSizesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
-    args.insertOrAssign(FindTriangleGeomSizesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
-    args.insertOrAssign(FindTriangleGeomSizesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
+    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
+    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
     // Output Path
-    args.insertOrAssign(FindTriangleGeomSizesFilter::k_VolumesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VolumesArrayName));
+    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_VolumesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VolumesArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

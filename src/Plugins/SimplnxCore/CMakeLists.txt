@@ -71,7 +71,7 @@ set(FilterList
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
   ComputeBoundaryElementFractionsFilter
-  FindTriangleGeomSizesFilter
+  ComputeTriangleGeomSizesFilter
   FlyingEdges3DFilter
   ComputeColorTableFilter
   IdentifySampleFilter
@@ -176,7 +176,7 @@ set(AlgorithmList
   ComputeBiasedFeatures
   ComputeBoundaryCells
   FindNRingNeighbors
-  FindTriangleGeomSizes
+  ComputeTriangleGeomSizes
   FlyingEdges3D
   ComputeColorTable
   LabelTriangleGeometry

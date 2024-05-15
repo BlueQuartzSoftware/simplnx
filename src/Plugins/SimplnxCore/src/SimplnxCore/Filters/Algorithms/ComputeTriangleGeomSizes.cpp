@@ -1,4 +1,4 @@
-#include "FindTriangleGeomSizes.hpp"
+#include "ComputeTriangleGeomSizes.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -39,8 +39,8 @@ T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const DataArray<T>&
 } // namespace
 
 // -----------------------------------------------------------------------------
-FindTriangleGeomSizes::FindTriangleGeomSizes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             FindTriangleGeomSizesInputValues* inputValues)
+ComputeTriangleGeomSizes::ComputeTriangleGeomSizes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                             ComputeTriangleGeomSizesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -49,16 +49,16 @@ FindTriangleGeomSizes::FindTriangleGeomSizes(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-FindTriangleGeomSizes::~FindTriangleGeomSizes() noexcept = default;
+ComputeTriangleGeomSizes::~ComputeTriangleGeomSizes() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FindTriangleGeomSizes::getCancel()
+const std::atomic_bool& ComputeTriangleGeomSizes::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> FindTriangleGeomSizes::operator()()
+Result<> ComputeTriangleGeomSizes::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
   using SharedVertexListType = IGeometry::SharedVertexList;
