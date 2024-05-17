@@ -17,39 +17,32 @@ using namespace nx::core;
 
 TEST_CASE("nx::core::Test SIMPL Json Conversion", "[simplnx][Filter]")
 {
-
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "simpl_json_exemplars.tar.gz", "simpl_json_exemplars");
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/simpl_json_exemplars/uuid", unit_test::k_TestFilesDir));
+  auto exemplarDirPath = fs::path(fmt::format("{}/simpl_json_exemplars/uuid", unit_test::k_TestFilesDir));
 
   auto appPtr = Application::GetOrCreateInstance();
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
   REQUIRE(appPtr != nullptr);
 
   appPtr->loadPlugins(unit_test::k_BuildDir.view());
-  auto* filterListPtr = Application::Instance()->getFilterList();
-  const auto pluginListPtr = Application::Instance()->getPluginList();
-
-  std::stringstream output;
+  FilterList* filterList = appPtr->getFilterList();
 
   // Loop on each Plugin
-  for(const auto& plugin : pluginListPtr)
+  for(const auto* plugin : appPtr->getPluginList())
   {
-    const std::string plugName = plugin->getName();
-    auto simplFilterMap = plugin->getSimplToSimplnxMap();
-
-    for(const auto& simplMapIter : simplFilterMap)
+    for(const auto& [simplID, conversionData] : plugin->getSimplToSimplnxMap())
     {
-      IFilter::UniquePointer filter = filterListPtr->createFilter(simplMapIter.second.simplnxUuid);
-      std::string simplJsonFilePath = fmt::format("{}/{}.json", exemplarFilePath.string(), simplMapIter.first.str());
-      if(std::filesystem::exists({simplJsonFilePath}))
+      IFilter::UniquePointer filter = filterList->createFilter(conversionData.simplnxUuid);
+      REQUIRE(filter != nullptr);
+      fs::path simplJsonFilePath = exemplarDirPath / fmt::format("{}.json", simplID.str());
+      if(std::filesystem::exists(simplJsonFilePath))
       {
-        Result<Pipeline> result = Pipeline::FromSIMPLFile(simplJsonFilePath, filterListPtr);
+        Result<Pipeline> result = Pipeline::FromSIMPLFile(simplJsonFilePath, filterList);
         SIMPLNX_RESULT_REQUIRE_VALID(result)
       }
       else
       {
-        std::cout << plugName << "::" << filter->className() << "    SIMPL UUID FILE DOES NOT EXIST: " << simplJsonFilePath << std::endl;
+        fmt::print("{}::{}    SIMPL UUID FILE DOES NOT EXIST: {}\n", plugin->getName(), filter->className(), simplJsonFilePath.string());
       }
     }
   }
