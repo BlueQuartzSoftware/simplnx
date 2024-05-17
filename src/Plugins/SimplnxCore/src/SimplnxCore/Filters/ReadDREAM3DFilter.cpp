@@ -97,13 +97,17 @@ nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
   auto json = IFilter::toJson(args);
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   nx::core::HDF5::FileReader d3dReader(importData.FilePath);
-  auto fileVersion = DREAM3D::GetFileVersion(d3dReader);
-  if(fileVersion == DREAM3D::k_CurrentFileVersion)
+  if(d3dReader.isValid())
   {
-    Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(importData.FilePath);
-    if(pipelineResult.valid())
+    std::string fileVersion = DREAM3D::GetFileVersion(d3dReader);
+    // File version checking should be more robust
+    if(fileVersion == DREAM3D::k_CurrentFileVersion)
     {
-      json[k_ImportedPipeline] = pipelineResult.value().toJson();
+      Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
+      if(pipelineResult.valid())
+      {
+        json[k_ImportedPipeline] = pipelineResult.value().toJson();
+      }
     }
   }
   return json;
