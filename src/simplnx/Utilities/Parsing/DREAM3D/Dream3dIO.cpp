@@ -727,6 +727,12 @@ void DREAM3D::WriteXdmf(const std::filesystem::path& filePath, const DataStructu
   ::WriteXdmf(file, dataStructure, hdf5FilePath);
 }
 
+DREAM3D::FileVersionType DREAM3D::GetFileVersion(const std::filesystem::path& path)
+{
+  HDF5::FileReader fileReader(path);
+  return GetFileVersion(fileReader);
+}
+
 DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileReader& fileReader)
 {
   auto fileVersionAttribute = fileReader.getAttribute(k_FileVersionTag);
