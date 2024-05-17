@@ -696,29 +696,25 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
   if(argumentsResult.valid())
   {
-    std::stringstream exceptionMessage;
+    std::stringstream exceptionMessageStream;
     // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
-    for(const auto& parameter : pipelineFilter->getFilter()->parameters())
+    for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
     {
-      for(const auto& acceptedType : parameter.second->acceptedTypes())
+      IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+      auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
+      if(iter == acceptedTypes.cend())
       {
-        if(std::type_index(argumentsResult.value().at(parameter.first).type()) != acceptedType)
-        {
-          exceptionMessage << fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\nThe mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
-                                          "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.",
-                                          filterName, parameter.first)
-                           << std::endl;
-        }
+        exceptionMessageStream << fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\nThe mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
+                                              "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n",
+                                              filterName, parameterName);
       }
     }
-    if(exceptionMessage.str().empty())
+    std::string exceptionMessage = exceptionMessageStream.str();
+    if(!exceptionMessage.empty())
     {
-      pipelineFilter->setArguments(std::move(argumentsResult.value()));
+      throw std::runtime_error(exceptionMessage);
     }
-    else
-    {
-      throw std::runtime_error(exceptionMessage.str());
-    }
+    pipelineFilter->setArguments(std::move(argumentsResult.value()));
   }
   else
   {
