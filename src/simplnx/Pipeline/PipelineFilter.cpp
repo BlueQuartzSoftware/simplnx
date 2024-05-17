@@ -14,7 +14,6 @@ using namespace nx::core;
 
 namespace
 {
-
 constexpr StringLiteral k_ArgsKey = "args";
 constexpr StringLiteral k_FilterKey = "filter";
 constexpr StringLiteral k_FilterNameKey = "name";
