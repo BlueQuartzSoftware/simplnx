@@ -38,7 +38,6 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{b0e30e6d-912d-5a7e-aeed-750134aba86b}").value(), Uuid::FromString("b0e30e6d-912d-5a7e-aeed-750134aba86b").value()}, /* FindTwinBoundarySchmidFactors */
     {Uuid::FromString("{9a6677a6-b9e5-5fee-afa2-27e868cab8ca}").value(), Uuid::FromString("9a6677a6-b9e5-5fee-afa2-27e868cab8ca").value()}, /* GenerateFZQuaternions */
     {Uuid::FromString("{0a121e03-3922-5c29-962d-40d88653f4b6}").value(), Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value()}, /* GenerateFaceIPFColoring */
-    {Uuid::FromString("{7cd30864-7bcf-5c10-aea7-d107373e2d40}").value(), Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value()}, /* GenerateFaceMisorientationColoring */
     {Uuid::FromString("{a50e6532-8075-5de5-ab63-945feb0de7f7}").value(), Uuid::FromString("a50e6532-8075-5de5-ab63-945feb0de7f7").value()}, /* GenerateIPFColors */
     {Uuid::FromString("{ec58f4fe-8e51-527e-9536-8b6f185684be}").value(), Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value()}, /* GenerateOrientationMatrixTranspose */
     {Uuid::FromString("{630d7486-75ea-5e04-874c-894460cd7c4d}").value(), Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value()}, /* GenerateQuaternionConjugate */
