@@ -55,8 +55,6 @@ constexpr StringLiteral PipelineName = "Pipeline";
 constexpr StringLiteral CompDims = "ComponentDimensions";
 constexpr StringLiteral TupleDims = "TupleDimensions";
 
-constexpr StringLiteral FileVersion = "7.0";
-
 constexpr StringLiteral VertexListName = "SharedVertexList";
 constexpr StringLiteral EdgeListName = "SharedEdgeList";
 constexpr StringLiteral TriListName = "SharedTriList";
@@ -1389,13 +1387,13 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const nx::core::HDF5:
   {
     return ImportDataStructureV8(fileReader, preflight);
   }
-  else if(fileVersion == Legacy::FileVersion)
+  else if(fileVersion == k_LegacyFileVersion)
   {
     return ImportLegacyDataStructure(fileReader, preflight);
   }
   // Unsupported file version
   return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion,
-                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
+                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, k_LegacyFileVersion));
 }
 
 Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight)
@@ -1425,7 +1423,7 @@ Result<Pipeline> DREAM3D::ImportPipelineFromFile(const nx::core::HDF5::FileReade
     }
     return Pipeline::FromJson(pipelineJson.value());
   }
-  if(fileVersion == Legacy::FileVersion)
+  if(fileVersion == k_LegacyFileVersion)
   {
     return Pipeline::FromSIMPLJson(pipelineJson.value());
   }
