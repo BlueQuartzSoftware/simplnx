@@ -55,7 +55,7 @@
 #include <simplnx/Parameters/BoolParameter.hpp>
 #include <simplnx/Parameters/CalculatorParameter.hpp>
 #include <simplnx/Parameters/ChoicesParameter.hpp>
-#include <simplnx/Parameters/ComputeColorTableParameter.hpp>
+#include <simplnx/Parameters/CreateColorMapParameter.hpp>
 #include <simplnx/Parameters/DataGroupCreationParameter.hpp>
 #include <simplnx/Parameters/DataGroupSelectionParameter.hpp>
 #include <simplnx/Parameters/DataObjectNameParameter.hpp>
@@ -1033,7 +1033,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto dynamicTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
   auto ensembleInfoParameter = SIMPLNX_PY_BIND_PARAMETER(mod, EnsembleInfoParameter);
   auto fileSystemPathParameter = SIMPLNX_PY_BIND_PARAMETER(mod, FileSystemPathParameter);
-  auto computeColorTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ComputeColorTableParameter);
+  auto computeColorTableParameter = SIMPLNX_PY_BIND_PARAMETER(mod, CreateColorMapParameter);
   auto generatedFileListParameter = SIMPLNX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
   auto geometrySelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
   auto importTextDataParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadCSVFileParameter);
@@ -1429,7 +1429,7 @@ PYBIND11_MODULE(simplnx, mod)
   internals->addConversion<DynamicTableParameter>();
   internals->addConversion<EnsembleInfoParameter>();
   internals->addConversion<FileSystemPathParameter>();
-  internals->addConversion<ComputeColorTableParameter>();
+  internals->addConversion<CreateColorMapParameter>();
   internals->addConversion<GeneratedFileListParameter>();
   internals->addConversion<GeometrySelectionParameter>();
   internals->addConversion<ReadCSVFileParameter>();

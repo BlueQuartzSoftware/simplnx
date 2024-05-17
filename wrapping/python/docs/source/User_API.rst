@@ -305,10 +305,10 @@ General Parameters
 
     a_file_system_path = "/The/Path/To/The/File/Or/Directory"
 
-.. _ComputeColorTableParameter:
-.. py:class:: ComputeColorTableParameter (Updated v1.2.6)
+.. _CreateColorMapParameter:
+.. py:class:: CreateColorMapParameter (Updated v1.2.6)
    
-   This parameter is used specifically for the  :ref:`simplnx.ComputeColorTableFilter() <ComputeColorTableFilter>` filter. This parameter 
+   This parameter is used specifically for the  :ref:`simplnx.CreateColorMapFilter() <CreateColorMapFilter>` filter. This parameter 
    represents a **string** value that corresponds to an RGB Preset Name and can be instantiated using a simple python string type.
 
    Default RGB Preset Names are as follows:
@@ -331,7 +331,7 @@ General Parameters
 
    .. code:: python
 
-      result = nx.ComputeColorTableFilter.execute(data_structure=data_structure,
+      result = nx.CreateColorMapFilter.execute(data_structure=data_structure,
                                               rgb_array_path="CI Color", 
                                               input_data_array_path=nx.DataPath("Small IN100/Scan Data/Confidence Index"), 
                                               selected_preset="hsv")      

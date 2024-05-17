@@ -1,6 +1,6 @@
-#include "ComputeColorTableFilter.hpp"
+#include "CreateColorMapFilter.hpp"
 
-#include "Algorithms/ComputeColorTable.hpp"
+#include "Algorithms/CreateColorMap.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -13,7 +13,7 @@
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Parameters/ComputeColorTableParameter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
 using namespace nx::core;
@@ -31,44 +31,44 @@ inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -72443;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ComputeColorTableFilter::name() const
+std::string CreateColorMapFilter::name() const
 {
-  return FilterTraits<ComputeColorTableFilter>::name.str();
+  return FilterTraits<CreateColorMapFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeColorTableFilter::className() const
+std::string CreateColorMapFilter::className() const
 {
-  return FilterTraits<ComputeColorTableFilter>::className;
+  return FilterTraits<CreateColorMapFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ComputeColorTableFilter::uuid() const
+Uuid CreateColorMapFilter::uuid() const
 {
-  return FilterTraits<ComputeColorTableFilter>::uuid;
+  return FilterTraits<CreateColorMapFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeColorTableFilter::humanName() const
+std::string CreateColorMapFilter::humanName() const
 {
-  return "Generate Color Table";
+  return "Create Color Map";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ComputeColorTableFilter::defaultTags() const
+std::vector<std::string> CreateColorMapFilter::defaultTags() const
 {
-  return {className(), "Core", "Image"};
+  return {className(), "Core", "Image", "Color Table", "Generate"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ComputeColorTableFilter::parameters() const
+Parameters CreateColorMapFilter::parameters() const
 {
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ComputeColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array",
-                                                             ColorTableUtilities::GetDefaultRGBPresetName()));
+  params.insert(std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array",
+                                                          ColorTableUtilities::GetDefaultRGBPresetName()));
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
@@ -92,14 +92,14 @@ Parameters ComputeColorTableFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeColorTableFilter::clone() const
+IFilter::UniquePointer CreateColorMapFilter::clone() const
 {
-  return std::make_unique<ComputeColorTableFilter>();
+  return std::make_unique<CreateColorMapFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateColorMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   auto pRgbArrayPathValue = pSelectedDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_RgbArrayPath_Key));
@@ -147,19 +147,19 @@ IFilter::PreflightResult ComputeColorTableFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeColorTableFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+Result<> CreateColorMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
 {
-  ComputeColorTableInputValues inputValues;
+  CreateColorMapInputValues inputValues;
 
-  inputValues.PresetName = filterArgs.value<ComputeColorTableParameter::ValueType>(k_SelectedPreset_Key);
+  inputValues.PresetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.replaceName(filterArgs.value<std::string>(k_RgbArrayPath_Key));
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.InvalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
 
-  return ComputeColorTable(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return CreateColorMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -173,14 +173,14 @@ constexpr StringLiteral k_RgbArrayNameKey = "RgbArrayName";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ComputeColorTableFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> CreateColorMapFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ComputeColorTableFilter().getDefaultArguments();
+  Arguments args = CreateColorMapFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::ComputeColorTableFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey, SIMPL::k_SelectedPresetControlPointsKey,
-                                                                                                                    k_SelectedPreset_Key));
+  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::CreateColorMapFilterParameterConverter>(args, json, SIMPL::k_SelectedPresetNameKey, SIMPL::k_SelectedPresetControlPointsKey,
+                                                                                                                 k_SelectedPreset_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RgbArrayNameKey, k_RgbArrayPath_Key));
 

@@ -1,4 +1,4 @@
-# Compute Color Table
+# Create Color Map
 
 ## Description
 

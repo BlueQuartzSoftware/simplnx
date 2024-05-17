@@ -8,22 +8,22 @@
 namespace nx::core
 {
 /**
- * @class ComputeColorTableFilter
+ * @class CreateColorMapFilter
  * @brief This filter generates a color table array for a given 1-component input array.
  * Each element of the input array is normalized and converted to a color based on where
  * the value falls in the spectrum of the selected color preset.
  */
-class SIMPLNXCORE_EXPORT ComputeColorTableFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateColorMapFilter : public IFilter
 {
 public:
-  ComputeColorTableFilter() = default;
-  ~ComputeColorTableFilter() noexcept override = default;
+  CreateColorMapFilter() = default;
+  ~CreateColorMapFilter() noexcept override = default;
 
-  ComputeColorTableFilter(const ComputeColorTableFilter&) = delete;
-  ComputeColorTableFilter(ComputeColorTableFilter&&) noexcept = delete;
+  CreateColorMapFilter(const CreateColorMapFilter&) = delete;
+  CreateColorMapFilter(CreateColorMapFilter&&) noexcept = delete;
 
-  ComputeColorTableFilter& operator=(const ComputeColorTableFilter&) = delete;
-  ComputeColorTableFilter& operator=(ComputeColorTableFilter&&) noexcept = delete;
+  CreateColorMapFilter& operator=(const CreateColorMapFilter&) = delete;
+  CreateColorMapFilter& operator=(CreateColorMapFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
@@ -107,4 +107,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeColorTableFilter, "d1731177-4d70-41c0-9334-566a0b482796");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateColorMapFilter, "d1731177-4d70-41c0-9334-566a0b482796");

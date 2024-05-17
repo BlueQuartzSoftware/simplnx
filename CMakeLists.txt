@@ -278,7 +278,7 @@ set(CoreParameters
   DynamicTableParameter
   EnsembleInfoParameter
   FileSystemPathParameter
-  ComputeColorTableParameter
+  CreateColorMapParameter
   GeneratedFileListParameter
   GeometrySelectionParameter
   DataStoreFormatParameter

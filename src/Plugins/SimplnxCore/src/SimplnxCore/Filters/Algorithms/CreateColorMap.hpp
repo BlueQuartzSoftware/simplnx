@@ -8,7 +8,7 @@
 
 namespace nx::core
 {
-struct SIMPLNXCORE_EXPORT ComputeColorTableInputValues
+struct SIMPLNXCORE_EXPORT CreateColorMapInputValues
 {
   std::string PresetName;
   DataPath SelectedDataArrayPath;
@@ -18,16 +18,16 @@ struct SIMPLNXCORE_EXPORT ComputeColorTableInputValues
   std::vector<uint8> InvalidColor;
 };
 
-class SIMPLNXCORE_EXPORT ComputeColorTable
+class SIMPLNXCORE_EXPORT CreateColorMap
 {
 public:
-  ComputeColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeColorTableInputValues* inputValues);
-  ~ComputeColorTable() noexcept;
+  CreateColorMap(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, CreateColorMapInputValues* inputValues);
+  ~CreateColorMap() noexcept;
 
-  ComputeColorTable(const ComputeColorTable&) = delete;
-  ComputeColorTable(ComputeColorTable&&) noexcept = delete;
-  ComputeColorTable& operator=(const ComputeColorTable&) = delete;
-  ComputeColorTable& operator=(ComputeColorTable&&) noexcept = delete;
+  CreateColorMap(const CreateColorMap&) = delete;
+  CreateColorMap(CreateColorMap&&) noexcept = delete;
+  CreateColorMap& operator=(const CreateColorMap&) = delete;
+  CreateColorMap& operator=(CreateColorMap&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -35,7 +35,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ComputeColorTableInputValues* m_InputValues = nullptr;
+  const CreateColorMapInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

@@ -56,7 +56,7 @@
 #include "SimplnxCore/Filters/ComputeSurfaceAreaToVolumeFilter.hpp"
 #include "SimplnxCore/Filters/ComputeSurfaceFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/ComputeVolumeFractionsFilter.hpp"
-#include "SimplnxCore/Filters/ComputeColorTableFilter.hpp"
+#include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
 #include "SimplnxCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
@@ -171,7 +171,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), {nx::core::FilterTraits<ComputeSurfaceAreaToVolumeFilter>::uuid, &ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson}}, // ComputeSurfaceAreaToVolume
     {nx::core::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), {nx::core::FilterTraits<ComputeSurfaceFeaturesFilter>::uuid, &ComputeSurfaceFeaturesFilter::FromSIMPLJson}}, // ComputeSurfaceFeaturesFilter
     {nx::core::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), {nx::core::FilterTraits<ComputeVolumeFractionsFilter>::uuid, &ComputeVolumeFractionsFilter::FromSIMPLJson}}, // ComputeVolumeFractions
-    {nx::core::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {nx::core::FilterTraits<ComputeColorTableFilter>::uuid, &ComputeColorTableFilter::FromSIMPLJson}}, // ComputeColorTable
+    {nx::core::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), {nx::core::FilterTraits<CreateColorMapFilter>::uuid, &CreateColorMapFilter::FromSIMPLJson}}, // CreateColorMap
     {nx::core::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), {nx::core::FilterTraits<IdentifySampleFilter>::uuid, &IdentifySampleFilter::FromSIMPLJson}}, // IdentifySampleFilter
     {nx::core::Uuid::FromString("f2259481-5011-5f22-9fcb-c92fb6f8be10").value(), {nx::core::FilterTraits<ReadBinaryCTNorthstarFilter>::uuid, &ReadBinaryCTNorthstarFilter::FromSIMPLJson}}, // ImportBinaryCTNorthstarFilter
     {nx::core::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), {nx::core::FilterTraits<ReadCSVFileFilter>::uuid, &ReadCSVFileFilter::FromSIMPLJson}}, // ReadASCIIData

@@ -74,7 +74,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeBoundaryElementFractionsTest.cpp
   ComputeTriangleGeomSizesTest.cpp
   FlyingEdges3DTest.cpp
-  ComputeColorTableTest.cpp
+  CreateColorMapTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
