@@ -42,7 +42,6 @@ constexpr StringLiteral k_FileVersionTag = "FileVersion";
 constexpr StringLiteral k_PipelineJsonTag = "Pipeline";
 constexpr StringLiteral k_PipelineNameTag = "Current Pipeline";
 constexpr StringLiteral k_PipelineVersionTag = "Pipeline Version";
-constexpr StringLiteral k_CurrentFileVersion = "8.0";
 
 constexpr int32_t k_CurrentPipelineVersion = 3;
 
@@ -55,8 +54,6 @@ constexpr StringLiteral GeometryTypeNameTag = "GeometryTypeName";
 constexpr StringLiteral PipelineName = "Pipeline";
 constexpr StringLiteral CompDims = "ComponentDimensions";
 constexpr StringLiteral TupleDims = "TupleDimensions";
-
-constexpr StringLiteral FileVersion = "7.0";
 
 constexpr StringLiteral VertexListName = "SharedVertexList";
 constexpr StringLiteral EdgeListName = "SharedEdgeList";
@@ -730,6 +727,12 @@ void DREAM3D::WriteXdmf(const std::filesystem::path& filePath, const DataStructu
   ::WriteXdmf(file, dataStructure, hdf5FilePath);
 }
 
+DREAM3D::FileVersionType DREAM3D::GetFileVersion(const std::filesystem::path& path)
+{
+  HDF5::FileReader fileReader(path);
+  return GetFileVersion(fileReader);
+}
+
 DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileReader& fileReader)
 {
   auto fileVersionAttribute = fileReader.getAttribute(k_FileVersionTag);
@@ -1390,13 +1393,13 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const nx::core::HDF5:
   {
     return ImportDataStructureV8(fileReader, preflight);
   }
-  else if(fileVersion == Legacy::FileVersion)
+  else if(fileVersion == k_LegacyFileVersion)
   {
     return ImportLegacyDataStructure(fileReader, preflight);
   }
   // Unsupported file version
   return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion,
-                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
+                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, k_LegacyFileVersion));
 }
 
 Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight)
@@ -1426,7 +1429,7 @@ Result<Pipeline> DREAM3D::ImportPipelineFromFile(const nx::core::HDF5::FileReade
     }
     return Pipeline::FromJson(pipelineJson.value());
   }
-  if(fileVersion == Legacy::FileVersion)
+  if(fileVersion == k_LegacyFileVersion)
   {
     return Pipeline::FromSIMPLJson(pipelineJson.value());
   }
@@ -1543,7 +1546,7 @@ Result<> WriteDataStructure(nx::core::HDF5::FileWriter& fileWriter, const DataSt
 Result<> WriteFileVersion(nx::core::HDF5::FileWriter& fileWriter)
 {
   auto fileVersionAttribute = fileWriter.createAttribute(k_FileVersionTag);
-  return fileVersionAttribute.writeString(k_CurrentFileVersion);
+  return fileVersionAttribute.writeString(DREAM3D::k_CurrentFileVersion);
 }
 
 Result<> DREAM3D::WriteFile(nx::core::HDF5::FileWriter& fileWriter, const FileData& fileData)

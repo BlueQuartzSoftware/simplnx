@@ -127,7 +127,7 @@ Result<> ExecuteProcess::operator()()
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
     }
   }
 
@@ -136,7 +136,7 @@ Result<> ExecuteProcess::operator()()
   if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56414, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
 
   if(m_InputValues->Blocking)
