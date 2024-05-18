@@ -251,16 +251,22 @@ nlohmann::json IFilter::toJson(const Arguments& args) const
   Parameters params = parameters();
   for(const auto& [name, param] : params)
   {
-    nlohmann::json parameterJson;
-    if(args.contains(name))
+    try
     {
-      parameterJson = param->toJson(args.at(name));
-    }
-    else
+      nlohmann::json parameterJson;
+      if(args.contains(name))
+      {
+        parameterJson = param->toJson(args.at(name));
+      }
+      else
+      {
+        parameterJson = param->toJson(param->defaultValue());
+      }
+      json[name] = std::move(parameterJson);
+    } catch(const std::exception& e)
     {
-      parameterJson = param->toJson(param->defaultValue());
+      throw std::runtime_error(fmt::format("While serializing the filter '{}' to JSON an exception was thrown with message:\n {}", className(), e.what()));
     }
-    json[name] = std::move(parameterJson);
   }
   return json;
 }

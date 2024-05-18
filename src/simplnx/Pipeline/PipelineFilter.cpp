@@ -8,6 +8,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <sstream>
 
 using namespace nx::core;
 
@@ -690,10 +691,28 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
   Result<Arguments> argumentsResult = simplData->convertJson(json);
 
   const auto filterName = filter->name();
-  const auto& defaultArguments = filter->getDefaultArguments();
+  const auto defaultArguments = filter->getDefaultArguments();
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
   if(argumentsResult.valid())
   {
+    std::stringstream exceptionMessageStream;
+    // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
+    for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
+    {
+      IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+      auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
+      if(iter == acceptedTypes.cend())
+      {
+        exceptionMessageStream << fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\nThe mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
+                                              "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n",
+                                              filterName, parameterName);
+      }
+    }
+    std::string exceptionMessage = exceptionMessageStream.str();
+    if(!exceptionMessage.empty())
+    {
+      throw std::runtime_error(exceptionMessage);
+    }
     pipelineFilter->setArguments(std::move(argumentsResult.value()));
   }
   else

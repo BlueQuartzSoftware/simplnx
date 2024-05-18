@@ -39,6 +39,7 @@ add_executable(simplnx_test
   UuidTest.cpp
   StringUtilitiesTest.cpp
   FilterValidationTest.cpp
+  SimplJsonConversionTest.cpp
 )
 
 target_link_libraries(simplnx_test
@@ -84,4 +85,6 @@ target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 catch_discover_tests(simplnx_test)
 
+
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME simpl_json_exemplars.tar.gz SHA512 550a1ad3c9c31b1093d961fdda2057d63a48f08c04d2831c70c1ec65d499f39b354a5a569903ff68e9b703ef45c23faba340aa0c61f9a927fbc845c15b87d05e )
 
