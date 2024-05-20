@@ -37,4 +37,13 @@ inline const std::string PluginInitPythonFile()
   return {k_PluginInitPythonFileCharArray};
 }
 
+// clang-format off
+static const char k_PluginEnvironmentPythonFileCharArray[] = {@PYTHON_PLUGIN_ENVIRONMENT_TEMPLATE@};
+// clang-format on
+
+inline const std::string PluginEnvironmentPythonFile()
+{
+  return {k_PluginEnvironmentPythonFileCharArray};
+}
+
 }; // namespace nx::core
