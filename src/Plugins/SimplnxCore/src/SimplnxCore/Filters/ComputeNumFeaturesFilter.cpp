@@ -57,7 +57,7 @@ Parameters ComputeNumFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
                                                               "The path to the ensemble attribute matrix where the number of features array will be stored",
-                                                              DataPath({"DataContainer", "EnsembleData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+                                                              DataPath({"DataContainer", "Ensemble Data"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
 
   params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumFeaturesArrayName_Key, "Number of Features", "The number of Features that belong to each Ensemble", "Number of Features"));
