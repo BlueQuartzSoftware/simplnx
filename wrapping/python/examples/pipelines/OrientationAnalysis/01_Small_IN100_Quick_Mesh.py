@@ -44,7 +44,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Execute Filter with Parameters
 #result = nx_filter.execute(
 #    data_structure=data_structure,
-#     data=[nx.DataPath("DataContainer/CellEnsembleData")],
+#     data=[nx.DataPath("DataContainer/Cell Ensemble Data")],
 #     new_parent=nx.DataPath("DataContainer")
 # )
 # nxtest.check_filter_result(nx_filter, result)

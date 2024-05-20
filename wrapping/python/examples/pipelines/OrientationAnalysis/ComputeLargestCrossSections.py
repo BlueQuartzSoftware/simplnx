@@ -25,7 +25,7 @@ h5ebsdParameter.use_recommended_transform=True
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
-    cell_ensemble_attribute_matrix_name="CellEnsembleData",
+    cell_ensemble_attribute_matrix_name="Cell Ensemble Data",
     output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
@@ -76,7 +76,7 @@ result = nx_filter.execute(
     active_array_name="Active",
     cell_feature_attribute_matrix_name="Cell Feature Data",
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
     input_image_geometry_path =nx.DataPath("DataContainer"),
     cell_mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),

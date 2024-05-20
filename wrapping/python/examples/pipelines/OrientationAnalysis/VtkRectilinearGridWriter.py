@@ -28,7 +28,7 @@ nx_filter = nx.DeleteDataFilter()
 # Execute Filter
 result = nx_filter.execute(
     data_structure=data_structure,
-    removed_data_path=[nx.DataPath("DataContainer/CellEnsembleData/MaterialName"),
+    removed_data_path=[nx.DataPath("DataContainer/Cell Ensemble Data/MaterialName"),
                        nx.DataPath("MergeTwins SeedValue")]
 )
 

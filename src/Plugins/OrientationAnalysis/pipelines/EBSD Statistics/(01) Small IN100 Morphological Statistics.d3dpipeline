@@ -7,9 +7,9 @@
       "args": {
         "import_data_object": {
           "data_paths": [
-            "DataContainer/CellEnsembleData",
-            "DataContainer/CellEnsembleData/CrystalStructures",
-            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer/Cell Ensemble Data",
+            "DataContainer/Cell Ensemble Data/CrystalStructures",
+            "DataContainer/Cell Ensemble Data/LatticeConstants",
             "DataContainer",
             "DataContainer/CellData",
             "DataContainer/Cell Data/Confidence Index",

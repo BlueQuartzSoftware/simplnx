@@ -6,7 +6,7 @@
     {
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "output_image_geometry_path": "fw-ar-IF1-aptr12-corr",
         "degrees_to_radians": true,
         "edax_hexagonal_alignment": true,
@@ -126,7 +126,7 @@
         "cell_euler_angles_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles",
         "cell_ipf_colors_array_name": "IPF_001",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "mask_array_path": "",
         "reference_dir": [
           0.0,
@@ -162,7 +162,7 @@
         "cell_euler_angles_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles",
         "cell_ipf_colors_array_name": "IPF_010",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "mask_array_path": "",
         "reference_dir": [
           0.0,
@@ -198,7 +198,7 @@
         "cell_euler_angles_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles",
         "cell_ipf_colors_array_name": "IPF_100",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "mask_array_path": "",
         "reference_dir": [
           1.0,
@@ -234,7 +234,7 @@
         "active_array_name": "Active",
         "cell_feature_attribute_matrix_name": "Cell Feature Data",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
         "cell_mask_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray",
         "input_image_geometry_path": "fw-ar-IF1-aptr12-corr",
@@ -308,7 +308,7 @@
         "cell_feature_ids_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
         "cell_quats_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Quats",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"
       },
       "comments": "",
       "filter": {
@@ -320,7 +320,7 @@
     {
       "args": {
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "feature_ids_path": "fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds",
         "kernel_average_misorientations_array_name": "KernelAverageMisorientations",
         "kernel_size": [
@@ -378,7 +378,7 @@
         "avg_quats_array_path": "fw-ar-IF1-aptr12-corr/Cell Feature Data/AvgQuats",
         "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "cell_phases_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Phases",
-        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures",
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
         "feature_ids_path": "fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",

@@ -5,7 +5,7 @@
     {
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang",
         "output_image_geometry_path": "DataContainer"
       },
@@ -116,7 +116,7 @@
         "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
         "cell_ipf_colors_array_name": "IPFColors",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "mask_array_path": "DataContainer/Cell Data/Mask",
         "reference_dir": [
           0.0,
@@ -166,7 +166,7 @@
         "active_array_name": "Active",
         "cell_feature_attribute_matrix_name": "Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "mask_array_path": "DataContainer/Cell Data/Mask",
@@ -187,7 +187,7 @@
         "avg_c_axes_array_name": "AvgCAxes",
         "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "quats_array_path": "DataContainer/Cell Data/Quats"
       },
@@ -202,7 +202,7 @@
       "args": {
         "avg_c_axes_array_path": "DataContainer/Cell Feature Data/AvgCAxes",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_avg_c_axis_misorientations_array_name": "AvgCAxisMisorientation",
         "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "feature_reference_c_axis_misorientations_array_name": "FeatureRefCAxisMisorientation",
@@ -221,7 +221,7 @@
       "args": {
         "c_axis_locations_array_name": "CAxisLocations",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "quats_array_path": "DataContainer/Cell Data/Quats"
       },
       "comments": "",
@@ -319,7 +319,7 @@
         "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "cell_quats_array_path": "DataContainer/Cell Data/Quats",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures"
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures"
       },
       "comments": "",
       "filter": {
@@ -353,7 +353,7 @@
         "avg_c_axis_misalignments_array_name": "AvgCAxisMisalignments",
         "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
         "c_axis_misalignment_list_array_name": "CAxisMisalignmentList",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "find_avg_misals": true,
         "neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborList"

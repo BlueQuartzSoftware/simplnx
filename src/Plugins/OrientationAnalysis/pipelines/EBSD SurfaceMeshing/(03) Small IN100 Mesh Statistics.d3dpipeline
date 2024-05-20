@@ -26,9 +26,9 @@
             "DataContainer/Cell Data/FeatureReferenceMisorientations",
             "DataContainer/Cell Data/KernelAverageMisorientations",
             "DataContainer/Cell Feature Data",
-            "DataContainer/CellEnsembleData",
-            "DataContainer/CellEnsembleData/CrystalStructures",
-            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer/Cell Ensemble Data",
+            "DataContainer/Cell Ensemble Data/CrystalStructures",
+            "DataContainer/Cell Ensemble Data/LatticeConstants",
             "DataContainer/NewGrain Data",
             "DataContainer/NewGrain Data/Active",
             "DataContainer/Cell Feature Data/Active",
@@ -114,7 +114,7 @@
     },
     {
       "args": {
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_euler_angles_array_path": "DataContainer/Cell Feature Data/AvgEulerAngles",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "surface_mesh_face_ipf_colors_array_name": "FaceIPFColors",
@@ -131,7 +131,7 @@
     {
       "args": {
         "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
         "surface_mesh_face_misorientation_colors_array_name": "FaceMisorientationColors"

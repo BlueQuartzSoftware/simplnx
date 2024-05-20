@@ -45,7 +45,7 @@ nx_filter = cxor.ComputeGBCDMetricBasedFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     chosen_limit_dists_index=2,
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     dist_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution.dat",
     err_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbcd_distribution_errors.dat",
     exclude_triple_lines=True,
@@ -71,7 +71,7 @@ nx_filter = cxor.ComputeGBPDMetricBasedFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     dist_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbpd_distribution.dat",
     err_output_file=nxtest.get_data_directory() / "Output/GBPDMetricBased/gbpd_distribution_errors.dat",
     exclude_triple_lines=False,

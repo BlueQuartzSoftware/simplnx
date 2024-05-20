@@ -58,7 +58,7 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
                                                               "The path to the cell ensemble attribute matrix where the output volume fractions array will be stored",
-                                                              DataPath({"DataContainer", "CellEnsembleData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+                                                              DataPath({"DataContainer", "Cell Ensemble Data"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolFractionsArrayName_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", "Volume Fractions"));
 

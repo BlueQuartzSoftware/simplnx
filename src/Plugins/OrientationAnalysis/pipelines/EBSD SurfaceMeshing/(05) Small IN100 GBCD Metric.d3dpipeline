@@ -26,9 +26,9 @@
           "DataContainer/Cell Data/FeatureReferenceMisorientations",
           "DataContainer/Cell Data/KernelAverageMisorientations",
           "DataContainer/Cell Feature Data",
-          "DataContainer/CellEnsembleData",
-          "DataContainer/CellEnsembleData/CrystalStructures",
-          "DataContainer/CellEnsembleData/LatticeConstants",
+          "DataContainer/Cell Ensemble Data",
+          "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "DataContainer/Cell Ensemble Data/LatticeConstants",
           "DataContainer/NewGrain Data",
           "DataContainer/NewGrain Data/Active",
           "DataContainer/Cell Feature Data/Active",
@@ -98,7 +98,7 @@
       {
         "args": {
           "chosen_limit_dists_index": 0,
-          "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+          "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
           "dist_output_file": "Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat",
           "err_output_file": "Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat",
           "exclude_triple_lines": false,
