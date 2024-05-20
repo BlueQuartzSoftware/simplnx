@@ -115,7 +115,10 @@ public:
    * @brief Reads the dataset into the given span. Requires the span to be the
    * correct size. Returns invalid result if unable to read.
    * @tparam T
-   * @param data
+   * @param data A span where the dataset will be read into. Must be of the correct size.
+   * @param start Optional parameter specifying the starting coordinates for the read operation. If not provided, the read starts from the beginning of the dataset.
+   * @param count Optional parameter specifying the number of elements to read along each dimension. If not provided, reads the entire dataset from the start point.
+   * @return Result<> indicating the success or failure of the read operation.
    */
   template <class T>
   Result<> readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<hsize_t>>& start = std::nullopt, const std::optional<std::vector<hsize_t>>& count = std::nullopt) const;
