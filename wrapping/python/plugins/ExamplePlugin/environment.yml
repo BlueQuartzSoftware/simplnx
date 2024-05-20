@@ -1,4 +1,4 @@
-name: d3dnx
+name: example_plugin
 channels:
   - conda-forge
   - defaults
