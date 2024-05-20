@@ -18,10 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-11
+          - macos-12
           - macos-14
         include:
-          - os: macos-11
+          - os: macos-12
             preset: ci-macos-x64
           - os: macos-14
             preset: ci-macos-arm64
