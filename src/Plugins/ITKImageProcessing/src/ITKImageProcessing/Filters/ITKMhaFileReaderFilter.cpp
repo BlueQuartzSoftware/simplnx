@@ -220,7 +220,7 @@ struct CopyImageDataFunctor
     auto& srcDataStore = srcDataArray.getDataStoreRef();
     auto& destDataStore = destDataArray.getDataStoreRef();
     // Copy imported array into the data structure
-    if(!destDataStore.copyFrom(0, srcDataStore, 0, srcDataStore.getNumberOfTuples()))
+    if(destDataStore.copyFrom(0, srcDataStore, 0, srcDataStore.getNumberOfTuples()).invalid())
     {
       return MakeErrorResult(-5008, fmt::format("Error copying image data read from file '{}' into destination array.", fileNamePath.string()));
     }

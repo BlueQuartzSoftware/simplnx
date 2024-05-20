@@ -250,7 +250,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // Copy that into the output array...
-    if(!outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice))
+    if(outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice).invalid())
     {
       return MakeErrorResult(-64511, fmt::format("Error copying source image data into destination array.\n  Slice:{}\n  TupleIndex:{}\n  MaxTupleIndex:{}", slice, tupleIndex, outputData.getSize()));
     }

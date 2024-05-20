@@ -113,12 +113,15 @@ public:
 
   /**
    * @brief Reads the dataset into the given span. Requires the span to be the
-   * correct size. Returns false if unable to read.
+   * correct size. Returns invalid result if unable to read.
    * @tparam T
-   * @param data
+   * @param data A span where the dataset will be read into. Must be of the correct size.
+   * @param start Optional parameter specifying the starting coordinates for the read operation. If not provided, the read starts from the beginning of the dataset.
+   * @param count Optional parameter specifying the number of elements to read along each dimension. If not provided, reads the entire dataset from the start point.
+   * @return Result<> indicating the success or failure of the read operation.
    */
   template <class T>
-  bool readIntoSpan(nonstd::span<T> data) const;
+  Result<> readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<hsize_t>>& start = std::nullopt, const std::optional<std::vector<hsize_t>>& count = std::nullopt) const;
 
   /**
    * @brief Returns a vector of the sizes of the dimensions for the dataset
@@ -134,17 +137,17 @@ protected:
    */
   void closeHdf5() override;
 };
-extern template bool DatasetReader::readIntoSpan<bool>(nonstd::span<bool>) const;
-extern template bool DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
-extern template bool DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;
-extern template bool DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>) const;
-extern template bool DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>) const;
-extern template bool DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>) const;
-extern template bool DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>) const;
-extern template bool DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>) const;
-extern template bool DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>) const;
-extern template bool DatasetReader::readIntoSpan<float>(nonstd::span<float>) const;
-extern template bool DatasetReader::readIntoSpan<double>(nonstd::span<double>) const;
+extern template Result<> DatasetReader::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
+extern template Result<> DatasetReader::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<hsize_t>>&, const std::optional<std::vector<hsize_t>>&) const;
 
 extern template std::vector<bool> DatasetReader::readAsVector<bool>() const;
 extern template std::vector<int8_t> DatasetReader::readAsVector<int8_t>() const;

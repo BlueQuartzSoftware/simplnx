@@ -30,11 +30,10 @@ public:
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
     std::array<T, 1> buffer{};
-    bool result = datasetReader.readIntoSpan<T>(nonstd::span<T>{buffer});
-    if(!result)
+    Result<> result = datasetReader.readIntoSpan<T>(nonstd::span<T>{buffer});
+    if(result.invalid())
     {
-      std::string ss = "Failed to read ScalarData. Incorrect number of values";
-      return MakeErrorResult(-458, ss);
+      return MakeErrorResult(-458, fmt::format("Failed to read ScalarData: {}", result.errors()[0].message));
     }
 
     ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);

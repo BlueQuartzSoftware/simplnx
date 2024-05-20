@@ -541,7 +541,7 @@ public:
             }
             size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
 
-            if(!newDataStore.copyFrom(newIndex, oldDataStore, oldIndex, 1))
+            if(newDataStore.copyFrom(newIndex, oldDataStore, oldIndex, 1).invalid())
             {
               std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_SourceArray->getName(), oldIndex,
                                        m_SourceArray->getName(), newIndex)
