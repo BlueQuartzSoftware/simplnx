@@ -283,7 +283,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::FindFeaturePhasesFilter",
+                        "name": "simplnx::ComputeFeaturePhasesFilter",
                         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
                       },
                       "isDisabled": false
@@ -300,7 +300,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::FindAvgOrientationsFilter",
+                        "name": "simplnx::ComputeAvgOrientationsFilter",
                         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
                       },
                       "isDisabled": false
@@ -360,7 +360,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::CalculateFeatureSizesFilter",
+                        "name": "simplnx::ComputeFeatureSizesFilter",
                         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
                       },
                       "isDisabled": false
@@ -377,7 +377,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::RemoveMinimumSizeFeaturesFilter",
+                        "name": "simplnx::RequireMinimumSizeFeaturesFilter",
                         "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
                       },
                       "isDisabled": false
@@ -416,7 +416,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::MinNeighborsFilter",
+                        "name": "simplnx::RequireMinNumNeighborsFilter",
                         "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
                       },
                       "isDisabled": false
@@ -489,7 +489,7 @@
                       },
                       "comments": "",
                       "filter": {
-                        "name": "simplnx::GenerateIPFColorsFilter",
+                        "name": "simplnx::ComputeIPFColorsFilter",
                         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
                       },
                       "isDisabled": false
@@ -525,7 +525,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindFeatureCentroidsFilter",
+                "name": "simplnx::ComputeFeatureCentroidsFilter",
                 "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
               },
               "isDisabled": false
@@ -542,7 +542,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::CalculateFeatureSizesFilter",
+                "name": "simplnx::ComputeFeatureSizesFilter",
                 "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
               },
               "isDisabled": false
@@ -560,7 +560,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindShapesFilter",
+                "name": "simplnx::ComputeShapesFilter",
                 "uuid": "036b17d5-23bb-4a24-9187-c4a8dd918792"
               },
               "isDisabled": false
@@ -597,7 +597,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindNeighborhoodsFilter",
+                "name": "simplnx::ComputeNeighborhoodsFilter",
                 "uuid": "924c10e3-2f39-4c08-9d7a-7fe029f74f6d"
               },
               "isDisabled": false
@@ -618,7 +618,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindEuclideanDistMapFilter",
+                "name": "simplnx::ComputeEuclideanDistMapFilter",
                 "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
               },
               "isDisabled": false
@@ -634,7 +634,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::FindSurfaceAreaToVolumeFilter",
+                "name": "simplnx::ComputeSurfaceAreaToVolumeFilter",
                 "uuid": "94e83e4f-797d-4594-b130-3819b7676f01"
               },
               "isDisabled": false
@@ -684,7 +684,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindAvgOrientationsFilter",
+        "name": "simplnx::ComputeAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
@@ -701,7 +701,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindMisorientationsFilter",
+        "name": "simplnx::ComputeMisorientationsFilter",
         "uuid": "0b68fe25-b5ef-4805-ae32-20acb8d4e823"
       },
       "isDisabled": false
@@ -736,7 +736,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindSchmidsFilter",
+        "name": "simplnx::ComputeSchmidsFilter",
         "uuid": "b4681855-0a3d-4237-97f2-5aec509115c4"
       },
       "isDisabled": false
@@ -756,7 +756,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureReferenceMisorientationsFilter",
+        "name": "simplnx::ComputeFeatureReferenceMisorientationsFilter",
         "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
       },
       "isDisabled": false
@@ -777,7 +777,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindKernelAvgMisorientationsFilter",
+        "name": "simplnx::ComputeKernelAvgMisorientationsFilter",
         "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
       },
       "isDisabled": false

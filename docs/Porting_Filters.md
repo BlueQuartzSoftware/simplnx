@@ -195,7 +195,7 @@ If you have a filter that needs to create an array in something like a cell attr
 a feature attribute matrix then the following filters have examples.
 
 - TriangleNormalFilter
-- CalculateFeatureSizesFilter
+- ComputeFeatureSizesFilter
 
 ## Replace EXECUTE_FUNCTION_TEMPLATE ##
 

@@ -176,7 +176,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 10
 # Instantiate Filter
-nx_filter = nx.FindFeaturePhasesFilter()
+nx_filter = nx.ComputeFeaturePhasesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -189,7 +189,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-nx_filter = cxor.FindAvgOrientationsFilter()
+nx_filter = cxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -205,7 +205,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 12
 # Instantiate Filter
-nx_filter = nx.FindFeatureNeighborsFilter()
+nx_filter = nx.ComputeFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -247,7 +247,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 14
 # Instantiate Filter
-nx_filter = nx.CalculateFeatureSizesFilter()
+nx_filter = nx.ComputeFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -263,7 +263,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 15
 # Instantiate Filter
-nx_filter = nx.RemoveMinimumSizeFeaturesFilter()
+nx_filter = nx.RequireMinimumSizeFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -280,7 +280,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 16
 # Instantiate Filter
-nx_filter = nx.FindFeatureNeighborsFilter()
+nx_filter = nx.ComputeFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -299,7 +299,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 17
 # Instantiate Filter
-nx_filter = nx.MinNeighborsFilter()
+nx_filter = nx.RequireMinNumNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -366,7 +366,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 21
 # Instantiate Filter
-nx_filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

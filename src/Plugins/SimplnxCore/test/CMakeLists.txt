@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
@@ -14,14 +15,33 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
-  CalculateArrayHistogramTest.cpp
-  CalculateFeatureSizesTest.cpp
-  CalculateTriangleAreasFilterTest.cpp
+  ComputeArrayHistogramTest.cpp
+  ComputeFeatureSizesTest.cpp
+  ComputeTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   CombineStlFilesTest.cpp
+  ComputeDifferencesMapTest.cpp
+  ComputeEuclideanDistMapTest.cpp
+  ComputeFeatureCentroidsTest.cpp
+  ComputeFeatureClusteringTest.cpp
+  ComputeFeatureNeighborsTest.cpp
+  ComputeFeaturePhasesBinaryTest.cpp
+  ComputeFeaturePhasesFilterTest.cpp
   ComputeFeatureRectTest.cpp
+  ComputeKMeansTest.cpp
+  ComputeKMedoidsTest.cpp
+  ComputeLargestCrossSectionsTest.cpp
   ComputeMomentInvariants2DTest.cpp
+  ComputeNeighborhoodsTest.cpp
+  ComputeNeighborListStatisticsTest.cpp
+  ComputeNumFeaturesTest.cpp
+  ComputeSurfaceAreaToVolumeTest.cpp
+  ComputeSurfaceFeaturesTest.cpp
+  ComputeTriangleGeomCentroidsTest.cpp
+  ComputeVectorColorsTest.cpp
+  ComputeVertexToTriangleDistancesTest.cpp
+  ComputeVolumeFractionsTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp
@@ -33,6 +53,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateFeatureArrayFromElementArrayTest.cpp
   CreateGeometryTest.cpp
   CreateImageGeometryTest.cpp
+  CreatePythonSkeletonTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
   DeleteDataTest.cpp
@@ -47,43 +68,23 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
-  FindArrayStatisticsTest.cpp
-  FindBiasedFeaturesTest.cpp
-  FindBoundaryCellsTest.cpp
-  FindBoundaryElementFractionsTest.cpp
-  FindDifferencesMapTest.cpp
-  FindEuclideanDistMapTest.cpp
-  FindFeatureCentroidsFilterTest.cpp
-  FindFeatureClusteringTest.cpp
-  FindFeaturePhasesBinaryTest.cpp
-  FindFeaturePhasesFilterTest.cpp
-  FindLargestCrossSectionsTest.cpp
-  FindNeighborhoodsTest.cpp
-  FindNeighborListStatisticsTest.cpp
-  FindFeatureNeighborsTest.cpp
-  FindNumFeaturesTest.cpp
-  FindSurfaceAreaToVolumeTest.cpp
-  FindSurfaceFeaturesTest.cpp
-  FindTriangleGeomCentroidsTest.cpp
-  FindTriangleGeomSizesTest.cpp
-  FindVertexToTriangleDistancesTest.cpp
-  FindVolFractionsTest.cpp
-  GenerateColorTableTest.cpp
-  GenerateVectorColorsTest.cpp
-  GeneratePythonSkeletonTest.cpp
-  IdentifySampleTest.cpp
+  ComputeArrayStatisticsTest.cpp
+  ComputeBiasedFeaturesTest.cpp
+  ComputeBoundaryCellsTest.cpp
+  ComputeBoundaryElementFractionsTest.cpp
+  ComputeTriangleGeomSizesTest.cpp
   FlyingEdges3DTest.cpp
+  CreateColorMapTest.cpp
+  IdentifySampleTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
   InitializeImageGeomCellDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
-  KMeansTest.cpp
-  KMedoidsTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
-  MinNeighborsTest.cpp
+  RequireMinNumNeighborsTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
@@ -93,17 +94,17 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   QuickSurfaceMeshFilterTest.cpp
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
-  # ReadDeformKeyFileV12Test.cpp
   ReadHDF5DatasetTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadTextDataArrayTest.cpp
   ReadVolumeGraphicsFileTest.cpp
+  ReadVtkStructuredPointsTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
   RemoveFlaggedVerticesTest.cpp
-  RemoveMinimumSizeFeaturesTest.cpp
+  RequireMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   ResampleImageGeomTest.cpp
@@ -130,7 +131,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteLosAlamosFFTTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
-  ReadVtkStructuredPointsTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -169,10 +169,11 @@ target_include_directories(${PLUGIN_NAME}UnitTest
 # the table and then upload your compressed file.
 # Save the release so that the repo is updated
 # -----------------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES) 
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()
+
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_test_data_1.tar.gz SHA512 6e21118a882c6a0cc54341eec8928b89ee84ac3a41b1d5b534193f4fabcb49c363db22028055622ad777787be0163cf5525e6c548c11c2c369748feb23031651)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_Goldfeather.tar.gz SHA512 3ad4a8f2bd578d81ce1ca67213ec846b7de4394e0c0e7796077bac51f7b58ae36340e2abd315665d9ee5fe745315458d5c1559766765e20dbe2c35eb693e8e26)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_align_sections_feature_centroid.tar.gz SHA512 e79a4c8e59bc856d40e91daf4cdce8b82c2e5ccfa6de51e23a0b8c6628282b03701bd5b5d7ddde76c4378142e3d9fe7c1cd6db261360c91751cf7c63747b054b)
@@ -209,11 +210,11 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME volume_graphics_test.tar.gz SHA512 94d996fbf2b8b42cd715fb3adf33548f097970211e7a26eb9ccc5b073a78014eecbd10d40fc0451ff9cc7c92e23ed21582fc082d64e1f62b3714e4d9640c975f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_write_stl_test.tar.gz SHA512 d1e929246f73515b006d99392414a4b5a2afe6c96261a7cbccbcbb68cc0be1e43a987f6ab4a8fff21914fe3f15bf7f59b4387d8314cbdf8697f5c8cea40fa481)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_interpolate_point_cloud_to_regular_grid.tar.gz SHA512 287500082913dfbf62c5f66ec5185c3db53cedc20a2c89c28b23a208ddfca47c377d557d2f509c1d72f3aff8aadc3058e6932159a6cef73f33227ad433f14752)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_resample_rect_grid_to_image_geom.tar.gz SHA512  58cabfb83deeef7aff1252963a8cb378745ca00fc120a9623f699b4c9c618d216c4d3fa88e964772706a0096e979abc741be7ba6f96a2398162b3f6d4ec8ec13)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_resample_rect_grid_to_image_geom.tar.gz SHA512 58cabfb83deeef7aff1252963a8cb378745ca00fc120a9623f699b4c9c618d216c4d3fa88e964772706a0096e979abc741be7ba6f96a2398162b3f6d4ec8ec13)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_combine_stl_files_v2.tar.gz SHA512 40235976b9897365c338587056dc9ba90466b3eca58d6b310d59f7df16592b53647349daa1c7247cdcf01b5940596ad53d39eb734549dda4e829ae93a5928a4a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_avizo_writers.tar.gz SHA512 f776eb5c86e06bde0fb1ee76dbdf95e4fd1457697033b2c639cac376db3ba0b05410ed4074fb10a47dd26ef79c78a02b5bb77c04cfe1299e8a33d8b3bff09749)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME vtk_rectilinear_grid_writer.tar.gz SHA512 9fef02b5269609503d03dd0126cc635cc1c1156894cff18b0184b334d705b850ca1a06ae0d1c66a352a32dd9ad9fb74f24255c7de1399b06bbec7d2e2b41941b )
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf )
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME vtk_rectilinear_grid_writer.tar.gz SHA512 9fef02b5269609503d03dd0126cc635cc1c1156894cff18b0184b334d705b850ca1a06ae0d1c66a352a32dd9ad9fb74f24255c7de1399b06bbec7d2e2b41941b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_sample_surface_mesh.tar.gz SHA512 b1eec1127d125303a4757a482a7fd4b6c0e42241f01f8afabec9a15dc1ffa6d732afc11b4623aaf81c7a9e53de59423ef4bbc470710c31fe9a5c61916bdf544e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME bin_feature_phases.tar.gz SHA512 e43805c5a69d08ce6d657f8fa3fb9fec7d174f2329412fa62ba95ac6d82f1983ed2c5a641d81651ba86e6eeb5d20602b6e131f34094160305c4bf03cfbd06be1)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_feature_boundary_element_fractions.tar.gz SHA512 b267b902c87030f7508882e77d3f4483a9d4e351da78061b1b845b0301529a3532ac60934748eec1b4f8e900778af78244133b24607509b80c5cd49bc5f07a49)
@@ -221,7 +222,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME LosAlamosFFTExemplar.tar.gz SHA512 c4f2f6cbdaea4512ca2911cb0c3169e62449fcdb7cb99a5e64640601239a08cc09ea35f81f17b056fd38da85add95a37b244b7f844fe0abc944c1ba2f7514812)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_identify_sample.tar.gz SHA512 b1c35b0f070426ff5e06fb85e8688026756c079415ccb25968669dc8943056d28bf120759a639a72aa321d515cc9eb59db1abe1cb7163957ad66c9e915103611)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_vector_colors.tar.gz SHA512 a30ac9ac35002f4a79b60a02a86de1661c4828c77b45d3848c6e2c37943c8874756f0e163cda99f2c0de372ff1cd9257288d5357fa3db8a539428df713325ee7)
-#  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_import_deform_12.tar.gz SHA512 21aef18e48a877a1298ae4be0a4ebbb13df4f55acd2178778bd5e1dce32791180dd4c2dd83584be833ae0eb02dc003165c394fc001cc7375d289fcd86b712486)
+
+  # download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_import_deform_12.tar.gz SHA512 21aef18e48a877a1298ae4be0a4ebbb13df4f55acd2178778bd5e1dce32791180dd4c2dd83584be833ae0eb02dc003165c394fc001cc7375d289fcd86b712486)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME k_files.tar.gz SHA512 2701d7bca711821df78bf7649f9b5928cd9febeb4f04e5c8ce8008633304128e3e9290dadfb01e15f73b281a55c6d65255ca4bd115bf04a3218c32dfd7337d7a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME SurfaceMeshTest.tar.gz SHA512 a74e9fa40ccec78174dbbac90969bfa17367c3a7e14b7b84624032317c351de89957750803d7cb43c67dec19281ee4f647de022d474566fd43e25b8230cce6d6)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME initialize_data_test_files.tar.gz SHA512 f04fe76ef96add4b775111ae7fc95233a7748a25501d9f00a8b2a162c87782b8cd2813e6e46ba7892e721976693da06965e624335dbb28224c9c5b877a05aa49)
@@ -231,7 +233,6 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_color_table_test.tar.gz SHA512 b5683c758964eb723267400b14047f8adb0d5365ee9ca93d1a6940e9b6ad198cd4739c1ca799eb787b7706e668dbc16ab8243642034cdba5b71d64c27e682d3f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
-
 endif()
 
 # -----------------------------------------------------------------------------
@@ -240,29 +241,28 @@ endif()
 include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 
 set(PREBUILT_PIPELINE_NAMES
-  # Example or other test pipelines
-  
 
+  # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Node.d3dpipeline"
 
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
+
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_File.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
-  
+
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
 
   # These depend on files that are output from OrientationAnalysis Plugin
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBiasedFeatures.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBiasedFeatures.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBoundaryCells.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_Text_Data.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 )
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
-

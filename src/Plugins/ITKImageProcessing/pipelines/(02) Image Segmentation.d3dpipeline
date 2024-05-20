@@ -95,7 +95,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateFeatureSizesFilter",
+        "name": "simplnx::ComputeFeatureSizesFilter",
         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
       },
       "isDisabled": false
@@ -160,7 +160,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeaturePhasesFilter",
+        "name": "simplnx::ComputeFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
@@ -174,7 +174,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureCentroidsFilter",
+        "name": "simplnx::ComputeFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false

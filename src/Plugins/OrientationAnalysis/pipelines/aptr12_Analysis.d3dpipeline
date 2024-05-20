@@ -137,7 +137,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateIPFColorsFilter",
+        "name": "simplnx::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -173,7 +173,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateIPFColorsFilter",
+        "name": "simplnx::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -209,7 +209,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateIPFColorsFilter",
+        "name": "simplnx::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -278,7 +278,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateFeatureSizesFilter",
+        "name": "simplnx::ComputeFeatureSizesFilter",
         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
       },
       "isDisabled": false
@@ -295,7 +295,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RemoveMinimumSizeFeaturesFilter",
+        "name": "simplnx::RequireMinimumSizeFeaturesFilter",
         "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
       },
       "isDisabled": false
@@ -312,7 +312,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindAvgOrientationsFilter",
+        "name": "simplnx::ComputeAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
@@ -333,7 +333,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindKernelAvgMisorientationsFilter",
+        "name": "simplnx::ComputeKernelAvgMisorientationsFilter",
         "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
       },
       "isDisabled": false
@@ -347,7 +347,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureCentroidsFilter",
+        "name": "simplnx::ComputeFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false
@@ -368,7 +368,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindEuclideanDistMapFilter",
+        "name": "simplnx::ComputeEuclideanDistMapFilter",
         "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
       },
       "isDisabled": false
@@ -388,7 +388,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindFeatureReferenceMisorientationsFilter",
+        "name": "simplnx::ComputeFeatureReferenceMisorientationsFilter",
         "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
       },
       "isDisabled": false
@@ -423,7 +423,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateArrayHistogramFilter",
+        "name": "simplnx::ComputeArrayHistogramFilter",
         "uuid": "c6b6d9e5-301d-4767-abf7-530f5ef5007d"
       },
       "isDisabled": false

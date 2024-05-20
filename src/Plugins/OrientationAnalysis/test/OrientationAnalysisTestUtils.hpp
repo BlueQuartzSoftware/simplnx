@@ -85,12 +85,12 @@ const FilterHandle k_CropImageGeometryFilterHandle(k_CropImageGeometryFilterId, 
 // Make sure we can instantiate the CopyDataGroup
 const Uuid k_CopyDataGroupFilterId = *Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1");
 const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the RemoveMinimumSizeFeaturesFilter
-const Uuid k_RemoveMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
-const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFeaturesFilterId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the CalculateFeatureSizesFilter
-const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
-const FilterHandle k_CalculateFeatureSizesFilterHandle(k_CalculateFeatureSizesFilterId, k_SimplnxCorePluginId);
+// Make sure we can instantiate the RequireMinimumSizeFeaturesFilter
+const Uuid k_RequireMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
+const FilterHandle k_RequireMinimumSizeFeaturesFilterHandle(k_RequireMinimumSizeFeaturesFilterId, k_SimplnxCorePluginId);
+// Make sure we can instantiate the ComputeFeatureSizesFilter
+const Uuid k_ComputeFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
+const FilterHandle k_ComputeFeatureSizesFilterHandle(k_ComputeFeatureSizesFilterId, k_SimplnxCorePluginId);
 const Uuid k_ReadCSVFileFilterId = *Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261");
 const FilterHandle k_ReadCSVFileFilterHandle(k_ReadCSVFileFilterId, k_SimplnxCorePluginId);
 
@@ -117,8 +117,8 @@ const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313
 const Uuid k_AlignSectionsFeatureCentroidFilterId = *Uuid::FromString("b83f9bae-9ccf-4932-96c3-7f2fdb091452");
 const FilterHandle k_AlignSectionsFeatureCentroidFilterHandle(k_AlignSectionsFeatureCentroidFilterId, k_SimplnxCorePluginId);
 
-const Uuid k_FindFeaturePhasesObjectsId = *Uuid::FromString("da5bb20e-4a8e-49d9-9434-fbab7bc434fc");
-const FilterHandle k_FindNFeaturePhasesFilterHandle(k_FindFeaturePhasesObjectsId, k_SimplnxCorePluginId);
+const Uuid k_ComputeFeaturePhasesObjectsId = *Uuid::FromString("da5bb20e-4a8e-49d9-9434-fbab7bc434fc");
+const FilterHandle k_FindNFeaturePhasesFilterHandle(k_ComputeFeaturePhasesObjectsId, k_SimplnxCorePluginId);
 const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("7177e88c-c3ab-4169-abe9-1fdaff20e598");
 const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_SimplnxCorePluginId);
 } // namespace nx::core

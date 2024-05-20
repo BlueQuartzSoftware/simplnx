@@ -112,7 +112,7 @@ nxtest.check_filter_result(nx.MultiThresholdObjectsFilter, result)
 #------------------------------------------------------------------------------
 # Generate the IPF Colors for the <001> direction
 #------------------------------------------------------------------------------
-result = nxor.GenerateIPFColorsFilter.execute(    data_structure=data_structure,
+result = nxor.ComputeIPFColorsFilter.execute(    data_structure=data_structure,
     cell_euler_angles_array_path=nx.DataPath(["Small IN100", "Scan Data", "EulerAngles"]),
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=nx.DataPath(["Small IN100", "Scan Data", "Phases"]),
@@ -121,7 +121,7 @@ result = nxor.GenerateIPFColorsFilter.execute(    data_structure=data_structure,
     reference_dir=[0,0,1],
     use_mask=True
 )
-nxtest.check_filter_result(nxor.GenerateIPFColorsFilter, result)
+nxtest.check_filter_result(nxor.ComputeIPFColorsFilter, result)
 
 
 
@@ -156,11 +156,11 @@ nxtest.check_filter_result(nxitk.ITKImageWriterFilter, result)
 #------------------------------------------------------------------------------
 # Generate a Colorized Version of the Confidence Index
 #------------------------------------------------------------------------------
-result = nx.GenerateColorTableFilter.execute(data_structure=data_structure,
+result = nx.CreateColorMapFilter.execute(data_structure=data_structure,
                                               output_rgb_array_name="CI Color", 
                                               input_data_array_path=nx.DataPath(["Small IN100", "Scan Data", "Confidence Index"]), 
                                               selected_preset="Rainbow Desaturated")
-nxtest.check_filter_result(nx.GenerateColorTableFilter, result)
+nxtest.check_filter_result(nx.CreateColorMapFilter, result)
 
 
 #------------------------------------------------------------------------------

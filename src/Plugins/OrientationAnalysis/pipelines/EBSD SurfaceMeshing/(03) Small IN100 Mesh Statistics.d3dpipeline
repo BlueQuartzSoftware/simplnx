@@ -83,7 +83,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CalculateTriangleAreasFilter",
+        "name": "simplnx::ComputeTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
@@ -123,7 +123,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateFaceIPFColoringFilter",
+        "name": "simplnx::ComputeFaceIPFColoringFilter",
         "uuid": "30759600-7c02-4650-b5ca-e7036d6b568e"
       },
       "isDisabled": false

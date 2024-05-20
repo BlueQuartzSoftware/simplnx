@@ -15,14 +15,33 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
-  CalculateArrayHistogramFilter
-  CalculateFeatureSizesFilter
-  CalculateTriangleAreasFilter
+  ComputeArrayHistogramFilter
+  ComputeFeatureSizesFilter
+  ComputeTriangleAreasFilter
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineStlFilesFilter
+  ComputeDifferencesMapFilter
+  ComputeEuclideanDistMapFilter
+  ComputeFeatureCentroidsFilter
+  ComputeFeatureClusteringFilter
+  ComputeFeatureNeighborsFilter
+  ComputeFeaturePhasesBinaryFilter
+  ComputeFeaturePhasesFilter
   ComputeFeatureRectFilter
+  ComputeKMeansFilter
+  ComputeKMedoidsFilter
+  ComputeLargestCrossSectionsFilter
   ComputeMomentInvariants2DFilter
+  ComputeNeighborhoodsFilter
+  ComputeNeighborListStatisticsFilter
+  ComputeNumFeaturesFilter
+  ComputeSurfaceAreaToVolumeFilter
+  ComputeSurfaceFeaturesFilter
+  ComputeTriangleGeomCentroidsFilter
+  ComputeVectorColorsFilter
+  ComputeVertexToTriangleDistancesFilter
+  ComputeVolumeFractionsFilter
   ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -34,6 +53,7 @@ set(FilterList
   CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
   CreateImageGeometryFilter
+  CreatePythonSkeletonFilter
   CropImageGeometryFilter
   CropVertexGeometryFilter
   DeleteDataFilter
@@ -47,42 +67,22 @@ set(FilterList
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
-  FindArrayStatisticsFilter
-  FindBiasedFeaturesFilter
-  FindBoundaryCellsFilter
-  FindBoundaryElementFractionsFilter
-  FindDifferencesMapFilter
-  FindEuclideanDistMapFilter
-  FindFeatureCentroidsFilter
-  FindFeatureClusteringFilter
-  FindFeaturePhasesBinaryFilter
-  FindFeaturePhasesFilter
-  FindLargestCrossSectionsFilter
-  FindNeighborhoodsFilter
-  FindNeighborListStatisticsFilter
-  FindFeatureNeighborsFilter
-  FindNumFeaturesFilter
-  FindSurfaceAreaToVolumeFilter
-  FindSurfaceFeaturesFilter
-  FindTriangleGeomCentroidsFilter
-  FindTriangleGeomSizesFilter
-  FindVertexToTriangleDistancesFilter
-  FindVolFractionsFilter
+  ComputeArrayStatisticsFilter
+  ComputeBiasedFeaturesFilter
+  ComputeBoundaryCellsFilter
+  ComputeBoundaryElementFractionsFilter
+  ComputeTriangleGeomSizesFilter
   FlyingEdges3DFilter
-  GenerateColorTableFilter
-  GeneratePythonSkeletonFilter
-  GenerateVectorColorsFilter
+  CreateColorMapFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
-  KMeansFilter
-  KMedoidsFilter
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  MinNeighborsFilter
+  RequireMinNumNeighborsFilter
   MoveDataFilter
   MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
@@ -98,11 +98,12 @@ set(FilterList
   ReadStlFileFilter
   ReadTextDataArrayFilter
   ReadVolumeGraphicsFileFilter
+  ReadVtkStructuredPointsFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
   RemoveFlaggedVerticesFilter
-  RemoveMinimumSizeFeaturesFilter
+  RequireMinimumSizeFeaturesFilter
   RenameDataObjectFilter
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
@@ -131,7 +132,6 @@ set(FilterList
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
-  ReadVtkStructuredPointsFilter
 )
 
 set(ActionList
@@ -144,14 +144,26 @@ set(AlgorithmList
   AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
-  CalculateArrayHistogram
+  ComputeArrayHistogram
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
   CombineStlFiles
+  ComputeEuclideanDistMap
+  ComputeFeatureCentroids
+  ComputeFeatureClustering
   ComputeFeatureRect
+  ComputeKMeans
+  ComputeKMedoids
+  ComputeLargestCrossSections
   ComputeMomentInvariants2D
+  ComputeNeighborhoods
+  ComputeSurfaceAreaToVolume
+  ComputeTriangleGeomCentroids
+  ComputeVectorColors
+  ComputeVertexToTriangleDistances
   ConvertColorToGrayScale
   ConvertData
+  CreatePythonSkeleton
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
@@ -160,25 +172,13 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
-  FindArrayStatistics
-  FindBiasedFeatures
-  FindBoundaryCells
-  FindEuclideanDistMap
-  FindFeatureCentroids
-  FindFeatureClustering
-  FindLargestCrossSections
-  FindNeighborhoods
+  ComputeArrayStatistics
+  ComputeBiasedFeatures
+  ComputeBoundaryCells
   FindNRingNeighbors
-  FindSurfaceAreaToVolume
-  FindTriangleGeomCentroids
-  FindTriangleGeomSizes
-  FindVertexToTriangleDistances
+  ComputeTriangleGeomSizes
   FlyingEdges3D
-  GenerateColorTable
-  GeneratePythonSkeleton
-  GenerateVectorColors
-  KMeans
-  KMedoids
+  CreateColorMap
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
@@ -190,6 +190,7 @@ set(AlgorithmList
   ReadRawBinary
   ReadStlFile
   ReadVolumeGraphicsFile
+  ReadVtkStructuredPoints
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
@@ -211,7 +212,6 @@ set(AlgorithmList
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
-  ReadVtkStructuredPoints
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}

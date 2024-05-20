@@ -44,7 +44,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.FindAvgOrientationsFilter()
+nx_filter = cxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -60,14 +60,14 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.FindMisorientationsFilter()
+nx_filter = cxor.ComputeMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
     avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
-    find_avg_misors=False,
+    compute_avg_misors=False,
     misorientation_list_array_name="MisorientationList",
     neighbor_list_array_path=nx.DataPath("DataContainer/CellFeatureData/NeighborhoodList")
     # avg_misorientations_array_name: str = ...,  # Not currently part of the code
@@ -76,7 +76,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.FindSchmidsFilter()
+nx_filter = cxor.ComputeSchmidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -98,7 +98,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxor.FindFeatureReferenceMisorientationsFilter()
+nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -117,7 +117,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = cxor.FindKernelAvgMisorientationsFilter()
+nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
