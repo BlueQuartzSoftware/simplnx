@@ -124,7 +124,7 @@
         "input_image_geometry_path": "DataContainer",
         "mask_array_path": "DataContainer/Cell Data/Mask",
         "reference_slice": 0,
-        "selected_cell_data_path": "DataContainer/CellData",
+        "selected_cell_data_path": "DataContainer/Cell Data",
         "use_reference_slice": true,
         "write_alignment_shifts": false
       },
@@ -339,7 +339,7 @@
     {
       "args": {
         "apply_to_single_phase": false,
-        "cell_attribute_matrix_path": "DataContainer/CellData",
+        "cell_attribute_matrix_path": "DataContainer/Cell Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_phases_path": "Data Container/Feature Data/Phases",
         "ignored_voxel_arrays": [],

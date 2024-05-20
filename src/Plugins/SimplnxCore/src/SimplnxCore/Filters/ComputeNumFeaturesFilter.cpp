@@ -52,7 +52,7 @@ Parameters ComputeNumFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "FeatureData", "Phases"}), nx::core::GetAllDataTypes()));
+                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",

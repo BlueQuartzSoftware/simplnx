@@ -55,7 +55,7 @@ nx_filter = nx.QuickSurfaceMeshFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    face_data_group_name=("FaceData"),
+    face_data_group_name=("Face Data"),
     face_feature_attribute_matrix_name=("Face Feature Data"),
     face_labels_array_name=("FaceLabels"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
@@ -64,7 +64,7 @@ result = nx_filter.execute(
     input_grid_geometry_path=nx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
     output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
-    vertex_data_group_name=("VertexData")
+    vertex_data_group_name=("Vertex Data")
 )
 nxtest.check_filter_result(nx_filter, result)
 

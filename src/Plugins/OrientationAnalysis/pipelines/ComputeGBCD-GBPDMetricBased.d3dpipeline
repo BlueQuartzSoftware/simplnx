@@ -8,7 +8,7 @@
         "import_data_object": {
           "data_paths": [
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Image Quality",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/SEM Signal",
@@ -56,15 +56,15 @@
             "TriangleDataContainer/SharedTriList",
             "TriangleDataContainer/SharedVertexList",
             "TriangleDataContainer/FaceData",
-            "TriangleDataContainer/VertexData",
-            "TriangleDataContainer/FaceData/FaceLabels",
-            "TriangleDataContainer/VertexData/NodeType",
+            "TriangleDataContainer/Vertex Data",
+            "TriangleDataContainer/Face Data/FaceLabels",
+            "TriangleDataContainer/Vertex Data/NodeType",
             "TriangleDataContainer/Edge List",
-            "TriangleDataContainer/FaceData/FaceAreas",
-            "TriangleDataContainer/FaceData/FaceNormals",
-            "TriangleDataContainer/FaceData/FaceDihedralAngles",
-            "TriangleDataContainer/FaceData/FaceIPFColors",
-            "TriangleDataContainer/FaceData/FaceMisorientationColors"
+            "TriangleDataContainer/Face Data/FaceAreas",
+            "TriangleDataContainer/Face Data/FaceNormals",
+            "TriangleDataContainer/Face Data/FaceDihedralAngles",
+            "TriangleDataContainer/Face Data/FaceIPFColors",
+            "TriangleDataContainer/Face Data/FaceMisorientationColors"
           ],
           "file_path": "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
         },
@@ -77,7 +77,7 @@
                 "import_data_object": {
                   "data_paths": [
                     "DataContainer",
-                    "DataContainer/CellData",
+                    "DataContainer/Cell Data",
                     "DataContainer/Cell Data/Image Quality",
                     "DataContainer/Cell Data/Confidence Index",
                     "DataContainer/Cell Data/SEM Signal",
@@ -125,9 +125,9 @@
                     "TriangleDataContainer/SharedTriList",
                     "TriangleDataContainer/SharedVertexList",
                     "TriangleDataContainer/FaceData",
-                    "TriangleDataContainer/VertexData",
-                    "TriangleDataContainer/FaceData/FaceLabels",
-                    "TriangleDataContainer/VertexData/NodeType",
+                    "TriangleDataContainer/Vertex Data",
+                    "TriangleDataContainer/Face Data/FaceLabels",
+                    "TriangleDataContainer/Vertex Data/NodeType",
                     "TriangleDataContainer/Edge List"
                   ],
                   "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
@@ -141,7 +141,7 @@
                         "import_data_object": {
                           "data_paths": [
                             "DataContainer",
-                            "DataContainer/CellData",
+                            "DataContainer/Cell Data",
                             "DataContainer/Cell Data/Image Quality",
                             "DataContainer/Cell Data/Confidence Index",
                             "DataContainer/Cell Data/SEM Signal",
@@ -189,9 +189,9 @@
                             "TriangleDataContainer/SharedTriList",
                             "TriangleDataContainer/SharedVertexList",
                             "TriangleDataContainer/FaceData",
-                            "TriangleDataContainer/VertexData",
-                            "TriangleDataContainer/FaceData/FaceLabels",
-                            "TriangleDataContainer/VertexData/NodeType"
+                            "TriangleDataContainer/Vertex Data",
+                            "TriangleDataContainer/Face Data/FaceLabels",
+                            "TriangleDataContainer/Vertex Data/NodeType"
                           ],
                           "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
                         },
@@ -204,7 +204,7 @@
                                 "import_data_object": {
                                   "data_paths": [
                                     "DataContainer",
-                                    "DataContainer/CellData",
+                                    "DataContainer/Cell Data",
                                     "DataContainer/Cell Data/Image Quality",
                                     "DataContainer/Cell Data/Confidence Index",
                                     "DataContainer/Cell Data/SEM Signal",
@@ -264,7 +264,7 @@
                                         "import_data_object": {
                                           "data_paths": [
                                             "DataContainer",
-                                            "DataContainer/CellData",
+                                            "DataContainer/Cell Data",
                                             "DataContainer/Cell Data/Image Quality",
                                             "DataContainer/Cell Data/Confidence Index",
                                             "DataContainer/Cell Data/SEM Signal",
@@ -315,7 +315,7 @@
                                                 "import_data_object": {
                                                   "data_paths": [
                                                     "DataContainer",
-                                                    "DataContainer/CellData",
+                                                    "DataContainer/Cell Data",
                                                     "DataContainer/Cell Data/Image Quality",
                                                     "DataContainer/Cell Data/Confidence Index",
                                                     "DataContainer/Cell Data/SEM Signal",
@@ -461,7 +461,7 @@
                                                         "alignment_shift_file_name": "Data/Output/Alignment_By_Feature_Centroid_Shifts.txt",
                                                         "mask_array_path": "DataContainer/Cell Data/Mask",
                                                         "reference_slice": 0,
-                                                        "selected_cell_data_path": "DataContainer/CellData",
+                                                        "selected_cell_data_path": "DataContainer/Cell Data",
                                                         "input_image_geometry_path": "DataContainer",
                                                         "use_reference_slice": true,
                                                         "write_alignment_shifts": false
@@ -661,7 +661,7 @@
                                                     {
                                                       "args": {
                                                         "apply_to_single_phase": false,
-                                                        "cell_attribute_matrix_path": "DataContainer/CellData",
+                                                        "cell_attribute_matrix_path": "DataContainer/Cell Data",
                                                         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                                                         "feature_phases_path": "Data Container/Feature Data/Phases",
                                                         "ignored_voxel_arrays": [],
@@ -1006,7 +1006,7 @@
                                         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
                                         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                                         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-                                        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
+                                        "gb_euclidean_distances_array_path": "Cell Data/GBEuclideanDistances",
                                         "quats_array_path": "DataContainer/Cell Data/Quats",
                                         "reference_orientation_index": 0
                                       },
@@ -1101,7 +1101,7 @@
                             },
                             {
                               "args": {
-                                "face_data_group_name": "FaceData",
+                                "face_data_group_name": "Face Data",
                                 "face_feature_attribute_matrix_name": "Face Feature Data",
                                 "face_labels_array_name": "FaceLabels",
                                 "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
@@ -1111,7 +1111,7 @@
                                 "node_types_array_name": "NodeType",
                                 "input_data_array_paths": [],
                                 "output_triangle_geometry_path": "TriangleDataContainer",
-                                "vertex_data_group_name": "VertexData"
+                                "vertex_data_group_name": "Vertex Data"
                               },
                               "comments": "",
                               "filter": {
@@ -1148,7 +1148,7 @@
                         "lambda_value": 0.25,
                         "mu_factor": 0.20000000298023224,
                         "quad_point_lambda": 0.15000000596046448,
-                        "surface_mesh_node_type_array_path": "TriangleDataContainer/VertexData/NodeType",
+                        "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeType",
                         "surface_point_lambda": 0.0,
                         "surface_quad_point_lambda": 0.0,
                         "surface_triple_line_lambda": 0.0,
@@ -1227,8 +1227,8 @@
                 "feature_euler_angles_array_path": "DataContainer/Cell Feature Data/AvgEulerAngles",
                 "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
                 "surface_mesh_face_ipf_colors_array_name": "FaceIPFColors",
-                "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
-                "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals"
+                "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
+                "surface_mesh_face_normals_array_path": "TriangleDataContainer/Face Data/FaceNormals"
               },
               "comments": "",
               "filter": {
@@ -1242,7 +1242,7 @@
                 "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
                 "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
                 "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
-                "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+                "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
                 "surface_mesh_face_misorientation_colors_array_name": "FaceMisorientationColors"
               },
               "comments": "",
@@ -1276,11 +1276,11 @@
     },
     {
       "args": {
-        "face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
         "feature_face_ids_array_name": "FeatureFaceId",
         "feature_face_labels_array_name": "FaceLabels",
         "feature_num_triangles_array_name": "NumTriangles",
-        "grain_boundary_attribute_matrix_name": "FaceFeatureData",
+        "grain_boundary_attribute_matrix_name": "Face Feature Data",
         "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
@@ -1305,14 +1305,14 @@
           1.0,
           17.899999618530273
         ],
-        "node_types_array_path": "TriangleDataContainer/VertexData/NodeType",
+        "node_types_array_path": "TriangleDataContainer/Vertex Data/NodeType",
         "num_sampl_pts": 3000,
         "phase_of_interest": 1,
         "save_relative_err": true,
-        "surface_mesh_face_areas_array_path": "TriangleDataContainer/FaceData/FaceAreas",
-        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
-        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals",
-        "surface_mesh_feature_face_labels_array_path": "TriangleDataContainer/FaceFeatureData/FaceLabels",
+        "surface_mesh_face_areas_array_path": "TriangleDataContainer/Face Data/FaceAreas",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/Face Data/FaceNormals",
+        "surface_mesh_feature_face_labels_array_path": "TriangleDataContainer/Face Feature Data/FaceLabels",
         "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",
@@ -1331,14 +1331,14 @@
         "feature_euler_angles_array_path": "DataContainer/Cell Feature Data/AxisEulerAngles",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "limit_dist": 7.0,
-        "node_types_array_path": "TriangleDataContainer/VertexData/NodeType",
+        "node_types_array_path": "TriangleDataContainer/Vertex Data/NodeType",
         "num_sampl_pts": 3000,
         "phase_of_interest": 1,
         "save_relative_err": false,
-        "surface_mesh_face_areas_array_path": "TriangleDataContainer/FaceData/FaceAreas",
-        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
-        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals",
-        "surface_mesh_feature_face_labels_array_path": "TriangleDataContainer/FaceFeatureData/FaceLabels",
+        "surface_mesh_face_areas_array_path": "TriangleDataContainer/Face Data/FaceAreas",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/Face Data/FaceNormals",
+        "surface_mesh_feature_face_labels_array_path": "TriangleDataContainer/Face Feature Data/FaceLabels",
         "input_triangle_geometry_path": "TriangleDataContainer"
       },
       "comments": "",

@@ -12,7 +12,7 @@
         "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
-      "isDisabled": false
+      "isDisabled": true
     },
     {
       "args": {
@@ -165,7 +165,7 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Import_ASCII_IPF.png",
+        "file_name": "Data/Output/Import_CSV_Example/Import_ASCII_IPF.png",
         "image_array_path": "[Image Geometry]/Cell Data//IPFColors",
         "index_offset": 0,
         "input_image_geometry_path": "[Image Geometry]",

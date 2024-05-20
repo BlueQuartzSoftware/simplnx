@@ -172,7 +172,7 @@
         "input_grid_geometry_path": "DataContainer",
         "mask_array_path": "DataContainer/Cell Data/Mask Y Pos",
         "output_shared_vertex_list_name": "SharedVertexList",
-        "output_vertex_attr_matrix_name": "VertexData",
+        "output_vertex_attr_matrix_name": "Vertex Data",
         "output_vertex_geometry_path": "Vertex Geometry",
         "use_mask": true
       },

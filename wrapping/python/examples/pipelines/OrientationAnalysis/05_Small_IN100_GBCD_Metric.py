@@ -13,9 +13,10 @@ data_structure = nx.DataStructure()
 # Instantiate Import Data Parameter
 import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = str(nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_MeshStats.dream3d")
+
 import_data.data_paths =[
             nx.DataPath("DataContainer"),
-            nx.DataPath("DataContainer/CellData"),
+            nx.DataPath("DataContainer/Cell Data"),
             nx.DataPath("DataContainer/Cell Data/Image Quality"),
             nx.DataPath("DataContainer/Cell Data/Confidence Index"),
             nx.DataPath("DataContainer/Cell Data/SEM Signal"),
@@ -63,14 +64,15 @@ import_data.data_paths =[
             nx.DataPath("TriangleDataContainer/SharedTriList"),
             nx.DataPath("TriangleDataContainer/SharedVertexList"),
             nx.DataPath("TriangleDataContainer/FaceData"),
-            nx.DataPath("TriangleDataContainer/VertexData"),
-            nx.DataPath("TriangleDataContainer/VertexData/NodeType"),
-            nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
+            nx.DataPath("TriangleDataContainer/Vertex Data"),
+            nx.DataPath("TriangleDataContainer/Vertex Data/NodeType"),
+            nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
             nx.DataPath("TriangleDataContainer/Edge List"),
-            nx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
-            nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
-            nx.DataPath("TriangleDataContainer/FaceData/FaceDihedralAngles")
+            nx.DataPath("TriangleDataContainer/Face Data/FaceAreas"),
+            nx.DataPath("TriangleDataContainer/Face Data/FaceNormals"),
+            nx.DataPath("TriangleDataContainer/Face Data/FaceDihedralAngles")
           ]
+import_data.data_paths = None
 
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
@@ -86,7 +88,7 @@ nx_filter = nx.SharedFeatureFaceFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
+    face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
     feature_face_ids_array_name="SharedFeatureFaceId",
     feature_face_labels_array_name="FaceLabels",
     feature_num_triangles_array_name="NumTriangles",
@@ -110,13 +112,13 @@ result = nx_filter.execute(
     feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     misorientation_rotation=[1.0, 1.0, 1.0, 60.0],
-    node_types_array_path=nx.DataPath("TriangleDataContainer/VertexData/NodeType"),
+    node_types_array_path=nx.DataPath("TriangleDataContainer/Vertex Data/NodeType"),
     num_sampl_pts=3000,
     phase_of_interest=1,
     save_relative_err=False,
-    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
-    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
+    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceAreas"),
+    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
+    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceNormals"),
     surface_mesh_feature_face_labels_array_path=nx.DataPath("TriangleDataContainer/SharedFeatureFace/FaceLabels"),
     input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )

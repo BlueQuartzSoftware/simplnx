@@ -1,14 +1,1103 @@
 {
   "isDisabled": false,
-  "name": "(03) Small IN100 Mesh Statistics.d3dpipeline",
-  "pinnedParams": [],
+  "name": "Untitled Pipeline",
   "pipeline": [
     {
       "args": {
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "(02) Small IN100 Smooth Mesh",
+          "pipeline": [
+            {
+              "args": {
+                "Imported Pipeline": {
+                  "isDisabled": false,
+                  "name": "(01) Small IN100 Quick Mesh",
+                  "pipeline": [
+                    {
+                      "args": {
+                        "Imported Pipeline": {
+                          "isDisabled": false,
+                          "name": "(05) Small IN100 Crystallographic Statistics",
+                          "pipeline": [
+                            {
+                              "args": {
+                                "Imported Pipeline": {
+                                  "isDisabled": false,
+                                  "name": "(01) Small IN100 Morphological Statistics",
+                                  "pipeline": [
+                                    {
+                                      "args": {
+                                        "Imported Pipeline": {
+                                          "isDisabled": false,
+                                          "name": "(08) Small IN100 Full Reconstruction",
+                                          "pipeline": [
+                                            {
+                                              "args": {
+                                                "cell_attribute_matrix_name": "Cell Data",
+                                                "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
+                                                "output_image_geometry_path": "DataContainer",
+                                                "read_h5_ebsd_object": {
+                                                  "end_slice": 117,
+                                                  "euler_representation": 0,
+                                                  "hdf5_data_paths": [
+                                                    "Confidence Index",
+                                                    "EulerAngles",
+                                                    "Fit",
+                                                    "Image Quality",
+                                                    "Phases",
+                                                    "SEM Signal",
+                                                    "X Position",
+                                                    "Y Position"
+                                                  ],
+                                                  "input_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
+                                                  "start_slice": 1,
+                                                  "use_recommended_transform": true
+                                                }
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ReadH5EbsdFilter",
+                                                "uuid": "db291b6c-9aaf-432d-9547-430c865a539c"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "array_thresholds_object": {
+                                                  "inverted": false,
+                                                  "thresholds": [
+                                                    {
+                                                      "array_path": "DataContainer/Cell Data/Image Quality",
+                                                      "comparison": 0,
+                                                      "inverted": false,
+                                                      "type": "array",
+                                                      "union": 0,
+                                                      "value": 120.0
+                                                    },
+                                                    {
+                                                      "array_path": "DataContainer/Cell Data/Confidence Index",
+                                                      "comparison": 0,
+                                                      "inverted": false,
+                                                      "type": "array",
+                                                      "union": 0,
+                                                      "value": 0.1
+                                                    }
+                                                  ],
+                                                  "type": "collection",
+                                                  "union": 0
+                                                },
+                                                "created_mask_type": 10,
+                                                "custom_false_value": 0.0,
+                                                "custom_true_value": 1.0,
+                                                "output_data_array_name": "Mask",
+                                                "use_custom_false_value": false,
+                                                "use_custom_true_value": false
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::MultiThresholdObjectsFilter",
+                                                "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "input_orientation_array_path": "DataContainer/Cell Data/EulerAngles",
+                                                "input_representation_index": 0,
+                                                "output_orientation_array_name": "Quats",
+                                                "output_representation_index": 2
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ConvertOrientationsFilter",
+                                                "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "alignment_shift_file_name": "Data/Output/Alignment_By_Misorientation_Shifts.txt",
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "mask_array_path": "DataContainer/Cell Data/Mask",
+                                                "misorientation_tolerance": 5.0,
+                                                "quats_array_path": "DataContainer/Cell Data/Quats",
+                                                "use_mask": true,
+                                                "write_alignment_shifts": false
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::AlignSectionsMisorientationFilter",
+                                                "uuid": "8df2135c-7079-49f4-9756-4f3c028a5ced"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "fill_holes": false,
+                                                "input_image_geometry_path": "DataContainer",
+                                                "mask_array_path": "DataContainer/Cell Data/Mask"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::IdentifySampleFilter",
+                                                "uuid": "94d47495-5a89-4c7f-a0ee-5ff20e6bd273"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "alignment_shift_file_name": "Data/Output/Alignment_By_Feature_Centroid_Shifts.txt",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "mask_array_path": "DataContainer/Cell Data/Mask",
+                                                "reference_slice": 0,
+                                                "selected_cell_data_path": "DataContainer/Cell Data",
+                                                "use_reference_slice": true,
+                                                "write_alignment_shifts": false
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::AlignSectionsFeatureCentroidFilter",
+                                                "uuid": "b83f9bae-9ccf-4932-96c3-7f2fdb091452"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "mask_array_path": "DataContainer/Cell Data/Mask",
+                                                "misorientation_tolerance": 5.0,
+                                                "number_of_neighbors": 4,
+                                                "quats_array_path": "DataContainer/Cell Data/Quats"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::BadDataNeighborOrientationCheckFilter",
+                                                "uuid": "3f342977-aea1-49e1-a9c2-f73760eba0d3"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "correlation_array_path": "DataContainer/Cell Data/Confidence Index",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "ignored_data_array_paths": [],
+                                                "input_image_geometry_path": "DataContainer",
+                                                "level": 2,
+                                                "min_confidence": 0.20000000298023224,
+                                                "misorientation_tolerance": 5.0,
+                                                "quats_array_path": "DataContainer/Cell Data/Quats"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::NeighborOrientationCorrelationFilter",
+                                                "uuid": "4625c192-7e46-4333-a294-67a2eb64cb37"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "active_array_name": "Active",
+                                                "cell_feature_attribute_matrix_name": "Cell Feature Data",
+                                                "cell_mask_array_path": "DataContainer/Cell Data/Mask",
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "cell_quats_array_path": "DataContainer/Cell Data/Quats",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "feature_ids_array_name": "FeatureIds",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "misorientation_tolerance": 5.0,
+                                                "randomize_features": true,
+                                                "use_mask": true
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::EBSDSegmentFeaturesFilter",
+                                                "uuid": "1810c2c7-63e3-41db-b204-a5821e6271c0"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "cell_features_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "feature_phases_array_name": "Phases"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeFeaturePhasesFilter",
+                                                "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "avg_euler_angles_array_name": "AvgEulerAngles",
+                                                "avg_quats_array_name": "AvgQuats",
+                                                "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                                "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "cell_quats_array_path": "DataContainer/Cell Data/Quats",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeAvgOrientationsFilter",
+                                                "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "boundary_cells_name": "BoundaryCells",
+                                                "cell_feature_array_path": "DataContainer/Cell Feature Data",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "neighbor_list_name": "NeighborList2",
+                                                "number_of_neighbors_name": "NumNeighbors2",
+                                                "shared_surface_area_list_name": "SharedSurfaceAreaList2",
+                                                "store_boundary_cells": false,
+                                                "store_surface_features": false,
+                                                "surface_features_name": "SurfaceFeatures"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeFeatureNeighborsFilter",
+                                                "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "active_array_name": "Active",
+                                                "angle_tolerance": 2.0,
+                                                "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
+                                                "axis_tolerance": 3.0,
+                                                "cell_parent_ids_array_name": "ParentIds",
+                                                "contiguous_neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborList2",
+                                                "created_feature_attribute_matrix_name": "NewGrain Data",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "feature_parent_ids_array_name": "ParentIds",
+                                                "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
+                                                "seed_array_name": "MergeTwins SeedValue",
+                                                "seed_value": 5489,
+                                                "use_seed": false
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::MergeTwinsFilter",
+                                                "uuid": "f173786a-50cd-4c3c-9518-48ef6fc2bac9"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "equivalent_diameters_name": "EquivalentDiameters",
+                                                "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "num_elements_name": "NumElements",
+                                                "save_element_sizes": false,
+                                                "volumes_name": "Volumes"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeFeatureSizesFilter",
+                                                "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "apply_single_phase": false,
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "feature_phases_path": "",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "min_allowed_features_size": 16,
+                                                "num_cells_path": "DataContainer/Cell Feature Data/NumElements",
+                                                "phase_number": 0
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::RequireMinimumSizeFeaturesFilter",
+                                                "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "removed_data_path": [
+                                                  "DataContainer/Cell Feature Data/NumNeighbors2"
+                                                ]
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::DeleteDataFilter",
+                                                "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "boundary_cells_name": "BoundaryCells",
+                                                "cell_feature_array_path": "DataContainer/Cell Feature Data",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "input_image_geometry_path": "DataContainer",
+                                                "neighbor_list_name": "NeighborList",
+                                                "number_of_neighbors_name": "NumNeighbors",
+                                                "shared_surface_area_list_name": "SharedSurfaceAreaList",
+                                                "store_boundary_cells": false,
+                                                "store_surface_features": false,
+                                                "surface_features_name": "SurfaceFeatures"
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeFeatureNeighborsFilter",
+                                                "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "apply_to_single_phase": false,
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "feature_phases_path": "Data Container/Feature Data/Phases",
+                                                "ignored_voxel_arrays": [],
+                                                "input_image_geometry_path": "DataContainer",
+                                                "min_num_neighbors": 2,
+                                                "num_neighbors_path": "DataContainer/Cell Feature Data/NumNeighbors",
+                                                "phase_number": 0
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::RequireMinNumNeighborsFilter",
+                                                "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "removed_data_path": [
+                                                  "DataContainer/Cell Feature Data/NumNeighbors"
+                                                ]
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::DeleteDataFilter",
+                                                "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "cell_phases_array_path": "Phases",
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "ignored_data_array_paths": [],
+                                                "input_image_geometry_path": "DataContainer",
+                                                "min_allowed_defect_size": 1000,
+                                                "store_as_new_phase": false
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::FillBadDataFilter",
+                                                "uuid": "a59eb864-9e6b-40bb-9292-e5281b0b4f3e"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "ignored_data_array_paths": [],
+                                                "input_image_geometry_path": "DataContainer",
+                                                "num_iterations": 2,
+                                                "operation_index": 0,
+                                                "x_dir_on": true,
+                                                "y_dir_on": true,
+                                                "z_dir_on": true
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ErodeDilateBadDataFilter",
+                                                "uuid": "7f2f7378-580e-4337-8c04-a29e7883db0b"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                                "ignored_data_array_paths": [],
+                                                "input_image_geometry_path": "DataContainer",
+                                                "num_iterations": 2,
+                                                "operation_index": 1,
+                                                "x_dir_on": true,
+                                                "y_dir_on": true,
+                                                "z_dir_on": true
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ErodeDilateBadDataFilter",
+                                                "uuid": "7f2f7378-580e-4337-8c04-a29e7883db0b"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+                                                "cell_ipf_colors_array_name": "IPFColors",
+                                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                                "mask_array_path": "DataContainer/Cell Data/Mask",
+                                                "reference_dir": [
+                                                  0.0,
+                                                  0.0,
+                                                  1.0
+                                                ],
+                                                "use_mask": true
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::ComputeIPFColorsFilter",
+                                                "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+                                              },
+                                              "isDisabled": false
+                                            },
+                                            {
+                                              "args": {
+                                                "export_file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+                                                "write_xdmf_file": true
+                                              },
+                                              "comments": "",
+                                              "filter": {
+                                                "name": "nx::core::WriteDREAM3DFilter",
+                                                "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+                                              },
+                                              "isDisabled": false
+                                            }
+                                          ],
+                                          "version": 1
+                                        },
+                                        "import_data_object": {
+                                          "data_paths": [
+                                            "DataContainer",
+                                            "DataContainer/Cell Data",
+                                            "DataContainer/Cell Data/Image Quality",
+                                            "DataContainer/Cell Data/Confidence Index",
+                                            "DataContainer/Cell Data/SEM Signal",
+                                            "DataContainer/Cell Data/Fit",
+                                            "DataContainer/Cell Data/EulerAngles",
+                                            "DataContainer/Cell Data/Phases",
+                                            "DataContainer/Cell Ensemble Data",
+                                            "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                            "DataContainer/Cell Ensemble Data/LatticeConstants",
+                                            "DataContainer/Cell Data/Mask",
+                                            "DataContainer/Cell Data/Quats",
+                                            "DataContainer/Cell Feature Data",
+                                            "DataContainer/Cell Feature Data/Active",
+                                            "DataContainer/Cell Data/FeatureIds",
+                                            "DataContainer/Cell Feature Data/Phases",
+                                            "DataContainer/Cell Feature Data/AvgQuats",
+                                            "DataContainer/Cell Feature Data/AvgEulerAngles",
+                                            "DataContainer/NewGrain Data",
+                                            "DataContainer/Cell Data/ParentIds",
+                                            "DataContainer/Cell Feature Data/ParentIds",
+                                            "DataContainer/NewGrain Data/Active",
+                                            "DataContainer/Cell Data/IPFColors"
+                                          ],
+                                          "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+                                        }
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ReadDREAM3DFilter",
+                                        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "centroids_array_name": "Centroids",
+                                        "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "input_image_geometry_path": "DataContainer"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeFeatureCentroidsFilter",
+                                        "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "equivalent_diameters_name": "EquivalentDiameters",
+                                        "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "num_elements_name": "NumElements",
+                                        "save_element_sizes": false,
+                                        "volumes_name": "Size Volumes"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeFeatureSizesFilter",
+                                        "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "aspect_ratios_array_name": "AspectRatios",
+                                        "axis_euler_angles_array_name": "AxisEulerAngles",
+                                        "axis_lengths_array_name": "AxisLengths",
+                                        "centroids_array_path": "DataContainer/Cell Feature Data/Centroids",
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "omega3s_array_name": "Omega3s",
+                                        "volumes_array_name": "Shape Volumes"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeShapesFilter",
+                                        "uuid": "036b17d5-23bb-4a24-9187-c4a8dd918792"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "boundary_cells_name": "BoundaryCells",
+                                        "cell_feature_array_path": "DataContainer/Cell Feature Data",
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "neighbor_list_name": "NeighborList",
+                                        "number_of_neighbors_name": "NumNeighbors",
+                                        "shared_surface_area_list_name": "SharedSurfaceAreaList",
+                                        "store_boundary_cells": false,
+                                        "store_surface_features": false,
+                                        "surface_features_name": "SurfaceFeatures"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeFeatureNeighborsFilter",
+                                        "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "centroids_array_path": "DataContainer/Cell Feature Data/Centroids",
+                                        "equivalent_diameters_array_path": "DataContainer/Cell Feature Data/EquivalentDiameters",
+                                        "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "multiples_of_average": 1.0,
+                                        "neighborhood_list_array_name": "NeighborhoodList",
+                                        "neighborhoods_array_name": "Neighborhoods"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeNeighborhoodsFilter",
+                                        "uuid": "924c10e3-2f39-4c08-9d7a-7fe029f74f6d"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "calc_manhattan_dist": true,
+                                        "do_boundaries": true,
+                                        "do_quad_points": true,
+                                        "do_triple_lines": true,
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "g_bdistances_array_name": "GBManhattanDistances",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "nearest_neighbors_array_name": "NearestNeighbors",
+                                        "q_pdistances_array_name": "QPManhattanDistances",
+                                        "save_nearest_neighbors": false,
+                                        "t_jdistances_array_name": "TJManhattanDistances"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeEuclideanDistMapFilter",
+                                        "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "calculate_sphericity": true,
+                                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                        "input_image_geometry_path": "DataContainer",
+                                        "num_cells_array_path": "DataContainer/Cell Feature Data/NumElements",
+                                        "sphericity_array_name": "Sphericity",
+                                        "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::ComputeSurfaceAreaToVolumeFilter",
+                                        "uuid": "94e83e4f-797d-4594-b130-3819b7676f01"
+                                      },
+                                      "isDisabled": false
+                                    },
+                                    {
+                                      "args": {
+                                        "export_file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d",
+                                        "write_xdmf_file": true
+                                      },
+                                      "comments": "",
+                                      "filter": {
+                                        "name": "nx::core::WriteDREAM3DFilter",
+                                        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+                                      },
+                                      "isDisabled": false
+                                    }
+                                  ],
+                                  "version": 1
+                                },
+                                "import_data_object": {
+                                  "data_paths": [
+                                    "DataContainer",
+                                    "DataContainer/Cell Data",
+                                    "DataContainer/Cell Data/Image Quality",
+                                    "DataContainer/Cell Data/Confidence Index",
+                                    "DataContainer/Cell Data/SEM Signal",
+                                    "DataContainer/Cell Data/Fit",
+                                    "DataContainer/Cell Data/EulerAngles",
+                                    "DataContainer/Cell Data/Phases",
+                                    "DataContainer/Cell Ensemble Data",
+                                    "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                    "DataContainer/Cell Ensemble Data/LatticeConstants",
+                                    "DataContainer/Cell Data/Mask",
+                                    "DataContainer/Cell Data/Quats",
+                                    "DataContainer/Cell Feature Data",
+                                    "DataContainer/Cell Feature Data/Active",
+                                    "DataContainer/Cell Data/FeatureIds",
+                                    "DataContainer/Cell Feature Data/Phases",
+                                    "DataContainer/NewGrain Data",
+                                    "DataContainer/Cell Data/ParentIds",
+                                    "DataContainer/Cell Feature Data/ParentIds",
+                                    "DataContainer/NewGrain Data/Active",
+                                    "DataContainer/Cell Data/IPFColors",
+                                    "DataContainer/Cell Feature Data/Centroids",
+                                    "DataContainer/Cell Feature Data/EquivalentDiameters",
+                                    "DataContainer/Cell Feature Data/NumElements",
+                                    "DataContainer/Cell Feature Data/Omega3s",
+                                    "DataContainer/Cell Feature Data/AxisLengths",
+                                    "DataContainer/Cell Feature Data/AxisEulerAngles",
+                                    "DataContainer/Cell Feature Data/AspectRatios",
+                                    "DataContainer/Cell Feature Data/Shape Volumes",
+                                    "DataContainer/Cell Feature Data/NumNeighbors",
+                                    "DataContainer/Cell Feature Data/NeighborList",
+                                    "DataContainer/Cell Feature Data/SharedSurfaceAreaList",
+                                    "DataContainer/Cell Feature Data/Neighborhoods",
+                                    "DataContainer/Cell Feature Data/NeighborhoodList",
+                                    "DataContainer/Cell Data/GBManhattanDistances",
+                                    "DataContainer/Cell Data/TJManhattanDistances",
+                                    "DataContainer/Cell Data/QPManhattanDistances",
+                                    "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio"
+                                  ],
+                                  "file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d"
+                                }
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ReadDREAM3DFilter",
+                                "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "removed_data_path": []
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::DeleteDataFilter",
+                                "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "avg_euler_angles_array_name": "AvgEulerAngles",
+                                "avg_quats_array_name": "AvgQuats",
+                                "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                                "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
+                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                "cell_quats_array_path": "DataContainer/Cell Data/Quats",
+                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures"
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ComputeAvgOrientationsFilter",
+                                "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "avg_misorientations_array_name": "AvgMisorientations",
+                                "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
+                                "compute_avg_misors": false,
+                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
+                                "misorientation_list_array_name": "MisorientationList",
+                                "neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborhoodList"
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ComputeMisorientationsFilter",
+                                "uuid": "0b68fe25-b5ef-4805-ae32-20acb8d4e823"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
+                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
+                                "lambdas_array_name": "Schmid_Lambdas",
+                                "loading_direction": [
+                                  1.0,
+                                  1.0,
+                                  1.0
+                                ],
+                                "override_system": false,
+                                "phis_array_name": "Schmid_Phis",
+                                "poles_array_name": "Poles",
+                                "schmids_array_name": "Schmids",
+                                "slip_direction": [
+                                  1.0,
+                                  0.0,
+                                  0.0
+                                ],
+                                "slip_plane": [
+                                  0.0,
+                                  0.0,
+                                  1.0
+                                ],
+                                "slip_systems_array_name": "SlipSystems",
+                                "store_angle_components": false
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ComputeSchmidsFilter",
+                                "uuid": "b4681855-0a3d-4237-97f2-5aec509115c4"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
+                                "cell_feature_attribute_matrix_path": "Cell Feature Data",
+                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
+                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
+                                "gb_euclidean_distances_array_path": "Cell Data/GBEuclideanDistances",
+                                "quats_array_path": "DataContainer/Cell Data/Quats",
+                                "reference_orientation_index": 0
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ComputeFeatureReferenceMisorientationsFilter",
+                                "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                                "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+                                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                                "input_image_geometry_path": "DataContainer",
+                                "kernel_average_misorientations_array_name": "KernelAverageMisorientations",
+                                "kernel_size": [
+                                  1,
+                                  1,
+                                  1
+                                ],
+                                "quats_array_path": "DataContainer/Cell Data/Quats"
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::ComputeKernelAvgMisorientationsFilter",
+                                "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
+                              },
+                              "isDisabled": false
+                            },
+                            {
+                              "args": {
+                                "export_file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
+                                "write_xdmf_file": true
+                              },
+                              "comments": "",
+                              "filter": {
+                                "name": "nx::core::WriteDREAM3DFilter",
+                                "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+                              },
+                              "isDisabled": false
+                            }
+                          ],
+                          "version": 1
+                        },
+                        "import_data_object": {
+                          "data_paths": [
+                            "DataContainer",
+                            "DataContainer/Cell Data",
+                            "DataContainer/Cell Data/Image Quality",
+                            "DataContainer/Cell Data/Confidence Index",
+                            "DataContainer/Cell Data/SEM Signal",
+                            "DataContainer/Cell Data/Fit",
+                            "DataContainer/Cell Data/EulerAngles",
+                            "DataContainer/Cell Data/Phases",
+                            "DataContainer/Cell Ensemble Data",
+                            "DataContainer/Cell Ensemble Data/CrystalStructures",
+                            "DataContainer/Cell Ensemble Data/LatticeConstants",
+                            "DataContainer/Cell Data/Mask",
+                            "DataContainer/Cell Data/Quats",
+                            "DataContainer/Cell Feature Data",
+                            "DataContainer/Cell Feature Data/Active",
+                            "DataContainer/Cell Data/FeatureIds",
+                            "DataContainer/Cell Feature Data/Phases",
+                            "DataContainer/NewGrain Data",
+                            "DataContainer/Cell Data/ParentIds",
+                            "DataContainer/Cell Feature Data/ParentIds",
+                            "DataContainer/NewGrain Data/Active",
+                            "DataContainer/Cell Data/IPFColors",
+                            "DataContainer/Cell Feature Data/Centroids",
+                            "DataContainer/Cell Feature Data/EquivalentDiameters",
+                            "DataContainer/Cell Feature Data/NumElements",
+                            "DataContainer/Cell Feature Data/Omega3s",
+                            "DataContainer/Cell Feature Data/AxisLengths",
+                            "DataContainer/Cell Feature Data/AxisEulerAngles",
+                            "DataContainer/Cell Feature Data/AspectRatios",
+                            "DataContainer/Cell Feature Data/Shape Volumes",
+                            "DataContainer/Cell Feature Data/NumNeighbors",
+                            "DataContainer/Cell Feature Data/NeighborList",
+                            "DataContainer/Cell Feature Data/SharedSurfaceAreaList",
+                            "DataContainer/Cell Feature Data/Neighborhoods",
+                            "DataContainer/Cell Feature Data/NeighborhoodList",
+                            "DataContainer/Cell Data/GBManhattanDistances",
+                            "DataContainer/Cell Data/TJManhattanDistances",
+                            "DataContainer/Cell Data/QPManhattanDistances",
+                            "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
+                            "DataContainer/Cell Feature Data/AvgQuats",
+                            "DataContainer/Cell Feature Data/AvgEulerAngles",
+                            "DataContainer/Cell Feature Data/MisorientationList",
+                            "DataContainer/Cell Feature Data/Schmids",
+                            "DataContainer/Cell Feature Data/SlipSystems",
+                            "DataContainer/Cell Feature Data/Poles",
+                            "DataContainer/Cell Data/FeatureReferenceMisorientations",
+                            "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
+                            "DataContainer/Cell Data/KernelAverageMisorientations"
+                          ],
+                          "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+                        }
+                      },
+                      "comments": "",
+                      "filter": {
+                        "name": "nx::core::ReadDREAM3DFilter",
+                        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+                      },
+                      "isDisabled": false
+                    },
+                    {
+                      "args": {
+                        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                        "input_image_geometry_path": "DataContainer",
+                        "max_coord": [
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "max_voxel": [
+                          140,
+                          140,
+                          99
+                        ],
+                        "min_coord": [
+                          0.0,
+                          0.0,
+                          0.0
+                        ],
+                        "min_voxel": [
+                          41,
+                          41,
+                          0
+                        ],
+                        "output_image_geometry_path": "DataContainer",
+                        "remove_original_geometry": true,
+                        "renumber_features": true,
+                        "use_physical_bounds": false
+                      },
+                      "comments": "",
+                      "filter": {
+                        "name": "nx::core::CropImageGeometryFilter",
+                        "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+                      },
+                      "isDisabled": false
+                    },
+                    {
+                      "args": {
+                        "destination_parent_path": "DataContainer",
+                        "source_data_paths": [
+                          "DataContainer/Cell Ensemble Data"
+                        ]
+                      },
+                      "comments": "",
+                      "filter": {
+                        "name": "nx::core::MoveDataFilter",
+                        "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
+                      },
+                      "isDisabled": false
+                    },
+                    {
+                      "args": {
+                        "face_data_group_name": "Face Data",
+                        "face_feature_attribute_matrix_name": "QM Face Feature Data",
+                        "face_labels_array_name": "FaceLabels",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
+                        "fix_problem_voxels": false,
+                        "generate_triple_lines": false,
+                        "input_data_array_paths": [],
+                        "input_grid_geometry_path": "DataContainer",
+                        "node_types_array_name": "NodeType",
+                        "output_triangle_geometry_path": "TriangleDataContainer",
+                        "vertex_data_group_name": "Vertex Data"
+                      },
+                      "comments": "",
+                      "filter": {
+                        "name": "nx::core::QuickSurfaceMeshFilter",
+                        "uuid": "13dd00bd-ad49-4e04-95eb-3267952fd6e5"
+                      },
+                      "isDisabled": false
+                    },
+                    {
+                      "args": {
+                        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d",
+                        "write_xdmf_file": true
+                      },
+                      "comments": "",
+                      "filter": {
+                        "name": "nx::core::WriteDREAM3DFilter",
+                        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+                      },
+                      "isDisabled": false
+                    }
+                  ],
+                  "version": 1
+                },
+                "import_data_object": {
+                  "data_paths": [
+                    "DataContainer",
+                    "DataContainer/Cell Data",
+                    "DataContainer/Cell Data/Image Quality",
+                    "DataContainer/Cell Data/Confidence Index",
+                    "DataContainer/Cell Data/SEM Signal",
+                    "DataContainer/Cell Data/Fit",
+                    "DataContainer/Cell Data/EulerAngles",
+                    "DataContainer/Cell Data/Phases",
+                    "DataContainer/Cell Data/Mask",
+                    "DataContainer/Cell Data/Quats",
+                    "DataContainer/Cell Data/FeatureIds",
+                    "DataContainer/Cell Data/ParentIds",
+                    "DataContainer/Cell Data/IPFColors",
+                    "DataContainer/Cell Data/GBManhattanDistances",
+                    "DataContainer/Cell Data/TJManhattanDistances",
+                    "DataContainer/Cell Data/QPManhattanDistances",
+                    "DataContainer/Cell Data/FeatureReferenceMisorientations",
+                    "DataContainer/Cell Data/KernelAverageMisorientations",
+                    "DataContainer/Cell Feature Data",
+                    "DataContainer/Cell Ensemble Data",
+                    "DataContainer/Cell Ensemble Data/CrystalStructures",
+                    "DataContainer/Cell Ensemble Data/LatticeConstants",
+                    "DataContainer/NewGrain Data",
+                    "DataContainer/NewGrain Data/Active",
+                    "DataContainer/Cell Feature Data/Active",
+                    "DataContainer/Cell Feature Data/AspectRatios",
+                    "DataContainer/Cell Feature Data/AvgEulerAngles",
+                    "DataContainer/Cell Feature Data/AvgQuats",
+                    "DataContainer/Cell Feature Data/AxisEulerAngles",
+                    "DataContainer/Cell Feature Data/AxisLengths",
+                    "DataContainer/Cell Feature Data/Centroids",
+                    "DataContainer/Cell Feature Data/EquivalentDiameters",
+                    "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
+                    "DataContainer/Cell Feature Data/Neighborhoods",
+                    "DataContainer/Cell Feature Data/NumElements",
+                    "DataContainer/Cell Feature Data/NumNeighbors",
+                    "DataContainer/Cell Feature Data/Omega3s",
+                    "DataContainer/Cell Feature Data/ParentIds",
+                    "DataContainer/Cell Feature Data/Phases",
+                    "DataContainer/Cell Feature Data/Poles",
+                    "DataContainer/Cell Feature Data/Schmids",
+                    "DataContainer/Cell Feature Data/Shape Volumes",
+                    "DataContainer/Cell Feature Data/SlipSystems",
+                    "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
+                    "TriangleDataContainer",
+                    "TriangleDataContainer/SharedTriList",
+                    "TriangleDataContainer/SharedVertexList",
+                    "TriangleDataContainer/Face Data",
+                    "TriangleDataContainer/Vertex Data",
+                    "TriangleDataContainer/Vertex Data/NodeType",
+                    "TriangleDataContainer/Face Data/FaceLabels",
+                    "TriangleDataContainer/QM Face Feature Data"
+                  ],
+                  "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+                }
+              },
+              "comments": "",
+              "filter": {
+                "name": "nx::core::ReadDREAM3DFilter",
+                "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+              },
+              "isDisabled": false
+            },
+            {
+              "args": {
+                "input_triangle_geometry_path": "TriangleDataContainer",
+                "iteration_steps": 100,
+                "lambda_value": 0.25,
+                "mu_factor": 0.20000000298023224,
+                "quad_point_lambda": 0.15000000596046448,
+                "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeType",
+                "surface_point_lambda": 0.0,
+                "surface_quad_point_lambda": 0.0,
+                "surface_triple_line_lambda": 0.0,
+                "triple_line_lambda": 0.20000000298023224,
+                "use_taubin_smoothing": true
+              },
+              "comments": "",
+              "filter": {
+                "name": "nx::core::LaplacianSmoothingFilter",
+                "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
+              },
+              "isDisabled": false
+            },
+            {
+              "args": {
+                "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
+                "write_xdmf_file": true
+              },
+              "comments": "",
+              "filter": {
+                "name": "nx::core::WriteDREAM3DFilter",
+                "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+              },
+              "isDisabled": false
+            }
+          ],
+          "version": 1
+        },
         "import_data_object": {
           "data_paths": [
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Image Quality",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/SEM Signal",
@@ -43,7 +1132,6 @@
             "DataContainer/Cell Feature Data/Neighborhoods",
             "DataContainer/Cell Feature Data/NumElements",
             "DataContainer/Cell Feature Data/NumNeighbors",
-            
             "DataContainer/Cell Feature Data/Omega3s",
             "DataContainer/Cell Feature Data/ParentIds",
             "DataContainer/Cell Feature Data/Phases",
@@ -55,59 +1143,55 @@
             "TriangleDataContainer",
             "TriangleDataContainer/SharedTriList",
             "TriangleDataContainer/SharedVertexList",
-            "TriangleDataContainer/FaceData",
-            "TriangleDataContainer/VertexData",
-            "TriangleDataContainer/FaceData/FaceLabels",
-            "TriangleDataContainer/VertexData/NodeType",
+            "TriangleDataContainer/Face Data",
+            "TriangleDataContainer/Vertex Data",
+            "TriangleDataContainer/Vertex Data/NodeType",
+            "TriangleDataContainer/Face Data/FaceLabels",
+            "TriangleDataContainer/QM Face Feature Data",
             "TriangleDataContainer/Edge List"
           ],
           "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
-        },
-        "Imported Pipeline": {
-          "isDisabled": false,
-          "name": "Untitled Pipeline",
-          "pipeline": []
         }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadDREAM3DFilter",
+        "name": "nx::core::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "triangle_areas_array_name": "FaceAreas",
-        "input_triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer",
+        "triangle_areas_array_name": "FaceAreas"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeTriangleAreasFilter",
+        "name": "nx::core::ComputeTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "output_normals_array_name": "FaceNormals",
-        "input_triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer",
+        "output_normals_array_name": "FaceNormals"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::TriangleNormalFilter",
+        "name": "nx::core::TriangleNormalFilter",
         "uuid": "8133d419-1919-4dbf-a5bf-1c97282ba63f"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles",
-        "input_triangle_geometry_path": "TriangleDataContainer"
+        "input_triangle_geometry_path": "TriangleDataContainer",
+        "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::TriangleDihedralAngleFilter",
+        "name": "nx::core::TriangleDihedralAngleFilter",
         "uuid": "dd42c521-4ae5-485d-ad35-d1276547d2f1"
       },
       "isDisabled": false
@@ -118,12 +1202,12 @@
         "feature_euler_angles_array_path": "DataContainer/Cell Feature Data/AvgEulerAngles",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "surface_mesh_face_ipf_colors_array_name": "FaceIPFColors",
-        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
-        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals"
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/Face Data/FaceNormals"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeFaceIPFColoringFilter",
+        "name": "nx::core::ComputeFaceIPFColoringFilter",
         "uuid": "30759600-7c02-4650-b5ca-e7036d6b568e"
       },
       "isDisabled": false
@@ -133,30 +1217,13 @@
         "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
         "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
-        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/Face Data/FaceLabels",
         "surface_mesh_face_misorientation_colors_array_name": "FaceMisorientationColors"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::GenerateFaceMisorientationColoringFilter",
+        "name": "nx::core::ComputeFeatureFaceMisorientationFilter",
         "uuid": "f3473af9-db77-43db-bd25-60df7230ea73"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
-        "feature_face_ids_array_name": "SharedFeatureFaceId",
-        "feature_face_labels_array_name": "FaceLabels",
-        "feature_num_triangles_array_name": "NumTriangles",
-        "grain_boundary_attribute_matrix_name": "SharedFeatureFace",
-        "randomize_features": false,
-        "input_triangle_geometry_path": "TriangleDataContainer"
-      },
-      "comments": "",
-      "filter": {
-        "name": "simplnx::SharedFeatureFaceFilter",
-        "uuid": "aaf7a258-fc92-48d7-9d06-ba317a3769e8"
       },
       "isDisabled": false
     },
@@ -167,11 +1234,11 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

@@ -78,8 +78,8 @@ Parameters ComputeGBCDFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Ensemble Data"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_FaceEnsembleAttributeMatrixName_Key, "Face Ensemble Attribute Matrix", "The name of the created face ensemble attribute matrix", "FaceEnsembleData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceEnsembleAttributeMatrixName_Key, "Face Ensemble Attribute Matrix", "The name of the created face ensemble attribute matrix",
+                                                          "Face Ensemble Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBCDArrayName_Key, "GBCD",
                                                           "5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere", "GBCD"));
 

@@ -81,7 +81,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/ConfidenceIndex"),
     scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -99,7 +99,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/ImageQuality"),
     scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -118,7 +118,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/SEM Signal"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/SEM Signal"),
     scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -136,7 +136,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Fit"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/Fit"),
     scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -155,7 +155,7 @@ result = nx_filter.execute(
     number_comp=3,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/EulerAngles"),
     scalar_type_index=nx.NumericType.float32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -173,7 +173,7 @@ result = nx_filter.execute(
     number_comp=1,
     skip_line_count=0,
     # n_tuples: List[List[float]] = ...,
-    output_data_array_path=nx.DataPath("RectGridGeometry/CellData/Phases"),
+    output_data_array_path=nx.DataPath("RectGridGeometry/Cell Data/Phases"),
     scalar_type_index=nx.NumericType.int32
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -189,12 +189,12 @@ result = nx_filter.execute(
     image_geom_cell_attribute_matrix_name="Cell Data",
     input_image_geometry_path=nx.DataPath("Image Geometry"),
     rectilinear_grid_path=nx.DataPath("RectGridGeometry"),
-    input_data_array_paths=[nx.DataPath("RectGridGeometry/CellData/ConfidenceIndex"), 
-                               nx.DataPath("RectGridGeometry/CellData/EulerAngles"),
-                               nx.DataPath("RectGridGeometry/CellData/Fit"),
-                               nx.DataPath("RectGridGeometry/CellData/ImageQuality"),
-                               nx.DataPath("RectGridGeometry/CellData/Phases"),
-                               nx.DataPath("RectGridGeometry/CellData/SEM Signal")]
+    input_data_array_paths=[nx.DataPath("RectGridGeometry/Cell Data/ConfidenceIndex"), 
+                               nx.DataPath("RectGridGeometry/Cell Data/EulerAngles"),
+                               nx.DataPath("RectGridGeometry/Cell Data/Fit"),
+                               nx.DataPath("RectGridGeometry/Cell Data/ImageQuality"),
+                               nx.DataPath("RectGridGeometry/Cell Data/Phases"),
+                               nx.DataPath("RectGridGeometry/Cell Data/SEM Signal")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

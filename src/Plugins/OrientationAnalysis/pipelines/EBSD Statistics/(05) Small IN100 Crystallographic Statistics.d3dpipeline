@@ -8,7 +8,7 @@
         "import_data_object": {
           "data_paths": [
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Image Quality",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/SEM Signal",
@@ -24,7 +24,6 @@
             "DataContainer/Cell Feature Data/Active",
             "DataContainer/Cell Data/FeatureIds",
             "DataContainer/Cell Feature Data/Phases",
-            
             "DataContainer/NewGrain Data",
             "DataContainer/Cell Data/ParentIds",
             "DataContainer/Cell Feature Data/ParentIds",
@@ -59,7 +58,7 @@
                 "import_data_object": {
                   "data_paths": [
                     "DataContainer",
-                    "DataContainer/CellData",
+                    "DataContainer/Cell Data",
                     "DataContainer/Cell Data/Image Quality",
                     "DataContainer/Cell Data/Confidence Index",
                     "DataContainer/Cell Data/SEM Signal",
@@ -205,7 +204,7 @@
                         "alignment_shift_file_name": "Data/Output/Alignment_By_Feature_Centroid_Shifts.txt",
                         "mask_array_path": "DataContainer/Cell Data/Mask",
                         "reference_slice": 0,
-                        "selected_cell_data_path": "DataContainer/CellData",
+                        "selected_cell_data_path": "DataContainer/Cell Data",
                         "input_image_geometry_path": "DataContainer",
                         "use_reference_slice": true,
                         "write_alignment_shifts": false
@@ -405,7 +404,7 @@
                     {
                       "args": {
                         "apply_to_single_phase": false,
-                        "cell_attribute_matrix_path": "DataContainer/CellData",
+                        "cell_attribute_matrix_path": "DataContainer/Cell Data",
                         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "feature_phases_path": "Data Container/Feature Data/Phases",
                         "ignored_voxel_arrays": [],
@@ -663,17 +662,6 @@
     },
     {
       "args": {
-        "removed_data_path": []
-      },
-      "comments": "",
-      "filter": {
-        "name": "simplnx::DeleteDataFilter",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
-      },
-      "isDisabled": true
-    },
-    {
-      "args": {
         "avg_euler_angles_array_name": "AvgEulerAngles",
         "avg_quats_array_name": "AvgQuats",
         "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
@@ -750,7 +738,7 @@
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "gb_euclidean_distances_array_path": "Cell Data/GBEuclideanDistances",
         "quats_array_path": "DataContainer/Cell Data/Quats",
         "reference_orientation_index": 0
       },

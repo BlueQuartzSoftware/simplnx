@@ -382,7 +382,7 @@
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
         "feature_ids_path": "fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
-        "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "gb_euclidean_distances_array_path": "Cell Data/GBEuclideanDistances",
         "quats_array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Quats",
         "reference_orientation_index": 0
       },
@@ -397,7 +397,7 @@
       "args": {
         "cell_feature_attribute_matrix_path": "fw-ar-IF1-aptr12-corr/Cell Feature Data",
         "delimiter_index": 2,
-        "feature_data_file": "Data/Output/fw-ar-IF1-aptr12-corr/FeatureData.csv",
+        "feature_data_file": "Data/Output/fw-ar-IF1-aptr12-corr/Feature_Data.csv",
         "write_neighborlist_data": false,
         "write_num_features_line": true
       },

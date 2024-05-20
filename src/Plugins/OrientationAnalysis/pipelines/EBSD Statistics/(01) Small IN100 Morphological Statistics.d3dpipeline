@@ -11,7 +11,7 @@
             "DataContainer/Cell Ensemble Data/CrystalStructures",
             "DataContainer/Cell Ensemble Data/LatticeConstants",
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/EulerAngles",
             "DataContainer/Cell Data/Fit",
@@ -26,7 +26,6 @@
             "DataContainer/Cell Feature Data/Phases",
             "DataContainer/Cell Feature Data/AvgQuats",
             "DataContainer/Cell Feature Data/AvgEulerAngles",
-            
             "DataContainer/NewGrain Data",
             "DataContainer/Cell Data/ParentIds",
             "DataContainer/Cell Feature Data/ParentIds",

@@ -331,7 +331,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Feature Data"),
     delimiter_index=2,
-    feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/FeatureData.csv",
+    feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-avtr12-corr/Feature_Data.csv",
     write_neighborlist_data=False,
     write_num_features_line=True
 )

@@ -70,8 +70,8 @@ All orientation data in the H5OINA file are in radians.
 | Kind        | Default Name | Type | Comp Dims | Description                            |
 |-------------|--------------|------|-----------|----------------------------------------|
 | Data Container  | ImageDataContainer | N/A | N/A    | Created Data Container name with an **Image Geometry** |
-| Attribute Matrix  | CellData | Cell | N/A    | Created **Cell Attribute Matrix** name  |
-| Attribute Matrix  | CellEnsembleData | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
+| Attribute Matrix  | Cell Data | Cell | N/A    | Created **Cell Attribute Matrix** name  |
+| Attribute Matrix  | Cell Ensemble Data | Cell Ensemble | N/A    | Created **Cell Ensemble Attribute Matrix** name  |
 | Cell Attribute Array | Band Contrast  | uint8 | (1) |  |
 | Cell Attribute Array | Band Slope  | uint8 | (1) |  |
 | Cell Attribute Array | Bands  | uint8 | (1) |  |

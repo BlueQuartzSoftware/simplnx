@@ -8,7 +8,7 @@
         "import_data_object": {
           "data_paths": [
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Image Quality",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/SEM Signal",

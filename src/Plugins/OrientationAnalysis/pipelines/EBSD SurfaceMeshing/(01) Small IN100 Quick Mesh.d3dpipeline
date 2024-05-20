@@ -11,7 +11,7 @@
             "DataContainer/Cell Ensemble Data/CrystalStructures",
             "DataContainer/Cell Ensemble Data/LatticeConstants",
             "DataContainer",
-            "DataContainer/CellData",
+            "DataContainer/Cell Data",
             "DataContainer/Cell Data/Confidence Index",
             "DataContainer/Cell Data/EulerAngles",
             "DataContainer/Cell Data/Fit",
@@ -24,7 +24,6 @@
             "DataContainer/Cell Feature Data/Active",
             "DataContainer/Cell Data/FeatureIds",
             "DataContainer/Cell Feature Data/Phases",
-            
             "DataContainer/NewGrain Data",
             "DataContainer/Cell Data/ParentIds",
             "DataContainer/Cell Feature Data/ParentIds",
@@ -113,8 +112,8 @@
     },
     {
       "args": {
-        "face_data_group_name": "FaceData",
-        "face_feature_attribute_matrix_name": "Face Feature Data",
+        "face_data_group_name": "Face Data",
+        "face_feature_attribute_matrix_name": "QM Face Feature Data",
         "face_labels_array_name": "FaceLabels",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "fix_problem_voxels": false,
@@ -123,7 +122,7 @@
         "node_types_array_name": "NodeType",
         "input_data_array_paths": [],
         "output_triangle_geometry_path": "TriangleDataContainer",
-        "vertex_data_group_name": "VertexData"
+        "vertex_data_group_name": "Vertex Data"
       },
       "comments": "",
       "filter": {

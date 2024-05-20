@@ -124,11 +124,11 @@ class ExampleFilter1:
     params.insert(nx.CreateColorMapParameter(ExampleFilter1.PARAM16_KEY, "Select Preset...", "Select a preset color scheme to apply to the created array", "Rainbow Desaturated"))
 
     dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
-    dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
+    dataset1.dataset_path = "/DataStructure/DataContainer/Cell Data/Confidence Index"
     dataset1.tuple_dims = "117,201,189"
     dataset1.component_dims = "1"
     dataset2 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
-    dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
+    dataset2.dataset_path = "/DataStructure/DataContainer/Cell Data/EulerAngles"
     dataset2.tuple_dims = "117,201,189"
     dataset2.component_dims = "3"
     import_hdf5_param = nx.ReadHDF5DatasetParameter.ValueType()

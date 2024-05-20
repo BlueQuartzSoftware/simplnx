@@ -59,13 +59,13 @@ Parameters WriteGBCDTriangleDataFilter::parameters() const
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face",
-                                                          DataPath({"[Triangle Geometry]", "FaceData", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face",
-                                                          DataPath({"[Triangle Geometry]", "FaceData", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Specifies the area of each Face",
-                                                          DataPath({"[Triangle Geometry]", "FaceData", "FaceAreas"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
