@@ -261,21 +261,45 @@ Result<> DatasetReader::readIntoSpan(nonstd::span<T> data, const std::optional<s
 
   hsize_t totalElements;
   std::vector<hsize_t> memDims;
+  int rank = H5Sget_simple_extent_ndims(fileSpaceId);
+  std::vector<hsize_t> dims(rank), maxDims(rank);
+  H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
   if(start.has_value() && count.has_value())
   {
-    // Select hyperslab in the file.
+    // Both start and count are provided
     if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
     {
       return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyperslab.");
     }
     memDims = count.value();
   }
+  else if(start.has_value())
+  {
+    // Only start is provided
+    std::vector<hsize_t> countRemaining(rank);
+    for(int i = 0; i < rank; ++i)
+    {
+      countRemaining[i] = dims[i] - start->at(i);
+    }
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
+    {
+      return MakeErrorResult(-1004, "DatasetReader error: Unable to select hyperslab.");
+    }
+    memDims = countRemaining;
+  }
+  else if(count.has_value())
+  {
+    // Only count is provided
+    std::vector<hsize_t> startZeros(rank, 0);
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
+    {
+      return MakeErrorResult(-1005, "DatasetReader error: Unable to select hyperslab.");
+    }
+    memDims = count.value();
+  }
   else
   {
-    // Use the entire dataset
-    int rank = H5Sget_simple_extent_ndims(fileSpaceId);
-    std::vector<hsize_t> dims(rank), maxDims(rank);
-    H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
+    // Neither start nor count is provided
     memDims = dims;
   }
 
@@ -283,20 +307,20 @@ Result<> DatasetReader::readIntoSpan(nonstd::span<T> data, const std::optional<s
 
   if(data.size() != totalElements)
   {
-    return MakeErrorResult(-1004, "DatasetReader error: Span size does not match the number of elements to read.");
+    return MakeErrorResult(-1006, "DatasetReader error: Span size does not match the number of elements to read.");
   }
 
   hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), NULL);
   if(memSpaceId < 0)
   {
-    return MakeErrorResult(-1005, "DatasetReader error: Unable to create memory dataspace.");
+    return MakeErrorResult(-1007, "DatasetReader error: Unable to create memory dataspace.");
   }
 
   if(H5Dread(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, data.data()) < 0)
   {
     H5Sclose(memSpaceId);
     H5Sclose(fileSpaceId);
-    return MakeErrorResult(-1006, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
   }
 
   H5Sclose(memSpaceId);
