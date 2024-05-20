@@ -28,21 +28,21 @@ nx_filter = nx.DeleteDataFilter()
 # Execute Filter With Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    removed_data_path=[nx.DataPath("DataContainer/CellFeatureData/Centroids"),
-                       nx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
-                       nx.DataPath("DataContainer/CellFeatureData/NumElements"),
-                       nx.DataPath("DataContainer/CellFeatureData/Omega3s"),
-                       nx.DataPath("DataContainer/CellFeatureData/AxisLengths"),
-                       nx.DataPath("DataContainer/CellFeatureData/AxisEulerAngles"),
-                       nx.DataPath("DataContainer/CellFeatureData/AspectRatios"),
-                       nx.DataPath("DataContainer/CellFeatureData/Shape Volumes"),
-                       nx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
-                       nx.DataPath("DataContainer/CellFeatureData/NeighborList"),
-                       nx.DataPath("DataContainer/CellFeatureData/SharedSurfaceAreaList"),
-                       nx.DataPath("DataContainer/CellFeatureData/NeighborhoodList"),
-                       nx.DataPath("DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"),
-                       nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
-                       nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles")]
+    removed_data_path=[nx.DataPath("DataContainer/Cell Feature Data/Centroids"),
+                       nx.DataPath("DataContainer/Cell Feature Data/EquivalentDiameters"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NumElements"),
+                       nx.DataPath("DataContainer/Cell Feature Data/Omega3s"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AxisLengths"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AxisEulerAngles"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AspectRatios"),
+                       nx.DataPath("DataContainer/Cell Feature Data/Shape Volumes"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NumNeighbors"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NeighborList"),
+                       nx.DataPath("DataContainer/Cell Feature Data/SharedSurfaceAreaList"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NeighborhoodList"),
+                       nx.DataPath("DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles")]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -54,7 +54,7 @@ nx_filter = nx.ComputeFeatureNeighborsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     #boundary_cells: str = ...,
-    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
+    cell_feature_array_path=nx.DataPath("DataContainer/Cell Feature Data"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name="NeighborList",
@@ -73,7 +73,7 @@ nx_filter = nx.ComputeFeatureCentroidsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
@@ -85,7 +85,7 @@ nx_filter = nx.ComputeSurfaceFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     mark_feature_0_neighbors=True,
@@ -101,10 +101,10 @@ result = nx_filter.execute(
     data_structure=data_structure,
     biased_features_array_name="BiasedFeatures",
     calc_by_phase=True,
-    centroids_array_path=nx.DataPath("DataContainer/CellFeatureData/Centroids"),
+    centroids_array_path=nx.DataPath("DataContainer/Cell Feature Data/Centroids"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
-    phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
-    surface_features_array_path=nx.DataPath("DataContainer/CellFeatureData/SurfaceFeatures")
+    phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
+    surface_features_array_path=nx.DataPath("DataContainer/Cell Feature Data/SurfaceFeatures")
 )
 nxtest.check_filter_result(nx_filter, result)
 

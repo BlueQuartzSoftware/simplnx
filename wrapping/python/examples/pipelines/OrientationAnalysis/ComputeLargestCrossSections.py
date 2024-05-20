@@ -74,7 +74,7 @@ nx_filter = cxor.EBSDSegmentFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
-    cell_feature_attribute_matrix_name="CellFeatureData",
+    cell_feature_attribute_matrix_name="Cell Feature Data",
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
@@ -93,7 +93,7 @@ nx_filter = nx.ComputeLargestCrossSectionsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
     feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     largest_cross_sections_array_name="LargestCrossSections",

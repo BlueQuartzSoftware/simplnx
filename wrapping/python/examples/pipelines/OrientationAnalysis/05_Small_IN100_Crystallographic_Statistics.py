@@ -26,8 +26,8 @@ nx_filter = nx.DeleteDataFilter()
 # Execute Filter With Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    removed_data_path=[nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
-                       nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles")]
+    removed_data_path=[nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
+                       nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles")]
 
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -50,7 +50,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     avg_euler_angles_array_name="AvgEulerAngles",
     avg_quats_array_name="AvgQuats",
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
     cell_feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
@@ -64,12 +64,12 @@ nx_filter = cxor.ComputeMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     compute_avg_misors=False,
     misorientation_list_array_name="MisorientationList",
-    neighbor_list_array_path=nx.DataPath("DataContainer/CellFeatureData/NeighborhoodList")
+    neighbor_list_array_path=nx.DataPath("DataContainer/Cell Feature Data/NeighborhoodList")
     # avg_misorientations_array_name: str = ...,  # Not currently part of the code
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -80,9 +80,9 @@ nx_filter = cxor.ComputeSchmidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     loading_direction=[1.0, 1.0, 1.0],
     override_system=False,
     poles_array_name="Poles",
@@ -102,7 +102,7 @@ nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_avg_misorientations_array_name="FeatureAvgMisorientations",

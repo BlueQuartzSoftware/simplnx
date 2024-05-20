@@ -164,7 +164,7 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_attribute_matrix_name": "CellFeatureData",
+        "cell_feature_attribute_matrix_name": "Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
@@ -185,7 +185,7 @@
     {
       "args": {
         "avg_c_axes_array_name": "AvgCAxes",
-        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
@@ -200,7 +200,7 @@
     },
     {
       "args": {
-        "avg_c_axes_array_path": "DataContainer/CellFeatureData/AvgCAxes",
+        "avg_c_axes_array_path": "DataContainer/Cell Feature Data/AvgCAxes",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_avg_c_axis_misorientations_array_name": "AvgCAxisMisorientation",
@@ -299,7 +299,7 @@
     },
     {
       "args": {
-        "cell_features_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_features_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_phases_array_name": "Phases"
@@ -315,7 +315,7 @@
       "args": {
         "avg_euler_angles_array_name": "AvgEulerAngles",
         "avg_quats_array_name": "AvgQuats",
-        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "cell_quats_array_path": "DataContainer/Cell Data/Quats",
@@ -331,7 +331,7 @@
     {
       "args": {
         "boundary_cells_name": "BoundaryCells",
-        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "cell_feature_array_path": "DataContainer/Cell Feature Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "neighbor_list_name": "NeighborList",
@@ -351,12 +351,12 @@
     {
       "args": {
         "avg_c_axis_misalignments_array_name": "AvgCAxisMisalignments",
-        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
         "c_axis_misalignment_list_array_name": "CAxisMisalignmentList",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "find_avg_misals": true,
-        "neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborList"
+        "neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborList"
       },
       "comments": "",
       "filter": {

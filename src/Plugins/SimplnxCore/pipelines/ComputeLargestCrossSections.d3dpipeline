@@ -84,7 +84,7 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_attribute_matrix_name": "CellFeatureData",
+        "cell_feature_attribute_matrix_name": "Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
@@ -104,7 +104,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "largest_cross_sections_array_name": "LargestCrossSections",

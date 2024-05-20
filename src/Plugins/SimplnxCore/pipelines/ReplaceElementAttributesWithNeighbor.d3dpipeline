@@ -144,7 +144,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "output_image_geometry_path": "",
         "feature_ids_path": "",
         "max_voxel": [

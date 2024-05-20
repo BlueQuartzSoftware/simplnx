@@ -66,10 +66,10 @@ Parameters ComputeSchmidsFilter::parameters() const
                                                          std::vector<std::string>({"X", "Y", "Z"})));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"CellFeatureData", "Phases"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Cell Feature Data", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orienation of each Feature in quaternion representation",
-                                                          DataPath({"CellFeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
+                                                          DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",

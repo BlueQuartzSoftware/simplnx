@@ -28,7 +28,7 @@ nx_filter = nx.CropImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     max_voxel=[140, 140, 99],
     min_voxel=[41, 41, 0],

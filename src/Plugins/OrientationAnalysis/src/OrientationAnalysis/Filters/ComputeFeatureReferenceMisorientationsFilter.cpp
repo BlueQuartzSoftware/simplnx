@@ -75,9 +75,9 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_AvgQuatsArrayPath_Key, "Average Quaternions",
       "Specifies the average orientation of the Feature in quaternion representation (, w). Only required if the reference orientation is selected to be the average of the Feature",
-      DataPath({"CellFeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+      DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "The path to the cell feature attribute matrix",
-                                                                    DataPath({"CellFeatureData"})));
+                                                                    DataPath({"Cell Feature Data"})));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},

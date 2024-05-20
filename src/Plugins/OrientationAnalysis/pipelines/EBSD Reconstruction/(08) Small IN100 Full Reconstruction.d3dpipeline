@@ -174,7 +174,7 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_attribute_matrix_name": "CellFeatureData",
+        "cell_feature_attribute_matrix_name": "Cell Feature Data",
         "cell_mask_array_path": "DataContainer/Cell Data/Mask",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "cell_quats_array_path": "DataContainer/Cell Data/Quats",
@@ -194,7 +194,7 @@
     },
     {
       "args": {
-        "cell_features_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_features_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_phases_array_name": "Phases"
@@ -210,7 +210,7 @@
       "args": {
         "avg_euler_angles_array_name": "AvgEulerAngles",
         "avg_quats_array_name": "AvgQuats",
-        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "cell_quats_array_path": "DataContainer/Cell Data/Quats",
@@ -226,7 +226,7 @@
     {
       "args": {
         "boundary_cells_name": "BoundaryCells",
-        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "cell_feature_array_path": "DataContainer/Cell Feature Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "neighbor_list_name": "NeighborList2",
@@ -247,15 +247,15 @@
       "args": {
         "active_array_name": "Active",
         "angle_tolerance": 2.0,
-        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
         "axis_tolerance": 3.0,
         "cell_parent_ids_array_name": "ParentIds",
-        "contiguous_neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborList2",
+        "contiguous_neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborList2",
         "created_feature_attribute_matrix_name": "NewGrain Data",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_parent_ids_array_name": "ParentIds",
-        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
         "non_contiguous_neighbor_list_array_path": "",
         "seed_array_name": "MergeTwins SeedValue",
         "seed_value": 5489,
@@ -272,7 +272,7 @@
     {
       "args": {
         "equivalent_diameters_name": "EquivalentDiameters",
-        "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "num_elements_name": "NumElements",
@@ -293,7 +293,7 @@
         "feature_phases_path": "",
         "input_image_geometry_path": "DataContainer",
         "min_allowed_features_size": 16,
-        "num_cells_path": "DataContainer/CellFeatureData/NumElements",
+        "num_cells_path": "DataContainer/Cell Feature Data/NumElements",
         "phase_number": 0
       },
       "comments": "",
@@ -306,10 +306,10 @@
     {
       "args": {
         "removed_data_path": [
-          "DataContainer/CellFeatureData/NumNeighbors2"
+          "DataContainer/Cell Feature Data/NumNeighbors2"
         ]
       },
-      "comments": "We are going to remove the DataContainer/CellFeatureData/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
+      "comments": "We are going to remove the DataContainer/Cell Feature Data/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
       "filter": {
         "name": "nx::core::DeleteData",
         "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
@@ -319,7 +319,7 @@
     {
       "args": {
         "boundary_cells_name": "BoundaryCells",
-        "cell_feature_array_path": "DataContainer/CellFeatureData",
+        "cell_feature_array_path": "DataContainer/Cell Feature Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "neighbor_list_name": "NeighborList",
@@ -345,7 +345,7 @@
         "ignored_voxel_arrays": [],
         "input_image_geometry_path": "DataContainer",
         "min_num_neighbors": 2,
-        "num_neighbors_path": "DataContainer/CellFeatureData/NumNeighbors",
+        "num_neighbors_path": "DataContainer/Cell Feature Data/NumNeighbors",
         "phase_number": 0
       },
       "comments": "",
@@ -358,10 +358,10 @@
     {
       "args": {
         "removed_data_path": [
-          "DataContainer/CellFeatureData/NumNeighbors"
+          "DataContainer/Cell Feature Data/NumNeighbors"
         ]
       },
-      "comments": "We are going to remove the DataContainer/CellFeatureData/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
+      "comments": "We are going to remove the DataContainer/Cell Feature Data/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
       "filter": {
         "name": "nx::core::DeleteData",
         "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"

@@ -40,7 +40,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "exact_dimensions": [
           100,
           500,
@@ -72,7 +72,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "exact_dimensions": [
           100,
           500,
@@ -104,7 +104,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "exact_dimensions": [
           262,
           195,

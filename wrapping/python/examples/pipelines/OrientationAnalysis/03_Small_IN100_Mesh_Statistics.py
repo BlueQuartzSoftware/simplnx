@@ -60,8 +60,8 @@ nx_filter = cxor.ComputeFaceIPFColoringFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     surface_mesh_face_ipf_colors_array_name="FaceIPFColors",
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
@@ -74,9 +74,9 @@ nx_filter = cxor.ComputeFeatureFaceMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
     surface_mesh_face_misorientation_colors_array_name="FaceMisorientationColors"
 )
