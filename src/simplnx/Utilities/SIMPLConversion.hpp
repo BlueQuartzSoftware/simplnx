@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -19,7 +20,6 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/EnsembleInfoParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Parameters/GenerateColorTableParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -1676,9 +1676,9 @@ struct EnsembleInfoFilterParameterConverter
   }
 };
 
-struct GenerateColorTableFilterParameterConverter
+struct CreateColorMapFilterParameterConverter
 {
-  using ParameterType = GenerateColorTableParameter;
+  using ParameterType = CreateColorMapParameter;
   using ValueType = ParameterType::ValueType;
 
   static constexpr StringLiteral k_SelectedPresetKey = "SelectedPresetName";
@@ -1689,11 +1689,11 @@ struct GenerateColorTableFilterParameterConverter
   {
     if(!json1.is_string())
     {
-      return MakeErrorResult<ValueType>(-2, fmt::format("GenerateColorTableFilterParameterConverter json1 '{}' is not a string", json2.dump()));
+      return MakeErrorResult<ValueType>(-2, fmt::format("CreateColorMapFilterParameterConverter json1 '{}' is not a string", json2.dump()));
     }
     if(!json2.is_array())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("GenerateColorTableFilterParameterConverter json2 '{}' is not an array", json1.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("CreateColorMapFilterParameterConverter json2 '{}' is not an array", json1.dump()));
     }
 
     auto presetName = json1.get<std::string>();

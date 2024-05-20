@@ -120,8 +120,8 @@ class ExampleFilter1:
     ensemble_info.append(["Cubic-High m-3m","Primary","Phase 2"])
     params.insert(nx.EnsembleInfoParameter(ExampleFilter1.PARAM15_KEY, "Created Ensemble Info", "The values with which to populate the crystal structures, phase types, and phase names data arrays. Each row corresponds to an ensemble phase.", ensemble_info))
 
-    # See https://www.dream3d.io/python_docs/User_API.html#nx.GenerateColorTableParameter for the full list of preset names
-    params.insert(nx.GenerateColorTableParameter(ExampleFilter1.PARAM16_KEY, "Select Preset...", "Select a preset color scheme to apply to the created array", "Rainbow Desaturated"))
+    # See https://www.dream3d.io/python_docs/User_API.html#nx.CreateColorMapParameter for the full list of preset names
+    params.insert(nx.CreateColorMapParameter(ExampleFilter1.PARAM16_KEY, "Select Preset...", "Select a preset color scheme to apply to the created array", "Rainbow Desaturated"))
 
     dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
     dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"

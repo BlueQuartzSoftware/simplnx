@@ -158,7 +158,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateIPFColorsFilter",
+        "name": "nx::core::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false

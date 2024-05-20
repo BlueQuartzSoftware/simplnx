@@ -1135,7 +1135,7 @@
                     "uuid": "{6cc3148c-0bad-53b4-9568-ee1971cadb00}"
                 },
                 {
-                    "name": "FindNeighborListStatisticsFilter",
+                    "name": "ComputeNeighborListStatisticsFilter",
                     "parameters": [
                         {
                             "name": "FindLength",
@@ -1241,7 +1241,7 @@
                     "uuid": "{4178c7f9-5f90-5e95-8cf1-a67ca2a98a60}"
                 },
                 {
-                    "name": "FindVertexToTriangleDistances",
+                    "name": "ComputeVertexToTriangleDistances",
                     "parameters": [
                         {
                             "name": "VertexDataContainer",
@@ -1879,7 +1879,7 @@
                     "uuid": "{247ea39f-cb50-5dbb-bb9d-ecde12377fed}"
                 },
                 {
-                    "name": "KMeans",
+                    "name": "ComputeKMeans",
                     "parameters": [
                         {
                             "name": "InitClusters",
@@ -1925,7 +1925,7 @@
                     "uuid": "{b56a04de-0ca0-509d-809f-52219fca9c98}"
                 },
                 {
-                    "name": "KMedoids",
+                    "name": "ComputeKMedoids",
                     "parameters": [
                         {
                             "name": "InitClusters",
@@ -8641,7 +8641,7 @@
         {
             "filters": [
                 {
-                    "name": "CalculateArrayHistogram",
+                    "name": "ComputeArrayHistogramFilter",
                     "parameters": [
                         {
                             "name": "NumberOfBins",
@@ -8747,7 +8747,7 @@
                     "uuid": "{cd91b8fd-0383-5803-ad26-9a47d6c309b0}"
                 },
                 {
-                    "name": "FindBoundaryElementFractions",
+                    "name": "ComputeBoundaryElementFractions",
                     "parameters": [
                         {
                             "name": "",
@@ -8791,7 +8791,7 @@
                     "uuid": "{29086169-20ce-52dc-b13e-824694d759aa}"
                 },
                 {
-                    "name": "FindEuclideanDistMap",
+                    "name": "ComputeEuclideanDistMap",
                     "parameters": [
                         {
                             "name": "CalcManhattanDist",
@@ -8845,7 +8845,7 @@
                     "uuid": "{933e4b2d-dd61-51c3-98be-00548ba783a3}"
                 },
                 {
-                    "name": "FindFeatureClustering",
+                    "name": "ComputeFeatureClustering",
                     "parameters": [
                         {
                             "name": "NumberOfBins",
@@ -8945,7 +8945,7 @@
                     "uuid": "{9f77b4a9-6416-5220-a688-115f4e14c90d}"
                 },
                 {
-                    "name": "FindNeighborhoods",
+                    "name": "ComputeNeighborhoods",
                     "parameters": [
                         {
                             "name": "MultiplesOfAverage",
@@ -9041,7 +9041,7 @@
                     "uuid": "{97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac}"
                 },
                 {
-                    "name": "FindNumFeatures",
+                    "name": "ComputeNumFeatures",
                     "parameters": [
                         {
                             "name": "",
@@ -9063,7 +9063,7 @@
                     "uuid": "{529743cf-d5d5-5d5a-a79f-95c84a5ddbb5}"
                 },
                 {
-                    "name": "FindShapes",
+                    "name": "ComputeShapes",
                     "parameters": [
                         {
                             "name": "",
@@ -9155,7 +9155,7 @@
                     "uuid": "{656f144c-a120-5c3b-bee5-06deab438588}"
                 },
                 {
-                    "name": "FindSurfaceAreaToVolume",
+                    "name": "ComputeSurfaceAreaToVolume",
                     "parameters": [
                         {
                             "name": "",
@@ -9193,7 +9193,7 @@
                     "uuid": "{5d586366-6b59-566e-8de1-57aa9ae8a91c}"
                 },
                 {
-                    "name": "FindVolFractions",
+                    "name": "ComputeVolumeFractions",
                     "parameters": [
                         {
                             "name": "",
@@ -10484,7 +10484,7 @@
                     "uuid": "{a69d8d43-5be9-59a0-b997-81773a635673}"
                 },
                 {
-                    "name": "FindTriangleGeomCentroids",
+                    "name": "TriangleGeomCentroids",
                     "parameters": [
                         {
                             "name": "",
@@ -10548,7 +10548,7 @@
                     "uuid": "{749dc8ae-a402-5ee7-bbca-28d5734c60df}"
                 },
                 {
-                    "name": "FindTriangleGeomShapes",
+                    "name": "ComputeTriangleGeomShapes",
                     "parameters": [
                         {
                             "name": "",
@@ -10598,7 +10598,7 @@
                     "uuid": "{26765457-89fb-5686-87f6-878ca549f0df}"
                 },
                 {
-                    "name": "FindTriangleGeomSizes",
+                    "name": "ComputeTriangleGeomSizes",
                     "parameters": [
                         {
                             "name": "",
@@ -10937,7 +10937,7 @@
         {
             "filters": [
                 {
-                    "name": "FindBoundaryCells",
+                    "name": "ComputeBoundaryCells",
                     "parameters": [
                         {
                             "name": "IgnoreFeatureZero",
@@ -11001,7 +11001,7 @@
                     "uuid": "{450c2f00-9ddf-56e1-b4c1-0e74e7ad2349}"
                 },
                 {
-                    "name": "FindFeatureCentroids",
+                    "name": "ComputeFeatureCentroids",
                     "parameters": [
                         {
                             "name": "",
@@ -11049,7 +11049,7 @@
                     "uuid": "{6334ce16-cea5-5643-83b5-9573805873fa}"
                 },
                 {
-                    "name": "FindFeaturePhasesBinary",
+                    "name": "ComputeFeaturePhasesBinary",
                     "parameters": [
                         {
                             "name": "",
@@ -11083,7 +11083,7 @@
                     "uuid": "{64d20c7b-697c-5ff1-9d1d-8a27b071f363}"
                 },
                 {
-                    "name": "FindSurfaceFeaturesFilter",
+                    "name": "ComputeSurfaceFeaturesFilter",
                     "parameters": [
                         {
                             "name": "",
@@ -11105,7 +11105,7 @@
                     "uuid": "{d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb}"
                 },
                 {
-                    "name": "GenerateVectorColors",
+                    "name": "ComputeVectorColors",
                     "parameters": [
                         {
                             "name": "UseGoodVoxels",
@@ -12299,11 +12299,11 @@
                     "uuid": "{8ec1fc8e-6484-5412-a898-8079986c0a26}"
                 },
                 {
-                    "name": "GenerateColorTable",
+                    "name": "CreateColorMap",
                     "parameters": [
                         {
                             "name": "SelectedPresetName",
-                            "type": "GenerateColorTableFilterParameter"
+                            "type": "CreateColorMapFilterParameter"
                         },
                         {
                             "name": "SelectedDataArrayPath",
@@ -13461,7 +13461,7 @@
                     "uuid": "{c5a9a96c-7570-5279-b383-cc25ebae0046}"
                 },
                 {
-                    "name": "FindAvgOrientations",
+                    "name": "ComputeAvgOrientations",
                     "parameters": [
                         {
                             "name": "",
@@ -13503,7 +13503,7 @@
                     "uuid": "{bf7036d8-25bd-540e-b6de-3a5ab0e42c5f}"
                 },
                 {
-                    "name": "FindBoundaryStrengths",
+                    "name": "ComputeBoundaryStrengths",
                     "parameters": [
                         {
                             "name": "Loading",
@@ -13561,7 +13561,7 @@
                     "uuid": "{8071facb-8905-5699-b345-105ae4ac33ff}"
                 },
                 {
-                    "name": "FindCAxisLocations",
+                    "name": "ComputeCAxisLocations",
                     "parameters": [
                         {
                             "name": "",
@@ -13641,7 +13641,7 @@
                     "uuid": "{94f986fc-1295-5e32-9808-752855fa658a}"
                 },
                 {
-                    "name": "FindFeatureNeighborCAxisMisalignments",
+                    "name": "ComputeFeatureNeighborCAxisMisalignments",
                     "parameters": [
                         {
                             "name": "FindAvgMisals",
@@ -14121,7 +14121,7 @@
                     "uuid": "{286dd493-4fea-54f4-b59e-459dd13bbe57}"
                 },
                 {
-                    "name": "FindSchmids",
+                    "name": "ComputeSchmids",
                     "parameters": [
                         {
                             "name": "LoadingDirection",
@@ -14191,7 +14191,7 @@
                     "uuid": "{e67ca06a-176f-58fc-a676-d6ee5553511a}"
                 },
                 {
-                    "name": "FindSlipTransmissionMetrics",
+                    "name": "ComputeSlipTransmissionMetrics",
                     "parameters": [
                         {
                             "name": "",
@@ -14365,7 +14365,7 @@
                     "uuid": "{b0e30e6d-912d-5a7e-aeed-750134aba86b}"
                 },
                 {
-                    "name": "GenerateFZQuaternions",
+                    "name": "ComputeFZQuaternions",
                     "parameters": [
                         {
                             "name": "UseGoodVoxels",
@@ -14407,7 +14407,7 @@
                     "uuid": "{9a6677a6-b9e5-5fee-afa2-27e868cab8ca}"
                 },
                 {
-                    "name": "GenerateFaceIPFColoring",
+                    "name": "ComputeFaceIPFColoring",
                     "parameters": [
                         {
                             "name": "",
@@ -14495,7 +14495,7 @@
                     "uuid": "{7cd30864-7bcf-5c10-aea7-d107373e2d40}"
                 },
                 {
-                    "name": "GenerateIPFColors",
+                    "name": "ComputeIPFColors",
                     "parameters": [
                         {
                             "name": "ReferenceDir",
@@ -14559,7 +14559,7 @@
                     "uuid": "{ec58f4fe-8e51-527e-9536-8b6f185684be}"
                 },
                 {
-                    "name": "GenerateQuaternionConjugate",
+                    "name": "ComputeQuaternionConjugate",
                     "parameters": [
                         {
                             "name": "QuaternionDataArrayPath",

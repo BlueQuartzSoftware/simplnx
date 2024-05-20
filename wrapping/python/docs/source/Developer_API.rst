@@ -937,21 +937,21 @@ General Parameters
       params.insert(nx.FileSystemPathParameter('output_dir', 'Output Directory', 'Example output directory help text', 'Output Data', set(), nx.FileSystemPathParameter.PathType.OutputDir))
       params.insert(nx.FileSystemPathParameter('output_file', 'Output File', 'Example output file help text', '', set(), nx.FileSystemPathParameter.PathType.OutputFile))
 
-.. _GenerateColorTableParameter:
-.. py:class:: GenerateColorTableParameter
+.. _CreateColorMapParameter:
+.. py:class:: CreateColorMapParameter
 
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
 
-      GenerateColorTableParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
+      CreateColorMapParameter(name: str, human_name: str, help_text: str, default_value: str) -> None
 
    Description
    ~~~~~~~~~~~
    
-   The ``GenerateColorTableParameter`` is used to specify parameters for generating color tables, typically used in visualization or data representation.
+   The ``CreateColorMapParameter`` is used to specify parameters for generating color tables, typically used in visualization or data representation.
 
-   This parameter is used specifically for the  :ref:`simplnx.GenerateColorTableFilter() <GenerateColorTableFilter>` filter.
+   This parameter is used specifically for the  :ref:`simplnx.CreateColorMapFilter() <CreateColorMapFilter>` filter.
 
    These are the color table presets:
    
@@ -996,7 +996,7 @@ General Parameters
 
       import simplnx as nx
 
-      params.insert(nx.GenerateColorTableParameter('color_table_preset_key', "Select Color Preset...", "Select a preset color name.", "Cool to Warm"))
+      params.insert(nx.CreateColorMapParameter('color_table_preset_key', "Select Color Preset...", "Select a preset color name.", "Cool to Warm"))
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter

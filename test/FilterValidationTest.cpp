@@ -45,7 +45,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(simplnx.DataTypeParameter, "d31358d5-3253-4c69-aff0-eb98618f851b")
   ADD_PARAMETER_TRAIT(simplnx.EnsembleInfoParameter, "10d3924f-b4c9-4e06-9225-ce11ec8dff89")
   ADD_PARAMETER_TRAIT(simplnx.ArrayThresholdsParameter, "e93251bc-cdad-44c2-9332-58fe26aedfbe")
-  ADD_PARAMETER_TRAIT(simplnx.GenerateColorTableParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0")
+  ADD_PARAMETER_TRAIT(simplnx.CreateColorMapParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0")
   ADD_PARAMETER_TRAIT(simplnx.DataObjectNameParameter, "fbc89375-3ca4-4eb2-8257-aad9bf8e1c94")
   ADD_PARAMETER_TRAIT(simplnx.NeighborListSelectionParameter, "ab0b7a7f-f9ab-4e6f-99b5-610e7b69fc5b")
   ADD_PARAMETER_TRAIT(simplnx.ChoicesParameter, "ee4d5ce2-9582-48fa-b182-8a766ce0feff")
@@ -104,8 +104,8 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
   std::stringstream output;
-  //  std::ofstream logFile(fmt::format("{}/human_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
-  //  std::set<std::string> uniqueSepNames;
+  std::ofstream logFile(fmt::format("{}/human_names.log", unit_test::k_BinaryDir.view()), std::ios_base::trunc | std::ios_base::binary);
+  std::set<std::string> uniqueSepNames;
 
   // Loop on each Plugin
   for(const auto& plugin : pluginListPtr)
@@ -120,6 +120,12 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
       const auto& parameters = filter->parameters();
+
+      if(nx::core::StringUtilities::starts_with(filterClassName, "Calculate") || nx::core::StringUtilities::starts_with(filterClassName, "Find") ||
+         nx::core::StringUtilities::starts_with(filterClassName, "Generate") || nx::core::StringUtilities::starts_with(filterClassName, "Calculate"))
+      {
+        uniqueSepNames.insert(fmt::format("{},{}", plugName, filterClassName));
+      }
 
       // Loop over each Parameter
       for(const auto& parameter : parameters)
@@ -161,10 +167,10 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
     }
   }
 
-  //  for(const auto& name : uniqueSepNames)
-  //  {
-  //    logFile << "- " << name << "\n";
-  //  }
+  for(const auto& name : uniqueSepNames)
+  {
+    logFile << "- " << name << "\n";
+  }
 
   Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);

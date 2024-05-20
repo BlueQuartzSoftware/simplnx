@@ -85,7 +85,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = nx.CalculateFeatureSizesFilter()
+nx_filter = nx.ComputeFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -144,7 +144,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = nx.FindFeaturePhasesFilter()
+nx_filter = nx.ComputeFeaturePhasesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -157,7 +157,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 9
 
 # Instantiate Filter
-nx_filter = nx.FindFeatureCentroidsFilter()
+nx_filter = nx.ComputeFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

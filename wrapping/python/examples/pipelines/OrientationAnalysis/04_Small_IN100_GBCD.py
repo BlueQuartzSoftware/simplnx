@@ -22,7 +22,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 2
 # Instantiate Filter
-nx_filter = cxor.FindGBCDFilter()
+nx_filter = cxor.ComputeGBCDFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -42,7 +42,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -59,7 +59,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -76,7 +76,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.GenerateGBCDPoleFigureFilter()
+nx_filter = cxor.ComputeGBCDPoleFigureFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

@@ -201,7 +201,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeaturePhasesFilter",
+        "name": "nx::core::ComputeFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
@@ -218,7 +218,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindAvgOrientationsFilter",
+        "name": "nx::core::ComputeAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
@@ -281,7 +281,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::CalculateFeatureSizesFilter",
+        "name": "nx::core::ComputeFeatureSizesFilter",
         "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
       },
       "isDisabled": false
@@ -298,7 +298,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::RemoveMinimumSizeFeaturesFilter",
+        "name": "nx::core::RequireMinimumSizeFeaturesFilter",
         "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
       },
       "isDisabled": false
@@ -350,7 +350,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MinNeighborsFilter",
+        "name": "simplnx::RequireMinNumNeighborsFilter",
         "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
       },
       "isDisabled": false
@@ -436,7 +436,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateIPFColorsFilter",
+        "name": "nx::core::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false

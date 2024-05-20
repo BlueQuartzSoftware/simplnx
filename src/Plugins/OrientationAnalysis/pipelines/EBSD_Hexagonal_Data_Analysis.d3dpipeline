@@ -127,7 +127,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateIPFColorsFilter",
+        "name": "nx::core::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -193,7 +193,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindAvgCAxesFilter",
+        "name": "nx::core::ComputeAvgCAxesFilter",
         "uuid": "453cdb58-7bbb-4576-ad5e-f75a1c54d348"
       },
       "isDisabled": false
@@ -212,7 +212,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureReferenceCAxisMisorientationsFilter",
+        "name": "nx::core::ComputeFeatureReferenceCAxisMisorientationsFilter",
         "uuid": "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25"
       },
       "isDisabled": false
@@ -226,7 +226,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindCAxisLocationsFilter",
+        "name": "nx::core::ComputeCAxisLocationsFilter",
         "uuid": "a51c257a-ddc1-499a-9b21-f2d25a19d098"
       },
       "isDisabled": false
@@ -277,7 +277,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::GenerateColorTableFilter",
+        "name": "nx::core::CreateColorMapFilter",
         "uuid": "d1731177-4d70-41c0-9334-566a0b482796"
       },
       "isDisabled": false
@@ -306,7 +306,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeaturePhasesFilter",
+        "name": "nx::core::ComputeFeaturePhasesFilter",
         "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
       },
       "isDisabled": false
@@ -323,7 +323,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindAvgOrientationsFilter",
+        "name": "nx::core::ComputeAvgOrientationsFilter",
         "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
       },
       "isDisabled": false
@@ -360,7 +360,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindFeatureNeighborCAxisMisalignmentsFilter",
+        "name": "nx::core::ComputeFeatureNeighborCAxisMisalignmentsFilter",
         "uuid": "636ee030-9f07-4f16-a4f3-592eff8ef1ee"
       },
       "isDisabled": false

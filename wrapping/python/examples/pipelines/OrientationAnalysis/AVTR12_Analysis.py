@@ -91,7 +91,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -120,7 +120,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -150,7 +150,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 10
 # Instantiate Filter
-nx_filter = cxor.GenerateIPFColorsFilter()
+nx_filter = cxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -213,7 +213,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 14
 # Instantiate Filter
-nx_filter = nx.CalculateFeatureSizesFilter()
+nx_filter = nx.ComputeFeatureSizesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -229,7 +229,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 15
 # Instantiate Filter
-nx_filter = nx.RemoveMinimumSizeFeaturesFilter()
+nx_filter = nx.RequireMinimumSizeFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -244,7 +244,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 16
 # Instantiate Filter
-nx_filter = cxor.FindAvgOrientationsFilter()
+nx_filter = cxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -260,7 +260,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 17
 # Instantiate Filter
-nx_filter = cxor.FindKernelAvgMisorientationsFilter()
+nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -276,7 +276,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 18
 # Instantiate Filter
-nx_filter = nx.FindFeatureCentroidsFilter()
+nx_filter = nx.ComputeFeatureCentroidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -289,7 +289,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 19
 # Instantiate Filter
-nx_filter = nx.FindEuclideanDistMapFilter()
+nx_filter = nx.ComputeEuclideanDistMapFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -307,7 +307,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 20
 # Instantiate Filter
-nx_filter = cxor.FindFeatureReferenceMisorientationsFilter()
+nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -339,7 +339,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 22
 # Instantiate Filter
-nx_filter = nx.CalculateArrayHistogramFilter()
+nx_filter = nx.ComputeArrayHistogramFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

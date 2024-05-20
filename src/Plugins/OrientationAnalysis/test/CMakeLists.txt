@@ -10,34 +10,34 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
   CAxisSegmentFeaturesTest.cpp
+  ComputeAvgCAxesTest.cpp
+  ComputeAvgOrientationsTest.cpp
+  ComputeBoundaryStrengthsTest.cpp
+  ComputeCAxisLocationsTest.cpp
+  ComputeFaceIPFColoringTest.cpp
+  ComputeFeatureFaceMisorientationTest.cpp
+  ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
+  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
+  ComputeFeatureReferenceMisorientationsTest.cpp
+  ComputeFZQuaternionsTest.cpp
+  ComputeGBCDMetricBasedTest.cpp
+  ComputeGBCDPoleFigureTest.cpp
+  ComputeGBCDTest.cpp
+  ComputeGBPDMetricBasedTest.cpp
+  ComputeIPFColorsTest.cpp
+  ComputeKernelAvgMisorientationsTest.cpp
+  ComputeMisorientationsTest.cpp
+  ComputeQuaternionConjugateTest.cpp
+  ComputeSchmidsTest.cpp
+  ComputeShapesFilterTest.cpp
+  ComputeSlipTransmissionMetricsTest.cpp
+  ComputeTriangleGeomShapesTest.cpp
   ConvertHexGridToSquareGridTest.cpp
   ConvertOrientationsTest.cpp
   ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
-  FindAvgCAxesTest.cpp
-  FindAvgOrientationsTest.cpp
-  FindBoundaryStrengthsTest.cpp
-  FindCAxisLocationsTest.cpp
-  FindFeatureNeighborCAxisMisalignmentsTest.cpp
-  FindFeatureReferenceCAxisMisorientationsTest.cpp
-  FindFeatureReferenceMisorientationsTest.cpp
-  FindGBCDMetricBasedTest.cpp
-  FindGBCDTest.cpp
-  FindGBPDMetricBasedTest.cpp
-  FindKernelAvgMisorientationsTest.cpp
-  FindMisorientationsTest.cpp
-  FindSchmidsTest.cpp
-  FindShapesFilterTest.cpp
-  FindSlipTransmissionMetricsTest.cpp
-  FindTriangleGeomShapesTest.cpp
-  GenerateFaceIPFColoringTest.cpp
-  GenerateFeatureFaceMisorientationTest.cpp
-  GenerateFZQuaternionsTest.cpp
-  GenerateGBCDPoleFigureTest.cpp
-  GenerateIPFColorsTest.cpp
-  GenerateQuaternionConjugateTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
@@ -59,7 +59,7 @@ set(DISABLED_TESTS
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
   FindDistsToCharactGBsTest.cpp
-  FindFeatureReferenceCAxisMisorientationsTest.cpp
+  ComputeFeatureReferenceCAxisMisorientationsTest.cpp
   FindTwinBoundariesTest.cpp
   FindTwinBoundarySchmidFactorsTest.cpp
   GenerateOrientationMatrixTransposeTest.cpp

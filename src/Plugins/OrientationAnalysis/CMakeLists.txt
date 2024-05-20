@@ -31,34 +31,34 @@ set(FilterList
   AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
   CAxisSegmentFeaturesFilter
+  ComputeAvgCAxesFilter
+  ComputeAvgOrientationsFilter
+  ComputeBoundaryStrengthsFilter
+  ComputeCAxisLocationsFilter
+  ComputeFaceIPFColoringFilter
+  ComputeFeatureFaceMisorientationFilter
+  ComputeFeatureNeighborCAxisMisalignmentsFilter
+  ComputeFeatureReferenceCAxisMisorientationsFilter
+  ComputeFeatureReferenceMisorientationsFilter
+  ComputeFZQuaternionsFilter
+  ComputeGBCDFilter
+  ComputeGBCDMetricBasedFilter
+  ComputeGBCDPoleFigureFilter
+  ComputeGBPDMetricBasedFilter
+  ComputeIPFColorsFilter
+  ComputeKernelAvgMisorientationsFilter
+  ComputeMisorientationsFilter
+  ComputeQuaternionConjugateFilter
+  ComputeSchmidsFilter
+  ComputeShapesFilter
+  ComputeSlipTransmissionMetricsFilter
+  ComputeTriangleGeomShapesFilter
   ConvertHexGridToSquareGridFilter
   ConvertOrientationsFilter
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
-  FindAvgCAxesFilter
-  FindAvgOrientationsFilter
-  FindBoundaryStrengthsFilter
-  FindCAxisLocationsFilter
-  FindFeatureNeighborCAxisMisalignmentsFilter
-  FindFeatureReferenceCAxisMisorientationsFilter
-  FindFeatureReferenceMisorientationsFilter
-  FindGBCDFilter
-  FindGBCDMetricBasedFilter
-  FindGBPDMetricBasedFilter
-  FindKernelAvgMisorientationsFilter
-  FindMisorientationsFilter
-  FindSchmidsFilter
-  FindShapesFilter
-  FindSlipTransmissionMetricsFilter
-  FindTriangleGeomShapesFilter
-  GenerateFaceIPFColoringFilter
-  GenerateFeatureFaceMisorientationFilter
-  GenerateFZQuaternionsFilter
-  GenerateGBCDPoleFigureFilter
-  GenerateIPFColorsFilter
-  GenerateQuaternionConjugateFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -76,20 +76,21 @@ set(FilterList
   WritePoleFigureFilter
   WriteStatsGenOdfAngleFileFilter
 )
-  
+
 set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
-  FindBoundaryStrengths
+  ComputeBoundaryStrengths
   FindDistsToCharactGBs
-  FindKernelAvgMisorientations
-  FindMisorientations
-  FindSchmids
+  ComputeKernelAvgMisorientations
+  ComputeMisorientations
+  ComputeSchmids
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
-  GenerateFaceIPFColoring
-  GenerateFeatureFaceMisorientation
+  ComputeFaceIPFColoring
+  ComputeFeatureFaceMisorientation
   GenerateOrientationMatrixTranspose
+
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
 )
 
@@ -163,32 +164,32 @@ set(filter_algorithms
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
   CAxisSegmentFeatures
+  ComputeAvgCAxes
+  ComputeAvgOrientations
+  ComputeBoundaryStrengths
+  ComputeCAxisLocations
+  ComputeFaceIPFColoring
+  ComputeFeatureFaceMisorientation
+  ComputeFeatureNeighborCAxisMisalignments
+  ComputeFeatureReferenceCAxisMisorientations
+  ComputeFeatureReferenceMisorientations
+  ComputeGBCD
+  ComputeGBCDMetricBased
+  ComputeGBCDPoleFigure
+  ComputeGBPDMetricBased
+  ComputeIPFColors
+  ComputeKernelAvgMisorientations
+  ComputeMisorientations
+  ComputeQuaternionConjugate
+  ComputeSchmids
+  ComputeShapes
+  ComputeSlipTransmissionMetrics
+  ComputeTriangleGeomShapes
   ConvertHexGridToSquareGrid
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
-  FindAvgCAxes
-  FindAvgOrientations
-  FindBoundaryStrengths
-  FindCAxisLocations
-  FindFeatureNeighborCAxisMisalignments
-  FindFeatureReferenceCAxisMisorientations
-  FindFeatureReferenceMisorientations
-  FindGBCD
-  FindGBCDMetricBased
-  FindGBPDMetricBased
-  FindKernelAvgMisorientations
-  FindMisorientations
-  FindSchmids
-  FindShapes
-  FindSlipTransmissionMetrics
-  FindTriangleGeomShapes
-  GenerateFaceIPFColoring
-  GenerateFeatureFaceMisorientation
-  GenerateGBCDPoleFigure
-  GenerateIPFColors
-  GenerateQuaternionConjugate
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData

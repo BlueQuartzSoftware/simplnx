@@ -36,7 +36,7 @@ Change Log 1.2.7
 - FILTER: Add H5OINAReader (#700) [a51dd5f3]
 - BUG: Small bugs, doc fixes, StopWatch class added (#894) [327e4b65]
 - BUG: StringUtilities::split-Add Additional Edge Case Checks(#893) [3a9c87d8]
-- BUG: Rename GenerateFaceMisorientationColors to GenerateFeatureFaceMisorientations (#889) [5ed1cd93]
+- BUG: Rename GenerateFaceMisorientationColors to ComputeFeatureFaceMisorientations (#889) [5ed1cd93]
 - BUG: Return invalid Result<> if size of directory is requested. (#891) [219471be]
 - BUG/ENH: StringUtilities Split Function Updates (#892) [381aecc4]
 - ENH: Report total installed memory on some memory allocation errors (#887) [0343a96c]

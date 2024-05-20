@@ -1,5 +1,5 @@
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
-#include "SimplnxCore/Filters/CalculateTriangleAreasFilter.hpp"
+#include "SimplnxCore/Filters/ComputeTriangleAreasFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -108,14 +108,14 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
   // Calculate the Triangle Areas
   {
-    CalculateTriangleAreasFilter filter;
+    ComputeTriangleAreasFilter filter;
     Arguments args;
 
     DataPath geometryPath = DataPath({triangleGeometryName});
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
+    args.insertOrAssign(ComputeTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ComputeTriangleAreasFilter::k_CalculatedAreasDataName_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
