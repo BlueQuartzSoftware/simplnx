@@ -82,7 +82,7 @@ set(FilterList
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  MinNeighborsFilter
+  RequireMinNumNeighborsFilter
   MoveDataFilter
   MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
@@ -103,7 +103,7 @@ set(FilterList
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
   RemoveFlaggedVerticesFilter
-  RemoveMinimumSizeFeaturesFilter
+  RequireMinimumSizeFeaturesFilter
   RenameDataObjectFilter
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter

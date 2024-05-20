@@ -229,7 +229,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 15
 # Instantiate Filter
-nx_filter = nx.RemoveMinimumSizeFeaturesFilter()
+nx_filter = nx.RequireMinimumSizeFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

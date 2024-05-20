@@ -332,7 +332,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::RemoveMinimumSizeFeaturesFilter",
+                "name": "simplnx::RequireMinimumSizeFeaturesFilter",
                 "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
               },
               "isDisabled": false
@@ -371,7 +371,7 @@
               },
               "comments": "",
               "filter": {
-                "name": "simplnx::MinNeighborsFilter",
+                "name": "simplnx::RequireMinNumNeighborsFilter",
                 "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
               },
               "isDisabled": false

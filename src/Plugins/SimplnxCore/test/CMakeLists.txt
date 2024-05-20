@@ -84,7 +84,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
-  MinNeighborsTest.cpp
+  RequireMinNumNeighborsTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
@@ -104,7 +104,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
   RemoveFlaggedVerticesTest.cpp
-  RemoveMinimumSizeFeaturesTest.cpp
+  RequireMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   ResampleImageGeomTest.cpp

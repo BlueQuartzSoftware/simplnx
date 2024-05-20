@@ -1,4 +1,4 @@
-#include "RemoveMinimumSizeFeaturesFilter.hpp"
+#include "RequireMinimumSizeFeaturesFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -259,33 +259,33 @@ std::vector<bool> remove_smallfeatures(FeatureIdsArrayType& featureIdsArrayRef, 
 }
 } // namespace
 
-std::string RemoveMinimumSizeFeaturesFilter::name() const
+std::string RequireMinimumSizeFeaturesFilter::name() const
 {
-  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::name;
+  return FilterTraits<RequireMinimumSizeFeaturesFilter>::name;
 }
 
-std::string RemoveMinimumSizeFeaturesFilter::className() const
+std::string RequireMinimumSizeFeaturesFilter::className() const
 {
-  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::className;
+  return FilterTraits<RequireMinimumSizeFeaturesFilter>::className;
 }
 
-Uuid RemoveMinimumSizeFeaturesFilter::uuid() const
+Uuid RequireMinimumSizeFeaturesFilter::uuid() const
 {
-  return FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid;
+  return FilterTraits<RequireMinimumSizeFeaturesFilter>::uuid;
 }
 
-std::string RemoveMinimumSizeFeaturesFilter::humanName() const
+std::string RequireMinimumSizeFeaturesFilter::humanName() const
 {
   return "Remove Minimum Size Features";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
+std::vector<std::string> RequireMinimumSizeFeaturesFilter::defaultTags() const
 {
   return {className(), "Processing", "Cleanup", "MinSize", "Feature Removal"};
 }
 
-Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
+Parameters RequireMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
 
@@ -313,13 +313,13 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
   return params;
 }
 
-IFilter::UniquePointer RemoveMinimumSizeFeaturesFilter::clone() const
+IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
 {
-  return std::make_unique<RemoveMinimumSizeFeaturesFilter>();
+  return std::make_unique<RequireMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -382,8 +382,8 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
 }
 
 // -----------------------------------------------------------------------------
-Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
@@ -465,9 +465,9 @@ constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> RemoveMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> RequireMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = RemoveMinimumSizeFeaturesFilter().getDefaultArguments();
+  Arguments args = RequireMinimumSizeFeaturesFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/RequireMinimumSizeFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("SimplnxCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[SimplnxCore][RemoveMinimumSizeFeatures]")
+TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[SimplnxCore][RequireMinimumSizeFeatures]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_min_size_output.tar.gz", "6_6_min_size_output.dream3d");
 
@@ -41,18 +41,18 @@ TEST_CASE("SimplnxCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Simp
   const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(Constants::k_Phases);
 
   {
-    RemoveMinimumSizeFeaturesFilter filter;
+    RequireMinimumSizeFeaturesFilter filter;
 
     // Parameter Keys
     Arguments args;
     // Create default Parameters for the filter.
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_PhaseNumber_Key, std::make_any<int64>(1));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_NumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
-    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_PhaseNumber_Key, std::make_any<int64>(1));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_NumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

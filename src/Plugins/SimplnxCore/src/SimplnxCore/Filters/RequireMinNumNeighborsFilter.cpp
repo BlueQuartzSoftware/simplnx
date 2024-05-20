@@ -1,4 +1,4 @@
-#include "MinNeighborsFilter.hpp"
+#include "RequireMinNumNeighborsFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -24,21 +24,21 @@ constexpr int32 k_FetchChildArrayError = -5559;
 
 Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  auto imageGeomPath = args.value<DataPath>(MinNeighborsFilter::k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
-  auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
-  auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighborsFilter::k_IgnoredVoxelArrays_Key);
+  auto imageGeomPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key);
+  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
+  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
+  auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key);
   auto cellDataAttrMatrix = featureIdsPath.getParent();
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
   auto& featureIds = featureIdsArray.getDataStoreRef();
 
-  auto applyToSinglePhase = args.value<bool>(MinNeighborsFilter::k_ApplyToSinglePhase_Key);
+  auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
   Int32Array* featurePhasesArray = nullptr;
   if(applyToSinglePhase)
   {
-    auto featurePhasesPath = args.value<DataPath>(MinNeighborsFilter::k_FeaturePhasesPath_Key);
+    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
     featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
   }
 
@@ -243,12 +243,12 @@ Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, co
 
 nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
-  auto imageGeomPath = args.value<DataPath>(MinNeighborsFilter::k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
-  auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
-  auto minNumNeighbors = args.value<uint64>(MinNeighborsFilter::k_MinNumNeighbors_Key);
+  auto imageGeomPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key);
+  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
+  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
+  auto minNumNeighbors = args.value<uint64>(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key);
 
-  auto phaseNumber = args.value<uint64>(MinNeighborsFilter::k_PhaseNumber_Key);
+  auto phaseNumber = args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key);
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
@@ -256,11 +256,11 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
   auto& featureIds = featureIdsArray.getDataStoreRef();
   auto& numNeighbors = numNeighborsArray.getDataStoreRef();
 
-  auto applyToSinglePhase = args.value<bool>(MinNeighborsFilter::k_ApplyToSinglePhase_Key);
+  auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
   Int32Array* featurePhasesArray = nullptr;
   if(applyToSinglePhase)
   {
-    auto featurePhasesPath = args.value<DataPath>(MinNeighborsFilter::k_FeaturePhasesPath_Key);
+    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
     featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
   }
 
@@ -316,37 +316,37 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 } // namespace
 
 //------------------------------------------------------------------------------
-std::string MinNeighborsFilter::name() const
+std::string RequireMinNumNeighborsFilter::name() const
 {
-  return FilterTraits<MinNeighborsFilter>::name;
+  return FilterTraits<RequireMinNumNeighborsFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string MinNeighborsFilter::className() const
+std::string RequireMinNumNeighborsFilter::className() const
 {
-  return FilterTraits<MinNeighborsFilter>::className;
+  return FilterTraits<RequireMinNumNeighborsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid MinNeighborsFilter::uuid() const
+Uuid RequireMinNumNeighborsFilter::uuid() const
 {
-  return FilterTraits<MinNeighborsFilter>::uuid;
+  return FilterTraits<RequireMinNumNeighborsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string MinNeighborsFilter::humanName() const
+std::string RequireMinNumNeighborsFilter::humanName() const
 {
-  return "Minimum Number of Neighbors";
+  return "Require Minimum Number of Neighbors";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> MinNeighborsFilter::defaultTags() const
+std::vector<std::string> RequireMinNumNeighborsFilter::defaultTags() const
 {
   return {className(), "Minimum", "Neighbors", "Memory Management", "Cleanup", "Remove Features"};
 }
 
 //------------------------------------------------------------------------------
-Parameters MinNeighborsFilter::parameters() const
+Parameters RequireMinNumNeighborsFilter::parameters() const
 {
   Parameters params;
 
@@ -380,13 +380,14 @@ Parameters MinNeighborsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MinNeighborsFilter::clone() const
+IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
 {
-  return std::make_unique<MinNeighborsFilter>();
+  return std::make_unique<RequireMinNumNeighborsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MinNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
@@ -445,8 +446,8 @@ IFilter::PreflightResult MinNeighborsFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
@@ -485,7 +486,7 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arg
     return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
 
-  auto featureIdsPath = args.value<DataPath>(MinNeighborsFilter::k_FeatureIdsPath_Key);
+  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
 
   // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
   auto cellDataAttrMatrixPath = featureIdsPath.getParent();
@@ -504,7 +505,7 @@ Result<> MinNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arg
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
-  auto numNeighborsPath = args.value<DataPath>(MinNeighborsFilter::k_NumNeighborsPath_Key);
+  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
   auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
 
   DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
@@ -538,9 +539,9 @@ constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> MinNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> RequireMinNumNeighborsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = MinNeighborsFilter().getDefaultArguments();
+  Arguments args = RequireMinNumNeighborsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

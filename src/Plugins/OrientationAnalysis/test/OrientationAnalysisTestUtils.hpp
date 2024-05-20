@@ -85,9 +85,9 @@ const FilterHandle k_CropImageGeometryFilterHandle(k_CropImageGeometryFilterId, 
 // Make sure we can instantiate the CopyDataGroup
 const Uuid k_CopyDataGroupFilterId = *Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1");
 const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_SimplnxCorePluginId);
-// Make sure we can instantiate the RemoveMinimumSizeFeaturesFilter
-const Uuid k_RemoveMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
-const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFeaturesFilterId, k_SimplnxCorePluginId);
+// Make sure we can instantiate the RequireMinimumSizeFeaturesFilter
+const Uuid k_RequireMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
+const FilterHandle k_RequireMinimumSizeFeaturesFilterHandle(k_RequireMinimumSizeFeaturesFilterId, k_SimplnxCorePluginId);
 // Make sure we can instantiate the ComputeFeatureSizesFilter
 const Uuid k_ComputeFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
 const FilterHandle k_ComputeFeatureSizesFilterHandle(k_ComputeFeatureSizesFilterId, k_SimplnxCorePluginId);

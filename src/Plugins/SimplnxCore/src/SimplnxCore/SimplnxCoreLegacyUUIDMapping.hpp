@@ -70,14 +70,14 @@
 #include "SimplnxCore/Filters/IterativeClosestPointFilter.hpp"
 #include "SimplnxCore/Filters/LaplacianSmoothingFilter.hpp"
 #include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
-#include "SimplnxCore/Filters/MinNeighborsFilter.hpp"
+#include "SimplnxCore/Filters/RequireMinNumNeighborsFilter.hpp"
 #include "SimplnxCore/Filters/MoveDataFilter.hpp"
 #include "SimplnxCore/Filters/MultiThresholdObjectsFilter.hpp"
 #include "SimplnxCore/Filters/PointSampleTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/Filters/RemoveFlaggedVerticesFilter.hpp"
-#include "SimplnxCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
+#include "SimplnxCore/Filters/RequireMinimumSizeFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 #include "SimplnxCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 #include "SimplnxCore/Filters/ResampleImageGeomFilter.hpp"
@@ -184,7 +184,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("6c8fb24b-5b12-551c-ba6d-ae2fa7724764").value(), {nx::core::FilterTraits<IterativeClosestPointFilter>::uuid, &IterativeClosestPointFilter::FromSIMPLJson}}, // IterativeClosestPoint
     {nx::core::Uuid::FromString("601c4885-c218-5da6-9fc7-519d85d241ad").value(), {nx::core::FilterTraits<LaplacianSmoothingFilter>::uuid, &LaplacianSmoothingFilter::FromSIMPLJson}}, // LaplacianSmoothing
     {nx::core::Uuid::FromString("9fe34deb-99e1-5f3a-a9cc-e90c655b47ee").value(), {nx::core::FilterTraits<MapPointCloudToRegularGridFilter>::uuid, &MapPointCloudToRegularGridFilter::FromSIMPLJson}}, // MapPointCloudToRegularGrid
-    {nx::core::Uuid::FromString("dab5de3c-5f81-5bb5-8490-73521e1183ea").value(), {nx::core::FilterTraits<MinNeighborsFilter>::uuid, &MinNeighborsFilter::FromSIMPLJson}}, // MinNeighborsFilter
+    {nx::core::Uuid::FromString("dab5de3c-5f81-5bb5-8490-73521e1183ea").value(), {nx::core::FilterTraits<RequireMinNumNeighborsFilter>::uuid, &RequireMinNumNeighborsFilter::FromSIMPLJson}}, // RequireMinNumNeighborsFilter
     {nx::core::Uuid::FromString("fe2cbe09-8ae1-5bea-9397-fd5741091fdb").value(), {nx::core::FilterTraits<MoveDataFilter>::uuid, &MoveDataFilter::FromSIMPLJson}}, // MoveDataFilter
     {nx::core::Uuid::FromString("014b7300-cf36-5ede-a751-5faf9b119dae").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects
     {nx::core::Uuid::FromString("686d5393-2b02-5c86-b887-dd81a8ae80f2").value(), {nx::core::FilterTraits<MultiThresholdObjectsFilter>::uuid, &MultiThresholdObjectsFilter::FromSIMPLJson}}, // MultiThresholdObjects2
@@ -192,7 +192,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("07b49e30-3900-5c34-862a-f1fb48bad568").value(), {nx::core::FilterTraits<QuickSurfaceMeshFilter>::uuid, &QuickSurfaceMeshFilter::FromSIMPLJson}}, // QuickSurfaceMesh
     {nx::core::Uuid::FromString("0791f556-3d73-5b1e-b275-db3f7bb6850d").value(), {nx::core::FilterTraits<ReadRawBinaryFilter>::uuid, &ReadRawBinaryFilter::FromSIMPLJson}}, // RawBinaryReader
     {nx::core::Uuid::FromString("379ccc67-16dd-530a-984f-177db2314bac").value(), {nx::core::FilterTraits<RemoveFlaggedVerticesFilter>::uuid, &RemoveFlaggedVerticesFilter::FromSIMPLJson}}, // RemoveFlaggedVerticesFilter
-    {nx::core::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), {nx::core::FilterTraits<RemoveMinimumSizeFeaturesFilter>::uuid, &RemoveMinimumSizeFeaturesFilter::FromSIMPLJson}}, // MinSize
+    {nx::core::Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec").value(), {nx::core::FilterTraits<RequireMinimumSizeFeaturesFilter>::uuid, &RequireMinimumSizeFeaturesFilter::FromSIMPLJson}}, // MinSize
     {nx::core::Uuid::FromString("53a5f731-2858-5e3e-bd43-8f2cf45d90ec").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameAttributeArray
     {nx::core::Uuid::FromString("ee29e6d6-1f59-551b-9350-a696523261d5").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameAttributeMatrix
     {nx::core::Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6").value(), {nx::core::FilterTraits<RenameDataObjectFilter>::uuid, &RenameDataObjectFilter::FromSIMPLJson}}, // RenameDataContainer
