@@ -1,0 +1,9 @@
+name: d3dnx
+channels:
+  - conda-forge
+  - defaults
+  - bluequartzsoftware
+dependencies:
+  - python=3.12
+  - numpy
+  - dream3dnx
