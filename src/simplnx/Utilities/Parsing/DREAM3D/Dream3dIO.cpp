@@ -789,9 +789,10 @@ Result<IDataArray*> createLegacyDataArray(DataStructure& dataStructure, DataObje
   {
     auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims, static_cast<T>(0));
 
-    if(!dataArrayReader.readIntoSpan(dataStore->createSpan()))
+    Result<> result = dataArrayReader.readIntoSpan(dataStore->createSpan());
+    if(result.invalid())
     {
-      std::string ss = fmt::format("Error reading HDF5 Data set {}", nx::core::HDF5::Support::GetObjectPath(dataArrayReader.getId()));
+      std::string ss = fmt::format("Error reading HDF5 Data set {}:\n\n{}", nx::core::HDF5::Support::GetObjectPath(dataArrayReader.getId()), result.errors()[0].message);
       return nx::core::MakeErrorResult<IDataArray*>(Legacy::k_FailedReadingDataArrayData_Code, ss);
     }
     // Insert the DataArray into the DataStructure

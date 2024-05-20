@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -17,56 +18,6 @@ using namespace nx::core;
 
 namespace
 {
-
-/**
- * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
- * unique vertices in the triangle geometry
- */
-class FindUniqueIdsImpl
-{
-public:
-  FindUniqueIdsImpl(IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds)
-  : m_Vertex(vertex)
-  , m_NodesInBin(nodesInBin)
-  , m_UniqueIds(uniqueIds)
-  {
-  }
-
-  // -----------------------------------------------------------------------------
-  void convert(size_t start, size_t end) const
-  {
-    for(size_t i = start; i < end; i++)
-    {
-      for(size_t j = 0; j < m_NodesInBin[i].size(); j++)
-      {
-        size_t node1 = m_NodesInBin[i][j];
-        if(m_UniqueIds[node1] == static_cast<int64_t>(node1))
-        {
-          for(size_t k = j + 1; k < m_NodesInBin[i].size(); k++)
-          {
-            size_t node2 = m_NodesInBin[i][k];
-            if(m_Vertex[node1 * 3] == m_Vertex[node2 * 3] && m_Vertex[node1 * 3 + 1] == m_Vertex[node2 * 3 + 1] && m_Vertex[node1 * 3 + 2] == m_Vertex[node2 * 3 + 2])
-            {
-              m_UniqueIds[node2] = node1;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // -----------------------------------------------------------------------------
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  const IGeometry::SharedVertexList& m_Vertex;
-  const std::vector<std::vector<size_t>>& m_NodesInBin;
-  nx::core::Int64DataStore& m_UniqueIds;
-};
-
 class StlFileSentinel
 {
 public:
@@ -86,12 +37,6 @@ public:
 private:
   FILE* m_File = nullptr;
 };
-
-std::array<float, 6> CreateMinMaxCoords()
-{
-  return {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-          -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
-}
 
 bool IsMagicsFile(const std::string& stlHeaderStr)
 {
@@ -119,7 +64,6 @@ bool IsVxElementsFile(const std::string& stlHeader)
   // ignore the 2 bytes are anything meaningful.
   return nx::core::StringUtilities::contains(stlHeader, "VXelements");
 }
-
 } // End anonymous namespace
 
 ReadStlFile::ReadStlFile(DataStructure& dataStructure, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput,
@@ -140,8 +84,6 @@ ReadStlFile::~ReadStlFile() noexcept = default;
 
 Result<> ReadStlFile::operator()()
 {
-
-  m_MinMaxCoords = ::CreateMinMaxCoords();
   std::error_code errorCode;
   auto stlFileSize = std::filesystem::file_size(m_FilePath, errorCode);
 
@@ -257,80 +199,6 @@ Result<> ReadStlFile::operator()()
       std::ignore = std::fseek(f, static_cast<size_t>(attr), SEEK_CUR); // Skip past the Triangle Attribute data since we don't know how to read it anyways
     }
 
-    // Determine the Min/Max Coordinates
-    if(fileVert[3] < m_MinMaxCoords[0])
-    {
-      m_MinMaxCoords[0] = fileVert[3];
-    }
-    if(fileVert[3] > m_MinMaxCoords[1])
-    {
-      m_MinMaxCoords[1] = fileVert[3];
-    }
-    if(fileVert[4] < m_MinMaxCoords[2])
-    {
-      m_MinMaxCoords[2] = fileVert[4];
-    }
-    if(fileVert[4] > m_MinMaxCoords[3])
-    {
-      m_MinMaxCoords[3] = fileVert[4];
-    }
-    if(fileVert[5] < m_MinMaxCoords[4])
-    {
-      m_MinMaxCoords[4] = fileVert[5];
-    }
-    if(fileVert[5] > m_MinMaxCoords[5])
-    {
-      m_MinMaxCoords[5] = fileVert[5];
-    }
-    if(fileVert[6] < m_MinMaxCoords[0])
-    {
-      m_MinMaxCoords[0] = fileVert[6];
-    }
-    if(fileVert[6] > m_MinMaxCoords[1])
-    {
-      m_MinMaxCoords[1] = fileVert[6];
-    }
-    if(fileVert[7] < m_MinMaxCoords[2])
-    {
-      m_MinMaxCoords[2] = fileVert[7];
-    }
-    if(fileVert[7] > m_MinMaxCoords[3])
-    {
-      m_MinMaxCoords[3] = fileVert[7];
-    }
-    if(fileVert[8] < m_MinMaxCoords[4])
-    {
-      m_MinMaxCoords[4] = fileVert[8];
-    }
-    if(fileVert[8] > m_MinMaxCoords[5])
-    {
-      m_MinMaxCoords[5] = fileVert[8];
-    }
-    if(fileVert[9] < m_MinMaxCoords[0])
-    {
-      m_MinMaxCoords[0] = fileVert[9];
-    }
-    if(fileVert[9] > m_MinMaxCoords[1])
-    {
-      m_MinMaxCoords[1] = fileVert[9];
-    }
-    if(fileVert[10] < m_MinMaxCoords[2])
-    {
-      m_MinMaxCoords[2] = fileVert[10];
-    }
-    if(fileVert[10] > m_MinMaxCoords[3])
-    {
-      m_MinMaxCoords[3] = fileVert[10];
-    }
-    if(fileVert[11] < m_MinMaxCoords[4])
-    {
-      m_MinMaxCoords[4] = fileVert[11];
-    }
-    if(fileVert[11] > m_MinMaxCoords[5])
-    {
-      m_MinMaxCoords[5] = fileVert[11];
-    }
-
     // Write the data into the actual geometry
     faceNormals[3 * t + 0] = static_cast<double>(fileVert[0]);
     faceNormals[3 * t + 1] = static_cast<double>(fileVert[1]);
@@ -349,122 +217,6 @@ Result<> ReadStlFile::operator()()
     triangles[t * 3 + 2] = 3 * t + 2;
   }
 
-  return eliminate_duplicate_nodes();
+  return GeometryUtilities::EliminateDuplicateNodes(triangleGeom, m_ScaleOutput ? std::optional<float32>(m_ScaleFactor) : std::nullopt);
   // The fileSentinel will ensure the FILE* is closed.
-}
-
-Result<> ReadStlFile::eliminate_duplicate_nodes()
-{
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
-
-  using SharedTriList = IGeometry::MeshIndexArrayType;
-  using SharedVertList = IGeometry::SharedVertexList;
-
-  SharedTriList& triangles = *(triangleGeom.getFaces());
-  SharedVertList& vertices = *(triangleGeom.getVertices());
-
-  IGeometry::MeshIndexType nNodesAll = triangleGeom.getNumberOfVertices();
-  IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
-  size_t nNodes = 0;
-  if(nNodesAll > 0)
-  {
-    nNodes = static_cast<size_t>(nNodesAll);
-  }
-  float stepX = (m_MinMaxCoords[1] - m_MinMaxCoords[0]) / 100.0f;
-  float stepY = (m_MinMaxCoords[3] - m_MinMaxCoords[2]) / 100.0f;
-  float stepZ = (m_MinMaxCoords[5] - m_MinMaxCoords[4]) / 100.0f;
-
-  std::vector<std::vector<size_t>> nodesInBin(100 * 100 * 100);
-
-  // determine (xyz) bin each node falls in - used to speed up node comparison
-  int32_t bin = 0, xBin = 0, yBin = 0, zBin = 0;
-  for(size_t i = 0; i < nNodes; i++)
-  {
-    if(stepX != 0.0)
-    {
-      xBin = static_cast<int32_t>((vertices[i * 3] - m_MinMaxCoords[0]) / stepX);
-    }
-    if(stepY != 0.0)
-    {
-      yBin = static_cast<int32_t>((vertices[i * 3 + 1] - m_MinMaxCoords[2]) / stepY);
-    }
-    if(zBin != 0.0)
-    {
-      zBin = static_cast<int32_t>((vertices[i * 3 + 2] - m_MinMaxCoords[4]) / stepZ);
-    }
-    if(xBin == 100)
-    {
-      xBin = 99;
-    }
-    if(yBin == 100)
-    {
-      yBin = 99;
-    }
-    if(zBin == 100)
-    {
-      zBin = 99;
-    }
-    bin = (zBin * 10000) + (yBin * 100) + xBin;
-    nodesInBin[bin].push_back(i);
-  }
-
-  // Create array to hold unique node numbers
-  Int64DataStore uniqueIds(IDataStore::ShapeType{nNodes}, IDataStore::ShapeType{1}, {});
-  for(IGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
-  {
-    uniqueIds[i] = static_cast<int64_t>(i);
-  }
-
-  // Parallel algorithm to find duplicate nodes
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(100 * 100 * 100));
-  dataAlg.execute(::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
-
-  // renumber the unique nodes
-  int64_t uniqueCount = 0;
-  for(size_t i = 0; i < nNodes; i++)
-  {
-    if(uniqueIds[i] == static_cast<int64_t>(i))
-    {
-      uniqueIds[i] = uniqueCount;
-      uniqueCount++;
-    }
-    else
-    {
-      uniqueIds[i] = uniqueIds[uniqueIds[i]];
-    }
-  }
-
-  float scaleFactor = 1.0F;
-  if(m_ScaleOutput)
-  {
-    scaleFactor = m_ScaleFactor;
-  }
-
-  // Move nodes to unique Id and then resize nodes array and apply optional scaling
-  for(size_t i = 0; i < nNodes; i++)
-  {
-    vertices[uniqueIds[i] * 3] = vertices[i * 3] * m_ScaleFactor;
-    vertices[uniqueIds[i] * 3 + 1] = vertices[i * 3 + 1] * m_ScaleFactor;
-    vertices[uniqueIds[i] * 3 + 2] = vertices[i * 3 + 2] * m_ScaleFactor;
-  }
-  triangleGeom.resizeVertexList(uniqueCount);
-
-  // Update the triangle nodes to reflect the unique ids
-  int64_t node1 = 0, node2 = 0, node3 = 0;
-  for(size_t i = 0; i < static_cast<size_t>(nTriangles); i++)
-  {
-    node1 = triangles[i * 3];
-    node2 = triangles[i * 3 + 1];
-    node3 = triangles[i * 3 + 2];
-
-    triangles[i * 3] = uniqueIds[node1];
-    triangles[i * 3 + 1] = uniqueIds[node2];
-    triangles[i * 3 + 2] = uniqueIds[node3];
-  }
-
-  triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfFaces()});
-  triangleGeom.getVertexAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfVertices()});
-
-  return {};
 }

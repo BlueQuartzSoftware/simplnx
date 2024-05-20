@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -382,48 +383,48 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
     switch(type)
     {
     case nx::core::HDF5::Type::float32: {
-      fillArrayResults = fillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::float64: {
-      fillArrayResults = fillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::int8: {
-      fillArrayResults = fillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::int16: {
-      fillArrayResults = fillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::int32: {
-      fillArrayResults = fillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::int64: {
-      fillArrayResults = fillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::uint8: {
-      fillArrayResults = fillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::uint16: {
-      fillArrayResults = fillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::uint32: {
-      fillArrayResults = fillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     case nx::core::HDF5::Type::uint64: {
-      fillArrayResults = fillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = HDF5::Support::FillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
     default: {
       return {MakeErrorResult(-21001,
-                              fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)))};
+                              fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)))};
     }
     }
     if(fillArrayResults.invalid())

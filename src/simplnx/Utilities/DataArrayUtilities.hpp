@@ -985,7 +985,7 @@ public:
       int64 oldIndexI = m_NewToOldIndices[i];
       if(oldIndexI >= 0)
       {
-        if(!newDataStore.copyFrom(i, oldDataStore, oldIndexI, 1))
+        if(newDataStore.copyFrom(i, oldDataStore, oldIndexI, 1).invalid())
         {
           std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndexI, i) << std::endl;
           break;

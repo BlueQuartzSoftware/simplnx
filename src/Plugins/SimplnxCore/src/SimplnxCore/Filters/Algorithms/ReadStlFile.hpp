@@ -37,17 +37,7 @@ public:
    */
   Result<> readFile();
 
-  /**
-   * @brief eliminate_duplicate_nodes Removes duplicate nodes to ensure the
-   * created vertex list is shared
-   */
-  Result<> eliminate_duplicate_nodes();
-
 private:
-  // Holds the min/max coordinates for X, Y, Z laid out at { X_Min, X_Max, Y_Min, Y_Max, Z_Min, Z_Max}
-  std::array<float, 6> m_MinMaxCoords = {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-                                         -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
-
   DataStructure& m_DataStructure;
   const fs::path m_FilePath;
   const DataPath& m_GeometryDataPath;

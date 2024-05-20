@@ -81,6 +81,8 @@
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
 #include <simplnx/Utilities/DataGroupUtilities.hpp>
+#include <simplnx/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp>
+#include <simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp>
 
 #include <fmt/ranges.h>
 
