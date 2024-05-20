@@ -54,7 +54,7 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Feature Attribute Matrix",

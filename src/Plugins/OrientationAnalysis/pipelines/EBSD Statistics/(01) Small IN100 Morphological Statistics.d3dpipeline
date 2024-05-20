@@ -12,26 +12,26 @@
             "DataContainer/CellEnsembleData/LatticeConstants",
             "DataContainer",
             "DataContainer/CellData",
-            "DataContainer/CellData/Confidence Index",
-            "DataContainer/CellData/EulerAngles",
-            "DataContainer/CellData/Fit",
-            "DataContainer/CellData/Image Quality",
-            "DataContainer/CellData/Phases",
-            "DataContainer/CellData/SEM Signal",
-            "DataContainer/CellData/Mask",
-            "DataContainer/CellData/Quats",
+            "DataContainer/Cell Data/Confidence Index",
+            "DataContainer/Cell Data/EulerAngles",
+            "DataContainer/Cell Data/Fit",
+            "DataContainer/Cell Data/Image Quality",
+            "DataContainer/Cell Data/Phases",
+            "DataContainer/Cell Data/SEM Signal",
+            "DataContainer/Cell Data/Mask",
+            "DataContainer/Cell Data/Quats",
             "DataContainer/CellFeatureData",
             "DataContainer/CellFeatureData/Active",
-            "DataContainer/CellData/FeatureIds",
+            "DataContainer/Cell Data/FeatureIds",
             "DataContainer/CellFeatureData/Phases",
             "DataContainer/CellFeatureData/AvgQuats",
             "DataContainer/CellFeatureData/AvgEulerAngles",
             
             "DataContainer/NewGrain Data",
-            "DataContainer/CellData/ParentIds",
+            "DataContainer/Cell Data/ParentIds",
             "DataContainer/CellFeatureData/ParentIds",
             "DataContainer/NewGrain Data/Active",
-            "DataContainer/CellData/IPFColors"
+            "DataContainer/Cell Data/IPFColors"
           ],
           "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
         },
@@ -51,7 +51,7 @@
       "args": {
         "centroids_array_name": "Centroids",
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer"
       },
       "filter": {
@@ -64,7 +64,7 @@
       "args": {
         "equivalent_diameters_name": "EquivalentDiameters",
         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "num_elements_name": "NumElements",
         "save_element_sizes": false,
@@ -82,7 +82,7 @@
         "axis_euler_angles_array_name": "AxisEulerAngles",
         "axis_lengths_array_name": "AxisLengths",
         "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "omega3s_array_name": "Omega3s",
         "input_image_geometry_path": "DataContainer",
         "volumes_array_name": "Shape Volumes"
@@ -97,7 +97,7 @@
       "args": {
         "boundary_cells_name": "BoundaryCells",
         "cell_feature_array_path": "DataContainer/CellFeatureData",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "neighbor_list_name": "NeighborList",
         "number_of_neighbors_name": "NumNeighbors",
@@ -134,7 +134,7 @@
         "do_boundaries": true,
         "do_quad_points": true,
         "do_triple_lines": true,
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "g_bdistances_array_name": "GBManhattanDistances",
         "nearest_neighbors_array_name": "NearestNeighbors",
         "q_pdistances_array_name": "QPManhattanDistances",
@@ -151,7 +151,7 @@
     {
       "args": {
         "calculate_sphericity": true,
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
         "input_image_geometry_path": "DataContainer",
         "sphericity_array_name": "Sphericity",

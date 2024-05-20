@@ -72,7 +72,7 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_CreatedImageGeometryPrefix_Key, "Created Image Geometry Prefix",
                                                   "The prefix name for each of new cropped (extracted) geometry \n\nNOTE: a '-' will automatically be added between the prefix and number",

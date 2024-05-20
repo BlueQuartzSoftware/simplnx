@@ -16,7 +16,7 @@
     },
     {
       "args": {
-        "cell_data_name": "CellData",
+        "cell_data_name": "Cell Data",
         "dimensions": [
           60,
           40,
@@ -72,7 +72,7 @@
             480000
           ]
         },
-        "selected_attribute_matrix_path": "[Image Geometry]/CellData",
+        "selected_attribute_matrix_path": "[Image Geometry]/Cell Data/",
         "use_existing_group": true
       },
       "comments": "",
@@ -85,9 +85,9 @@
     {
       "args": {
         "input_data_array_paths": [
-          "[Image Geometry]/CellData/phi1",
-          "[Image Geometry]/CellData/Phi",
-          "[Image Geometry]/CellData/phi2"
+          "[Image Geometry]/Cell Data//phi1",
+          "[Image Geometry]/Cell Data//Phi",
+          "[Image Geometry]/Cell Data//phi2"
         ],
         "move_values": true,
         "normalize_data": false,
@@ -127,7 +127,7 @@
         "data_format": "",
         "initialization_value_str": "1",
         "numeric_type_index": 4,
-        "output_array_path": "[Image Geometry]/CellData/Phases",
+        "output_array_path": "[Image Geometry]/Cell Data//Phases",
         "set_tuple_dimensions": true,
         "tuple_dimensions": [
           [
@@ -144,9 +144,9 @@
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "[Image Geometry]/CellData/Eulers",
+        "cell_euler_angles_array_path": "[Image Geometry]/Cell Data//Eulers",
         "cell_ipf_colors_array_name": "IPFColors",
-        "cell_phases_array_path": "[Image Geometry]/CellData/Phases",
+        "cell_phases_array_path": "[Image Geometry]/Cell Data//Phases",
         "crystal_structures_array_path": "[Image Geometry]/EnsembleAttributeMatrix/CrystalStructures",
         "mask_array_path": "",
         "reference_dir": [
@@ -166,7 +166,7 @@
     {
       "args": {
         "file_name": "Data/Output/Import_ASCII_IPF.png",
-        "image_array_path": "[Image Geometry]/CellData/IPFColors",
+        "image_array_path": "[Image Geometry]/Cell Data//IPFColors",
         "index_offset": 0,
         "input_image_geometry_path": "[Image Geometry]",
         "plane_index": 0

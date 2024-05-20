@@ -25,7 +25,7 @@ nx_filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_attribute_matrix_name="CellData",
+    cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
@@ -35,12 +35,12 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
 threshold_1 = nx.ArrayThreshold()
-threshold_1.array_path = nx.DataPath("DataContainer/CellData/Image Quality")
+threshold_1.array_path = nx.DataPath("DataContainer/Cell Data/Image Quality")
 threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_1.value = 120
 
 threshold_2 = nx.ArrayThreshold()
-threshold_2.array_path = nx.DataPath("DataContainer/CellData/Confidence Index")
+threshold_2.array_path = nx.DataPath("DataContainer/Cell Data/Confidence Index")
 threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_2.value = 0.1
 
@@ -65,7 +65,7 @@ nx_filter = cxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
+    input_orientation_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     input_representation_index=0,
     output_orientation_array_name="Quats",
     output_representation_index=2
@@ -79,11 +79,11 @@ nx_filter = cxor.AlignSectionsMutualInformationFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     alignment_shift_file_name=nxtest.get_data_directory() / "Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     misorientation_tolerance=5.0,
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_mask=True,
     write_alignment_shifts=True

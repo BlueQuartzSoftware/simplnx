@@ -59,17 +59,17 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
                                                                     ChoicesParameter::Choices{"Average Orientation", "Orientation at Feature Centroid"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"CellData", "Phases"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Cell Data", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation",
-                                                          DataPath({"CellData", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          DataPath({"Cell Data", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances",
       "Distance the Cells are from the boundary of the Feature they belong to. Only required if the reference orientation is selected to be the orientation at the Feature centroid",
-      DataPath({"CellData", "GBEuclideanDistances"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Cell Data", "GBEuclideanDistances"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(

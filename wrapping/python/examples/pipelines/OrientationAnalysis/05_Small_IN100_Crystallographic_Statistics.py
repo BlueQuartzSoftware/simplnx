@@ -51,9 +51,9 @@ result = nx_filter.execute(
     avg_euler_angles_array_name="AvgEulerAngles",
     avg_quats_array_name="AvgQuats",
     cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    cell_feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    cell_feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -103,12 +103,12 @@ nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
     feature_avg_misorientations_array_name="FeatureAvgMisorientations",
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     feature_reference_misorientations_array_name="FeatureReferenceMisorientations",
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     reference_orientation_index=0
     # cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
     # g_beuclidean_distances_array_path=nx.DataPath("DataContainer/"),  # Not currently part of the code
@@ -121,12 +121,12 @@ nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     kernel_average_misorientations_array_name="KernelAverageMisorientations",
     kernel_size=[1, 1, 1],
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)

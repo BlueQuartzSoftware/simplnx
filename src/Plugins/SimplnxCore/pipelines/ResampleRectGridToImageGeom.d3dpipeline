@@ -43,7 +43,7 @@
     {
       "args": {
         "array_handling_index": 1,
-        "cell_attribute_matrix_name": "CellData",
+        "cell_attribute_matrix_name": "Cell Data",
         "dimensions": [
           20,
           60,
@@ -228,7 +228,7 @@
           20,
           20
         ],
-        "image_geom_cell_attribute_matrix_name": "CellData",
+        "image_geom_cell_attribute_matrix_name": "Cell Data",
         "input_image_geometry_path": "Image Geometry",
         "rectilinear_grid_path": "RectGridGeometry",
         "input_data_array_paths": [

@@ -63,7 +63,7 @@ h5ebsdParameter.use_recommended_transform=True
 # Execute Filter with Parameters
 result = nxor.ReadH5EbsdFilter.execute(
     data_structure=data_structure,
-    cell_attribute_matrix_name="CellData",
+    cell_attribute_matrix_name="Cell Data",
     cell_ensemble_attribute_matrix_name="CellEnsembleData",
     output_image_geometry_path=nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter

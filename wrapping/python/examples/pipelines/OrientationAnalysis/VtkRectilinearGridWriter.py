@@ -43,19 +43,19 @@ result = nx_filter.execute(
     output_file=output_file_path,
     write_binary_file=True,
     input_data_array_paths=[
-            nx.DataPath("DataContainer/CellData/Confidence Index"), 
-            nx.DataPath("DataContainer/CellData/EulerAngles"),
-            nx.DataPath("DataContainer/CellData/FeatureIds"),
-            nx.DataPath("DataContainer/CellData/Fit"),
-            nx.DataPath("DataContainer/CellData/IPFColors"),
-            nx.DataPath("DataContainer/CellData/Image Quality"),
-            nx.DataPath("DataContainer/CellData/Mask"),
-            nx.DataPath("DataContainer/CellData/ParentIds"),
-            nx.DataPath("DataContainer/CellData/Phases"),
-            nx.DataPath("DataContainer/CellData/Quats"),
-            nx.DataPath("DataContainer/CellData/SEM Signal"),
-            nx.DataPath("DataContainer/CellData/X Position"),
-            nx.DataPath("DataContainer/CellData/Y Position")]
+            nx.DataPath("DataContainer/Cell Data/Confidence Index"), 
+            nx.DataPath("DataContainer/Cell Data/EulerAngles"),
+            nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+            nx.DataPath("DataContainer/Cell Data/Fit"),
+            nx.DataPath("DataContainer/Cell Data/IPFColors"),
+            nx.DataPath("DataContainer/Cell Data/Image Quality"),
+            nx.DataPath("DataContainer/Cell Data/Mask"),
+            nx.DataPath("DataContainer/Cell Data/ParentIds"),
+            nx.DataPath("DataContainer/Cell Data/Phases"),
+            nx.DataPath("DataContainer/Cell Data/Quats"),
+            nx.DataPath("DataContainer/Cell Data/SEM Signal"),
+            nx.DataPath("DataContainer/Cell Data/X Position"),
+            nx.DataPath("DataContainer/Cell Data/Y Position")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

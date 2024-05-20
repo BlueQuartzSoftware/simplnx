@@ -9,27 +9,27 @@
           "data_paths": [
             "DataContainer",
             "DataContainer/CellData",
-            "DataContainer/CellData/Image Quality",
-            "DataContainer/CellData/Confidence Index",
-            "DataContainer/CellData/SEM Signal",
-            "DataContainer/CellData/Fit",
-            "DataContainer/CellData/EulerAngles",
-            "DataContainer/CellData/Phases",
+            "DataContainer/Cell Data/Image Quality",
+            "DataContainer/Cell Data/Confidence Index",
+            "DataContainer/Cell Data/SEM Signal",
+            "DataContainer/Cell Data/Fit",
+            "DataContainer/Cell Data/EulerAngles",
+            "DataContainer/Cell Data/Phases",
             "DataContainer/CellEnsembleData",
             "DataContainer/CellEnsembleData/CrystalStructures",
             "DataContainer/CellEnsembleData/LatticeConstants",
-            "DataContainer/CellData/Mask",
-            "DataContainer/CellData/Quats",
+            "DataContainer/Cell Data/Mask",
+            "DataContainer/Cell Data/Quats",
             "DataContainer/CellFeatureData",
             "DataContainer/CellFeatureData/Active",
-            "DataContainer/CellData/FeatureIds",
+            "DataContainer/Cell Data/FeatureIds",
             "DataContainer/CellFeatureData/Phases",
             
             "DataContainer/NewGrain Data",
-            "DataContainer/CellData/ParentIds",
+            "DataContainer/Cell Data/ParentIds",
             "DataContainer/CellFeatureData/ParentIds",
             "DataContainer/NewGrain Data/Active",
-            "DataContainer/CellData/IPFColors",
+            "DataContainer/Cell Data/IPFColors",
             "DataContainer/CellFeatureData/Centroids",
             "DataContainer/CellFeatureData/EquivalentDiameters",
             "DataContainer/CellFeatureData/NumElements",
@@ -43,9 +43,9 @@
             "DataContainer/CellFeatureData/SharedSurfaceAreaList",
             "DataContainer/CellFeatureData/Neighborhoods",
             "DataContainer/CellFeatureData/NeighborhoodList",
-            "DataContainer/CellData/GBManhattanDistances",
-            "DataContainer/CellData/TJManhattanDistances",
-            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/Cell Data/GBManhattanDistances",
+            "DataContainer/Cell Data/TJManhattanDistances",
+            "DataContainer/Cell Data/QPManhattanDistances",
             "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"
           ],
           "file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d"
@@ -60,29 +60,29 @@
                   "data_paths": [
                     "DataContainer",
                     "DataContainer/CellData",
-                    "DataContainer/CellData/Image Quality",
-                    "DataContainer/CellData/Confidence Index",
-                    "DataContainer/CellData/SEM Signal",
-                    "DataContainer/CellData/Fit",
-                    "DataContainer/CellData/EulerAngles",
-                    "DataContainer/CellData/Phases",
+                    "DataContainer/Cell Data/Image Quality",
+                    "DataContainer/Cell Data/Confidence Index",
+                    "DataContainer/Cell Data/SEM Signal",
+                    "DataContainer/Cell Data/Fit",
+                    "DataContainer/Cell Data/EulerAngles",
+                    "DataContainer/Cell Data/Phases",
                     "DataContainer/CellEnsembleData",
                     "DataContainer/CellEnsembleData/CrystalStructures",
                     "DataContainer/CellEnsembleData/LatticeConstants",
-                    "DataContainer/CellData/Mask",
-                    "DataContainer/CellData/Quats",
+                    "DataContainer/Cell Data/Mask",
+                    "DataContainer/Cell Data/Quats",
                     "DataContainer/CellFeatureData",
                     "DataContainer/CellFeatureData/Active",
-                    "DataContainer/CellData/FeatureIds",
+                    "DataContainer/Cell Data/FeatureIds",
                     "DataContainer/CellFeatureData/Phases",
                     "DataContainer/CellFeatureData/AvgQuats",
                     "DataContainer/CellFeatureData/AvgEulerAngles",
                     
                     "DataContainer/NewGrain Data",
-                    "DataContainer/CellData/ParentIds",
+                    "DataContainer/Cell Data/ParentIds",
                     "DataContainer/CellFeatureData/ParentIds",
                     "DataContainer/NewGrain Data/Active",
-                    "DataContainer/CellData/IPFColors"
+                    "DataContainer/Cell Data/IPFColors"
                   ],
                   "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
                 },
@@ -92,7 +92,7 @@
                   "pipeline": [
                     {
                       "args": {
-                        "cell_attribute_matrix_name": "CellData",
+                        "cell_attribute_matrix_name": "Cell Data",
                         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
                         "output_image_geometry_path": "DataContainer",
                         "read_h5_ebsd_object": {
@@ -126,7 +126,7 @@
                           "inverted": false,
                           "thresholds": [
                             {
-                              "array_path": "DataContainer/CellData/Image Quality",
+                              "array_path": "DataContainer/Cell Data/Image Quality",
                               "comparison": 0,
                               "inverted": false,
                               "type": "array",
@@ -134,7 +134,7 @@
                               "value": 120.0
                             },
                             {
-                              "array_path": "DataContainer/CellData/Confidence Index",
+                              "array_path": "DataContainer/Cell Data/Confidence Index",
                               "comparison": 0,
                               "inverted": false,
                               "type": "array",
@@ -156,7 +156,7 @@
                     },
                     {
                       "args": {
-                        "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
+                        "input_orientation_array_path": "DataContainer/Cell Data/EulerAngles",
                         "input_representation_index": 0,
                         "output_orientation_array_name": "Quats",
                         "output_representation_index": 2
@@ -171,11 +171,11 @@
                     {
                       "args": {
                         "alignment_shift_file_name": "Data/Output/Alignment_By_Misorientation_Shifts.txt",
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "misorientation_tolerance": 5.0,
-                        "quats_array_path": "DataContainer/CellData/Quats",
+                        "quats_array_path": "DataContainer/Cell Data/Quats",
                         "input_image_geometry_path": "DataContainer",
                         "use_mask": true,
                         "write_alignment_shifts": false
@@ -190,7 +190,7 @@
                     {
                       "args": {
                         "fill_holes": false,
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "image_geometry": "DataContainer"
                       },
                       "comments": "",
@@ -203,7 +203,7 @@
                     {
                       "args": {
                         "alignment_shift_file_name": "Data/Output/Alignment_By_Feature_Centroid_Shifts.txt",
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "reference_slice": 0,
                         "selected_cell_data_path": "DataContainer/CellData",
                         "input_image_geometry_path": "DataContainer",
@@ -219,13 +219,13 @@
                     },
                     {
                       "args": {
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "input_image_geometry_path": "DataContainer",
                         "misorientation_tolerance": 5.0,
                         "number_of_neighbors": 4,
-                        "quats_array_path": "DataContainer/CellData/Quats"
+                        "quats_array_path": "DataContainer/Cell Data/Quats"
                       },
                       "comments": "",
                       "filter": {
@@ -236,15 +236,15 @@
                     },
                     {
                       "args": {
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
-                        "correlation_array_path": "DataContainer/CellData/Confidence Index",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                        "correlation_array_path": "DataContainer/Cell Data/Confidence Index",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                         "ignored_data_array_paths": [],
                         "input_image_geometry_path": "DataContainer",
                         "level": 2,
                         "min_confidence": 0.20000000298023224,
                         "misorientation_tolerance": 5.0,
-                        "quats_array_path": "DataContainer/CellData/Quats"
+                        "quats_array_path": "DataContainer/Cell Data/Quats"
                       },
                       "comments": "",
                       "filter": {
@@ -257,13 +257,13 @@
                       "args": {
                         "active_array_name": "Active",
                         "cell_feature_attribute_matrix_name": "CellFeatureData",
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
                         "feature_ids_array_name": "FeatureIds",
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "input_image_geometry_path": "DataContainer",
                         "misorientation_tolerance": 5.0,
-                        "quats_array_path": "DataContainer/CellData/Quats",
+                        "quats_array_path": "DataContainer/Cell Data/Quats",
                         "randomize_features": true,
                         "use_mask": true
                       },
@@ -277,8 +277,8 @@
                     {
                       "args": {
                         "cell_features_attribute_matrix_path": "DataContainer/CellFeatureData",
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "feature_phases_array_name": "Phases"
                       },
                       "comments": "",
@@ -293,9 +293,9 @@
                         "avg_euler_angles_array_name": "AvgEulerAngles",
                         "avg_quats_array_name": "AvgQuats",
                         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-                        "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
-                        "cell_quats_array_path": "DataContainer/CellData/Quats",
+                        "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+                        "cell_quats_array_path": "DataContainer/Cell Data/Quats",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures"
                       },
                       "comments": "",
@@ -309,7 +309,7 @@
                       "args": {
                         "boundary_cells_name": "BoundaryCells",
                         "cell_feature_array_path": "DataContainer/CellFeatureData",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "input_image_geometry_path": "DataContainer",
                         "neighbor_list_name": "NeighborList2",
                         "number_of_neighbors_name": "NumNeighbors2",
@@ -334,7 +334,7 @@
                         "cell_parent_ids_array_name": "ParentIds",
                         "contiguous_neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborList2",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "feature_parent_ids_array_name": "ParentIds",
                         "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
                         "created_feature_attribute_matrix_name": "NewGrain Data",
@@ -352,7 +352,7 @@
                       "args": {
                         "equivalent_diameters_name": "EquivalentDiameters",
                         "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "input_image_geometry_path": "DataContainer",
                         "num_elements_name": "NumElements",
                         "save_element_sizes": false,
@@ -368,7 +368,7 @@
                     {
                       "args": {
                         "apply_single_phase": false,
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "feature_phases_path": "",
                         "input_image_geometry_path": "DataContainer",
                         "min_allowed_features_size": 16,
@@ -386,7 +386,7 @@
                       "args": {
                         "boundary_cells_name": "BoundaryCells",
                         "cell_feature_array_path": "DataContainer/CellFeatureData",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "input_image_geometry_path": "DataContainer",
                         "neighbor_list_name": "NeighborList",
                         "number_of_neighbors_name": "NumNeighbors",
@@ -406,7 +406,7 @@
                       "args": {
                         "apply_to_single_phase": false,
                         "cell_attribute_matrix_path": "DataContainer/CellData",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "feature_phases_path": "Data Container/Feature Data/Phases",
                         "ignored_voxel_arrays": [],
                         "image_geom": "DataContainer",
@@ -424,7 +424,7 @@
                     {
                       "args": {
                         "cell_phases_array_path": "Phases",
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "ignored_data_array_paths": [],
                         "min_allowed_defect_size": 1000,
                         "input_image_geometry_path": "DataContainer",
@@ -439,7 +439,7 @@
                     },
                     {
                       "args": {
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "ignored_data_array_paths": [],
                         "num_iterations": 2,
                         "operation_index": 0,
@@ -457,7 +457,7 @@
                     },
                     {
                       "args": {
-                        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                         "ignored_data_array_paths": [],
                         "num_iterations": 2,
                         "operation_index": 1,
@@ -475,11 +475,11 @@
                     },
                     {
                       "args": {
-                        "cell_euler_angles_array_path": "DataContainer/CellData/EulerAngles",
+                        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
                         "cell_ipf_colors_array_name": "IPFColors",
-                        "cell_phases_array_path": "DataContainer/CellData/Phases",
+                        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
                         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-                        "mask_array_path": "DataContainer/CellData/Mask",
+                        "mask_array_path": "DataContainer/Cell Data/Mask",
                         "reference_dir": [
                           0.0,
                           0.0,
@@ -520,7 +520,7 @@
               "args": {
                 "centroids_array_name": "Centroids",
                 "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "input_image_geometry_path": "DataContainer"
               },
               "comments": "",
@@ -534,7 +534,7 @@
               "args": {
                 "equivalent_diameters_name": "EquivalentDiameters",
                 "feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "input_image_geometry_path": "DataContainer",
                 "num_elements_name": "NumElements",
                 "save_element_sizes": false,
@@ -553,7 +553,7 @@
                 "axis_euler_angles_array_name": "AxisEulerAngles",
                 "axis_lengths_array_name": "AxisLengths",
                 "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "omega3s_array_name": "Omega3s",
                 "input_image_geometry_path": "DataContainer",
                 "volumes_array_name": "Shape Volumes"
@@ -569,7 +569,7 @@
               "args": {
                 "boundary_cells_name": "BoundaryCells",
                 "cell_feature_array_path": "DataContainer/CellFeatureData",
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "input_image_geometry_path": "DataContainer",
                 "neighbor_list_name": "NeighborList",
                 "number_of_neighbors_name": "NumNeighbors",
@@ -608,7 +608,7 @@
                 "do_boundaries": true,
                 "do_quad_points": true,
                 "do_triple_lines": true,
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "g_bdistances_array_name": "GBManhattanDistances",
                 "nearest_neighbors_array_name": "NearestNeighbors",
                 "q_pdistances_array_name": "QPManhattanDistances",
@@ -626,7 +626,7 @@
             {
               "args": {
                 "calculate_sphericity": true,
-                "feature_ids_path": "DataContainer/CellData/FeatureIds",
+                "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
                 "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
                 "input_image_geometry_path": "DataContainer",
                 "sphericity_array_name": "Sphericity",
@@ -677,9 +677,9 @@
         "avg_euler_angles_array_name": "AvgEulerAngles",
         "avg_quats_array_name": "AvgQuats",
         "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
-        "cell_phases_array_path": "DataContainer/CellData/Phases",
-        "cell_quats_array_path": "DataContainer/CellData/Quats",
+        "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+        "cell_quats_array_path": "DataContainer/Cell Data/Quats",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures"
       },
       "comments": "",
@@ -745,13 +745,13 @@
       "args": {
         "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
         "cell_feature_attribute_matrix_path": "CellFeatureData",
-        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
         "gb_euclidean_distances_array_path": "CellData/GBEuclideanDistances",
-        "quats_array_path": "DataContainer/CellData/Quats",
+        "quats_array_path": "DataContainer/Cell Data/Quats",
         "reference_orientation_index": 0
       },
       "comments": "",
@@ -763,16 +763,16 @@
     },
     {
       "args": {
-        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "kernel_average_misorientations_array_name": "KernelAverageMisorientations",
         "kernel_size": [
           1,
           1,
           1
         ],
-        "quats_array_path": "DataContainer/CellData/Quats",
+        "quats_array_path": "DataContainer/Cell Data/Quats",
         "input_image_geometry_path": "DataContainer"
       },
       "comments": "",

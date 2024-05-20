@@ -15,7 +15,7 @@ namespace nx::core
 {
 namespace write_pole_figure
 {
-const std::string k_ImageAttrMatName("CellData");
+const std::string k_ImageAttrMatName("Cell Data");
 const std::string k_ImageDataName("Image");
 } // namespace write_pole_figure
 struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues

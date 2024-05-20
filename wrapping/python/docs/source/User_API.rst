@@ -501,7 +501,7 @@ General Parameters
       # Execute Filter with Parameters
       result = cxor.ReadH5EbsdFilter.execute(
          data_structure=data_structure,
-         cell_attribute_matrix_name="CellData",
+         cell_attribute_matrix_name="Cell Data",
          cell_ensemble_attribute_matrix_name="CellEnsembleData",
          data_container_name=nx.DataPath("DataContainer"),
          read_h5_ebsd_parameter=h5ebsdParameter

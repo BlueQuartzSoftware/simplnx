@@ -55,7 +55,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     #boundary_cells: str = ...,
     cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name="NeighborList",
     number_of_neighbors_name="NumNeighbors",
@@ -74,7 +74,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
     feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -87,7 +87,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     mark_feature_0_neighbors=True,
     surface_features_array_name="SurfaceFeatures"
 )
