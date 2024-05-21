@@ -3,6 +3,7 @@
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -30,6 +31,7 @@ constexpr StringLiteral k_Param10 = "param10_path";
 constexpr StringLiteral k_Param11 = "param11_path";
 constexpr StringLiteral k_Param12 = "param12s";
 constexpr StringLiteral k_Param13 = "param13";
+constexpr StringLiteral k_Param30 = "param30";
 
 } // namespace
 
@@ -81,6 +83,18 @@ Parameters ExampleFilter2Filter::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "Dynamic Table Parameter", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
 
   // These should show up under the "Required Objects" Section in the GUI
+
+  // params.linkParameters(k_Param3, k_Param10, std::make_any<ChoicesParameter::ValueType>(0));
+  // params.linkParameters(k_Param3, k_Param6, std::make_any<ChoicesParameter::ValueType>(1));
+  // params.linkParameters(k_Param3, k_Param11, std::make_any<ChoicesParameter::ValueType>(2));
+
+  // These should show up under the "Created Objects" section in the GUI
+
+  params.insertSeparator(Parameters::Separator{"Data Object Parameters"});
+
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroup Creation Parameter", "Example data group creation help text", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
+
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroup Selection Parameter", "Example data group selection help text", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPath Selection Parameter", "Example data path selection help text", DataPath{}));
@@ -89,16 +103,9 @@ Parameters ExampleFilter2Filter::parameters() const
       std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArray Selection Parameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_Param30, "Attribute Matrix Selection", "Example Help Text", DataPath{}));
 
   params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));
-
-  params.linkParameters(k_Param3, k_Param10, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_Param3, k_Param6, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_Param3, k_Param11, std::make_any<ChoicesParameter::ValueType>(2));
-
-  // These should show up under the "Created Objects" section in the GUI
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroup Creation Parameter", "Example data group creation help text", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
 
   return params;
 }

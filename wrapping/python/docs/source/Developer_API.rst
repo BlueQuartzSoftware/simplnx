@@ -7,6 +7,11 @@ General Parameters
 .. _ArrayCreationParameter:
 .. py:class:: ArrayCreationParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/ArrayCreationParameter.png
+      :alt: Array Creation Parameter
+
 
    Declaration
    ~~~~~~~~~~~
@@ -48,6 +53,12 @@ General Parameters
 
 .. _ArraySelectionParameter:
 .. py:class:: ArraySelectionParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/ArraySelectionParameter.png
+      :alt: Array Creation Parameter
+
 
    Declaration
    ~~~~~~~~~~~
@@ -101,6 +112,11 @@ General Parameters
 
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/ArrayThresholdsParameter.png
+      :alt: Array Creation Parameter
 
    Declaration
    ~~~~~~~~~~~
@@ -220,6 +236,11 @@ General Parameters
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/AttributeMatrixSelectionParameter.png
+      :alt: Array Creation Parameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -259,6 +280,11 @@ General Parameters
 
 .. _BoolParameter:
 .. py:class:: BoolParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/BoolParameter.png
+      :alt: Array Creation Parameter
 
    Declaration
    ~~~~~~~~~~~
@@ -315,6 +341,11 @@ General Parameters
 .. _CalculatorParameter:
 .. py:class:: CalculatorParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/CalculatorParameter.png
+      :alt: Array Creation Parameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -367,6 +398,11 @@ General Parameters
 
 .. _ChoicesParameter:
 .. py:class:: ChoicesParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/ChoicesParameter.png
+      :alt: Array Creation Parameter
 
    Declaration
    ~~~~~~~~~~~
@@ -425,6 +461,11 @@ General Parameters
 .. _DataGroupCreationParameter:
 .. py:class:: DataGroupCreationParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/DataGroupCreationParameter.png
+      :alt: Array Creation Parameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -464,6 +505,11 @@ General Parameters
 
 .. _DataGroupSelectionParameter:
 .. py:class:: DataGroupSelectionParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/DataGroupSelectionParameter.png
+      :alt: Array Creation Parameter
 
    Declaration
    ~~~~~~~~~~~
