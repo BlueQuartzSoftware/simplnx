@@ -31,7 +31,7 @@ the user should **CHECK** the option **ON** for "Perform Slice By Slice Transfor
 
 ## Thresholding out Unindexed Scan Points
 
-The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <SimplnxCore/MultiThresholdObjects:Description>` **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality.
+The user also may want to assign un-indexed pixels to be ignored by flagging them as "bad". The {ref}`Threshold Objects <SimplnxCore/MultiThresholdObjectsFilter:Description>` **Filter** can be used to define this *mask* by thresholding on values such as *Confidence Index* > xx or *Image Quality* > desired quality.
 
 % Auto generated parameter table will be inserted here
 
