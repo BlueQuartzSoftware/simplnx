@@ -10,7 +10,7 @@ source:
   - path: ../
     folder: simplnx
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
-    git_rev: v1.0.26
+    git_rev: v1.0.28
     folder: EbsdLib
   - git_url: https://github.com/BlueQuartzSoftware/H5Support
     git_rev: v1.0.13
