@@ -66,7 +66,7 @@ Parameters AlignSectionsMutualInformationFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to remove some Cells from consideration in the alignment process.", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array",
                                                           "Specifies if the Cell is to be counted in the algorithm. Only required if Use Mask Array is checked.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
@@ -102,10 +102,7 @@ IFilter::UniquePointer AlignSectionsMutualInformationFilter::clone() const
 IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                              const std::atomic_bool& shouldCancel) const
 {
-  auto pWriteAlignmentShiftsValue = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
   auto pAlignmentShiftFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
-  auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -116,7 +113,7 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   if(imageGeom.getCellData() == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-3540, fmt::format("Cannot find cell data Attribute Matrix in the selected Image geometry '{}'", imageGeometryPath.toString()))};

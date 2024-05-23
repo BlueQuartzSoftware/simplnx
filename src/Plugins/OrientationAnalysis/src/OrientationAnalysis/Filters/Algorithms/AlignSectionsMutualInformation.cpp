@@ -65,7 +65,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const AttributeMatrix* cellData = imageGeom.getCellData();
-  int64 totalPoints = static_cast<int64>(cellData->getNumTuples());
+  auto totalPoints = static_cast<int64>(cellData->getNumTuples());
 
   std::ofstream outFile;
   if(m_InputValues->WriteAlignmentShifts)
@@ -83,6 +83,20 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     {
       std::string message = fmt::format("Error creating output shifts file with file path {}", m_InputValues->AlignmentShiftFileName.string());
       return MakeErrorResult(-53701, message);
+    }
+  }
+
+  if (m_InputValues->UseMask)
+  {
+    try
+    {
+      m_MaskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      return MakeErrorResult(-53702, message);
     }
   }
 
@@ -246,10 +260,9 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
   auto orientationOps = LaueOps::GetAllOrientationOps();
 
-  Float32Array& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  BoolArray* goodVoxelsPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
-  Int32Array& m_CellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  UInt32Array& m_CrystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  auto& m_CellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& m_CrystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
   size_t initialVoxelsListSize = 1000;
 
@@ -276,7 +289,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
       for(int64 point = currentStartPoint; point < endPoint; point++)
       {
-        if((!m_InputValues->UseMask || (goodVoxelsPtr != nullptr && (*goodVoxelsPtr)[point])) && miFeatureIds[point] == 0 && m_CellPhases[point] > 0)
+        if((!m_InputValues->UseMask || (m_MaskCompare != nullptr && m_MaskCompare->isTrue(point))) && miFeatureIds[point] == 0 && m_CellPhases[point] > 0)
         {
           seed = point;
           currentStartPoint = point;
