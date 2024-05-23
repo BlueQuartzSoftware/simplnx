@@ -23,8 +23,8 @@ needs additional data from the file, the "Import HDF5 Dataset" filter can be use
 
 In order to bring the crystal reference frame and sample reference frame into coincidence, rotations **MAY** need to be applied to the data. There are 2 filters that can perform the necessary rotations.
 
-+ [Rotate Euler Reference Frame](../RotateEulerRefFrameFilter/index.html)
-+ [Rotate Sample Reference Frame](../RotateSampleRefFrameFilter/index.html)
+- {ref}`Rotate Euler Reference Frame <OrientationAnalysis/RotateEulerRefFrameFilter:Description>`
+- {ref}`Rotate Sample Reference Frame <SimplnxCore/RotateSampleRefFrameFilter:Description>`
 
 Historical reference frame operations for a .ctf file are the following:
 
