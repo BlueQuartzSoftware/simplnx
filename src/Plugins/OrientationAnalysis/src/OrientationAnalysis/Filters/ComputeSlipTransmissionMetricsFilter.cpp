@@ -37,13 +37,13 @@ Uuid ComputeSlipTransmissionMetricsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeSlipTransmissionMetricsFilter::humanName() const
 {
-  return "Compute Neighbor Slip Transmission Metrics";
+  return "Compute Neighbor Slip Transmission Metrics (Luster-Morris)";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeSlipTransmissionMetricsFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Crystallography", "Find", "Generate", "Calculate", "Determine"};
+  return {className(), "Statistics", "Crystallography", "Find", "Generate", "Calculate", "Determine", "Luster-Morris"};
 }
 
 //------------------------------------------------------------------------------
@@ -52,14 +52,12 @@ Parameters ComputeSlipTransmissionMetricsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions",
-                                                          "Data Array that specifies the average orientation of each Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Data Array that specifies to which Ensemble each Feature belongs", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Data Array that specifies the average orientation of each Feature as a quaternion",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Data Array that specifies to which Ensemble each Feature belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", DataPath{},
+  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "List of the contiguous neighboring Features for a given Feature", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
@@ -67,10 +65,10 @@ Parameters ComputeSlipTransmissionMetricsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F1ListArrayName_Key, "F1 List", "DataArray Name to store the calculated F1s Values", "F1 List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F1sptListArrayName_Key, "F1spt List", "DataArray Name to store the calculated F1spts Values", "F1spt List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_F7ListArrayName_Key, "F7 List", "DataArray Name to store the calculated F7s Values", "F7 List"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_mPrimeListArrayName_Key, "mPrime List", "DataArray Name to store the calculated mPrimes Values", "mPrime List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_mPrimeListArrayName_Key, "Luster-Morris M-Prime", "DataArray Name to store the calculated Luster-Morris Parameters", "mPrime List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F1ListArrayName_Key, "Fracture Initiation Parameter (F1)", "DataArray Name to store the calculated F1 Values", "F1 List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F1sptListArrayName_Key, "Fracture Initiation Parameter (F1spt)", "DataArray Name to store the calculated F1spt Values", "F1spt List"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_F7ListArrayName_Key, "Fracture Initiation Parameter (F7)", "DataArray Name to store the calculated F7 Values", "F7 List"));
 
   return params;
 }

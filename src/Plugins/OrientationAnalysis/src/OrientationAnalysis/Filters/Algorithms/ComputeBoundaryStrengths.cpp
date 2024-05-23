@@ -50,6 +50,7 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   float64 LD[3] = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
   MatrixMath::Normalize3x1(LD);
+  bool emitLaueClassWarning = false;
 
   for(usize i = 0; i < numTriangles; i++)
   {
@@ -60,7 +61,13 @@ Result<> ComputeBoundaryStrengths::operator()()
       QuatD q1(avgQuats[gName1 * 4], avgQuats[gName1 * 4 + 1], avgQuats[gName1 * 4 + 2], avgQuats[gName1 * 4 + 3]);
       QuatD q2(avgQuats[gName2 * 4], avgQuats[gName2 * 4 + 1], avgQuats[gName2 * 4 + 2], avgQuats[gName2 * 4 + 3]);
 
-      if(crystalStructures[featurePhases[gName1]] == crystalStructures[featurePhases[gName2]] && featurePhases[gName1] > 0)
+      uint32 laueClassG1 = static_cast<uint32>(featurePhases[gName1]);
+      uint32 laueClassG2 = static_cast<uint32>(featurePhases[gName2]);
+      if(laueClassG1 == laueClassG2 && laueClassG1 != 1)
+      {
+        emitLaueClassWarning = true;
+      }
+      if(crystalStructures[laueClassG1] == crystalStructures[laueClassG2] && featurePhases[gName1] > 0)
       {
         mPrime_1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getmPrime(q1, q2, LD));
         mPrime_2 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getmPrime(q2, q1, LD));
@@ -103,6 +110,11 @@ Result<> ComputeBoundaryStrengths::operator()()
     f1sPts[2 * i + 1] = F1spt_2;
     f7s[2 * i] = F7_1;
     f7s[2 * i + 1] = F7_2;
+  }
+
+  if(emitLaueClassWarning)
+  {
+    return MakeWarningVoidResult(-94739, fmt::format("A phase other then Cubic m-3m is being analyzed. This filter only works on Cubic m-3m Laue classes. Those phases have a result of 0.0."));
   }
 
   return {};
