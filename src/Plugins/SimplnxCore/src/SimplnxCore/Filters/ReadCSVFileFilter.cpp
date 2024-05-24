@@ -67,6 +67,22 @@ enum class IssueCodes
   IGNORED_TUPLE_DIMS = -200
 };
 
+StringVector RemoveIllegalCharacters(StringVector& headers)
+{
+  for(int i = 0; i < headers.size(); i++)
+  {
+    auto& headerName = headers[i];
+    // Replace all illegal characters with '_' character. The header names become array names which is the issue.
+    // This should have been taken care of in the GUI, but if someone is trying this from Python they will not have done that
+    // or if they are just reading it in through nxrunner.
+    headerName = StringUtilities::replace(headerName, "&", "_");
+    headerName = StringUtilities::replace(headerName, ":", "_");
+    headerName = StringUtilities::replace(headerName, "/", "_");
+    headerName = StringUtilities::replace(headerName, "\\", "_");
+    headerName = StringUtilities::replace(headerName, "\"", "");
+  }
+  return headers;
+}
 // -----------------------------------------------------------------------------
 Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const DataStructure& dataStructure, const std::vector<std::string>& headers)
 {
@@ -530,9 +546,11 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_MASK_COUNT), errMsg), {}};
   }
 
+  headers = RemoveIllegalCharacters(headers);
+
   for(int i = 0; i < headers.size(); i++)
   {
-    const auto& headerName = headers[i];
+    auto& headerName = headers[i];
     if(headerName.empty())
     {
       std::string errMsg = fmt::format("The header for column #{} is empty.  Please fill in a header for column #{}.", i + 1, i + 1);
@@ -650,6 +668,8 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   {
     headers = readCSVData.customHeaders;
   }
+
+  headers = RemoveIllegalCharacters(headers);
 
   DataPath groupPath = createdDataGroup;
   if(useExistingGroup)
