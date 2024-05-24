@@ -1,0 +1,14 @@
+name: data_analysis_toolkit
+channels:
+  - conda-forge
+  - defaults
+  - bluequartzsoftware
+dependencies:
+  - python=3.12
+  - numpy
+  - matplotlib
+  - pillow
+  - opencv
+  - scipy
+  - h5py
+  - dream3dnx
