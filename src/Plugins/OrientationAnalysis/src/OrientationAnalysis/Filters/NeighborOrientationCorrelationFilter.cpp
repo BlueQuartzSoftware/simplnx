@@ -225,9 +225,9 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pConfidenceIndexArrayPathValue.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeomPtr->getCellDataPath(), {});
 
-  return {};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
