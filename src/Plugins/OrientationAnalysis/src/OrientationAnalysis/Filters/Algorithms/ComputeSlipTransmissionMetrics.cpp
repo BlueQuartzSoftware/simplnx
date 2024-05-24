@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 
 #include "EbsdLib/Core/Quaternion.hpp"
+#include "EbsdLib/EbsdLibVersion.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace nx::core;
