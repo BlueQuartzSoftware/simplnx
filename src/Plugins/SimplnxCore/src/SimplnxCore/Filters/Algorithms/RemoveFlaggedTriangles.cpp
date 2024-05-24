@@ -3,8 +3,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
 

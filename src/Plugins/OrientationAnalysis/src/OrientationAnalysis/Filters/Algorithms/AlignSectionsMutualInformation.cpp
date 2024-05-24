@@ -86,7 +86,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     }
   }
 
-  if (m_InputValues->UseMask)
+  if(m_InputValues->UseMask)
   {
     try
     {

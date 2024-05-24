@@ -1,9 +1,9 @@
 #include "Silhouette.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/KUtilities.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <unordered_set>
 
