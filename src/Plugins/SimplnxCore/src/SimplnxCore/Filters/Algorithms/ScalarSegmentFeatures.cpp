@@ -3,8 +3,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -136,11 +134,18 @@ ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::operator()()
 {
-  nx::core::AbstractDataStore<bool>* goodVoxels = nullptr;
   if(m_InputValues->pUseGoodVoxels)
   {
-    m_GoodVoxelsArray = m_DataStructure.getDataAs<GoodVoxelsArrayType>(m_InputValues->pGoodVoxelsPath);
-    goodVoxels = m_GoodVoxelsArray->getDataStore();
+    try
+    {
+      m_GoodVoxels = InstantiateMaskCompare(m_DataStructure, m_InputValues->pGoodVoxelsPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->pGoodVoxelsPath.toString());
+      return MakeErrorResult(-54110, message);
+    }
   }
 
   auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->pGridGeomPath);
@@ -238,23 +243,17 @@ Result<> ScalarSegmentFeatures::operator()()
 // -----------------------------------------------------------------------------
 int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
-  nx::core::AbstractDataStore<bool>* goodVoxels = nullptr;
-  if(m_InputValues->pUseGoodVoxels)
-  {
-    goodVoxels = m_GoodVoxelsArray->getDataStore();
-  }
-
   nx::core::DataArray<int32>::store_type* featureIds = m_FeatureIdsArray->getDataStore();
   usize totalPoints = featureIds->getNumberOfTuples();
 
   int64 seed = -1;
   // start with the next voxel after the last seed
-  usize randpoint = static_cast<usize>(nextSeed);
+  auto randpoint = static_cast<usize>(nextSeed);
   while(seed == -1 && randpoint < totalPoints)
   {
     if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if(!m_InputValues->pUseGoodVoxels || goodVoxels->getValue(randpoint))
+      if(!m_InputValues->pUseGoodVoxels || m_GoodVoxels->isTrue(randpoint))
       {
         seed = randpoint;
       }
@@ -270,7 +269,7 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    UInt8Array& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->pActiveArrayPath);
+    auto& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->pActiveArrayPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
     std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
     auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->pCellFeaturesPath);
@@ -282,16 +281,8 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 // -----------------------------------------------------------------------------
 bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
-
   auto featureIds = m_FeatureIdsArray->getDataStore();
-
-  const nx::core::AbstractDataStore<bool>* goodVoxels = nullptr;
-  if(m_InputValues->pUseGoodVoxels)
-  {
-    goodVoxels = m_GoodVoxelsArray->getDataStore();
-  }
-
-  if(featureIds->getValue(neighborpoint) == 0 && (!m_InputValues->pUseGoodVoxels || goodVoxels->getValue(neighborpoint)))
+  if(featureIds->getValue(neighborpoint) == 0 && (!m_InputValues->pUseGoodVoxels || m_GoodVoxels->isTrue(neighborpoint)))
   {
     CompareFunctor* func = m_CompareFunctor.get();
     return (*func)((usize)(referencepoint), (usize)(neighborpoint), gnum);

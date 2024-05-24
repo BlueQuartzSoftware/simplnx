@@ -73,8 +73,8 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the DataArray Mask", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the DataArray Mask", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, std::make_any<bool>(true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
@@ -158,12 +158,6 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
     }
-    const GoodVoxelsArrayType* maskArrayPtr = dataStructure.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
-    if(maskArrayPtr == nullptr)
-    {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool.", goodVoxelsPath.toString())}})};
-    }
     dataPaths.push_back(goodVoxelsPath);
   }
 
@@ -204,9 +198,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
   inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
 
-  nx::core::ScalarSegmentFeatures filterAlgorithm(dataStructure, &inputValues, shouldCancel, messageHandler);
-  Result<> result = filterAlgorithm();
-  return result;
+  return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }
 
 namespace

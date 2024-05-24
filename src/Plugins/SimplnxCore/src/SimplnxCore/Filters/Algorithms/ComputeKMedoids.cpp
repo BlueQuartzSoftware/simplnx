@@ -217,7 +217,7 @@ Result<> ComputeKMedoids::operator()()
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
-    return MakeErrorResult(-54060, message);
+    return MakeErrorResult(-54070, message);
   }
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare,
                                                            m_InputValues->InitClusters, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_InputValues->DistanceMetric,
