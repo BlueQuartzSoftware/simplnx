@@ -8,6 +8,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+
 namespace nx::core
 {
 
@@ -44,8 +46,8 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  int determineOutputLineCount(const Int32Array& cellPhases, const BoolArray* mask, usize totalPoints, int32 phase) const;
-  Result<> writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const BoolArray* mask, int32 lineCount, usize totalPoints, int32 phase) const;
+  int determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompare>& mask, usize totalPoints, int32 phase) const;
+  Result<> writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
 
 private:
   DataStructure& m_DataStructure;

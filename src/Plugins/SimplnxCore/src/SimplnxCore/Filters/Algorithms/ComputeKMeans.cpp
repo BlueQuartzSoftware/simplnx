@@ -1,6 +1,7 @@
 #include "ComputeKMeans.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/KUtilities.hpp"
 
@@ -14,7 +15,7 @@ template <typename T>
 class ComputeKMeansTemplate
 {
 public:
-  ComputeKMeansTemplate(ComputeKMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
+  ComputeKMeansTemplate(ComputeKMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, Int32Array& fIds,
                         KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
@@ -48,7 +49,7 @@ public:
     while(clusterChoices < m_NumClusters)
     {
       usize index = std::floor(dist(gen) * static_cast<float64>(rangeMax));
-      if(m_Mask[index])
+      if(m_Mask->isTrue(index))
       {
         clusterIdxs[clusterChoices] = index;
         clusterChoices++;
@@ -103,7 +104,7 @@ private:
   ComputeKMeans* m_Filter;
   const DataArrayT& m_InputArray;
   DataArrayT& m_Means;
-  const BoolArray& m_Mask;
+  const std::unique_ptr<MaskCompare>& m_Mask;
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
   KUtilities::DistanceMetric m_DistMetric;
@@ -125,7 +126,7 @@ private:
       {
         return;
       }
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
@@ -207,9 +208,22 @@ const std::atomic_bool& ComputeKMeans::getCancel()
 Result<> ComputeKMeans::operator()()
 {
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+
+  std::unique_ptr<MaskCompare> maskCompare;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    return MakeErrorResult(-54060, message);
+  }
+
   RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath),
-                                                                m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), m_InputValues->InitClusters,
-                                                                m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_InputValues->DistanceMetric, m_InputValues->Seed);
+                                                                maskCompare, m_InputValues->InitClusters, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath),
+                                                                m_InputValues->DistanceMetric, m_InputValues->Seed);
 
   return {};
 }

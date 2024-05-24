@@ -80,8 +80,8 @@ Parameters ComputeKMeansFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to cluster from", DataPath{}, nx::core::GetAllNumericTypes()));
