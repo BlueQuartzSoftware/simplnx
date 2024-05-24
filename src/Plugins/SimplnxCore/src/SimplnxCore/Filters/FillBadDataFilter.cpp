@@ -102,11 +102,10 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  //  const auto* cellDataGroup = dataStructure.getDataAs<AttributeMatrix>(cellDataGroupPath);
-  //  if(cellDataGroup == nullptr)
-  //  {
-  //    return {MakeErrorResult<OutputActions>(-11501, fmt::format("Could not find cell data Attribute Matrix at path '{}'", cellDataGroupPath.toString()))};
-  //  }
+  std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
+                                           "level data should be rerun to ensure accurate final results from your pipeline.";
+  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
+  resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
 
   auto storeAsNewPhase = filterArgs.value<bool>(k_StoreAsNewPhase_Key);
   // Get the Feature Phases Array and get its TupleShape

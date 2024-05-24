@@ -1,7 +1,6 @@
 {
   "isDisabled": false,
-  "name": "(08) Small IN100 Full Reconstruction.d3dpipeline",
-  "pinnedParams": [],
+  "name": "Untitled Pipeline",
   "pipeline": [
     {
       "args": {
@@ -67,7 +66,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -81,7 +80,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ConvertOrientations",
+        "name": "nx::core::ConvertOrientationsFilter",
         "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
       },
       "isDisabled": false
@@ -113,7 +112,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::IdentifySampleFilter",
+        "name": "nx::core::IdentifySampleFilter",
         "uuid": "94d47495-5a89-4c7f-a0ee-5ff20e6bd273"
       },
       "isDisabled": false
@@ -238,7 +237,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindNeighborsFilter",
+        "name": "nx::core::ComputeFeatureNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -256,10 +255,8 @@
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_parent_ids_array_name": "ParentIds",
         "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
-        "non_contiguous_neighbor_list_array_path": "",
         "seed_array_name": "MergeTwins SeedValue",
         "seed_value": 5489,
-        "use_non_contiguous_neighbors": false,
         "use_seed": false
       },
       "comments": "",
@@ -309,9 +306,9 @@
           "DataContainer/Cell Feature Data/NumNeighbors2"
         ]
       },
-      "comments": "We are going to remove the DataContainer/Cell Feature Data/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
+      "comments": "",
       "filter": {
-        "name": "nx::core::DeleteData",
+        "name": "nx::core::DeleteDataFilter",
         "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
       },
       "isDisabled": false
@@ -331,7 +328,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindNeighborsFilter",
+        "name": "nx::core::ComputeFeatureNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
@@ -339,7 +336,6 @@
     {
       "args": {
         "apply_to_single_phase": false,
-        "cell_attribute_matrix_path": "DataContainer/Cell Data",
         "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
         "feature_phases_path": "Data Container/Feature Data/Phases",
         "ignored_voxel_arrays": [],
@@ -350,7 +346,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RequireMinNumNeighborsFilter",
+        "name": "nx::core::RequireMinNumNeighborsFilter",
         "uuid": "4ab5153f-6014-4e6d-bbd6-194068620389"
       },
       "isDisabled": false
@@ -358,12 +354,20 @@
     {
       "args": {
         "removed_data_path": [
-          "DataContainer/Cell Feature Data/NumNeighbors"
+          "DataContainer/Cell Feature Data/NumNeighbors",
+          "DataContainer/Cell Feature Data/Active",
+          "DataContainer/Cell Feature Data/AvgEulerAngles",
+          "DataContainer/Cell Feature Data/AvgQuats",
+          "DataContainer/Cell Feature Data/EquivalentDiameters",
+          "DataContainer/Cell Feature Data/NumElements",
+          "DataContainer/Cell Feature Data/ParentIds",
+          "DataContainer/Cell Feature Data/Phases",
+          "DataContainer/Cell Feature Data/Volumes"
         ]
       },
-      "comments": "We are going to remove the DataContainer/Cell Feature Data/NumNeighbors data because there is no way to ensure that it is correct after the last filter was executed.",
+      "comments": "",
       "filter": {
-        "name": "nx::core::DeleteData",
+        "name": "nx::core::DeleteDataFilter",
         "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
       },
       "isDisabled": false
@@ -454,6 +458,5 @@
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }

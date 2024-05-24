@@ -31,6 +31,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
 {
   // Input Cell Data
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+
   // Input Feature Data
   const auto& numCells = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->NumCellsArrayPath);
 
@@ -67,11 +68,6 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   {
     return {MakeErrorResult(-5555, errorMessage)};
   }
-  //
-  //  if(largestFeature != (numFeatures - 1))
-  //  {
-  //    return {MakeErrorResult(-5555, fmt::format("The number of Features in the NumCells array ({}) does not match the largest Feature Id {} in the FeatureIds array", numFeatures, largestFeature))};
-  //  }
 
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
@@ -84,79 +80,81 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
 
   std::vector<float> featureSurfaceArea(static_cast<size_t>(numFeatures), 0.0f);
 
-  int64_t neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = -xPoints * yPoints;
-  neighpoints[1] = -xPoints;
-  neighpoints[2] = -1;
-  neighpoints[3] = 1;
-  neighpoints[4] = xPoints;
-  neighpoints[5] = xPoints * yPoints;
+  // This stores an offset to get to a particular index in the array based on
+  // a normal orthogonal cube
+  int64_t neighborOffset[6] = {0, 0, 0, 0, 0, 0};
+  neighborOffset[0] = -xPoints * yPoints; // -Z
+  neighborOffset[1] = -xPoints;           // -Y
+  neighborOffset[2] = -1;                 // -X
+  neighborOffset[3] = 1;                  // +X
+  neighborOffset[4] = xPoints;            // +Y
+  neighborOffset[5] = xPoints * yPoints;  // +Z
 
-  int32_t feature = 0;
-  float onsurf = 0.0f;
-  bool good = false;
-  int64_t neighbor = 0;
-
-  int64_t zStride = 0, yStride = 0;
-  for(int64_t i = 0; i < zPoints; i++)
+  // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
+  for(int64_t zIdx = 0; zIdx < zPoints; zIdx++)
   {
-    zStride = i * xPoints * yPoints;
-    for(int64_t j = 0; j < yPoints; j++)
+    int64_t zStride = zIdx * xPoints * yPoints;
+    for(int64_t yIdx = 0; yIdx < yPoints; yIdx++)
     {
-      yStride = j * xPoints;
-      for(int64_t k = 0; k < xPoints; k++)
+      int64_t yStride = yIdx * xPoints;
+      for(int64_t xIdx = 0; xIdx < xPoints; xIdx++)
       {
-        onsurf = 0.0f;
-        feature = featureIds[zStride + yStride + k];
-        if(feature > 0)
+        float onSurface = 0.0f; // Start totalling the surface area
+        int32 currentFeatureId = featureIds[zStride + yStride + xIdx];
+        // If the current feature ID is not valid (< 1), then just continue;
+        if(currentFeatureId < 1)
         {
-          for(int32_t l = 0; l < 6; l++)
+          continue;
+        }
+
+        // Loop over all 6 face neighbors
+        for(int32_t neighborOffsetIndex = 0; neighborOffsetIndex < 6; neighborOffsetIndex++)
+        {
+          if(neighborOffsetIndex == 0 && zIdx == 0) // if we are on the bottom Z Layer, skip
           {
-            good = true;
-            neighbor = zStride + yStride + k + neighpoints[l];
-            if(l == 0 && i == 0)
+            continue;
+          }
+          if(neighborOffsetIndex == 5 && zIdx == (zPoints - 1)) // if we are on the top Z Layer, skip
+          {
+            continue;
+          }
+          if(neighborOffsetIndex == 1 && yIdx == 0) // If we are on the first Y row, skip
+          {
+            continue;
+          }
+          if(neighborOffsetIndex == 4 && yIdx == (yPoints - 1)) // If we are on the last Y row, skip
+          {
+            continue;
+          }
+          if(neighborOffsetIndex == 2 && xIdx == 0) // If we are on the first X column, skip
+          {
+            continue;
+          }
+          if(neighborOffsetIndex == 3 && xIdx == (xPoints - 1)) // If we are on the last X column, skip
+          {
+            continue;
+          }
+          //
+          int64_t neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
+
+          if(featureIds[neighborIndex] != currentFeatureId)
+          {
+            if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // XY face shared
             {
-              good = false;
+              onSurface = onSurface + spacing[0] * spacing[1];
             }
-            if(l == 5 && i == (zPoints - 1))
+            if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4) // YZ face shared
             {
-              good = false;
+              onSurface = onSurface + spacing[1] * spacing[2];
             }
-            if(l == 1 && j == 0)
+            if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3) // XZ face shared
             {
-              good = false;
-            }
-            if(l == 4 && j == (yPoints - 1))
-            {
-              good = false;
-            }
-            if(l == 2 && k == 0)
-            {
-              good = false;
-            }
-            if(l == 3 && k == (xPoints - 1))
-            {
-              good = false;
-            }
-            if(good && featureIds[neighbor] != feature)
-            {
-              if(l == 0 || l == 5) // XY face shared
-              {
-                onsurf = onsurf + spacing[0] * spacing[1];
-              }
-              if(l == 1 || l == 4) // YZ face shared
-              {
-                onsurf = onsurf + spacing[1] * spacing[2];
-              }
-              if(l == 2 || l == 3) // XZ face shared
-              {
-                onsurf = onsurf + spacing[2] * spacing[0];
-              }
+              onSurface = onSurface + spacing[2] * spacing[0];
             }
           }
         }
-        int32 featureId = featureIds[zStride + yStride + k];
-        featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onsurf;
+        int32 featureId = featureIds[zStride + yStride + xIdx];
+        featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
       }
     }
   }
