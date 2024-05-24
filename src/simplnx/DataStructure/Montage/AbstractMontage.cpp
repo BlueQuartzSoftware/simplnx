@@ -102,11 +102,11 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
   return m_Collection;
 }
 
-bool AbstractMontage::canInsert(const DataObject* obj) const
+Result<bool> AbstractMontage::canInsert(const DataObject* obj) const
 {
   if(!dynamic_cast<const IGeometry*>(obj))
   {
-    return false;
+    return MakeErrorResult<bool>(-1676, fmt::format("AbstractMontage::canInsert() Error: DataObject with name='{}' and type='{}' is not subclass of IGeometry", obj->getName(), obj->getTypeName()));
   }
   return BaseGroup::canInsert(obj);
 }

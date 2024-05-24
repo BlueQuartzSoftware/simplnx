@@ -78,18 +78,19 @@ std::string AttributeMatrix::getTypeName() const
   return k_TypeName;
 }
 
-bool AttributeMatrix::canInsert(const DataObject* obj) const
+Result<bool> AttributeMatrix::canInsert(const DataObject* obj) const
 {
-  if(!BaseGroup::canInsert(obj))
+  auto result = BaseGroup::canInsert(obj);
+  if(result.invalid())
   {
-    return false;
+    return result;
   }
 
   const auto* arrayObjectPtr = dynamic_cast<const IArray*>(obj);
 
   if(arrayObjectPtr == nullptr)
   {
-    return false;
+    return MakeErrorResult<bool>(-1673, "BaseGroup::canInsert() Error: DataObject being inserted is null");
   }
 
   const IArray::ShapeType arrayTupleShape = arrayObjectPtr->getTupleShape();
@@ -98,9 +99,9 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
   const usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   if(totalTuples != incomingTupleCount)
   {
-    std::cout << "AttributeMatrix: CanInsert() Failed with object " << obj->getName() << ". totalTuples=" << totalTuples << "  incomingTupleCount=" << incomingTupleCount << "\n";
+    return MakeErrorResult<bool>(-1674, fmt::format("AttributeMatrix: CanInsert() Failed with object {}. totalTuples={} incomingTupleCount={}", obj->getName(), totalTuples, incomingTupleCount));
   }
-  return (totalTuples == incomingTupleCount);
+  return {true};
 }
 
 const AttributeMatrix::ShapeType& AttributeMatrix::getShape() const

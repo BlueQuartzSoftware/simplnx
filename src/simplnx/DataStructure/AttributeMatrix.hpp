@@ -171,7 +171,7 @@ protected:
    * @param obj
    * @return bool
    */
-  bool canInsert(const DataObject* obj) const override;
+  Result<bool> canInsert(const DataObject* obj) const override;
 
 private:
   ShapeType m_TupleShape;
