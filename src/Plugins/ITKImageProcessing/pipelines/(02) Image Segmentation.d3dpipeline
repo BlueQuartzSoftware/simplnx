@@ -67,7 +67,7 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_group_name": "CellFeatureData",
+        "cell_feature_group_name": "Cell Feature Data",
         "feature_ids_name": "FeatureIds",
         "input_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",
@@ -86,7 +86,7 @@
     {
       "args": {
         "equivalent_diameters_name": "EquivalentDiameters",
-        "feature_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
+        "feature_attribute_matrix_path": "ImageDataContainer/Cell Feature Data",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "ImageDataContainer",
         "num_elements_name": "NumElements",
@@ -104,7 +104,7 @@
       "args": {
         "created_array_suffix": "",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "selected_feature_array_paths": ["ImageDataContainer/CellFeatureData/EquivalentDiameters"]
+        "selected_feature_array_paths": ["ImageDataContainer/Cell Feature Data/EquivalentDiameters"]
       },
       "comments": "",
       "filter": {
@@ -153,7 +153,7 @@
     },
     {
       "args": {
-        "cell_features_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
+        "cell_features_attribute_matrix_path": "ImageDataContainer/Cell Feature Data",
         "cell_phases_array_path": "ImageDataContainer/Cell Data/Phases",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
         "feature_phases_array_name": "Phases"
@@ -168,7 +168,7 @@
     {
       "args": {
         "centroids_array_name": "Centroids",
-        "feature_attribute_matrix_path": "ImageDataContainer/CellFeatureData",
+        "feature_attribute_matrix_path": "ImageDataContainer/Cell Feature Data",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "ImageDataContainer"
       },

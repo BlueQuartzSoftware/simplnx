@@ -16,7 +16,7 @@ nx_filter = cxor.ReadCtfDataFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
-    cell_ensemble_attribute_matrix_name="CellEnsembleData",
+    cell_ensemble_attribute_matrix_name="Cell Ensemble Data",
     output_image_geometry_path =nx.DataPath("fw-ar-IF1-aptr12-corr"),
     degrees_to_radians=True,
     edax_hexagonal_alignment=True,
@@ -98,7 +98,7 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name="IPF_001",
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=False
 )
@@ -127,7 +127,7 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name="IPF_010",
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     #mask_array_path=nx.DataPath("")
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=False
@@ -157,7 +157,7 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name="IPF_100",
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     reference_dir=[1.0, 0.0, 0.0],
     use_mask=False
 )
@@ -184,9 +184,9 @@ nx_filter = cxor.EBSDSegmentFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
-    cell_feature_attribute_matrix_name="CellFeatureData",
+    cell_feature_attribute_matrix_name="Cell Feature Data",
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
     input_image_geometry_path =nx.DataPath("fw-ar-IF1-aptr12-corr"),
     cell_mask_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray"),
@@ -218,7 +218,7 @@ nx_filter = nx.ComputeFeatureSizesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_name="EquivalentDiameters",
-    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
+    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     num_elements_name="NumElements",
@@ -237,7 +237,7 @@ result = nx_filter.execute(
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr"),
     min_allowed_features_size=5,
-    num_cells_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData/NumElements")
+    num_cells_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data/NumElements")
     # feature_phases_path and phase_number parameters are not used in this context
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -250,11 +250,11 @@ result = nx_filter.execute(
     data_structure=data_structure,
     avg_euler_angles_array_name="AvgEulerAngles",
     avg_quats_array_name="AvgQuats",
-    cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
+    cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data"),
     cell_feature_ids_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
     cell_quats_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Quats"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures")
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -265,7 +265,7 @@ nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     kernel_average_misorientations_array_name="KernelAverageMisorientations",
     kernel_size=[1, 1, 1],
@@ -281,7 +281,7 @@ nx_filter = nx.ComputeFeatureCentroidsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
+    feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data"),
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-aptr12-corr")
 )
@@ -311,9 +311,9 @@ nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data/AvgQuats"),
     cell_phases_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Ensemble Data/CrystalStructures"),
     feature_avg_misorientations_array_name="FeatureAvgMisorientations",
     feature_ids_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Data/FeatureIds"),
     feature_reference_misorientations_array_name="FeatureReferenceMisorientations",
@@ -329,9 +329,9 @@ nx_filter = nx.WriteFeatureDataCSVFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData"),
+    cell_feature_attribute_matrix_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data"),
     delimiter_index=2,
-    feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-aptr12-corr/FeatureData.csv",
+    feature_data_file=nxtest.get_data_directory() / "Output/fw-ar-IF1-aptr12-corr/Feature_Data.csv",
     write_neighborlist_data=False,
     write_num_features_line=True
 )
@@ -347,7 +347,7 @@ result = nx_filter.execute(
     create_new_data_group=True,
     new_data_group_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Histograms"),
     number_of_bins=256,
-    selected_array_paths=[nx.DataPath("fw-ar-IF1-aptr12-corr/CellFeatureData/EquivalentDiameters")],
+    selected_array_paths=[nx.DataPath("fw-ar-IF1-aptr12-corr/Cell Feature Data/EquivalentDiameters")],
     user_defined_range=False
 )
 nxtest.check_filter_result(nx_filter, result)

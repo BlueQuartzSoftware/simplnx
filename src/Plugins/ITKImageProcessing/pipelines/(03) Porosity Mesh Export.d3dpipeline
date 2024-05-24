@@ -67,7 +67,7 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_group_name": "CellFeatureData",
+        "cell_feature_group_name": "Cell Feature Data",
         "feature_ids_name": "FeatureIds",
         "input_image_geometry_path": "ImageDataContainer",
         "input_array_path": "ImageDataContainer/Cell Data/ImageData",

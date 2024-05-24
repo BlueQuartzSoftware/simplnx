@@ -26,15 +26,15 @@ nx_filter = cxor.ComputeGBCDFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    face_ensemble_attribute_matrix_name="FaceEnsembleData",
-    feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    face_ensemble_attribute_matrix_name="Face Ensemble Data",
+    feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     gbcd_array_name="GBCD",
     gbcd_resolution=9.0,
-    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
-    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals"),
+    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceAreas"),
+    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
+    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceNormals"),
     input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -48,8 +48,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    gbcd_array_path=nx.DataPath("TriangleDataContainer/Face Ensemble Data/GBCD"),
     output_image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 3]"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
@@ -65,8 +65,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    gbcd_array_path=nx.DataPath("TriangleDataContainer/Face Ensemble Data/GBCD"),
     output_image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 9]"),
     misorientation_rotation=[39.0, 1.0, 1.0, 1.0],
     output_image_dimension=100,
@@ -82,8 +82,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name="Cell Data",
     cell_intensity_array_name="MRD",
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    gbcd_array_path=nx.DataPath("TriangleDataContainer/Face Ensemble Data/GBCD"),
     output_image_geometry_path=nx.DataPath("GBCD Pole Figure [Sigma 11]"),
     misorientation_rotation=[50.5, 1.0, 1.0, 1.0],
     output_image_dimension=100,
@@ -97,8 +97,8 @@ nx_filter = cxor.WriteGBCDGMTFileFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    gbcd_array_path=nx.DataPath("TriangleDataContainer/FaceEnsembleData/GBCD"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    gbcd_array_path=nx.DataPath("TriangleDataContainer/Face Ensemble Data/GBCD"),
     misorientation_rotation=[60.0, 1.0, 1.0, 1.0],
     output_file="Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat",
     phase_of_interest=1
@@ -111,11 +111,11 @@ nx_filter = cxor.WriteGBCDTriangleDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
+    feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
     output_file="Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph",
-    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceAreas"),
-    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
+    surface_mesh_face_areas_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceAreas"),
+    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
+    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceNormals")
 )
 nxtest.check_filter_result(nx_filter, result)
 

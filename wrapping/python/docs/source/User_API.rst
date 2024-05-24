@@ -501,8 +501,8 @@ General Parameters
       # Execute Filter with Parameters
       result = cxor.ReadH5EbsdFilter.execute(
          data_structure=data_structure,
-         cell_attribute_matrix_name="CellData",
-         cell_ensemble_attribute_matrix_name="CellEnsembleData",
+         cell_attribute_matrix_name="Cell Data",
+         cell_ensemble_attribute_matrix_name="Cell Ensemble Data",
          data_container_name=nx.DataPath("DataContainer"),
          read_h5_ebsd_parameter=h5ebsdParameter
       )
@@ -534,12 +534,12 @@ General Parameters
    .. code:: python
 
       dataset1 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
-      dataset1.dataset_path = "/DataStructure/DataContainer/CellData/Confidence Index"
+      dataset1.dataset_path = "/DataStructure/DataContainer/Cell Data/Confidence Index"
       dataset1.tuple_dims = "117,201,189"
       dataset1.component_dims = "1"
 
       dataset2 = nx.ReadHDF5DatasetParameter.DatasetImportInfo()
-      dataset2.dataset_path = "/DataStructure/DataContainer/CellData/EulerAngles"
+      dataset2.dataset_path = "/DataStructure/DataContainer/Cell Data/EulerAngles"
       dataset2.tuple_dims = "117,201,189"
       dataset2.component_dims = "3"
 

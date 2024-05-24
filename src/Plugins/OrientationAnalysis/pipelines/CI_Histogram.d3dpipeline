@@ -6,7 +6,7 @@
     {
       "args": {
         "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "output_image_geometry_path": "DataContainer",
         "input_file": "Data/Small_IN100/Slice_1.ang"
       },

@@ -5,8 +5,8 @@
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "CellData",
-        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "output_image_geometry_path": "DataContainer",
         "read_h5_ebsd_object": {
           "end_slice": 117,
@@ -39,7 +39,7 @@
           "inverted": false,
           "thresholds": [
             {
-              "array_path": "DataContainer/CellData/Image Quality",
+              "array_path": "DataContainer/Cell Data/Image Quality",
               "comparison": 0,
               "inverted": false,
               "type": "array",
@@ -47,7 +47,7 @@
               "value": 120.0
             },
             {
-              "array_path": "DataContainer/CellData/Confidence Index",
+              "array_path": "DataContainer/Cell Data/Confidence Index",
               "comparison": 0,
               "inverted": false,
               "type": "array",
@@ -69,7 +69,7 @@
     },
     {
       "args": {
-        "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
+        "input_orientation_array_path": "DataContainer/Cell Data/EulerAngles",
         "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
         "output_representation_index": 2
@@ -84,11 +84,11 @@
     {
       "args": {
         "alignment_shift_file_name": "Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
-        "cell_phases_array_path": "DataContainer/CellData/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
-        "mask_array_path": "DataContainer/CellData/Mask",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
+        "mask_array_path": "DataContainer/Cell Data/Mask",
         "misorientation_tolerance": 5.0,
-        "quats_array_path": "DataContainer/CellData/Quats",
+        "quats_array_path": "DataContainer/Cell Data/Quats",
         "input_image_geometry_path": "DataContainer",
         "use_mask": true,
         "write_alignment_shifts": true

@@ -28,8 +28,8 @@ nx_filter = nx.CropImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     max_voxel=[140, 140, 99],
     min_voxel=[41, 41, 0],
     remove_original_geometry=True,
@@ -44,7 +44,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Execute Filter with Parameters
 #result = nx_filter.execute(
 #    data_structure=data_structure,
-#     data=[nx.DataPath("DataContainer/CellEnsembleData")],
+#     data=[nx.DataPath("DataContainer/Cell Ensemble Data")],
 #     new_parent=nx.DataPath("DataContainer")
 # )
 # nxtest.check_filter_result(nx_filter, result)
@@ -55,16 +55,16 @@ nx_filter = nx.QuickSurfaceMeshFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    face_data_group_name=("FaceData"),
+    face_data_group_name=("Face Data"),
     face_feature_attribute_matrix_name=("Face Feature Data"),
     face_labels_array_name=("FaceLabels"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     fix_problem_voxels=False,
     generate_triple_lines=False,
     input_grid_geometry_path=nx.DataPath("DataContainer"),
     node_types_array_name=("NodeType"),
     output_triangle_geometry_path=nx.DataPath("TriangleDataContainer"),
-    vertex_data_group_name=("VertexData")
+    vertex_data_group_name=("Vertex Data")
 )
 nxtest.check_filter_result(nx_filter, result)
 
