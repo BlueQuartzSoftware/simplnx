@@ -26,7 +26,7 @@ nx_filter = nx.WriteAvizoUniformCoordinateFilter()
 output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_AvizoUniform.am"
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-    feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",
@@ -41,7 +41,7 @@ output_file_path = nxtest.get_data_directory() / "Output/AzizoWriter/SmallIN100_
 
 # Execute Filter with Parameters
 result = nx_filter.execute(data_structure=data_structure,
-    feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     output_file=output_file_path,
     units="meters",

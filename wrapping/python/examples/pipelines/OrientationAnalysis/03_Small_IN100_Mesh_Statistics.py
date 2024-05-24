@@ -59,12 +59,12 @@ nx_filter = cxor.ComputeFaceIPFColoringFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_euler_angles_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgEulerAngles"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     surface_mesh_face_ipf_colors_array_name="FaceIPFColors",
-    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceNormals")
+    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
+    surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceNormals")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -74,31 +74,15 @@ nx_filter = cxor.ComputeFeatureFaceMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
-    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
+    surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
     surface_mesh_face_misorientation_colors_array_name="FaceMisorientationColors"
 )
 nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
-# Instantiate Filter
-nx_filter = nx.SharedFeatureFaceFilter()
-# Execute Filter with Parameters
-result = nx_filter.execute(
-    data_structure=data_structure,
-    face_labels_array_path=nx.DataPath("TriangleDataContainer/FaceData/FaceLabels"),
-    feature_face_ids_array_name="SharedFeatureFaceId",
-    feature_face_labels_array_name="FaceLabels",
-    feature_num_triangles_array_name="NumTriangles",
-    grain_boundary_attribute_matrix_name="SharedFeatureFace",
-    randomize_features=False,
-    input_triangle_geometry_path=nx.DataPath("TriangleDataContainer")
-)
-nxtest.check_filter_result(nx_filter, result)
-
-# Filter 8
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Execute Filter with Parameters

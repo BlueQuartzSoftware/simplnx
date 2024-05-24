@@ -24,8 +24,8 @@ nx_filter = cxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_attribute_matrix_name="CellData",
-    cell_ensemble_attribute_matrix_name="CellEnsembleData",
+    cell_attribute_matrix_name="Cell Data",
+    cell_ensemble_attribute_matrix_name="Cell Ensemble Data",
     output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=filter_parameter
 )
@@ -34,12 +34,12 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 2
 # Set Up Thresholds and Instantiate Filter
 threshold_1 = nx.ArrayThreshold()
-threshold_1.array_path = nx.DataPath("DataContainer/CellData/Image Quality")
+threshold_1.array_path = nx.DataPath("DataContainer/Cell Data/Image Quality")
 threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_1.value = 120
 
 threshold_2 = nx.ArrayThreshold()
-threshold_2.array_path = nx.DataPath("DataContainer/CellData/Confidence Index")
+threshold_2.array_path = nx.DataPath("DataContainer/Cell Data/Confidence Index")
 threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_2.value = 0.1
 
@@ -64,7 +64,7 @@ nx_filter = cxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
+    input_orientation_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     input_representation_index=0,
     output_orientation_array_name="Quats",
     output_representation_index=2
@@ -78,11 +78,11 @@ nx_filter = cxor.AlignSectionsMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     misorientation_tolerance=5.0,
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_mask=True,
     write_alignment_shifts=False
@@ -97,7 +97,7 @@ nx_filter = nx.IdentifySampleFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     fill_holes=False,
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     input_image_geometry_path =nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -108,9 +108,9 @@ nx_filter = nx.AlignSectionsFeatureCentroidFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     reference_slice=0,
-    selected_cell_data_path=nx.DataPath("DataContainer/CellData"),
+    selected_cell_data_path=nx.DataPath("DataContainer/Cell Data"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_reference_slice=True,
     write_alignment_shifts=False
@@ -125,13 +125,13 @@ nx_filter = cxor.BadDataNeighborOrientationCheckFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     misorientation_tolerance=5.0,
     number_of_neighbors=4,
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats")
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -141,14 +141,14 @@ nx_filter = cxor.NeighborOrientationCorrelationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    correlation_array_path=nx.DataPath("DataContainer/CellData/Confidence Index"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    correlation_array_path=nx.DataPath("DataContainer/Cell Data/Confidence Index"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     level=2,
     min_confidence=0.2,
     misorientation_tolerance=5.0,
-    quats_array_path=nx.DataPath("DataContainer/CellData/Quats")
+    quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats")
     # ignored_data_array_paths: List[DataPath] = ...,  # Not currently part of the code
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -160,14 +160,14 @@ nx_filter = cxor.EBSDSegmentFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
-    cell_feature_attribute_matrix_name="CellFeatureData",
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    cell_feature_attribute_matrix_name="Cell Feature Data",
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
-    cell_mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    cell_mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     misorientation_tolerance=5.0,
-    cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     randomize_features=True,
     use_mask=True
 )
@@ -180,9 +180,9 @@ nx_filter = nx.ComputeFeaturePhasesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_features_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_features_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     feature_phases_array_name="Phases"
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -195,11 +195,11 @@ result = nx_filter.execute(
     data_structure=data_structure,
     avg_euler_angles_array_name="AvgEulerAngles",
     avg_quats_array_name="AvgQuats",
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    cell_feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures")
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    cell_feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures")
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -209,8 +209,8 @@ nx_filter = nx.ComputeFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_array_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name="NeighborList2",
     number_of_neighbors_name="NumNeighbors2",
@@ -231,14 +231,14 @@ result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
     angle_tolerance=2.0,
-    avg_quats_array_path=nx.DataPath("DataContainer/CellFeatureData/AvgQuats"),
+    avg_quats_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgQuats"),
     axis_tolerance=3.0,
     cell_parent_ids_array_name="ParentIds",
-    contiguous_neighbor_list_array_path=nx.DataPath("DataContainer/CellFeatureData/NeighborList2"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    contiguous_neighbor_list_array_path=nx.DataPath("DataContainer/Cell Feature Data/NeighborList2"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     feature_parent_ids_array_name="ParentIds",
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     created_feature_attribute_matrix_name="NewGrain Data"
     # use_non_contiguous_neighbors=False
     # non_contiguous_neighbor_list_array_path: DataPath = ...,  # Not currently part of the code
@@ -252,8 +252,8 @@ nx_filter = nx.ComputeFeatureSizesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_name="EquivalentDiameters",
-    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     num_elements_name="NumElements",
     save_element_sizes=False,
@@ -268,10 +268,10 @@ nx_filter = nx.RequireMinimumSizeFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     apply_single_phase=False,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     min_allowed_features_size=16,
-    num_cells_path=nx.DataPath("DataContainer/CellFeatureData/NumElements")
+    num_cells_path=nx.DataPath("DataContainer/Cell Feature Data/NumElements")
     # feature_phases_path: DataPath = ...,  # Not currently part of the code
     # phase_number: int = ...  # Not currently part of the code
 )
@@ -284,8 +284,8 @@ nx_filter = nx.ComputeFeatureNeighborsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_array_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name="NeighborList",
     number_of_neighbors_name="NumNeighbors",
@@ -304,10 +304,10 @@ nx_filter = nx.RequireMinNumNeighborsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     apply_to_single_phase=False,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     min_num_neighbors=2,
-    num_neighbors_path=nx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
+    num_neighbors_path=nx.DataPath("DataContainer/Cell Feature Data/NumNeighbors"),
     phase_number=0
     # feature_phases: DataPath = ...,  # Not currently part of the code
     # ignored_voxel_arrays: List[DataPath] = ...  # Not currently part of the code
@@ -320,7 +320,7 @@ nx_filter = nx.FillBadDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     min_allowed_defect_size=1000,
     input_image_geometry_path=nx.DataPath("DataContainer"),
     store_as_new_phase=False
@@ -336,7 +336,7 @@ nx_filter = nx.ErodeDilateBadDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     num_iterations=2,
     operation_index=0,
     input_image_geometry_path=nx.DataPath("DataContainer"),
@@ -353,7 +353,7 @@ nx_filter = nx.ErodeDilateBadDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     num_iterations=2,
     operation_index=1,  # Dilate operation
     input_image_geometry_path=nx.DataPath("DataContainer"),
@@ -370,11 +370,11 @@ nx_filter = cxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_euler_angles_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
+    cell_euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name="IPFColors",
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
-    mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
+    mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=True
 )

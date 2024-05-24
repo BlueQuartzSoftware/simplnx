@@ -90,7 +90,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", "FeatureIds"));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created cell feature attribute matrix", "CellFeatureData"));
+      std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created cell feature attribute matrix", "Cell Feature Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active",
                                                           "The name of the array which specifies if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). "
                                                           "At the end of the Filter, all Features will be Active",

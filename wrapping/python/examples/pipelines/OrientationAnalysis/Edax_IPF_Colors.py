@@ -16,7 +16,7 @@ nx_filter = cxor.ReadAngDataFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     cell_attribute_matrix_name=("Cell Data"),
-    cell_ensemble_attribute_matrix_name=("CellEnsembleData"),
+    cell_ensemble_attribute_matrix_name=("Cell Ensemble Data"),
     output_image_geometry_path =nx.DataPath("DataContainer"),
     input_file=nxtest.get_data_directory() / "Small_IN100/Slice_1.ang"
 )
@@ -80,7 +80,7 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     cell_ipf_colors_array_name=("IPFColors"),
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=True

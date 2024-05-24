@@ -108,7 +108,7 @@ nx_filter = cxor.CreateEnsembleInfoFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_ensemble_attribute_matrix_path=nx.DataPath("[Image Geometry]/CellEnsembleData"),
+    cell_ensemble_attribute_matrix_path=nx.DataPath("[Image Geometry]/Cell Ensemble Data"),
     crystal_structures_array_name="CrystalStructures",
     phase_names_array_name="PhaseNames",
     phase_types_array_name="PhaseTypes",
@@ -125,7 +125,7 @@ result = nx_filter.execute(
     cell_euler_angles_array_path=nx.DataPath("[Image Geometry]/Cell Data/Eulers"),
     cell_ipf_colors_array_name="IPFColors",
     cell_phases_array_path=nx.DataPath("[Image Geometry]/Cell Data/Phase"),
-    crystal_structures_array_path=nx.DataPath("[Image Geometry]/CellEnsembleData/CrystalStructures"),
+    crystal_structures_array_path=nx.DataPath("[Image Geometry]/Cell Ensemble Data/CrystalStructures"),
     #mask_array_path: DataPath = ...,
     reference_dir=[0.0, 0.0, 1.0],
     use_mask=False

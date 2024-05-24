@@ -29,10 +29,10 @@ nx_filter = nx.DeleteDataFilter()
 # Execute Filter With Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    removed_data_path=[nx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
-                       nx.DataPath("DataContainer/CellFeatureData/NumElements"),
-                       nx.DataPath("DataContainer/CellFeatureData/NumNeighbors"),
-                       nx.DataPath("DataContainer/CellFeatureData/NumNeighbors2")]
+    removed_data_path=[nx.DataPath("DataContainer/Cell Feature Data/EquivalentDiameters"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NumElements"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NumNeighbors"),
+                       nx.DataPath("DataContainer/Cell Feature Data/NumNeighbors2")]
 )
 nxtest.check_filter_result(nx_filter, result)
     
@@ -43,8 +43,8 @@ nx_filter = nx.ComputeFeatureCentroidsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer")
 )
 nxtest.check_filter_result(nx_filter, result)
@@ -57,8 +57,8 @@ nx_filter = nx.ComputeFeatureSizesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_name="EquivalentDiameters",
-    feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     num_elements_name="NumElements",
     save_element_sizes=False,
@@ -76,8 +76,8 @@ result = nx_filter.execute(
     aspect_ratios_array_name=("AspectRatios"),
     axis_euler_angles_array_name=("AxisEulerAngles"),
     axis_lengths_array_name=("AxisLengths"),
-    centroids_array_path=nx.DataPath("DataContainer/CellFeatureData/Centroids"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    centroids_array_path=nx.DataPath("DataContainer/Cell Feature Data/Centroids"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     omega3s_array_name=("Omega3s"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     volumes_array_name=("Shape Volumes")
@@ -93,8 +93,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     # Boundary cells parameter is not currently part of the code
     # boundary_cells: str = ...,
-    cell_feature_array_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_array_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("DataContainer"),
     neighbor_list_name=("NeighborList"),
     number_of_neighbors_name=("NumNeighbors"),
@@ -114,9 +114,9 @@ nx_filter = nx.ComputeNeighborhoodsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    centroids_array_path=nx.DataPath("DataContainer/CellFeatureData/Centroids"),
-    equivalent_diameters_array_path=nx.DataPath("DataContainer/CellFeatureData/EquivalentDiameters"),
-    feature_phases_array_path=nx.DataPath("DataContainer/CellFeatureData/Phases"),
+    centroids_array_path=nx.DataPath("DataContainer/Cell Feature Data/Centroids"),
+    equivalent_diameters_array_path=nx.DataPath("DataContainer/Cell Feature Data/EquivalentDiameters"),
+    feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     multiples_of_average=1.0,
     neighborhood_list_array_name=("NeighborhoodList"),
     neighborhoods_array_name=("Neighborhoods"),
@@ -135,7 +135,7 @@ result = nx_filter.execute(
     do_boundaries=True,
     do_quad_points=True,
     do_triple_lines=True,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     g_bdistances_array_name=("GBManhattanDistances"),
     # Nearest neighbors array name is not currently part of the code
     # nearest_neighbors_array_name: str = ...,
@@ -154,8 +154,8 @@ nx_filter = nx.ComputeSurfaceAreaToVolumeFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     calculate_sphericity=True,
-    feature_ids_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
-    num_cells_array_path=nx.DataPath("DataContainer/CellFeatureData/NumElements"),
+    feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
+    num_cells_array_path=nx.DataPath("DataContainer/Cell Feature Data/NumElements"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     sphericity_array_name=("Sphericity"),
     surface_area_volume_ratio_array_name=("SurfaceAreaVolumeRatio")

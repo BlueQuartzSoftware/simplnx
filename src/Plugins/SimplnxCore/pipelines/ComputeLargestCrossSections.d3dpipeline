@@ -5,8 +5,8 @@
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "CellData",
-        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "output_image_geometry_path": "DataContainer",
         "read_h5_ebsd_object": {
           "end_slice": 117,
@@ -39,7 +39,7 @@
           "inverted": false,
           "thresholds": [
             {
-              "array_path": "DataContainer/CellData/Image Quality",
+              "array_path": "DataContainer/Cell Data/Image Quality",
               "comparison": 0,
               "inverted": false,
               "type": "array",
@@ -47,7 +47,7 @@
               "value": 120.0
             },
             {
-              "array_path": "DataContainer/CellData/Confidence Index",
+              "array_path": "DataContainer/Cell Data/Confidence Index",
               "comparison": 0,
               "inverted": false,
               "type": "array",
@@ -69,7 +69,7 @@
     },
     {
       "args": {
-        "input_orientation_array_path": "DataContainer/CellData/EulerAngles",
+        "input_orientation_array_path": "DataContainer/Cell Data/EulerAngles",
         "input_representation_index": 0,
         "output_orientation_array_name": "Quats",
         "output_representation_index": 2
@@ -84,14 +84,14 @@
     {
       "args": {
         "active_array_name": "Active",
-        "cell_feature_attribute_matrix_name": "CellFeatureData",
-        "cell_phases_array_path": "DataContainer/CellData/Phases",
-        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "cell_feature_attribute_matrix_name": "Cell Feature Data",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "feature_ids_array_name": "FeatureIds",
-        "cell_mask_array_path": "DataContainer/CellData/Mask",
+        "cell_mask_array_path": "DataContainer/Cell Data/Mask",
         "input_image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
-        "cell_quats_array_path": "DataContainer/CellData/Quats",
+        "cell_quats_array_path": "DataContainer/Cell Data/Quats",
         "randomize_features": true,
         "use_mask": true
       },
@@ -104,8 +104,8 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "DataContainer/CellFeatureData",
-        "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
+        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
         "input_image_geometry_path": "DataContainer",
         "largest_cross_sections_array_name": "LargestCrossSections",
         "plane_index": 0

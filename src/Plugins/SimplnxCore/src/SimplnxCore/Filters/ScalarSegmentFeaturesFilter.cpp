@@ -87,7 +87,7 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsName_Key, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureName_Key, "Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "CellFeatureData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureName_Key, "Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "Cell Feature Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "Created array", "Active"));
 
   return params;

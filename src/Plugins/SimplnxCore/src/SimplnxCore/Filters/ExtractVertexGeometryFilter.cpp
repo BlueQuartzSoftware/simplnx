@@ -87,7 +87,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Output Vertex Geometry", "The complete path to the vertex geometry that will be created", DataPath({"Vertex Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttrMatrixName_Key, "Output Vertex Attribute Matrix Name", "The name of the vertex attribute matrix that will be created",
-                                                          std::string{"VertexData"}));
+                                                          std::string{"Vertex Data"}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SharedVertexListName_Key, "Output Shared Vertex List Name", "The name of the shared vertex list that will be created",
                                                           std::string{"SharedVertexList"}));
 

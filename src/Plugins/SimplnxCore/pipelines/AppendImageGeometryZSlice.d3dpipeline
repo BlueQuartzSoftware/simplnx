@@ -139,7 +139,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "feature_ids_path": "",
         "input_image_geometry_path": "Image Geometry",
         "max_coord": [
@@ -176,7 +176,7 @@
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_feature_attribute_matrix_path": "Cell Feature Data",
         "feature_ids_path": "",
         "input_image_geometry_path": "Image Geometry",
         "max_coord": [

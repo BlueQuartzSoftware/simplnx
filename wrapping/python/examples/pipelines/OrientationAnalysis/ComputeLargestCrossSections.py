@@ -24,8 +24,8 @@ h5ebsdParameter.use_recommended_transform=True
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_attribute_matrix_name="CellData",
-    cell_ensemble_attribute_matrix_name="CellEnsembleData",
+    cell_attribute_matrix_name="Cell Data",
+    cell_ensemble_attribute_matrix_name="Cell Ensemble Data",
     output_image_geometry_path =nx.DataPath("DataContainer"),
     read_h5_ebsd_object=h5ebsdParameter
 )
@@ -34,12 +34,12 @@ nxtest.check_filter_result(nx_filter, result)
 # Filter 2
 # Instantiate Filter
 threshold_1 = nx.ArrayThreshold()
-threshold_1.array_path = nx.DataPath("DataContainer/CellData/Image Quality")
+threshold_1.array_path = nx.DataPath("DataContainer/Cell Data/Image Quality")
 threshold_1.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_1.value = 120
 
 threshold_2 = nx.ArrayThreshold()
-threshold_2.array_path = nx.DataPath("DataContainer/CellData/Confidence Index")
+threshold_2.array_path = nx.DataPath("DataContainer/Cell Data/Confidence Index")
 threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
 threshold_2.value = 0.1
 
@@ -60,7 +60,7 @@ nx_filter = cxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    input_orientation_array_path=nx.DataPath("DataContainer/CellData/EulerAngles"),
+    input_orientation_array_path=nx.DataPath("DataContainer/Cell Data/EulerAngles"),
     input_representation_index=0,
     output_orientation_array_name="Quats",
     output_representation_index=2
@@ -74,14 +74,14 @@ nx_filter = cxor.EBSDSegmentFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
-    cell_feature_attribute_matrix_name="CellFeatureData",
-    cell_phases_array_path=nx.DataPath("DataContainer/CellData/Phases"),
-    crystal_structures_array_path=nx.DataPath("DataContainer/CellEnsembleData/CrystalStructures"),
+    cell_feature_attribute_matrix_name="Cell Feature Data",
+    cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
+    crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     feature_ids_array_name="FeatureIds",
     input_image_geometry_path =nx.DataPath("DataContainer"),
-    cell_mask_array_path=nx.DataPath("DataContainer/CellData/Mask"),
+    cell_mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     misorientation_tolerance=5.0,
-    cell_quats_array_path=nx.DataPath("DataContainer/CellData/Quats"),
+    cell_quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     randomize_features=True,
     use_mask=True
 )
@@ -93,8 +93,8 @@ nx_filter = nx.ComputeLargestCrossSectionsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/CellFeatureData"),
-    feature_ids_array_path=nx.DataPath("DataContainer/CellData/FeatureIds"),
+    cell_feature_attribute_matrix_path=nx.DataPath("DataContainer/Cell Feature Data"),
+    feature_ids_array_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     largest_cross_sections_array_name="LargestCrossSections",
     plane_index=0

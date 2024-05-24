@@ -72,7 +72,7 @@ nx_filter = nx.ScalarSegmentFeaturesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     active_array_name="Active",
-    cell_feature_group_name="CellFeatureData",
+    cell_feature_group_name="Cell Feature Data",
     feature_ids_name="FeatureIds",
     input_image_geometry_path=nx.DataPath("ImageDataContainer"),
     input_array_path=nx.DataPath("ImageDataContainer/Cell Data/ImageData"),
@@ -90,7 +90,7 @@ nx_filter = nx.ComputeFeatureSizesFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     equivalent_diameters_name="EquivalentDiameters",
-    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/CellFeatureData"),
+    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/Cell Feature Data"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path =nx.DataPath("ImageDataContainer"),
     num_elements_name="NumElements",
@@ -107,7 +107,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     created_array_suffix="Created Array Suffix",
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
-    selected_feature_array_paths=[nx.DataPath("ImageDataContainer/CellFeatureData/EquivalentDiameters")]
+    selected_feature_array_paths=[nx.DataPath("ImageDataContainer/Cell Feature Data/EquivalentDiameters")]
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -148,7 +148,7 @@ nx_filter = nx.ComputeFeaturePhasesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    cell_features_attribute_matrix_path=nx.DataPath("ImageDataContainer/CellFeatureData"),
+    cell_features_attribute_matrix_path=nx.DataPath("ImageDataContainer/Cell Feature Data"),
     cell_phases_array_path=nx.DataPath("ImageDataContainer/Cell Data/Phases"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     feature_phases_array_name="Phases"
@@ -162,7 +162,7 @@ nx_filter = nx.ComputeFeatureCentroidsFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     centroids_array_name="Centroids",
-    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/CellFeatureData"),
+    feature_attribute_matrix_path =nx.DataPath("ImageDataContainer/Cell Feature Data"),
     feature_ids_path=nx.DataPath("ImageDataContainer/Cell Data/FeatureIds"),
     input_image_geometry_path=nx.DataPath("ImageDataContainer")
 )
