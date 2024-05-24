@@ -37,7 +37,7 @@ Uuid ComputeSlipTransmissionMetricsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeSlipTransmissionMetricsFilter::humanName() const
 {
-  return "Compute Neighbor Slip Transmission Metrics (Luster-Morris)";
+  return "Compute Neighbor Slip Transmission Metrics";
 }
 
 //------------------------------------------------------------------------------
