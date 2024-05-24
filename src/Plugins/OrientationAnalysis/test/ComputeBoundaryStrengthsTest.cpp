@@ -8,6 +8,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
+using namespace nx::core::UnitTest;
 
 namespace
 {
@@ -17,21 +18,21 @@ DataPath avgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Da
 DataPath featurePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
 DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
 
-const std::string k_f1s = "SurfaceMeshF1s";
-const std::string k_f1spts = "SurfaceMeshF1spts";
-const std::string k_f7s = "SurfaceMeshF7s";
-const std::string k_mPrimes = "SurfaceMeshmPrimes";
+const std::string k_f1s = "F1List_COMPUTED";
+const std::string k_f1spts = "F1sptList_COMPUTED";
+const std::string k_f7s = "F7List_COMPUTED";
+const std::string k_mPrimes = "mPrimeList_COMPUTED";
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
                                                               "feature_boundary_neighbor_slip_transmission");
 
   DataStructure dataStructure =
-      UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
+      UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission_1/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     ComputeBoundaryStrengthsFilter filter;
@@ -56,6 +57,10 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
+
+  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_ComputeBoundaryStrengthsFilter.dream3d", unit_test::k_BinaryTestOutputDir)));
+  // #endif
 
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F1s"), faceDataPath.createChildPath(k_f1s));
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F1spts"), faceDataPath.createChildPath(k_f1spts));

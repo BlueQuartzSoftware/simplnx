@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 
 #include "EbsdLib/Core/Quaternion.hpp"
+#include "EbsdLib/EbsdLibVersion.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace nx::core;
@@ -49,6 +50,9 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   int32 nName;
   float32 mPrime, F1, F1sPt, F7;
+
+  bool emitLaueClassWarning = false;
+
   for(usize i = 1; i < totalFeatures; i++)
   {
     usize listLength = neighborList[i].size();
@@ -62,7 +66,15 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
       QuatD q1(avgQuats[i * 4], avgQuats[i * 4 + 1], avgQuats[i * 4 + 2], avgQuats[i * 4 + 3]);
       QuatD q2(avgQuats[nName * 4], avgQuats[nName * 4 + 1], avgQuats[nName * 4 + 2], avgQuats[nName * 4 + 3]);
 
-      if(crystalStructures[featurePhases[i]] == crystalStructures[featurePhases[nName]] && featurePhases[i] > 0)
+      uint32 laueClassI = static_cast<uint32>(featurePhases[i]);
+      uint32 laueClassN = static_cast<uint32>(featurePhases[nName]);
+
+      if(laueClassI == laueClassN && laueClassN != 1)
+      {
+        emitLaueClassWarning = true;
+      }
+      // Make sure we only run the algorithm on CubicOps: orientationOps[1];
+      if(crystalStructures[laueClassI] == crystalStructures[laueClassN] && featurePhases[i] > 0 && laueClassN == 1)
       {
         mPrime = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getmPrime(q1, q2, LD));
         F1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[i]]]->getF1(q1, q2, LD, true));
@@ -101,6 +113,11 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
     Float32NeighborList::SharedVectorType primeL(new std::vector<float32>(mPrimeLists[i]));
     mPrimeL.setList(static_cast<int32>(i), primeL);
+  }
+
+  if(emitLaueClassWarning)
+  {
+    return MakeWarningVoidResult(-94739, fmt::format("A phase other then Cubic m-3m is being analyzed. This filter only works on Cubic m-3m Laue classes. Those phases have a result of 0.0."));
   }
 
   return {};
