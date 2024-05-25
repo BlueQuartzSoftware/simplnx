@@ -61,7 +61,7 @@ Parameters ComputeBiasedFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features", "Flag of 1 if Feature touches an outer surface or of 0 if it does not", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Feature belongs. Only required if Apply Phase by Phase is checked",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
@@ -102,10 +102,11 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
   if(!tupleValidityCheck)
   {
     return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
-  };
+  }
 
-  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},
-                                                    pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
+  const auto& surfaceFeaturesMaskArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceFeaturesArrayPathValue);
+  auto action =
+      std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1}, pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
