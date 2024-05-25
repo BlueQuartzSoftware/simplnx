@@ -86,10 +86,10 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_SurfaceFeaturesArrayPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath));
 
-  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath);
+  UInt8Array& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(k_SurfaceFeaturesArrayPath);
   Int8Array& surfaceFeaturesExemplary = dataStructure.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath);
   REQUIRE(surfaceFeatures.getSize() == surfaceFeaturesExemplary.getSize());
   REQUIRE(surfaceFeatures.getSize() == 796);
@@ -106,7 +106,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1");
@@ -137,12 +137,12 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 
   }
 
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(computedSurfaceFeaturesPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(computedSurfaceFeaturesPath));
 
     DataPath exemplaryDataPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeaturesExemplar);
-    const DataArray<bool>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<bool>>(exemplaryDataPath);
+    const BoolArray& featureArrayExemplary = dataStructure.getDataRefAs<BoolArray>(exemplaryDataPath);
 
-    const DataArray<bool>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<bool>>(computedSurfaceFeaturesPath);
+    const UInt8Array& createdFeatureArray = dataStructure.getDataRefAs<UInt8Array>(computedSurfaceFeaturesPath);
     REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
 
     for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
@@ -152,17 +152,17 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 
   }
 }
 
-TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 2D - XY Plane", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 2D - XZ Plane", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Valid filter execution in 2D - YZ Plane", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
