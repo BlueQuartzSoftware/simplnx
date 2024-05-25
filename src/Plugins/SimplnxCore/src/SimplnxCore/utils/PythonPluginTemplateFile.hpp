@@ -16,6 +16,27 @@ namespace fs = std::filesystem;
 
 namespace nx::core
 {
+inline std::string CamelCaseToSnakeCase(const std::string& input)
+{
+  std::string result;
+  for(char ch : input)
+  {
+    if(std::isupper(ch))
+    {
+      if(!result.empty())
+      {
+        result += '_';
+      }
+      result += std::tolower(ch);
+    }
+    else
+    {
+      result += ch;
+    }
+  }
+  return result;
+}
+
 inline const std::string k_FilterIncludeInsertToken = "# FILTER_INCLUDE_INSERT";
 inline const std::string k_FilterNameInsertToken = "# FILTER_NAME_INSERT";
 
@@ -397,6 +418,35 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       return commitResult;
     }
   }
+
+  // Write the environment.yml file
+  outputPath = pluginRootPath / "environment.yml";
+  {
+    auto atomicFileResult = AtomicFile::Create(outputPath);
+    if(atomicFileResult.invalid())
+    {
+      return ConvertResult(std::move(atomicFileResult));
+    }
+    AtomicFile envTempFile = std::move(atomicFileResult.value());
+    {
+      // Scope this so that the file closes first before we then 'commit' with the atomic file
+      std::ofstream fout(envTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
+      if(!fout.is_open())
+      {
+        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", envTempFile.tempFilePath().string()));
+      }
+      std::string content = PluginEnvironmentPythonFile();
+
+      content = StringUtilities::replace(content, "#PLUGIN_ENV_NAME#", CamelCaseToSnakeCase(pluginName));
+
+      fout << content;
+    }
+    Result<> commitResult = envTempFile.commit();
+    if(commitResult.invalid())
+    {
+      return commitResult;
+    }
+  }
   // Now loop over each Filter and generate the skeleton files
   auto filterList = StringUtilities::split(pluginFilterList, ',');
   for(const auto& name : filterList)
@@ -406,5 +456,4 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
 
   return {};
 }
-
 } // namespace nx::core
