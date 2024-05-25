@@ -22,7 +22,7 @@ DataPath::DataPath(std::vector<std::string> path)
   {
     if(!DataObject::IsValidName(item) && !item.empty())
     {
-      throw std::invalid_argument("DataPath: Invalid DataObject name");
+      throw std::invalid_argument(fmt::format("DataPath: Invalid DataObject name - [{}]. One of the DataObject names contains the '/' character.", fmt::join(m_Path, ",")));
     }
   }
 }
