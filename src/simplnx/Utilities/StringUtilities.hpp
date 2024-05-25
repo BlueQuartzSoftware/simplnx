@@ -166,24 +166,24 @@ inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
 
 /**
  * @brief Replace characters in a string. If 'from' is empty, the origin string is returned.
- * @param str Input String
+ * @param inputString Input String
  * @param from Characters to replace (These characters are being replaced)
  * @param to The characters to be used as the replacement
  * @return The modified string
  */
-inline std::string replace(std::string str, std::string_view from, std::string_view to)
+inline std::string replace(std::string inputString, std::string_view from, std::string_view to)
 {
   usize startPos = 0;
   if(from.empty())
   {
-    return str;
+    return inputString;
   }
-  while((startPos = str.find(from, startPos)) != std::string::npos)
+  while((startPos = inputString.find(from, startPos)) != std::string::npos)
   {
-    str.replace(startPos, from.length(), to);
+    inputString.replace(startPos, from.length(), to);
     startPos += to.length();
   }
-  return str;
+  return inputString;
 }
 
 inline std::string ltrim(std::string_view str)

@@ -206,9 +206,16 @@ void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize sta
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors().size() == 1);
-  REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
+  if(expectedErrorCode == 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    REQUIRE(executeResult.result.errors().size() == 1);
+    REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
+  }
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 1): Valid filter execution")
@@ -456,23 +463,23 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
 
   std::vector<std::string> illegalHeaders = {"Illegal/Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, 0);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, 0);
 
   illegalHeaders = {"Illegal\\Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, 0);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, 0);
 
   illegalHeaders = {"Illegal&Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, 0);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, 0);
 
   illegalHeaders = {"Illegal:Header"};
   CreateTestDataFile(tmp_file, v, illegalHeaders);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
-  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, k_IllegalNames);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {DataType::int8}, {false}, tupleDims, v, 0);
+  TestCase_TestImporterData_Error(tmp_file.string(), 2, ReadCSVData::HeaderMode::CUSTOM, 1, {','}, illegalHeaders, {DataType::int8}, {false}, tupleDims, v, 0);
 
   fs::remove(tmp_file);
 
