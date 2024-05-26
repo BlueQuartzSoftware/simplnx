@@ -855,80 +855,81 @@ struct MaskCompare
 
 struct BoolMaskCompare : public MaskCompare
 {
-  BoolMaskCompare(BoolArray& array)
-  : m_Array(array)
+  BoolMaskCompare(AbstractDataStore<bool>& dataStore)
+  : m_DataStore(dataStore)
   {
   }
   ~BoolMaskCompare() noexcept override = default;
 
-  BoolArray& m_Array;
+  AbstractDataStore<bool>& m_DataStore;
   bool bothTrue(usize indexA, usize indexB) const override
   {
-    return m_Array.at(indexA) && m_Array.at(indexB);
+    return m_DataStore.at(indexA) && m_DataStore.at(indexB);
   }
   bool bothFalse(usize indexA, usize indexB) const override
   {
-    return !m_Array.at(indexA) && !m_Array.at(indexB);
+    return !m_DataStore.at(indexA) && !m_DataStore.at(indexB);
   }
   bool isTrue(usize index) const override
   {
-    return m_Array.at(index);
+    return m_DataStore.at(index);
   }
   void setValue(usize index, bool val) override
   {
-    m_Array[index] = val;
+    m_DataStore[index] = val;
   }
   usize getNumberOfTuples() const override
   {
-    return m_Array.getNumberOfTuples();
+    return m_DataStore.getNumberOfTuples();
   }
   usize getNumberOfComponents() const override
   {
-    return m_Array.getNumberOfComponents();
+    return m_DataStore.getNumberOfComponents();
   }
 
   usize countTrueValues() const override
   {
-    return std::count(m_Array.begin(), m_Array.end(), true);
+    return std::count(m_DataStore.begin(), m_DataStore.end(), true);
   }
 };
 
 struct UInt8MaskCompare : public MaskCompare
 {
-  UInt8MaskCompare(UInt8Array& array)
-  : m_Array(array)
+  UInt8MaskCompare(AbstractDataStore<uint8>& dataStore)
+  : m_DataStore(dataStore)
   {
   }
   ~UInt8MaskCompare() noexcept override = default;
-  UInt8Array& m_Array;
+
+  AbstractDataStore<uint8>& m_DataStore;
   bool bothTrue(usize indexA, usize indexB) const override
   {
-    return m_Array.at(indexA) != 0 && m_Array.at(indexB) != 0;
+    return m_DataStore.at(indexA) != 0 && m_DataStore.at(indexB) != 0;
   }
   bool bothFalse(usize indexA, usize indexB) const override
   {
-    return m_Array.at(indexA) == 0 && m_Array.at(indexB) == 0;
+    return m_DataStore.at(indexA) == 0 && m_DataStore.at(indexB) == 0;
   }
   bool isTrue(usize index) const override
   {
-    return m_Array.at(index) != 0;
+    return m_DataStore.at(index) != 0;
   }
   void setValue(usize index, bool val) override
   {
-    m_Array[index] = static_cast<uint8>(val);
+    m_DataStore[index] = static_cast<uint8>(val);
   }
   usize getNumberOfTuples() const override
   {
-    return m_Array.getNumberOfTuples();
+    return m_DataStore.getNumberOfTuples();
   }
   usize getNumberOfComponents() const override
   {
-    return m_Array.getNumberOfComponents();
+    return m_DataStore.getNumberOfComponents();
   }
 
   usize countTrueValues() const override
   {
-    const usize falseCount = std::count(m_Array.begin(), m_Array.end(), 0);
+    const usize falseCount = std::count(m_DataStore.begin(), m_DataStore.end(), 0);
     return getNumberOfTuples() - falseCount;
   }
 };

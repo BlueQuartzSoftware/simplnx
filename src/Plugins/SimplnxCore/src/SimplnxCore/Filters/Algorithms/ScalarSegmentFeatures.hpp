@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SegmentFeatures.hpp"
 
 #include <random>
@@ -74,5 +75,6 @@ private:
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
   std::shared_ptr<SegmentFeatures::CompareFunctor> m_CompareFunctor;
+  std::unique_ptr<MaskCompare> m_GoodVoxels = nullptr;
 };
 } // namespace nx::core

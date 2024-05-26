@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -81,7 +82,17 @@ Result<> RemoveFlaggedTriangles::operator()()
 {
   // Remove Triangles from reduced according to removeTrianglesIndex
   const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
-  const auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
+  std::unique_ptr<MaskCompare> maskCompare;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    return MakeErrorResult(-54070, message);
+  }
   auto& reducedTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
 
   // Set up allocated masks
@@ -92,7 +103,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   // parse mask Triangles list and load a list of indices for triangles to keep
   for(usize index = 0; index < size; index++)
   {
-    if(!mask[index])
+    if(!maskCompare->isTrue(index))
     {
       newTrianglesIndexList.push_back(index);
     }

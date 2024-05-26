@@ -71,7 +71,7 @@ Parameters BadDataNeighborOrientationCheckFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Used to define Cells as good or bad", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -119,15 +119,11 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find mask array at path '{}'", pGoodVoxelsArrayPathValue.toString())}})};
   }
-  auto* goodVoxelsBoolPtr = dataStructure.getDataAs<BoolArray>(pGoodVoxelsArrayPathValue);
-  if(nullptr == goodVoxelsBoolPtr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool.", pGoodVoxelsArrayPathValue.toString())}})};
-  }
+
+  auto* goodVoxelsBoolPtr = dataStructure.getDataAs<IDataArray>(pGoodVoxelsArrayPathValue);
   if(goodVoxelsBoolPtr->getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Mask Input Array must be a 1 component Bool array"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Mask Input Array must be a 1 component array"}})};
   }
   dataArrayPaths.push_back(pGoodVoxelsArrayPathValue);
 

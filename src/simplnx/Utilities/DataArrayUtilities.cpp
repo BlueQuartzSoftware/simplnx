@@ -285,10 +285,10 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
   switch(maskArray.getDataType())
   {
   case DataType::boolean: {
-    return std::make_unique<BoolMaskCompare>(dynamic_cast<BoolArray&>(maskArray));
+    return std::make_unique<BoolMaskCompare>(dynamic_cast<BoolArray&>(maskArray).getDataStoreRef());
   }
   case DataType::uint8: {
-    return std::make_unique<UInt8MaskCompare>(dynamic_cast<UInt8Array&>(maskArray));
+    return std::make_unique<UInt8MaskCompare>(dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef());
   }
   default:
     throw std::runtime_error("InstantiateMaskCompare: The Mask Array being used is NOT of type bool or uint8.");
