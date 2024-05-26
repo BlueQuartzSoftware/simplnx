@@ -9,10 +9,10 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/AlignSections.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 namespace nx::core
 {
-
 struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
 {
   bool WriteAlignmentShifts;
@@ -56,6 +56,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   Result<> m_Result = {};
+
+  std::unique_ptr<MaskCompare> m_MaskCompare = nullptr;
 };
 
 } // namespace nx::core

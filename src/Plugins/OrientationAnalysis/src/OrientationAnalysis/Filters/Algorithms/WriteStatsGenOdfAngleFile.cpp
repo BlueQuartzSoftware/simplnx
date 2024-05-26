@@ -47,10 +47,10 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
   }
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  BoolArray* maskPtr = nullptr;
+  std::unique_ptr<MaskCompare> maskPtr = nullptr;
   if(m_InputValues->UseMask)
   {
-    maskPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
+    maskPtr = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   }
 
   // Figure out how many unique phase values we have by looping over all the phase values
@@ -100,14 +100,14 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
 }
 
 // -----------------------------------------------------------------------------
-int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPhases, const BoolArray* mask, usize totalPoints, int32 phase) const
+int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompare>& mask, usize totalPoints, int32 phase) const
 {
   int32 lineCount = 0;
   for(usize i = 0; i < totalPoints; i++)
   {
     if(cellPhases[i] == phase)
     {
-      if(!m_InputValues->UseMask || (m_InputValues->UseMask && (*mask)[i]))
+      if(!m_InputValues->UseMask || (m_InputValues->UseMask && mask->isTrue(i)))
       {
         lineCount++;
       }
@@ -118,7 +118,7 @@ int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPh
 }
 
 // -----------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const BoolArray* mask, int32 lineCount, usize totalPoints, int32 phase) const
+Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const
 {
   const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
 
@@ -147,7 +147,7 @@ Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const In
 
     if(cellPhases[i] == phase)
     {
-      if(!m_InputValues->UseMask || (m_InputValues->UseMask && (*mask)[i]))
+      if(!m_InputValues->UseMask || (m_InputValues->UseMask && mask->isTrue(i)))
       {
         writeLine = true;
       }

@@ -97,16 +97,22 @@ Result<> PointSampleTriangleGeometry::operator()()
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array
   // 'on demand' in the loop. That is a BAD idea as is it really slow to do that. (10x slower).
-  DataObject* maskArrayDataObject = m_DataStructure.getData(m_Inputs->pMaskArrayPath);
-  BoolArray* maskArray = nullptr;
-  if(nullptr != maskArrayDataObject && m_Inputs->pUseMask)
+  std::unique_ptr<MaskCompare> maskArray = nullptr;
+  if(m_Inputs->pUseMask)
   {
-    maskArray = m_DataStructure.getDataAs<BoolArray>(m_Inputs->pMaskArrayPath);
+    std::unique_ptr<MaskCompare> maskCompare;
+    try
+    {
+      maskCompare = InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_Inputs->pMaskArrayPath.toString());
+      return MakeErrorResult(-506, message);
+    }
   }
-  if(maskArray == nullptr && m_Inputs->pUseMask)
-  {
-    return MakeErrorResult(-502, "Use Mask is true but the MaskArray could not be extracted from the DataStructure. Please ensure the path is correct and that the selected DataArray is of type bool");
-  }
+
   // Get a reference to the Vertex List
   IGeometry::SharedVertexList* vertices = vertex.getVertices();
 
@@ -126,7 +132,7 @@ Result<> PointSampleTriangleGeometry::operator()()
 
     int64_t randomTri = 0;
 
-    if(m_Inputs->pUseMask)
+    if(m_Inputs->pUseMask && maskArray != nullptr)
     {
       while(true)
       {
@@ -135,7 +141,7 @@ Result<> PointSampleTriangleGeometry::operator()()
         {
           throw std::out_of_range(fmt::format("Generated Random Triangle Index '{}' was out of range. '0->{}'", randomTri, numTris));
         }
-        if((*maskArray)[randomTri])
+        if(maskArray->isTrue(randomTri))
         {
           break;
         }

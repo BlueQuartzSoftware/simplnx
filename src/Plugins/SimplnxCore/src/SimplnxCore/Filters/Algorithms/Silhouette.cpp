@@ -1,6 +1,7 @@
 #include "Silhouette.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/KUtilities.hpp"
 
@@ -25,7 +26,7 @@ public:
     return Pointer(static_cast<Self*>(nullptr));
   }
 
-  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64Array& outputDataArray, const BoolArray& maskDataArray, usize numClusters, const Int32Array& featureIds,
+  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64Array& outputDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, const Int32Array& featureIds,
                      KUtilities::DistanceMetric distMetric)
   : m_InputData(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_OutputData(outputDataArray)
@@ -56,7 +57,7 @@ public:
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         numTuplesPerFeature[m_FeatureIds[i]]++;
       }
@@ -64,11 +65,11 @@ public:
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         for(usize j = 0; j < numTuples; j++)
         {
-          if(m_Mask[j])
+          if(m_Mask->isTrue(j))
           {
             clusterDist[i][m_FeatureIds[j]] += KUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
           }
@@ -78,7 +79,7 @@ public:
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         for(usize j = 1; j < totalClusters; j++)
         {
@@ -89,7 +90,7 @@ public:
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         int32 cluster = m_FeatureIds[i];
         inClusterDist[i] = clusterDist[i][cluster];
@@ -112,7 +113,7 @@ public:
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(m_Mask[i])
+      if(m_Mask->isTrue(i))
       {
         m_OutputData[i] = (outClusterMinDist[i] - inClusterDist[i]) / (std::max(outClusterMinDist[i], inClusterDist[i]));
       }
@@ -124,7 +125,7 @@ private:
   const DataArrayT& m_InputData;
   Float64Array& m_OutputData;
   const Int32Array& m_FeatureIds;
-  const BoolArray& m_Mask;
+  const std::unique_ptr<MaskCompare>& m_Mask;
   usize m_NumClusters;
   KUtilities::DistanceMetric m_DistMetric;
 };
@@ -167,7 +168,18 @@ Result<> Silhouette::operator()()
   }
 
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  std::unique_ptr<MaskCompare> maskCompare;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    return MakeErrorResult(-54080, message);
+  }
   RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SilhouetteArrayPath),
-                                                             m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), uniqueIds.size(), featureIds, m_InputValues->DistanceMetric);
+                                                             maskCompare, uniqueIds.size(), featureIds, m_InputValues->DistanceMetric);
   return {};
 }
