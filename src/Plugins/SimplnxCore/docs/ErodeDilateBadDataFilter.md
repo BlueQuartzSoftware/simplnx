@@ -47,6 +47,11 @@ would remove the single **Cells** and reduce the pores by one **Cell**. If this 
 operation, then the pores would grow by one **Cell** and return to near their original size, while the single **Cells**
 would remain removed and not "grow back".
 
+
+## WARNING: Feature Data Will Become Invalid
+
+By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

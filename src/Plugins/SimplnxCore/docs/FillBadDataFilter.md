@@ -14,6 +14,10 @@ This **Filter** removes small *noise* in the data, but keeps larger regions that
 
 The above images show the before and after results of running this filter with a minimum defect size of 1000 voxels. Note that because the minimum defect size was set to 1000 voxels that the over scan area was not modified (the area in all black around the sample).
 
+## WARNING: Feature Data Will Become Invalid
+
+By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
