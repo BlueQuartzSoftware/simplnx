@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -42,31 +43,33 @@ Result<> ComputeBiasedFeatures::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void ComputeBiasedFeatures::findBoundingBoxFeatures()
+Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  const auto& surfaceFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SurfaceFeaturesArrayPath);
-  Int32Array* phases = nullptr;
+  Int32Array* phasesPtr = nullptr;
   if(m_InputValues->CalcByPhase)
   {
-    phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath);
+    phasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath);
   }
   auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
   biasedFeatures.fill(false);
 
+  std::unique_ptr<MaskCompare> surfaceFeatures = nullptr;
+  try
+  {
+    surfaceFeatures = InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->SurfaceFeaturesArrayPath.toString());
+    return MakeErrorResult(-54900, message);
+  }
+
   const usize size = centroids.getNumberOfTuples();
-  float boundBox[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-  float32 coords[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-  float32 x = 0.0f;
-  float32 y = 0.0f;
-  float32 z = 0.0f;
-  float32 dist[7] = {
-      0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-  };
-  float32 minDist = std::numeric_limits<float32>::max();
-  int32 sideToMove = 0;
-  int32 move = 0;
+  std::vector<float32> boundBox = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+  std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
   // loop first to determine number of phases if calcByPhase is being used
   int32 numPhases = 1;
@@ -74,9 +77,9 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
   {
     for(usize i = 1; i < size; i++)
     {
-      if((*phases)[i] > numPhases)
+      if((*phasesPtr)[i] > numPhases)
       {
-        numPhases = (*phases)[i];
+        numPhases = (*phasesPtr)[i];
       }
     }
   }
@@ -87,10 +90,10 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Phase {} of {}", iter, numPhases));
     }
     // reset boundBox for each phase
-    const BoundingBox3D<float32> bb = imageGeometry.getBoundingBoxf();
+    const BoundingBox3D<float32> boundingBox = imageGeometry.getBoundingBoxf();
 
-    auto min = bb.getMinPoint();
-    auto max = bb.getMaxPoint();
+    const auto& min = boundingBox.getMinPoint();
+    const auto& max = boundingBox.getMaxPoint();
     boundBox[0] = min.getX();
     boundBox[1] = max.getX();
     boundBox[2] = min.getY();
@@ -100,28 +103,26 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
 
     for(usize i = 1; i < size; i++)
     {
-      if(surfaceFeatures[i] && (!m_InputValues->CalcByPhase || (*phases)[i] == iter))
+      if(surfaceFeatures->isTrue(i) && (!m_InputValues->CalcByPhase || (*phasesPtr)[i] == iter))
       {
-        sideToMove = 0;
-        move = 1;
-        minDist = std::numeric_limits<float32>::max();
-        x = centroids[3 * i];
-        y = centroids[3 * i + 1];
-        z = centroids[3 * i + 2];
-        coords[0] = x;
-        coords[1] = x;
-        coords[2] = y;
-        coords[3] = y;
-        coords[4] = z;
-        coords[5] = z;
+        int32 sideToMove = 0;
+        int32 move = 1;
+        float32 minDist = std::numeric_limits<float32>::max();
+
+        coords[0] = centroids[3 * i];
+        coords[1] = centroids[3 * i];
+        coords[2] = centroids[3 * i + 1];
+        coords[3] = centroids[3 * i + 1];
+        coords[4] = centroids[3 * i + 2];
+        coords[5] = centroids[3 * i + 2];
         for(int32 j = 1; j < 7; j++)
         {
-          dist[j] = std::numeric_limits<float32>::max();
+          float32 dist = std::numeric_limits<float32>::max();
           if(j % 2 == 1)
           {
             if(coords[j - 1] > boundBox[j - 1])
             {
-              dist[j] = (coords[j - 1] - boundBox[j - 1]);
+              dist = (coords[j - 1] - boundBox[j - 1]);
             }
             if(coords[j - 1] <= boundBox[j - 1])
             {
@@ -132,16 +133,16 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
           {
             if(coords[j - 1] < boundBox[j - 1])
             {
-              dist[j] = (boundBox[j - 1] - coords[j - 1]);
+              dist = (boundBox[j - 1] - coords[j - 1]);
             }
             if(coords[j - 1] >= boundBox[j - 1])
             {
               move = 0;
             }
           }
-          if(dist[j] < minDist)
+          if(dist < minDist)
           {
-            minDist = dist[j];
+            minDist = dist;
             sideToMove = j - 1;
           }
         }
@@ -153,7 +154,7 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
     }
     for(usize j = 1; j < size; j++)
     {
-      if(!m_InputValues->CalcByPhase || (*phases)[j] == iter)
+      if(!m_InputValues->CalcByPhase || (*phasesPtr)[j] == iter)
       {
         if(centroids[3 * j] <= boundBox[0])
         {
@@ -184,35 +185,43 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures()
 
     if(getCancel())
     {
-      return;
+      return {};
     }
   }
+
+  return {};
 }
 
 // -----------------------------------------------------------------------------
-void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
+Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();
   const FloatVec3 imageOrigin = imageGeometry.getOrigin();
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  const auto& surfaceFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SurfaceFeaturesArrayPath);
   auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
   biasedFeatures.fill(false);
 
+  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->SurfaceFeaturesArrayPath.toString());
+    return MakeErrorResult(-54900, message);
+  }
+
   const usize size = centroids.getNumberOfTuples();
 
-  float32 coords[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-  float32 x = 0.0f;
-  float32 y = 0.0f;
-  float32 dist[5] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-  float32 minDist = std::numeric_limits<float32>::max();
-  int32 sideToMove = 0;
-  int32 move = 0;
+  std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f};
 
   float32 xOrigin = 0.0f;
   float32 yOrigin = 0.0f;
-  int32 xPoints = 0, yPoints = 0;
+  int32 xPoints = 0;
+  int32 yPoints = 0;
   FloatVec3 spacing;
 
   usize centroidShift0 = 0;
@@ -249,29 +258,27 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
     centroidShift1 = 1;
   }
 
-  float32 boundBox[6] = {xOrigin, xOrigin + xPoints * spacing[0], yOrigin, yOrigin + yPoints * spacing[1], 0.0f, 0.0f};
+  std::vector<float32> boundBox = {xOrigin, xOrigin + static_cast<float32>(xPoints) * spacing[0], yOrigin, yOrigin + static_cast<float32>(yPoints) * spacing[1], 0.0f, 0.0f};
 
   for(usize i = 1; i < size; i++)
   {
-    if(surfaceFeatures[i])
+    if(maskCompare->isTrue(i))
     {
-      sideToMove = 0;
-      move = 1;
-      minDist = std::numeric_limits<float32>::max();
-      x = centroids[3 * i + centroidShift0];
-      y = centroids[3 * i + centroidShift1];
-      coords[0] = x;
-      coords[1] = x;
-      coords[2] = y;
-      coords[3] = y;
+      int32 sideToMove = 0;
+      int32 move = 1;
+      float32 minDist = std::numeric_limits<float32>::max();
+      coords[0] = centroids[3 * i + centroidShift0];
+      coords[1] = centroids[3 * i + centroidShift0];
+      coords[2] = centroids[3 * i + centroidShift1];
+      coords[3] = centroids[3 * i + centroidShift1];
       for(int32 j = 1; j < 5; j++)
       {
-        dist[j] = std::numeric_limits<float32>::max();
+        float32 dist = std::numeric_limits<float32>::max();
         if(j % 2 == 1)
         {
           if(coords[j - 1] > boundBox[j - 1])
           {
-            dist[j] = (coords[j - 1] - boundBox[j - 1]);
+            dist = (coords[j - 1] - boundBox[j - 1]);
           }
           if(coords[j - 1] <= boundBox[j - 1])
           {
@@ -282,16 +289,16 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
         {
           if(coords[j - 1] < boundBox[j - 1])
           {
-            dist[j] = (boundBox[j - 1] - coords[j - 1]);
+            dist = (boundBox[j - 1] - coords[j - 1]);
           }
           if(coords[j - 1] >= boundBox[j - 1])
           {
             move = 0;
           }
         }
-        if(dist[j] < minDist)
+        if(dist < minDist)
         {
-          minDist = dist[j];
+          minDist = dist;
           sideToMove = j - 1;
         }
       }
@@ -303,7 +310,7 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 
     if(getCancel())
     {
-      return;
+      return {};
     }
   }
   for(usize j = 1; j < size; j++)
@@ -327,7 +334,8 @@ void ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 
     if(getCancel())
     {
-      return;
+      return {};
     }
   }
+  return {};
 }

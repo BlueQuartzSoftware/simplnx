@@ -109,7 +109,7 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesArrayPathValue);
 
   const usize xPoints = featureGeometry.getNumXCells();
   const usize yPoints = featureGeometry.getNumYCells();
@@ -133,7 +133,7 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
         {
           if(IsPointASurfaceFeature(Point3D<usize>{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
-            surfaceFeatures[gNum] = true;
+            surfaceFeatures[gNum] = 1;
           }
         }
       }
@@ -146,7 +146,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = 0;
   usize yPoints = 0;
@@ -183,7 +183,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
       {
         if(IsPointASurfaceFeature(Point2D<usize>{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
-          surfaceFeatures[gNum] = true;
+          surfaceFeatures[gNum] = 1;
         }
       }
     }
@@ -280,7 +280,7 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
   }
 
   auto createSurfaceFeaturesAction =
-      std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue));
+      std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -298,19 +298,19 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
 
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
+  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(pSurfaceFeaturesArrayPathValue);
   auto& surfaceFeaturesStore = surfaceFeatures.getDataStoreRef();
 
   const usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   const usize maxFeature = featureIds[featureIdsMaxIdx];
   const std::vector<usize> surfaceFeaturesTupleShape = {maxFeature + 1};
 
-  Result<> resizeResults = ResizeDataArray<bool>(dataStructure, pSurfaceFeaturesArrayPathValue, surfaceFeaturesTupleShape);
+  Result<> resizeResults = ResizeDataArray<uint8>(dataStructure, pSurfaceFeaturesArrayPathValue, surfaceFeaturesTupleShape);
   if(resizeResults.invalid())
   {
     return resizeResults;
   }
-  surfaceFeaturesStore.fill(false);
+  surfaceFeaturesStore.fill(0);
 
   // Find surface features
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);

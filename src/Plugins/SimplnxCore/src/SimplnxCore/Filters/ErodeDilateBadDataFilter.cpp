@@ -102,6 +102,11 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
+                                           "level data should be rerun to ensure accurate final results from your pipeline.";
+  preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
+  resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
+
   if(pOperationValue != ::k_DilateIndex && pOperationValue != ::k_ErodeIndex)
   {
     MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Dilate) or 1 (Erode). {} was passed into the filter. ", pOperationValue));

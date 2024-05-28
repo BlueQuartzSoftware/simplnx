@@ -40,8 +40,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  void findBoundingBoxFeatures();
-  void findBoundingBoxFeatures2D();
+  Result<> findBoundingBoxFeatures();
+  Result<> findBoundingBoxFeatures2D();
 
 private:
   DataStructure& m_DataStructure;

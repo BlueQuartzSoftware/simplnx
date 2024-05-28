@@ -12,7 +12,7 @@ The **Filter** can be run in a mode where the minimum number of neighbors is app
 
 ## WARNING: Feature Data Will Become Invalid
 
-By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters such as "Find Sizes", "Find Shapes" should be re-run if you want accurate final results from your pipeline.
+By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature level data should be rerun to ensure accurate final results from your pipeline.
 
 ## WARNING: NeighborList Removal
 
