@@ -48,8 +48,8 @@ Set the output directory where the output from this tutorial will be stored, and
 
 .. code:: python
 
-    output_dir = Path('/tmp/Tutorial_2_Output')   # Modify this path to point to the directory where the Tutorial 2 output will be stored!
-    output_dir.mkdir(exist_ok=True)
+    output_dir = Path(__file__).parent / 'Output' / 'Tutorial_2_Output'
+    output_dir.mkdir(exist_ok=True, parents=True)
 
 ######################################
 2.4 Creating the DataStructure Object
@@ -252,7 +252,7 @@ The modify_pipeline_filter method from section 2.7.1 can be used inside a loop t
 
     # Loop over the EBSD pipeline
     edax_ipf_colors_output_dir = output_dir / 'Edax_IPF_Colors'
-    edax_ipf_colors_output_dir.mkdir(exist_ok=True)
+    edax_ipf_colors_output_dir.mkdir(exist_ok=True, parents=True)
     for i in range(1, 6):
         # Create the data structure
         data_structure = nx.DataStructure()
