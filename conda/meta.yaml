@@ -1,5 +1,5 @@
 {% set name = "simplnx" %}
-{% set version = "1.4.0" %}
+{% set version = "1.5.0" %}
 
 package:
   name: {{ name|lower }}
@@ -9,19 +9,19 @@ source:
   - path: ../
     folder: simplnx
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
-    git_rev: v1.0.26
+    git_rev: v1.0.29
     folder: EbsdLib
   - git_url: https://github.com/BlueQuartzSoftware/H5Support
     git_rev: v1.0.13
     folder: H5Support
   - git_url: https://github.com/martinmoene/expected-lite
-    git_rev: v0.5.0
+    git_rev: v0.6.3
     folder: expected-lite
   - git_url: https://github.com/fr00b0/nod
-    git_rev: v0.5.2
+    git_rev: v0.5.3
     folder: nod
   - git_url: https://github.com/martinmoene/span-lite
-    git_rev: v0.10.3
+    git_rev: v0.11.0
     folder: span-lite
   - url: https://raw.githubusercontent.com/BlueQuartzSoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
