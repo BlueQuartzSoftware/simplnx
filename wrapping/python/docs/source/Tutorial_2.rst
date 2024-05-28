@@ -44,7 +44,7 @@ Also use the following imports:
 2.3 Set Output Directory
 ###################################
 
-Set the output directory where the output from this tutorial will be stored, and create the directory.
+Set the output directory where the output from this tutorial will be stored, and create the directory.  We are going to set the output directory in the same location as the current script.
 
 .. code:: python
 
