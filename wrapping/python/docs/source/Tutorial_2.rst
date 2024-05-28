@@ -22,6 +22,18 @@ Setup your environment in the same way as from :ref:`Tutorial 1<Tutorial_1_Setup
 
 Use the same import statements as from :ref:`Tutorial 1<Tutorial_1_Imports>`.
 
+.. code:: python
+
+    import simplnx as nx
+    import numpy as np
+
+If you will be using filters from DREAM3D-NX's other plugins, then you may additionally need the following:
+
+.. code:: python
+
+    import itkimageprocessing as nxitk
+    import orientationanalysis as nxor
+
 ######################################
 2.3 Creating the DataStructure Object
 ######################################
@@ -36,17 +48,20 @@ This line creates a DataStructure object, which will serve as the overall contai
 2.4 Reading the Pipeline File
 ###############################################
 
+SIMPLNX has an object called the "Pipeline" object that holds a linear list of filters. This object
+has an API that allows the developer to query the pipeline for filters and also to insert filters
+into the pipeline. We are going to add a line of code to read a pipeline directly from a ".d3dpipeline" file.
+
 .. code:: python
 
     pipeline = nx.Pipeline().from_file('Pipelines/lesson_2.d3dpipeline')
-
-This line reads the pipeline file and creates a Pipeline object. The from_file method loads the pipeline from the specified file.
 
 ###############################################
 2.5 Printing Pipeline Filter Information
 ###############################################
 
-Understanding the filters in your pipeline is crucial for effective data processing. Here, we will see how to print out each filter's human name and index from the pipeline.
+One basic example of using the pipeline object is to loop over each filter in the pipeline and print its human name. This example can  
+be done as follows:
 
 .. code:: python
 
@@ -54,6 +69,14 @@ Understanding the filters in your pipeline is crucial for effective data process
         print(f"[{index}]: {filter.get_filter().human_name()}")
 
 This loop iterates over each filter in the pipeline and prints out its index and human name.
+
+The output should look like this:
+
+.. code:: text
+
+    [0]: Create Geometry
+    [1]: Create Data Array
+    [2]: Write DREAM3D NX File
 
 ###############################################
 2.6 Inserting a Filter into a Pipeline
@@ -77,11 +100,11 @@ Here, we define the arguments for the new filter. These arguments specify the co
 2.6.2 Inserting the Filter
 ****************************************
 
-We can insert the new filter into the pipeline at the specified position (index 2). The CreateDataGroup class is used to create the filter, and the arguments are passed to configure it.
+We can insert the new filter into the pipeline at the specified position (index 2). The CreateDataGroupFilter is used to create the filter, and the arguments are passed to configure it.
 
 .. code:: python
 
-    pipeline.insert(2, nx.CreateDataGroup(), create_data_group_args)
+    pipeline.insert(2, nx.CreateDataGroupFilter(), create_data_group_args)
 
 ****************************************
 2.6.3 Executing the Modified Pipeline
