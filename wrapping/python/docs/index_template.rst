@@ -65,6 +65,8 @@ How to use SIMPLNX from Python
    Python_Introduction
    User_API
    Tutorial_1
+   Tutorial_2
+   Tutorial_3
 
 .. toctree::
    :maxdepth: 1

@@ -29,6 +29,7 @@ that you are interested in running.
       conda create -c bluequartzsoftware -n nxpython python=3.12 dream3dnx
       conda activate nxpython
   
+.. _Tutorial_1_Intro:
 
 ###################################
 1.2 Introduction
@@ -36,6 +37,7 @@ that you are interested in running.
 
 Setup your virtual environment following the directions from above. Then create a Tutorial_1.py file anywhere that you want and open that up in your Editor/IDE.
 
+.. _Tutorial_1_Imports:
 
 ###################################
 1.3 Necessary Import Statements
