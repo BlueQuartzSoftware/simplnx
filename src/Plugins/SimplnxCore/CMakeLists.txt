@@ -7,6 +7,8 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
+  CreateAMScanPathsFilter
+  SliceTriangleGeometryFilter
   AddBadDataFilter
   AlignGeometriesFilter
   AlignSectionsFeatureCentroidFilter
@@ -139,6 +141,8 @@ set(ActionList
 )
 
 set(AlgorithmList
+  CreateAMScanPaths
+  SliceTriangleGeometry
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList

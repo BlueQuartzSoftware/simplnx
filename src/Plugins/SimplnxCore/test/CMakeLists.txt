@@ -6,6 +6,8 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  CreateAMScanPathsTest.cpp
+  SliceTriangleGeometryTest.cpp
   # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
