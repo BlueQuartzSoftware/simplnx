@@ -26,6 +26,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -34,6 +35,13 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::ScanVectorsGeneratorFilter: Valid Filter Execution", "[SimplnxCore][ScanVectorsGeneratorFilter][.][UNIMPLEMENTED][!mayfail]")
 {
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_scan_path_test_data.tar.gz", "6_5_test_data_1");
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_scan_path_test_data/6_6_scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateAMScanPathsFilter filter;
   DataStructure ds;
@@ -55,12 +63,11 @@ TEST_CASE("SimplnxCore::ScanVectorsGeneratorFilter: Valid Filter Execution", "[S
   args.insertOrAssign(CreateAMScanPathsFilter::k_PowersArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
 // TEST_CASE("SimplnxCore::ScanVectorsGeneratorFilter: InValid Filter Execution")
