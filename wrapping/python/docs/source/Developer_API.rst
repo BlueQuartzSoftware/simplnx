@@ -9,7 +9,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/ArrayCreationParameter.png
+   .. figure:: Images/Parameters/ArrayCreationParameter.png
       :alt: Array Creation Parameter
 
 
@@ -56,7 +56,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/ArraySelectionParameter.png
+   .. figure:: Images/Parameters/ArraySelectionParameter.png
       :alt: Array Creation Parameter
 
 
@@ -115,7 +115,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/ArrayThresholdsParameter.png
+   .. figure:: Images/Parameters/ArrayThresholdsParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -238,7 +238,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/AttributeMatrixSelectionParameter.png
+   .. figure:: Images/Parameters/AttributeMatrixSelectionParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -283,7 +283,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/BoolParameter.png
+   .. figure:: Images/Parameters/BoolParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -343,7 +343,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/CalculatorParameter.png
+   .. figure:: Images/Parameters/CalculatorParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -401,7 +401,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/ChoicesParameter.png
+   .. figure:: Images/Parameters/ChoicesParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -463,7 +463,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/DataGroupCreationParameter.png
+   .. figure:: Images/Parameters/DataGroupCreationParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -508,7 +508,7 @@ General Parameters
 
    The figure shows what the parameter looks like in the user interface.
    
-   .. figure:: Images/DataGroupSelectionParameter.png
+   .. figure:: Images/Parameters/DataGroupSelectionParameter.png
       :alt: Array Creation Parameter
 
    Declaration
@@ -555,6 +555,11 @@ General Parameters
 .. _DataObjectNameParameter:
 .. py:class:: DataObjectNameParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/DataObjectNameParameter.png
+      :alt: DataObjectName Parameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -563,7 +568,14 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``DataObjectNameParameter`` is used to specify the name of a data object within the data structure.
+   The ``DataObjectNameParameter`` is used to specify the name of a data object within the data structure. This parameter 
+   is used most often when the developer of the filter intends the output "Group|Array|ArrtributeMatrix|Geometry" to be 
+   created as a sibling to an input DataObject or as a Child of an input DataObject. Examples would be a filter that asks 
+   for an input array "Foo" and creates an output array that they want to be a sibling of "Foo" called "Bar". Another 
+   example would be a filter that asks for an input Attribute Matrix and wants to create an output array as a child of 
+   the input Attribute Matrix. The major difference between this Parameter and the String parameter is that if a user 
+   changes the value of a DataObjectName parameter, other filters further down the pipeline will be updated with the new 
+   value.
 
    Inputs
    ~~~~~~
@@ -594,6 +606,11 @@ General Parameters
 
 .. _DataPathSelectionParameter:
 .. py:class:: DataPathSelectionParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/DataPathSelectionParameter.png
+      :alt: DataPathSelection Parameter
 
    Declaration
    ~~~~~~~~~~~
@@ -677,6 +694,11 @@ General Parameters
 .. _DataTypeParameter:
 .. py:class:: DataTypeParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/DataTypeParameter.png
+      :alt: DataTypeParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -733,6 +755,11 @@ General Parameters
 .. _Dream3dImportParameter:
 .. py:class:: Dream3dImportParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/Dream3dImportParameter.png
+      :alt: Dream3dImportParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -741,7 +768,8 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``Dream3dImportParameter`` holds the information necessary to import a .dream3d file through the **ImportData** object.
+   The ``Dream3dImportParameter`` holds the information necessary to import a .dream3d file through the **ImportData** object. This parameter
+   should rarely, if ever, be used outside of the filter it was created to be used by.
 
    Inputs
    ~~~~~~
@@ -779,6 +807,11 @@ General Parameters
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/DynamicTableParameter.png
+      :alt: DynamicTableParameter
+
    Declarations
    ~~~~~~~~~~~~
    .. code-block:: python
@@ -789,7 +822,10 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``DynamicTableParameter`` is used to specify parameters for dynamic tables which can be modified by the user during runtime. It involves detailed configuration of rows and columns using the `DynamicTableInfo` class.
+   The ``DynamicTableParameter`` is used to specify parameters for dynamic tables which can be modified by the user 
+   during runtime. It involves detailed configuration of rows and columns using the `DynamicTableInfo` class. The parameter
+   can have either static or adjustable (dynamic) rows and columns at runtime. This is done through the configuration
+   object.
 
    Inputs
    ~~~~~~
@@ -860,6 +896,11 @@ General Parameters
 .. _EnsembleInfoParameter:
 .. py:class:: EnsembleInfoParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/EnsembleInfoParameter.png
+      :alt: EnsembleInfoParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -868,7 +909,10 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``EnsembleInfoParameter`` is used to represent a list of 3 value lists. Each list holds 3 values, Crystal Structure, Phase Type, Phase Name.
+   The ``EnsembleInfoParameter`` is used to create the necessary phase information that will help when analyzing EBSD style of 
+   data where crystallographic information about the phases is needed. This kind of data is typically read as part of EBSD
+   files but there are cases where this kind of data is being read from CSV files. It is represented a list of 3 value lists. 
+   Each list holds 3 values, Crystal Structure, Phase Type, Phase Name.
    
    Each row represents a specific phase.
 
@@ -896,7 +940,8 @@ General Parameters
 
    The user can define their own phase names.
 
-   This is used in combination with the :ref:`OrientationAnalysis.CreateEnsembleInfoFilter() <CreateEnsembleInfoFilter>` filter.
+   This parameter is typically used in combination with the :ref:`OrientationAnalysis.CreateEnsembleInfoFilter() <CreateEnsembleInfoFilter>` filter
+   but could find uses in other filters that need this kind of information from the user.
 
    Inputs
    ~~~~~~
@@ -931,6 +976,11 @@ General Parameters
 .. _FileSystemPathParameter:
 .. py:class:: FileSystemPathParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/FileSystemPathParameter.png
+      :alt: FileSystemPathParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -939,7 +989,8 @@ General Parameters
 
    Description
    ~~~~~~~~~~~
-   The ``FileSystemPathParameter`` is used to specify a file system path, allowing the user to select directories or files for input or output operations.
+   The ``FileSystemPathParameter`` is used to ask a user for a path from the local computer system. The parameter can be 
+   configured to allow the user to select directories or files for input or output operations.
 
    Inputs
    ~~~~~~
@@ -986,6 +1037,11 @@ General Parameters
 .. _CreateColorMapParameter:
 .. py:class:: CreateColorMapParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/CreateColorMapParameter.png
+      :alt: CreateColorMapParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -999,23 +1055,7 @@ General Parameters
 
    This parameter is used specifically for the  :ref:`simplnx.CreateColorMapFilter() <CreateColorMapFilter>` filter.
 
-   These are the color table presets:
-   
-   - "Rainbow Desaturated"
-   - "Cold and Hot"
-   - "Black-Body Radiation"
-   - "X Ray"
-   - "Grayscale"
-   - "Black, Blue and White"
-   - "Black, Orange and White"
-   - "Rainbow Blended White"
-   - "Rainbow Blended Grey"
-   - "Rainbow Blended Black"
-   - "Blue to Yellow"
-   - "jet"
-   - "rainbow"
-   - "Haze"
-   - "hsv"
+   Please see the full documentation for the filter for the complete list of preset values.
 
    Inputs
    ~~~~~~
@@ -1046,6 +1086,11 @@ General Parameters
 
 .. _GeneratedFileListParameter:
 .. py:class:: GeneratedFileListParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/GeneratedFileListParameter.png
+      :alt: GeneratedFileListParameter
 
    Declaration
    ~~~~~~~~~~~
@@ -1153,6 +1198,11 @@ General Parameters
 .. _GeometrySelectionParameter:
 .. py:class:: GeometrySelectionParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/GeometrySelectionParameter.png
+      :alt: GeometrySelectionParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -1209,6 +1259,11 @@ General Parameters
 
 .. _ReadCSVFileParameter:
 .. py:class:: ReadCSVFileParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/ReadCSVFileParameter.png
+      :alt: ReadCSVFileParameter
 
    Declaration
    ~~~~~~~~~~~
@@ -1388,6 +1443,11 @@ General Parameters
 .. _ReadHDF5DatasetParameter:
 .. py:class:: ReadHDF5DatasetParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/ReadHDF5DatasetParameter.png
+      :alt: ReadHDF5DatasetParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -1466,6 +1526,11 @@ General Parameters
 .. _MultiArraySelectionParameter:
 .. py:class:: MultiArraySelectionParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/MultiArraySelectionParameter.png
+      :alt: MultiArraySelectionParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -1519,6 +1584,11 @@ General Parameters
 .. _MultiPathSelectionParameter:
 .. py:class:: MultiPathSelectionParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/MultiPathSelectionParameter.png
+      :alt: MultiPathSelectionParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -1558,6 +1628,11 @@ General Parameters
 
 .. _NeighborListSelectionParameter:
 .. py:class:: NeighborListSelectionParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/NeighborListSelectionParameter.png
+      :alt: NeighborListSelectionParameter
 
    Declaration
    ~~~~~~~~~~~
@@ -1602,6 +1677,11 @@ General Parameters
 
 .. _NumericTypeParameter:
 .. py:class:: NumericTypeParameter
+
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/NumericTypeParameter.png
+      :alt: NumericTypeParameter
 
    Declaration
    ~~~~~~~~~~~
@@ -1654,6 +1734,11 @@ General Parameters
 .. _StringParameter:
 .. py:class:: StringParameter
 
+   The figure shows what the parameter looks like in the user interface.
+   
+   .. figure:: Images/Parameters/StringParameter.png
+      :alt: StringParameter
+
    Declaration
    ~~~~~~~~~~~
    .. code-block:: python
@@ -1693,6 +1778,13 @@ General Parameters
 
 Numerical Parameters
 --------------------
+
+   The figure shows two different numerical parameters. One for a floating point number and one
+   for an integer.
+   
+   .. figure:: Images/Parameters/NumericalParameter.png
+      :alt: NumericalParameter
+
 
 Declarations
 ~~~~~~~~~~~~
@@ -1754,6 +1846,13 @@ Usage
 
 Numerical Vector Parameters
 ---------------------------
+
+   The figure shows two different numerical vector parameters each having a different number of components to the vector.
+   The user interface has built in Copy/Paste functionality to easily get data into and out of the text fields.
+   
+   .. figure:: Images/Parameters/VectorParameter.png
+      :alt: VectorParameter
+
 
 Declarations
 ~~~~~~~~~~~~
