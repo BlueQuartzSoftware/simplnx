@@ -1,7 +1,8 @@
 #include "SliceTriangleGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 using namespace nx::core;
 
@@ -27,59 +28,55 @@ const std::atomic_bool& SliceTriangleGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SliceTriangleGeometry::operator()()
 {
-#if 0
   // geometry will be rotated so that the sectioning direction is always 001 before rotating back
-  float n[3] = {0.0f, 0.0f, 0.0f};
-  n[0] = 0.0f;
-  n[1] = 0.0f;
-  n[2] = 1.0f;
+  std::array<float32, 3> n = {0.0f, 0.0f, 1.0f};
 
-  TriangleGeom::Pointer triangle = getDataContainerArray()->getDataContainer(getCADDataContainerName())->getGeometryAs<TriangleGeom>();
-  triangle->findEdges();
+  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->CADDataContainerName);
+  triangle.findEdges();
 
-  MeshIndexType* tris = triangle->getTriPointer(0);
-  float* triVerts = triangle->getVertexPointer(0);
-  MeshIndexType numTris = triangle->getNumberOfTris();
-  MeshIndexType numTriVerts = triangle->getNumberOfVertices();
+  INodeGeometry2D::SharedFaceList& tris = triangle.getFacesRef();
+  INodeGeometry0D::SharedVertexList& triVerts = triangle.getVerticesRef();
+  usize numTris = triangle.getNumberOfFaces();
+  usize numTriVerts = triangle.getNumberOfVertices();
 
-  // rotate CAD tiangles to get into sectioning orientation
-  rotateVertices(rotForward, n, numTriVerts, triVerts);
+  // rotate CAD triangles to get into sectioning orientation
+  // rotateVertices(rotForward, n, numTriVerts, triVerts);
 
   // determine bounds and number of slices needed for CAD geometry
-  float minDim = std::numeric_limits<float>::max();
-  float maxDim = -minDim;
-  determineBoundsAndNumSlices(minDim, maxDim, numTris, tris, triVerts);
-  int64_t minSlice = static_cast<int64_t>(minDim / m_SliceResolution);
-  int64_t maxSlice = static_cast<int64_t>(maxDim / m_SliceResolution);
+  float32 minDim = std::numeric_limits<float32>::max();
+  float32 maxDim = -minDim;
+  usize numberOfSlices = determineBoundsAndNumSlices(minDim, maxDim, numTris, tris, triVerts);
+  const auto minSlice = static_cast<int64>(minDim / m_InputValues->SliceResolution);
+  const auto maxSlice = static_cast<int64>(maxDim / m_InputValues->SliceResolution);
 
-  float q[3] = {0.0f, 0.0f, 0.0f};
-  float r[3] = {0.0f, 0.0f, 0.0f};
-  float p[3] = {0.0f, 0.0f, 0.0f};
-  float corner[3] = {0.0f, 0.0f, 0.0f};
-  float d = 0;
+  std::array<float32, 3> q = {0.0f, 0.0f, 0.0f};
+  std::array<float32, 3> r = {0.0f, 0.0f, 0.0f};
+  std::array<float32, 3> p = {0.0f, 0.0f, 0.0f};
+  std::array<float32, 3> corner = {0.0f, 0.0f, 0.0f};
+  float32 d = 0;
 
-  std::vector<float> slicedVerts;
-  std::vector<int32_t> sliceIds;
-  std::vector<int32_t> regionIds;
+  std::vector<float32> slicedVerts;
+  std::vector<int32> sliceIds;
+  std::vector<int32> regionIds;
 
   // Get an object reference to the pointer
-  Int32ArrayType& m_TriRegionId = *(m_TriRegionIdPtr.lock());
+  auto& triRegionId = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdArrayPath);
 
-  int32_t edgeCounter = 0;
-  for(MeshIndexType i = 0; i < numTris; i++)
+  int32 edgeCounter = 0;
+  for(usize i = 0; i < numTris; i++)
   {
-    int32_t regionId = 0;
+    int32 regionId = 0;
     // get region Id of this triangle (if they are available)
-    if(m_HaveRegionIds)
+    if(m_InputValues->HaveRegionIds)
     {
-      regionId = m_TriRegionId[i];
+      regionId = triRegionId[i];
     }
     // determine which slices would hit the triangle
-    float minTriDim = std::numeric_limits<float>::max();
-    float maxTriDim = -minTriDim;
-    for(size_t j = 0; j < 3; j++)
+    auto minTriDim = std::numeric_limits<float32>::max();
+    float32 maxTriDim = -minTriDim;
+    for(usize j = 0; j < 3; j++)
     {
-      int64_t vert = tris[3 * i + j];
+      int64 vert = tris[3 * i + j];
       if(minTriDim > triVerts[3 * vert + 2])
       {
         minTriDim = triVerts[3 * vert + 2];
@@ -101,8 +98,8 @@ Result<> SliceTriangleGeometry::operator()()
     {
       maxTriDim = maxDim;
     }
-    int64_t firstSlice = static_cast<int64_t>(minTriDim / m_SliceResolution);
-    int64_t lastSlice = static_cast<int64_t>(maxTriDim / m_SliceResolution);
+    auto firstSlice = static_cast<int64>(minTriDim / m_InputValues->SliceResolution);
+    auto lastSlice = static_cast<int64>(maxTriDim / m_InputValues->SliceResolution);
     if(firstSlice < minSlice)
     {
       firstSlice = minSlice;
@@ -112,9 +109,9 @@ Result<> SliceTriangleGeometry::operator()()
       lastSlice = maxSlice;
     }
     // get cross product of triangle vectors to get normals
-    float vecAB[3];
-    float vecAC[3];
-    float triCross[3];
+    float32 vecAB[3];
+    float32 vecAC[3];
+    float32 triCross[3];
     char val;
     vecAB[0] = triVerts[3 * tris[3 * i + 1]] - triVerts[3 * tris[3 * i]];
     vecAB[1] = triVerts[3 * tris[3 * i + 1] + 1] - triVerts[3 * tris[3 * i] + 1];
@@ -125,11 +122,11 @@ Result<> SliceTriangleGeometry::operator()()
     triCross[0] = vecAB[1] * vecAC[2] - vecAB[2] * vecAC[1];
     triCross[1] = vecAB[2] * vecAC[0] - vecAB[0] * vecAC[2];
     triCross[2] = vecAB[0] * vecAC[1] - vecAB[1] * vecAC[0];
-    for(int64_t j = firstSlice; j <= lastSlice; j++)
+    for(int64 j = firstSlice; j <= lastSlice; j++)
     {
       int cut = 0;
       bool cornerHit = false;
-      d = (m_SliceResolution * float(j));
+      d = (m_InputValues->SliceResolution * static_cast<float32>(j));
       q[0] = triVerts[3 * tris[3 * i]];
       q[1] = triVerts[3 * tris[3 * i] + 1];
       q[2] = triVerts[3 * tris[3 * i] + 2];
@@ -231,13 +228,13 @@ Result<> SliceTriangleGeometry::operator()()
       }
       if(cut == 2)
       {
-        size_t size = slicedVerts.size();
+        const usize size = slicedVerts.size();
         // get delta x for the current ordering of the segment
-        float delX = slicedVerts[size - 6] - slicedVerts[size - 3];
+        const float32 delX = slicedVerts[size - 6] - slicedVerts[size - 3];
         // get cross product of vec with 001 slicing direction
         if((triCross[1] > 0 && delX < 0) || (triCross[1] < 0 && delX > 0))
         {
-          float temp[3] = {slicedVerts[size - 3], slicedVerts[size - 2], slicedVerts[size - 1]};
+          const float32 temp[3] = {slicedVerts[size - 3], slicedVerts[size - 2], slicedVerts[size - 1]};
           slicedVerts[size - 3] = slicedVerts[size - 6];
           slicedVerts[size - 2] = slicedVerts[size - 5];
           slicedVerts[size - 1] = slicedVerts[size - 4];
@@ -246,7 +243,7 @@ Result<> SliceTriangleGeometry::operator()()
           slicedVerts[size - 4] = temp[2];
         }
         sliceIds.push_back(j);
-        if(m_HaveRegionIds)
+        if(m_InputValues->HaveRegionIds)
         {
           regionIds.push_back(regionId);
         }
@@ -255,34 +252,35 @@ Result<> SliceTriangleGeometry::operator()()
     }
   }
 
-  size_t numVerts = slicedVerts.size() / 3;
-  size_t numEdges = slicedVerts.size() / 6;
+  usize numVerts = slicedVerts.size() / 3;
+  usize numEdges = slicedVerts.size() / 6;
 
   if(numVerts != (2 * numEdges))
   {
-    QString message = QObject::tr("Number of sectioned vertices and edges do not make sense.  Number of Vertices: %1 and Number of Edges: %2").arg(numVerts).arg(numEdges);
-    setErrorCondition(-13003, message);
-    return;
+    return MakeErrorResult(-62101, fmt::format("Number of sectioned vertices and edges do not make sense.  Number of Vertices: {} and Number of Edges: {}", numVerts, numEdges));
   }
 
-  DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getSliceDataContainerName());
-  SharedVertexList::Pointer vertices = EdgeGeom::CreateSharedVertexList(numVerts);
-  EdgeGeom::Pointer edge = EdgeGeom::CreateGeometry(numEdges, vertices, SIMPL::Geometry::EdgeGeometry, !getInPreflight());
-  float* verts = edge->getVertexPointer(0);
-  MeshIndexType* edges = edge->getEdgePointer(0);
+  auto& edge = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
+  edge.resizeVertexList(numVerts);
+  edge.resizeEdgeList(numEdges);
+  INodeGeometry0D::SharedVertexList& verts = edge.getVerticesRef();
+  INodeGeometry1D::SharedEdgeList& edges = edge.getEdgesRef();
+  edge.getVertexAttributeMatrix()->resizeTuples({numVerts});
+  edge.getEdgeAttributeMatrix()->resizeTuples({numEdges});
+  auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->SliceAttributeMatrixName));
+  sliceAM.resizeTuples({numberOfSlices});
 
-  std::vector<size_t> tDims(1, numEdges);
-  m->getAttributeMatrix(getEdgeAttributeMatrixName())->resizeAttributeArrays(tDims);
+  DataPath edgeAmPath = m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->EdgeAttributeMatrixName);
+  auto& sliceId = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->SliceIdArrayName));
+  sliceId.fill(0);
+  Int32Array* triRegionIds = nullptr;
+  if(m_InputValues->HaveRegionIds)
+  {
+    triRegionIds = m_DataStructure.getDataAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->RegionIdArrayPath.getTargetName()));
+    triRegionId.fill(0);
+  }
 
-  tDims[0] = m_NumberOfSlices;
-  m->getAttributeMatrix(getSliceAttributeMatrixName())->resizeAttributeArrays(tDims);
-
-  // Weak pointers are still good because the resize operations are affecting the internal structure of the DataArray<T>
-  // and not the actual pointer to the DataArray<T> object itself.
-  Int32ArrayType& m_SliceId = *(m_SliceIdPtr.lock());
-  Int32ArrayType& m_RegionId = *(m_RegionIdPtr.lock());
-
-  for(size_t i = 0; i < numEdges; i++)
+  for(usize i = 0; i < numEdges; i++)
   {
     edges[2 * i] = 2 * i;
     edges[2 * i + 1] = 2 * i + 1;
@@ -292,22 +290,82 @@ Result<> SliceTriangleGeometry::operator()()
     verts[3 * (2 * i + 1)] = slicedVerts[3 * (2 * i + 1)];
     verts[3 * (2 * i + 1) + 1] = slicedVerts[3 * (2 * i + 1) + 1];
     verts[3 * (2 * i + 1) + 2] = slicedVerts[3 * (2 * i + 1) + 2];
-    m_SliceId[i] = sliceIds[i];
-    if(m_HaveRegionIds)
+    sliceId[i] = sliceIds[i];
+    if(m_InputValues->HaveRegionIds)
     {
-      m_RegionId[i] = regionIds[i];
+      (*triRegionIds)[i] = regionIds[i];
     }
   }
 
   // rotate all CAD triangles back to original orientation
-  rotateVertices(rotBackward, n, numTriVerts, triVerts);
-
+  // rotateVertices(rotBackward, n, numTriVerts, triVerts);
   // rotate all edges back to original orientation
-  rotateVertices(rotBackward, n, numVerts, verts);
+  // rotateVertices(rotBackward, n, numVerts, verts);
 
-  m->setGeometry(edge);
+  // m_MessageHandler("Complete");
 
-  notifyStatusMessage("Complete");
-#endif
   return {};
+}
+
+// -----------------------------------------------------------------------------
+char SliceTriangleGeometry::rayIntersectsPlane(const float d, const std::array<float32, 3>& q, const std::array<float32, 3>& r, std::array<float32, 3>& p)
+{
+  const float64 rqDelZ = r[2] - q[2];
+  const float64 dqDelZ = d - q[2];
+  const float64 t = dqDelZ / rqDelZ;
+  for(int i = 0; i < 3; i++)
+  {
+    p[i] = q[i] + (t * (r[i] - q[i]));
+  }
+  if(t > 0.0 && t < 1.0)
+  {
+    return '1';
+  }
+  if(t == 0.0)
+  {
+    return 'q';
+  }
+  if(t == 1.0)
+  {
+    return 'r';
+  }
+
+  return '0';
+}
+
+// -----------------------------------------------------------------------------
+usize SliceTriangleGeometry::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, INodeGeometry2D::SharedFaceList& tris, INodeGeometry0D::SharedVertexList& triVerts)
+{
+  for(usize i = 0; i < numTris; i++)
+  {
+    for(usize j = 0; j < 3; j++)
+    {
+      const usize vert = tris[3 * i + j];
+      if(minDim > triVerts[3 * vert + 2])
+      {
+        minDim = triVerts[3 * vert + 2];
+      }
+      if(maxDim < triVerts[3 * vert + 2])
+      {
+        maxDim = triVerts[3 * vert + 2];
+      }
+    }
+  }
+
+  // adjust sectioning range if user selected a specific range - check that user range is within actual range
+  if(m_InputValues->SliceRange == 1)
+  {
+    if(m_InputValues->Zstart > minDim)
+    {
+      minDim = m_InputValues->Zstart;
+    }
+    if(m_InputValues->Zend < maxDim)
+    {
+      maxDim = m_InputValues->Zend;
+    }
+  }
+  // TODO: Is this still correct? Why have the subtraction at all?
+  const auto numberOfSlices = static_cast<usize>((maxDim - 0.0) / m_InputValues->SliceResolution) + 1;
+  // const auto numberOfSlices = static_cast<usize>((maxDim - minDim) / m_InputValues->SliceResolution) + 1;
+  return numberOfSlices;
 }

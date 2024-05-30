@@ -4,16 +4,12 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Parameters/VectorParameter.hpp"
 
 namespace nx::core
 {
@@ -53,6 +49,10 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+
+protected:
+  char rayIntersectsPlane(float32 d, const std::array<float32, 3>& q, const std::array<float32, 3>& r, std::array<float32, 3>& p);
+  usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, INodeGeometry2D::SharedFaceList& tris, INodeGeometry0D::SharedVertexList& triVerts);
 
 private:
   DataStructure& m_DataStructure;
