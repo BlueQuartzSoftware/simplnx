@@ -6,7 +6,7 @@ Processing (Crystallography)
 
 ## Description
 
-This **Filter** will generate *inverse pole figure* (IPF) colors for cubic, hexagonal or trigonal crystal structures. The user can enter the *Reference Direction*, which defaults to [001]. The **Filter** also has the option to apply a black color to all "bad" **Elements**, as defined by a boolean *mask* array, which can be generated using the Threshold Objects **Filter**.
+This **Filter** will generate *inverse pole figure* (IPF) colors. The user can enter the *Reference Direction*, which defaults to [001]. The **Filter** also has the option to apply a black color to all "bad" **Elements**, as defined by a boolean *mask* array, which can be generated using the Threshold Objects **Filter** or any other filter that generates a "mask" of the data and outputs either a bool or uint8 array.
 
 ### Originating Data Notes
 
@@ -14,8 +14,13 @@ This **Filter** will generate *inverse pole figure* (IPF) colors for cubic, hexa
   + If the data originates from a TSL .ang file, then **Elements** that the TSL software could not reliably identify the Euler angles for will have a "Fit of Solution" = 180 and/or an "Image Quality" = 0.0.
   + This means that when the user runs some sort of threshold **Filter** the *mask* will be those **Elements** that have an Image Quality > 0 and/or Fit < 180.0
 + HKL (.ctf file)
-  + If the data originates from an HKL (or Bruker) system (.ctf file) then bad voxels can typically be found by setting "Error" > 0
+  + If the data originates from an HKL (or Bruker) system (.ctf file) then unindexed voxels can typically be found by setting "Error" > 0
   + This means that when the user runs some sort of threshold **Filter** the *mask* will be those **Elements** that have an Error = 0
+
+
+### IPF Legends
+
+IPF Legends for most all of the Laue classes can be found in the Data/OrientationAnalysis folder that comes with DREAM3D-NX distributions. They are very high resolution images and you are free to use them in any published work.
 
 ![IPF Color Triangle](Images/IPFFilterLegend.png)
 
