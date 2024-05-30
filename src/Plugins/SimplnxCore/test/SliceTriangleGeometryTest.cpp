@@ -43,6 +43,7 @@ namespace
 {
 const nx::core::DataPath k_InputTriangleGeometryPath = DataPath({"Exemplar Triangle Geometry"});
 const nx::core::DataPath k_RegionIdsPath = DataPath({"Exemplar Triangle Geometry", "Face Data", "RegionIds"});
+const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Edge Geometry"});
 
 const nx::core::DataPath k_ComputedEdgeGeometryPath = DataPath({"Output Edge Geometry"});
 const DataObjectNameParameter::ValueType k_EdgeData("Edge Data");
@@ -68,7 +69,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zstart_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zend_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.33f));
-  args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceRange_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceRange_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(true));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(k_InputTriangleGeometryPath));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_RegionIdArrayPath_Key, std::make_any<DataPath>(k_RegionIdsPath));
@@ -83,7 +84,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto result = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -92,18 +93,18 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
 
   // Compare the exemplar and the computed outputs
   {
-    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_InputTriangleGeometryPath);
+    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarEdgeGeometryPath);
     auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedEdgeGeometryPath);
     REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
   }
   {
-    DataPath exemplarDataArray = k_InputTriangleGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds);
+    DataPath exemplarDataArray = k_ExemplarEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds);
     DataPath computedDataArray = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds);
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 
   {
-    DataPath exemplarDataArray = k_InputTriangleGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
+    DataPath exemplarDataArray = k_ExemplarEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
     DataPath computedDataArray = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
