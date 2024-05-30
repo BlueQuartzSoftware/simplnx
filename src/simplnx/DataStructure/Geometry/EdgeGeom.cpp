@@ -11,11 +11,13 @@ using namespace nx::core;
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name)
 : INodeGeometry1D(dataStructure, std::move(name))
 {
+  m_UnitDimensionality = 1;
 }
 
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId)
 : INodeGeometry1D(dataStructure, std::move(name), importId)
 {
+  m_UnitDimensionality = 1;
 }
 
 DataObject::Type EdgeGeom::getDataObjectType() const

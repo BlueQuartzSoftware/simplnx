@@ -11,11 +11,13 @@ using namespace nx::core;
 QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name)
 : INodeGeometry2D(dataStructure, std::move(name))
 {
+  m_UnitDimensionality = 2;
 }
 
 QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name, IdType importId)
 : INodeGeometry2D(dataStructure, std::move(name), importId)
 {
+  m_UnitDimensionality = 2;
 }
 
 IGeometry::Type QuadGeom::getGeomType() const
