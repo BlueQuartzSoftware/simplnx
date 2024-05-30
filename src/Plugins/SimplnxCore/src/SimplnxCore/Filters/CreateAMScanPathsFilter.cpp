@@ -3,11 +3,14 @@
 #include "SimplnxCore/Filters/Algorithms/CreateAMScanPaths.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/Filter/Actions/EmptyAction.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -50,25 +53,28 @@ Parameters CreateAMScanPathsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_StripeWidth_Key, "Vector Width", "", 1.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Vector Spacing", "", 1.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_Power_Key, "Power", "", 10.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_Speed_Key, "Speed", "", 20.0f));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CADSliceDataContainerName_Key, "Slice Data Container", "", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::TriangleGeom}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "", DataPath{},
-                                                          nx::core::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "", DataPath{},
-                                                          nx::core::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<Float32Parameter>(k_StripeWidth_Key, "Vector Width", "The stripe width", 7.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Vector Spacing", "The hatch spacing", 0.14f));
+  params.insert(std::make_unique<Float32Parameter>(k_Power_Key, "Power", "Laser Power", 100.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_Speed_Key, "Speed", "Scan Speed", 1000.0f));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerName_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "Identifies the slice to which each edge belongs", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "Identifies the region to which each edge belongs", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Objects"});
-  params.insert(std::make_unique<StringParameter>(k_HatchDataContainerName_Key, "Scan Vector Data Container", "", "SomeString"));
-  params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vector Node Attribute Matrix", "", "SomeString"));
-  params.insert(std::make_unique<StringParameter>(k_HatchAttributeMatrixName_Key, "Vector Attribute Matrix", "", "SomeString"));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_HatchDataContainerName_Key, "Scan Vector Geometry", "The created edge geometry representing the scan paths", DataPath({"ScanVectorGeometry"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vector Node Attribute Matrix", "The name of the attribute matrix containing the scan paths' node data",
+                                                          "Vector Node Data"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_HatchAttributeMatrixName_Key, "Vector Attribute Matrix", "The name of the attribute matrix containing the scan paths' data", "Vector Data"));
   params.insertSeparator(Parameters::Separator{"Vector Node Data"});
-  params.insert(std::make_unique<StringParameter>(k_TimeArrayName_Key, "Times", "", "SomeString"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TimeArrayName_Key, "Times", "The name of the array containing scan paths' node times", "Times"));
   params.insertSeparator(Parameters::Separator{"Vector Data"});
-  params.insert(std::make_unique<StringParameter>(k_RegionIdsArrayName_Key, "Region Ids", "", "SomeString"));
-  params.insert(std::make_unique<StringParameter>(k_PowersArrayName_Key, "Powers", "", "SomeString"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_RegionIdsArrayName_Key, "Region Ids", "The name of the array identifying the region to which each scan path belongs", "RegionIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PowersArrayName_Key, "Powers", "The name of the array containing the scan vectors' laser power", "Powers"));
 
   return params;
 }
@@ -83,15 +89,6 @@ IFilter::UniquePointer CreateAMScanPathsFilter::clone() const
 IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
-
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
   auto pStripeWidthValue = filterArgs.value<float32>(k_StripeWidth_Key);
   auto pHatchSpacingValue = filterArgs.value<float32>(k_HatchSpacing_Key);
   auto pPowerValue = filterArgs.value<float32>(k_Power_Key);
@@ -99,52 +96,46 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
   auto pCADSliceDataContainerNameValue = filterArgs.value<DataPath>(k_CADSliceDataContainerName_Key);
   auto pCADSliceIdsArrayPathValue = filterArgs.value<DataPath>(k_CADSliceIdsArrayPath_Key);
   auto pCADRegionIdsArrayPathValue = filterArgs.value<DataPath>(k_CADRegionIdsArrayPath_Key);
-  auto pHatchDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_HatchDataContainerName_Key);
-  auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
-  auto pHatchAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_HatchAttributeMatrixName_Key);
-  auto pTimeArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_TimeArrayName_Key);
-  auto pRegionIdsArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_RegionIdsArrayName_Key);
-  auto pPowersArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_PowersArrayName_Key);
+  auto pHatchDataContainerNameValue = filterArgs.value<DataPath>(k_HatchDataContainerName_Key);
+  auto pVertexAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  auto pHatchAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_HatchAttributeMatrixName_Key);
+  auto pTimeArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_TimeArrayName_Key);
+  auto pRegionIdsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegionIdsArrayName_Key);
+  auto pPowersArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_PowersArrayName_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
+  {
+    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pHatchDataContainerNameValue, 1, 2, pVertexAttributeMatrixNameValue, pHatchAttributeMatrixNameValue,
+                                                                           CreateEdgeGeometryAction::k_DefaultVerticesName, CreateEdgeGeometryAction::k_DefaultEdgesName);
+    resultOutputActions.value().appendAction(std::move(createGeometryAction));
+  }
+  const DataPath hatchAttributeMatrixPath = pHatchDataContainerNameValue.createChildPath(pHatchAttributeMatrixNameValue);
+  std::vector<size_t> tDims = {1};
+  const std::vector<size_t> compDims = {1};
+  {
+    DataPath path = hatchAttributeMatrixPath.createChildPath(pCADSliceIdsArrayPathValue.getTargetName());
+    auto createArray = std::make_unique<CreateArrayAction>(DataType::int32, tDims, compDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray));
+  }
+  {
+    DataPath path = hatchAttributeMatrixPath.createChildPath(pPowersArrayNameValue);
+    auto createArray = std::make_unique<CreateArrayAction>(DataType::float32, tDims, compDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray));
+  }
+  {
+    DataPath path = hatchAttributeMatrixPath.createChildPath(pRegionIdsArrayNameValue);
+    auto createArray = std::make_unique<CreateArrayAction>(DataType::int32, tDims, compDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray));
+  }
+  {
+    DataPath path = pHatchDataContainerNameValue.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(pTimeArrayNameValue);
+    auto createArray = std::make_unique<CreateArrayAction>(DataType::float64, std::vector<size_t>{2}, compDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray));
+  }
 
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -152,7 +143,6 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
 Result<> CreateAMScanPathsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel) const
 {
-
   CreateAMScanPathsInputValues inputValues;
 
   inputValues.StripeWidth = filterArgs.value<float32>(k_StripeWidth_Key);
@@ -162,12 +152,12 @@ Result<> CreateAMScanPathsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.CADSliceDataContainerName = filterArgs.value<DataPath>(k_CADSliceDataContainerName_Key);
   inputValues.CADSliceIdsArrayPath = filterArgs.value<DataPath>(k_CADSliceIdsArrayPath_Key);
   inputValues.CADRegionIdsArrayPath = filterArgs.value<DataPath>(k_CADRegionIdsArrayPath_Key);
-  inputValues.HatchDataContainerName = filterArgs.value<StringParameter::ValueType>(k_HatchDataContainerName_Key);
-  inputValues.VertexAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
-  inputValues.HatchAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_HatchAttributeMatrixName_Key);
-  inputValues.TimeArrayName = filterArgs.value<StringParameter::ValueType>(k_TimeArrayName_Key);
-  inputValues.RegionIdsArrayName = filterArgs.value<StringParameter::ValueType>(k_RegionIdsArrayName_Key);
-  inputValues.PowersArrayName = filterArgs.value<StringParameter::ValueType>(k_PowersArrayName_Key);
+  inputValues.HatchDataContainerName = filterArgs.value<DataPath>(k_HatchDataContainerName_Key);
+  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.HatchAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_HatchAttributeMatrixName_Key);
+  inputValues.TimeArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TimeArrayName_Key);
+  inputValues.RegionIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegionIdsArrayName_Key);
+  inputValues.PowersArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PowersArrayName_Key);
 
   return CreateAMScanPaths(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -176,7 +166,19 @@ namespace
 {
 namespace SIMPL
 {
-
+constexpr StringLiteral k_StripeWidth_Key = "StripeWidth";
+constexpr StringLiteral k_HatchSpacing_Key = "HatchSpacing";
+constexpr StringLiteral k_Power_Key = "Power";
+constexpr StringLiteral k_Speed_Key = "Speed";
+constexpr StringLiteral k_CADSliceDataContainerName_Key = "CADSliceDataContainerName";
+constexpr StringLiteral k_CADSliceIdsArrayPath_Key = "CADSliceIdsArrayPath";
+constexpr StringLiteral k_CADRegionIdsArrayPath_Key = "CADRegionIdsArrayPath";
+constexpr StringLiteral k_HatchDataContainerName_Key = "HatchDataContainerName";
+constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
+constexpr StringLiteral k_HatchAttributeMatrixName_Key = "HatchAttributeMatrixName";
+constexpr StringLiteral k_TimeArrayName_Key = "TimeArrayName";
+constexpr StringLiteral k_RegionIdsArrayName_Key = "RegionIdsArrayName";
+constexpr StringLiteral k_PowersArrayName_Key = "PowersArrayName";
 } // namespace SIMPL
 } // namespace
 
@@ -186,6 +188,22 @@ Result<Arguments> CreateAMScanPathsFilter::FromSIMPLJson(const nlohmann::json& j
   Arguments args = CreateAMScanPathsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_StripeWidth_Key, k_StripeWidth_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_HatchSpacing_Key, k_HatchSpacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_Power_Key, k_Power_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_Speed_Key, k_Speed_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CADSliceDataContainerName_Key, k_CADSliceDataContainerName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CADSliceIdsArrayPath_Key, k_CADSliceIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CADRegionIdsArrayPath_Key, k_CADRegionIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_HatchDataContainerName_Key, k_HatchDataContainerName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TimeArrayName_Key, k_TimeArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PowersArrayName_Key, k_PowersArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class CreateAMScanPathsFilter
- * @brief This filter will ....
+ * @brief This filter will generate additive manufacturing scan paths from an edge geometry
  */
 class SIMPLNXCORE_EXPORT CreateAMScanPathsFilter : public IFilter
 {

@@ -10,10 +10,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
