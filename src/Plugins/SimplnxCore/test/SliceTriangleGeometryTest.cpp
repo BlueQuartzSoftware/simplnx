@@ -65,7 +65,6 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.0f, 0.0f, 1.0f}));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zstart_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zend_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.33f));

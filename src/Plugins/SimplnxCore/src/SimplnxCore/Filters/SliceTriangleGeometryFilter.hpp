@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class SliceTriangleGeometryFilter
- * @brief This filter will ....
+ * @brief This filter slices an input Triangle Geometry, producing an Edge Geometry
  */
 class SIMPLNXCORE_EXPORT SliceTriangleGeometryFilter : public IFilter
 {
@@ -24,7 +24,7 @@ public:
   SliceTriangleGeometryFilter& operator=(SliceTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SliceDirection_Key = "slice_direction";
+  // static inline constexpr StringLiteral k_SliceDirection_Key = "slice_direction";
   static inline constexpr StringLiteral k_SliceRange_Key = "slice_range_index";
   static inline constexpr StringLiteral k_Zstart_Key = "z_start_value";
   static inline constexpr StringLiteral k_Zend_Key = "z_end_value";

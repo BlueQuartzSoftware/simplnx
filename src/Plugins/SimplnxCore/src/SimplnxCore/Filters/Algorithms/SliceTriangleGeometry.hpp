@@ -20,7 +20,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
-  VectorFloat32Parameter::ValueType SliceDirection;
+  // VectorFloat32Parameter::ValueType SliceDirection;
   ChoicesParameter::ValueType SliceRange;
   float32 Zstart;
   float32 Zend;
@@ -35,9 +35,8 @@ struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 };
 
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class SliceTriangleGeometry
+ * @brief This filter slices an input Triangle Geometry, producing an Edge Geometry
  */
 
 class SIMPLNXCORE_EXPORT SliceTriangleGeometry
