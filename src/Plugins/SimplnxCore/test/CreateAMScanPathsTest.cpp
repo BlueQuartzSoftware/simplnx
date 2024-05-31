@@ -46,10 +46,10 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(0.33f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_Power_Key, std::make_any<float32>(100.0f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_Speed_Key, std::make_any<float32>(1000.0f));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerName_Key, std::make_any<DataPath>(k_ExemplarEdgeGeometryPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(k_ExemplarEdgeGeometryPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(k_SliceIdsPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(k_RegionIdsPath));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerName_Key, std::make_any<DataPath>(k_ComputedScanVectorsPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(k_ComputedScanVectorsPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>(k_VertexData));
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>(k_EdgeData));
   args.insertOrAssign(CreateAMScanPathsFilter::k_TimeArrayName_Key, std::make_any<StringParameter::ValueType>(k_Times));

@@ -28,10 +28,10 @@ public:
   static inline constexpr StringLiteral k_HatchSpacing_Key = "hatch_spacing";
   static inline constexpr StringLiteral k_Power_Key = "power";
   static inline constexpr StringLiteral k_Speed_Key = "speed";
-  static inline constexpr StringLiteral k_CADSliceDataContainerName_Key = "cad_slice_data_container_name";
+  static inline constexpr StringLiteral k_CADSliceDataContainerPath_Key = "cad_slice_data_container_path";
   static inline constexpr StringLiteral k_CADSliceIdsArrayPath_Key = "cad_slice_ids_array_path";
   static inline constexpr StringLiteral k_CADRegionIdsArrayPath_Key = "cad_region_ids_array_path";
-  static inline constexpr StringLiteral k_HatchDataContainerName_Key = "hatch_data_container_name";
+  static inline constexpr StringLiteral k_HatchDataContainerPath_Key = "hatch_data_container_path";
   static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
   static inline constexpr StringLiteral k_HatchAttributeMatrixName_Key = "hatch_attribute_matrix_name";
   static inline constexpr StringLiteral k_TimeArrayName_Key = "time_array_name";

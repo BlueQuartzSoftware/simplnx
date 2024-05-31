@@ -58,10 +58,10 @@
     {
       "args": {
         "cad_region_ids_array_path": "Edge Geometry/Edge Data/Region Ids",
-        "cad_slice_data_container_name": "Edge Geometry",
+        "cad_slice_data_container_path": "Edge Geometry",
         "cad_slice_ids_array_path": "Edge Geometry/Edge Data/Slice Ids",
         "hatch_attribute_matrix_name": "Vector Data",
-        "hatch_data_container_name": "ScanVectorGeometry",
+        "hatch_data_container_path": "ScanVectorGeometry",
         "hatch_spacing": 0.33,
         "power": 100.0,
         "powers_array_name": "Powers",
