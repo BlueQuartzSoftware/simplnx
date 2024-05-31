@@ -275,8 +275,6 @@ Result<> CreateAMScanPaths::operator()()
             p2[0] = xCoord2 + 1000;
             p2[1] = yCoord;
             int* ptr = curEdgeList.data();
-            // float32* vert1ptr = CADLayers->getVertexPointer(0);
-            // float32* vert2ptr = CADLayers->getVertexPointer(0);
             for(usize m = 0; m < mSize; m++)
             {
               usize curEdge = *ptr;
@@ -284,8 +282,6 @@ Result<> CreateAMScanPaths::operator()()
               usize CADvert2 = CADLayerEdges[2 * curEdge + 1];
               usize vertOffset1 = 3 * CADvert1;
               usize vertOffset2 = 3 * CADvert2;
-              // vert1ptr += 3 * CADvert1;
-              // vert2ptr += 3 * CADvert2;
               std::array<float32, 2> vert1 = {CADLayerVerts[vertOffset1], CADLayerVerts[vertOffset1 + 1]};
               std::array<float32, 2> vert2 = {CADLayerVerts[vertOffset2], CADLayerVerts[vertOffset2 + 1]};
               char good = determineIntersectCoord(p1, p2, vert1, vert2, coord);
@@ -323,8 +319,6 @@ Result<> CreateAMScanPaths::operator()()
                 }
               }
               ptr++;
-              // vert1ptr -= 3 * CADvert1;
-              // vert2ptr -= 3 * CADvert2;
             }
             int32 intersectionSize = intersectionCoords.size();
             if(intersectionSize > 1)

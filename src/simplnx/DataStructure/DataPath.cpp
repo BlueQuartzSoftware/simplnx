@@ -16,14 +16,18 @@ namespace nx::core
 DataPath::DataPath() = default;
 
 DataPath::DataPath(std::vector<std::string> path)
-: m_Path(std::move(path))
 {
-  for(const auto& item : m_Path)
+  for(const auto& item : path)
   {
-    if(!DataObject::IsValidName(item) && !item.empty())
+    if(item.empty())
     {
-      throw std::invalid_argument(fmt::format("DataPath: Invalid DataObject name - [{}]. One of the DataObject names contains the '/' character.", fmt::join(m_Path, ",")));
+      continue;
     }
+    if(!DataObject::IsValidName(item))
+    {
+      throw std::invalid_argument(fmt::format("DataPath: Invalid DataObject name - [{}]. One of the DataObject names contains the '/' character.", fmt::join(path, ",")));
+    }
+    m_Path.push_back(item);
   }
 }
 
