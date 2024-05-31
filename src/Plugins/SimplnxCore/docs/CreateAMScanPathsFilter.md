@@ -11,6 +11,8 @@ Given an input **Edge Geometry**, stripe width, hatch spacing, laser power, and 
 
 ## Example Pipelines
 
+CreateScanVectors
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

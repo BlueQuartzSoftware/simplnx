@@ -14,6 +14,8 @@ Additionally, if the input **Triangle Geometry** is labeled with an identifier a
 
 ## Example Pipelines
 
+CreateScanVectors
+
 ## License & Copyright 
 
 Please see the description file distributed with this plugin.
