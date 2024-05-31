@@ -1,9 +1,9 @@
 #include "Silhouette.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
 
 #include <unordered_set>
 
@@ -27,7 +27,7 @@ public:
   }
 
   SilhouetteTemplate(const IDataArray& inputIDataArray, Float64Array& outputDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, const Int32Array& featureIds,
-                     KUtilities::DistanceMetric distMetric)
+                     ClusterUtilities::DistanceMetric distMetric)
   : m_InputData(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_OutputData(outputDataArray)
   , m_Mask(maskDataArray)
@@ -71,7 +71,7 @@ public:
         {
           if(m_Mask->isTrue(j))
           {
-            clusterDist[i][m_FeatureIds[j]] += KUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
+            clusterDist[i][m_FeatureIds[j]] += ClusterUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
           }
         }
       }
@@ -127,7 +127,7 @@ private:
   const Int32Array& m_FeatureIds;
   const std::unique_ptr<MaskCompare>& m_Mask;
   usize m_NumClusters;
-  KUtilities::DistanceMetric m_DistMetric;
+  ClusterUtilities::DistanceMetric m_DistMetric;
 };
 } // namespace
 

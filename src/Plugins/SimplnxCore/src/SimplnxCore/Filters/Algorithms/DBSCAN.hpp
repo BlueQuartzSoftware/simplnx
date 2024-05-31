@@ -9,20 +9,19 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 namespace nx::core
 {
-
 struct SIMPLNXCORE_EXPORT DBSCANInputValues
 {
-  uint64 InitClusters;
-  KUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
-  DataPath MeansArrayPath;
-  uint64 Seed;
+  float32 Epsilon;
+  int32 MinPoints;
+  ClusterUtilities::DistanceMetric DistanceMetric;
+  DataPath FeatureAM;
 };
 
 /**

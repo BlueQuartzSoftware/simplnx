@@ -15,7 +15,7 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Utilities/KUtilities.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 using namespace nx::core;
 
@@ -63,7 +63,7 @@ Parameters SilhouetteFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(
-      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(KUtilities::DistanceMetric::Euclidean),
+      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
                                          ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
 
   // Create the parameter descriptors that are needed for this filter
@@ -147,7 +147,7 @@ Result<> SilhouetteFilter::executeImpl(DataStructure& dataStructure, const Argum
 
   SilhouetteInputValues inputValues;
 
-  inputValues.DistanceMetric = static_cast<KUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
+  inputValues.DistanceMetric = static_cast<ClusterUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   inputValues.MaskArrayPath = maskPath;
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);

@@ -8,13 +8,13 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT SilhouetteInputValues
 {
-  KUtilities::DistanceMetric DistanceMetric;
+  ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;

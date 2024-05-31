@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-namespace nx::core::KUtilities
+namespace nx::core::ClusterUtilities
 {
 enum SIMPLNX_EXPORT DistanceMetric
 {
@@ -134,4 +134,4 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
   // Return the correct primitive type for distance
   return dist;
 }
-} // namespace nx::core::KUtilities
+} // namespace nx::core::ClusterUtilities

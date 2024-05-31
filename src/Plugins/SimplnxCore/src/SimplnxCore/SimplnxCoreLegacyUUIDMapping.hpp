@@ -31,6 +31,7 @@
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropVertexGeometryFilter.hpp"
+#include "SimplnxCore/Filters/DBSCANFilter.hpp"
 #include "SimplnxCore/Filters/DeleteDataFilter.hpp"
 #include "SimplnxCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 #include "SimplnxCore/Filters/ErodeDilateMaskFilter.hpp"
@@ -152,7 +153,8 @@ namespace nx::core
     {nx::core::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), {nx::core::FilterTraits<CreateImageGeometryFilter>::uuid, &CreateImageGeometryFilter::FromSIMPLJson}}, // CreateImageGeometryFilter
     {nx::core::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), {nx::core::FilterTraits<CropImageGeometryFilter>::uuid, &CropImageGeometryFilter::FromSIMPLJson}}, // CropImageGeometryFilter
     {nx::core::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), {nx::core::FilterTraits<CropVertexGeometryFilter>::uuid, &CropVertexGeometryFilter::FromSIMPLJson}}, // CropVertexGeometryFilter
-    {nx::core::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), {nx::core::FilterTraits<DeleteDataFilter>::uuid, &DeleteDataFilter::FromSIMPLJson}}, // RemoveArrays   
+    {nx::core::Uuid::FromString("c2d4f1e8-2b04-5d82-b90f-2191e8f4262e").value(), {nx::core::FilterTraits<DBSCANFilter>::uuid, &DBSCANFilter::FromSIMPLJson}}, // DBSCAN
+    {nx::core::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), {nx::core::FilterTraits<DeleteDataFilter>::uuid, &DeleteDataFilter::FromSIMPLJson}}, // RemoveArrays
     {nx::core::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), {nx::core::FilterTraits<WriteDREAM3DFilter>::uuid, &WriteDREAM3DFilter::FromSIMPLJson}}, // DataContainerWriter
     {nx::core::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), {nx::core::FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::uuid, &ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJson}}, // ExtractInternalSurfacesFromTriangleGeometryFilter
     {nx::core::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), {nx::core::FilterTraits<WriteFeatureDataCSVFilter>::uuid, &WriteFeatureDataCSVFilter::FromSIMPLJson}}, // FeatureDataCSVWriter

@@ -1,182 +1,223 @@
 #include "DBSCAN.hpp"
 
+#include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include <random>
+#include <fmt/format.h>
 
 using namespace nx::core;
 
 namespace
 {
 template <typename T>
+class FindEpsilonNeighborhoodsImpl
+{
+private:
+  using AbstractDataStoreT = AbstractDataStore<T>;
+
+public:
+  FindEpsilonNeighborhoodsImpl(DBSCAN* filter, float64 epsilon, const AbstractDataStoreT& inputData, const std::unique_ptr<MaskCompare>& mask, usize numCompDims, usize numTuples,
+                               ClusterUtilities::DistanceMetric distMetric, std::vector<std::list<usize>>& neighborhoods)
+  : m_Filter(filter)
+  , m_Epsilon(epsilon)
+  , m_InputDataStore(inputData)
+  , m_Mask(mask)
+  , m_NumCompDims(numCompDims)
+  , m_NumTuples(numTuples)
+  , m_DistMetric(distMetric)
+  , m_Neighborhoods(neighborhoods)
+  {
+  }
+
+  void compute(usize start, usize end) const
+  {
+    // int64 counter = 0;
+    // int64 totalElements = end - start;
+    // int64 progIncrement = static_cast<int64>(totalElements / 100);
+
+    for(usize i = start; i < end; i++)
+    {
+      if(m_Mask->isTrue(i))
+      {
+        std::list<usize> neighbors = epsilon_neighbors(i);
+        m_Neighborhoods[i] = neighbors;
+      }
+    }
+  }
+
+  std::list<usize> epsilon_neighbors(usize index) const
+  {
+    std::list<usize> neighbors;
+
+    for(usize i = 0; i < m_NumTuples; i++)
+    {
+      if(m_Filter->getCancel())
+      {
+        return {};
+      }
+      if(m_Mask->isTrue(i))
+      {
+        float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (m_NumCompDims * index), m_InputDataStore, (m_NumCompDims * i), m_NumCompDims, m_DistMetric);
+        if(dist < m_Epsilon)
+        {
+          neighbors.push_back(i);
+        }
+      }
+    }
+
+    return neighbors;
+  }
+
+  void operator()(const Range& range) const
+  {
+    compute(range.min(), range.max());
+  }
+
+private:
+  DBSCAN* m_Filter;
+  float64 m_Epsilon;
+  const AbstractDataStoreT& m_InputDataStore;
+  const std::unique_ptr<MaskCompare>& m_Mask;
+  usize m_NumCompDims;
+  usize m_NumTuples;
+  ClusterUtilities::DistanceMetric m_DistMetric;
+  std::vector<std::list<usize>>& m_Neighborhoods;
+};
+
+template <typename T>
 class DBSCANTemplate
 {
+private:
+  using DataArrayT = DataArray<T>;
+  using AbstractDataStoreT = AbstractDataStore<T>;
+
 public:
-  DBSCANTemplate(DBSCAN* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, Int32Array& fIds,
-                        KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  DBSCANTemplate(DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, Int32Array& fIds, float32 epsilon, int32 minPoints,
+                 ClusterUtilities::DistanceMetric distMetric)
   : m_Filter(filter)
-  , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
-  , m_Means(dynamic_cast<DataArrayT&>(meansIDataArray))
+  , m_InputDataStore(dynamic_cast<const DataArrayT&>(inputIDataArray).getDataStoreRef())
   , m_Mask(maskDataArray)
-  , m_NumClusters(numClusters)
-  , m_FeatureIds(fIds)
+  , m_FeatureIds(fIds.getDataStoreRef())
+  , m_Epsilon(epsilon)
+  , m_MinPoints(minPoints)
   , m_DistMetric(distMetric)
-  , m_Seed(seed)
   {
   }
   ~DBSCANTemplate() = default;
 
   DBSCANTemplate(const DBSCANTemplate&) = delete; // Copy Constructor Not Implemented
-  void operator=(const DBSCANTemplate&) = delete;        // Move assignment Not Implemented
+  void operator=(const DBSCANTemplate&) = delete; // Move assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void operator()()
   {
-    usize numTuples = m_InputArray.getNumberOfTuples();
-    int32 numCompDims = m_InputArray.getNumberOfComponents();
+    usize numTuples = m_InputDataStore.getNumberOfTuples();
+    usize numCompDims = m_InputDataStore.getNumberOfComponents();
+    std::vector<bool> visited(numTuples, false);
+    std::vector<bool> clustered(numTuples, false);
 
-    const usize rangeMax = numTuples - 1;
+    auto minDist = static_cast<float64>(m_Epsilon);
+    int32 cluster = 0;
 
-    std::mt19937_64 gen(m_Seed);
-    std::uniform_real_distribution<float64> dist(0.0, 1.0);
+    auto progIncrement = static_cast<int64>(numTuples / 100);
+    int64 prog = 1;
+    int64 progressInt = 0;
+    int64 counter = 0;
 
-    std::vector<usize> clusterIdxs(m_NumClusters);
+    std::vector<std::list<usize>> epsilonNeighborhoods(numTuples);
 
-    usize clusterChoices = 0;
-    while(clusterChoices < m_NumClusters)
-    {
-      usize index = std::floor(dist(gen) * static_cast<float64>(rangeMax));
-      if(m_Mask->isTrue(index))
-      {
-        clusterIdxs[clusterChoices] = index;
-        clusterChoices++;
-      }
-    }
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0ULL, numTuples);
+    dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
 
-    for(usize i = 0; i < m_NumClusters; i++)
-    {
-      for(int32 j = 0; j < numCompDims; j++)
-      {
-        m_Means[numCompDims * (i + 1) + j] = m_InputArray[numCompDims * clusterIdxs[i] + j];
-      }
-    }
+    prog = 1;
+    progressInt = 0;
+    counter = 0;
 
-    std::vector<float64> oldMeans(m_NumClusters);
-    std::vector<float64> differences(m_NumClusters);
-    usize iteration = 1;
-    usize updateCheck = 0;
-    while(updateCheck != m_NumClusters)
+    for(usize i = 0; i < numTuples; i++)
     {
       if(m_Filter->getCancel())
       {
         return;
       }
-      findClusters(numTuples, numCompDims);
 
-      for(usize i = 0; i < m_NumClusters; i++)
+      if(m_Mask->isTrue(i) && !visited[i])
       {
-        oldMeans[i] = m_Means[i + 1];
-      }
+        visited[i] = true;
 
-      findMeans(numTuples, numCompDims);
-
-      updateCheck = 0;
-      for(usize i = 0; i < m_NumClusters; i++)
-      {
-        differences[i] = oldMeans[i] - m_Means[i + 1];
-        if(closeEnough<float64>(differences[i], 0.0))
+        if(counter > prog)
         {
-          updateCheck++;
+          progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
+          std::string ss = fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt);
+          m_Filter->updateProgress(ss);
+          prog = prog + progIncrement;
         }
-      }
+        counter++;
 
-      float64 sum = std::accumulate(std::begin(differences), std::end(differences), 0.0);
-      m_Filter->updateProgress(fmt::format("Clustering Data || Iteration {} || Total Mean Shift: {}", iteration, sum));
-      iteration++;
-    }
-  }
+        std::list<usize> neighbors = epsilonNeighborhoods[i];
 
-private:
-  using DataArrayT = DataArray<T>;
-  DBSCAN* m_Filter;
-  const DataArrayT& m_InputArray;
-  DataArrayT& m_Means;
-  const std::unique_ptr<MaskCompare>& m_Mask;
-  usize m_NumClusters;
-  Int32Array& m_FeatureIds;
-  KUtilities::DistanceMetric m_DistMetric;
-  std::mt19937_64::result_type m_Seed;
-
-  // -----------------------------------------------------------------------------
-  template <typename K>
-  bool closeEnough(const K& a, const K& b, const K& epsilon = std::numeric_limits<K>::epsilon())
-  {
-    return (epsilon > fabs(a - b));
-  }
-
-  // -----------------------------------------------------------------------------
-  void findClusters(usize tuples, int32 dims)
-  {
-    for(usize i = 0; i < tuples; i++)
-    {
-      if(m_Filter->getCancel())
-      {
-        return;
-      }
-      if(m_Mask->isTrue(i))
-      {
-        float64 minDist = std::numeric_limits<float64>::max();
-        for(int32 j = 0; j < m_NumClusters; j++)
+        if(static_cast<int32>(neighbors.size()) < m_MinPoints)
         {
-          float64 dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Means, (dims * (j + 1)), dims, m_DistMetric);
-          if(dist < minDist)
+          m_FeatureIds[i] = 0;
+          clustered[i] = true;
+        }
+        else
+        {
+          cluster++;
+          m_FeatureIds[i] = cluster;
+          clustered[i] = true;
+
+          for(auto&& idx : neighbors)
           {
-            minDist = dist;
-            m_FeatureIds[i] = j + 1;
+            if(m_Filter->getCancel())
+            {
+              return;
+            }
+            if(m_Mask->isTrue(idx))
+            {
+              if(!visited[idx])
+              {
+                visited[idx] = true;
+
+                if(counter > prog)
+                {
+                  progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
+                  std::string ss = fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt);
+                  m_Filter->updateProgress(ss);
+                  prog = prog + progIncrement;
+                }
+                counter++;
+
+                std::list<usize> neighbors_prime = epsilonNeighborhoods[idx];
+                if(static_cast<int32>(neighbors_prime.size()) >= m_MinPoints)
+                {
+                  neighbors.splice(std::end(neighbors), neighbors_prime);
+                }
+              }
+              if(!clustered[idx])
+              {
+                m_FeatureIds[idx] = cluster;
+                clustered[idx] = true;
+              }
+            }
           }
         }
       }
     }
   }
 
-  // -----------------------------------------------------------------------------
-  void findMeans(usize tuples, int32 dims)
-  {
-    std::vector<usize> counts(m_NumClusters + 1, 0);
-
-    for(usize i = 0; i <= m_NumClusters; i++)
-    {
-      for(usize j = 0; j < dims; j++)
-      {
-        m_Means[dims * i + j] = 0.0;
-      }
-    }
-
-    for(usize i = 0; i < dims; i++)
-    {
-      for(usize j = 0; j < tuples; j++)
-      {
-        int32 feature = m_FeatureIds[j];
-        m_Means[dims * feature + i] += static_cast<float64>(m_InputArray[dims * j + i]);
-        counts[feature] += 1;
-      }
-      for(usize j = 0; j <= m_NumClusters; j++)
-      {
-        if(counts[j] == 0)
-        {
-          m_Means[dims * j + i] = 0.0;
-        }
-        else
-        {
-          m_Means[dims * j + i] /= static_cast<float64>(counts[j]);
-        }
-      }
-      std::fill(std::begin(counts), std::end(counts), 0);
-    }
-  }
+private:
+  DBSCAN* m_Filter;
+  const AbstractDataStoreT& m_InputDataStore;
+  const std::unique_ptr<MaskCompare>& m_Mask;
+  AbstractDataStore<int32>& m_FeatureIds;
+  float32 m_Epsilon;
+  int32 m_MinPoints;
+  ClusterUtilities::DistanceMetric m_DistMetric;
 };
 } // namespace
 
@@ -208,6 +249,7 @@ const std::atomic_bool& DBSCAN::getCancel()
 Result<> DBSCAN::operator()()
 {
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
   std::unique_ptr<MaskCompare> maskCompare;
   try
@@ -221,9 +263,12 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  RunTemplateClass<DBSCANTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath),
-                                                                maskCompare, m_InputValues->InitClusters, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath),
-                                                                m_InputValues->DistanceMetric, m_InputValues->Seed);
+  RunTemplateClass<DBSCANTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
+                                                         m_InputValues->DistanceMetric);
+
+  auto& featureIdsDataStore = featureIds.getDataStoreRef();
+  int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
+  m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(maxCluster + 1)});
 
   return {};
 }

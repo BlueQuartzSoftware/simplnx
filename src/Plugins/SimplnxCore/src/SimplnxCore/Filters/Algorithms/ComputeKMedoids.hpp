@@ -6,14 +6,14 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT KMedoidsInputValues
 {
   uint64 InitClusters;
-  KUtilities::DistanceMetric DistanceMetric;
+  ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
