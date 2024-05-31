@@ -4,9 +4,8 @@
 
 Core (Geometry/Processing)
 
-
 ## Description
-
+Given an input **Edge Geometry**, stripe width, hatch spacing, laser power, and scan speed, this **Filter** will generate an **Edge Geometry** representing the additive manufacturing scan paths along with arrays containing times for each scan path node and powers, region ids, and slice ids for each scan path. Currently this filter will only support a hatch direction along the positive x axis.
 
 % Auto generated parameter table will be inserted here
 

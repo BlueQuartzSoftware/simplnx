@@ -6,7 +6,7 @@ Sampling (Geometry)
 
 ## Description
 
-This **Filter** slices an input **Triangle Geometry**, producing an **Edge Geometry**.  The user can control the direction along which the slicing occurs, the range over which to slice (either the entire range of the geoemtry or a specified subregion), and the spacing bewteen slices.  The total area and perimieter of each slice is also computed and stored as an attribute on each created slice.
+This **Filter** slices an input **Triangle Geometry**, producing an **Edge Geometry**.  The user can control the range over which to slice (either the entire range of the geoemtry or a specified subregion), and the spacing bewteen slices. Currently this filter only supports slicing along the direction of the z axis. The total area and perimieter of each slice is also computed and stored as an attribute on each created slice.
 
 Additionally, if the input **Triangle Geometry** is labeled with an identifier array (such as different regions or features), the user may select this array and the resulting edges will inherit these identifiers.
 
