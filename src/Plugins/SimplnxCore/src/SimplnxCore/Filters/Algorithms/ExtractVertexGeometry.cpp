@@ -149,7 +149,7 @@ Result<> ExtractVertexGeometry::operator()()
   }
 
   // If we are copying arrays, either with or without a mask, this code is applicable.
-  if(m_InputValues->ArrayHandling == static_cast<ChoicesParameter::ValueType>(ArrayHandlingType::CopyArrays))
+  if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Copy))
   {
     // Since we made copies of the DataArrays, we can safely resize the entire Attribute Matrix,
     // which will resize all the contained DataArrays
@@ -168,7 +168,7 @@ Result<> ExtractVertexGeometry::operator()()
   // took care of renaming/moving the arrays for us and we are done.
 
   // If we are MOVING arrays AND we are using a mask then we need this code block to execute
-  if(m_InputValues->ArrayHandling == static_cast<ChoicesParameter::ValueType>(ArrayHandlingType::MoveArrays) && m_InputValues->UseMask && vertexCount != cellCount)
+  if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Move) && m_InputValues->UseMask && vertexCount != cellCount)
   {
     // The arrays have already been moved at this point, so the source and
     // destinations are the same. This should work.
