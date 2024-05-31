@@ -37,13 +37,13 @@ Uuid CreateAMScanPathsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string CreateAMScanPathsFilter::humanName() const
 {
-  return "Generate Scan Vectors";
+  return "Create AM Scan Paths";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateAMScanPathsFilter::defaultTags() const
 {
-  return {className(), "AFRLDistributionC", "Scan Path"};
+  return {className(), "AFRLDistributionC", "Scan Path", "Scan Vector", "Generate"};
 }
 
 //------------------------------------------------------------------------------

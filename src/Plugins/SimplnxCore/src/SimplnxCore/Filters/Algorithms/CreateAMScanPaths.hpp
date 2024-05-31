@@ -50,6 +50,9 @@ public:
 
   const std::atomic_bool& getCancel();
 
+protected:
+  char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX);
+
 private:
   DataStructure& m_DataStructure;
   const CreateAMScanPathsInputValues* m_InputValues = nullptr;
