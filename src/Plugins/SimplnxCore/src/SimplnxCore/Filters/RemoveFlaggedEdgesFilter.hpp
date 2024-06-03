@@ -31,6 +31,10 @@ public:
   static inline constexpr StringLiteral k_EdgeDataSelectedArrays_Key = "edge_data_selected_array_paths";
   static inline constexpr StringLiteral k_EdgeDataSelectedAttributeMatrix_Key = "edge_data_selected_attribute_matrix_path";
 
+  static inline constexpr StringLiteral k_VertexDataHandling_Key = "vertex_data_handling_index";
+  static inline constexpr StringLiteral k_VertexDataSelectedArrays_Key = "vertex_data_selected_array_paths";
+  static inline constexpr StringLiteral k_VertexDataSelectedAttributeMatrix_Key = "vertex_data_selected_attribute_matrix_path";
+
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.
    * @param json

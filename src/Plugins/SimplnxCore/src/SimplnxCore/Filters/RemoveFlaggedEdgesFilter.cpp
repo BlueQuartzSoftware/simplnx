@@ -11,9 +11,30 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
+
+namespace
+{
+template <typename GeometryType>
+void createDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
+                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions)
+{
+  // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
+  // in the destination geometry's attribute matrix
+  for(const auto& dataPath : selectedArrayPaths)
+  {
+    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    DataType dataType = srcArray.getDataType();
+    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+    DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
+  }
+}
+
+} // namespace
 
 namespace nx::core
 {
@@ -59,18 +80,29 @@ Parameters RemoveFlaggedEdgesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each edge as either true (remove) or false(keep).", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  // Edge Data Handling
+  // Vertex Data Handling
+  params.insertSeparator(Parameters::Separator{"Vertex Data Handling"});
   params.insertLinkableParameter(
-      std::make_unique<ChoicesParameter>(k_EdgeDataHandling_Key, "Edge Data Handling", "How to handle Data that resides on the edges", k_IgnoreArraysIdx, k_ArrayHandlingChoices));
+      std::make_unique<ChoicesParameter>(k_VertexDataHandling_Key, "Vertex Data Handling", "How to handle Data that resides on the edges", k_CopySelectedVertexArraysIdx, k_VertexDataHandlingChoices));
   params.insert(
-      std::make_unique<AttributeMatrixSelectionParameter>(k_EdgeDataSelectedAttributeMatrix_Key, "Edge Data", "Edge Attribute Matrix that will be copied to the reduced geometry", DataPath{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_EdgeDataSelectedArrays_Key, "Edge Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
+      std::make_unique<AttributeMatrixSelectionParameter>(k_VertexDataSelectedAttributeMatrix_Key, "Vertex Data", "Vertex Attribute Matrix that will be copied to the reduced geometry", DataPath{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VertexDataSelectedArrays_Key, "Vertex Attribute Arrays to Copy", "Vertex DataPaths to copy", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
 
-  params.linkParameters(k_EdgeDataHandling_Key, k_EdgeDataSelectedArrays_Key, k_CopySelectedArraysIdx);
-  params.linkParameters(k_EdgeDataHandling_Key, k_EdgeDataSelectedAttributeMatrix_Key, k_CopyAllArraysIdx);
+  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedAttributeMatrix_Key, k_CopyAllVertexArraysIdx);
+  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedArrays_Key, k_CopySelectedVertexArraysIdx);
 
-  // Vertex Data Handling
+  // Edge Data Handling
+  params.insertSeparator(Parameters::Separator{"Edge Data Handling"});
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_EdgeDataHandling_Key, "Edge Data Handling", "How to handle Data that resides on the edges", k_CopySelectedEdgeArraysIdx, k_EdgeDataHandlingChoices));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_EdgeDataSelectedAttributeMatrix_Key, "Edge Data", "Edge Attribute Matrix that will be copied to the reduced geometry", DataPath{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_EdgeDataSelectedArrays_Key, "Edge Attribute Arrays to Copy", "Edge DataPaths to copy", std::vector<DataPath>(),
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
+
+  params.linkParameters(k_EdgeDataHandling_Key, k_EdgeDataSelectedArrays_Key, k_CopySelectedEdgeArraysIdx);
+  params.linkParameters(k_EdgeDataHandling_Key, k_EdgeDataSelectedAttributeMatrix_Key, k_CopyAllEdgeArraysIdx);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Edge Geometry", DataPath({"ReducedGeometry"})));
@@ -90,70 +122,94 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
 {
   auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  auto pArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
+  auto pEdgeArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
+  auto selectedEdgeArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
+  auto selectedEdgeAttrMatPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
+
+  auto pVertexArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
+  auto selectedVertexArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
+  auto selectedVertexAttrMatPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
 
   PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* initialGeom = dataStructure.getDataAs<INodeGeometry1D>(pInitialGeometryPathValue);
+  const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry1D>(pInitialGeometryPathValue);
 
-  if(initialGeom->getGeomType() == IGeometry::Type::Edge)
+  std::string reducedVertexAttributeMatrixName = (initialGeomPtr->getVertexAttributeMatrix() == nullptr ? "Vertex Data" : initialGeomPtr->getVertexAttributeMatrix()->getName());
+  std::string reducedEdgeAttributeMatrixName = (initialGeomPtr->getEdgeAttributeMatrix() == nullptr ? "Edge Data" : initialGeomPtr->getEdgeAttributeMatrix()->getName());
+
+  DataPath reducedVertexAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(reducedVertexAttributeMatrixName);
+  DataPath reducedEdgeAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(reducedEdgeAttributeMatrixName);
+
+  std::vector<usize> edgeDataShape = {initialGeomPtr->getNumberOfEdges()};
+  std::vector<usize> vertexDataShape = {initialGeomPtr->getNumberOfVertices()};
+
+  if(initialGeomPtr->getGeomType() == IGeometry::Type::Edge)
   {
-    auto createGeometryAction = std::make_unique<CreateGeometry1DAction<EdgeGeom>>(
-        pReducedGeometryPathValue, initialGeom->getNumberOfEdges(), initialGeom->getNumberOfVertices(),
-        (initialGeom->getVertexAttributeMatrix() == nullptr ? "VertexAM" : initialGeom->getVertexAttributeMatrix()->getName()),
-        (initialGeom->getEdgeAttributeMatrix() == nullptr ? "FaceAM" : initialGeom->getEdgeAttributeMatrix()->getName()), initialGeom->getVertices()->getName(), initialGeom->getEdges()->getName());
+    auto createGeometryAction =
+        std::make_unique<CreateGeometry1DAction<EdgeGeom>>(pReducedGeometryPathValue, initialGeomPtr->getNumberOfEdges(), initialGeomPtr->getNumberOfVertices(), reducedVertexAttributeMatrixName,
+                                                           reducedEdgeAttributeMatrixName, initialGeomPtr->getVertices()->getName(), initialGeomPtr->getEdges()->getName());
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
 
-  std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
-
-  std::vector<usize> dataArrayShape = {initialGeom->getNumberOfEdges()}; // The DataArray shape goes slowest to fastest (ZYX)
-
-  // This section gets the cell attribute matrix for the input Edge Geometry and
-  // then creates new arrays from each array that is in that attribute matrix. We
-  // also push this attribute matrix into the `ignorePaths` variable since we do
-  // not need to manually copy these arrays to the destination image geometry
-  if(pArrayHandling == k_CopyAllArraysIdx)
+  /** This section is for copying the Edge Data ***/
+  // This _could_ be nullptr. We are going to hold off doing that check until inside each of the
+  // conditional blocks below.
   {
-    // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = initialGeom->getEdgeAttributeMatrix();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* srcEdgeAttrMatPtr = initialGeomPtr->getEdgeAttributeMatrix();
+    if(pEdgeArrayHandling == k_CopySelectedEdgeArraysIdx)
     {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", pInitialGeometryPathValue.toString()))};
+      if(!selectedEdgeArrays.empty() && nullptr == srcEdgeAttrMatPtr)
+      {
+        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+      }
+      createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
-    std::string cellDataName = selectedCellData->getName();
-    ignorePaths.push_back(pInitialGeometryPathValue.createChildPath(cellDataName));
-
-    // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
-    // in the destination geometry's attribute matrix
-    DataPath newCellAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    else if(pEdgeArrayHandling == k_CopyAllEdgeArraysIdx)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
-      DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+      if(nullptr == srcEdgeAttrMatPtr)
+      {
+        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+      }
+      std::vector<DataPath> ignorePaths;
+
+      auto getChildrenResult = GetAllChildArrayDataPaths(dataStructure, selectedEdgeAttrMatPath, ignorePaths);
+      if(getChildrenResult.has_value())
+      {
+        selectedEdgeArrays = getChildrenResult.value();
+        createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+      }
     }
   }
-  if(pArrayHandling == k_CopySelectedArraysIdx)
-  {
-    const AttributeMatrix* selectedCellData = initialGeom->getEdgeAttributeMatrix();
-    std::string cellDataName = selectedCellData->getName();
 
-    auto selectedEdgeArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
-    // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
-    // in the destination geometry's attribute matrix
-    DataPath newCellAttributeMatrixPath = pReducedGeometryPathValue.createChildPath(cellDataName);
-    for(const auto& dataPath : selectedEdgeArrays)
+  /** This section is for copying the Vertex Data ***/
+  // This _could_ be nullptr. We are going to hold off doing that check until inside each of the
+  // conditional blocks below.
+  {
+    const AttributeMatrix* srcVertexAttrMatPtr = initialGeomPtr->getVertexAttributeMatrix();
+    if(pVertexArrayHandling == k_CopySelectedVertexArraysIdx)
     {
-      const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
-      DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+      if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
+      {
+        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+      }
+      createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+    }
+    else if(pVertexArrayHandling == k_CopyAllVertexArraysIdx)
+    {
+      if(nullptr == srcVertexAttrMatPtr)
+      {
+        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+      }
+      std::vector<DataPath> ignorePaths;
+
+      auto getChildrenResult = GetAllChildArrayDataPaths(dataStructure, selectedVertexAttrMatPath, ignorePaths);
+      if(getChildrenResult.has_value())
+      {
+        selectedVertexArrays = getChildrenResult.value();
+        createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      }
     }
   }
 
@@ -170,6 +226,14 @@ Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.EdgeGeometry = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.ReducedEdgeGeometry = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+
+  inputValues.EdgeDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
+  inputValues.EdgeAttributeMatrixPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
+  inputValues.SelectedEdgeData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
+
+  inputValues.VertexDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
+  inputValues.VertexAttributeMatrixPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
+  inputValues.SelectedVertexData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
 
   return RemoveFlaggedEdges(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -123,6 +124,30 @@ private:
   const std::vector<usize>& m_NewEdgesIndex;
   const std::vector<usize>& m_NewVerticesIndex;
 };
+
+void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
+                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler)
+{
+  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
+  // refers to the cropping of each DataArray being done on a separate thread.
+  ParallelTaskAlgorithm taskRunner;
+  for(const auto& edgeDataArrayPath : sourceDataPaths)
+  {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
+    const auto& oldDataArray = m_DataStructure.getDataRefAs<IDataArray>(edgeDataArrayPath);
+    const std::string srcName = oldDataArray.getName();
+
+    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    m_MessageHandler(fmt::format("Reducing Edge Geometry || Copying Data Array {}", srcName));
+    ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
+  }
+  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -235,27 +260,35 @@ Result<> RemoveFlaggedEdges::operator()()
   dataAlg.setRange(0, size);
   dataAlg.execute(PopulateReducedGeometryEdgesImpl(originalEdgeGeom, reducedEdgeGeom, newEdgesIndexList, vertexListIndices));
 
-  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
-  ParallelTaskAlgorithm taskRunner;
-  const auto& srcCellDataAM = originalEdgeGeom.getEdgeAttributeMatrixRef();
-  auto& destCellDataAM = reducedEdgeGeom.getEdgeAttributeMatrixRef();
-  for(const auto& [dataId, oldDataObject] : srcCellDataAM)
+  /** This section will copy any user defined Edge Data Arrays from the old to the reduced edge geometry **/
+  if(m_InputValues->EdgeDataHandling == k_CopySelectedEdgeArraysIdx)
   {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-    const std::string srcName = oldDataArray.getName();
-
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-
-    m_MessageHandler(fmt::format("Reducing Edge Geometry || Copying Data Array {}", srcName));
-    ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
+    ::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->SelectedEdgeData, newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
   }
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  else if(m_InputValues->EdgeDataHandling == k_CopyAllEdgeArraysIdx)
+  {
+    std::vector<DataPath> ignorePaths;
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->EdgeAttributeMatrixPath, ignorePaths);
+    if(getChildrenResult.has_value())
+    {
+      ::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), getChildrenResult.value(), newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
+    }
+  }
+
+  /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
+  if(m_InputValues->VertexDataHandling == k_CopySelectedVertexArraysIdx)
+  {
+    ::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel, m_MessageHandler);
+  }
+  else if(m_InputValues->VertexDataHandling == k_CopyAllVertexArraysIdx)
+  {
+    std::vector<DataPath> ignorePaths;
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);
+    if(getChildrenResult.has_value())
+    {
+      ::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
+    }
+  }
 
   return {};
 }
