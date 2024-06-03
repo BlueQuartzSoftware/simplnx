@@ -577,6 +577,7 @@ int main(int argc, char* argv[])
     auto manualImportFinder = nx::python::ManualImportFinderHolder::Create();
     manualImportFinder.addToMetaPath();
     nx::python::LoadPythonPlugins(pythonPlugins, outputCallback, pluginLoadErrorCallback, pythonErrorCallback);
+    nx::python::LoadInstalledPythonPlugins(outputCallback, pluginLoadErrorCallback, pythonErrorCallback);
   } catch(const std::exception& exception)
   {
     std::cout << "Aborting python plugin loading due to exception: \n";

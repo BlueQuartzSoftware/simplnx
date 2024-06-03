@@ -696,7 +696,11 @@ inline void Internals::loadPythonPlugin(py::module_& mod)
 
   auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
 
-  m_App->getFilterList()->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+  Result<> result = m_App->getFilterList()->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+  if(result.invalid())
+  {
+    throw std::runtime_error(result.errors().at(0).message);
+  }
 
   m_PythonPlugins.insert({plugin->getId(), plugin});
 }

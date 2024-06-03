@@ -304,4 +304,126 @@ inline std::vector<std::string> LoadPythonPlugins(const std::set<std::string>& p
   }
   return loadedPythonPlugins;
 }
+
+inline py::module_ GetImportlibMetadata()
+{
+  auto sys = py::module_::import("sys");
+  if(sys.attr("version_info").attr("__lt__")(py::make_tuple(3, 10)))
+  {
+    return py::module_::import("importlib_metadata");
+  }
+  else
+  {
+    return py::module_::import("importlib.metadata");
+  }
+}
+
+class PluginEntrypoint
+{
+public:
+  PluginEntrypoint(py::object object)
+  : m_Entrypoint(object)
+  {
+  }
+
+  py::object& getPyObject()
+  {
+    return m_Entrypoint;
+  }
+
+  const py::object& getPyObject() const
+  {
+    return m_Entrypoint;
+  }
+
+  std::string getValue() const
+  {
+    return m_Entrypoint.attr("value").cast<std::string>();
+  }
+
+  py::object load()
+  {
+    return m_Entrypoint.attr("load")();
+  }
+
+private:
+  py::object m_Entrypoint;
+};
+
+inline std::vector<PluginEntrypoint> GetInstalledPythonPlugins()
+{
+  using namespace pybind11::literals;
+  py::module_ importlibMetadata = GetImportlibMetadata();
+  auto discoveredPlugins = importlibMetadata.attr("entry_points")("group"_a = "simplnx.plugins");
+  std::vector<PluginEntrypoint> plugins;
+  for(py::handle pluginEntryPoint : discoveredPlugins)
+  {
+    plugins.emplace_back(py::reinterpret_borrow<py::object>(pluginEntryPoint));
+  }
+  return plugins;
+}
+
+inline std::vector<std::string> LoadInstalledPythonPlugins(OutputCallback outputCallback = {}, PluginLoadErrorCallback pluginLoadErrorCallback = {}, PythonErrorCallback pythonErrorCallback = {})
+{
+  std::vector<std::string> loadedPythonPlugins;
+
+  try
+  {
+    auto simplnxModule = py::module_::import(SIMPLNX_PYTHON_MODULE);
+    std::vector<PluginEntrypoint> discoveredPlugins = GetInstalledPythonPlugins();
+    if(outputCallback)
+    {
+      std::set<std::string> pluginNames;
+      for(auto& pluginEntryPoint : discoveredPlugins)
+      {
+        pluginNames.insert(pluginEntryPoint.getValue());
+      }
+      outputCallback(fmt::format("Loading installed Python plugins: {}", pluginNames));
+    }
+    for(auto& pluginEntryPoint : discoveredPlugins)
+    {
+      std::string pluginName = pluginEntryPoint.getValue();
+      if(outputCallback)
+      {
+        outputCallback(fmt::format("Attempting to load installed Python plugin: '{}'", pluginName));
+      }
+      try
+      {
+        py::object mod = pluginEntryPoint.load();
+        simplnxModule.attr("load_python_plugin")(mod);
+        if(outputCallback)
+        {
+          outputCallback(fmt::format("Successfully loaded installed Python plugin '{}'", pluginName));
+        }
+        loadedPythonPlugins.push_back(pluginName);
+      } catch(const py::error_already_set& exception)
+      {
+        if(pluginLoadErrorCallback)
+        {
+          pluginLoadErrorCallback(PluginLoadErrorInfo{ExceptionType::Python, pluginName, exception.what()});
+        }
+      } catch(const std::exception& exception)
+      {
+        if(pluginLoadErrorCallback)
+        {
+          pluginLoadErrorCallback(PluginLoadErrorInfo{ExceptionType::Cpp, pluginName, exception.what()});
+        }
+      }
+    }
+  } catch(const py::error_already_set& exception)
+  {
+    if(pythonErrorCallback)
+    {
+      pythonErrorCallback(PythonErrorInfo{ExceptionType::Python, exception.what()});
+    }
+  } catch(const std::exception& exception)
+  {
+    if(pythonErrorCallback)
+    {
+      pythonErrorCallback(PythonErrorInfo{ExceptionType::Cpp, exception.what()});
+    }
+  }
+
+  return loadedPythonPlugins;
+}
 } // namespace nx::python
