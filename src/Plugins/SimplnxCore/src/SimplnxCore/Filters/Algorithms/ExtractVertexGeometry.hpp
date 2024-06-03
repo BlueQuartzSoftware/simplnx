@@ -33,12 +33,6 @@ public:
   ExtractVertexGeometry& operator=(const ExtractVertexGeometry&) = delete;
   ExtractVertexGeometry& operator=(ExtractVertexGeometry&&) noexcept = delete;
 
-  enum class ArrayHandlingType : ChoicesParameter::ValueType
-  {
-    MoveArrays,
-    CopyArrays
-  };
-
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

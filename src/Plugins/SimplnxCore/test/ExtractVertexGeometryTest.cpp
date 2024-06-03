@@ -25,8 +25,6 @@ const std::string k_WrongAttrMatName = "WrongAttrMatrix";
 const std::string k_FloatArrayName = "FloatArray";
 const std::string k_MaskArrayName = "MaskArray";
 const DataPath k_VertexDataContainerPath = {{"VertexDataContainer"}};
-const int32 k_MoveArrays = 0;
-const int32 k_CopyArrays = 1;
 
 namespace ExtractVertexGeometryTest
 {
@@ -88,7 +86,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Move)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_WrongAttrMatName, k_FloatArrayName}}}));
@@ -108,7 +106,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Move)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}}));
@@ -132,7 +130,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
   MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Move)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
@@ -162,7 +160,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
   MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_CopyArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Copy)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
@@ -205,7 +203,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
   MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_MoveArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Move)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));
@@ -238,7 +236,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
   MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName})};
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(k_CopyArrays));
+  args.insertOrAssign(ExtractVertexGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ArrayHandlingType::Copy)));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(DataPath{{k_ImageGeometryName}}));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_IncludedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputDataPaths));
   args.insertOrAssign(ExtractVertexGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath{k_VertexDataContainerPath}));

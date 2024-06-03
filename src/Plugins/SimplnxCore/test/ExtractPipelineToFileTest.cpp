@@ -22,7 +22,7 @@ fs::path k_JsonOutputFile(k_OutputFileName.string() + Pipeline::k_SIMPLExtension
 fs::path k_NXOutputFile(k_OutputFileName.string() + Pipeline::k_Extension.str());
 } // namespace
 
-TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution", "[SimplnxCore][ExtractPipelineToFileFilter]")
+TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -49,7 +49,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution", "[Simpln
   fs::remove(k_JsonOutputFile);
 }
 
-TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
+TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;

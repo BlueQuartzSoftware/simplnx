@@ -51,15 +51,17 @@ Parameters CopyDataObjectFilter::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNewParent_Key, "Copy to New Parent", "Copy all the DataObjects to a different Group", false));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewPath_Key, "New Parent Destination", "DataPath to parent Group in which to store the copied DataObject(s)", DataPath{},
+                                                              BaseGroup::GetAllGroupTypes()));
+  params.insert(std::make_unique<StringParameter>(k_NewPathSuffix_Key, "Copied Object(s) Suffix", "Suffix string to be appended to each copied DataObject. Can be blank.", "_COPY"));
+
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiPathSelectionParameter>(k_DataPath_Key, "Objects to copy", "A list of DataPaths to the DataObjects to be copied", MultiPathSelectionParameter::ValueType{}));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNewParent_Key, "Copy to New Parent", "Copy all the DataObjects to a new BaseGroup", false));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewPath_Key, "Copied Parent Group", "DataPath to parent BaseGroup in which to store the copied DataObject(s)", DataPath{},
-                                                              BaseGroup::GetAllGroupTypes()));
-  params.insert(std::make_unique<StringParameter>(k_NewPathSuffix_Key, "Copied Object(s) Suffix", "Suffix string to be appended to each copied DataObject", "_COPY"));
-
   params.linkParameters(k_UseNewParent_Key, k_NewPath_Key, true);
+
   return params;
 }
 

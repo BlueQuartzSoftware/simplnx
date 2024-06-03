@@ -76,6 +76,14 @@ enum class DataType : uint8
   boolean
 };
 
+enum class ArrayHandlingType : uint64
+{
+  Copy = 0,      // Copy an existing array to the constructed object
+  Move = 1,      // Move an existing array to the constructed object
+  Reference = 2, // Reference an existing array
+  Create = 3     // Allocate a new array
+};
+
 enum class RunState
 {
   Idle = 0,

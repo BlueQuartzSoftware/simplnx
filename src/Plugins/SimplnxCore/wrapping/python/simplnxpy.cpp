@@ -200,7 +200,7 @@ auto BindCreateGeometry2DAction(py::handle scope, const char* name)
   auto createGeometry2DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
   createGeometry2DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_faces"_a,
                              "num_vertices"_a, "vertex_attribute_matrix_name"_a, "face_attribute_matrix_name"_a, "shared_vertices_name"_a, "shared_faces_name"_a);
-  createGeometry2DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const IDataCreationAction::ArrayHandlingType&>(), "geometry_path"_a,
+  createGeometry2DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
                              "input_vertices_array_path"_a, "input_faces_array_path"_a, "vertex_attribute_matrix_name"_a, "face_attribute_matrix_name"_a, "array_type"_a);
   return createGeometry2DAction;
 }
@@ -211,7 +211,7 @@ auto BindCreateGeometry3DAction(py::handle scope, const char* name)
   auto createGeometry3DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
   createGeometry3DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_cells"_a,
                              "num_vertices"_a, "vertex_data_name"_a, "cell_data_name"_a, "shared_vertices_name"_a, "shared_cells_name"_a);
-  createGeometry3DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const IDataCreationAction::ArrayHandlingType&>(), "geometry_path"_a,
+  createGeometry3DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
                              "input_vertices_array_path"_a, "input_cell_array_path"_a, "vertex_attribute_matrix_name"_a, "cell_attribute_matrix_name"_a, "array_type"_a);
   return createGeometry3DAction;
 }
@@ -450,6 +450,10 @@ PYBIND11_MODULE(simplnx, mod)
   dataType.value("float64", DataType::float64);
   dataType.value("boolean", DataType::boolean);
 
+  py::enum_<ArrayHandlingType> arrayHandlingType(mod, "ArrayHandlingType");
+  arrayHandlingType.value("Copy", ArrayHandlingType::Copy);
+  arrayHandlingType.value("Move", ArrayHandlingType::Move);
+
   py::class_<Uuid> uuid(mod, "Uuid");
   uuid.def(py::init<>());
   uuid.def(py::init([](std::string_view text) {
@@ -539,11 +543,11 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<ArrayThreshold, IArrayThreshold, std::shared_ptr<ArrayThreshold>> arrayThreshold(mod, "ArrayThreshold");
 
-  py::enum_<ArrayThreshold::ComparisonType> comparisionType(arrayThreshold, "ComparisonType");
-  comparisionType.value("GreaterThan", ArrayThreshold::ComparisonType::GreaterThan);
-  comparisionType.value("LessThan", ArrayThreshold::ComparisonType::LessThan);
-  comparisionType.value("Equal", ArrayThreshold::ComparisonType::Operator_Equal);
-  comparisionType.value("NotEqual", ArrayThreshold::ComparisonType::Operator_NotEqual);
+  py::enum_<ArrayThreshold::ComparisonType> comparisonType(arrayThreshold, "ComparisonType");
+  comparisonType.value("GreaterThan", ArrayThreshold::ComparisonType::GreaterThan);
+  comparisonType.value("LessThan", ArrayThreshold::ComparisonType::LessThan);
+  comparisonType.value("Equal", ArrayThreshold::ComparisonType::Operator_Equal);
+  comparisonType.value("NotEqual", ArrayThreshold::ComparisonType::Operator_NotEqual);
 
   arrayThreshold.def(py::init<>());
   arrayThreshold.def_property("array_path", &ArrayThreshold::getArrayPath, &ArrayThreshold::setArrayPath);
@@ -937,11 +941,11 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto iDataCreationAction = py::class_<IDataCreationAction, IDataAction>(mod, "IDataCreationAction");
 
-  auto iDataCreationActionArrayHandlingType = py::enum_<IDataCreationAction::ArrayHandlingType>(iDataCreationAction, "ArrayHandlingType");
-  iDataCreationActionArrayHandlingType.value("Copy", IDataCreationAction::ArrayHandlingType::Copy);
-  iDataCreationActionArrayHandlingType.value("Move", IDataCreationAction::ArrayHandlingType::Move);
-  iDataCreationActionArrayHandlingType.value("Reference", IDataCreationAction::ArrayHandlingType::Reference);
-  iDataCreationActionArrayHandlingType.value("Create", IDataCreationAction::ArrayHandlingType::Create);
+  //  auto iDataCreationActionArrayHandlingType = py::enum_<ArrayHandlingType>(iDataCreationAction, "ArrayHandlingType");
+  //  iDataCreationActionArrayHandlingType.value("Copy", ArrayHandlingType::Copy);
+  //  iDataCreationActionArrayHandlingType.value("Move", ArrayHandlingType::Move);
+  //  iDataCreationActionArrayHandlingType.value("Reference", ArrayHandlingType::Reference);
+  //  iDataCreationActionArrayHandlingType.value("Create", ArrayHandlingType::Create);
 
   auto copyArrayInstanceAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyArrayInstanceAction, IDataCreationAction);
   copyArrayInstanceAction.def(py::init<const DataPath&, const DataPath&>(), "input_data_array_path"_a, "output_data_array_path"_a);
@@ -962,7 +966,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto createEdgeGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateEdgeGeometryAction, IDataCreationAction);
   createEdgeGeometryAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_edges"_a,
                                "num_vertices"_a, "vertex_attribute_matrix_name"_a, "edge_attribute_matrix_name"_a, "shared_vertices_name"_a, "shared_edges_name"_a);
-  createEdgeGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const IDataCreationAction::ArrayHandlingType&>(), "geometry_path"_a,
+  createEdgeGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
                                "input_vertices_array_path"_a, "input_edges_array_path"_a, "vertex_attribute_matrix_name"_a, "edge_attribute_matrix_name"_a, "array_type"_a);
 
   auto createTriangleGeometryAction = SIMPLNX_PY_BIND_CREATE_GEOMETRY_2D_ACTION(mod, CreateTriangleGeometryAction);
@@ -982,8 +986,8 @@ PYBIND11_MODULE(simplnx, mod)
   auto createRectGridGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateRectGridGeometryAction, IDataCreationAction);
   createRectGridGeometryAction.def(py::init<const DataPath&, usize, usize, usize, const std::string&, const std::string&, const std::string&, const std::string&>(), "path"_a, "x_bounds_dim"_a,
                                    "y_bounds_dim"_a, "z_bounds_dim"_a, "cell_attribute_matrix_name"_a, "x_bounds_name"_a, "y_bounds_name"_a, "z_bounds_name"_a);
-  createRectGridGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const DataPath&, const std::string&, const IDataCreationAction::ArrayHandlingType&>(), "path"_a,
-                                   "input_x_bounds_path"_a, "input_y_bounds_path"_a, "input_z_bounds_path"_a, "cell_attribute_matrix_name"_a, "array_type"_a);
+  createRectGridGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const DataPath&, const std::string&, const ArrayHandlingType&>(), "path"_a, "input_x_bounds_path"_a,
+                                   "input_y_bounds_path"_a, "input_z_bounds_path"_a, "cell_attribute_matrix_name"_a, "array_type"_a);
 
   auto createStringArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateStringArrayAction, IDataCreationAction);
   createStringArrayAction.def(py::init<const std::vector<usize>&, const DataPath&, const std::string&>(), "t_dims"_a, "path"_a, "initialize_value"_a = std::string(""));
@@ -991,7 +995,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto createVertexGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateVertexGeometryAction, IDataCreationAction);
   createVertexGeometryAction.def(py::init<const DataPath&, IGeometry::MeshIndexType, const std::string&, const std::string&>(), "geometry_path"_a, "num_vertices"_a, "vertex_attribute_matrix_name"_a,
                                  "shared_vertex_list_name"_a);
-  createVertexGeometryAction.def(py::init<const DataPath&, const DataPath&, const std::string&, const IDataCreationAction::ArrayHandlingType&>(), "geometry_path"_a, "input_vertices_array_path"_a,
+  createVertexGeometryAction.def(py::init<const DataPath&, const DataPath&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a, "input_vertices_array_path"_a,
                                  "vertex_attribute_matrix_name"_a, "array_type"_a);
 
   auto deleteDataAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, DeleteDataAction, IDataAction);
@@ -1103,10 +1107,10 @@ PYBIND11_MODULE(simplnx, mod)
   dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
   dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& self) { return "Dream3dImportParameter.ImportData()"; });
 
-  auto arraySelectionParamterDataLocation = py::enum_<ArraySelectionParameter::DataLocation>(arraySelectionParameter, "DataLocation");
-  arraySelectionParamterDataLocation.value("Any", ArraySelectionParameter::DataLocation::Any);
-  arraySelectionParamterDataLocation.value("InMemory", ArraySelectionParameter::DataLocation::InMemory);
-  arraySelectionParamterDataLocation.value("OutOfCore", ArraySelectionParameter::DataLocation::OutOfCore);
+  auto arraySelectionParameterDataLocation = py::enum_<ArraySelectionParameter::DataLocation>(arraySelectionParameter, "DataLocation");
+  arraySelectionParameterDataLocation.value("Any", ArraySelectionParameter::DataLocation::Any);
+  arraySelectionParameterDataLocation.value("InMemory", ArraySelectionParameter::DataLocation::InMemory);
+  arraySelectionParameterDataLocation.value("OutOfCore", ArraySelectionParameter::DataLocation::OutOfCore);
 
   auto dynamicTableInfo = py::class_<DynamicTableInfo>(mod, "DynamicTableInfo");
 

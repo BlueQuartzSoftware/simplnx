@@ -37,10 +37,7 @@ Result<> checkGeometryArraysCompatible(const Float32Array& vertices, const UInt6
   uint64 idx = 0;
   for(usize i = 0; i < cells.getSize(); i++)
   {
-    if(cells[i] > idx)
-    {
-      idx = cells[i];
-    }
+    idx = std::max(cells[i], idx);
   }
   if((idx + 1) > numVertices)
   {
@@ -120,8 +117,8 @@ Parameters CreateGeometryFilter::parameters() const
                                                    IGeometry::GetAllLengthUnitStrings()));
   params.insert(std::make_unique<BoolParameter>(k_WarningsAsErrors_Key, "Treat Geometry Warnings as Errors", "Whether run time warnings for Geometries should be treated as errors", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling",
-                                                   "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.", 0,
-                                                   ChoicesParameter::Choices{"Copy Array", "Move Array" /*, "Reference Array"*/}));
+                                                   "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.",
+                                                   to_underlying(ArrayHandlingType::Move), ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
 
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
                                                         std::vector<std::string>{"X"s, "Y"s, "Z"s}));
@@ -216,9 +213,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 {
   auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pGeometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
-  auto pWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto pArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  auto pMoveArrays = pArrayHandling == k_MoveArray;
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -305,13 +300,12 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
                                                       xBounds->getNumberOfTuples(), yBounds->getNumberOfTuples(), zBounds->getNumberOfTuples())}})};
     }
 
-    auto createRectGridGeometryAction =
-        std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createRectGridGeometryAction = std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createRectGridGeometryAction));
   }
   if(pGeometryType == k_VertexGeometry) // VertexGeom
   {
-    auto createVertexGeomAction = std::make_unique<CreateVertexGeometryAction>(pGeometryPath, pVertexListPath, pVertexAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createVertexGeomAction = std::make_unique<CreateVertexGeometryAction>(pGeometryPath, pVertexListPath, pVertexAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createVertexGeomAction));
   }
   if(pGeometryType == k_EdgeGeometry) // EdgeGeom
@@ -323,8 +317,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9845, fmt::format("Cannot find selected edge list at path '{}'", pEdgeListPath.toString())}})};
     }
 
-    auto createEdgeGeomAction =
-        std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
   }
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
@@ -335,8 +328,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString())}})};
     }
 
-    auto createTriangleGeomAction =
-        std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTriangleGeomAction));
   }
   if(pGeometryType == k_QuadGeometry) // QuadGeom
@@ -347,8 +339,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString())}})};
     }
 
-    auto createQuadGeomAction =
-        std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createQuadGeomAction = std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createQuadGeomAction));
   }
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
@@ -359,8 +350,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString())}})};
     }
 
-    auto createTetGeomAction =
-        std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createTetGeomAction = std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTetGeomAction));
   }
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
@@ -371,8 +361,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString())}})};
     }
 
-    auto createHexGeomAction =
-        std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
+    auto createHexGeomAction = std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createHexGeomAction));
   }
 
@@ -387,7 +376,7 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
-  auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
+  // auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
 
   auto iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
   auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
