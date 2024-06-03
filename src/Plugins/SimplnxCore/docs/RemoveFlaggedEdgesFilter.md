@@ -1,4 +1,4 @@
-# Remove Flagged Triangles
+# Remove Flagged Edges
 
 ## Group (Subgroup)
 
@@ -6,24 +6,28 @@ Surface Meshing (Misc)
 
 ## Description
 
-This **Filter** removes **Triangles** from the supplied **Triangle Geometry** that are flagged by a boolean mask array as **true**.  A new reduced **Geometry** is created that contains all the remaining **Triangles**.  It is unknown until run time how many **Triangles** will be removed from the **Geometry**. Therefore, this **Filter** requires that a new **TriangleGeom** be created to contain the reduced **Triangle Geometry**. This new **Geometry** will *NOT* contain copies of any **Feature Attribute Matrix** or **Ensemble Attribute Matrix** from the original **Geometry**. 
+This **Filter** removes **Edges** from the supplied **Edges Geometry** that are flagged by a (boolean|uint8) mask array as **true|1**.  A new reduced **Edge Geometry** is created that contains all the remaining **Edges**.  It is unknown until run time how many **Edges** will be removed from the **Geometry**. Therefore, this **Filter** requires that a new **EdgeGeom** be created to contain the reduced **Edge Geometry**. This new **Geometry** will *NOT* contain copies of any **Feature Attribute Matrix** or **Ensemble Attribute Matrix** from the original 
+**Geometry**. The mask is expected to be over the edges themselves so it should be based on something from the **Edge Data Attribute Matrix**.
 
-- Additionally, all **Vertex** data will be copied, with tuples *removed* for any **Vertices** removed by the **Filter**.  The user must supply a name for the reduced **Geometry**.
 
-The mask is expected to be over the triangles themselves so it should be based on something from the ***Face Data*** **Attribute Matrix**, generally we suggest basing the mask on the created **Region Ids** array from the *Label Triangle Geometry Filter*.
+## Data Handling
 
-*Note:* Since it cannot be known before run time how many **Vertices** will be removed, the new **Vertex Geometry** and
-all associated **Vertex** data to be copied will be initialized to have size 0.
+For each of the vertex and edge data attribute matrices, the user can select to copy none, some or all of the associated data arrays
+into the newly created geometry. If the user wishes to not copy any of the data, just leave the choice to "Copy Selected XXX Data" [0]
+but do not populate the list with any selections.
+
+
+*Note:* Since it cannot be known before run time how many **Edges** will be removed, the new **Edge Geometry** and all associated **Edge** data to be copied will be initialized to have size 0.
 
 ## Example Output
 
-- The next figure shows a triangle geometry that has had a mask generated. Yellow parts are flagged as true.
+- The next figure shows an edge geometry that has had a mask generated. Yellow parts are flagged as true.
 
-![Masked triangle geometries for removal.](Images/RemoveFlaggedTriangles_1.png)
+![Masked edge geometries for removal.](Images/RemoveFlaggedEdges_1.png)
 
 - The next figure shows the result of running the filter.
 
-![Resulting triangle geometry](Images/RemoveFlaggedTriangles_2.png)
+![Resulting edge geometry](Images/RemoveFlaggedEdges_2.png)
 
 % Auto generated parameter table will be inserted here
 
