@@ -7,68 +7,12 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
 
 namespace
 {
 constexpr usize k_NumVerts = 2;
-
-/**
- * @brief
- * @tparam T
- */
-template <typename T>
-class CopyCellDataArray
-{
-public:
-  CopyCellDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const std::vector<usize>& newEdgesIndex, const std::atomic_bool& shouldCancel)
-  : m_OldCellArray(dynamic_cast<const DataArray<T>&>(oldCellArray))
-  , m_NewCellArray(dynamic_cast<DataArray<T>&>(newCellArray))
-  , m_NewEdgesIndex(newEdgesIndex)
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-
-  ~CopyCellDataArray() = default;
-
-  CopyCellDataArray(const CopyCellDataArray&) = default;
-  CopyCellDataArray(CopyCellDataArray&&) noexcept = default;
-  CopyCellDataArray& operator=(const CopyCellDataArray&) = delete;
-  CopyCellDataArray& operator=(CopyCellDataArray&&) noexcept = delete;
-
-  void operator()() const
-  {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
-    size_t numComps = m_OldCellArray.getNumberOfComponents();
-    const auto& oldCellData = m_OldCellArray.getDataStoreRef();
-
-    auto& dataStore = m_NewCellArray.getDataStoreRef();
-    std::fill(dataStore.begin(), dataStore.end(), static_cast<T>(-1));
-
-    uint64 destTupleIndex = 0;
-    for(const auto& srcIndex : m_NewEdgesIndex)
-    {
-      for(size_t compIndex = 0; compIndex < numComps; compIndex++)
-      {
-        dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
-      }
-      destTupleIndex++;
-    }
-  }
-
-private:
-  const DataArray<T>& m_OldCellArray;
-  DataArray<T>& m_NewCellArray;
-  const std::vector<usize>& m_NewEdgesIndex;
-  const std::atomic_bool& m_ShouldCancel;
-};
 
 /**
  * @brief The PopulateReducedGeometryEdgesImpl pulls the vertices associated with a triangle then locates the indices in
@@ -124,29 +68,6 @@ private:
   const std::vector<usize>& m_NewEdgesIndex;
   const std::vector<usize>& m_NewVerticesIndex;
 };
-
-void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
-                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler)
-{
-  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
-  ParallelTaskAlgorithm taskRunner;
-  for(const auto& edgeDataArrayPath : sourceDataPaths)
-  {
-    if(m_ShouldCancel)
-    {
-      return;
-    }
-
-    const auto& oldDataArray = m_DataStructure.getDataRefAs<IDataArray>(edgeDataArrayPath);
-    const std::string srcName = oldDataArray.getName();
-
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Reducing Edge Geometry || Copying Data Array {}", srcName));
-    ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
-  }
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-}
 
 } // namespace
 
@@ -263,7 +184,8 @@ Result<> RemoveFlaggedEdges::operator()()
   /** This section will copy any user defined Edge Data Arrays from the old to the reduced edge geometry **/
   if(m_InputValues->EdgeDataHandling == k_CopySelectedEdgeArraysIdx)
   {
-    ::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->SelectedEdgeData, newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
+    TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->SelectedEdgeData, newEdgesIndexList, m_ShouldCancel,
+                                                     m_MessageHandler);
   }
   else if(m_InputValues->EdgeDataHandling == k_CopyAllEdgeArraysIdx)
   {
@@ -271,14 +193,15 @@ Result<> RemoveFlaggedEdges::operator()()
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->EdgeAttributeMatrixPath, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      ::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), getChildrenResult.value(), newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
+      TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), getChildrenResult.value(), newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
     }
   }
 
   /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
   if(m_InputValues->VertexDataHandling == k_CopySelectedVertexArraysIdx)
   {
-    ::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel, m_MessageHandler);
+    TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
+                                                     m_MessageHandler);
   }
   else if(m_InputValues->VertexDataHandling == k_CopyAllVertexArraysIdx)
   {
@@ -286,7 +209,7 @@ Result<> RemoveFlaggedEdges::operator()()
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      ::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
+      TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
     }
   }
 

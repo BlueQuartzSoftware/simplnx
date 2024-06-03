@@ -18,21 +18,6 @@ using namespace nx::core;
 
 namespace
 {
-template <typename GeometryType>
-void createDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
-                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions)
-{
-  // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
-  // in the destination geometry's attribute matrix
-  for(const auto& dataPath : selectedArrayPaths)
-  {
-    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
-    DataType dataType = srcArray.getDataType();
-    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-    DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
-  }
-}
 
 } // namespace
 
@@ -164,7 +149,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       {
         return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
     else if(pEdgeArrayHandling == k_CopyAllEdgeArraysIdx)
     {
@@ -178,7 +163,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedEdgeArrays = getChildrenResult.value();
-        createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
       }
     }
   }
@@ -194,7 +179,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       {
         return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
     else if(pVertexArrayHandling == k_CopyAllVertexArraysIdx)
     {
@@ -208,7 +193,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedVertexArrays = getChildrenResult.value();
-        createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
       }
     }
   }

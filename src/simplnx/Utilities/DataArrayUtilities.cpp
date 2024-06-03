@@ -24,8 +24,8 @@ struct InitializeNeighborListFunctor
   template <typename T>
   void operator()(INeighborList* iNeighborList)
   {
-    auto* neighborList = dynamic_cast<NeighborList<T>*>(iNeighborList);
-    neighborList->setList(neighborList->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
+    auto* neighborListPtr = dynamic_cast<NeighborList<T>*>(iNeighborList);
+    neighborListPtr->setList(neighborListPtr->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
   }
 };
 } // namespace
@@ -124,8 +124,8 @@ bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vecto
   std::set<nx::core::DataType> types;
   for(const auto& dataPath : dataArrayPaths)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    types.insert(dataArray->getDataType());
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+    types.insert(dataArrayPtr->getDataType());
   }
   return types.size() == 1;
 }
@@ -153,11 +153,11 @@ bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory,
     return true;
   }
 
-  Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
+  Preferences* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
 
   const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
-  const uint64 largeDataStructureSize = preferences->largeDataStructureSize();
-  std::string largeDataFormat = preferences->largeDataFormat();
+  const uint64 largeDataStructureSize = preferencesPtr->largeDataStructureSize();
+  std::string largeDataFormat = preferencesPtr->largeDataFormat();
 
   if(memoryUsage >= largeDataStructureSize)
   {
@@ -184,51 +184,51 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
 //-----------------------------------------------------------------------------
 Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode)
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+  auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
 
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<float32>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<float32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<float64>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<float64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<int8>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<int8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<uint8>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<uint8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<int16>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<int16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<uint16>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<uint16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<int32>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<int32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<uint32>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<uint32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<int64>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<int64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
   {
-    return ReplaceArray<uint64>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<uint64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
+  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
   {
-    return ReplaceArray<bool>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
+    return ReplaceArray<bool>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
 
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
@@ -237,13 +237,13 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 //-----------------------------------------------------------------------------
 Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds)
 {
-  const auto* featureArray = dataStructure.getDataAs<IDataArray>(arrayPath);
-  if(featureArray == nullptr)
+  const auto* featureArrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
+  if(featureArrayPtr == nullptr)
   {
     return MakeErrorResult(-5550, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
   }
   Result<> results = {};
-  const usize numFeatures = featureArray->getNumberOfTuples();
+  const usize numFeatures = featureArrayPtr->getNumberOfTuples();
 
   for(const int32& featureId : featureIds)
   {
@@ -267,8 +267,8 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
 //-----------------------------------------------------------------------------
 void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighborListPath)
 {
-  auto* neighborList = dataStructure.getDataAs<INeighborList>(neighborListPath);
-  ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborList->getDataType(), neighborList);
+  auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(neighborListPath);
+  ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborListPtr->getDataType(), neighborListPtr);
 }
 
 //-----------------------------------------------------------------------------
@@ -327,4 +327,31 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
     return false;
   }
 }
+
+namespace TransferGeometryElementData
+{
+void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
+                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler)
+{
+  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
+  // refers to the cropping of each DataArray being done on a separate thread.
+  ParallelTaskAlgorithm taskRunner;
+  for(const auto& edgeDataArrayPath : sourceDataPaths)
+  {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
+    const auto& oldDataArray = m_DataStructure.getDataRefAs<IDataArray>(edgeDataArrayPath);
+    const std::string srcName = oldDataArray.getName();
+
+    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    m_MessageHandler(fmt::format("Copying Data Array {}", srcName));
+    ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
+  }
+  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+}
+} // namespace TransferGeometryElementData
+
 } // namespace nx::core

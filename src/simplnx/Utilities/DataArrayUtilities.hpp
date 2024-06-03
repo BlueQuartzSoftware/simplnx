@@ -11,9 +11,12 @@
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Output.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -258,7 +261,6 @@ SIMPLNX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
 template <class T, typename ConditionalType>
 void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>* condArrayPtr, T replaceValue, bool invertMask = false)
 {
-  T replaceVal = static_cast<T>(replaceValue);
   usize numTuples = inputArrayPtr.getNumberOfTuples();
 
   const DataArray<ConditionalType>& conditionalArray = *condArrayPtr;
@@ -365,10 +367,10 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
   case IDataAction::Mode::Execute: {
     uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
-    auto* preferences = Application::GetOrCreateInstance()->getPreferences();
-    if(preferences->forceOocData())
+    auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+    if(preferencesPtr->forceOocData())
     {
-      dataFormat = preferences->largeDataFormat();
+      dataFormat = preferencesPtr->largeDataFormat();
     }
     auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
     ioCollection->checkStoreDataFormat(dataSize, dataFormat);
@@ -399,16 +401,16 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::optional<DataObject::IdType> dataObjectId;
 
-  DataObject* parentObject = nullptr;
+  DataObject* parentObjectPtr = nullptr;
   if(parentPath.getLength() != 0)
   {
-    parentObject = dataStructure.getData(parentPath);
-    if(parentObject == nullptr)
+    parentObjectPtr = dataStructure.getData(parentPath);
+    if(parentObjectPtr == nullptr)
     {
       return MakeErrorResult(-260, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
     }
 
-    dataObjectId = parentObject->getId();
+    dataObjectId = parentObjectPtr->getId();
   }
 
   if(tupleShape.empty())
@@ -450,15 +452,15 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
     }
 
-    if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
-      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
+      auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));
       std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(store->getTupleShape(), " x "));
       return MakeErrorResult(-265,
                              fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                          "dimensions or the same total number of tuples.\n{}\n{}",
-                                         name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
+                                         name, dataStructure.getDataPathsForId(parentObjectPtr->getId()).front().toString(), amShape, arrayShape));
     }
     else
     {
@@ -527,13 +529,13 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 
   if(parentPath.getLength() != 0)
   {
-    auto* parentObject = dataStructure.getData(parentPath);
-    if(parentObject == nullptr)
+    auto* parentObjectPtr = dataStructure.getData(parentPath);
+    if(parentObjectPtr == nullptr)
     {
       return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", prefix, parentPath.toString()));
     }
 
-    dataObjectId = parentObject->getId();
+    dataObjectId = parentObjectPtr->getId();
   }
 
   const usize last = path.getLength() - 1;
@@ -560,12 +562,12 @@ template <class T>
 DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
 {
   using DataArrayType = DataArray<T>;
-  DataObject* object = dataStructure.getData(path);
-  if(object == nullptr)
+  DataObject* objectPtr = dataStructure.getData(path);
+  if(objectPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataArray does not exist at DataPath: '{}'", path.toString()));
   }
-  auto* dataArray = dynamic_cast<DataArrayType*>(object);
+  auto* dataArray = dynamic_cast<DataArrayType*>(objectPtr);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -583,13 +585,13 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
 template <class T>
 DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& path)
 {
-  DataObject* object = dataStructure.getData(path);
-  auto* dataArray = dynamic_cast<DataArray<T>*>(object);
-  if(dataArray == nullptr)
+  DataObject* objectPtr = dataStructure.getData(path);
+  auto* dataArrayPtr = dynamic_cast<DataArray<T>*>(objectPtr);
+  if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error("Can't obtain DataArray");
   }
-  return *dataArray;
+  return *dataArrayPtr;
 }
 
 /**
@@ -604,8 +606,8 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
 template <typename T>
 Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
 {
-  FILE* inputFile = std::fopen(binaryFilePath.string().c_str(), "rb");
-  if(inputFile == nullptr)
+  FILE* inputFilePtr = std::fopen(binaryFilePath.string().c_str(), "rb");
+  if(inputFilePtr == nullptr)
   {
     return MakeErrorResult(-1000, fmt::format("Unable to open the specified file. '{}'", binaryFilePath.string()));
   }
@@ -613,7 +615,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
   // Skip some bytes if needed
   if(startByte > 0)
   {
-    FSEEK64(inputFile, static_cast<int32>(startByte), SEEK_SET);
+    FSEEK64(inputFilePtr, static_cast<int32>(startByte), SEEK_SET);
   }
 
   const usize numElements = outputDataArray.getSize();
@@ -624,14 +626,14 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
   usize elementCounter = 0;
   while(elementCounter < numElements)
   {
-    usize elements_read = std::fread(buffer.data(), sizeof(T), chunkSize, inputFile);
+    usize elementsRead = std::fread(buffer.data(), sizeof(T), chunkSize, inputFilePtr);
 
-    for(usize i = 0; i < elements_read; i++)
+    for(usize i = 0; i < elementsRead; i++)
     {
       outputDataArray[i + elementCounter] = buffer[i];
     }
 
-    elementCounter += elements_read;
+    elementCounter += elementsRead;
 
     usize elementsLeft = numElements - elementCounter;
 
@@ -641,7 +643,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
     }
   }
 
-  std::fclose(inputFile);
+  std::fclose(inputFilePtr);
 
   return {};
 }
@@ -667,28 +669,28 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
 
   if(!fs::exists(filename))
   {
-    std::cout << "File Does Not Exist:'" << filename << "'" << std::endl;
+    std::cout << "File Does Not Exist:'" << filename << "'\n";
     return nullptr;
   }
 
   std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape, static_cast<T>(0)));
-  ArrayType* dataArray = ArrayType::Create(dataStructure, name, dataStore, parentId);
+  ArrayType* dataArrayPtr = ArrayType::Create(dataStructure, name, dataStore, parentId);
 
   const usize fileSize = fs::file_size(filename);
-  const usize numBytesToRead = dataArray->getSize() * sizeof(T);
+  const usize numBytesToRead = dataArrayPtr->getSize() * sizeof(T);
   if(numBytesToRead != fileSize)
   {
-    std::cout << "FileSize '" << fileSize << "' and Allocated Size '" << numBytesToRead << "' do not match" << std::endl;
+    std::cout << "FileSize '" << fileSize << "' and Allocated Size '" << numBytesToRead << "' do not match\n";
     return nullptr;
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), *dataArray);
+  Result<> result = ImportFromBinaryFile(fs::path(filename), *dataArrayPtr);
   if(result.invalid())
   {
     return nullptr;
   }
 
-  return dataArray;
+  return dataArrayPtr;
 }
 
 /**
@@ -772,12 +774,12 @@ SIMPLNX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStru
 template <typename T>
 Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath, const std::vector<usize>& newShape)
 {
-  auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-  if(dataArray == nullptr)
+  auto* dataArrayPtr = dataStructure.getDataAs<DataArray<T>>(arrayPath);
+  if(dataArrayPtr == nullptr)
   {
     return MakeErrorResult(-4830, fmt::format("Could not find array path '{}' in the given data structure", arrayPath.toString()));
   }
-  if(dataArray->getTupleShape() == newShape) // array does not need to be reshaped
+  if(dataArrayPtr->getTupleShape() == newShape) // array does not need to be reshaped
   {
     return {};
   }
@@ -789,7 +791,7 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
   }
 
   // the array's parent is not in an Attribute Matrix so we can safely reshape to the new tuple shape
-  dataArray->template getIDataStoreRefAs<DataStore<T>>().resizeTuples(newShape);
+  dataArrayPtr->template getIDataStoreRefAs<DataStore<T>>().resizeTuples(newShape);
   return {};
 }
 
@@ -988,7 +990,7 @@ public:
       {
         if(newDataStore.copyFrom(i, oldDataStore, oldIndexI, 1).invalid())
         {
-          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndexI, i) << std::endl;
+          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n\n", m_OldCellArray.getName(), oldIndexI, i);
           break;
         }
       }
@@ -1103,19 +1105,19 @@ public:
     const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
-      using NeighborListT = NeighborList<T>;
-      auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+      using NeighborListType = NeighborList<T>;
+      auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
       // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
-      if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+      if(destArrayPtr->getValues().empty() || destArrayPtr->getList(0) == nullptr)
       {
-        destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+        destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
-      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, offset);
+      AppendData<NeighborListType>(*dynamic_cast<const NeighborListType*>(m_InputCellArray), *destArrayPtr, offset);
     }
     if(m_ArrayType == IArray::ArrayType::DataArray)
     {
-      using DataArrayT = DataArray<T>;
-      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *dynamic_cast<DataArrayT*>(m_DestCellArray), offset);
+      using DataArrayType = DataArray<T>;
+      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *dynamic_cast<DataArrayType*>(m_DestCellArray), offset);
     }
     if(m_ArrayType == IArray::ArrayType::StringArray)
     {
@@ -1169,9 +1171,9 @@ public:
     }
     if(m_ArrayType == IArray::ArrayType::DataArray)
     {
-      using DataArrayT = DataArray<T>;
-      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray1), *dynamic_cast<DataArrayT*>(m_DestCellArray), 0);
-      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray2), *dynamic_cast<DataArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
+      using DataArrayType = DataArray<T>;
+      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray1), *dynamic_cast<DataArrayType*>(m_DestCellArray), 0);
+      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray2), *dynamic_cast<DataArrayType*>(m_DestCellArray), m_InputCellArray1->getSize());
     }
     if(m_ArrayType == IArray::ArrayType::StringArray)
     {
@@ -1231,11 +1233,11 @@ public:
       }
       else if(m_ArrayType == IArray::ArrayType::DataArray)
       {
-        using DataArrayT = DataArray<T>;
-        auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
+        using DataArrayType = DataArray<T>;
+        auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
         if(oldIndexI >= 0)
         {
-          copySucceeded = CopyData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+          copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
         }
         else
         {
@@ -1359,21 +1361,21 @@ public:
           if(m_ArrayType == IArray::ArrayType::NeighborListArray)
           {
             using NeighborListT = NeighborList<T>;
-            auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+            auto* destArrayPtr = dynamic_cast<NeighborListT*>(m_DestCellArray);
             // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
-            destArray->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+            destArrayPtr->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
             if(rectGridIndex >= 0)
             {
-              copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
+              copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
             }
           }
           else if(m_ArrayType == IArray::ArrayType::DataArray)
           {
-            using DataArrayT = DataArray<T>;
-            auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
+            using DataArrayType = DataArray<T>;
+            auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
             if(rectGridIndex >= 0)
             {
-              copySucceeded = CopyData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
+              copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
             }
             else
             {
@@ -1394,9 +1396,8 @@ public:
           }
           if(!copySucceeded)
           {
-            std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), rectGridIndex,
-                                     imageIndex)
-                      << std::endl;
+            std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n\n", m_InputCellArray->getName(), rectGridIndex,
+                                     imageIndex);
             break;
           }
 
@@ -1426,9 +1427,9 @@ private:
  */
 inline void RunAppendBoolAppend(IArray& destCellArray, const IArray& inputCellArray, usize tupleOffset)
 {
-  using DataArrayT = DataArray<bool>;
+  using DataArrayType = DataArray<bool>;
   const usize offset = tupleOffset * destCellArray.getNumberOfComponents();
-  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray), *dynamic_cast<DataArrayT*>(&destCellArray), offset);
+  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray), *dynamic_cast<DataArrayType*>(&destCellArray), offset);
 }
 
 /**
@@ -1437,9 +1438,9 @@ inline void RunAppendBoolAppend(IArray& destCellArray, const IArray& inputCellAr
  */
 inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& inputCellArray2, IArray& destCellArray)
 {
-  using DataArrayT = DataArray<bool>;
-  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray1), *dynamic_cast<DataArrayT*>(&destCellArray), 0);
-  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray2), *dynamic_cast<DataArrayT*>(&destCellArray), inputCellArray1.getSize());
+  using DataArrayType = DataArray<bool>;
+  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray1), *dynamic_cast<DataArrayType*>(&destCellArray), 0);
+  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray2), *dynamic_cast<DataArrayType*>(&destCellArray), inputCellArray1.getSize());
 }
 
 /**
@@ -1448,8 +1449,8 @@ inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& in
  */
 inline void RunBoolCopyUsingIndexList(IArray& destCellArray, const IArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
 {
-  using DataArrayT = DataArray<bool>;
-  CopyUsingIndexList<DataArrayT>(*dynamic_cast<DataArrayT*>(&destCellArray), *dynamic_cast<const DataArrayT*>(&inputCellArray), newToOldIndices);
+  using DataArrayType = DataArray<bool>;
+  CopyUsingIndexList<DataArrayType>(*dynamic_cast<DataArrayType*>(&destCellArray), *dynamic_cast<const DataArrayType*>(&inputCellArray), newToOldIndices);
 }
 
 /**
@@ -1459,9 +1460,9 @@ inline void RunBoolCopyUsingIndexList(IArray& destCellArray, const IArray& input
 inline void RunBoolMapRectToImage(IArray& destCellArray, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
                                   const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
 {
-  using DataArrayT = DataArray<bool>;
-  MapRectGridDataToImageData<DataArrayT>(*dynamic_cast<DataArrayT*>(&destCellArray), *dynamic_cast<const DataArrayT*>(&inputCellArray), origin, imageGeoDims, imageGeoSpacing, rectGridDims,
-                                         xGridValues, yGridValues, zGridValues);
+  using DataArrayType = DataArray<bool>;
+  MapRectGridDataToImageData<DataArrayType>(*dynamic_cast<DataArrayType*>(&destCellArray), *dynamic_cast<const DataArrayType*>(&inputCellArray), origin, imageGeoDims, imageGeoSpacing, rectGridDims,
+                                            xGridValues, yGridValues, zGridValues);
 }
 
 template <class ParallelRunnerT, class... ArgsT>
@@ -1553,4 +1554,85 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Args
 
 } // namespace CopyFromArray
 
+namespace TransferGeometryElementData
+{
+
+/**
+ * @brief
+ * @tparam T
+ */
+template <typename T>
+class CopyCellDataArray
+{
+public:
+  CopyCellDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const std::vector<usize>& newEdgesIndex, const std::atomic_bool& shouldCancel)
+  : m_OldCellArray(dynamic_cast<const DataArray<T>&>(oldCellArray))
+  , m_NewCellArray(dynamic_cast<DataArray<T>&>(newCellArray))
+  , m_NewEdgesIndex(newEdgesIndex)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  ~CopyCellDataArray() = default;
+
+  CopyCellDataArray(const CopyCellDataArray&) = default;
+  CopyCellDataArray(CopyCellDataArray&&) noexcept = default;
+  CopyCellDataArray& operator=(const CopyCellDataArray&) = delete;
+  CopyCellDataArray& operator=(CopyCellDataArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    size_t numComps = m_OldCellArray.getNumberOfComponents();
+    const auto& oldCellData = m_OldCellArray.getDataStoreRef();
+
+    auto& dataStore = m_NewCellArray.getDataStoreRef();
+    std::fill(dataStore.begin(), dataStore.end(), static_cast<T>(-1));
+
+    uint64 destTupleIndex = 0;
+    for(const auto& srcIndex : m_NewEdgesIndex)
+    {
+      for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+      {
+        dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
+      }
+      destTupleIndex++;
+    }
+  }
+
+private:
+  const DataArray<T>& m_OldCellArray;
+  DataArray<T>& m_NewCellArray;
+  const std::vector<usize>& m_NewEdgesIndex;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
+/**
+ *
+ * @param m_DataStructure
+ * @param destCellDataAM The destination Attribute Matrix
+ * @param sourceDataPaths The source data array paths that are to be copied
+ * @param newEdgesIndexList The index mapping
+ * @param m_ShouldCancel Should the algorithm be canceled
+ * @param m_MessageHandler The message handler to use for messages.
+ */
+SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
+                                        const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler);
+
+template <typename GeometryType>
+void createDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
+                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions)
+{
+  // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
+  // in the destination geometry's attribute matrix
+  for(const auto& dataPath : selectedArrayPaths)
+  {
+    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    DataType dataType = srcArray.getDataType();
+    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+    DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
+  }
+}
+
+} // namespace TransferGeometryElementData
 } // namespace nx::core

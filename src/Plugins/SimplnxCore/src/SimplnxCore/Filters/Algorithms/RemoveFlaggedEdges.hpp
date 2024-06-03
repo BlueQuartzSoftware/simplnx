@@ -14,10 +14,10 @@
 namespace
 {
 
-const std::string k_CopySelectedEdgeData("Copy Selected Edge Data");
+const std::string k_CopySelectedTriangleData("Copy Selected Edge Data");
 const std::string k_CopyAllEdgeData("Copy All Edge Data");
 
-const nx::core::ChoicesParameter::Choices k_EdgeDataHandlingChoices = {k_CopySelectedEdgeData, k_CopyAllEdgeData};
+const nx::core::ChoicesParameter::Choices k_EdgeDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllEdgeData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedEdgeArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllEdgeArraysIdx = 1ULL;
 

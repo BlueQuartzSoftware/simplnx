@@ -6,8 +6,29 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+
+namespace
+{
+
+const std::string k_CopySelectedTriangleData("Copy Selected Triangle Data");
+const std::string k_CopyAllTriangleData("Copy All Triangle Data");
+
+const nx::core::ChoicesParameter::Choices k_TriangleDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllTriangleData};
+const nx::core::ChoicesParameter::ValueType k_CopySelectedTriangleArraysIdx = 0ULL;
+const nx::core::ChoicesParameter::ValueType k_CopyAllTriangleArraysIdx = 1ULL;
+
+const std::string k_CopySelectedVertexData("Copy Selected Vertex Data");
+const std::string k_CopyAllVertexData("Copy All Vertex Data");
+
+const nx::core::ChoicesParameter::Choices k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
+const nx::core::ChoicesParameter::ValueType k_CopySelectedVertexArraysIdx = 0ULL;
+const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
+
+} // namespace
 
 namespace nx::core
 {
@@ -16,6 +37,14 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
   DataPath TriangleGeometry;
   DataPath MaskArrayPath;
   DataPath ReducedTriangleGeometry;
+  // These variables are associated with the Edge Data Handling
+  nx::core::ChoicesParameter::ValueType TriangleDataHandling;
+  MultiArraySelectionParameter::ValueType SelectedTriangleData;
+  DataPath TriangleAttributeMatrixPath;
+  // These variables are associated with the Vertex Data Handling
+  nx::core::ChoicesParameter::ValueType VertexDataHandling;
+  MultiArraySelectionParameter::ValueType SelectedVertexData;
+  DataPath VertexAttributeMatrixPath;
 };
 
 /**

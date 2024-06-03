@@ -28,6 +28,14 @@ public:
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
 
+  static inline constexpr StringLiteral k_TriangleDataHandling_Key = "triangle_data_handling_index";
+  static inline constexpr StringLiteral k_TriangleDataSelectedArrays_Key = "triangle_data_selected_array_paths";
+  static inline constexpr StringLiteral k_TriangleDataSelectedAttributeMatrix_Key = "triangle_data_selected_attribute_matrix_path";
+
+  static inline constexpr StringLiteral k_VertexDataHandling_Key = "vertex_data_handling_index";
+  static inline constexpr StringLiteral k_VertexDataSelectedArrays_Key = "vertex_data_selected_array_paths";
+  static inline constexpr StringLiteral k_VertexDataSelectedAttributeMatrix_Key = "vertex_data_selected_attribute_matrix_path";
+
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.
    * @param json

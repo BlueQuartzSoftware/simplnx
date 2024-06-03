@@ -27,6 +27,7 @@ public:
   static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+
   static inline constexpr StringLiteral k_EdgeDataHandling_Key = "edge_data_handling_index";
   static inline constexpr StringLiteral k_EdgeDataSelectedArrays_Key = "edge_data_selected_array_paths";
   static inline constexpr StringLiteral k_EdgeDataSelectedAttributeMatrix_Key = "edge_data_selected_attribute_matrix_path";
