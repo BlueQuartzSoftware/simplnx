@@ -67,8 +67,8 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", 0,
-                                                   ChoicesParameter::Choices{"Move Attribute Arrays", "Copy Attribute Arrays"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", to_underlying(ArrayHandlingType::Move),
+                                                   ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
@@ -117,8 +117,6 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   auto pSharedVertexListNameValue = filterArgs.value<std::string>(k_SharedVertexListName_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
-
-  const ExtractVertexGeometry::ArrayHandlingType arrayHandlingType = static_cast<ExtractVertexGeometry::ArrayHandlingType>(pArrayHandlingValue);
 
   const IGridGeometry& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
   SizeVec3 dims = geometry.getDimensions();
@@ -173,13 +171,13 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   {
     const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
 
-    if(arrayHandlingType == ExtractVertexGeometry::ArrayHandlingType::CopyArrays)
+    if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Copy))
     {
       DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
       auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), dataArray.getTupleShape(), dataArray.getComponentShape(), newDataPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(arrayHandlingType == ExtractVertexGeometry::ArrayHandlingType::MoveArrays)
+    else if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Move))
     {
       auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, vertexAttrMatrixPath);
       resultOutputActions.value().appendAction(std::move(moveDataAction));

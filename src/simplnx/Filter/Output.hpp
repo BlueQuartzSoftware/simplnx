@@ -62,14 +62,6 @@ using AnyDataAction = AnyCloneable<IDataAction>;
 class SIMPLNX_EXPORT IDataCreationAction : public IDataAction
 {
 public:
-  enum class ArrayHandlingType : uint64
-  {
-    Copy = 0,      // Copy an existing array to the constructed object
-    Move = 1,      // Move an existing array to the constructed object
-    Reference = 2, // Reference an existing array
-    Create = 3     // Allocate a new array
-  };
-
   /**
    * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
    * @param createdPath
