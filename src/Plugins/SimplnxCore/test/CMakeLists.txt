@@ -106,6 +106,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
+  RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RequireMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
