@@ -18,8 +18,8 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_FullRange = 0;
-constexpr usize k_UserDefinedRange = 1;
+constexpr ChoicesParameter::ValueType k_FullRange = 0;
+constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 } // namespace
 
 namespace nx::core
