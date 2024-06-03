@@ -20,7 +20,7 @@ Setup your environment in the same way as from :ref:`Tutorial 1<Tutorial_1_Setup
 2.2 Necessary Import Statements
 ###################################
 
-Use the same import statements as from :ref:`Tutorial 1<Tutorial_1_Imports>`.
+Use the same import statements as from :ref:`Tutorial 1<Tutorial_1_Imports>`:
 
 .. code:: python
 
@@ -51,19 +51,19 @@ Set the output directory where the output from this tutorial will be stored, and
     output_dir = Path(__file__).parent / 'Output' / 'Tutorial_2_Output'
     output_dir.mkdir(exist_ok=True, parents=True)
 
-######################################
+#####################################
 2.4 Creating the DataStructure Object
-######################################
+#####################################
 
 .. code:: python
 
     data_structure = nx.DataStructure()
 
-This line creates a DataStructure object, which will serve as the overall container for our data.
+This line creates a DataStructure object, which will serve as the overall container for our `simplnx` data.
 
-###############################################
+#############################
 2.5 Reading the Pipeline File
-###############################################
+#############################
 
 SIMPLNX has an object called the "Pipeline" object that holds a linear list of filters. This object
 has an API that allows the developer to query the pipeline for filters and also to insert filters
@@ -74,9 +74,9 @@ into the pipeline. We are going to add a line of code to read a pipeline directl
     pipeline_file_path = Path(__file__).parent / 'Pipelines' / 'lesson_2.d3dpipeline'
     pipeline = nx.Pipeline().from_file(str(pipeline_file_path))
 
-###############################################
+########################################
 2.6 Printing Pipeline Filter Information
-###############################################
+########################################
 
 One basic example of using the pipeline object is to loop over each filter in the pipeline and print its human name. This example can  
 be done as follows:
@@ -96,15 +96,15 @@ The output should look like this:
     [1]: Create Data Array
     [2]: Write DREAM3D NX File
 
-###############################################
+######################################
 2.7 Inserting a Filter into a Pipeline
-###############################################
+######################################
 
 To extend or customize a data processing workflow, you might need to insert new filters into an existing pipeline. The following steps demonstrate how to do this.
 
-****************************************
+***********************************
 2.7.1 Defining the Filter Arguments
-****************************************
+***********************************
 
 Here, we define the arguments for the new filter. These arguments specify the configuration for the CreateDataGroup filter that we will add to the pipeline.
 
@@ -114,9 +114,9 @@ Here, we define the arguments for the new filter. These arguments specify the co
         "data_object_path": nx.DataPath("Small IN100/EBSD Data")
     }
 
-****************************************
+**************************
 2.7.2 Inserting the Filter
-****************************************
+**************************
 
 We can insert the new filter into the pipeline at the specified position (index 2). The CreateDataGroupFilter is used to create the filter, and the arguments are passed to configure it.
 
@@ -124,14 +124,16 @@ We can insert the new filter into the pipeline at the specified position (index 
 
     pipeline.insert(2, nx.CreateDataGroupFilter(), create_data_group_args)
 
-****************************************
-2.7.3 Executing the Modified Pipeline
-****************************************
+.. _2.7.3:
 
-Each time a pipeline is executed, it will return a :ref:`nx.IFilter.ExecuteResult <result>` object. This 
-object can be interrogated for both warnings and errors that occured while the 
-filter was executing. A typical function that can be written to properly error
-check the 'result' value is the following:
+*************************************
+2.7.3 Executing the Modified Pipeline
+*************************************
+
+Each time a pipeline is executed, it will return an :ref:`nx.IFilter.ExecuteResult <result>` object. This 
+object contains the errors and warnings that occurred while the filter was executing.
+
+A typical function that can be written to properly error check the 'result' value is the following:
 
 .. code:: python
 
@@ -153,37 +155,42 @@ check the 'result' value is the following:
         
         print(f"Pipeline :: No errors running the pipeline")
 
-If you were to integrate this into your own code, then we would get the following when we execute the pipeline:
+If you were to integrate this into your own code, then we would execute the pipeline and check the result like this:
 
 .. code:: python
 
     result = pipeline.execute(data_structure)
     check_pipeline_result(result=result)
 
-This code executes the modified pipeline with the DataStructure object. The check_pipeline_result function is used to verify the execution result.
+This code executes the modified pipeline with the DataStructure object. The `check_pipeline_result function` is used to verify the execution result, printing out any errors or warnings from the pipeline execution.
 
-****************************************
+.. _2.7.4:
+
+**********************************
 2.7.4 Saving the Modified Pipeline
-****************************************
+**********************************
 
-We can save the modified pipeline configuration to a new file for future use.
+We can save the modified pipeline configuration to a new pipeline file for future use.
+Let's create the output pipeline file path using pathlib, and then call `to_file` to save the pipeline to a pipeline file.
 
 .. code:: python
 
     output_pipeline_file_path = output_dir / 'lesson_2a_modified_pipeline.d3dpipeline'
     pipeline.to_file("Modified Pipeline", str(output_pipeline_file_path))
 
-###############################################
+##############################
 2.8 Modifying Pipeline Filters
-###############################################
+##############################
 
 Sometimes you need to adjust the parameters of existing filters in your pipeline. Here’s how you can modify a filter's parameters.
 
-****************************************
-2.8.1 Modifying the Filter Arguments
-****************************************
+.. _2.8.1:
 
-We can modify the arguments of a given filter by writing and using a short method:
+************************************
+2.8.1 Modifying the Filter Arguments
+************************************
+
+We can modify the parameters of a given filter by writing and using a short method:
 
 .. code:: python
 
@@ -195,33 +202,33 @@ We can modify the arguments of a given filter by writing and using a short metho
     
     modify_pipeline_filter(pipeline, 1, "numeric_type", nx.NumericType.int8)
 
-Here, we use the modify_pipeline_filter method to change the 2nd filter's numeric type to int8.
+Here, we use the modify_pipeline_filter method to change the 2nd filter's NumericType parameter value to int8.
 
-****************************************
+*************************************
 2.8.2 Executing the Modified Pipeline
-****************************************
+*************************************
 
-Just like in section 2.6.3, we can execute the modified pipeline and check the result using the check_pipeline_result method:
+Just like in :ref:`Section 2.7.3 <2.7.3>`, we can execute the modified pipeline and check the result using the check_pipeline_result method:
 
 .. code:: python
 
     result = pipeline.execute(data_structure)
     check_pipeline_result(result=result)
 
-****************************************
+**********************************
 2.8.3 Saving the Modified Pipeline
-****************************************
+**********************************
 
-Just like in section 2.6.4, we can save the modified pipeline to a new pipeline file for future use:
+Just like in :ref:`Section 2.7.4 <2.7.4>`, we can save the modified pipeline to a new pipeline file for future use:
 
 .. code:: python
 
     output_pipeline_file_path = output_dir / 'lesson_2b_modified_pipeline.d3dpipeline'
     pipeline.to_file("Modified Pipeline", str(output_pipeline_file_path))
 
-###############################################
+#########################
 2.9 Looping On a Pipeline
-###############################################
+#########################
 
 In certain cases, it might be necessary to modify pipeline filters in a loop.  One example where this is handy is when the same pipeline needs to be run on multiple image slices.
 
@@ -242,11 +249,11 @@ Filter 6 is the image writing filter where we need to adjust the output file (ht
 
 Filter 7 is the write dream3d file filter where we need to adjust the output file (https://www.dream3d.io/python_docs/simplnx.html#write-dream3d-nx-file).
 
-****************************************
+*************************
 2.9.1 Setting Up the Loop
-****************************************
+*************************
 
-The modify_pipeline_filter method from section 2.7.1 can be used inside a loop to update file paths for the 1st, 6th, and 7th filters.  The pipeline can be executed and saved (and the execution result checked) at the end of each iteration of the loop.
+The `check_pipeline_result` method from :ref:`Section 2.7.3 <2.7.3>` and the `modify_pipeline_filter` method from :ref:`Section 2.8.1 <2.8.1>` can be used inside a loop to update file paths for the 1st, 6th, and 7th filters.  The pipeline can be executed and saved (and the execution result checked) at the end of each iteration of the loop.
 
 .. code:: python
 
@@ -276,9 +283,9 @@ The modify_pipeline_filter method from section 2.7.1 can be used inside a loop t
 
 The code above will generate IPF maps for SmallIN100 slices 1-6.
 
-#################
+##################
 2.10 Full Examples
-#################
+##################
 
 Full examples of the concepts in this tutorial are located at:
 
