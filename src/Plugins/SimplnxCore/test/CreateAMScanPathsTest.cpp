@@ -50,11 +50,11 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(k_SliceIdsPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(k_RegionIdsPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(k_ComputedScanVectorsPath));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>(k_VertexData));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>(k_EdgeData));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_TimeArrayName_Key, std::make_any<StringParameter::ValueType>(k_Times));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<StringParameter::ValueType>(k_RegionIdsName));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_PowersArrayName_Key, std::make_any<StringParameter::ValueType>(k_Powers));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_VertexAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VertexData));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_EdgeData));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_TimeArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Times));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_RegionIdsName));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_PowersArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Powers));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

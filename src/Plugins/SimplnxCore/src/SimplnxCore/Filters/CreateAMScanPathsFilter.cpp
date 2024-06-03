@@ -89,10 +89,6 @@ IFilter::UniquePointer CreateAMScanPathsFilter::clone() const
 IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel) const
 {
-  auto pStripeWidthValue = filterArgs.value<float32>(k_StripeWidth_Key);
-  auto pHatchSpacingValue = filterArgs.value<float32>(k_HatchSpacing_Key);
-  auto pPowerValue = filterArgs.value<float32>(k_Power_Key);
-  auto pSpeedValue = filterArgs.value<float32>(k_Speed_Key);
   auto pCADSliceDataContainerNameValue = filterArgs.value<DataPath>(k_CADSliceDataContainerPath_Key);
   auto pCADSliceIdsArrayPathValue = filterArgs.value<DataPath>(k_CADSliceIdsArrayPath_Key);
   auto pCADRegionIdsArrayPathValue = filterArgs.value<DataPath>(k_CADRegionIdsArrayPath_Key);

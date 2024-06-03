@@ -109,7 +109,6 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   auto pSliceRangeValue = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
   auto pZStartValue = filterArgs.value<float32>(k_Zstart_Key);
   auto pZEndValue = filterArgs.value<float32>(k_Zend_Key);
-  auto pSliceResolutionValue = filterArgs.value<float32>(k_SliceResolution_Key);
   auto pHaveRegionIdsValue = filterArgs.value<bool>(k_HaveRegionIds_Key);
   auto pCADDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pRegionIdArrayPathValue = filterArgs.value<DataPath>(k_RegionIdArrayPath_Key);
