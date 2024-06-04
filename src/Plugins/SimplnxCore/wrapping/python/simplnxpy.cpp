@@ -1167,7 +1167,8 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(calculatorParameter);
 
-  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::Choices&>());
+  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::Choices&>(), "name"_a, "human_name"_a, "help_text"_a,
+                       "default_value"_a, "choices"_a);
 
   BindParameterConstructor(dataGroupCreationParameter);
 
