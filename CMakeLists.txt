@@ -511,7 +511,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/KUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ClusteringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
 

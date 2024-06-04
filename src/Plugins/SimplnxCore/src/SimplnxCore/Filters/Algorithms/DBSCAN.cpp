@@ -35,10 +35,6 @@ public:
 
   void compute(usize start, usize end) const
   {
-    // int64 counter = 0;
-    // int64 totalElements = end - start;
-    // int64 progIncrement = static_cast<int64>(totalElements / 100);
-
     for(usize i = start; i < end; i++)
     {
       if(m_Mask->isTrue(i))
@@ -171,12 +167,12 @@ public:
           m_FeatureIds[i] = cluster;
           clustered[i] = true;
 
+          if(m_Filter->getCancel())
+          {
+            return;
+          }
           for(auto&& idx : neighbors)
           {
-            if(m_Filter->getCancel())
-            {
-              return;
-            }
             if(m_Mask->isTrue(idx))
             {
               if(!visited[idx])
