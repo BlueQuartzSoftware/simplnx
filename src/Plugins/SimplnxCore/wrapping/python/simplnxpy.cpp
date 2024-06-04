@@ -1525,11 +1525,9 @@ PYBIND11_MODULE(simplnx, mod)
   manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
 
   // Geometry Helper Methods
-  py::module_ sub = mod.def_submodule("ArrayHandlingType", "How existing arrays will be handled when creating the new geometry.");
-  sub.attr("CopyArray") = CreateGeometryFilter::k_CopyArray;
-  sub.attr("MoveArray") = CreateGeometryFilter::k_MoveArray;
+  py::module_ sub = mod.def_submodule("CreateGeometry", "Submodule that contains the CreateGeometry utility methods.");
 
-  mod.def(
+  sub.def(
       "create_image_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const std::vector<uint64>& dims, const std::vector<float32>& origin, const std::vector<float32>& spacing,
          const std::string& cellAttrMatrixName) {
@@ -1548,10 +1546,10 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "geometry_path"_a, "dimensions"_a, "origin"_a, "spacing"_a, "cell_attr_matrix_name"_a = "Cell Data");
 
-  mod.def(
+  sub.def(
       "create_rect_grid_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& xBoundsPath, const DataPath& yBoundsPath, const DataPath& zBoundsPath, const std::string& cellAttrMatrixName,
-         ChoicesParameter::ValueType arrayHandling) {
+         ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
@@ -1561,40 +1559,40 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(yBoundsPath));
         args.insertOrAssign(CreateGeometryFilter::k_ZBoundsPath_Key, std::make_any<DataPath>(zBoundsPath));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
 
         IFilter::ExecuteResult executeResult = filter.execute(ds, args);
         return executeResult.result;
       },
-      "data_structure"_a, "geometry_path"_a, "x_bounds_path"_a, "y_bounds_path"_a, "z_bounds_path"_a, "cell_attr_matrix_name"_a = "Cell Data", "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "data_structure"_a, "geometry_path"_a, "x_bounds_path"_a, "y_bounds_path"_a, "z_bounds_path"_a, "cell_attr_matrix_name"_a = "Cell Data", "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_vertex_geometry",
-      [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const std::string& vertexAttrMatrixName, ChoicesParameter::ValueType arrayHandling) {
+      [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const std::string& vertexAttrMatrixName, ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_VertexGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
 
         IFilter::ExecuteResult executeResult = filter.execute(ds, args);
         return executeResult.result;
       },
-      "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_edge_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& edgeListPath, const std::string& vertexAttrMatrixName, const std::string& edgeAttrMatrixName,
-         ChoicesParameter::ValueType arrayHandling) {
+         ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_EdgeGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(edgeListPath));
@@ -1604,18 +1602,18 @@ PYBIND11_MODULE(simplnx, mod)
         return executeResult.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "edge_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "edge_attr_matrix_name"_a = "Edge Data",
-      "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_triangle_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& triangleListPath, const std::string& vertexAttrMatrixName,
-         const std::string& faceAttrMatrixName, ChoicesParameter::ValueType arrayHandling) {
+         const std::string& faceAttrMatrixName, ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TriangleGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(triangleListPath));
@@ -1625,18 +1623,18 @@ PYBIND11_MODULE(simplnx, mod)
         return executeResult.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "triangle_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Face Data",
-      "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_quad_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& quadListPath, const std::string& vertexAttrMatrixName, const std::string& faceAttrMatrixName,
-         ChoicesParameter::ValueType arrayHandling) {
+         ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_QuadGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(quadListPath));
@@ -1646,18 +1644,18 @@ PYBIND11_MODULE(simplnx, mod)
         return executeResult.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "quad_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Quad Data",
-      "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_tetrahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& tetrahedralListPath, const std::string& vertexAttrMatrixName,
-         const std::string& cellAttrMatrixName, ChoicesParameter::ValueType arrayHandling) {
+         const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TetGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(tetrahedralListPath));
@@ -1667,18 +1665,18 @@ PYBIND11_MODULE(simplnx, mod)
         return executeResult.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "tetrahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
-      "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "array_handling"_a = ArrayHandlingType::Copy);
 
-  mod.def(
+  sub.def(
       "create_hexahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& hexahedralListPath, const std::string& vertexAttrMatrixName,
-         const std::string& cellAttrMatrixName, ChoicesParameter::ValueType arrayHandling) {
+         const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_HexGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
-        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(arrayHandling));
+        args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(hexahedralListPath));
@@ -1688,5 +1686,5 @@ PYBIND11_MODULE(simplnx, mod)
         return executeResult.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "hexahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
-      "array_handling"_a = CreateGeometryFilter::k_CopyArray);
+      "array_handling"_a = ArrayHandlingType::Copy);
 }
