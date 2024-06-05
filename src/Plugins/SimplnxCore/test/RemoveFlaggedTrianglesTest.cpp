@@ -11,8 +11,8 @@ namespace
 {
 namespace
 {
-fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test/remove_flagged_triangles_test.dream3d", nx::core::unit_test::k_TestFilesDir));
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test/data_to_generate_test/masked_triangle_geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/remove_flagged_triangles_test.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/data_to_generate_test/masked_triangle_geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
 static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
@@ -29,7 +29,7 @@ const DataPath k_TriangleListPath = k_ReducedGeomPath.createChildPath("SharedTri
 
 TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "[SimplnxCore][RemoveFlaggedTrianglesFilter]")
 {
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_triangles_test.tar.gz", "remove_flagged_triangles_test.dream3d");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_triangles_test_1.tar.gz", "remove_flagged_triangles_test.dream3d");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

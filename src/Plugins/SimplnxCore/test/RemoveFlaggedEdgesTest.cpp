@@ -5,6 +5,9 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
@@ -14,19 +17,21 @@ namespace
 {
 namespace
 {
-// fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/6_6_scan_path_test_data/6_6_scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
-// fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_scan_path_test_data/masked_triangle_geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-// static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
-// static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
-// static constexpr StringLiteral k_RegionIdsName = "Region Ids";
-
-const DataPath k_TriangleGeomPath({"Exemplar Edge Geometry"});
-const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath("Edge Data").createChildPath(Constants::k_Mask);
+const std::string k_EdgeGeomName("Exemplar Edge Geometry");
+const DataPath k_EdgeGeomPath({k_EdgeGeomName});
+const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath("Edge Data").createChildPath(Constants::k_Mask);
 const DataPath k_ReducedGeomPath({"Reduced Geometry"});
 
-const DataPath k_VertexListPath = k_ReducedGeomPath.createChildPath("SharedVertexList");
-const DataPath k_TriangleListPath = k_ReducedGeomPath.createChildPath("SharedTriList");
+const std::string k_VertexAttrMatName("Vertex Data");
+const std::string k_EdgeAttrMatName("Edge Data");
+
+const std::string k_VertArray1Name("vert data 1");
+const std::string k_EdgeMaskArray1Name("mask data");
+const std::string k_EdgeDataArray1Name("edge data 1");
+
+// const DataPath k_VertexListPath = k_ReducedGeomPath.createChildPath("SharedVertexList");
+// const DataPath k_TriangleListPath = k_ReducedGeomPath.createChildPath("SharedTriList");
 } // namespace
 } // namespace
 
@@ -73,7 +78,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Valid Filter Execution", "[Sim
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_EdgeGeomPath));
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(::k_MaskPath));
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
 
@@ -99,4 +104,90 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Valid Filter Execution", "[Sim
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/remove_flagged_edges.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter:1", "[SimplnxCore][RemoveFlaggedEdgesFilter]")
+{
+
+  DataStructure dataStructure;
+  size_t numEdges = 25;
+  size_t numVertices = 26;
+  CreateGeometry1DAction<EdgeGeom> creatEdgeGeomAction(k_EdgeGeomPath, numEdges, numVertices, k_VertexAttrMatName, k_EdgeAttrMatName, CreateGeometry1DAction<EdgeGeom>::k_DefaultVerticesName,
+                                                       CreateGeometry1DAction<EdgeGeom>::k_DefaultEdgesName);
+  creatEdgeGeomAction.apply(dataStructure, IDataAction::Mode::Execute);
+  auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(k_EdgeGeomPath);
+
+  DataPath vertAMPath = k_EdgeGeomPath.createChildPath(k_VertexAttrMatName);
+  auto& vertexAM = edgeGeom.getVertexAttributeMatrixRef();
+
+  DataPath edgeAMPath = k_EdgeGeomPath.createChildPath(k_EdgeAttrMatName);
+  auto& edgeAM = edgeGeom.getEdgeAttributeMatrixRef();
+
+  CreateArrayAction vertArray1Action(DataType::int32, vertexAM.getShape(), {1ULL}, vertAMPath.createChildPath(k_VertArray1Name));
+  vertArray1Action.apply(dataStructure, IDataAction::Mode::Execute);
+
+  CreateArrayAction edgeMaskArrayAction(DataType::uint8, edgeAM.getShape(), {1ULL}, edgeAMPath.createChildPath(k_EdgeMaskArray1Name));
+  edgeMaskArrayAction.apply(dataStructure, IDataAction::Mode::Execute);
+
+  CreateArrayAction edgeDataArrayAction(DataType::uint32, edgeAM.getShape(), {1ULL}, edgeAMPath.createChildPath(k_EdgeDataArray1Name));
+  edgeDataArrayAction.apply(dataStructure, IDataAction::Mode::Execute);
+
+  // Assign Coordinates to the Vertices
+  //
+  auto& vertDataArray = dataStructure.getDataRefAs<Int32Array>(vertAMPath.createChildPath(k_VertArray1Name));
+  auto& sharedVertexList = edgeGeom.getVerticesRef();
+  float32 radius = 10.0f;
+  for(usize i = 0; i < numVertices; i++)
+  {
+    double angle = 2.0 * M_PI * i / numVertices; // Angle in radians
+
+    sharedVertexList[i * 3] = radius * cos(angle);
+    sharedVertexList[i * 3 + 1] = radius * sin(angle);
+    sharedVertexList[i * 3 + 2] = 0.0f; // radius * cos(phi);
+
+    // We are just creating some data
+    vertDataArray[i] = static_cast<int32>(sin(angle) * 10.0f);
+  }
+
+  // Assign values to the shared edge list
+  auto& edgeDataArray = dataStructure.getDataRefAs<UInt32Array>(edgeAMPath.createChildPath(k_EdgeDataArray1Name));
+  auto& edgeMaskDataArray = dataStructure.getDataRefAs<UInt8Array>(edgeAMPath.createChildPath(k_EdgeMaskArray1Name));
+  auto& sharedEdgeList = edgeGeom.getEdgesRef();
+  for(usize i = 1; i < numEdges; i++)
+  {
+    sharedEdgeList[i * 2] = i - 1;
+    sharedEdgeList[i * 2 + 1] = i;
+
+    edgeMaskDataArray[i] = (i % 2 == 0 ? 0 : 1);
+    edgeDataArray[i] = i * 100;
+  }
+
+  {
+    // Instantiate the filter and an Arguments Object
+    RemoveFlaggedEdgesFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_EdgeGeomPath));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(edgeAMPath.createChildPath(k_EdgeMaskArray1Name)));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
+
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_VertexDataHandling_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_VertexDataSelectedAttributeMatrix_Key, std::make_any<AttributeMatrixSelectionParameter::ValueType>(vertAMPath));
+
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_EdgeDataHandling_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_EdgeDataSelectedAttributeMatrix_Key, std::make_any<AttributeMatrixSelectionParameter::ValueType>(edgeAMPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/remove_flagged_edges_1.dream3d", unit_test::k_BinaryTestOutputDir)));
+  // #endif
 }
