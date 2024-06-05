@@ -2,14 +2,18 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D-NX Python Docs (v1.2.7)
-=================================
+DREAM3D-NX Python Docs (v24.06.05)
+===================================
 
 Installation
 ----------------------
    
 The *simplnx* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
-by creating a new virtual environment and installing the `dream3dnx` python package.
+by creating a new virtual environment and installing the `dream3dnx` python package. Please check the latest release
+notes for the latest changes to the API.
+
+DREAM3D-NX is built on top of a library called `simplnx` which is why all of the python code
+is prefixed as such.
 
 .. code:: shell
 
@@ -19,6 +23,11 @@ by creating a new virtual environment and installing the `dream3dnx` python pack
     conda activate nxpython
     conda install -c bluequartzsoftware dream3dnx
 
+
+.. attention::
+
+   MacOS: Intel MacOS does not support Python 3.12 due to a library conflict between Qt 6 and the other libraries. 
+   
 
 How to use SIMPLNX from Python
 ------------------------------
@@ -73,7 +82,7 @@ How to use SIMPLNX from Python
    :maxdepth: 1
    :caption: Release Notes
 
-   ReleaseNotes_140
+   ReleaseNotes_240605
    ReleaseNotes_130
    ReleaseNotes_127
    ReleaseNotes_126
