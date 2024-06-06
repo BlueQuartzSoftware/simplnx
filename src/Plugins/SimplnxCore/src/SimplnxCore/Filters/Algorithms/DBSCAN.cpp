@@ -84,20 +84,19 @@ private:
   std::vector<std::list<usize>>& m_Neighborhoods;
 };
 
-template <typename T>
+template <typename T, bool PrecacheT>
 class DBSCANTemplate
 {
 private:
-  using DataArrayT = DataArray<T>;
   using AbstractDataStoreT = AbstractDataStore<T>;
 
 public:
-  DBSCANTemplate(DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, Int32Array& fIds, float32 epsilon, int32 minPoints,
+  DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore, float32 epsilon, int32 minPoints,
                  ClusterUtilities::DistanceMetric distMetric)
   : m_Filter(filter)
-  , m_InputDataStore(dynamic_cast<const DataArrayT&>(inputIDataArray).getDataStoreRef())
+  , m_InputDataStore(inputDataStore)
   , m_Mask(maskDataArray)
-  , m_FeatureIds(fIds.getDataStoreRef())
+  , m_FeatureIds(fIdsDataStore)
   , m_Epsilon(epsilon)
   , m_MinPoints(minPoints)
   , m_DistMetric(distMetric)
@@ -198,6 +197,23 @@ private:
   int32 m_MinPoints;
   ClusterUtilities::DistanceMetric m_DistMetric;
 };
+
+struct DBSCANFunctor
+{
+  template <typename T>
+  void operator()(bool cache, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, Int32Array& fIds, float32 epsilon, int32 minPoints,
+                  ClusterUtilities::DistanceMetric distMetric)
+  {
+    if(cache)
+    {
+      DBSCANTemplate<T, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric)();
+    }
+    else
+    {
+      DBSCANTemplate<T, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric)();
+    }
+  }
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -242,8 +258,8 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  RunTemplateClass<DBSCANTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
-                                                         m_InputValues->DistanceMetric);
+  ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
+                      m_InputValues->DistanceMetric);
 
   updateProgress("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();

@@ -22,6 +22,7 @@ struct SIMPLNXCORE_EXPORT DBSCANInputValues
   int32 MinPoints;
   ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath FeatureAM;
+  bool AllowCaching;
 };
 
 /**
