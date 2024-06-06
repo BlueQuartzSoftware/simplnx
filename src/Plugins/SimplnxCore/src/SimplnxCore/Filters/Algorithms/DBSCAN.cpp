@@ -39,13 +39,13 @@ public:
     {
       if(m_Mask->isTrue(i))
       {
-        std::list<usize> neighbors = epsilon_neighbors(i);
-        m_Neighborhoods[i] = neighbors;
+        // directly inline to try to convince compiler to construct in place
+        m_Neighborhoods[i] = epsilon_neighbors(i);
       }
     }
   }
 
-  std::list<usize> epsilon_neighbors(usize index) const
+  [[nodiscard]] std::list<usize> epsilon_neighbors(usize index) const
   {
     std::list<usize> neighbors;
 
@@ -113,23 +113,23 @@ public:
   {
     usize numTuples = m_InputDataStore.getNumberOfTuples();
     usize numCompDims = m_InputDataStore.getNumberOfComponents();
-    std::vector<bool> visited(numTuples, false); // stores one bit per value for space efficiency
+    std::vector<bool> visited(numTuples, false);   // Uses one bit per value for space efficiency
     std::vector<bool> clustered(numTuples, false); // Uses one bit per value for space efficiency
 
     auto minDist = static_cast<float64>(m_Epsilon);
     int32 cluster = 0;
 
+    // In-memory only with current implementation for speed with std::list
     std::vector<std::list<usize>> epsilonNeighborhoods(numTuples);
 
+    m_Filter->updateProgress("Finding Neighborhoods in parallel...");
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0ULL, numTuples);
     dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
 
-    auto progIncrement = static_cast<int64>(numTuples / 100);
-    int64 prog = 1;
-    int64 progressInt = 0;
-    int64 counter = 0;
+    m_Filter->updateProgress("Neighborhoods found, proceeding to clustering...");
 
+    auto start = std::chrono::steady_clock::now();
     for(usize i = 0; i < numTuples; i++)
     {
       if(m_Filter->getCancel())
@@ -140,14 +140,14 @@ public:
       if(m_Mask->isTrue(i) && !visited[i])
       {
         visited[i] = true;
-
-        if(counter > prog)
+        auto now = std::chrono::steady_clock::now();
+        //// Only send updates every 1 second
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
-          progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
-          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt));
-          prog += progIncrement;
+          float32 progress = (static_cast<float32>(i) / static_cast<float32>(numTuples)) * 100.0f;
+          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", i, numTuples, progress));
+          start = std::chrono::steady_clock::now();
         }
-        counter++;
 
         std::list<usize> neighbors = epsilonNeighborhoods[i];
 
@@ -162,10 +162,6 @@ public:
           m_FeatureIds[i] = cluster;
           clustered[i] = true;
 
-          if(m_Filter->getCancel())
-          {
-            return;
-          }
           for(auto&& idx : neighbors)
           {
             if(m_Mask->isTrue(idx))
@@ -173,14 +169,6 @@ public:
               if(!visited[idx])
               {
                 visited[idx] = true;
-
-                if(counter > prog)
-                {
-                  progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
-                  m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt));
-                  prog += progIncrement;
-                }
-                counter++;
 
                 std::list<usize> neighbors_prime = epsilonNeighborhoods[idx];
                 if(static_cast<int32>(neighbors_prime.size()) >= m_MinPoints)
@@ -198,6 +186,7 @@ public:
         }
       }
     }
+    m_Filter->updateProgress("Clustering Complete!");
   }
 
 private:
@@ -256,6 +245,7 @@ Result<> DBSCAN::operator()()
   RunTemplateClass<DBSCANTemplate, types::NoBooleanType>(clusteringArray.getDataType(), this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
                                                          m_InputValues->DistanceMetric);
 
+  updateProgress("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(maxCluster + 1)});
