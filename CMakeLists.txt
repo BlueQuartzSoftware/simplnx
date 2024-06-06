@@ -126,7 +126,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
   set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
 endif()
 
-if(SIMPLNX_BUILD_TESTS AND SIMPLNX_DOWNLOAD_TEST_FILES)
+if(SIMPLNX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
     COMMAND "${CMAKE_COMMAND}" -DCMAKE_CONFIG=$<CONFIG> -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
@@ -893,14 +893,14 @@ set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
 if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
 
-set(PREBUILT_PIPELINE_NAMES
-  )
-  # Install the pipeline files
-  install(FILES
-    ${PREBUILT_PIPELINE_NAMES}
-    DESTINATION "pipelines/Examples"
-    COMPONENT Applications
-  )
+  set(PREBUILT_PIPELINE_NAMES
+    )
+    # Install the pipeline files
+    install(FILES
+      ${PREBUILT_PIPELINE_NAMES}
+      DESTINATION "pipelines/Examples"
+      COMPONENT Applications
+    )
 
   create_pipeline_tests(PLUGIN_NAME OrientationAnalysis PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
