@@ -113,16 +113,11 @@ public:
   {
     usize numTuples = m_InputDataStore.getNumberOfTuples();
     usize numCompDims = m_InputDataStore.getNumberOfComponents();
-    std::vector<bool> visited(numTuples, false);
-    std::vector<bool> clustered(numTuples, false);
+    std::vector<bool> visited(numTuples, false); // stores one bit per value for space efficiency
+    std::vector<bool> clustered(numTuples, false); // Uses one bit per value for space efficiency
 
     auto minDist = static_cast<float64>(m_Epsilon);
     int32 cluster = 0;
-
-    auto progIncrement = static_cast<int64>(numTuples / 100);
-    int64 prog = 1;
-    int64 progressInt = 0;
-    int64 counter = 0;
 
     std::vector<std::list<usize>> epsilonNeighborhoods(numTuples);
 
@@ -130,9 +125,10 @@ public:
     dataAlg.setRange(0ULL, numTuples);
     dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
 
-    prog = 1;
-    progressInt = 0;
-    counter = 0;
+    auto progIncrement = static_cast<int64>(numTuples / 100);
+    int64 prog = 1;
+    int64 progressInt = 0;
+    int64 counter = 0;
 
     for(usize i = 0; i < numTuples; i++)
     {
@@ -148,9 +144,8 @@ public:
         if(counter > prog)
         {
           progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
-          std::string ss = fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt);
-          m_Filter->updateProgress(ss);
-          prog = prog + progIncrement;
+          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt));
+          prog += progIncrement;
         }
         counter++;
 
@@ -182,9 +177,8 @@ public:
                 if(counter > prog)
                 {
                   progressInt = static_cast<int64>((static_cast<float>(counter) / numTuples) * 100.0f);
-                  std::string ss = fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt);
-                  m_Filter->updateProgress(ss);
-                  prog = prog + progIncrement;
+                  m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {}% Completed", counter, numTuples, progressInt));
+                  prog += progIncrement;
                 }
                 counter++;
 
