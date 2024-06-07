@@ -37,6 +37,10 @@ public:
   {
     for(usize i = start; i < end; i++)
     {
+      if(m_Filter->getCancel())
+      {
+        return;
+      }
       if(m_Mask->isTrue(i))
       {
         // directly inline to try to convince compiler to construct in place
@@ -51,10 +55,6 @@ public:
 
     for(usize i = 0; i < m_NumTuples; i++)
     {
-      if(m_Filter->getCancel())
-      {
-        return {};
-      }
       if(m_Mask->isTrue(i))
       {
         float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (m_NumCompDims * index), m_InputDataStore, (m_NumCompDims * i), m_NumCompDims, m_DistMetric);
@@ -118,16 +118,22 @@ public:
     auto minDist = static_cast<float64>(m_Epsilon);
     int32 cluster = 0;
 
-    // In-memory only with current implementation for speed with std::list
-    std::vector<std::list<usize>> epsilonNeighborhoods(numTuples);
+    std::vector<std::list<usize>> epsilonNeighborhoods;
 
-    m_Filter->updateProgress("Finding Neighborhoods in parallel...");
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0ULL, numTuples);
-    dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
+    if constexpr(PrecacheT)
+    {
+      // In-memory only with current implementation for speed with std::list
+      epsilonNeighborhoods = std::vector<std::list<usize>>(numTuples);
 
-    m_Filter->updateProgress("Neighborhoods found, proceeding to clustering...");
+      m_Filter->updateProgress("Finding Neighborhoods in parallel...");
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setRange(0ULL, numTuples);
+      dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
 
+      m_Filter->updateProgress("Neighborhoods found.");
+    }
+
+    m_Filter->updateProgress("Beginning clustering...");
     auto start = std::chrono::steady_clock::now();
     for(usize i = 0; i < numTuples; i++)
     {
@@ -148,7 +154,25 @@ public:
           start = std::chrono::steady_clock::now();
         }
 
-        std::list<usize> neighbors = epsilonNeighborhoods[i];
+        std::list<usize> neighbors;
+        if constexpr(PrecacheT)
+        {
+          neighbors = epsilonNeighborhoods[i];
+        }
+        if constexpr(!PrecacheT)
+        {
+          for(usize j = 0; j < numTuples; j++)
+          {
+            if(m_Mask->isTrue(j))
+            {
+              float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * i), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
+              if(dist < m_Epsilon)
+              {
+                neighbors.push_back(j);
+              }
+            }
+          }
+        }
 
         if(static_cast<int32>(neighbors.size()) < m_MinPoints)
         {
@@ -157,6 +181,10 @@ public:
         }
         else
         {
+          if(m_Filter->getCancel())
+          {
+            return;
+          }
           cluster++;
           m_FeatureIds[i] = cluster;
           clustered[i] = true;
@@ -169,7 +197,26 @@ public:
               {
                 visited[idx] = true;
 
-                std::list<usize> neighbors_prime = epsilonNeighborhoods[idx];
+                std::list<usize> neighbors_prime;
+                if constexpr(PrecacheT)
+                {
+                  neighbors_prime = epsilonNeighborhoods[idx];
+                }
+                if constexpr(!PrecacheT)
+                {
+                  for(usize j = 0; j < numTuples; j++)
+                  {
+                    if(m_Mask->isTrue(j))
+                    {
+                      float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * idx), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
+                      if(dist < m_Epsilon)
+                      {
+                        neighbors_prime.push_back(j);
+                      }
+                    }
+                  }
+                }
+
                 if(static_cast<int32>(neighbors_prime.size()) >= m_MinPoints)
                 {
                   neighbors.splice(std::end(neighbors), neighbors_prime);
@@ -258,8 +305,8 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
-                      m_InputValues->DistanceMetric);
+  ExecuteNeighborFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
+                          m_InputValues->DistanceMetric);
 
   updateProgress("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();

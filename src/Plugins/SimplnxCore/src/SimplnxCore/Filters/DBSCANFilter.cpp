@@ -67,6 +67,7 @@ Parameters DBSCANFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(std::make_unique<BoolParameter>(k_UsePrecaching_Key, "Use Precaching", "If true the algorithm will be significantly faster, but it requires more memory", true));
   params.insert(std::make_unique<Float32Parameter>(k_Epsilon_Key, "Epsilon", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0.0001));
   params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0.0001));
   params.insert(
@@ -168,6 +169,7 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
   inputValues.FeatureIdsArrayPath = fIdsPath;
   inputValues.FeatureAM = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
+  inputValues.AllowCaching = filterArgs.value<bool>(k_UsePrecaching_Key);
 
   return DBSCAN(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -24,6 +24,7 @@ public:
   DBSCANFilter& operator=(DBSCANFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_UsePrecaching_Key = "use_precaching";
   static inline constexpr StringLiteral k_Epsilon_Key = "epsilon";
   static inline constexpr StringLiteral k_MinPoints_Key = "min_points";
   static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
