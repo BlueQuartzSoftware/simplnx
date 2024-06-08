@@ -16,8 +16,8 @@ The first step in creating a new Python plugin with a custom Python filter insid
 
 Open the DREAM3D-NX application, and add the `Create Python Plugin and/or Filters` filter to the pipeline.
 
-3.1.1 Configuring and Executing the Filter
-------------------------------------------
+3.1.1 Configuring and Executing the Skeleton Generation Filter
+--------------------------------------------------------------
 
 The `Create Python Plugin and/or Filters` filter has the following inputs:
 
@@ -46,14 +46,33 @@ We are going to generate a new plugin and filters, so let's set the following in
 - **Use Existing Plugin**: Unchecked
 - **Name of Plugin**: ExamplePlugin
 - **Human Name of Plugin**: Example Plugin
-- **Plugin Output Directory**: /plugin/output/directory
+- **Plugin Output Directory**: /plugin/output/directory (please fill this in with an actual output directory!)
 - **Filter Names (comma-separated)**: ArrayCalculationFilter
 
 These settings will generate a new plugin called `ExamplePlugin` at `/plugin/output/directory`.  Inside the `ExamplePlugin`, the skeleton code for a new filter called `ArrayCalculationFilter` will be generated in a Python file called `ArrayCalculationFilter.py`.
 
 After configuring these inputs, execute the filter.  Any existing files with the same names will be overwritten.
 
-Navigate to `/plugin/output/directory/ExamplePlugin` and open `ArrayCalculationFilter.py`.
+Your newly generated plugin should have a file structure that looks like the following:
+
+.. figure:: Images/Tutorial_3/plugin_generated.png
+
+3.1.2 Loading The New Python Plugin
+-----------------------------------
+
+Next, we need to load the newly generated Python plugin into DREAM3D-NX.  Open DREAM3D-NX and then open the Preferences panel found in the file menu.  Navigate to the Python tab.
+
+.. figure:: Images/Tutorial_3/plugin_loading_1.png
+
+Press the "plus" button on the right side to add the plugin to the list.  You need to pick the internal plugin source directory, not the top-level directory, so the path should be something like `/plugin/output/directory/ExamplePlugin/src/ExamplePlugin`.
+
+.. figure:: Images/Tutorial_3/plugin_loading_2.png
+
+Press the OK button, and then DREAM3D-NX will automatically load the `ExamplePlugin` plugin for you.  You should now be able to see your filter in the Filter List if you search for `ArrayCalculationFilter (Python)`.
+
+.. figure:: Images/Tutorial_3/plugin_loading_3.png
+
+Now, navigate to `/plugin/output/directory/ExamplePlugin/src/ExamplePlugin` on the file system and open `ArrayCalculationFilter.py`.
 
 Let's begin editing `ArrayCalculationFilter's` skeleton methods.
 
