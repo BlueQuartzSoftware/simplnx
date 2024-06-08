@@ -330,14 +330,26 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
 inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirectory, const std::string& pluginName, const std::string& pluginShortName, const std::string& pluginDescription,
                                        const std::string& pluginFilterList)
 {
-
   auto pluginRootPath = outputDirectory / pluginName;
+  auto pluginSrcPath = pluginRootPath / "src" / pluginName;
   auto result = nx::core::CreateOutputDirectories(pluginRootPath);
   if(result.invalid())
   {
     return result;
   }
-  auto outputPath = pluginRootPath / "Plugin.py";
+  auto pluginCondaPath = pluginRootPath / "conda";
+  result = nx::core::CreateOutputDirectories(pluginCondaPath);
+  if(result.invalid())
+  {
+    return result;
+  }
+  auto pluginDocsPath = pluginRootPath / "docs";
+  result = nx::core::CreateOutputDirectories(pluginDocsPath);
+  if(result.invalid())
+  {
+    return result;
+  }
+  auto outputPath = pluginSrcPath / "Plugin.py";
   {
     auto atomicFileResult = AtomicFile::Create(outputPath);
     if(atomicFileResult.invalid())
@@ -365,7 +377,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
 
   // Write the __init__.py file
-  outputPath = pluginRootPath / "__init__.py";
+  outputPath = pluginSrcPath / "__init__.py";
   {
     auto atomicFileResult = AtomicFile::Create(outputPath);
     if(atomicFileResult.invalid())
@@ -447,11 +459,66 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       return commitResult;
     }
   }
+
+  // Write the pyproject.toml file
+  outputPath = pluginRootPath / "pyproject.toml";
+  {
+    auto atomicFileResult = AtomicFile::Create(outputPath);
+    if(atomicFileResult.invalid())
+    {
+      return ConvertResult(std::move(atomicFileResult));
+    }
+    AtomicFile pyProjTempFile = std::move(atomicFileResult.value());
+    {
+      // Scope this so that the file closes first before we then 'commit' with the atomic file
+      std::ofstream fout(pyProjTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
+      if(!fout.is_open())
+      {
+        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", pyProjTempFile.tempFilePath().string()));
+      }
+      std::string content = PluginPyProjectPythonFile();
+      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+      fout << content;
+    }
+    Result<> commitResult = pyProjTempFile.commit();
+    if(commitResult.invalid())
+    {
+      return commitResult;
+    }
+  }
+
+  // Write the meta.yaml file
+  outputPath = pluginCondaPath / "meta.yaml";
+  {
+    auto atomicFileResult = AtomicFile::Create(outputPath);
+    if(atomicFileResult.invalid())
+    {
+      return ConvertResult(std::move(atomicFileResult));
+    }
+    AtomicFile metaTempFile = std::move(atomicFileResult.value());
+    {
+      // Scope this so that the file closes first before we then 'commit' with the atomic file
+      std::ofstream fout(metaTempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
+      if(!fout.is_open())
+      {
+        return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", metaTempFile.tempFilePath().string()));
+      }
+      std::string content = PluginMetaPythonFile();
+      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+      fout << content;
+    }
+    Result<> commitResult = metaTempFile.commit();
+    if(commitResult.invalid())
+    {
+      return commitResult;
+    }
+  }
+
   // Now loop over each Filter and generate the skeleton files
   auto filterList = StringUtilities::split(pluginFilterList, ',');
   for(const auto& name : filterList)
   {
-    WritePythonFilterToFile(pluginRootPath, name, name, Uuid::GenerateV4().str());
+    WritePythonFilterToFile(pluginSrcPath, name, name, Uuid::GenerateV4().str());
   }
 
   return {};
