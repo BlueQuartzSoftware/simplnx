@@ -163,7 +163,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
         outFile << "# FILTER_START: " << filterName << "\n"
                 << "try:\n"
                 << "  from " << pluginName << "." << filterName << " import " << filterName << "\n"
-                << "  _filters_.append(" << filterName << ")\n"
+                << "  _filters.append(" << filterName << ")\n"
                 << "except ImportError:\n"
                 << "  pass\n"
                 << "# FILTER_END: " << filterName << "\n\n";
