@@ -6,12 +6,12 @@ package:
   version: {{ version }}
 
 source:
-  path: ../
-  folder: #PLUGIN_NAME#
+  - path: ../
+    folder: #PLUGIN_NAME#
 
 build:
   noarch: python
-  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  script: {{ PYTHON }} -m pip install ./#PLUGIN_NAME# -vv --no-deps --no-build-isolation
   number: 0
 
 requirements:
@@ -19,6 +19,7 @@ requirements:
     - python >=3.10
     - pytest
     - pip
+    - hatchling
   run:
     - python >=3.10
 
