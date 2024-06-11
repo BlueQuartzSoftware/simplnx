@@ -151,13 +151,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     }
   }
 
-  for(size_t i = 1; i < totalFeatures; i++)
-  {
-    // Set the vector for each list into the NeighborList Object
-    NeighborList<float>::SharedVectorType misaL(new std::vector<float>);
-    misaL->assign(misalignmentLists[i].begin(), misalignmentLists[i].end());
-    cAxisMisalignmentList.setList(static_cast<int32_t>(i), misaL);
-  }
+  cAxisMisalignmentList.setLists(misalignmentLists);
 
   return result;
 }

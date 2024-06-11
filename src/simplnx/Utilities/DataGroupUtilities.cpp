@@ -89,7 +89,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
       {
         if(featureIds[i] >= 0 && featureIds[i] < newNames.size())
         {
-          featureIds[i] = static_cast<int32_t>(newNames[featureIds[i]]);
+          featureIds.setValue(i, static_cast<int32_t>(newNames[featureIds[i]]));
           featureIdsChanged = true;
         }
         if(shouldCancel)

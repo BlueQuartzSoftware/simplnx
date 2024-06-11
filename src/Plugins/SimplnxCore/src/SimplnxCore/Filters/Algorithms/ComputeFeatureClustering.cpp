@@ -280,12 +280,14 @@ Result<> ComputeFeatureClustering::operator()()
     rdf[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
   }
 
-  for(usize i = 1; i < totalFeatures; i++)
-  {
-    // Set the vector for each list into the Clustering Object
-    NeighborList<float32>::SharedVectorType sharedClusterLst(new std::vector<float32>);
-    sharedClusterLst->assign(clusters[i].begin(), clusters[i].end());
-    clusteringList.setList(static_cast<int>(i), sharedClusterLst);
-  }
+  clusteringList.setLists(clusters);
+
+  //for(usize i = 1; i < totalFeatures; i++)
+  //{
+  //  // Set the vector for each list into the Clustering Object
+  //  NeighborList<float32>::SharedVectorType sharedClusterLst(new std::vector<float32>);
+  //  sharedClusterLst->assign(clusters[i].begin(), clusters[i].end());
+  //  clusteringList.setList(static_cast<int>(i), sharedClusterLst);
+  //}
   return {};
 }

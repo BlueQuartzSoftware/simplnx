@@ -2,6 +2,8 @@
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 
+#include <xtensor/xfunction.hpp>
+
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
 
@@ -10,6 +12,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <optional>
 #include <stdexcept>
@@ -32,6 +35,7 @@ public:
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
+  using XArrayType = typename parent_type::XArrayType;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
@@ -61,10 +65,14 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
+    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+    m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
+
     resizeTuples(m_TupleShape);
     if(initValue.has_value())
     {
-      std::fill_n(data(), this->getSize(), *initValue);
+      m_Array->fill(*initValue);
     }
   }
 
@@ -78,10 +86,21 @@ public:
   : parent_type()
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
-  , m_Data(std::move(buffer))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
+    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+    m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
+    if(buffer != nullptr)
+    {
+      auto count = m_Array->size();
+      auto* bufferPtr = buffer.get();
+      for(uint64 i = 0; i < count; i++)
+      {
+        setValue(i, bufferPtr[i]);
+      }
+    }
   }
 
   /**
@@ -94,11 +113,8 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
+  , m_Array(other.m_Array)
   {
-    const usize count = other.getSize();
-    auto* data = new value_type[count];
-    std::memcpy(data, other.m_Data.get(), count * sizeof(T));
-    m_Data.reset(data);
   }
 
   /**
@@ -109,7 +125,7 @@ public:
   : parent_type()
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
-  , m_Data(std::move(other.m_Data))
+  , m_Array(std::move(other.m_Array))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
   {
@@ -146,7 +162,7 @@ public:
    */
   const T* data() const
   {
-    return m_Data.get();
+    return m_Array->data();
   }
 
   /**
@@ -155,7 +171,17 @@ public:
    */
   T* data()
   {
-    return m_Data.get();
+    return m_Array->data();
+  }
+
+  XArrayType& xarray()
+  {
+    return *m_Array.get();
+  }
+
+  const XArrayType& xarray() const
+  {
+    return *m_Array.get();
   }
 
   /**
@@ -222,29 +248,26 @@ public:
 
     usize newSize = getNumberOfComponents() * m_NumTuples;
 
-    if(m_Data.get() == nullptr) // Data was never allocated
+    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+
+    if(m_Array.get() == nullptr) // Data was never allocated
     {
-      auto data = new value_type[newSize];
-      m_Data.reset(data);
+      m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
       return;
     }
 
-    // The caller is reshaping the array without actually effecting its overall number
-    // of elements. Old was 100 x 3 and the new was 300. Both with a {1} comp dim.
-    if(newSize == oldSize)
-    {
-      return;
-    }
+    auto data = std::shared_ptr<XArrayType>(new XArrayType(shape));
 
     // We have now figured out that the old array and the new array are different sizes so
     // copy the old data into the newly allocated data array or as much or as little
     // as possible
-    auto data = new value_type[newSize];
+
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
-      data[i] = m_Data.get()[i];
+      data->flat(i) = m_Array->flat(i);
     }
-    m_Data.reset(data);
+    m_Array = data;
   }
 
   /**
@@ -255,7 +278,7 @@ public:
    */
   value_type getValue(usize index) const override
   {
-    return m_Data.get()[index];
+    return m_Array->flat(index);
   }
 
   /**
@@ -265,7 +288,9 @@ public:
    */
   void setValue(usize index, value_type value) override
   {
-    m_Data.get()[index] = value;
+    std::lock_guard<std::mutex> guard(this->m_Mutex);
+
+    m_Array->flat(index) = value;
   }
 
   /**
@@ -276,7 +301,7 @@ public:
    */
   const_reference operator[](usize index) const override
   {
-    return m_Data.get()[index];
+    return m_Array->flat(index);
   }
 
   /**
@@ -287,7 +312,7 @@ public:
    */
   reference operator[](usize index) override
   {
-    return m_Data.get()[index];
+    return m_Array->flat(index);
   }
 
   /**
@@ -298,11 +323,9 @@ public:
    */
   const_reference at(usize index) const override
   {
-    if(index >= this->getSize())
-    {
-      throw std::runtime_error("");
-    }
-    return m_Data.get()[index];
+    std::lock_guard<std::mutex> guard(this->m_Mutex);
+
+    return m_Array->flat(index);
   }
 
   /**
@@ -335,6 +358,8 @@ public:
 
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
+    std::lock_guard<std::mutex> guard(this->m_Mutex);
+
     std::ofstream outStrm(absoluteFilePath, std::ios_base::out | std::ios_base::binary);
     if(!outStrm.is_open())
     {
@@ -347,8 +372,7 @@ public:
   std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
   {
     usize totalElements = getNumberOfComponents() * getNumberOfTuples();
-
-    outputStream.write(reinterpret_cast<char*>(m_Data.get()), sizeof(T) * totalElements);
+    outputStream.write(reinterpret_cast<char*>(m_Array->data()), sizeof(T) * totalElements);
 
     if(outputStream.bad())
     {
@@ -361,7 +385,7 @@ public:
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
-  std::unique_ptr<value_type[]> m_Data = nullptr;
+  std::shared_ptr<XArrayType> m_Array = nullptr;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
 };

@@ -25,6 +25,7 @@ public:
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
+  using XArrayType = typename AbstractDataStore<T>::XArrayType;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
@@ -126,6 +127,16 @@ public:
   std::string dataFormat() const
   {
     return m_DataFormat;
+  }
+
+  XArrayType& xarray() override
+  {
+    throw std::runtime_error("EmptyDataStore cannot access data");
+  }
+
+  const XArrayType& xarray() const override
+  {
+    throw std::runtime_error("EmptyDataStore cannot access data");
   }
 
   /**

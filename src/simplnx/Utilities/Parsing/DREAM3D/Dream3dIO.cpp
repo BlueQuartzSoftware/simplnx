@@ -977,10 +977,7 @@ Result<> createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdT
     std::string ss = fmt::format("Failed to create NeighborList: '{}'", datasetReader.getName());
     return MakeErrorResult(Legacy::k_FailedCreatingNeighborList_Code, ss);
   }
-  for(usize i = 0; i < data.size(); ++i)
-  {
-    neighborList->setList(i, data[i]);
-  }
+  neighborList->getStore()->setData(data);
   return {};
 }
 

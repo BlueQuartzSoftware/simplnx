@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 
 namespace nx::core
@@ -23,8 +24,9 @@ public:
   using value_type = T;
   using VectorType = std::vector<T>;
   using SharedVectorType = std::shared_ptr<VectorType>;
-  using iterator = typename std::vector<SharedVectorType>::iterator;
-  using const_iterator = typename std::vector<SharedVectorType>::const_iterator;
+  using store_type = AbstractListStore<T>;
+  using iterator = typename store_type::iterator;
+  using const_iterator = typename store_type::const_iterator;
 
   NeighborList() = default;
 
@@ -176,6 +178,18 @@ public:
   void setList(int32 grainId, const SharedVectorType& neighborList);
 
   /**
+   * @brief Updates the tuple count, internal list size, and sets the list values.
+   * @param neighborLists
+   */
+  void setLists(const std::vector<std::vector<T>>& neighborLists);
+
+  /**
+   * @brief Specifies the length of the longest list.
+   * @param size
+   */
+  void reserveListSize(uint64 size);
+
+  /**
    * @brief getValue
    * @param grainId
    * @param index
@@ -183,6 +197,13 @@ public:
    * @return T
    */
   T getValue(int32 grainId, int32 index, bool& ok) const;
+
+  /**
+  * @brief Sets the value at the given index using mutex locks.
+  * @param index
+  * @param value
+  */
+  void setValue(usize index, const VectorType& value);
 
   /**
    * @brief getNumberOfLists
@@ -198,18 +219,11 @@ public:
   int32 getListSize(int32 grainId) const;
 
   /**
-   * @brief Returns a reference to the target grain ID's data.
-   * @param grainId
-   * @return VectorType&
-   */
-  VectorType& getListReference(int32 grainId) const;
-
-  /**
    * @brief getList
    * @param grainId
-   * @return SharedVectorType
+   * @return VectorType
    */
-  SharedVectorType getList(int32 grainId) const;
+  VectorType getList(int32 grainId) const;
 
   /**
    * @brief Static function to get the typename
@@ -291,30 +305,30 @@ public:
   /**
    * @brief operator []
    * @param grainId
-   * @return VectorType&
+   * @return VectorType
    */
-  VectorType& operator[](int32 grainId);
+  VectorType operator[](int32 grainId);
 
   /**
    * @brief operator []
    * @param grainId
-   * @return VectorType&
+   * @return VectorType
    */
-  VectorType& operator[](usize grainId);
+  VectorType operator[](usize grainId);
 
   /**
    * @brief Returns a const reference to the VectorType value found at the specified index. This cannot be used to edit the VectorType value found at the specified index.
    * @param grainId
-   * @return const VectorType&
+   * @return VectorType
    */
-  const VectorType& at(int32 grainId) const;
+  VectorType at(int32 grainId) const;
 
   /**
    * @brief Returns a const reference to the VectorType value found at the specified index. This cannot be used to edit the VectorType value found at the specified index.
    * @param grainId
-   * @return const VectorType&
+   * @return VectorType
    */
-  const VectorType& at(usize grainId) const;
+  VectorType at(usize grainId) const;
 
   /**
    * @brief Returns the DataArray's value type as an enum
@@ -333,7 +347,9 @@ public:
    */
   void resizeTuples(const std::vector<usize>& tupleShape) override;
 
-  const std::vector<SharedVectorType>& getValues() const;
+  std::shared_ptr<store_type> getStore() const;
+
+  std::vector<VectorType> getVectors() const;
 
   iterator begin();
   iterator end();
@@ -354,7 +370,8 @@ protected:
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
 
 private:
-  std::vector<SharedVectorType> m_Array;
+  std::shared_ptr<store_type> m_Store;
+  // std::vector<SharedVectorType> m_Array;
   bool m_IsAllocated;
   value_type m_InitValue;
 };

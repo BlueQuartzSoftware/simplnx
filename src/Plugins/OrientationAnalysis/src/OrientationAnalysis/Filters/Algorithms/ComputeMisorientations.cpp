@@ -57,7 +57,7 @@ Result<> ComputeMisorientations::operator()()
     QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
     uint32_t xtalType1 = inXtalStruct[inFeaturePhases[i]];
 
-    const NeighborList<int32_t>::VectorType& featureNeighborList = inNeighborList.getListReference(static_cast<int32_t>(i));
+    const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
     tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
 
@@ -103,13 +103,14 @@ Result<> ComputeMisorientations::operator()()
 
   // Output Variables
   auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
+  outMisorientationList.setLists(tempMisorientationLists);
   // Set the vector for each list into the NeighborList Object
-  for(size_t i = 1; i < totalFeatures; i++)
-  {
-    // Construct a shared vector<float> through the std::vector<> copy constructor.
-    NeighborList<float>::SharedVectorType sharedMisorientationList(new std::vector<float>(tempMisorientationLists[i]));
-    outMisorientationList.setList(static_cast<int32_t>(i), sharedMisorientationList);
-  }
+  //for(size_t i = 1; i < totalFeatures; i++)
+  //{
+  //  // Construct a shared vector<float> through the std::vector<> copy constructor.
+  //  NeighborList<float>::SharedVectorType sharedMisorientationList(new std::vector<float>(tempMisorientationLists[i]));
+  //  outMisorientationList.setList(static_cast<int32_t>(i), sharedMisorientationList);
+  //}
 
   return {};
 }

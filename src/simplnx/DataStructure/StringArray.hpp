@@ -1,6 +1,9 @@
 #pragma once
 
 #include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractStringStore.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -11,8 +14,9 @@ public:
   using collection_type = std::vector<value_type>;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using iterator = typename collection_type::iterator;
-  using const_iterator = typename collection_type::const_iterator;
+  using store_type = AbstractStringStore;
+  using iterator = typename store_type::iterator;
+  using const_iterator = typename store_type::const_iterator;
 
   static inline constexpr StringLiteral k_TypeName = "StringArray";
 
@@ -39,11 +43,12 @@ public:
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   size_t size() const override;
-  const collection_type& values() const;
+  const collection_type values() const;
 
   reference operator[](usize index);
   const_reference operator[](usize index) const;
   const_reference at(usize index) const;
+  void setValue(usize index, const std::string& value);
 
   iterator begin();
   iterator end();
@@ -115,9 +120,11 @@ public:
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
   StringArray(DataStructure& dataStructure, std::string name, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store);
   StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings);
 
 private:
-  std::shared_ptr<collection_type> m_Strings = std::make_shared<collection_type>();
+  std::shared_ptr<AbstractStringStore> m_Strings = nullptr;
+  mutable std::mutex m_Mutex;
 };
 } // namespace nx::core

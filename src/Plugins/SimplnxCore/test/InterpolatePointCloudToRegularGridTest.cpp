@@ -5,6 +5,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <xtensor/xio.hpp>
+
 #include <string>
 
 namespace fs = std::filesystem;
@@ -115,6 +117,9 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    const auto& neighborList = dataStructure.getDataRefAs<NeighborList<float64>>(k_GaussianFaceAreasComputed);
+  std::cout << "InterpolatePointCloudToRegularGridFilter: " << neighborList.getStore()->xarray() << std::endl;
 
   UnitTest::CompareNeighborLists<float64>(dataStructure, k_GaussianFaceAreasExemplar, k_GaussianFaceAreasComputed);
   UnitTest::CompareNeighborLists<uint64>(dataStructure, k_GaussianVoxelIndicesExemplar, k_GaussianVoxelIndicesComputed);

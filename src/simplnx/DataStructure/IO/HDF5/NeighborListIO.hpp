@@ -104,14 +104,14 @@ public:
     DataStructure tmp;
 
     // Create NumNeighbors DataStore
-    const auto& neighborData = neighborList.getValues();
+    const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
     auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
     auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
     usize totalItems = 0;
     for(usize i = 0; i < arraySize; i++)
     {
-      const auto numNeighbors = neighborData[i]->size();
+      const auto numNeighbors = neighborData[i].size();
       numNeighborsStore[i] = static_cast<int32>(numNeighbors);
       totalItems += numNeighbors;
     }
@@ -129,12 +129,12 @@ public:
     usize offset = 0;
     for(const auto& segment : neighborData)
     {
-      usize numElements = segment->size();
+      usize numElements = segment.size();
       if(numElements == 0)
       {
         continue;
       }
-      T* start = segment->data();
+      const T* start = segment.data();
       for(usize i = 0; i < numElements; i++)
       {
         flattenedData[offset + i] = start[i];

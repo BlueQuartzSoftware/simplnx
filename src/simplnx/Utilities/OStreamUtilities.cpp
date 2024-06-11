@@ -59,7 +59,7 @@ struct PrintNeighborList
             return {};
           }
         }
-        const auto& grain = neighborList.getListReference(list);
+        const auto grain = neighborList.at(list);
         outputStrm << list << delimiter << grain.size() << delimiter;
         for(size_t index = 0; index < grain.size(); index++)
         {
@@ -98,7 +98,7 @@ struct PrintNeighborList
             return {};
           }
         }
-        const auto& grain = neighborList.getListReference(list);
+        const auto grain = neighborList.at(list);
         outputStrm << grain.size() << delimiter;
         for(size_t index = 0; index < grain.size(); index++)
         {

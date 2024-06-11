@@ -266,9 +266,9 @@ public:
             else
             {
               auto modeList = m_ModeArray->getList(j);
-              for(int i = 0; i < modeList->size(); i++)
+              for(int i = 0; i < modeList.size(); i++)
               {
-                const float32 mode = modeList->at(i);
+                const float32 mode = modeList.at(i);
                 const auto modalBin = static_cast<int32>((mode - histMin) / increment);
                 float32 minBinValue = 0.0f;
                 float32 maxBinValue = 0.0f;

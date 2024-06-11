@@ -605,11 +605,11 @@ public:
       {
         return;
       }
-      const Eigen::Vector4f position(m_Vertices[3 * i + 0], m_Vertices[3 * i + 1], m_Vertices[3 * i + 2], 1);
+      const Eigen::Vector4f position(m_Vertices.at(3 * i + 0), m_Vertices.at(3 * i + 1), m_Vertices.at(3 * i + 2), 1);
       Eigen::Vector4f transformedPosition = m_TransformationMatrix * position;
-      m_Vertices[3 * i + 0] = transformedPosition[0];
-      m_Vertices[3 * i + 1] = transformedPosition[1];
-      m_Vertices[3 * i + 2] = transformedPosition[2];
+      m_Vertices.setValue(3 * i + 0, transformedPosition[0]);
+      m_Vertices.setValue(3 * i + 1, transformedPosition[1]);
+      m_Vertices.setValue(3 * i + 2, transformedPosition[2]);
 
       if(progCounter > progIncrement)
       {

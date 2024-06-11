@@ -143,6 +143,10 @@ bool DataMap::contains(const std::string& name) const
 {
   for(auto& iter : m_Map)
   {
+    if (iter.second == nullptr)
+    {
+      continue;
+    }
     if(iter.second->getName() == name)
     {
       return true;
