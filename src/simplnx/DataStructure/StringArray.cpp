@@ -1,5 +1,6 @@
 #include "StringArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/StringStore.hpp"
 
 #include "fmt/format.h"
 
@@ -16,7 +17,7 @@ StringArray* StringArray::Create(DataStructure& dataStructure, const std::string
 StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
-  *data->m_Strings = std::move(strings);
+  data->m_Strings = std::make_shared<StringStore>(strings);
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -42,13 +43,19 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name)
 StringArray::StringArray(DataStructure& dataStructure, std::string name, collection_type strings)
 : IArray(dataStructure, std::move(name))
 {
-  *m_Strings = std::move(strings);
+  m_Strings = std::make_shared<StringStore>(strings);
+}
+
+StringArray::StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store)
+: IArray(dataStructure, std::move(name))
+, m_Strings(store)
+{
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings)
 : IArray(dataStructure, std::move(name), importId)
 {
-  *m_Strings = std::move(strings);
+  m_Strings = std::make_shared<StringStore>(strings);
 }
 
 StringArray::StringArray(const StringArray& other)
@@ -92,7 +99,7 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
     return nullptr;
   }
   // Don't construct with identifier since it will get created when inserting into data structure
-  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), *m_Strings));
+  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
@@ -105,9 +112,9 @@ size_t StringArray::size() const
   return m_Strings->size();
 }
 
-const StringArray::collection_type& StringArray::values() const
+const StringArray::collection_type StringArray::values() const
 {
-  return *m_Strings;
+  return collection_type(begin(), end());
 }
 
 StringArray::reference StringArray::operator[](usize index)
@@ -118,6 +125,12 @@ StringArray::reference StringArray::operator[](usize index)
 StringArray::const_reference StringArray::operator[](usize index) const
 {
   return (*m_Strings)[index];
+}
+
+void StringArray::setValue(usize index, const std::string& value)
+{
+  std::lock_guard<std::mutex> guard(m_Mutex);
+  (*m_Strings)[index] = value;
 }
 
 StringArray::const_reference StringArray::at(usize index) const

@@ -9,6 +9,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <xtensor/xio.hpp>
+
 #include <filesystem>
 
 namespace fs = std::filesystem;

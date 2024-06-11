@@ -291,9 +291,9 @@ public:
             else
             {
               auto modeList = m_ModeArray->getList(j);
-              for(int i = 0; i < modeList->size(); i++)
+              for(int i = 0; i < modeList.size(); i++)
               {
-                const T mode = modeList->at(i);
+                const float32 mode = modeList.at(i);
                 const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
                 if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
                 {

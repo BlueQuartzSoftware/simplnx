@@ -11,6 +11,8 @@
 
 #include <unordered_set>
 
+#include <xtensor/xio.hpp>
+
 namespace nx::core
 {
 namespace GeometryHelpers
@@ -284,6 +286,8 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
   // Reuse this vector for each loop. Avoids re-allocating the memory each time through the loop
   std::vector<K> loop_neighbors(32, 0);
 
+  std::cout << elems.getDataStoreRef().xarray() << std::endl;
+
   // Build up the element adjacency list now that we have the element links
   for(usize t = 0; t < numElems; ++t)
   {
@@ -306,6 +310,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
           continue;
         } // We already added this element so loop again
         //      qDebug() << "   Comparing Element " << vertIdxs[vt] << "\n";
+        const auto vertId = vertIdxs[vt];
         auto vertCell = elemList->cbegin() + (vertIdxs[vt] * elemList->getNumberOfComponents());
         usize vCount = 0;
         // Loop over all the vertex indices of this element and try to match numSharedVerts of them to the current loop element

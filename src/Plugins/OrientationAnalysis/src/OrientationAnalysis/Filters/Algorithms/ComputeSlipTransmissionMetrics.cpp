@@ -100,20 +100,25 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
   auto& F7L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
   auto& mPrimeL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->mPrimeListArrayName);
 
-  for(usize i = 1; i < totalFeatures; i++)
-  {
-    Float32NeighborList::SharedVectorType f1L(new std::vector<float32>(F1Lists[i]));
-    F1L.setList(static_cast<int32>(i), f1L);
+  F1L.setLists(F1Lists);
+  F1sptL.setLists(F1sPtLists);
+  F7L.setLists(F7Lists);
+  mPrimeL.setLists(mPrimeLists);
 
-    Float32NeighborList::SharedVectorType f1sptL(new std::vector<float32>(F1sPtLists[i]));
-    F1sptL.setList(static_cast<int32>(i), f1sptL);
+  //for(usize i = 1; i < totalFeatures; i++)
+  //{
+  //  Float32NeighborList::SharedVectorType f1L(new std::vector<float32>(F1Lists[i]));
+  //  F1L.setList(static_cast<int32>(i), f1L);
 
-    Float32NeighborList::SharedVectorType f7L(new std::vector<float32>(F7Lists[i]));
-    F7L.setList(static_cast<int32>(i), f7L);
+  //  Float32NeighborList::SharedVectorType f1sptL(new std::vector<float32>(F1sPtLists[i]));
+  //  F1sptL.setList(static_cast<int32>(i), f1sptL);
 
-    Float32NeighborList::SharedVectorType primeL(new std::vector<float32>(mPrimeLists[i]));
-    mPrimeL.setList(static_cast<int32>(i), primeL);
-  }
+  //  Float32NeighborList::SharedVectorType f7L(new std::vector<float32>(F7Lists[i]));
+  //  F7L.setList(static_cast<int32>(i), f7L);
+
+  //  Float32NeighborList::SharedVectorType primeL(new std::vector<float32>(mPrimeLists[i]));
+  //  mPrimeL.setList(static_cast<int32>(i), primeL);
+  //}
 
   if(emitLaueClassWarning)
   {

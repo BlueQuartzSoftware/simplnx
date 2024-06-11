@@ -21,6 +21,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <iostream>
 #include <memory>
 #include <vector>
 

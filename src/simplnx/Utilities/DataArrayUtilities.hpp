@@ -1045,6 +1045,19 @@ private:
 namespace CopyFromArray
 {
 /**
+ * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+ */
+template <class K>
+void AppendData(const K& inputArray, K& destArray, usize offset)
+{
+  const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
+  for(usize i = 0; i < numElements; ++i)
+  {
+    destArray.setValue(offset + i, inputArray.at(i));
+  }
+}
+
+/**
  * @brief Copies all of the data from the inputArray into the destination array using the given tuple offsets.
  */
 template <class K>
@@ -1406,8 +1419,9 @@ public:
     {
       using NeighborListType = NeighborList<T>;
       auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
-      if(destArrayPtr->getValues().empty() || destArrayPtr->getList(0) == nullptr)
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+
+      if(destArrayPtr->getNumberOfLists() == 0 || destArrayPtr->getList(0).size() == 0)
       {
         destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
@@ -1482,8 +1496,8 @@ public:
     {
       using NeighborListT = NeighborList<T>;
       auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
-      if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      if(destArray->getVectors().empty() || destArray->getList(0).empty())
       {
         destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
       }

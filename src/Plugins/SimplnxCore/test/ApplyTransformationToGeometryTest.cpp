@@ -11,7 +11,10 @@
 
 #include <catch2/catch.hpp>
 
+#include <xtensor/xio.hpp>
+
 #include <filesystem>
+#include <iostream>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -719,6 +722,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+
+    const auto& calculatedDataArr = dataStructure.getDataRefAs<DataArray<int32>>(calculatedPath);
+    std::cout << "ApplyTransformationToGeometryFilter: " << calculatedDataArr.getDataStoreRef().xarray() << std::endl;
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
 }

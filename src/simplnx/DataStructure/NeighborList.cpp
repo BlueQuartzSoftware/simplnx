@@ -3,12 +3,14 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 
 namespace nx::core
 {
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
 : INeighborList(dataStructure, name, numTuples)
+, m_Store(std::make_shared<ListStore<T>>(std::vector<uint64>{numTuples}))
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -17,7 +19,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
 : INeighborList(dataStructure, name, dataVector.size(), importId)
-, m_Array(dataVector)
+, m_Store(std::make_shared<ListStore<T>>(dataVector))
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -62,15 +64,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
-  copy->m_Array.reserve(m_Array.size());
-  for(usize i = 0; i < m_Array.size(); ++i)
-  {
-    copy->m_Array.push_back(std::make_shared<VectorType>(m_Array[i]->size()));
-    for(usize j = 0; j < m_Array[i]->size(); ++j)
-    {
-      (*copy->m_Array[i])[j] = (*m_Array[i])[j];
-    }
-  }
+  copy->m_Store->copy(*m_Store.get());
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
@@ -101,7 +95,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     return 0;
   }
 
-  usize arraySize = m_Array.size();
+  usize arraySize = m_Store->size();
   // Sanity Check the Indices in the vector to make sure we are not trying to remove any indices that are
   // off the end of the array and return an error code.
   for(usize idx : idxs)
@@ -112,7 +106,8 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
 
-  std::vector<SharedVectorType> replacement(arraySize - idxsSize);
+  auto copy = m_Store->deepCopy();
+  copy->resizeTuples(arraySize - idxsSize);
 
   usize idxsIndex = 0;
   usize rIdx = 0;
@@ -120,7 +115,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
   {
     if(dIdx != idxs[idxsIndex])
     {
-      replacement[rIdx] = m_Array[dIdx];
+      copy->setList(rIdx, m_Store->at(dIdx));
       ++rIdx;
     }
     else
@@ -132,24 +127,24 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
       }
     }
   }
-  m_Array = replacement;
-  setNumberOfTuples(m_Array.size());
+  setNumberOfTuples(m_Store->size());
+  m_Store = std::move(copy);
   return err;
 }
 
 template <typename T>
 void NeighborList<T>::copyTuple(usize currentPos, usize newPos)
 {
-  m_Array[newPos] = m_Array[currentPos];
+  m_Store->setList(newPos, m_Store->at(currentPos));
 }
 
 template <typename T>
 usize NeighborList<T>::getSize() const
 {
   usize total = 0;
-  for(usize dIdx = 0; dIdx < m_Array.size(); ++dIdx)
+  for(usize dIdx = 0; dIdx < m_Store->size(); ++dIdx)
   {
-    total += m_Array[dIdx]->size();
+    total += m_Store->getListSize(dIdx);
   }
   return total;
 }
@@ -158,9 +153,9 @@ template <typename T>
 usize NeighborList<T>::size() const
 {
   usize total = 0;
-  for(usize dIdx = 0; dIdx < m_Array.size(); ++dIdx)
+  for(usize dIdx = 0; dIdx < m_Store->size(); ++dIdx)
   {
-    total += m_Array[dIdx]->size();
+    total += m_Store->getListSize(dIdx);
   }
   return total;
 }
@@ -186,24 +181,17 @@ usize NeighborList<T>::getTypeSize() const
 template <typename T>
 void NeighborList<T>::initializeWithZeros()
 {
-  m_Array.clear();
+  m_Store->clear();
   m_IsAllocated = false;
 }
 
 template <typename T>
 int32 NeighborList<T>::resizeTotalElements(usize size)
 {
-  usize old = m_Array.size();
-  m_Array.resize(size);
+  usize old = m_Store->size();
+  m_Store->resizeTuples(size);
   setNumberOfTuples(size);
-  if(size >= old)
-  {
-    // Initialize with zero length Vectors
-    for(usize i = old; i < m_Array.size(); ++i)
-    {
-      m_Array[i] = SharedVectorType(new VectorType);
-    }
-  }
+
   if(size == 0)
   {
     m_IsAllocated = false;
@@ -224,110 +212,137 @@ void NeighborList<T>::resizeTuples(usize numTuples)
 template <typename T>
 void NeighborList<T>::addEntry(int32 grainId, value_type value)
 {
-  if(grainId >= static_cast<int32>(m_Array.size()))
+  if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Array.size();
-    m_Array.resize(grainId + 1);
+    usize old = m_Store->size();
+    m_Store->resizeTuples(grainId + 1);
     m_IsAllocated = true;
     // Initialize with zero length Vectors
-    for(usize i = old; i < m_Array.size(); ++i)
+    for(usize i = old; i < m_Store->size(); ++i)
     {
-      m_Array[i] = SharedVectorType(new VectorType);
+      m_Store->setList(i, SharedVectorType(new VectorType));
     }
+    setNumberOfTuples(m_Store->size());
   }
-  m_Array[grainId]->push_back(value);
-  setNumberOfTuples(m_Array.size());
+  m_Store->addEntry(grainId, value);
 }
 
 template <typename T>
 void NeighborList<T>::clearAllLists()
 {
-  m_Array.clear();
+  m_Store->clear();
   m_IsAllocated = false;
 }
 
 template <typename T>
 void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborList)
 {
-  if(grainId >= static_cast<int32>(m_Array.size()))
+  if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Array.size();
-    m_Array.resize(grainId + 1);
+    usize old = m_Store->size();
+    m_Store->resizeTuples(grainId + 1);
     m_IsAllocated = true;
     // Initialize with zero length Vectors
-    for(usize i = old; i < m_Array.size(); ++i)
+    for(usize i = old; i < m_Store->size(); ++i)
     {
-      m_Array[i] = SharedVectorType(new VectorType);
+      m_Store->setList(i, SharedVectorType(new VectorType));
     }
   }
-  m_Array[grainId] = neighborList;
+  m_Store->setList(grainId, neighborList);
+}
+
+template <typename T>
+void NeighborList<T>::setLists(const std::vector<std::vector<T>>& neighborLists)
+{
+  usize totalFeatures = neighborLists.size();
+  uint64 reserveSize = 0;
+  for(size_t i = 1; i < totalFeatures; i++)
+  {
+    reserveSize = std::max(reserveSize, neighborLists[i].size());
+  }
+  reserveListSize(reserveSize);
+  resizeTuples(totalFeatures);
+
+  for(size_t i = 1; i < totalFeatures; i++)
+  {
+    // Set the vector for each list into the NeighborList Object
+    SharedVectorType list(new std::vector<T>);
+    list->assign(neighborLists[i].begin(), neighborLists[i].end());
+    setList(static_cast<int32_t>(i), list);
+  }
+}
+
+template <typename T>
+void NeighborList<T>::reserveListSize(uint64 size)
+{
+  m_Store->setXtensorListSize(size);
 }
 
 template <typename T>
 T NeighborList<T>::getValue(int32 grainId, int32 index, bool& ok) const
 {
-  SharedVectorType vec = m_Array[grainId];
-  if(index < 0 || static_cast<usize>(index) >= vec->size())
+  VectorType vec = m_Store->at(grainId);
+  if(index < 0 || static_cast<usize>(index) >= vec.size())
   {
     ok = false;
     return static_cast<T>(-1);
   }
-  return (*vec)[index];
+  return vec[index];
 }
 
 template <typename T>
 int32 NeighborList<T>::getNumberOfLists() const
 {
-  return static_cast<int32>(m_Array.size());
+  return static_cast<int32>(m_Store->size());
 }
 
 template <typename T>
 int32 NeighborList<T>::getListSize(int32 grainId) const
 {
-  return static_cast<int32>(m_Array[grainId]->size());
+  return static_cast<int32>(m_Store->getListSize(grainId));
 }
 
 template <typename T>
-typename NeighborList<T>::VectorType& NeighborList<T>::getListReference(int32 grainId) const
+typename NeighborList<T>::VectorType NeighborList<T>::getList(int32 grainId) const
 {
-  return *(m_Array[grainId]);
-}
-
-template <typename T>
-typename NeighborList<T>::SharedVectorType NeighborList<T>::getList(int32 grainId) const
-{
-  return m_Array[grainId];
+  return m_Store->at(grainId);
 }
 
 template <typename T>
 typename NeighborList<T>::VectorType NeighborList<T>::copyOfList(int32 grainId) const
 {
-  VectorType copy(*(m_Array[grainId]));
+  VectorType copy(m_Store->at(grainId));
   return copy;
 }
 
 template <typename T>
-typename NeighborList<T>::VectorType& NeighborList<T>::operator[](int32 grainId)
+typename NeighborList<T>::VectorType NeighborList<T>::operator[](int32 grainId)
 {
-  return *(m_Array[grainId]);
+  return m_Store->at(grainId);
 }
 
 template <typename T>
-typename NeighborList<T>::VectorType& NeighborList<T>::operator[](usize grainId)
+typename NeighborList<T>::VectorType NeighborList<T>::operator[](usize grainId)
 {
-  return *(m_Array[grainId]);
+  return m_Store->at(grainId);
 }
 
 template <typename T>
-const typename NeighborList<T>::VectorType& NeighborList<T>::at(int32 grainId) const
+void NeighborList<T>::setValue(usize index, const VectorType& value)
 {
-  return *(m_Array[grainId]);
+  m_Store->setList(index, value);
 }
 
 template <typename T>
-const typename NeighborList<T>::VectorType& NeighborList<T>::at(usize grainId) const
+typename NeighborList<T>::VectorType NeighborList<T>::at(int32 grainId) const
 {
-  return *(m_Array[grainId]);
+  return m_Store->at(grainId);
+}
+
+template <typename T>
+typename NeighborList<T>::VectorType NeighborList<T>::at(usize grainId) const
+{
+  return m_Store->at(grainId);
 }
 
 template <typename T>
@@ -344,45 +359,57 @@ void NeighborList<T>::resizeTuples(const std::vector<usize>& tupleShape)
 }
 
 template <typename T>
-const std::vector<typename NeighborList<T>::SharedVectorType>& NeighborList<T>::getValues() const
+std::shared_ptr<typename NeighborList<T>::store_type> NeighborList<T>::getStore() const
 {
-  return m_Array;
+  return m_Store;
+}
+
+template <typename T>
+std::vector<typename NeighborList<T>::VectorType> NeighborList<T>::getVectors() const
+{
+  usize count = m_Store->size();
+  std::vector<typename NeighborList<T>::VectorType> vectors(count);
+  for (usize i = 0; i < count; i++)
+  {
+    vectors[i] = m_Store->at(i);
+  }
+  return vectors;
 }
 
 template <typename T>
 typename NeighborList<T>::iterator NeighborList<T>::begin()
 {
-  return m_Array.begin();
+  return m_Store->begin();
 }
 
 template <typename T>
 typename NeighborList<T>::iterator NeighborList<T>::end()
 {
-  return m_Array.end();
+  return m_Store->end();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::begin() const
 {
-  return m_Array.begin();
+  return m_Store->begin();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::end() const
 {
-  return m_Array.end();
+  return m_Store->end();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::cbegin() const
 {
-  return m_Array.begin();
+  return m_Store->begin();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::cend() const
 {
-  return m_Array.end();
+  return m_Store->end();
 }
 
 template <>
