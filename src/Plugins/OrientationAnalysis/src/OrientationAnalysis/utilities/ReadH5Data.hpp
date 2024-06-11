@@ -12,6 +12,8 @@
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
 
+#include <fmt/format.h>
+
 namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
@@ -90,13 +92,14 @@ public:
 
     if(const int32 err = m_Reader->readFile(); err < 0)
     {
-      return MakeErrorResult(-8970, "EbsdReader could not read the .h5 file.");
+      return MakeErrorResult(-8970, fmt::format("Attempting to read scan '{}' from file '{}' produced an error from the '{}' class.\n  Error Code: {}\n  Message: {}", scanName,
+                                                m_Reader->getFileName(), m_Reader->getNameOfClass(), m_Reader->getErrorCode(), m_Reader->getErrorMessage()));
     }
 
     const auto phases = m_Reader->getPhaseVector();
     if(phases.empty())
     {
-      return MakeErrorResult(-8971, "EbsdReader could not read the phase vector from the .h5 file.");
+      return MakeErrorResult(-8971, fmt::format("'{}' did not parse any phases from from the .h5 file '{}' for scan '{}'", m_Reader->getNameOfClass(), scanName, m_Reader->getFileName()));
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
