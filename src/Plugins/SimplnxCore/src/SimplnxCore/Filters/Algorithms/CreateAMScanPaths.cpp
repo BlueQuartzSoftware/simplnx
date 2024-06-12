@@ -101,7 +101,7 @@ Result<> CreateAMScanPaths::operator()()
   auto& cadSliceIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath);
   auto& cadRegionIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath);
   usize numCADLayerEdges = CADLayers.getNumberOfEdges();
-  // usize numCADLayerVerts = CADLayers.getNumberOfVertices();
+  usize numCADLayerVerts = CADLayers.getNumberOfVertices();
   int32 numCADLayers = 0;
   int32 numCADRegions = 0;
   for(usize i = 0; i < numCADLayerEdges; i++)
@@ -171,6 +171,7 @@ Result<> CreateAMScanPaths::operator()()
     return {};
   }
   // rotate CAD slices so hatching direction will always be 100
+  std::vector<bool> rotatedPtIds(numCADLayerVerts, false);
   for(int64 i = 0; i < numCADLayerEdges; i++)
   {
     int32 curLayer = cadSliceIds[i];
@@ -183,7 +184,12 @@ Result<> CreateAMScanPaths::operator()()
       rotMat = toGMatrix(om);
       for(int j = 0; j < 2; j++)
       {
-        usize vert = CADLayerEdges[2 * i + j];
+        usize vertIndex = 2 * i + j;
+        usize vert = CADLayerEdges[vertIndex];
+        if(rotatedPtIds[vert])
+        {
+          continue;
+        }
         coords[0] = CADLayerVerts[3 * vert];
         coords[1] = CADLayerVerts[3 * vert + 1];
         coords[2] = CADLayerVerts[3 * vert + 2];
@@ -191,6 +197,7 @@ Result<> CreateAMScanPaths::operator()()
         CADLayerVerts[3 * vert] = newcoords[0];
         CADLayerVerts[3 * vert + 1] = newcoords[1];
         CADLayerVerts[3 * vert + 2] = newcoords[2];
+        rotatedPtIds[vert] = true;
         if(boundingBoxes[curLayer][curRegion][0] > newcoords[0])
         {
           boundingBoxes[curLayer][curRegion][0] = newcoords[0];
@@ -579,7 +586,12 @@ Result<> CreateAMScanPaths::operator()()
       rotMat = toGMatrix(om);
       for(int j = 0; j < 2; j++)
       {
-        int64 vert = CADLayerEdges[2 * i + j];
+        usize vertIndex = 2 * i + j;
+        int64 vert = CADLayerEdges[vertIndex];
+        if(!rotatedPtIds[vert])
+        {
+          continue;
+        }
         coords[0] = CADLayerVerts[3 * vert];
         coords[1] = CADLayerVerts[3 * vert + 1];
         coords[2] = CADLayerVerts[3 * vert + 2];
@@ -587,6 +599,7 @@ Result<> CreateAMScanPaths::operator()()
         CADLayerVerts[3 * vert] = newcoords[0];
         CADLayerVerts[3 * vert + 1] = newcoords[1];
         CADLayerVerts[3 * vert + 2] = newcoords[2];
+        rotatedPtIds[vert] = false;
       }
     }
   }
