@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/GeometryUtilities.hpp"
 
 using namespace nx::core;
 
@@ -304,7 +305,12 @@ Result<> SliceTriangleGeometry::operator()()
 
   // m_MessageHandler("Complete");
 
-  return {};
+  Result<> result;
+  if(m_InputValues->RemoveDuplicateNodes)
+  {
+    result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edge);
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------------

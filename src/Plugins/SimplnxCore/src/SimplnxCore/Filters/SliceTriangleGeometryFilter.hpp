@@ -39,6 +39,7 @@ public:
 
   static inline constexpr StringLiteral k_SliceAttributeMatrixName_Key = "slice_attribute_matrix_name";
   static inline constexpr StringLiteral k_SliceIdArrayName_Key = "slice_ids_array_name";
+  static inline constexpr StringLiteral k_RemoveDuplicateNodes_Key = "remove_duplicate_nodes";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
