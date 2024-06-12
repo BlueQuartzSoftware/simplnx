@@ -33,7 +33,11 @@ Result<> SliceTriangleGeometry::operator()()
   std::array<float32, 3> n = {0.0f, 0.0f, 1.0f};
 
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->CADDataContainerName);
-  triangle.findEdges();
+  int32 err = triangle.findEdges();
+  if(err < 0)
+  {
+    return MakeErrorResult(-62101, "Error retrieving the shared edge list");
+  }
 
   INodeGeometry2D::SharedFaceList& tris = triangle.getFacesRef();
   INodeGeometry0D::SharedVertexList& triVerts = triangle.getVerticesRef();
@@ -61,7 +65,7 @@ Result<> SliceTriangleGeometry::operator()()
   std::vector<int32> regionIds;
 
   // Get an object reference to the pointer
-  auto* triRegionIdPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath);
+  const auto& triRegionId = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdArrayPath);
 
   int32 edgeCounter = 0;
   for(usize i = 0; i < numTris; i++)
@@ -70,7 +74,7 @@ Result<> SliceTriangleGeometry::operator()()
     // get region Id of this triangle (if they are available)
     if(m_InputValues->HaveRegionIds)
     {
-      regionId = (*triRegionIdPtr)[i];
+      regionId = triRegionId[i];
     }
     // determine which slices would hit the triangle
     auto minTriDim = std::numeric_limits<float32>::max();
@@ -258,7 +262,7 @@ Result<> SliceTriangleGeometry::operator()()
 
   if(numVerts != (2 * numEdges))
   {
-    return MakeErrorResult(-62101, fmt::format("Number of sectioned vertices and edges do not make sense.  Number of Vertices: {} and Number of Edges: {}", numVerts, numEdges));
+    return MakeErrorResult(-62102, fmt::format("Number of sectioned vertices and edges do not make sense.  Number of Vertices: {} and Number of Edges: {}", numVerts, numEdges));
   }
 
   auto& edge = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
@@ -278,7 +282,7 @@ Result<> SliceTriangleGeometry::operator()()
   if(m_InputValues->HaveRegionIds)
   {
     triRegionIds = m_DataStructure.getDataAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->RegionIdArrayPath.getTargetName()));
-    triRegionIdPtr->fill(0);
+    triRegionIds->fill(0);
   }
 
   for(usize i = 0; i < numEdges; i++)
