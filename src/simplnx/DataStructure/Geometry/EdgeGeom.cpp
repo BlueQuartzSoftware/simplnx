@@ -179,7 +179,7 @@ usize EdgeGeom::getNumberOfVerticesPerEdge() const
   return k_NumEdgeVerts;
 }
 
-IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
+IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
 {
   auto* containsVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(containsVert != nullptr && !recalculate)

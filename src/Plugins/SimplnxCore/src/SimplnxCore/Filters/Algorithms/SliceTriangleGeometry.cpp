@@ -33,7 +33,7 @@ Result<> SliceTriangleGeometry::operator()()
   std::array<float32, 3> n = {0.0f, 0.0f, 1.0f};
 
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->CADDataContainerName);
-  int32 err = triangle.findEdges();
+  int32 err = triangle.findEdges(true);
   if(err < 0)
   {
     return MakeErrorResult(-62101, "Error retrieving the shared edge list");
@@ -65,7 +65,7 @@ Result<> SliceTriangleGeometry::operator()()
   std::vector<int32> regionIds;
 
   // Get an object reference to the pointer
-  const auto& triRegionId = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdArrayPath);
+  const auto* triRegionId = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath);
 
   int32 edgeCounter = 0;
   for(usize i = 0; i < numTris; i++)
@@ -74,7 +74,7 @@ Result<> SliceTriangleGeometry::operator()()
     // get region Id of this triangle (if they are available)
     if(m_InputValues->HaveRegionIds)
     {
-      regionId = triRegionId[i];
+      regionId = (*triRegionId)[i];
     }
     // determine which slices would hit the triangle
     auto minTriDim = std::numeric_limits<float32>::max();
