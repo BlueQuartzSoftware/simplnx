@@ -68,7 +68,6 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value", 0.0f));
   params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value", 0.0));
   params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
-  params.insert(std::make_unique<BoolParameter>(k_RemoveDuplicateNodes_Key, "Remove Duplicate Nodes", "Remove the duplicate nodes from the output edge geometry", true));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
@@ -174,7 +173,6 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.Zend = filterArgs.value<float32>(k_Zend_Key);
   inputValues.SliceResolution = filterArgs.value<float32>(k_SliceResolution_Key);
   inputValues.HaveRegionIds = filterArgs.value<bool>(k_HaveRegionIds_Key);
-  inputValues.RemoveDuplicateNodes = filterArgs.value<bool>(k_RemoveDuplicateNodes_Key);
   inputValues.CADDataContainerName = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   inputValues.RegionIdArrayPath = filterArgs.value<DataPath>(k_RegionIdArrayPath_Key);
   inputValues.SliceDataContainerName = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputEdgeGeometryPath_Key);

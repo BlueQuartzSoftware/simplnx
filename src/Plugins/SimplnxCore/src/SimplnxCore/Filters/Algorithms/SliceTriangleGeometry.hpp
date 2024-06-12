@@ -22,7 +22,6 @@ struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
   float32 Zend;
   float32 SliceResolution;
   bool HaveRegionIds;
-  bool RemoveDuplicateNodes;
   DataPath CADDataContainerName;
   DataPath RegionIdArrayPath;
   DataGroupCreationParameter::ValueType SliceDataContainerName;
