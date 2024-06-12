@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -89,14 +90,23 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
 
   SharedVertList& vertices = *(geom.getVertices());
 
-  INodeGeometry1D::MeshIndexArrayType* cells;
-  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
+  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  {
+    cells = geom.getPolyhedra();
+  }
+  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
   {
     cells = geom.getFaces();
   }
-  else
+  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
   {
     cells = geom.getEdges();
+  }
+
+  if(nullptr == cells)
+  {
+    return MakeErrorResult(-56800, "EliminateDuplicateNodes Error: Geometry Type was not 1D, 2D or 3D? Did you pass in a vertex geometry?");
   }
   INodeGeometry1D::MeshIndexArrayType& cellsRef = *(cells);
 
@@ -193,16 +203,28 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
 
   // Update the triangle nodes to reflect the unique ids
   IGeometry::MeshIndexType nCells;
-  usize nVerticesPerCell = 2;
-  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  usize nVerticesPerCell = 0;
+  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  {
+    nCells = geom.getNumberOfPolyhedra();
+    nVerticesPerCell = geom.getNumberOfVerticesPerCell();
+  }
+  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
   {
     nCells = geom.getNumberOfFaces();
     nVerticesPerCell = geom.getNumberOfVerticesPerFace();
   }
-  else
+  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
   {
     nCells = geom.getNumberOfEdges();
+    nVerticesPerCell = geom.getNumberOfVerticesPerEdge();
   }
+
+  if(nVerticesPerCell == 0)
+  {
+    return MakeErrorResult(-56801, "EliminateDuplicateNodes Error: nVerticesPerCell = 0? Did you pass in a vertex geometry?");
+  }
+
   for(size_t i = 0; i < static_cast<size_t>(nCells); i++)
   {
     for(usize j = 0; j < nVerticesPerCell; j++)
@@ -212,11 +234,15 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     }
   }
 
-  if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  {
+    geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
+  }
+  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
   {
     geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
   }
-  else
+  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
   {
     geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
   }

@@ -23,6 +23,11 @@ DataObject::Type HexahedralGeom::getDataObjectType() const
   return DataObject::Type::HexahedralGeom;
 }
 
+usize HexahedralGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
 HexahedralGeom* HexahedralGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStructure, std::move(name)));

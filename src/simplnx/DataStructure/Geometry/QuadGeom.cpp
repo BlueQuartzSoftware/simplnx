@@ -163,6 +163,11 @@ usize QuadGeom::getNumberOfCells() const
   return getNumberOfFaces();
 }
 
+usize QuadGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
 usize QuadGeom::getNumberOfVerticesPerFace() const
 {
   return k_NumFaceVerts;

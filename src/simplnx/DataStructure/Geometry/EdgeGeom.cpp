@@ -174,16 +174,17 @@ IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
   return 1;
 }
 
-IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
+usize EdgeGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
+IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
 {
   auto* containsVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(containsVert != nullptr && !recalculate)
   {
     return 0;
-  }
-  if(containsVert == nullptr)
-  {
-    containsVert = ElementDynamicList::Create(*getDataStructure(), k_EltsContainingVert, getId());
   }
   if(containsVert == nullptr)
   {

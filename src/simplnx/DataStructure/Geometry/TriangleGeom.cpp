@@ -36,6 +36,11 @@ BaseGroup::GroupType TriangleGeom::getGroupType() const
   return GroupType::TriangleGeom;
 }
 
+usize TriangleGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
 TriangleGeom* TriangleGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStructure, std::move(name)));
