@@ -232,14 +232,11 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 
     if(saveElementSizes)
     {
-      if(!imageGeom->getElementSizes())
+      int32 err = imageGeom->findElementSizes(false);
+      if(err < 0)
       {
-        int32 err = imageGeom->findElementSizes();
-        if(err < 0)
-        {
-          std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", imageGeom->getTypeName());
-          return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
-        }
+        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", imageGeom->getTypeName());
+        return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
       }
     }
   }
@@ -255,14 +252,11 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 
     usize numfeatures = volumes.getNumberOfTuples();
 
-    if(!geom->getElementSizes())
+    int32_t err = geom->findElementSizes(false);
+    if(err < 0)
     {
-      int32_t err = geom->findElementSizes();
-      if(err < 0)
-      {
-        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", geom->getTypeName());
-        return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
-      }
+      std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", geom->getTypeName());
+      return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
     }
 
     const Float32Array* elemSizes = geom->getElementSizes();

@@ -178,7 +178,7 @@ DataStructure createTestDataStructure()
     (*zBoundsArray)[13] = 65;
 
     rectGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
-    rectGeom->findElementSizes();
+    rectGeom->findElementSizes(false);
   }
 
   // Vertex Geometry
@@ -204,7 +204,7 @@ DataStructure createTestDataStructure()
     (*vertListArray)[11] = 3;
     vertexGeom->setVertices(*vertListArray);
 
-    vertexGeom->findElementSizes();
+    vertexGeom->findElementSizes(false);
   }
 
   // Edge Geometry
@@ -247,10 +247,10 @@ DataStructure createTestDataStructure()
     (*edgesListArray)[7] = 4;
     edgeGeom->setEdgeList(*edgesListArray);
 
-    edgeGeom->findElementSizes();
-    edgeGeom->findElementsContainingVert();
-    edgeGeom->findElementNeighbors();
-    edgeGeom->findElementCentroids();
+    edgeGeom->findElementSizes(false);
+    edgeGeom->findElementsContainingVert(false);
+    edgeGeom->findElementNeighbors(false);
+    edgeGeom->findElementCentroids(false);
   }
 
   // Triangle Geometry
@@ -302,12 +302,12 @@ DataStructure createTestDataStructure()
     (*facesListArray)[14] = 1;
     triangleGeom->setFaceList(*facesListArray);
 
-    triangleGeom->findEdges();
-    // TODO: triangleGeom->findElementSizes();
-    triangleGeom->findElementsContainingVert();
-    triangleGeom->findElementNeighbors();
-    triangleGeom->findElementCentroids();
-    triangleGeom->findUnsharedEdges();
+    triangleGeom->findEdges(false);
+    // TODO: triangleGeom->findElementSizes(false);
+    triangleGeom->findElementsContainingVert(false);
+    triangleGeom->findElementNeighbors(false);
+    triangleGeom->findElementCentroids(false);
+    triangleGeom->findUnsharedEdges(false);
   }
 
   // Quad Geometry
@@ -351,12 +351,12 @@ DataStructure createTestDataStructure()
     (*facesListArray)[7] = 2;
     quadGeom->setFaceList(*facesListArray);
 
-    quadGeom->findEdges();
+    quadGeom->findEdges(false);
     // TODO: quadGeom->findElementSizes();
-    quadGeom->findElementsContainingVert();
-    quadGeom->findElementNeighbors();
-    quadGeom->findElementCentroids();
-    quadGeom->findUnsharedEdges();
+    quadGeom->findElementsContainingVert(false);
+    quadGeom->findElementNeighbors(false);
+    quadGeom->findElementCentroids(false);
+    quadGeom->findUnsharedEdges(false);
   }
 
   // Tetrahedral Geometry
@@ -397,14 +397,14 @@ DataStructure createTestDataStructure()
     (*polyListArray)[7] = 3;
     tetGeom->setPolyhedraList(*polyListArray);
 
-    tetGeom->findEdges();
-    tetGeom->findFaces();
-    tetGeom->findElementSizes();
-    tetGeom->findElementsContainingVert();
-    tetGeom->findElementNeighbors();
-    tetGeom->findElementCentroids();
-    tetGeom->findUnsharedEdges();
-    tetGeom->findUnsharedFaces();
+    tetGeom->findEdges(false);
+    tetGeom->findFaces(false);
+    tetGeom->findElementSizes(false);
+    tetGeom->findElementsContainingVert(false);
+    tetGeom->findElementNeighbors(false);
+    tetGeom->findElementCentroids(false);
+    tetGeom->findUnsharedEdges(false);
+    tetGeom->findUnsharedFaces(false);
   }
 
   // Hexahedral Geometry
@@ -474,14 +474,14 @@ DataStructure createTestDataStructure()
     (*polyListArray)[15] = 3;
     hexGeom->setPolyhedraList(*polyListArray);
 
-    hexGeom->findEdges();
-    hexGeom->findFaces();
-    hexGeom->findElementSizes();
-    hexGeom->findElementsContainingVert();
-    hexGeom->findElementNeighbors();
-    hexGeom->findElementCentroids();
-    hexGeom->findUnsharedEdges();
-    hexGeom->findUnsharedFaces();
+    hexGeom->findEdges(false);
+    hexGeom->findFaces(false);
+    hexGeom->findElementSizes(false);
+    hexGeom->findElementsContainingVert(false);
+    hexGeom->findElementNeighbors(false);
+    hexGeom->findElementCentroids(false);
+    hexGeom->findUnsharedEdges(false);
+    hexGeom->findUnsharedFaces(false);
   }
 
   return dataStruct;
@@ -1368,5 +1368,239 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     std::shared_ptr<DataObject> copyArrayToSelfGeo = nlArray->deepCopy(srcArrayPath);
     REQUIRE(copyArrayToSelfGeo == nullptr);
+  }
+}
+
+TEST_CASE("NodeBasedGeometryFindElementsTest")
+{
+  DataStructure dataStruct = createTestDataStructure();
+
+  SECTION("Image Geometry")
+  {
+    const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
+    auto* geom = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 1);
+    status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Rectilinear Grid Geometry")
+  {
+    const DataPath srcRectGeoPath({k_RectGridGeo});
+    auto* geom = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Vertex Geometry")
+  {
+    const DataPath srcGeoPath({Constants::k_VertexGeometry});
+    auto* geom = dataStruct.getDataAs<VertexGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Edge Geometry")
+  {
+    const DataPath srcGeoPath({k_EdgeGeo});
+    auto* geom = dataStruct.getDataAs<EdgeGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementsContainingVert(false);
+    REQUIRE(status == 0);
+    status = geom->findElementsContainingVert(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementNeighbors(false);
+    REQUIRE(status == 0);
+    status = geom->findElementNeighbors(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementCentroids(false);
+    REQUIRE(status == 0);
+    status = geom->findElementCentroids(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Triangle Geometry")
+  {
+    const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
+    auto* geom = dataStruct.getDataAs<TriangleGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 1);
+    status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementsContainingVert(false);
+    REQUIRE(status == 0);
+    status = geom->findElementsContainingVert(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementNeighbors(false);
+    REQUIRE(status == 0);
+    status = geom->findElementNeighbors(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementCentroids(false);
+    REQUIRE(status == 0);
+    status = geom->findElementCentroids(true);
+    REQUIRE(status == 1);
+
+    status = geom->findEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedEdges(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Quad Geometry")
+  {
+    const DataPath srcGeoPath({k_QuadGeo});
+    auto* geom = dataStruct.getDataAs<QuadGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 1);
+    status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementsContainingVert(false);
+    REQUIRE(status == 0);
+    status = geom->findElementsContainingVert(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementNeighbors(false);
+    REQUIRE(status == 0);
+    status = geom->findElementNeighbors(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementCentroids(false);
+    REQUIRE(status == 0);
+    status = geom->findElementCentroids(true);
+    REQUIRE(status == 1);
+
+    status = geom->findEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedEdges(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Tetrahedral Geometry")
+  {
+    const DataPath srcGeoPath({k_TetGeo});
+    auto* geom = dataStruct.getDataAs<TetrahedralGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementsContainingVert(false);
+    REQUIRE(status == 0);
+    status = geom->findElementsContainingVert(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementNeighbors(false);
+    REQUIRE(status == 0);
+    status = geom->findElementNeighbors(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementCentroids(false);
+    REQUIRE(status == 0);
+    status = geom->findElementCentroids(true);
+    REQUIRE(status == 1);
+
+    status = geom->findEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findFaces(false);
+    REQUIRE(status == 0);
+    status = geom->findFaces(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedFaces(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedFaces(true);
+    REQUIRE(status == 1);
+  }
+
+  SECTION("Hexahedral Geometry")
+  {
+    const DataPath srcGeoPath({k_HexGeo});
+    auto* geom = dataStruct.getDataAs<HexahedralGeom>(srcGeoPath);
+
+    IGeometry::StatusCode status = geom->findElementSizes(false);
+    REQUIRE(status == 0);
+    status = geom->findElementSizes(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementsContainingVert(false);
+    REQUIRE(status == 0);
+    status = geom->findElementsContainingVert(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementNeighbors(false);
+    REQUIRE(status == 0);
+    status = geom->findElementNeighbors(true);
+    REQUIRE(status == 1);
+
+    status = geom->findElementCentroids(false);
+    REQUIRE(status == 0);
+    status = geom->findElementCentroids(true);
+    REQUIRE(status == 1);
+
+    status = geom->findEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedEdges(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedEdges(true);
+    REQUIRE(status == 1);
+
+    status = geom->findFaces(false);
+    REQUIRE(status == 0);
+    status = geom->findFaces(true);
+    REQUIRE(status == 1);
+
+    status = geom->findUnsharedFaces(false);
+    REQUIRE(status == 0);
+    status = geom->findUnsharedFaces(true);
+    REQUIRE(status == 1);
   }
 }

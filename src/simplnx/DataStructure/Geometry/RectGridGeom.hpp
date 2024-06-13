@@ -208,7 +208,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  StatusCode findElementSizes() override;
+  StatusCode findElementSizes(bool recalculate) override;
 
   /**
    * @brief

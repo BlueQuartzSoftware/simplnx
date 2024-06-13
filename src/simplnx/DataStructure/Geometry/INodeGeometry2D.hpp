@@ -107,7 +107,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  virtual StatusCode findEdges() = 0;
+  virtual StatusCode findEdges(bool recalculate) = 0;
 
   /**
    * @brief Deletes the shared edge list and removes it from the DataStructure.
@@ -126,7 +126,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  virtual StatusCode findUnsharedEdges() = 0;
+  virtual StatusCode findUnsharedEdges(bool recalculate) = 0;
 
   /**
    * @brief Returns a const pointer to the unshared edge list. Returns nullptr

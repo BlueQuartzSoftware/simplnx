@@ -43,10 +43,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   std::vector<float> lambdas = generateLambdaArray();
 
   //  Generate the Unique Edges
-  if(nullptr == surfaceMesh.getEdges())
-  {
-    err = surfaceMesh.findEdges();
-  }
+  err = surfaceMesh.findEdges(false);
   if(err < 0)
   {
     return MakeErrorResult(-560, "Error retrieving the shared edge list");

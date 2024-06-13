@@ -145,17 +145,33 @@ usize ImageGeom::getNumberOfCells() const
   return (m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2]);
 }
 
-IGeometry::StatusCode ImageGeom::findElementSizes()
+IGeometry::StatusCode ImageGeom::findElementSizes(bool recalculate)
 {
+  auto* voxelSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  if(voxelSizes != nullptr && !recalculate)
+  {
+    return 0;
+  }
+
   FloatVec3 res = getSpacing();
 
   if(res[0] <= 0.0f || res[1] <= 0.0f || res[2] <= 0.0f)
   {
+    m_ElementSizesId.reset();
     return -1;
   }
-  float32 initValue = res[0] * res[1] * res[2];
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
-  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+
+  if(voxelSizes == nullptr)
+  {
+    float32 initValue = res[0] * res[1] * res[2];
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
+    voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+  }
+  if(voxelSizes == nullptr)
+  {
+    m_ElementSizesId.reset();
+    return -1;
+  }
   m_ElementSizesId = voxelSizes->getId();
   return 1;
 }

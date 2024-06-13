@@ -191,66 +191,100 @@ usize HexahedralGeom::getNumberOfCells() const
   return elements.getNumberOfTuples();
 }
 
-IGeometry::StatusCode HexahedralGeom::findElementSizes()
+IGeometry::StatusCode HexahedralGeom::findElementSizes(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-  Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
-  m_ElementSizesId = hexSizes->getId();
-  GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getPolyhedra(), getVertices(), hexSizes);
-  if(getElementSizes() == nullptr)
+  auto* hexSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  if(hexSizes != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(hexSizes == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    hexSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+  }
+  if(hexSizes == nullptr)
   {
     m_ElementSizesId.reset();
     return -1;
   }
+  m_ElementSizesId = hexSizes->getId();
+  GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getPolyhedra(), getVertices(), hexSizes);
   return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
+IGeometry::StatusCode HexahedralGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
-  m_CellContainingVertDataArrayId = hexasControllingVert->getId();
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
-  if(getElementsContainingVert() == nullptr)
+  auto* hexasControllingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  if(hexasControllingVert != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(hexasControllingVert == nullptr)
+  {
+    hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+  }
+  if(hexasControllingVert == nullptr)
   {
     m_CellContainingVertDataArrayId.reset();
     return -1;
   }
+  m_CellContainingVertDataArrayId = hexasControllingVert->getId();
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
   return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
+IGeometry::StatusCode HexahedralGeom::findElementNeighbors(bool recalculate)
 {
-  StatusCode err = 0;
-  if(getElementsContainingVert() == nullptr)
+  auto* hexNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  if(hexNeighbors != nullptr && !recalculate)
   {
-    err = findElementsContainingVert();
-    if(err < 0)
-    {
-      return err;
-    }
+    return 0;
   }
-  auto* hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
-  m_CellNeighborsDataArrayId = hexNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, IGeometry::Type::Hexahedral);
-  if(getElementNeighbors() == nullptr)
+
+  StatusCode err = findElementsContainingVert(recalculate);
+  if(err < 0)
+  {
+    m_CellNeighborsDataArrayId.reset();
+    return err;
+  }
+  if(hexNeighbors == nullptr)
+  {
+    hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
+  }
+  if(hexNeighbors == nullptr)
   {
     m_CellNeighborsDataArrayId.reset();
     return -1;
   }
-  return err;
+  m_CellNeighborsDataArrayId = hexNeighbors->getId();
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, IGeometry::Type::Hexahedral);
+  if(err < 0)
+  {
+    return err;
+  }
+  return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findElementCentroids()
+IGeometry::StatusCode HexahedralGeom::findElementCentroids(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-  auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
-  m_CellCentroidsDataArrayId = hexCentroids->getId();
-  GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
-  if(getElementCentroids() == nullptr)
+  auto* hexCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  if(hexCentroids != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(hexCentroids == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
+    hexCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+  }
+  if(hexCentroids == nullptr)
   {
     m_CellCentroidsDataArrayId.reset();
     return -1;
   }
+  m_CellCentroidsDataArrayId = hexCentroids->getId();
+  GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
   return 1;
 }
 
@@ -296,56 +330,88 @@ void HexahedralGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64*
   shape[23] = rm * pCoords[1];
 }
 
-IGeometry::StatusCode HexahedralGeom::findEdges()
+IGeometry::StatusCode HexahedralGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = createSharedEdgeList(0);
-  GeometryHelpers::Connectivity::FindHexEdges<uint64_t>(getPolyhedra(), edgeList);
-  if(getEdges() == nullptr)
+  auto* edgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
+  if(edgeList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(edgeList == nullptr)
+  {
+    edgeList = createSharedEdgeList(0);
+  }
+  if(edgeList == nullptr)
   {
     m_EdgeDataArrayId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::FindHexEdges<uint64_t>(getPolyhedra(), edgeList);
   m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findFaces()
+IGeometry::StatusCode HexahedralGeom::findFaces(bool recalculate)
 {
-  auto* quadList = createSharedQuadList(0);
-  GeometryHelpers::Connectivity::FindHexFaces<uint64_t>(getPolyhedra(), quadList);
+  auto* quadList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_FaceListId);
+  if(quadList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(quadList == nullptr)
+  {
+    quadList = createSharedQuadList(0);
+  }
   if(quadList == nullptr)
   {
     m_FaceListId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::FindHexFaces<uint64_t>(getPolyhedra(), quadList);
   m_FaceListId = quadList->getId();
   return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
+IGeometry::StatusCode HexahedralGeom::findUnsharedEdges(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getPolyhedra(), unsharedEdgeList);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  if(unsharedEdgeList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(unsharedEdgeList == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+    unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
+  }
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getPolyhedra(), unsharedEdgeList);
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
   return 1;
 }
 
-IGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
+IGeometry::StatusCode HexahedralGeom::findUnsharedFaces(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
-  auto* unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedFaces, std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getPolyhedra(), unsharedQuadList);
+  auto* unsharedQuadList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
+  if(unsharedQuadList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(unsharedQuadList == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
+    unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedFaces, std::move(dataStore), getId());
+  }
   if(unsharedQuadList == nullptr)
   {
     m_UnsharedFaceListId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getPolyhedra(), unsharedQuadList);
   m_UnsharedFaceListId = unsharedQuadList->getId();
   return 1;
 }
