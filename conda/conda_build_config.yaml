@@ -3,12 +3,12 @@ cxx_compiler:
 
 c_compiler_version: # [unix]
   - 10.4.0 # [linux]
+  - 17.0.6 # [osx]
 
 cxx_compiler_version:
   - 10.4.0 # [linux]
+  - 17.0.6 # [osx]
 
 python:
     - 3.12
-    - 3.11
-    - 3.10
-    - 3.9
+

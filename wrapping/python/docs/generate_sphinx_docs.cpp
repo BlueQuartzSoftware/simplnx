@@ -753,8 +753,8 @@ void GeneratePythonRstFiles()
       rstStream << ")\n\n";
 
       rstStream << memberStream.str();
-      rstStream << "      :return: Returns a :ref:`Result <result>` object that holds any warnings and/or errors that were encountered during execution.\n";
-      rstStream << "      :rtype: :ref:`simplnx.Result <result>`\n\n";
+      rstStream << "      :return: Returns a :ref:`nx.IFilter.ExecuteResult <result>` object that holds any warnings and/or errors that were encountered during execution.\n";
+      rstStream << "      :rtype: :ref:`nx.IFilter.ExecuteResult <result>`\n\n";
       rstStream << '\n';
     }
   }

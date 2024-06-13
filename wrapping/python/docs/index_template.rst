@@ -56,6 +56,7 @@ How to use SIMPLNX from Python
    Overview
    DataObjects
    Geometry
+   Reference_Frame_Notes
 
 .. toctree::
    :maxdepth: 2
@@ -63,7 +64,9 @@ How to use SIMPLNX from Python
 
    Python_Introduction
    User_API
-   Reference_Frame_Notes
+   Tutorial_1
+   Tutorial_2
+   Tutorial_3
 
 .. toctree::
    :maxdepth: 1
