@@ -1,7 +1,7 @@
-.. _UserAPIDocs:
-
 SIMPLNX Python API
 ===================
+
+.. _UserAPIDocs:
 
 Error & Warning Reporting
 --------------------------
@@ -11,7 +11,7 @@ Error & Warning Reporting
 
 
 .. _Result:
-.. py:class:: Result
+.. py:class:: IFilter.ExecuteResult
 
    The object that encapsulates any warnings or errors from either preflighting or executing a simplnx.Filter object.
    It can be queried for the list of errors or warnings and thus printed if needed.
@@ -23,11 +23,17 @@ Error & Warning Reporting
                                           input_type=0,
                                           output_orientation_array_name='Quaternions',
                                           output_type=2)
-      if len(result.errors) != 0:
-         print('Errors: {}', result.errors)
-         print('Warnings: {}', result.warnings)
+      if len(result.warnings) != 0:
+         for w in result.warnings:
+            print(f'Warning: ({w.code}) {w.message}')
+
+      has_errors = len(result.errors) != 0
+      if has_errors:
+         for err in result.errors:
+            print(f'Error: ({err.code}) {err.message}')
+            raise RuntimeError(result)
       else:
-         print("No errors running the ConvertOrientations")
+         print(f"{filter.name()} :: No errors running the filter")
 
 Creating Geometries
 ------------------
@@ -273,9 +279,8 @@ General Parameters
 .. _ArrayThresholdsParameter:
 .. py:class:: ArrayThresholdsParameter
 
-   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+   This parameter holds a ArrayThresholdSet_ object and is used specifically for the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
    This parameter should not be directly invoked but instead it's ArrayThresholdSet_ is invoked and used.
-
  
 .. _ArrayThresholdSet:
 .. py:class:: ArrayThresholdSet
@@ -287,7 +292,7 @@ General Parameters
 .. _ArrayThreshold:
 .. py:class:: ArrayThresholdSet.ArrayThreshold
 
-  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjects() <MultiThresholdObjectsFilter>` filter.
+  This class holds the values that are used for comparison in the :ref:`simplnx.MultiThresholdObjectsFilter() <MultiThresholdObjectsFilter>` filter.
 
   :ivar array_path: The :ref:`DataPath <DataPath>` to the array to use for this ArrayThreshold
   :ivar comparison: Int. The comparison operator to use. 0=">", 1="<", 2="=", 3="!="
@@ -312,7 +317,7 @@ General Parameters
    threshold_set = nx.ArrayThresholdSet()
    threshold_set.thresholds = [threshold_1, threshold_2]
    threshold_set.union_op = nx.IArrayThreshold.UnionOperator.And
-   result = nx.MultiThresholdObjects.execute(data_structure=data_structure,
+   result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
                                        created_mask_type=nx.DataType.boolean)

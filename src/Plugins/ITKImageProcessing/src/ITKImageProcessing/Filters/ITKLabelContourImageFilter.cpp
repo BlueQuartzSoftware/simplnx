@@ -75,7 +75,7 @@ Parameters ITKLabelContourImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
-                                                "Note For objects that are 1 pixel wide, use FullyConnectedOn.",
+                                                "**NOTE** For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
                                                    "Set/Get the background value used to identify the objects and mark the pixels not on the border of the objects.", 0));
