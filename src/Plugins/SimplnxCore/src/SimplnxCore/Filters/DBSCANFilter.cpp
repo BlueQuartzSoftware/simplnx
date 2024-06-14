@@ -26,7 +26,14 @@ using namespace nx::core;
 namespace
 {
 const std::string k_MaskName = "temp_mask";
-}
+
+enum AlgType
+{
+  Iterative,
+  Random,
+  SeededRandom
+};
+} // namespace
 
 namespace nx::core
 {
@@ -66,10 +73,18 @@ Parameters DBSCANFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SeedChoice_Key, "Initialization Type", "Whether to use random or iterative for start state. See Documentation for further detail",
+                                                                    to_underlying(::AlgType::SeededRandom),
+                                                                    ChoicesParameter::Choices{"Iterative", "Random", "Seeded Random"})); // sequence dependent DO NOT REORDER
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "DBSCAN SeedValue"));
+
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_UsePrecaching_Key, "Use Precaching", "If true the algorithm will be significantly faster, but it requires more memory", true));
-  params.insert(std::make_unique<Float32Parameter>(k_Epsilon_Key, "Epsilon", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0.0001));
-  params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0.0001));
+  params.insert(std::make_unique<Float32Parameter>(k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried", 0.0001));
+  params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points",
+                                                 "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
   params.insert(
       std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
                                          ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
@@ -143,6 +158,13 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
+  // For caching seed run to run
+  if(filterArgs.value<::AlgType>(k_SeedChoice_Key) != AlgType::Iterative)
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}));
+    resultOutputActions.value().appendAction(std::move(createAction));
+  }
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -158,6 +180,18 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
     dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
   }
 
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(filterArgs.value<::AlgType>(k_SeedChoice_Key) != AlgType::SeededRandom)
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
+  if(filterArgs.value<::AlgType>(k_SeedChoice_Key) != AlgType::Iterative)
+  {
+    // Store Seed Value in Top Level Array
+    dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  }
+
   DBSCANInputValues inputValues;
 
   inputValues.Epsilon = filterArgs.value<float32>(k_Epsilon_Key);
@@ -170,6 +204,8 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.FeatureIdsArrayPath = fIdsPath;
   inputValues.FeatureAM = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   inputValues.AllowCaching = filterArgs.value<bool>(k_UsePrecaching_Key);
+  inputValues.UseRandom = filterArgs.value<::AlgType>(k_SeedChoice_Key) != AlgType::Iterative;
+  inputValues.Seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
 
   return DBSCAN(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

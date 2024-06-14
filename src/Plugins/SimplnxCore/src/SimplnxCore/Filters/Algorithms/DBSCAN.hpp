@@ -11,6 +11,8 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
+#include <random>
+
 namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT DBSCANInputValues
@@ -23,6 +25,8 @@ struct SIMPLNXCORE_EXPORT DBSCANInputValues
   ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath FeatureAM;
   bool AllowCaching;
+  bool UseRandom;
+  std::mt19937_64::result_type Seed;
 };
 
 /**

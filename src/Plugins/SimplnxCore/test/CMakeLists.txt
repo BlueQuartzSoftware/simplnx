@@ -56,6 +56,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreatePythonSkeletonTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
+  DBSCANTest.cpp
   DeleteDataTest.cpp
   DREAM3DFileTest.cpp
   ErodeDilateBadDataTest.cpp

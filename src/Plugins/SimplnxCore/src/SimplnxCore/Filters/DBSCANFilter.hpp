@@ -24,6 +24,9 @@ public:
   DBSCANFilter& operator=(DBSCANFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SeedChoice_Key = "seed_choice";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
   static inline constexpr StringLiteral k_UsePrecaching_Key = "use_precaching";
   static inline constexpr StringLiteral k_Epsilon_Key = "epsilon";
   static inline constexpr StringLiteral k_MinPoints_Key = "min_points";

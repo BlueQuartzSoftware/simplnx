@@ -84,7 +84,7 @@ private:
   std::vector<std::list<usize>>& m_Neighborhoods;
 };
 
-template <typename T, bool PrecacheT>
+template <typename T, bool PrecacheV = true, bool RandomInitV = true>
 class DBSCANTemplate
 {
 private:
@@ -92,7 +92,7 @@ private:
 
 public:
   DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore, float32 epsilon, int32 minPoints,
-                 ClusterUtilities::DistanceMetric distMetric)
+                 ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputDataStore(inputDataStore)
   , m_Mask(maskDataArray)
@@ -100,6 +100,7 @@ public:
   , m_Epsilon(epsilon)
   , m_MinPoints(minPoints)
   , m_DistMetric(distMetric)
+  , m_Seed(seed)
   {
   }
   ~DBSCANTemplate() = default;
@@ -120,7 +121,7 @@ public:
 
     std::vector<std::list<usize>> epsilonNeighborhoods;
 
-    if constexpr(PrecacheT)
+    if constexpr(PrecacheV)
     {
       // In-memory only with current implementation for speed with std::list
       epsilonNeighborhoods = std::vector<std::list<usize>>(numTuples);
@@ -133,40 +134,85 @@ public:
       m_Filter->updateProgress("Neighborhoods found.");
     }
 
+    std::mt19937_64 gen(m_Seed);
+    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
+
     m_Filter->updateProgress("Beginning clustering...");
     auto start = std::chrono::steady_clock::now();
-    for(usize i = 0; i < numTuples; i++)
+    usize i = 0;
+    uint8 misses = 0;
+    while(std::find(visited.begin(), visited.end(), false) != visited.end())
     {
       if(m_Filter->getCancel())
       {
         return;
       }
 
-      if(m_Mask->isTrue(i) && !visited[i])
+      usize index;
+      if constexpr(!RandomInitV)
       {
-        visited[i] = true;
+        index = i;
+        if(i >= numTuples)
+        {
+          break;
+        }
+        i++;
+      }
+      if constexpr(RandomInitV)
+      {
+        index = dist(gen);
+      }
+
+      if(visited[index])
+      {
+        if(misses >= 10)
+        {
+          auto findIter = std::find(visited.begin(), visited.end(), false);
+          if(findIter == visited.end())
+          {
+            break;
+          }
+          index = std::distance(visited.begin(), findIter);
+
+          if constexpr(RandomInitV)
+          {
+            dist = std::uniform_int_distribution<usize>(index, numTuples - 1);
+          }
+        }
+        else
+        {
+          misses++;
+          continue;
+        }
+      }
+
+      misses = 0;
+
+      if(m_Mask->isTrue(index))
+      {
+        visited[index] = true;
         auto now = std::chrono::steady_clock::now();
-        //// Only send updates every 1 second
+        // Only send updates every 1 second
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
-          float32 progress = (static_cast<float32>(i) / static_cast<float32>(numTuples)) * 100.0f;
-          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", i, numTuples, progress));
+          float32 progress = (static_cast<float32>(index) / static_cast<float32>(numTuples)) * 100.0f;
+          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", index, numTuples, progress));
           start = std::chrono::steady_clock::now();
         }
 
         std::list<usize> neighbors;
-        if constexpr(PrecacheT)
+        if constexpr(PrecacheV)
         {
-          neighbors = epsilonNeighborhoods[i];
+          neighbors = epsilonNeighborhoods[index];
         }
-        if constexpr(!PrecacheT)
+        if constexpr(!PrecacheV)
         {
           for(usize j = 0; j < numTuples; j++)
           {
             if(m_Mask->isTrue(j))
             {
-              float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * i), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
-              if(dist < m_Epsilon)
+              float64 distance = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * index), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
+              if(distance < m_Epsilon)
               {
                 neighbors.push_back(j);
               }
@@ -176,8 +222,8 @@ public:
 
         if(static_cast<int32>(neighbors.size()) < m_MinPoints)
         {
-          m_FeatureIds[i] = 0;
-          clustered[i] = true;
+          m_FeatureIds[index] = 0;
+          clustered[index] = true;
         }
         else
         {
@@ -186,8 +232,8 @@ public:
             return;
           }
           cluster++;
-          m_FeatureIds[i] = cluster;
-          clustered[i] = true;
+          m_FeatureIds[index] = cluster;
+          clustered[index] = true;
 
           for(auto&& idx : neighbors)
           {
@@ -198,18 +244,18 @@ public:
                 visited[idx] = true;
 
                 std::list<usize> neighbors_prime;
-                if constexpr(PrecacheT)
+                if constexpr(PrecacheV)
                 {
                   neighbors_prime = epsilonNeighborhoods[idx];
                 }
-                if constexpr(!PrecacheT)
+                if constexpr(!PrecacheV)
                 {
                   for(usize j = 0; j < numTuples; j++)
                   {
                     if(m_Mask->isTrue(j))
                     {
-                      float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * idx), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
-                      if(dist < m_Epsilon)
+                      float64 distance = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * idx), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
+                      if(distance < m_Epsilon)
                       {
                         neighbors_prime.push_back(j);
                       }
@@ -231,6 +277,10 @@ public:
           }
         }
       }
+      else
+      {
+        visited[index] = true;
+      }
     }
     m_Filter->updateProgress("Clustering Complete!");
   }
@@ -243,21 +293,36 @@ private:
   float32 m_Epsilon;
   int32 m_MinPoints;
   ClusterUtilities::DistanceMetric m_DistMetric;
+  std::mt19937_64::result_type m_Seed;
 };
 
 struct DBSCANFunctor
 {
   template <typename T>
-  void operator()(bool cache, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, Int32Array& fIds, float32 epsilon, int32 minPoints,
-                  ClusterUtilities::DistanceMetric distMetric)
+  void operator()(bool cache, bool useRandom, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, Int32Array& fIds, float32 epsilon, int32 minPoints,
+                  ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   {
     if(cache)
     {
-      DBSCANTemplate<T, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric)();
+      if(useRandom)
+      {
+        DBSCANTemplate<T, true, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+      }
+      else
+      {
+        DBSCANTemplate<T, true, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+      }
     }
     else
     {
-      DBSCANTemplate<T, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric)();
+      if(useRandom)
+      {
+        DBSCANTemplate<T, false, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+      }
+      else
+      {
+        DBSCANTemplate<T, false, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+      }
     }
   }
 };
@@ -305,8 +370,8 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  ExecuteNeighborFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon, m_InputValues->MinPoints,
-                          m_InputValues->DistanceMetric);
+  ExecuteNeighborFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, m_InputValues->UseRandom, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon,
+                          m_InputValues->MinPoints, m_InputValues->DistanceMetric, m_InputValues->Seed);
 
   updateProgress("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
