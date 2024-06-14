@@ -7,6 +7,13 @@
 
 namespace nx::core
 {
+enum AlgType
+{
+  Iterative,
+  Random,
+  SeededRandom
+};
+
 /**
  * @class DBSCANFilter
  * @brief This filter will ....
