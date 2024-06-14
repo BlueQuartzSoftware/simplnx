@@ -40,11 +40,11 @@ const bool k_UseDiscreteHeatMap = false;
 class ComputeIntensityStereographicProjection
 {
 public:
-  ComputeIntensityStereographicProjection(EbsdLib::FloatArrayType* xyzCoords, PoleFigureConfiguration_t* config, EbsdLib::DoubleArrayType* intensity, size_t index)
+  ComputeIntensityStereographicProjection(EbsdLib::FloatArrayType* xyzCoords, PoleFigureConfiguration_t* config, EbsdLib::DoubleArrayType* intensity, bool normalizeToMRD)
   : m_XYZCoords(xyzCoords)
   , m_Config(config)
   , m_Intensity(intensity)
-  , m_Index(index)
+  , m_NormalizeToMRD(normalizeToMRD)
   {
   }
 
@@ -81,15 +81,10 @@ public:
     else
     {
       ModifiedLambertProjection::Pointer lambert = ModifiedLambertProjection::LambertBallToSquare(m_XYZCoords, m_Config->lambertDim, m_Config->sphereRadius);
-      lambert->normalizeSquaresToMRD();
-#if CSP_DEBUG_OUTPUT
-//    int dim = lambert->getDimension();
-//    std::stringstream ss;
-//    ss << "/tmp/Lambert-" << dim << "-"<< m_Config->labels[m_Index] << ".h5";
-//    hid_t file_id = H5Utilities::createFile(ss.str());
-//    lambert->writeHDF5Data(file_id);
-//    H5Fclose(file_id);
-#endif
+      if(m_NormalizeToMRD)
+      {
+        lambert->normalizeSquaresToMRD();
+      }
       lambert->createStereographicProjection(m_Config->imageDim, *m_Intensity);
     }
   }
@@ -98,7 +93,7 @@ private:
   EbsdLib::FloatArrayType* m_XYZCoords = nullptr;
   PoleFigureConfiguration_t* m_Config = nullptr;
   EbsdLib::DoubleArrayType* m_Intensity = nullptr;
-  size_t m_Index = 0;
+  bool m_NormalizeToMRD = false;
 };
 
 // -----------------------------------------------------------------------------
@@ -110,7 +105,7 @@ std::vector<EbsdLib::UInt8ArrayType::Pointer> makePoleFigures(PoleFigureConfigur
 }
 
 template <typename OpsType>
-std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFigureConfiguration_t& config)
+std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFigureConfiguration_t& config, bool normalizeToMRD)
 {
   OpsType ops;
   std::string label0 = std::string("<001>");
@@ -156,9 +151,9 @@ std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFi
   // Compute the Stereographic Data in parallel
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
-  taskRunner.execute(ComputeIntensityStereographicProjection(xyz001.get(), &config, intensity001.get(), 0));
-  taskRunner.execute(ComputeIntensityStereographicProjection(xyz011.get(), &config, intensity011.get(), 1));
-  taskRunner.execute(ComputeIntensityStereographicProjection(xyz111.get(), &config, intensity111.get(), 2));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz001.get(), &config, intensity001.get(), normalizeToMRD));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz011.get(), &config, intensity011.get(), normalizeToMRD));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz111.get(), &config, intensity111.get(), normalizeToMRD));
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
   return {intensity001, intensity011, intensity111};
@@ -166,11 +161,11 @@ std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFi
 
 // -----------------------------------------------------------------------------
 template <typename T>
-typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config, std::vector<size_t>& compDims)
+typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config)
 {
-  typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, compDims, src->getName(), true);
+  typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
   // We need to flip the image "vertically", which means the bottom row becomes
-  // the top row and convert from BGRA to RGB ordering (This is a Little Endian code)
+  // the top row and convert from BGRA to RGBA ordering (This is a Little Endian code)
   // If this is ever compiled on a BIG ENDIAN machine the colors will be off.
   for(int y = 0; y < config.imageDim; y++)
   {
@@ -181,13 +176,27 @@ typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src
       const size_t indexDest = destY * config.imageDim + x;
 
       T* argbPtr = src->getTuplePointer(indexSrc);
-      T* destPtr = converted->getTuplePointer(indexDest);
-
-      destPtr[0] = argbPtr[2];
-      destPtr[1] = argbPtr[1];
-      destPtr[2] = argbPtr[0];
-      destPtr[3] = argbPtr[3];
+      converted->setTuple(indexDest, argbPtr);
     }
+  }
+  return converted;
+}
+
+template <typename T>
+typename EbsdDataArray<T>::Pointer convertColorOrder(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config)
+{
+  typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
+  // BGRA to RGBA ordering (This is a Little Endian code)
+  // If this is ever compiled on a BIG ENDIAN machine the colors will be off.
+  size_t numTuples = src->getNumberOfTuples();
+  for(size_t tIdx = 0; tIdx < numTuples; tIdx++)
+  {
+    T* argbPtr = src->getTuplePointer(tIdx);
+    T* destPtr = converted->getTuplePointer(tIdx);
+    destPtr[0] = argbPtr[2];
+    destPtr[1] = argbPtr[1];
+    destPtr[2] = argbPtr[0];
+    destPtr[3] = argbPtr[3];
   }
   return converted;
 }
@@ -252,7 +261,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
     r = colors[3 * i];
     g = colors[3 * i + 1];
     b = colors[3 * i + 2];
-    colorTable[i] = RgbColor::dRgb(static_cast<uint8>(r) * 255, static_cast<uint8>(g) * 255, static_cast<uint8>(b) * 255, 255);
+    colorTable[i] = RgbColor::dRgb(static_cast<uint8>(r * 255.0f), static_cast<uint8>(g * 255.0f), static_cast<uint8>(b * 255.0f), 255);
   }
 
   // Now start from the bottom and draw colored lines up the scale bar
@@ -352,7 +361,7 @@ Result<> WritePoleFigure::operator()()
 
   const std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
-  const nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
+  const nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -374,7 +383,7 @@ Result<> WritePoleFigure::operator()()
 
   // Find the total number of angles we have based on the number of Tuples of the
   // Euler Angles array
-  const size_t numPoints = eulers.getNumberOfTuples();
+  const size_t numPoints = eulerAngles.getNumberOfTuples();
   // Find how many phases we have by getting the number of Crystal Structures
   const size_t numPhases = crystalStructures.getNumberOfTuples();
 
@@ -387,7 +396,7 @@ Result<> WritePoleFigure::operator()()
   imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});
   imageGeom.getCellData()->resizeTuples(tupleShape);
 
-  // Loop over all the voxels gathering the Eulers for a specific phase into an array
+  // Loop over all the voxels gathering the Euler angles for a specific phase into an array
   for(size_t phase = 1; phase < numPhases; ++phase)
   {
     size_t count = 0;
@@ -404,11 +413,11 @@ Result<> WritePoleFigure::operator()()
       }
     }
     const std::vector<size_t> eulerCompDim = {3};
-    const EbsdLib::FloatArrayType::Pointer subEulersPtr = EbsdLib::FloatArrayType::CreateArray(count, eulerCompDim, "Eulers_Per_Phase", true);
-    subEulersPtr->initializeWithValue(std::numeric_limits<float>::signaling_NaN());
-    EbsdLib::FloatArrayType& subEulers = *subEulersPtr;
+    const EbsdLib::FloatArrayType::Pointer subEulerAnglesPtr = EbsdLib::FloatArrayType::CreateArray(count, eulerCompDim, "Euler_Angles_Per_Phase", true);
+    subEulerAnglesPtr->initializeWithValue(std::numeric_limits<float>::signaling_NaN());
+    EbsdLib::FloatArrayType& subEulerAngles = *subEulerAnglesPtr;
 
-    // Now loop through the eulers again and this time add them to the sub-Eulers Array
+    // Now loop through the Euler angles again and this time add them to the sub-Euler angle Array
     count = 0;
     for(size_t i = 0; i < numPoints; ++i)
     {
@@ -416,14 +425,14 @@ Result<> WritePoleFigure::operator()()
       {
         if(!m_InputValues->UseMask || maskCompare->isTrue(i))
         {
-          subEulers[count * 3] = eulers[i * 3];
-          subEulers[count * 3 + 1] = eulers[i * 3 + 1];
-          subEulers[count * 3 + 2] = eulers[i * 3 + 2];
+          subEulerAngles[count * 3] = eulerAngles[i * 3];
+          subEulerAngles[count * 3 + 1] = eulerAngles[i * 3 + 1];
+          subEulerAngles[count * 3 + 2] = eulerAngles[i * 3 + 2];
           count++;
         }
       }
     }
-    if(subEulersPtr->getNumberOfTuples() == 0)
+    if(subEulerAnglesPtr->getNumberOfTuples() == 0)
     {
       continue;
     } // Skip because we have no Pole Figure data
@@ -432,7 +441,7 @@ Result<> WritePoleFigure::operator()()
     std::vector<EbsdLib::DoubleArrayType::Pointer> intensityImages;
 
     PoleFigureConfiguration_t config;
-    config.eulers = subEulersPtr.get();
+    config.eulers = subEulerAnglesPtr.get();
     config.imageDim = m_InputValues->ImageSize;
     config.lambertDim = m_InputValues->LambertSize;
     config.numColors = m_InputValues->NumColors;
@@ -445,51 +454,51 @@ Result<> WritePoleFigure::operator()()
     {
     case EbsdLib::CrystalStructure::Cubic_High:
       figures = makePoleFigures<CubicOps>(config);
-      intensityImages = createIntensityPoleFigures<CubicOps>(config);
+      intensityImages = createIntensityPoleFigures<CubicOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Cubic_Low:
       figures = makePoleFigures<CubicLowOps>(config);
-      intensityImages = createIntensityPoleFigures<CubicLowOps>(config);
+      intensityImages = createIntensityPoleFigures<CubicLowOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Hexagonal_High:
       figures = makePoleFigures<HexagonalOps>(config);
-      intensityImages = createIntensityPoleFigures<HexagonalOps>(config);
+      intensityImages = createIntensityPoleFigures<HexagonalOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Hexagonal_Low:
       figures = makePoleFigures<HexagonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<HexagonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Trigonal_High:
       figures = makePoleFigures<TrigonalOps>(config);
-      intensityImages = createIntensityPoleFigures<TrigonalOps>(config);
+      intensityImages = createIntensityPoleFigures<TrigonalOps>(config, m_InputValues->NormalizeToMRD);
       //   setWarningCondition(-1010, "Trigonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Trigonal_Low:
       figures = makePoleFigures<TrigonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<TrigonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
       //  setWarningCondition(-1010, "Trigonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Tetragonal_High:
       figures = makePoleFigures<TetragonalOps>(config);
-      intensityImages = createIntensityPoleFigures<TetragonalOps>(config);
+      intensityImages = createIntensityPoleFigures<TetragonalOps>(config, m_InputValues->NormalizeToMRD);
       //  setWarningCondition(-1010, "Tetragonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Tetragonal_Low:
       figures = makePoleFigures<TetragonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<TetragonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
       // setWarningCondition(-1010, "Tetragonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::OrthoRhombic:
       figures = makePoleFigures<OrthoRhombicOps>(config);
-      intensityImages = createIntensityPoleFigures<OrthoRhombicOps>(config);
+      intensityImages = createIntensityPoleFigures<OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Monoclinic:
       figures = makePoleFigures<MonoclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<MonoclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
       break;
     case EbsdLib::CrystalStructure::Triclinic:
       figures = makePoleFigures<TriclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<TriclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<TriclinicOps>(config, m_InputValues->NormalizeToMRD);
       break;
     default:
       break;
@@ -498,20 +507,47 @@ Result<> WritePoleFigure::operator()()
     if(m_InputValues->SaveIntensityData && intensityImages.size() == 3)
     {
       DataPath amPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_ImageAttrMatName);
+      // If there is more than a single phase we will need to add more arrays to the DataStructure
+      if(phase > 1)
+      {
+        const std::vector<size_t> intensityImageDims = {static_cast<usize>(config.imageDim), static_cast<usize>(config.imageDim), 1ULL};
+        DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
+        Result<> result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
 
-      auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot1Name));
-      auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot2Name));
-      auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot3Name));
+        arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name));
+        result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+
+        arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name));
+        result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+      }
+
+      auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name)));
+      auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name)));
+      auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name)));
 
       std::vector<size_t> compDims = {1ULL};
       for(int imageIndex = 0; imageIndex < figures.size(); imageIndex++)
       {
-        intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config, compDims);
+        intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config);
       }
 
       std::copy(intensityImages[0]->begin(), intensityImages[0]->end(), intensityPlot1Array.begin());
       std::copy(intensityImages[1]->begin(), intensityImages[1]->end(), intensityPlot2Array.begin());
       std::copy(intensityImages[2]->begin(), intensityImages[2]->end(), intensityPlot3Array.begin());
+
+      DataPath metaDataPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_MetaDataName);
+      auto metaDataArrayRef = m_DataStructure.getDataRefAs<StringArray>(metaDataPath);
+      if(metaDataArrayRef.getNumberOfTuples() != numPhases)
+      {
+        metaDataArrayRef.resizeTuples(std::vector<usize>{numPhases});
+      }
+
+      std::vector<std::string> laueNames = LaueOps::GetLaueNames();
+      const uint32_t laueIndex = crystalStructures[phase];
+      const std::string materialName = materialNames[phase];
+
+      metaDataArrayRef[phase] = fmt::format("Phase Num: {}\nMaterial Name: {}\nLaue Group: {}\nHemisphere: Northern\nSamples: {}\nLambert Square Dim: {}", phase, materialName, laueNames[laueIndex],
+                                            config.eulers->getNumberOfTuples(), config.lambertDim);
     }
 
     if(figures.size() == 3)
@@ -585,15 +621,16 @@ Result<> WritePoleFigure::operator()()
       std::vector<size_t> compDims = {4ULL};
       for(int imageIndex = 0; imageIndex < figures.size(); imageIndex++)
       {
-        figures[imageIndex] = flipAndMirrorPoleFigure(figures[imageIndex].get(), config, compDims);
+        figures[imageIndex] = flipAndMirrorPoleFigure(figures[imageIndex].get(), config);
+        figures[imageIndex] = convertColorOrder(figures[imageIndex].get(), config);
       }
 
       for(int i = 0; i < 3; i++)
       {
         std::array<float, 2> figureOrigin = {0.0f, 0.0f};
         std::tie(figureOrigin[0], figureOrigin[1]) = globalImageOrigins[i];
-        context.draw_image(figures[i]->getPointer(0), imageWidth, imageHeight, imageWidth * 2, figureOrigin[0] + margins, figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f,
-                           static_cast<float32>(imageWidth), static_cast<float32>(imageHeight));
+        context.draw_image(figures[i]->getPointer(0), imageWidth, imageHeight, imageWidth * figures[i]->getNumberOfComponents(), figureOrigin[0] + margins,
+                           figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f, static_cast<float32>(imageWidth), static_cast<float32>(imageHeight));
 
         // Draw an outline on the figure
         context.begin_path();

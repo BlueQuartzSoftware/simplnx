@@ -43,6 +43,7 @@ public:
   static inline constexpr StringLiteral k_WriteImageToDisk = "write_image_to_disk";
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_SaveIntensityDataArrays = "save_intensity_plots";
+  static inline constexpr StringLiteral k_NormalizeToMRD = "normalize_to_mrd";
   static inline constexpr StringLiteral k_IntensityGeometryPath = "intensity_geometry_path";
   static inline constexpr StringLiteral k_IntensityPlot1Name = "intensity_plot_1_name";
   static inline constexpr StringLiteral k_IntensityPlot2Name = "intensity_plot_2_name";

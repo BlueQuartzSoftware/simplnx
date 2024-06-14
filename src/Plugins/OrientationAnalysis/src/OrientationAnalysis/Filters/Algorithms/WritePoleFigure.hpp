@@ -17,6 +17,7 @@ namespace write_pole_figure
 {
 const std::string k_ImageAttrMatName("Cell Data");
 const std::string k_ImageDataName("Image");
+const std::string k_MetaDataName("MetaData");
 
 } // namespace write_pole_figure
 
@@ -43,6 +44,7 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   DataPath OutputImageGeometryPath;
 
   bool SaveIntensityData;
+  bool NormalizeToMRD;
   DataPath IntensityGeometryDataPath;
   std::string IntensityPlot1Name;
   std::string IntensityPlot2Name;

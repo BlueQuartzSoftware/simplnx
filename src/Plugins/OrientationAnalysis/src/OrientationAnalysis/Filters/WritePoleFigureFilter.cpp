@@ -9,7 +9,9 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -125,6 +127,7 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Intensity Data Arrays"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveIntensityDataArrays, "Save Intensity Images", "Save the Intensity Plots (x3)", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_IntensityGeometryPath, "Output Intensity Image Geometry", "", DataPath({"Intensity Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_NormalizeToMRD, "Normalize Data to MRD", "The Pole Figure data should be normalized to MRD values", true));
   params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot1Name, "Intensity Plot 1", "", "<001>"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot2Name, "Intensity Plot 2", "", "<011>"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot3Name, "Intensity Plot 3", "", "<111>"));
@@ -141,7 +144,9 @@ Parameters WritePoleFigureFilter::parameters() const
 
   params.linkParameters(k_SaveIntensityDataArrays, k_ImageGeometryPath_Key, true);
   params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot1Name, true);
-  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot1Name, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot2Name, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot3Name, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_NormalizeToMRD, true);
 
   return params;
 }
@@ -241,17 +246,21 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
     std::vector<size_t> cDims = {1ULL};
-    DataPath path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot1Name);
+    DataPath path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot1Name));
     auto createArray1 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray1));
 
-    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot2Name);
+    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot2Name));
     auto createArray2 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray2));
 
-    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot3Name);
+    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot3Name));
     auto createArray3 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray3));
+
+    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_MetaDataName);
+    auto createMetaData = std::make_unique<CreateStringArrayAction>(std::vector<usize>{0ULL}, path);
+    resultOutputActions.value().appendAction(std::move(createMetaData));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -284,6 +293,7 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
 
   inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
+  inputValues.NormalizeToMRD = filterArgs.value<bool>(k_NormalizeToMRD);
   inputValues.IntensityGeometryDataPath = filterArgs.value<DataPath>(k_IntensityGeometryPath);
   inputValues.IntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
   inputValues.IntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
