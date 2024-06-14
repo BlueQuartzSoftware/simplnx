@@ -122,6 +122,13 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsImageGeometry_Key, "Save Output as Image Geometry", "Save the generated pole figure as an ImageGeometry", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Output Image Geometry", "The path to the created Image Geometry", DataPath({"PoleFigure"})));
 
+  params.insertSeparator(Parameters::Separator{"Output Intensity Data Arrays"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveIntensityDataArrays, "Save Intensity Images", "Save the Intensity Plots (x3)", true));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_IntensityGeometryPath, "Output Intensity Image Geometry", "", DataPath({"Intensity Data"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot1Name, "Intensity Plot 1", "", "<001>"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot2Name, "Intensity Plot 2", "", "<011>"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot3Name, "Intensity Plot 3", "", "<111>"));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
@@ -131,6 +138,10 @@ Parameters WritePoleFigureFilter::parameters() const
   params.linkParameters(k_SaveAsImageGeometry_Key, k_ImageGeometryPath_Key, true);
   params.linkParameters(k_WriteImageToDisk, k_OutputPath_Key, true);
   params.linkParameters(k_WriteImageToDisk, k_ImagePrefix_Key, true);
+
+  params.linkParameters(k_SaveIntensityDataArrays, k_ImageGeometryPath_Key, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot1Name, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot1Name, true);
 
   return params;
 }
@@ -160,6 +171,12 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   auto pSaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
   auto pWriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
   auto pOutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+
+  auto pSaveIntensityPlot = filterArgs.value<bool>(k_SaveIntensityDataArrays);
+  auto pOutputIntensityGeometryPath = filterArgs.value<DataPath>(k_IntensityGeometryPath);
+  auto pIntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
+  auto pIntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
+  auto pIntensityPlot3Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
 
   PreflightResult preflightResult;
 
@@ -198,11 +215,12 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     pageWidth = subCanvasWidth * 2.0f;
     pageHeight = pageHeight + subCanvasHeight * 2.0f;
   }
-  const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
-  auto createImageGeometryAction =
-      std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
-  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
-
+  {
+    const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
+    auto createImageGeometryAction =
+        std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
+    resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
+  }
   if(!pSaveAsImageGeometry)
   {
     // After the execute function has been done, delete the original image geometry
@@ -213,6 +231,27 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   if(pWriteImageToDisk)
   {
     preflightUpdatedValues.push_back({"Example Output File.", fmt::format("{}/{}Phase_1.tiff", pOutputPathValue.string(), pImagePrefixValue)});
+  }
+
+  if(pSaveIntensityPlot)
+  {
+    const std::vector<size_t> intensityImageDims = {static_cast<usize>(pImageSizeValue), static_cast<usize>(pImageSizeValue), 1ULL};
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pOutputIntensityGeometryPath, intensityImageDims, std::vector<float>{0.0f, 0.0f, 0.0f},
+                                                                                 std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
+    resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
+
+    std::vector<size_t> cDims = {1ULL};
+    DataPath path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot1Name);
+    auto createArray1 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray1));
+
+    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot2Name);
+    auto createArray2 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray2));
+
+    path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(pIntensityPlot3Name);
+    auto createArray3 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    resultOutputActions.value().appendAction(std::move(createArray3));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -243,6 +282,12 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.SaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
   inputValues.WriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
   inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+
+  inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
+  inputValues.IntensityGeometryDataPath = filterArgs.value<DataPath>(k_IntensityGeometryPath);
+  inputValues.IntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
+  inputValues.IntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
+  inputValues.IntensityPlot3Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
 
   return WritePoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

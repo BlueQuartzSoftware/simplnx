@@ -26,7 +26,7 @@
 #include "EbsdLib/LaueOps/TriclinicOps.h"
 #include "EbsdLib/LaueOps/TrigonalLowOps.h"
 #include "EbsdLib/LaueOps/TrigonalOps.h"
-#include "EbsdLib/Utilities/ComputeStereographicProjection.h"
+#include "EbsdLib/Utilities/ModifiedLambertProjection.h"
 
 #define CANVAS_ITY_IMPLEMENTATION
 #include <canvas_ity.hpp>
@@ -37,6 +37,70 @@ namespace
 {
 const bool k_UseDiscreteHeatMap = false;
 
+class ComputeIntensityStereographicProjection
+{
+public:
+  ComputeIntensityStereographicProjection(EbsdLib::FloatArrayType* xyzCoords, PoleFigureConfiguration_t* config, EbsdLib::DoubleArrayType* intensity, size_t index)
+  : m_XYZCoords(xyzCoords)
+  , m_Config(config)
+  , m_Intensity(intensity)
+  , m_Index(index)
+  {
+  }
+
+  void operator()() const
+  {
+    m_Intensity->resizeTuples(m_Config->imageDim * m_Config->imageDim);
+    m_Intensity->initializeWithZeros();
+
+    if(m_Config->discrete)
+    {
+      int halfDim = m_Config->imageDim / 2;
+      double* intensity = m_Intensity->getPointer(0);
+      size_t numCoords = m_XYZCoords->getNumberOfTuples();
+      float* xyzPtr = m_XYZCoords->getPointer(0);
+      for(size_t i = 0; i < numCoords; i++)
+      {
+        if(xyzPtr[i * 3 + 2] < 0.0f)
+        {
+          xyzPtr[i * 3 + 0] *= -1.0f;
+          xyzPtr[i * 3 + 1] *= -1.0f;
+          xyzPtr[i * 3 + 2] *= -1.0f;
+        }
+        float x = xyzPtr[i * 3] / (1 + xyzPtr[i * 3 + 2]);
+        float y = xyzPtr[i * 3 + 1] / (1 + xyzPtr[i * 3 + 2]);
+
+        int xCoord = static_cast<int>(x * static_cast<float32>(halfDim - 1)) + halfDim;
+        int yCoord = static_cast<int>(y * static_cast<float32>(halfDim - 1)) + halfDim;
+
+        size_t index = (yCoord * m_Config->imageDim) + xCoord;
+
+        intensity[index]++;
+      }
+    }
+    else
+    {
+      ModifiedLambertProjection::Pointer lambert = ModifiedLambertProjection::LambertBallToSquare(m_XYZCoords, m_Config->lambertDim, m_Config->sphereRadius);
+      lambert->normalizeSquaresToMRD();
+#if CSP_DEBUG_OUTPUT
+//    int dim = lambert->getDimension();
+//    std::stringstream ss;
+//    ss << "/tmp/Lambert-" << dim << "-"<< m_Config->labels[m_Index] << ".h5";
+//    hid_t file_id = H5Utilities::createFile(ss.str());
+//    lambert->writeHDF5Data(file_id);
+//    H5Fclose(file_id);
+#endif
+      lambert->createStereographicProjection(m_Config->imageDim, *m_Intensity);
+    }
+  }
+
+private:
+  EbsdLib::FloatArrayType* m_XYZCoords = nullptr;
+  PoleFigureConfiguration_t* m_Config = nullptr;
+  EbsdLib::DoubleArrayType* m_Intensity = nullptr;
+  size_t m_Index = 0;
+};
+
 // -----------------------------------------------------------------------------
 template <typename Ops>
 std::vector<EbsdLib::UInt8ArrayType::Pointer> makePoleFigures(PoleFigureConfiguration_t& config)
@@ -46,7 +110,7 @@ std::vector<EbsdLib::UInt8ArrayType::Pointer> makePoleFigures(PoleFigureConfigur
 }
 
 template <typename OpsType>
-std::vector<EbsdLib::DoubleArrayType ::Pointer> createIntensityPoleFigures(PoleFigureConfiguration_t& config)
+std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFigureConfiguration_t& config)
 {
   OpsType ops;
   std::string label0 = std::string("<001>");
@@ -92,67 +156,19 @@ std::vector<EbsdLib::DoubleArrayType ::Pointer> createIntensityPoleFigures(PoleF
   // Compute the Stereographic Data in parallel
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
-  taskRunner.execute(ops.ComputeStereographicProjection(xyz001.get(), &config, intensity001.get()));
-  taskRunner.execute(ComputeStereographicProjection(xyz011.get(), &config, intensity011.get()));
-  taskRunner.execute(ComputeStereographicProjection(xyz111.get(), &config, intensity111.get()));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz001.get(), &config, intensity001.get(), 0));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz011.get(), &config, intensity011.get(), 1));
+  taskRunner.execute(ComputeIntensityStereographicProjection(xyz111.get(), &config, intensity111.get(), 2));
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-
-  // Find the Max and Min values based on ALL 3 arrays. We can color scale them all the same
-  double max = std::numeric_limits<double>::min();
-  double min = std::numeric_limits<double>::max();
-
-  double* dPtr = intensity001->getPointer(0);
-  size_t count = intensity001->getNumberOfTuples();
-  for(size_t i = 0; i < count; ++i)
-  {
-    if(dPtr[i] > max)
-    {
-      max = dPtr[i];
-    }
-    if(dPtr[i] < min)
-    {
-      min = dPtr[i];
-    }
-  }
-
-  dPtr = intensity011->getPointer(0);
-  count = intensity011->getNumberOfTuples();
-  for(size_t i = 0; i < count; ++i)
-  {
-    if(dPtr[i] > max)
-    {
-      max = dPtr[i];
-    }
-    if(dPtr[i] < min)
-    {
-      min = dPtr[i];
-    }
-  }
-
-  dPtr = intensity111->getPointer(0);
-  count = intensity111->getNumberOfTuples();
-  for(size_t i = 0; i < count; ++i)
-  {
-    if(dPtr[i] > max)
-    {
-      max = dPtr[i];
-    }
-    if(dPtr[i] < min)
-    {
-      min = dPtr[i];
-    }
-  }
-
-  config.minScale = min;
-  config.maxScale = max;
 
   return {intensity001, intensity011, intensity111};
 }
 
 // -----------------------------------------------------------------------------
-EbsdLib::UInt8ArrayType::Pointer flipAndMirrorPoleFigure(EbsdLib::UInt8ArrayType* src, const PoleFigureConfiguration_t& config)
+template <typename T>
+typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config, std::vector<size_t>& compDims)
 {
-  EbsdLib::UInt8ArrayType::Pointer converted = EbsdLib::UInt8ArrayType::CreateArray(static_cast<size_t>(config.imageDim * config.imageDim), {4}, src->getName(), true);
+  typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, compDims, src->getName(), true);
   // We need to flip the image "vertically", which means the bottom row becomes
   // the top row and convert from BGRA to RGB ordering (This is a Little Endian code)
   // If this is ever compiled on a BIG ENDIAN machine the colors will be off.
@@ -164,8 +180,8 @@ EbsdLib::UInt8ArrayType::Pointer flipAndMirrorPoleFigure(EbsdLib::UInt8ArrayType
       const size_t indexSrc = y * config.imageDim + x;
       const size_t indexDest = destY * config.imageDim + x;
 
-      uint8_t* argbPtr = src->getTuplePointer(indexSrc);
-      uint8_t* destPtr = converted->getTuplePointer(indexDest);
+      T* argbPtr = src->getTuplePointer(indexSrc);
+      T* destPtr = converted->getTuplePointer(indexDest);
 
       destPtr[0] = argbPtr[2];
       destPtr[1] = argbPtr[1];
@@ -187,7 +203,7 @@ void drawInformationBlock(canvas_ity::canvas& context, const PoleFigureConfigura
   const float colorHeight = (static_cast<float>(imageHeight)) / static_cast<float>(config.numColors);
   //
   using RectFType = std::pair<float, float>;
-  const RectFType rect = std::make_pair(imageWidth * scaleBarRelativeWidth, colorHeight * 1.00000f);
+  const RectFType rect = std::make_pair(static_cast<float>(imageWidth) * scaleBarRelativeWidth, colorHeight * 1.00000f);
   //
   const std::array<canvas_ity::baseline_style, 6> baselines = {canvas_ity::alphabetic, canvas_ity::top, canvas_ity::middle, canvas_ity::bottom, canvas_ity::hanging, canvas_ity::ideographic};
 
@@ -211,7 +227,7 @@ void drawInformationBlock(canvas_ity::canvas& context, const PoleFigureConfigura
     context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontPtSize);
     context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
     context.text_baseline = baselines[0];
-    context.fill_text(label.c_str(), position.first + margins + rect.first + margins, position.second + margins + (imageHeight / 3.0) + (heightInc * fontPtSize));
+    context.fill_text(label.c_str(), position.first + margins + rect.first + margins, position.second + margins + (static_cast<float>(imageHeight) / 3.0f) + (heightInc * fontPtSize));
     context.close_path();
     heightInc++;
   }
@@ -236,7 +252,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
     r = colors[3 * i];
     g = colors[3 * i + 1];
     b = colors[3 * i + 2];
-    colorTable[i] = RgbColor::dRgb(r * 255, g * 255, b * 255, 255);
+    colorTable[i] = RgbColor::dRgb(static_cast<uint8>(r) * 255, static_cast<uint8>(g) * 255, static_cast<uint8>(b) * 255, 255);
   }
 
   // Now start from the bottom and draw colored lines up the scale bar
@@ -249,7 +265,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
 
   using RectFType = std::pair<float, float>;
 
-  const RectFType rect = std::make_pair(imageWidth * scaleBarRelativeWidth, colorHeight * 1.00000f);
+  const RectFType rect = std::make_pair(static_cast<float32>(imageWidth) * scaleBarRelativeWidth, colorHeight * 1.00000f);
 
   const std::array<canvas_ity::baseline_style, 6> baselines = {canvas_ity::alphabetic, canvas_ity::top, canvas_ity::middle, canvas_ity::bottom, canvas_ity::hanging, canvas_ity::ideographic};
 
@@ -268,7 +284,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
   context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontPtSize);
   context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
   context.text_baseline = baselines[0];
-  context.fill_text(minStr.c_str(), position.first + 2.0F * margins + rect.first, position.second + (2 * margins) + (2 * fontPtSize) + ((numColors)*colorHeight));
+  context.fill_text(minStr.c_str(), position.first + 2.0F * margins + rect.first, position.second + (2 * margins) + (2 * fontPtSize) + (static_cast<float32>(numColors) * colorHeight));
   context.close_path();
 
   // Draw the color bar
@@ -278,7 +294,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
     std::tie(r, g, b) = RgbColor::fRgb(c);
 
     const float32 x = position.first + margins;
-    const float32 y = position.second + (2 * margins) + (2 * fontPtSize) + (i * colorHeight);
+    const float32 y = position.second + (2 * margins) + (2 * fontPtSize) + (static_cast<float32>(i) * colorHeight);
 
     context.begin_path();
     context.set_color(canvas_ity::fill_style, r, g, b, 1.0f);
@@ -337,10 +353,10 @@ Result<> WritePoleFigure::operator()()
   const std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
   const nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
 
-  nx::core::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  nx::core::StringArray& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
@@ -413,6 +429,7 @@ Result<> WritePoleFigure::operator()()
     } // Skip because we have no Pole Figure data
 
     std::vector<EbsdLib::UInt8ArrayType::Pointer> figures;
+    std::vector<EbsdLib::DoubleArrayType::Pointer> intensityImages;
 
     PoleFigureConfiguration_t config;
     config.eulers = subEulersPtr.get();
@@ -428,54 +445,84 @@ Result<> WritePoleFigure::operator()()
     {
     case EbsdLib::CrystalStructure::Cubic_High:
       figures = makePoleFigures<CubicOps>(config);
+      intensityImages = createIntensityPoleFigures<CubicOps>(config);
       break;
     case EbsdLib::CrystalStructure::Cubic_Low:
       figures = makePoleFigures<CubicLowOps>(config);
+      intensityImages = createIntensityPoleFigures<CubicLowOps>(config);
       break;
     case EbsdLib::CrystalStructure::Hexagonal_High:
       figures = makePoleFigures<HexagonalOps>(config);
+      intensityImages = createIntensityPoleFigures<HexagonalOps>(config);
       break;
     case EbsdLib::CrystalStructure::Hexagonal_Low:
       figures = makePoleFigures<HexagonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<HexagonalLowOps>(config);
       break;
     case EbsdLib::CrystalStructure::Trigonal_High:
       figures = makePoleFigures<TrigonalOps>(config);
+      intensityImages = createIntensityPoleFigures<TrigonalOps>(config);
       //   setWarningCondition(-1010, "Trigonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Trigonal_Low:
       figures = makePoleFigures<TrigonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<TrigonalLowOps>(config);
       //  setWarningCondition(-1010, "Trigonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Tetragonal_High:
       figures = makePoleFigures<TetragonalOps>(config);
+      intensityImages = createIntensityPoleFigures<TetragonalOps>(config);
       //  setWarningCondition(-1010, "Tetragonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::Tetragonal_Low:
       figures = makePoleFigures<TetragonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<TetragonalLowOps>(config);
       // setWarningCondition(-1010, "Tetragonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
     case EbsdLib::CrystalStructure::OrthoRhombic:
       figures = makePoleFigures<OrthoRhombicOps>(config);
+      intensityImages = createIntensityPoleFigures<OrthoRhombicOps>(config);
       break;
     case EbsdLib::CrystalStructure::Monoclinic:
       figures = makePoleFigures<MonoclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<MonoclinicOps>(config);
       break;
     case EbsdLib::CrystalStructure::Triclinic:
       figures = makePoleFigures<TriclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<TriclinicOps>(config);
       break;
     default:
       break;
     }
 
+    if(m_InputValues->SaveIntensityData && intensityImages.size() == 3)
+    {
+      DataPath amPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_ImageAttrMatName);
+
+      auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot1Name));
+      auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot2Name));
+      auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(m_InputValues->IntensityPlot3Name));
+
+      std::vector<size_t> compDims = {1ULL};
+      for(int imageIndex = 0; imageIndex < figures.size(); imageIndex++)
+      {
+        intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config, compDims);
+      }
+
+      std::copy(intensityImages[0]->begin(), intensityImages[0]->end(), intensityPlot1Array.begin());
+      std::copy(intensityImages[1]->begin(), intensityImages[1]->end(), intensityPlot2Array.begin());
+      std::copy(intensityImages[2]->begin(), intensityImages[2]->end(), intensityPlot3Array.begin());
+    }
+
     if(figures.size() == 3)
     {
-      const uint32 imageWidth = static_cast<uint32>(config.imageDim);
-      const uint32 imageHeight = static_cast<uint32>(config.imageDim);
-      const float32 fontPtSize = imageHeight / 16.0f;
-      const float32 margins = imageHeight / 32.0f;
+      const auto imageWidth = static_cast<int32>(config.imageDim);
+      const auto imageHeight = static_cast<int32>(config.imageDim);
+      const float32 fontPtSize = static_cast<float>(imageHeight) / 16.0f;
+      const float32 margins = static_cast<float>(imageHeight) / 32.0f;
 
       int32 pageWidth = 0;
-      int32 pageHeight = margins + fontPtSize;
+      auto pageHeight = static_cast<int32>(margins + fontPtSize);
 
       float32 xCharWidth = 0.0f;
       {
@@ -485,14 +532,14 @@ Result<> WritePoleFigure::operator()()
         xCharWidth = tempContext.measure_text(buf.data());
       }
       // Each Pole Figure gets its own Square mini canvas to draw into.
-      const float32 subCanvasWidth = margins + imageWidth + xCharWidth + margins;
-      const float32 subCanvasHeight = margins + fontPtSize + imageHeight + fontPtSize * 2 + margins * 2;
+      const float32 subCanvasWidth = margins + static_cast<float32>(imageWidth) + xCharWidth + margins;
+      const float32 subCanvasHeight = margins + fontPtSize + static_cast<float32>(imageHeight) + fontPtSize * 2 + margins * 2;
 
       std::vector<std::pair<float32, float32>> globalImageOrigins(4);
       if(static_cast<WritePoleFigure::LayoutType>(m_InputValues->ImageLayout) == WritePoleFigure::LayoutType::Horizontal)
       {
-        pageWidth = subCanvasWidth * 4;
-        pageHeight = pageHeight + subCanvasHeight;
+        pageWidth = static_cast<int32>(subCanvasWidth) * 4;
+        pageHeight = pageHeight + static_cast<int32>(subCanvasHeight);
         globalImageOrigins[0] = std::make_pair(0.0f, static_cast<float>(pageHeight) - subCanvasHeight);
         globalImageOrigins[1] = std::make_pair(subCanvasWidth, static_cast<float>(pageHeight) - subCanvasHeight);
         globalImageOrigins[2] = std::make_pair(subCanvasWidth * 2.0f, static_cast<float>(pageHeight) - subCanvasHeight);
@@ -500,8 +547,8 @@ Result<> WritePoleFigure::operator()()
       }
       else if(static_cast<WritePoleFigure::LayoutType>(m_InputValues->ImageLayout) == WritePoleFigure::LayoutType::Vertical)
       {
-        pageWidth = subCanvasWidth;
-        pageHeight = pageHeight + subCanvasHeight * 4.0f;
+        pageWidth = static_cast<int32>(subCanvasWidth);
+        pageHeight = pageHeight + static_cast<int32>(subCanvasHeight) * 4;
         globalImageOrigins[0] = std::make_pair(0.0f, margins + fontPtSize);
         globalImageOrigins[1] = std::make_pair(0.0f, margins + fontPtSize + subCanvasHeight * 1.0f);
         globalImageOrigins[2] = std::make_pair(0.0f, margins + fontPtSize + subCanvasHeight * 2.0f);
@@ -509,8 +556,8 @@ Result<> WritePoleFigure::operator()()
       }
       else if(static_cast<WritePoleFigure::LayoutType>(m_InputValues->ImageLayout) == nx::core::WritePoleFigure::LayoutType::Square)
       {
-        pageWidth = subCanvasWidth * 2.0f;
-        pageHeight = pageHeight + subCanvasHeight * 2.0f;
+        pageWidth = static_cast<int32>(subCanvasWidth) * 2;
+        pageHeight = pageHeight + static_cast<int32>(subCanvasHeight) * 2;
         globalImageOrigins[0] = std::make_pair(0.0f, (static_cast<float>(pageHeight) - 2.0f * subCanvasHeight));           // Upper Left
         globalImageOrigins[1] = std::make_pair(subCanvasWidth, (static_cast<float>(pageHeight) - 2.0f * subCanvasHeight)); // Upper Right
         globalImageOrigins[2] = std::make_pair(0.0f, (static_cast<float>(pageHeight) - subCanvasHeight));                  // Lower Left
@@ -535,23 +582,26 @@ Result<> WritePoleFigure::operator()()
       context.set_color(canvas_ity::fill_style, 1.0f, 1.0f, 1.0f, 1.0f);
       context.fill();
 
+      std::vector<size_t> compDims = {4ULL};
       for(int imageIndex = 0; imageIndex < figures.size(); imageIndex++)
       {
-        figures[imageIndex] = flipAndMirrorPoleFigure(figures[imageIndex].get(), config);
+        figures[imageIndex] = flipAndMirrorPoleFigure(figures[imageIndex].get(), config, compDims);
       }
 
       for(int i = 0; i < 3; i++)
       {
         std::array<float, 2> figureOrigin = {0.0f, 0.0f};
         std::tie(figureOrigin[0], figureOrigin[1]) = globalImageOrigins[i];
-        context.draw_image(figures[i]->getPointer(0), imageWidth, imageHeight, imageWidth * 4, figureOrigin[0] + margins, figureOrigin[1] + fontPtSize * 2 + margins * 2, imageWidth, imageHeight);
+        context.draw_image(figures[i]->getPointer(0), imageWidth, imageHeight, imageWidth * 2, figureOrigin[0] + margins, figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f,
+                           static_cast<float32>(imageWidth), static_cast<float32>(imageHeight));
 
         // Draw an outline on the figure
         context.begin_path();
         context.line_cap = canvas_ity::circle;
         context.set_line_width(3.0f);
         context.set_color(canvas_ity::stroke_style, 0.0f, 0.0f, 0.0f, 1.0f);
-        context.arc(figureOrigin[0] + margins + m_InputValues->ImageSize / 2.0f, figureOrigin[1] + fontPtSize * 2 + margins * 2 + m_InputValues->ImageSize / 2.0f, m_InputValues->ImageSize / 2.0f, 0,
+        context.arc(figureOrigin[0] + margins + static_cast<float32>(m_InputValues->ImageSize) / 2.0f,
+                    figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize) / 2.0f, static_cast<float32>(m_InputValues->ImageSize) / 2.0f, 0,
                     nx::core::Constants::k_2Pi<float>);
         context.stroke();
         context.close_path();
@@ -561,8 +611,9 @@ Result<> WritePoleFigure::operator()()
         context.line_cap = canvas_ity::square;
         context.set_line_width(2.0f);
         context.set_color(canvas_ity::stroke_style, 0.0f, 0.0f, 0.0f, 1.0f);
-        context.move_to(figureOrigin[0] + margins, figureOrigin[1] + fontPtSize * 2 + margins * 2 + m_InputValues->ImageSize / 2.0f);
-        context.line_to(figureOrigin[0] + margins + m_InputValues->ImageSize, figureOrigin[1] + fontPtSize * 2 + margins * 2 + m_InputValues->ImageSize / 2.0f);
+        context.move_to(figureOrigin[0] + margins, figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize) / 2.0f);
+        context.line_to(figureOrigin[0] + margins + static_cast<float32>(m_InputValues->ImageSize),
+                        figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize) / 2.0f);
         context.stroke();
         context.close_path();
 
@@ -571,8 +622,9 @@ Result<> WritePoleFigure::operator()()
         context.line_cap = canvas_ity::square;
         context.set_line_width(2.0f);
         context.set_color(canvas_ity::stroke_style, 0.0f, 0.0f, 0.0f, 1.0f);
-        context.move_to(figureOrigin[0] + margins + m_InputValues->ImageSize / 2.0f, figureOrigin[1] + fontPtSize * 2 + margins * 2);
-        context.line_to(figureOrigin[0] + margins + m_InputValues->ImageSize / 2.0f, figureOrigin[1] + fontPtSize * 2 + margins * 2 + m_InputValues->ImageSize);
+        context.move_to(figureOrigin[0] + margins + static_cast<float32>(m_InputValues->ImageSize) / 2.0f, figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f);
+        context.line_to(figureOrigin[0] + margins + static_cast<float32>(m_InputValues->ImageSize) / 2.0f,
+                        figureOrigin[1] + fontPtSize * 2.0f + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize));
         context.stroke();
         context.close_path();
 
@@ -581,7 +633,8 @@ Result<> WritePoleFigure::operator()()
         context.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
         context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
         context.text_baseline = baselines[0];
-        context.fill_text("X", figureOrigin[0] + margins * 2.0f + m_InputValues->ImageSize, figureOrigin[1] + fontPtSize * 2.25 + margins * 2 + m_InputValues->ImageSize / 2.0f);
+        context.fill_text("X", figureOrigin[0] + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize),
+                          figureOrigin[1] + fontPtSize * 2.25f + margins * 2.0f + static_cast<float32>(m_InputValues->ImageSize) / 2.0f);
         context.close_path();
 
         // Draw Y Axis Label
@@ -590,7 +643,7 @@ Result<> WritePoleFigure::operator()()
         context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
         context.text_baseline = baselines[0];
         const float yFontWidth = context.measure_text("Y");
-        context.fill_text("Y", figureOrigin[0] + margins - (0.5f * yFontWidth) + m_InputValues->ImageSize / 2.0f, figureOrigin[1] + fontPtSize * 2 + margins);
+        context.fill_text("Y", figureOrigin[0] + margins - (0.5f * yFontWidth) + static_cast<float32>(m_InputValues->ImageSize) / 2.0f, figureOrigin[1] + fontPtSize * 2.0f + margins);
         context.close_path();
 
         // Draw the figure subtitle. This is usually the direction or plane family
@@ -651,11 +704,12 @@ Result<> WritePoleFigure::operator()()
       // Now draw the Color Scalar Bar if needed.
       if(config.discrete)
       {
-        drawInformationBlock(context, config, globalImageOrigins[3], margins, imageHeight / 20.0f, static_cast<int32_t>(phase), m_LatoRegular, laueNames[laueIndex], materialName);
+        drawInformationBlock(context, config, globalImageOrigins[3], margins, static_cast<float32>(imageHeight) / 20.0f, static_cast<int32_t>(phase), m_LatoRegular, laueNames[laueIndex],
+                             materialName);
       }
       else
       {
-        drawScalarBar(context, config, globalImageOrigins[3], margins, imageHeight / 20.0f, static_cast<int32_t>(phase), m_LatoRegular, laueNames[laueIndex], materialName);
+        drawScalarBar(context, config, globalImageOrigins[3], margins, static_cast<float32>(imageHeight) / 20.0f, static_cast<int32_t>(phase), m_LatoRegular, laueNames[laueIndex], materialName);
       }
 
       // Fetch the rendered RGBA pixels from the entire canvas.
