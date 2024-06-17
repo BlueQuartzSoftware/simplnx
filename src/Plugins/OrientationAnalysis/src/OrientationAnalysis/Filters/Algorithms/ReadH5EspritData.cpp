@@ -9,7 +9,7 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 ReadH5EspritData::ReadH5EspritData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues,
                                    ReadH5EspritDataInputValues* espritInputValues)
-: ReadH5Data<H5EspritReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+: IEbsdOemReader<H5EspritReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 , m_EspritInputValues(espritInputValues)
 {
 }

@@ -32,10 +32,10 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
  */
 
 template <class T>
-class ORIENTATIONANALYSIS_EXPORT ReadH5Data
+class ORIENTATIONANALYSIS_EXPORT IEbsdOemReader
 {
 public:
-  ReadH5Data(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
+  IEbsdOemReader(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(mesgHandler)
@@ -45,12 +45,12 @@ public:
     m_Reader->setFileName(inputValues->SelectedScanNames.inputFilePath.string());
   }
 
-  virtual ~ReadH5Data() noexcept = default;
+  virtual ~IEbsdOemReader() noexcept = default;
 
-  ReadH5Data(const ReadH5Data&) = delete;
-  ReadH5Data(ReadH5Data&&) noexcept = delete;
-  ReadH5Data& operator=(const ReadH5Data&) = delete;
-  ReadH5Data& operator=(ReadH5Data&&) noexcept = delete;
+  IEbsdOemReader(const IEbsdOemReader&) = delete;
+  IEbsdOemReader(IEbsdOemReader&&) noexcept = delete;
+  IEbsdOemReader& operator=(const IEbsdOemReader&) = delete;
+  IEbsdOemReader& operator=(IEbsdOemReader&&) noexcept = delete;
 
   Result<> execute()
   {
