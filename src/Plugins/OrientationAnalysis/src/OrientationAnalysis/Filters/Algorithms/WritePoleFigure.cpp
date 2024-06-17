@@ -2,16 +2,22 @@
 
 #include "OrientationAnalysis/utilities/FiraSansRegular.hpp"
 #include "OrientationAnalysis/utilities/Fonts.hpp"
+#include "OrientationAnalysis/utilities/IntersectionUtilities.hpp"
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/LatoRegular.hpp"
+#include "OrientationAnalysis/utilities/RTree.hpp"
 #include "OrientationAnalysis/utilities/TiffWriter.hpp"
+#include "OrientationAnalysis/utilities/delaunator.h"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
@@ -26,7 +32,12 @@
 #include "EbsdLib/LaueOps/TriclinicOps.h"
 #include "EbsdLib/LaueOps/TrigonalLowOps.h"
 #include "EbsdLib/LaueOps/TrigonalOps.h"
+#include "EbsdLib/Utilities/LambertUtilities.h"
 #include "EbsdLib/Utilities/ModifiedLambertProjection.h"
+
+#include "H5Support/H5Lite.h"
+#include "H5Support/H5ScopedSentinel.h"
+#include "H5Support/H5Utilities.h"
 
 #define CANVAS_ITY_IMPLEMENTATION
 #include <canvas_ity.hpp>
@@ -86,7 +97,305 @@ public:
         lambert->normalizeSquaresToMRD();
       }
       lambert->createStereographicProjection(m_Config->imageDim, *m_Intensity);
+
+      // This next function (writeLambertData) is experimental but should be left in to
+      // make sure it will still compile. At some point I will get back to the development
+      // of this alternate pole figure generation.
+      // writeLambertData(lambert);
     }
+  }
+
+  template <typename V, typename T, typename W>
+  void unstructuredGridInterpolator(nx::core::IFilter* filter, nx::core::TriangleGeom* delaunayGeom, std::vector<V>& xPositionsPtr, std::vector<V>& yPositionsPtr, T* xyValues,
+                                    typename std::vector<W>& outputValues) const
+  {
+    using Vec3f = nx::core::Vec3<float>;
+    using RTreeType = RTree<size_t, float, 2, float>;
+
+    // filter->notifyStatusMessage(QString("Starting Interpolation...."));
+    nx::core::IGeometry::SharedFaceList& delTriangles = delaunayGeom->getFacesRef();
+    size_t numTriangles = delaunayGeom->getNumberOfFaces();
+    int percent = 0;
+    int counter = xPositionsPtr.size() / 100;
+    RTreeType m_RTree;
+    // Populate the RTree
+
+    size_t numTris = delaunayGeom->getNumberOfFaces();
+    for(size_t tIndex = 0; tIndex < numTris; tIndex++)
+    {
+      std::array<float, 6> boundBox = nx::IntersectionUtilities::GetBoundingBoxAtTri(*delaunayGeom, tIndex);
+      m_RTree.Insert(boundBox.data(), boundBox.data() + 3, tIndex); // Note, all values including zero are fine in this version
+    }
+
+    for(size_t vertIndex = 0; vertIndex < xPositionsPtr.size(); vertIndex++)
+    {
+      Vec3f rayOrigin(xPositionsPtr[vertIndex], yPositionsPtr[vertIndex], 1.0F);
+      Vec3f rayDirection(0.0F, 0.0F, -1.0F);
+      Vec3f barycentricCoord(0.0F, 0.0F, 0.0F);
+      //      int xPos = xPositionsPtr[vertIndex];
+      //      int yPos = yPositionsPtr[vertIndex];
+      if(counter != 0)
+      {
+
+        if(vertIndex % counter == 0)
+        {
+          //          QString ss = QObject::tr("Interpolating || %1% Complete").arg(percent);
+          //          filter->notifyStatusMessage(ss);
+          percent += 1;
+        }
+      }
+
+      // Create these reusable variables to save the reallocation each time through the loop
+
+      std::vector<size_t> hitTriangleIds;
+      std::function<bool(size_t)> func = [&](size_t id) {
+        hitTriangleIds.push_back(id);
+        return true; // keep going
+      };
+
+      int nhits = m_RTree.Search(rayOrigin.data(), rayOrigin.data(), func);
+      for(auto triIndex : hitTriangleIds)
+      {
+        barycentricCoord = {0.0F, 0.0F, 0.0F};
+        std::array<size_t, 3> triVertIndices;
+        // Get the Vertex Coordinates for each of the 3 vertices
+        std::array<nx::core::Point3Df, 3> verts;
+        delaunayGeom->getFaceCoordinates(triIndex, verts);
+        Vec3f v0 = verts[0];
+        Vec3f v1 = verts[1];
+        Vec3f v2 = verts[2];
+
+        // Get the vertex Indices from the triangle
+        delaunayGeom->getFacePointIds(triIndex, triVertIndices);
+        bool inTriangle = nx::IntersectionUtilities::RayTriangleIntersect2(rayOrigin, rayDirection, v0, v1, v2, barycentricCoord);
+        if(inTriangle)
+        {
+          // Linear Interpolate dx and dy values using the barycentric coordinates
+          delaunayGeom->getFaceCoordinates(triIndex, verts);
+          float f0 = xyValues[triVertIndices[0]];
+          float f1 = xyValues[triVertIndices[1]];
+          float f2 = xyValues[triVertIndices[2]];
+
+          float interpolatedVal = (barycentricCoord[0] * f0) + (barycentricCoord[1] * f1) + (barycentricCoord[2] * f2);
+
+          outputValues[vertIndex] = interpolatedVal;
+
+          break;
+        }
+      }
+    }
+  }
+
+  int writeLambertData(ModifiedLambertProjection::Pointer lambert) const
+  {
+    int err = -1;
+
+    int m_Dimension = lambert->getDimension();
+    EbsdLib::DoubleArrayType::Pointer m_NorthSquare = lambert->getNorthSquare();
+    EbsdLib::DoubleArrayType::Pointer m_SouthSquare = lambert->getSouthSquare();
+
+    // We want half the sphere area for each square because each square represents a hemisphere.
+    const float32 sphereRadius = 1.0f;
+    float halfSphereArea = 4.0f * EbsdLib::Constants::k_PiF * sphereRadius * sphereRadius / 2.0f;
+    // The length of a side of the square is the square root of the area
+    float squareEdge = std::sqrt(halfSphereArea);
+    float32 m_StepSize = squareEdge / static_cast<float>(m_Dimension);
+
+    float32 m_MaxCoord = squareEdge / 2.0f;
+    float32 m_MinCoord = -squareEdge / 2.0f;
+    std::array<float, 3> vert = {0.0f, 0.0f, 0.0f};
+
+    std::vector<float> squareCoords(m_Dimension * m_Dimension * 3);
+
+    // Northern Hemisphere Coordinates
+    std::vector<float> northSphereCoords(m_Dimension * m_Dimension * 3);
+    std::vector<float> northStereoCoords(m_Dimension * m_Dimension * 3);
+
+    // Southern Hemisphere Coordinates
+    std::vector<float> southSphereCoords(m_Dimension * m_Dimension * 3);
+    std::vector<float> southStereoCoords(m_Dimension * m_Dimension * 3);
+
+    size_t index = 0;
+
+    const float origin = m_MinCoord + (m_StepSize / 2.0f);
+    for(int32_t y = 0; y < m_Dimension; ++y)
+    {
+      for(int x = 0; x < m_Dimension; ++x)
+      {
+        vert[0] = origin + (static_cast<float>(x) * m_StepSize);
+        vert[1] = origin + (static_cast<float>(y) * m_StepSize);
+
+        squareCoords[index * 3] = vert[0];
+        squareCoords[index * 3 + 1] = vert[1];
+        squareCoords[index * 3 + 2] = 0.0f;
+
+        LambertUtilities::LambertSquareVertToSphereVert(vert.data(), LambertUtilities::Hemisphere::North);
+
+        northSphereCoords[index * 3] = vert[0];
+        northSphereCoords[index * 3 + 1] = vert[1];
+        northSphereCoords[index * 3 + 2] = vert[2];
+
+        northStereoCoords[index * 3] = vert[0] / (1.0f + vert[2]);
+        northStereoCoords[index * 3 + 1] = vert[1] / (1.0f + vert[2]);
+        northStereoCoords[index * 3 + 2] = 0.0f;
+
+        // Reset the Lambert Square Coord
+        vert[0] = origin + (static_cast<float>(x) * m_StepSize);
+        vert[1] = origin + (static_cast<float>(y) * m_StepSize);
+        LambertUtilities::LambertSquareVertToSphereVert(vert.data(), LambertUtilities::Hemisphere::South);
+
+        southSphereCoords[index * 3] = vert[0];
+        southSphereCoords[index * 3 + 1] = vert[1];
+        southSphereCoords[index * 3 + 2] = vert[2];
+
+        southStereoCoords[index * 3] = vert[0] / (1.0f + vert[2]);
+        southStereoCoords[index * 3 + 1] = vert[1] / (1.0f + vert[2]);
+        southStereoCoords[index * 3 + 2] = 0.0f;
+
+        index++;
+      }
+    }
+
+    //**********************************************************************************************************************
+    // Triangulate the stereo coordinates
+
+    DataStructure dataStructure;
+
+    auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Delaunay");
+    auto& triangleGeom = *triangleGeomPtr;
+
+    DataPath sharedFaceListPath({"Delaunay", "SharedFaceList"});
+
+    usize numPts = northStereoCoords.size() / 3;
+    // Create the default DataArray that will hold the FaceList and Vertices. We
+    // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
+    using DimensionType = std::vector<size_t>;
+
+    DimensionType faceTupleShape = {0};
+    Result result = CreateArray<IGeometry::MeshIndexType>(dataStructure, faceTupleShape, {3ULL}, sharedFaceListPath, IDataAction::Mode::Execute);
+    if(result.invalid())
+    {
+      return -1;
+      // return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString())));
+    }
+    auto& sharedFaceListRef = dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(sharedFaceListPath);
+    triangleGeom.setFaceList(sharedFaceListRef);
+
+    // Create the Vertex Array with a component size of 3
+    DataPath vertexPath({"Delaunay", "SharedVertexList"});
+
+    DimensionType vertexTupleShape = {0};
+    result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, IDataAction::Mode::Execute);
+    if(result.invalid())
+    {
+      return -2;
+      // return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
+    }
+    Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
+    triangleGeom.setVertices(*vertexArray);
+    triangleGeom.resizeVertexList(numPts);
+
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, "VertexData", {numPts}, triangleGeom.getId());
+    if(vertexAttributeMatrix == nullptr)
+    {
+      return -3;
+      // return MakeErrorResult(-5512, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
+    }
+    triangleGeom.setVertexAttributeMatrix(*vertexAttributeMatrix);
+
+    if(nullptr != triangleGeom.getVertexAttributeMatrix())
+    {
+      triangleGeom.getVertexAttributeMatrix()->resizeTuples({numPts});
+    }
+    auto vertexCoordsPtr = triangleGeom.getVerticesRef();
+
+    // Create Coords for the Delaunator Algorithm
+    std::vector<float64> coords(2 * numPts, 0.0);
+    for(usize i = 0; i < numPts; i++)
+    {
+      coords[i * 2] = northStereoCoords[i * 3];
+      coords[i * 2 + 1] = northStereoCoords[i * 3 + 1];
+      vertexCoordsPtr[i * 3] = northStereoCoords[i * 3];
+      vertexCoordsPtr[i * 3 + 1] = northStereoCoords[i * 3 + 1];
+      vertexCoordsPtr[i * 3 + 2] = northStereoCoords[i * 3 + 2];
+    }
+
+    // Perform the triangulation
+    nx::delaunator::Delaunator d(coords);
+
+    usize numTriangles = d.triangles.size();
+    triangleGeom.resizeFaceList(numTriangles / 3);
+    auto sharedTriListPtr = triangleGeom.getFacesRef();
+    // usize triangleIndex = 0;
+    for(usize i = 0; i < numTriangles; i += 3)
+    {
+      std::array<usize, 3> triIDs = {d.triangles[i], d.triangles[i + 1], d.triangles[i + 2]};
+      sharedTriListPtr[i] = d.triangles[i];
+      sharedTriListPtr[i + 1] = d.triangles[i + 1];
+      sharedTriListPtr[i + 2] = d.triangles[i + 2];
+    }
+
+    // Create the vertex and face AttributeMatrix
+    auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, "Face Data", {numTriangles / 3}, triangleGeom.getId());
+    if(faceAttributeMatrix == nullptr)
+    {
+      return -4;
+      // return MakeErrorResult(-5511, fmt::format("{}CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, faceDataPath.toString()));
+    }
+    triangleGeom.setFaceAttributeMatrix(*faceAttributeMatrix);
+
+    Pipeline pipeline;
+    const Result<> result2 = DREAM3D::WriteFile(fmt::format("/tmp/delaunay_triangulation.dream3d"), dataStructure, pipeline, true);
+    //******************************************************************************************************************************
+
+    //******************************************************************************************************************************
+    // Perform a Bi-linear Interpolation
+    // Generate a regular grid of XY points
+    size_t numSteps = 1024;
+    float32 stepInc = 2.0f / static_cast<float>(numSteps);
+    std::vector<float32> xcoords(numSteps * numSteps);
+    std::vector<float32> ycoords(numSteps * numSteps);
+    for(size_t y = 0; y < numSteps; ++y)
+    {
+      for(size_t x = 0; x < numSteps; x++)
+      {
+        size_t idx = y * numSteps + x;
+        xcoords[idx] = -1.0f + static_cast<float32>(x) * stepInc;
+        ycoords[idx] = -1.0f + static_cast<float32>(y) * stepInc;
+      }
+    }
+
+    std::vector<double> outputValues(numSteps * numSteps);
+    unstructuredGridInterpolator<float32, double, double>(nullptr, &triangleGeom, xcoords, ycoords, m_NorthSquare->data(), outputValues);
+
+    //******************************************************************************************************************************
+
+    //******************************************************************************************************************************
+    // Write out all the data
+    {
+      hid_t groupId = H5Support::H5Utilities::createFile("/tmp/lambert_data.h5");
+      H5Support::H5ScopedFileSentinel fileSentinel(groupId, false);
+
+      std::vector<hsize_t> dims = {static_cast<hsize_t>(m_Dimension), static_cast<hsize_t>(m_Dimension)};
+      err = H5Support::H5Lite::writePointerDataset(groupId, m_NorthSquare->getName(), 2, dims.data(), m_NorthSquare->data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, m_SouthSquare->getName(), 2, dims.data(), m_SouthSquare->data());
+      dims[0] = m_Dimension * m_Dimension;
+      dims[1] = 3ULL;
+
+      err = H5Support::H5Lite::writePointerDataset(groupId, "Lambert Square Coords", 2, dims.data(), squareCoords.data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, "North Sphere Coords", 2, dims.data(), northSphereCoords.data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, "North Stereo Coords", 2, dims.data(), northStereoCoords.data());
+
+      err = H5Support::H5Lite::writePointerDataset(groupId, "South Sphere Coords", 2, dims.data(), southSphereCoords.data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, "South Stereo Coords", 2, dims.data(), southStereoCoords.data());
+
+      dims[0] = numSteps * numSteps;
+      err = H5Support::H5Lite::writePointerDataset(groupId, "X Coords", 1, dims.data(), xcoords.data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, "Y Coords", 1, dims.data(), ycoords.data());
+      err = H5Support::H5Lite::writePointerDataset(groupId, "Interpolated Values", 1, dims.data(), outputValues.data());
+    }
+
+    return err;
   }
 
 private:
