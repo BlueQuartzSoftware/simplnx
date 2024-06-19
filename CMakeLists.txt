@@ -157,7 +157,7 @@ find_package(nod CONFIG REQUIRED)
 # Find HDF5 and get the path to the DLL libraries and put that into a
 # global property for later install, debugging and packaging
 # -----------------------------------------------------------------------
-find_package(HDF5 MODULE REQUIRED)
+find_package(HDF5 1.14 MODULE REQUIRED)
 get_target_property(hdf5_dll_path hdf5::hdf5 IMPORTED_LOCATION_RELEASE)
 get_filename_component(hdf5_dll_path "${hdf5_dll_path}" DIRECTORY)
 get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS)

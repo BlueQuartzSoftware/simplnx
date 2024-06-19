@@ -12,7 +12,7 @@ namespace nx::core::HDF5
 {
 using IdType = int64;
 using ErrorType = int32;
-using SizeType = unsigned long long;
+using SizeType = uint64;
 
 enum class Type
 {
