@@ -68,6 +68,21 @@ A clustering algorithm can be considered a kind of segmentation; this implementa
 
 % Auto generated parameter table will be inserted here
 
+## Notes on Hyperparameter Tuning
+
+Machine Learning algorithms, especially unsupervised ones like DBSCAN, depend heavily upon the hyperparameter values passed into the algorithm. In this case the hyperparameters would be Epsilon and Minimum Points. To exemplify this in the context of the filter itself, consider the following image:
+
+![STRAIN Array Visualization](Images/DBSCAN_strain_vis.png)
+
+The above image depicts the strains experienced by an object, the dataset for which is used to test the algorithm and can be found in our Data Archive under the name "_DBSCAN_test.tar.gz_". In it we can see 3 clearly distinct clusters, one thin cluster running midway across the object from the west side to roughly the center, with the other two being northeast and southeast of the center respectively. Below shows a table of the oucomes of DBSCAN with different hyperparameters:
+| Incorrect | Exemplars |
+|-----------------------------------|------------------------------------|
+| Epsilon: 0.01, Minimum Points: 50 | Epsilon: 0.06, Minimum Points: 100 |
+| ![Underdeveloped](Images/DBSCAN_underdeveloped.png) | ![Semi-Correct](Images/DBSCAN_semi_correct.png) |
+| Epsilon: 0.05, Minimum Points: 100 | Zoomed Image of STRAIN |
+| ![Overdeveloped](Images/DBSCAN_overdeveloped.png) | ![Zoomed STRAIN](Images/DBSCAN_zoomed_strain.png) |
+|-----------------------------------|------------------------------------|
+
 ## References
 
 [1] A density-based algorithm for discovering clusters in large spatial databases with noise, M. Ester, H.P. Kriegel, J. Sander, and X. Xu, Proceedings of the Second International Conference on Knowledge Discovery and Data Mining, pp. 226-231, 1996.
