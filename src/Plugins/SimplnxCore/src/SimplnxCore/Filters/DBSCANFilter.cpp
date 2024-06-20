@@ -67,8 +67,8 @@ Parameters DBSCANFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SeedChoice_Key, "Initialization Type", "Whether to use random or iterative for start state. See Documentation for further detail",
-                                                                    to_underlying(AlgType::SeededRandom),
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitTypeIndex_Key, "Initialization Type",
+                                                                    "Whether to use random or iterative for start state. See Documentation for further detail", to_underlying(AlgType::SeededRandom),
                                                                     ChoicesParameter::Choices{"Iterative", "Random", "Seeded Random"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "DBSCAN SeedValue"));
@@ -97,9 +97,9 @@ Parameters DBSCANFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "name and path of Attribute Matrix to hold Cluster Data", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_SeedChoice_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::Random)));
-  params.linkParameters(k_SeedChoice_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
-  params.linkParameters(k_SeedChoice_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+  params.linkParameters(k_InitTypeIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::Random)));
+  params.linkParameters(k_InitTypeIndex_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+  params.linkParameters(k_InitTypeIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
@@ -155,7 +155,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   }
 
   // For caching seed run to run
-  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_SeedChoice_Key)) != AlgType::Iterative)
+  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_InitTypeIndex_Key)) != AlgType::Iterative)
   {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}));
     resultOutputActions.value().appendAction(std::move(createAction));
@@ -177,12 +177,12 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   }
 
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
-  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_SeedChoice_Key)) != AlgType::SeededRandom)
+  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_InitTypeIndex_Key)) != AlgType::SeededRandom)
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
-  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_SeedChoice_Key)) != AlgType::Iterative)
+  if(static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_InitTypeIndex_Key)) != AlgType::Iterative)
   {
     // Store Seed Value in Top Level Array
     dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
@@ -200,7 +200,7 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.FeatureIdsArrayPath = fIdsPath;
   inputValues.FeatureAM = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   inputValues.AllowCaching = filterArgs.value<bool>(k_UsePrecaching_Key);
-  inputValues.UseRandom = static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_SeedChoice_Key)) != AlgType::Iterative;
+  inputValues.UseRandom = static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_InitTypeIndex_Key)) != AlgType::Iterative;
   inputValues.Seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
 
   return DBSCAN(dataStructure, messageHandler, shouldCancel, &inputValues)();
