@@ -272,40 +272,33 @@ DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& iden
   return iter->second.lock().get();
 }
 
-DataObject* traversePath(DataObject* obj, const DataPath& path, usize index)
-{
-  if(path.getLength() == index)
-  {
-    return obj;
-  }
-  auto col = dynamic_cast<BaseGroup*>(obj);
-  if(col == nullptr)
-  {
-    return nullptr;
-  }
-  DataObject* child = (*col)[path[index]];
-  return traversePath(child, path, index + 1);
-}
-
 DataObject* DataStructure::getData(const DataPath& path)
 {
   if(path.empty())
   {
     return nullptr;
   }
-  auto topLevel = getTopLevelData();
-  for(DataObject* obj : topLevel)
+  DataObject* targetObject = m_RootGroup[path[0]];
+  for(usize index = 1; index < path.getLength(); index++)
   {
-    if(obj == nullptr)
+    if(targetObject == nullptr)
     {
-      continue;
+      return nullptr;
     }
-    if(obj->getName() == path[0])
+    if(!targetObject->isGroup())
     {
-      return traversePath(obj, path, 1);
+      return nullptr;
     }
+    auto* groupObject = static_cast<BaseGroup*>(targetObject);
+    DataObject* childObject = (*groupObject)[path[index]];
+    if(childObject == nullptr)
+    {
+      return nullptr;
+    }
+    targetObject = childObject;
   }
-  return nullptr;
+
+  return targetObject;
 }
 
 DataObject& DataStructure::getDataRef(const DataPath& path)
@@ -364,20 +357,27 @@ const DataObject* DataStructure::getData(const DataPath& path) const
   {
     return nullptr;
   }
-
-  auto topLevel = getTopLevelData();
-  for(DataObject* obj : topLevel)
+  const DataObject* targetObject = m_RootGroup[path[0]];
+  for(usize index = 1; index < path.getLength(); index++)
   {
-    if(obj == nullptr)
+    if(targetObject == nullptr)
     {
-      continue;
+      return nullptr;
     }
-    if(obj->getName() == path[0])
+    if(!targetObject->isGroup())
     {
-      return traversePath(obj, path, 1);
+      return nullptr;
     }
+    const auto* groupObject = static_cast<const BaseGroup*>(targetObject);
+    const DataObject* childObject = (*groupObject)[path[index]];
+    if(childObject == nullptr)
+    {
+      return nullptr;
+    }
+    targetObject = childObject;
   }
-  return nullptr;
+
+  return targetObject;
 }
 
 const DataObject& DataStructure::getDataRef(const DataPath& path) const
