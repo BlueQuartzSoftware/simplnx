@@ -5,6 +5,7 @@
 //
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -36,11 +37,11 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      REQUIRE(preflightResult.outputActions.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      REQUIRE(executeResult.result.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     // Generate filters into an existing plugin
@@ -55,11 +56,11 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      REQUIRE(preflightResult.outputActions.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      REQUIRE(executeResult.result.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
   }
 }
