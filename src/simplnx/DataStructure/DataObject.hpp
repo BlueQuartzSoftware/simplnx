@@ -85,6 +85,12 @@ public:
   virtual Type getDataObjectType() const;
 
   /**
+   * @brief Returns true if this object is derived from BaseGroup.
+   * @return bool
+   */
+  virtual bool isGroup() const;
+
+  /**
    * @brief The IdType alias serves as an ID type for DataObjects within their
    * respective DataStructure.
    */
