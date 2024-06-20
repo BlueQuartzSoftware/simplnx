@@ -91,6 +91,11 @@ DataObject::Type DataObject::getDataObjectType() const
   return Type::DataObject;
 }
 
+bool DataObject::isGroup() const
+{
+  return false;
+}
+
 void DataObject::setId(IdType newId)
 {
   m_Id = newId;

@@ -39,6 +39,11 @@ DataObject::Type BaseGroup::getDataObjectType() const
   return Type::BaseGroup;
 }
 
+bool BaseGroup::isGroup() const
+{
+  return true;
+}
+
 BaseGroup::GroupType BaseGroup::getGroupType() const
 {
   return GroupType::BaseGroup;
