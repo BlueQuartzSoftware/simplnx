@@ -146,6 +146,21 @@ public:
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return T*
+   */
+  template <class T>
+  T* getDataAsUnsafe(DataObject::IdType identifier)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<T*>(getData(identifier));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
    * @return DataObject*
@@ -164,6 +179,22 @@ public:
     static_assert(std::is_base_of_v<DataObject, T>);
     auto* object = getData(identifier);
     return dynamic_cast<T*>(object);
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return T*
+   */
+  template <class T>
+  T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    auto* object = getData(identifier);
+    return static_cast<T*>(object);
   }
 
   /**
@@ -204,6 +235,21 @@ public:
   }
 
   /**
+   * @brief Returns a pointer to the DataObject at the given DataPath. If no
+   * DataObject is found, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param path
+   * @return T*
+   */
+  template <class T>
+  T* getDataAsUnsafe(const DataPath& path)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<T*>(getData(path));
+  }
+
+  /**
    * @brief Returns a reference to the DataObject at the given DataPath. If no
    * DataObject is found, this method throws std::out_of_range.
    * @param path
@@ -217,6 +263,21 @@ public:
   }
 
   /**
+   * @brief Returns a reference to the DataObject at the given DataPath. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param path
+   * @return T&
+   */
+  template <class T>
+  T& getDataRefAsUnsafe(const DataPath& path)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<T&>(getDataRef(path));
+  }
+
+  /**
    * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
    * @param identifier
@@ -227,6 +288,21 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T&>(getDataRef(identifier));
+  }
+
+  /**
+   * @brief Returns a reference to the DataObject with the given identifier. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return T&
+   */
+  template <class T>
+  T& getDataRefAsUnsafe(DataObject::IdType identifier)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<T&>(getDataRef(identifier));
   }
 
   /**
@@ -248,6 +324,21 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param path
+   * @return T*
+   */
+  template <class T>
+  T* getDataAsUnsafe(const LinkedPath& path)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<T*>(getData(path));
   }
 
   /**
@@ -273,6 +364,21 @@ public:
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return const T*
+   */
+  template <class T>
+  const T* getDataAsUnsafe(DataObject::IdType identifier) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T*>(getData(identifier));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
    * @return const DataObject*
@@ -290,6 +396,21 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * If no such object exists, or no ID is provided, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return const T*
+   */
+  template <class T>
+  const T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T*>(getData(identifier));
   }
 
   /**
@@ -333,6 +454,20 @@ public:
   }
 
   /**
+   * @brief Returns a pointer to the DataObject at the given DataPath.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param path
+   * @return const T*
+   */
+  template <class T>
+  const T* getDataAsUnsafe(const DataPath& path) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T*>(getData(path));
+  }
+
+  /**
    * @brief Returns a reference to the DataObject at the given DataPath.
    *
    * @throws std::out_of_range if path does not exist
@@ -349,6 +484,21 @@ public:
   }
 
   /**
+   * @brief Returns a reference to the DataObject at the given DataPath.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @throws std::out_of_range if path does not exist
+   * @param path
+   * @return const T&
+   */
+  template <class T>
+  const T& getDataRefAsUnsafe(const DataPath& path) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T&>(getDataRef(path));
+  }
+
+  /**
    * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
    * @param identifier
@@ -359,6 +509,21 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T&>(getDataRef(identifier));
+  }
+
+  /**
+   * @brief Returns a reference to the DataObject with the given identifier. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param identifier
+   * @return T&
+   */
+  template <class T>
+  const T& getDataRefAsUnsafe(DataObject::IdType identifier) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T&>(getDataRef(identifier));
   }
 
   /**
@@ -380,6 +545,21 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
+  }
+
+  /**
+   * @brief Returns a pointer to the DataObject found at the specified
+   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
+   * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
+   * @param path
+   * @return const T*
+   */
+  template <class T>
+  const T* getDataAsUnsafe(const LinkedPath& path) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return static_cast<const T*>(getData(path));
   }
 
   /**

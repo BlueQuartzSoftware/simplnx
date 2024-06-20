@@ -83,6 +83,12 @@ public:
   DataObject::Type getDataObjectType() const override;
 
   /**
+   * @brief Returns true if this object is derived from BaseGroup.
+   * @return bool
+   */
+  bool isGroup() const override;
+
+  /**
    * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
    * @return
    */
