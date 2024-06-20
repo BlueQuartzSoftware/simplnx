@@ -12,6 +12,8 @@
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
 
+#include <fmt/format.h>
+
 namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
@@ -30,10 +32,10 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
  */
 
 template <class T>
-class ORIENTATIONANALYSIS_EXPORT ReadH5Data
+class ORIENTATIONANALYSIS_EXPORT IEbsdOemReader
 {
 public:
-  ReadH5Data(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
+  IEbsdOemReader(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(mesgHandler)
@@ -43,12 +45,12 @@ public:
     m_Reader->setFileName(inputValues->SelectedScanNames.inputFilePath.string());
   }
 
-  virtual ~ReadH5Data() noexcept = default;
+  virtual ~IEbsdOemReader() noexcept = default;
 
-  ReadH5Data(const ReadH5Data&) = delete;
-  ReadH5Data(ReadH5Data&&) noexcept = delete;
-  ReadH5Data& operator=(const ReadH5Data&) = delete;
-  ReadH5Data& operator=(ReadH5Data&&) noexcept = delete;
+  IEbsdOemReader(const IEbsdOemReader&) = delete;
+  IEbsdOemReader(IEbsdOemReader&&) noexcept = delete;
+  IEbsdOemReader& operator=(const IEbsdOemReader&) = delete;
+  IEbsdOemReader& operator=(IEbsdOemReader&&) noexcept = delete;
 
   Result<> execute()
   {
@@ -90,13 +92,14 @@ public:
 
     if(const int32 err = m_Reader->readFile(); err < 0)
     {
-      return MakeErrorResult(-8970, "EbsdReader could not read the .h5 file.");
+      return MakeErrorResult(-8970, fmt::format("Attempting to read scan '{}' from file '{}' produced an error from the '{}' class.\n  Error Code: {}\n  Message: {}", scanName,
+                                                m_Reader->getFileName(), m_Reader->getNameOfClass(), m_Reader->getErrorCode(), m_Reader->getErrorMessage()));
     }
 
     const auto phases = m_Reader->getPhaseVector();
     if(phases.empty())
     {
-      return MakeErrorResult(-8971, "EbsdReader could not read the phase vector from the .h5 file.");
+      return MakeErrorResult(-8971, fmt::format("'{}' did not parse any phases from from the .h5 file '{}' for scan '{}'", m_Reader->getNameOfClass(), scanName, m_Reader->getFileName()));
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!

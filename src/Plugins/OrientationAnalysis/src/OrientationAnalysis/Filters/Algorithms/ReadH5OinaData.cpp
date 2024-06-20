@@ -49,7 +49,7 @@ void convertHexEulerAngle(const ReadH5DataInputValues* m_InputValues, size_t tot
 
 // -----------------------------------------------------------------------------
 ReadH5OinaData::ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues)
-: ReadH5Data<H5OINAReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+: IEbsdOemReader<H5OINAReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
