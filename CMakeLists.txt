@@ -66,6 +66,11 @@ option(SIMPLNX_CONDA_BUILD "Enables conda-build specific layout" OFF)
 option(SIMPLNX_ENABLE_INSTALL "Enablesinstall rules" ON)
 
 # ------------------------------------------------------------------------------
+# Enable benchmarking utility
+# ------------------------------------------------------------------------------
+option(SIMPLNX_ENABLE_BENCHMARK_UTILITY "Enables benchmark utility" OFF)
+
+# ------------------------------------------------------------------------------
 # Check if a different Data_Archive web site is being used.
 #   The alternate would be for the internal build bots that can download from a
 #   local webserver
@@ -873,6 +878,11 @@ foreach(plugin ${SIMPLNX_PLUGIN_LIST})
   endif()
   simplnx_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
+
+# Benchmarking utility
+if(SIMPLNX_ENABLE_BENCHMARK_UTILITY)
+  add_subdirectory(utilities/benchmark)
+endif()
 
 set(SIMPLNX_PACKAGE_NAMESPACE "simplnx::")
 
