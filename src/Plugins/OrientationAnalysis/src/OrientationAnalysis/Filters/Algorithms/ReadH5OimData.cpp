@@ -7,7 +7,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ReadH5OimData::ReadH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues)
-: ReadH5Data<H5OIMReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+: IEbsdOemReader<H5OIMReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 

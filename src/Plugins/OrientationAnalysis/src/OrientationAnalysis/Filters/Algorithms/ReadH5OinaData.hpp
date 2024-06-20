@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
-#include "OrientationAnalysis/utilities/ReadH5Data.hpp"
+#include "OrientationAnalysis/utilities/IEbsdOemReader.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * intermediate .h5ebsd file.
  */
 
-class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public ReadH5Data<H5OINAReader>
+class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public IEbsdOemReader<H5OINAReader>
 {
 public:
   ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues);
