@@ -74,18 +74,38 @@ Machine Learning algorithms, especially unsupervised ones like DBSCAN, depend he
 
 ![STRAIN Array Visualization](Images/DBSCAN_strain_vis.png)
 
-The above image depicts the strains experienced by an object, the dataset for which is used to test the algorithm and can be found in our Data Archive under the name "_DBSCAN_test.tar.gz_". In it we can see 3 clearly distinct clusters, one thin cluster running midway across the object from the west side to roughly the center, with the other two being northeast and southeast of the center respectively. Below shows a table of the oucomes of DBSCAN with different hyperparameters:
-| Incorrect | Exemplars |
+The above image depicts the strains experienced by an object, the dataset for which is used to test the algorithm and can be found in our Data Archive under the name "_DBSCAN_test.tar.gz_". In it we can see 3 clearly distinct stress points, one thin stressor running midway across the object from the west side to roughly the center, with the other two being northeast and southeast of the center respectively. Below shows a table of the oucomes of DBSCAN with different hyperparameters:
+
+| Incorrect | Exemplar |
 |-----------------------------------|------------------------------------|
 | Epsilon: 0.01, Minimum Points: 50 | Epsilon: 0.06, Minimum Points: 100 |
 | ![Underdeveloped](Images/DBSCAN_underdeveloped.png) | ![Semi-Correct](Images/DBSCAN_semi_correct.png) |
-| Epsilon: 0.05, Minimum Points: 100 | Zoomed Image of STRAIN |
+| Epsilon: 0.05, Minimum Points: 100 | Zoomed Image of STRAIN (Reference) |
 | ![Overdeveloped](Images/DBSCAN_overdeveloped.png) | ![Zoomed STRAIN](Images/DBSCAN_zoomed_strain.png) |
-|-----------------------------------|------------------------------------|
+
+Note: the colors are just representing index of the cluster at a specific point, it is exclusively a label **NOT a visual representation of a quantitative value**.
+
+Out of the above table, lets focus in on a few specific aspects:
+
+- The top left image (_Epsilon: 0.01, Minimum Points: 50_) is clearly underdeveloped. There are only two clusters and the red clusters are clearly undersized.
+- The bottom left image (_Epsilon: 0.05, Minimum Points: 100_) may seem correct at first glance, but there are a two things that stand out:
+  - Throughout the boundary of the red cluster there are specks of the dark blue cluster, where it should either be a red or light blue. (Compare to _Zoomed_)
+  - The red cluster boundary is seemingly arbitrarily defined on the gradient, in that there is not a clear enough distinction to denote it as a separate cluster. Even if you were looking to make a distinction, arguably the boundary would be far close to the east side of the object.
+- The top right image (_Epsilon: 0.06, Minimum Points: 100_) was selected as the exemplar here because it did cluster the three regions of stress into the same cluster, with clear and distinct boundaries. However, this is not perfect either, as it incorrectly incorporated part of the gradient into the cluster as well.
+
+This dataset is not the ideal case for this algorithm, but it is what we were able to source and make available. That said it still demonstrates the idea and potential application.
+
+_Note from Developers_: We are aware of a paper that outlines an algorithm that can reasonably predict the hyperparameter values, but at the current time implementation is left up to potential contributors [2].
+
+## Note on Randomness
+
+It is not recommended to use iterative for the _Initalization Type_, as it was just included for backwards compatibility. The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Iterative produced identical results in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
 
 ## References
 
 [1] A density-based algorithm for discovering clusters in large spatial databases with noise, M. Ester, H.P. Kriegel, J. Sander, and X. Xu, Proceedings of the Second International Conference on Knowledge Discovery and Data Mining, pp. 226-231, 1996.
+
+[2] Yang, Y., Qian, C., Li, H. et al. An efficient DBSCAN optimized by arithmetic optimization algorithm with opposition-based learning. J Supercomput 78, 19566–19604 (2022). https://doi.org/10.1007/s11227-022-04634-w
 
 ## Example Pipelines
 
