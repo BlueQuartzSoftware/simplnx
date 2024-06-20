@@ -184,3 +184,42 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[Si
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_uncached_random_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
+
+TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)", "[SimplnxCore][DBSCAN]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    DBSCANFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(DBSCANFilter::k_SeedChoice_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+    args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(true));
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.06));
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(100));
+    args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_TargetArrayPath));
+    args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ClusterIdsNameNX));
+    args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_ClusterDataPathNX));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  const auto& clusterIdsDataStore = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX).getDataStoreRef();
+  REQUIRE(*std::max_element(clusterIdsDataStore.cbegin(), clusterIdsDataStore.cend()) == 2);
+
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_detailed_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+}
