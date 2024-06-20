@@ -47,7 +47,7 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
     // Generate filters into an existing plugin
     {
       const std::string k_FilterNames = "ThirdFilter,FourthFilter";
-      const std::filesystem::path k_InputDirectory = k_OutputDirectory / k_PluginName;
+      const std::filesystem::path k_InputDirectory = k_OutputDirectory / k_PluginName / "src" / k_PluginName;
 
       // Create default Parameters for the filter.
       args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, true);
