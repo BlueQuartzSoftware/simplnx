@@ -48,6 +48,35 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std
 }
 
 template <typename T>
+NeighborList<T>::NeighborList<T>(const NeighborList<T>& other)
+: INeighborList(other)
+, m_Store(other.m_Store)
+, m_IsAllocated(other.m_IsAllocated)
+, m_InitValue(other.m_InitValue)
+{
+}
+
+template <typename T>
+NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
+{
+  m_Store->copy(*rhs.m_Store.get());
+  m_IsAllocated = rhs.m_IsAllocated;
+  m_InitValue = rhs.m_InitValue;
+
+  return *this;
+}
+
+template <typename T>
+NeighborList<T>& NeighborList<T>::operator=(NeighborList<T>&& rhs)
+{
+  m_Store = std::move(rhs.m_Store);
+  m_IsAllocated = std::move(rhs.m_IsAllocated);
+  m_InitValue = std::move(rhs.m_InitValue);
+
+  return *this;
+}
+
+template <typename T>
 DataObject* NeighborList<T>::shallowCopy()
 {
   return new NeighborList(*this);
@@ -127,8 +156,8 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
       }
     }
   }
-  setNumberOfTuples(m_Store->size());
   m_Store = std::move(copy);
+  setNumberOfTuples(m_Store->size());
   return err;
 }
 
@@ -212,6 +241,8 @@ void NeighborList<T>::resizeTuples(usize numTuples)
 template <typename T>
 void NeighborList<T>::addEntry(int32 grainId, value_type value)
 {
+  std::lock_guard<std::mutex> guard(this->m_Mutex);
+
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
@@ -222,9 +253,9 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
     {
       m_Store->setList(i, SharedVectorType(new VectorType));
     }
-    setNumberOfTuples(m_Store->size());
   }
   m_Store->addEntry(grainId, value);
+  setNumberOfTuples(m_Store->size());
 }
 
 template <typename T>
@@ -237,16 +268,13 @@ void NeighborList<T>::clearAllLists()
 template <typename T>
 void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborList)
 {
+  std::lock_guard<std::mutex> guard(this->m_Mutex);
+
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
     m_Store->resizeTuples(grainId + 1);
     m_IsAllocated = true;
-    // Initialize with zero length Vectors
-    for(usize i = old; i < m_Store->size(); ++i)
-    {
-      m_Store->setList(i, SharedVectorType(new VectorType));
-    }
   }
   m_Store->setList(grainId, neighborList);
 }

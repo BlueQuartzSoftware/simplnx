@@ -10,6 +10,7 @@
 #define NOMINMAX
 
 #include <xtensor/xarray.hpp>
+#include <xtensor/xchunked_array.hpp>
 #include <xtensor/xstrides.hpp>
 
 #include <nonstd/span.hpp>
@@ -39,7 +40,7 @@ public:
   using const_reference = const T&;
   using ShapeType = typename IDataStore::ShapeType;
   using index_type = uint64;
-  using XArrayType = typename xt::xarray<T, xt::layout_type::row_major>;
+  using XArrayType = typename xt::xarray<T>;
   using Iterator = typename XArrayType::iterator;
   using ConstIterator = typename XArrayType::const_iterator;
 
@@ -241,7 +242,6 @@ public:
                                          totalSrcTuples * sourceNumComponents, destTupleOffset * numComponents, getSize()));
     }
 
-    return {};
     auto srcBegin = source.begin() + (srcTupleOffset * sourceNumComponents);
     auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
     auto dstBegin = begin() + (destTupleOffset * numComponents);
@@ -402,6 +402,15 @@ protected:
    * @brief Default constructor
    */
   AbstractDataStore() = default;
+  AbstractDataStore(const AbstractDataStore& other)
+  : IDataStore(other)
+  {
+  }
+
+  AbstractDataStore(AbstractDataStore&& other)
+  : IDataStore(std::move(other))
+  {
+  }
 
   mutable std::mutex m_Mutex;
 };

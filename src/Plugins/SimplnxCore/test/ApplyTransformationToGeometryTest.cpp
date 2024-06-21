@@ -11,8 +11,6 @@
 
 #include <catch2/catch.hpp>
 
-#include <xtensor/xio.hpp>
-
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -723,13 +721,6 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
 
-    {
-      const auto& exemplarArr = dataStructure.getDataRefAs<DataArray<int32>>(exemplarPath);
-      std::cout << "ApplyTransformationToGeometryFilter: Exemplar: " << exemplarArr.getDataStoreRef().xarray() << std::endl;
-
-      const auto& calculatedDataArr = dataStructure.getDataRefAs<DataArray<int32>>(calculatedPath);
-      std::cout << "ApplyTransformationToGeometryFilter: Data: " << calculatedDataArr.getDataStoreRef().xarray() << std::endl;
-    }
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
 }
