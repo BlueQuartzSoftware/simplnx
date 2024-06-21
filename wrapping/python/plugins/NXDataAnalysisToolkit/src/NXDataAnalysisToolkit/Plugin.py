@@ -60,6 +60,54 @@ except ImportError:
   pass
 # FILTER_END: ReadPeregrineHDF5File
 
+# FILTER_START: WriteAbaqusFile
+try:
+  from DataAnalysisToolkit.WriteAbaqusFile import WriteAbaqusFile
+  _filters.append(WriteAbaqusFile)
+except ImportError:
+  pass
+# FILTER_END: WriteAbaqusFile
+
+# FILTER_START: WriteAnsysFile
+try:
+  from DataAnalysisToolkit.WriteAnsysFile import WriteAnsysFile
+  _filters.append(WriteAnsysFile)
+except ImportError:
+  pass
+# FILTER_END: WriteAnsysFile
+
+# FILTER_START: WriteMedFile
+try:
+  from DataAnalysisToolkit.WriteMedFile import WriteMedFile
+  _filters.append(WriteMedFile)
+except ImportError:
+  pass
+# FILTER_END: WriteMedFile
+
+# FILTER_START: WriteGmshFile
+try:
+  from DataAnalysisToolkit.WriteGmshFile import WriteGmshFile
+  _filters.append(WriteGmshFile)
+except ImportError:
+  pass
+# FILTER_END: WriteGmshFile
+
+# FILTER_START: WriteTetGenFile
+try:
+  from DataAnalysisToolkit.WriteTetGenFile import WriteTetGenFile
+  _filters.append(WriteTetGenFile)
+except ImportError:
+  pass
+# FILTER_END: WriteTetGenFile
+
+# FILTER_START: WriteVtuFile
+try:
+  from DataAnalysisToolkit.WriteVtuFile import WriteVtuFile
+  _filters.append(WriteVtuFile)
+except ImportError:
+  pass
+# FILTER_END: WriteVtuFile
+
 import simplnx as nx
 
 class NXDataAnalysisToolkit:
