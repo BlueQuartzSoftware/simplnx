@@ -112,7 +112,7 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 
 IGeometry::StatusCode VertexGeom::findElementSizes(bool recalculate)
 {
-  auto* vertexSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* vertexSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(vertexSizes != nullptr && !recalculate)
   {
     return 0;

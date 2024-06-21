@@ -193,7 +193,7 @@ usize HexahedralGeom::getNumberOfCells() const
 
 IGeometry::StatusCode HexahedralGeom::findElementSizes(bool recalculate)
 {
-  auto* hexSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* hexSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(hexSizes != nullptr && !recalculate)
   {
     return 0;
@@ -215,7 +215,7 @@ IGeometry::StatusCode HexahedralGeom::findElementSizes(bool recalculate)
 
 IGeometry::StatusCode HexahedralGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* hexasControllingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* hexasControllingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(hexasControllingVert != nullptr && !recalculate)
   {
     return 0;
@@ -236,7 +236,7 @@ IGeometry::StatusCode HexahedralGeom::findElementsContainingVert(bool recalculat
 
 IGeometry::StatusCode HexahedralGeom::findElementNeighbors(bool recalculate)
 {
-  auto* hexNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* hexNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(hexNeighbors != nullptr && !recalculate)
   {
     return 0;
@@ -268,7 +268,7 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors(bool recalculate)
 
 IGeometry::StatusCode HexahedralGeom::findElementCentroids(bool recalculate)
 {
-  auto* hexCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* hexCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(hexCentroids != nullptr && !recalculate)
   {
     return 0;
@@ -332,7 +332,7 @@ void HexahedralGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64*
 
 IGeometry::StatusCode HexahedralGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
+  auto* edgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
     return 0;
@@ -353,7 +353,7 @@ IGeometry::StatusCode HexahedralGeom::findEdges(bool recalculate)
 
 IGeometry::StatusCode HexahedralGeom::findFaces(bool recalculate)
 {
-  auto* quadList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_FaceListId);
+  auto* quadList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_FaceListId);
   if(quadList != nullptr && !recalculate)
   {
     return 0;
@@ -374,7 +374,7 @@ IGeometry::StatusCode HexahedralGeom::findFaces(bool recalculate)
 
 IGeometry::StatusCode HexahedralGeom::findUnsharedEdges(bool recalculate)
 {
-  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
     return 0;
@@ -396,7 +396,7 @@ IGeometry::StatusCode HexahedralGeom::findUnsharedEdges(bool recalculate)
 
 IGeometry::StatusCode HexahedralGeom::findUnsharedFaces(bool recalculate)
 {
-  auto* unsharedQuadList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
+  auto* unsharedQuadList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
   if(unsharedQuadList != nullptr && !recalculate)
   {
     return 0;

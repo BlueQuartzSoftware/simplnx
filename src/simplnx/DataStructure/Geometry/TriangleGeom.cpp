@@ -169,7 +169,7 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
 
 IGeometry::StatusCode TriangleGeom::findElementSizes(bool recalculate)
 {
-  auto* triangleSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* triangleSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(triangleSizes != nullptr && !recalculate)
   {
     return 0;
@@ -191,7 +191,7 @@ IGeometry::StatusCode TriangleGeom::findElementSizes(bool recalculate)
 
 IGeometry::StatusCode TriangleGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* trianglesContainingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* trianglesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(trianglesContainingVert != nullptr && !recalculate)
   {
     return 0;
@@ -212,7 +212,7 @@ IGeometry::StatusCode TriangleGeom::findElementsContainingVert(bool recalculate)
 
 IGeometry::StatusCode TriangleGeom::findElementNeighbors(bool recalculate)
 {
-  auto* triangleNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* triangleNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(triangleNeighbors != nullptr && !recalculate)
   {
     return 0;
@@ -244,7 +244,7 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors(bool recalculate)
 
 IGeometry::StatusCode TriangleGeom::findElementCentroids(bool recalculate)
 {
-  auto* triangleCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* triangleCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(triangleCentroids != nullptr && !recalculate)
   {
     return 0;
@@ -284,7 +284,7 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
 
 IGeometry::StatusCode TriangleGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = getDataStructureRef().getDataAs<UInt64Array>(m_EdgeDataArrayId);
+  auto* edgeList = getDataStructureRef().getDataAsUnsafe<UInt64Array>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
     return 0;
@@ -306,7 +306,7 @@ IGeometry::StatusCode TriangleGeom::findEdges(bool recalculate)
 
 IGeometry::StatusCode TriangleGeom::findUnsharedEdges(bool recalculate)
 {
-  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
     return 0;

@@ -193,7 +193,7 @@ usize TetrahedralGeom::getNumberOfCells() const
 
 IGeometry::StatusCode TetrahedralGeom::findElementSizes(bool recalculate)
 {
-  auto* tetSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* tetSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(tetSizes != nullptr && !recalculate)
   {
     return 0;
@@ -215,7 +215,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementSizes(bool recalculate)
 
 IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* tetsContainingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* tetsContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(tetsContainingVert != nullptr && !recalculate)
   {
     return 0;
@@ -236,7 +236,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert(bool recalcula
 
 IGeometry::StatusCode TetrahedralGeom::findElementNeighbors(bool recalculate)
 {
-  auto* tetNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* tetNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(tetNeighbors != nullptr && !recalculate)
   {
     return 0;
@@ -268,7 +268,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors(bool recalculate)
 
 IGeometry::StatusCode TetrahedralGeom::findElementCentroids(bool recalculate)
 {
-  auto* tetCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* tetCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(tetCentroids != nullptr && !recalculate)
   {
     return 0;
@@ -316,7 +316,7 @@ void TetrahedralGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>&
 
 IGeometry::StatusCode TetrahedralGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
+  auto* edgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
     return 0;
@@ -337,7 +337,7 @@ IGeometry::StatusCode TetrahedralGeom::findEdges(bool recalculate)
 
 IGeometry::StatusCode TetrahedralGeom::findFaces(bool recalculate)
 {
-  auto* triList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_FaceListId);
+  auto* triList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_FaceListId);
   if(triList != nullptr && !recalculate)
   {
     return 0;
@@ -358,7 +358,7 @@ IGeometry::StatusCode TetrahedralGeom::findFaces(bool recalculate)
 
 IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges(bool recalculate)
 {
-  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
     return 0;
@@ -380,7 +380,7 @@ IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges(bool recalculate)
 
 IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces(bool recalculate)
 {
-  auto* unsharedTriList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
+  auto* unsharedTriList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
   if(unsharedTriList != nullptr && !recalculate)
   {
     return 0;

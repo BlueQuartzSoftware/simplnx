@@ -306,7 +306,7 @@ usize RectGridGeom::getNumberOfCells() const
 
 IGeometry::StatusCode RectGridGeom::findElementSizes(bool recalculate)
 {
-  auto* sizeArray = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* sizeArray = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(sizeArray != nullptr && !recalculate)
   {
     return 0;
