@@ -54,9 +54,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
   std::vector<T> linkCount(numVerts, 0);
 
   // Fill out lists with number of references to cells
-  auto dataStore = std::make_unique<DataStore<K>>(numVerts, static_cast<K>(0));
-  DataArray<K>* linkLocPtr = DataArray<K>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Vertices", std::move(dataStore), parentId);
-  auto linkLoc = *linkLocPtr;
+  std::vector<K> linkLoc(numVerts, static_cast<K>(0));
   K* verts = nullptr;
 
   // vtkPolyData *pdata = static_cast<vtkPolyData *>(data);
@@ -145,9 +143,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
   dynamicList->allocateLists(linkCount);
 
   // Allocate an array of bools that we use each iteration so that we don't put duplicates into the array
-  auto visitedDataStore = std::make_unique<DataStore<uint8>>(numElems, 0);
-  DataArray<uint8>* visitedPtr = DataArray<uint8>::Create(*dataStructure, "_INTERNAL_USE_ONLY_Visited", std::move(visitedDataStore), parentId);
-  auto& visited = *visitedPtr;
+  std::vector<uint8> visited(numElems, 0);
 
   // Reuse this vector for each loop. Avoids re-allocating the memory each time through the loop
   std::vector<K> loop_neighbors(32, 0);

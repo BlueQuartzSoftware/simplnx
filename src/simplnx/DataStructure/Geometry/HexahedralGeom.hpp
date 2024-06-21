@@ -119,24 +119,24 @@ public:
    * @brief
    * @return StatusCode
    */
-  StatusCode findElementSizes() override;
+  StatusCode findElementSizes(bool recalculate) override;
 
   /**
    * @brief
    * @return StatusCode
    */
-  StatusCode findElementsContainingVert() override;
+  StatusCode findElementsContainingVert(bool recalculate) override;
 
   /**
    * @brief
    * @return StatusCode
    */
-  StatusCode findElementNeighbors() override;
+  StatusCode findElementNeighbors(bool recalculate) override;
 
   /**
    * @return StatusCode
    */
-  StatusCode findElementCentroids() override;
+  StatusCode findElementCentroids(bool recalculate) override;
 
   /**
    * @brief
@@ -155,25 +155,25 @@ public:
    * @brief
    * @return StatusCode
    */
-  StatusCode findEdges() override;
+  StatusCode findEdges(bool recalculate) override;
 
   /**
    * @brief
    * @return StatusCode
    */
-  StatusCode findFaces() override;
+  StatusCode findFaces(bool recalculate) override;
 
   /**
    * @brief
    * @return StatusCode
    */
-  StatusCode findUnsharedEdges() override;
+  StatusCode findUnsharedEdges(bool recalculate) override;
 
   /**
    * @brief
    * @return StatusCode
    */
-  StatusCode findUnsharedFaces() override;
+  StatusCode findUnsharedFaces(bool recalculate) override;
 
 protected:
   /**

@@ -35,16 +35,12 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
   m_NRingTriangles.clear();
 
   // Make sure we have the proper connectivity built
-  const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
-  if(node2TrianglePtr == nullptr)
+  err = triangleGeom->findElementsContainingVert(false);
+  if(err < 0)
   {
-    err = triangleGeom->findElementsContainingVert();
-    if(err < 0)
-    {
-      return MakeErrorResult(err, "Failed to find elements containing vert");
-    }
-    node2TrianglePtr = triangleGeom->getElementsContainingVert();
+    return MakeErrorResult(err, "Failed to find elements containing vert");
   }
+  const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
 
   // Figure out these boolean values for a sanity check
   bool check0 = faceLabels[triangleId * 2] == m_InputValues->RegionId0 && faceLabels[triangleId * 2 + 1] == m_InputValues->RegionId1;

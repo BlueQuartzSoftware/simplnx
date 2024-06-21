@@ -304,8 +304,14 @@ usize RectGridGeom::getNumberOfCells() const
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();
 }
 
-IGeometry::StatusCode RectGridGeom::findElementSizes()
+IGeometry::StatusCode RectGridGeom::findElementSizes(bool recalculate)
 {
+  auto* sizeArray = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  if(sizeArray != nullptr && !recalculate)
+  {
+    return 0;
+  }
+
   auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
@@ -333,8 +339,11 @@ IGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
-  if(!sizeArray)
+  if(sizeArray == nullptr)
+  {
+    sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
+  }
+  if(sizeArray == nullptr)
   {
     m_ElementSizesId.reset();
     return -1;

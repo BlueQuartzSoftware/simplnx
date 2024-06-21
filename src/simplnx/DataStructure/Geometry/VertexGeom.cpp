@@ -110,15 +110,23 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-IGeometry::StatusCode VertexGeom::findElementSizes()
+IGeometry::StatusCode VertexGeom::findElementSizes(bool recalculate)
 {
+  auto* vertexSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  if(vertexSizes != nullptr && !recalculate)
+  {
+    return 0;
+  }
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-
-  Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
   if(vertexSizes == nullptr)
   {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
+  }
+  if(vertexSizes == nullptr)
+  {
+    m_ElementSizesId.reset();
     return -1;
   }
   m_ElementSizesId = vertexSizes->getId();

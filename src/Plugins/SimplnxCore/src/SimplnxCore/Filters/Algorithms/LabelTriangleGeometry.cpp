@@ -35,7 +35,7 @@ Result<> LabelTriangleGeometry::operator()()
   {
     usize numTris = triangle.getNumberOfFaces();
 
-    auto check = triangle.findElementNeighbors(); // use auto since return time is a class declared typename
+    auto check = triangle.findElementNeighbors(false); // use auto since return time is a class declared typename
     if(check < 0)
     {
       return MakeErrorResult(check, fmt::format("Error finding element neighbors for {} geometry", triangle.getName()));
