@@ -139,7 +139,7 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 
 IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
 {
-  auto* sizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* sizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(sizes != nullptr && !recalculate)
   {
     return 0;
@@ -174,7 +174,7 @@ IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
 
 IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* containsVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* containsVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(containsVert != nullptr && !recalculate)
   {
     return 0;
@@ -195,7 +195,7 @@ IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
 
 IGeometry::StatusCode EdgeGeom::findElementNeighbors(bool recalculate)
 {
-  auto* edgeNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* edgeNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(edgeNeighbors != nullptr && !recalculate)
   {
     return 0;
@@ -228,7 +228,7 @@ IGeometry::StatusCode EdgeGeom::findElementNeighbors(bool recalculate)
 
 IGeometry::StatusCode EdgeGeom::findElementCentroids(bool recalculate)
 {
-  auto* edgeCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* edgeCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(edgeCentroids != nullptr && !recalculate)
   {
     return 0;
