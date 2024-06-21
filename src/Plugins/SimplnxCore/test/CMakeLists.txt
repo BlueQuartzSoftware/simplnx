@@ -56,6 +56,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreatePythonSkeletonTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
+  DBSCANTest.cpp
   DeleteDataTest.cpp
   DREAM3DFileTest.cpp
   ErodeDilateBadDataTest.cpp
@@ -233,6 +234,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_color_table_test.tar.gz SHA512 b5683c758964eb723267400b14047f8adb0d5365ee9ca93d1a6940e9b6ad198cd4739c1ca799eb787b7706e668dbc16ab8243642034cdba5b71d64c27e682d3f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME DBSCAN_tests.tar.gz SHA512 fba3d6c02cde5eeeccad0153032e403c20826365c2362351b8e1048b3d385480e7fba828748196e03ffa95aff569420630b0506441d9da9893d25db40390fdf0)
 endif()
 
 # -----------------------------------------------------------------------------

@@ -179,7 +179,7 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
     throw std::runtime_error("Cannot create a NeighborList of booleans.");
   }
   default: {
-    throw std::runtime_error("nx::core::ExecuteDataFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
+    throw std::runtime_error("nx::core::ExecuteNeighborFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
   }
   }
 }

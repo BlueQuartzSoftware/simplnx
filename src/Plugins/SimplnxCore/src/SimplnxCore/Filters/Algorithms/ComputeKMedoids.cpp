@@ -1,9 +1,9 @@
 #include "ComputeKMedoids.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/KUtilities.hpp"
 
 #include <random>
 
@@ -16,7 +16,7 @@ class KMedoidsTemplate
 {
 public:
   KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, Int32Array& fIds,
-                   KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+                   ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Medoids(dynamic_cast<DataArrayT&>(medoidsIDataArray))
@@ -95,7 +95,7 @@ private:
   const std::unique_ptr<MaskCompare>& m_Mask;
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
-  KUtilities::DistanceMetric m_DistMetric;
+  ClusterUtilities::DistanceMetric m_DistMetric;
   std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
@@ -112,7 +112,7 @@ private:
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
         {
-          float64 dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
+          float64 dist = ClusterUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
           if(dist < minDist)
           {
             minDist = dist;
@@ -153,7 +153,7 @@ private:
               }
               if(m_FeatureIds[k] == i + 1 && m_Mask->isTrue(k))
               {
-                cost += KUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
+                cost += ClusterUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
               }
             }
 
