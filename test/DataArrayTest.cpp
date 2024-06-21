@@ -7,8 +7,6 @@
 
 #include <catch2/catch.hpp>
 
-#include <xtensor/xio.hpp>
-
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -78,14 +76,12 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   {
     dataArray.initializeTuple(i, static_cast<int32>(i));
   }
-  std::cout << dataArray.getDataStoreRef().xarray() << std::endl;
 
   for(usize tupleIndex = 0; tupleIndex < k_NumTuples; tupleIndex++)
   {
     for(usize componentIndex = 0; componentIndex < k_NumComponents; componentIndex++)
     {
       uint64 index = tupleIndex * 3 + componentIndex;
-      // std::cout << "Array index: " << index << " : " << dataArray[index] << std::endl;
       REQUIRE(dataArray[index] == static_cast<int32>(tupleIndex));
     }
   }

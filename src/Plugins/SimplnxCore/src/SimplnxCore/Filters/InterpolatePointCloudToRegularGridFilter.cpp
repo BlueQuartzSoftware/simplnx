@@ -58,7 +58,7 @@ struct MapPointCloudDataByKernelFunctor
             continue;
           }
           index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
-          interpolatedDataPtr->addEntry(index, kernelVals[counter] * inputData[vertIdx]);
+          interpolatedDataPtr->addEntry(index, kernelVals[counter] * inputData.at(vertIdx));
           counter++;
         }
       }

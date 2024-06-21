@@ -74,16 +74,16 @@ public:
   {
     usize listSize = getListSize(grainId);
     usize interalListSize = xtensorListSize();
-    if(listSize >= interalListSize + 1)
+    if(listSize + 1 >= interalListSize)
     {
-      interalListSize *= 2;
+      interalListSize = listSize + 2;
       setXtensorListSize(interalListSize);
     }
 
+    std::lock_guard<std::mutex> guard(m_Mutex);
     uint64 offset = (grainId * interalListSize); // First element is list size
     listSize++;
 
-    std::lock_guard<std::mutex> guard(m_Mutex);
     auto& xarr = xarray();
     xarr.flat(offset) = listSize;
     xarr.flat(offset + listSize) = value;
@@ -150,7 +150,6 @@ public:
    */
   virtual vector_type getList(int32 grainId) const
   {
-
     return copyOfList(grainId);
   }
 
@@ -414,7 +413,7 @@ protected:
 
     uint64 internalCount = xtensorListSize();
     uint64 offset = grainId * (internalCount); // First element is list size
-    xarray().flat(offset) = size;
+    xarray().flat(offset) = static_cast<T>(size);
   }
 
 private:

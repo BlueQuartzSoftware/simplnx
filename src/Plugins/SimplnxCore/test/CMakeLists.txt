@@ -9,11 +9,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateAMScanPathsTest.cpp
   SliceTriangleGeometryTest.cpp
   # ReadDeformKeyFileV12Test.cpp
-  # AddBadDataTest.cpp
-  # AlignGeometriesTest.cpp
-  # AlignSectionsFeatureCentroidTest.cpp
-  # AlignSectionsListTest.cpp
-  # AppendImageGeometryZSliceTest.cpp
+  AddBadDataTest.cpp
+  AlignGeometriesTest.cpp
+  AlignSectionsFeatureCentroidTest.cpp
+  AlignSectionsListTest.cpp
+  AppendImageGeometryZSliceTest.cpp
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
@@ -112,30 +112,29 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   ResampleImageGeomTest.cpp
-
-  # ResampleRectGridToImageGeomTest.cpp
-  # ReverseTriangleWindingTest.cpp
-  # RobustAutomaticThresholdTest.cpp
-  # RotateSampleRefFrameTest.cpp
-  # ScalarSegmentFeaturesFilterTest.cpp
-  # SetImageGeomOriginScalingFilterTest.cpp
-  # SharedFeatureFaceTest.cpp
-  # SilhouetteTest.cpp
-  # SplitAttributeArrayTest.cpp
-  # SurfaceNetsTest.cpp
-  # TriangleCentroidTest.cpp
-  # TriangleDihedralAngleFilterTest.cpp
-  # TriangleNormalFilterTest.cpp
-  # UncertainRegularGridSampleSurfaceMeshTest.cpp
-  # WriteAbaqusHexahedronTest.cpp
-  # WriteASCIIDataTest.cpp
-  # WriteAvizoRectilinearCoordinateTest.cpp
-  # WriteAvizoUniformCoordinateTest.cpp
-  # WriteBinaryDataTest.cpp
-  # WriteFeatureDataCSVTest.cpp
-  # WriteLosAlamosFFTTest.cpp
-  # WriteStlFileTest.cpp
-  # WriteVtkRectilinearGridTest.cpp
+  ResampleRectGridToImageGeomTest.cpp
+  ReverseTriangleWindingTest.cpp
+  RobustAutomaticThresholdTest.cpp
+  RotateSampleRefFrameTest.cpp
+  ScalarSegmentFeaturesFilterTest.cpp
+  SetImageGeomOriginScalingFilterTest.cpp
+  SharedFeatureFaceTest.cpp
+  SilhouetteTest.cpp
+  SplitAttributeArrayTest.cpp
+  SurfaceNetsTest.cpp
+  TriangleCentroidTest.cpp
+  TriangleDihedralAngleFilterTest.cpp
+  TriangleNormalFilterTest.cpp
+  UncertainRegularGridSampleSurfaceMeshTest.cpp
+  WriteAbaqusHexahedronTest.cpp
+  WriteASCIIDataTest.cpp
+  WriteAvizoRectilinearCoordinateTest.cpp
+  WriteAvizoUniformCoordinateTest.cpp
+  WriteBinaryDataTest.cpp
+  WriteFeatureDataCSVTest.cpp
+  WriteLosAlamosFFTTest.cpp
+  WriteStlFileTest.cpp
+  WriteVtkRectilinearGridTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

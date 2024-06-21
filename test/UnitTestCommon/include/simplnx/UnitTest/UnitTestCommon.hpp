@@ -682,7 +682,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
           float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
           INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
                            computedPath.toString(), computed.size()));
-          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
+          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
           REQUIRE(diff < EPSILON);
           break;

@@ -5,6 +5,8 @@
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 
+#include <mutex>
+
 namespace nx::core
 {
 namespace NeighborListConstants
@@ -199,10 +201,10 @@ public:
   T getValue(int32 grainId, int32 index, bool& ok) const;
 
   /**
-  * @brief Sets the value at the given index using mutex locks.
-  * @param index
-  * @param value
-  */
+   * @brief Sets the value at the given index using mutex locks.
+   * @param index
+   * @param value
+   */
   void setValue(usize index, const VectorType& value);
 
   /**
@@ -347,8 +349,15 @@ public:
    */
   void resizeTuples(const std::vector<usize>& tupleShape) override;
 
+  /**
+   * @brief Returns a shared_ptr to the underlying list store.
+   * @return std::shared_ptr<store_type>
+   */
   std::shared_ptr<store_type> getStore() const;
 
+  /**
+   * @brief Returns a vector of vectors containing the current values.
+   */
   std::vector<VectorType> getVectors() const;
 
   iterator begin();
@@ -357,6 +366,9 @@ public:
   const_iterator end() const;
   const_iterator cbegin() const;
   const_iterator cend() const;
+
+  NeighborList& operator=(const NeighborList& rhs);
+  NeighborList& operator=(NeighborList&& rhs);
 
 protected:
   /**
@@ -369,9 +381,11 @@ protected:
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
 
+  NeighborList(const NeighborList& other);
+
 private:
   std::shared_ptr<store_type> m_Store;
-  // std::vector<SharedVectorType> m_Array;
+  mutable std::mutex m_Mutex;
   bool m_IsAllocated;
   value_type m_InitValue;
 };

@@ -39,6 +39,7 @@ void StringStore::resize(usize count)
   {
     data.flat(i) = m_xarray.flat(i);
   }
+  m_xarray.resize({count});
   m_xarray = std::move(data);
 }
 

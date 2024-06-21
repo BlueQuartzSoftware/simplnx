@@ -21,6 +21,6 @@ public:
   AbstractStringStore& operator=(const std::vector<std::string>& values) override;
 
 private:
-  xt::xarray<std::string> m_xarray;
+  xarray_type m_xarray;
 };
 } // namespace nx::core

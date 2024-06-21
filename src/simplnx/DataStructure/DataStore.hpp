@@ -143,7 +143,16 @@ public:
    * @param rhs
    * @return
    */
-  DataStore& operator=(DataStore&& rhs) = default;
+  DataStore& operator=(DataStore&& rhs)
+  {
+    m_ComponentShape = std::move(rhs.m_ComponentShape);
+    m_TupleShape = std::move(rhs.m_TupleShape);
+    m_Array = std::move(rhs.m_Array);
+    m_NumComponents = std::move(rhs.m_NumComponents);
+    m_NumTuples = std::move(rhs.m_NumTuples);
+
+    return *this;
+  }
 
   ~DataStore() override = default;
 
