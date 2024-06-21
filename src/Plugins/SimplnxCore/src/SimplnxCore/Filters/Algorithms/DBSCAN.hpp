@@ -11,33 +11,37 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
+#include <random>
+
 namespace nx::core
 {
-
-struct SIMPLNXCORE_EXPORT ComputeKMeansInputValues
+struct SIMPLNXCORE_EXPORT DBSCANInputValues
 {
-  uint64 InitClusters;
-  ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
-  DataPath MeansArrayPath;
-  uint64 Seed;
+  float32 Epsilon;
+  int32 MinPoints;
+  ClusterUtilities::DistanceMetric DistanceMetric;
+  DataPath FeatureAM;
+  bool AllowCaching;
+  bool UseRandom;
+  std::mt19937_64::result_type Seed;
 };
 
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT ComputeKMeans
+class SIMPLNXCORE_EXPORT DBSCAN
 {
 public:
-  ComputeKMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKMeansInputValues* inputValues);
-  ~ComputeKMeans() noexcept;
+  DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
+  ~DBSCAN() noexcept;
 
-  ComputeKMeans(const ComputeKMeans&) = delete;
-  ComputeKMeans(ComputeKMeans&&) noexcept = delete;
-  ComputeKMeans& operator=(const ComputeKMeans&) = delete;
-  ComputeKMeans& operator=(ComputeKMeans&&) noexcept = delete;
+  DBSCAN(const DBSCAN&) = delete;
+  DBSCAN(DBSCAN&&) noexcept = delete;
+  DBSCAN& operator=(const DBSCAN&) = delete;
+  DBSCAN& operator=(DBSCAN&&) noexcept = delete;
 
   Result<> operator()();
   void updateProgress(const std::string& message);
@@ -45,7 +49,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ComputeKMeansInputValues* m_InputValues = nullptr;
+  const DBSCANInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

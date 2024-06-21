@@ -56,6 +56,7 @@ set(FilterList
   CreatePythonSkeletonFilter
   CropImageGeometryFilter
   CropVertexGeometryFilter
+  DBSCANFilter
   DeleteDataFilter
   ErodeDilateBadDataFilter
   ErodeDilateCoordinationNumberFilter
@@ -164,6 +165,7 @@ set(AlgorithmList
   ConvertColorToGrayScale
   ConvertData
   CreatePythonSkeleton
+  DBSCAN
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
