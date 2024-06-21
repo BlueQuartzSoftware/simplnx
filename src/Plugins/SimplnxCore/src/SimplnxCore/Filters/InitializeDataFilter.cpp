@@ -607,11 +607,23 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
         return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
       }
     }
+    auto values = StringUtilities::split(args.value<std::string>(k_StepValue_Key), ";", false);
+    std::vector<size_t> zeroIdx;
+    for(size_t i = 0; i < values.size(); i++)
+    {
+      if(values[i] == "0")
+      {
+        zeroIdx.push_back(i);
+      }
+    }
+    if(!zeroIdx.empty())
+    {
 
-    operationNuancesStrm << "When supplying a 0 as the Step value the component at that index in the tuple will be unchanged in the end array.\n";
-    operationNuancesStrm << fmt::format("Example: Suppose we have a two component array with a Step Values of '2{}0', Starting Values of '0', and an addition Step Operation\n", k_DelimiterChar);
-    operationNuancesStrm << "The output array would look like 0,0 | 2,0 | 4,0 | 6,0 | ...";
-
+      operationNuancesStrm << "Warning: Zero Step Value found. Component(s) " << fmt::format("[{}]", fmt::join(zeroIdx, ","))
+                           << " have a ZERO value for the step/increment.\n    The values for those components will be unchanged from the starting value.\n";
+      operationNuancesStrm << fmt::format("    Example: Suppose we have a two component array with a Step Values of '2{}0', Starting Values of '0', and an addition Step Operation\n", k_DelimiterChar);
+      operationNuancesStrm << "    The output array would look like 0,0 | 2,0 | 4,0 | 6,0 | ...";
+    }
     break;
   }
   case InitializeType::RangedRandom: {
