@@ -46,4 +46,22 @@ inline const std::string PluginEnvironmentPythonFile()
   return {k_PluginEnvironmentPythonFileCharArray};
 }
 
+// clang-format off
+static const char k_PluginPyProjectPythonFileCharArray[] = {@PYTHON_PLUGIN_PYPROJECT_TEMPLATE@};
+// clang-format on
+
+inline const std::string PluginPyProjectPythonFile()
+{
+  return {k_PluginPyProjectPythonFileCharArray};
+}
+
+// clang-format off
+static const char k_PluginMetaPythonFileCharArray[] = {@PYTHON_PLUGIN_META_TEMPLATE@};
+// clang-format on
+
+inline const std::string PluginMetaPythonFile()
+{
+  return {k_PluginMetaPythonFileCharArray};
+}
+
 }; // namespace nx::core

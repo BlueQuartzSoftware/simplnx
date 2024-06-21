@@ -5,6 +5,7 @@
 //
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -36,17 +37,17 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      REQUIRE(preflightResult.outputActions.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      REQUIRE(executeResult.result.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     // Generate filters into an existing plugin
     {
       const std::string k_FilterNames = "ThirdFilter,FourthFilter";
-      const std::filesystem::path k_InputDirectory = k_OutputDirectory / k_PluginName;
+      const std::filesystem::path k_InputDirectory = k_OutputDirectory / k_PluginName / "src" / k_PluginName;
 
       // Create default Parameters for the filter.
       args.insertOrAssign(CreatePythonSkeletonFilter::k_UseExistingPlugin_Key, true);
@@ -55,11 +56,11 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      REQUIRE(preflightResult.outputActions.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
-      REQUIRE(executeResult.result.valid());
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
   }
 }

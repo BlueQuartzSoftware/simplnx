@@ -100,39 +100,77 @@ IFilter::PreflightResult CreatePythonSkeletonFilter::preflightImpl(const DataStr
   if(useExistingPlugin)
   {
     pluginPath = pluginInputDir.string();
+    pluginName = pluginInputDir.filename().string();
   }
-  std::string fullPath = fmt::format("{}{}{}{}Plugin.py", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
+
+  std::string fullPath = fmt::format("{}{}{}{}meta.yaml", pluginPath, std::string{fs::path::preferred_separator}, "conda", std::string{fs::path::preferred_separator});
   if(std::filesystem::exists({fullPath}))
   {
-    fullPath = "[REPLACE]: " + fullPath;
+    fullPath = std::string("[REPLACE]: ").append(fullPath);
   }
   else
   {
-    fullPath = "[New]: " + fullPath;
+    fullPath = std::string("[New]: ").append(fullPath);
   }
   preflightUpdatedValue << fullPath << '\n';
 
-  fullPath = fmt::format("{}{}{}{}__init__.py", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
+  fullPath = fmt::format("{}{}{}{}environment.yml", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
   if(std::filesystem::exists({fullPath}))
   {
-    fullPath = "[REPLACE]: " + fullPath;
+    fullPath = std::string("[REPLACE]: ").append(fullPath);
   }
   else
   {
-    fullPath = "[New]: " + fullPath;
+    fullPath = std::string("[New]: ").append(fullPath);
+  }
+  preflightUpdatedValue << fullPath << '\n';
+
+  fullPath = fmt::format("{}{}{}{}pyproject.toml", pluginOutputDir.string(), std::string{fs::path::preferred_separator}, pluginName, std::string{fs::path::preferred_separator});
+  if(std::filesystem::exists({fullPath}))
+  {
+    fullPath = std::string("[REPLACE]: ").append(fullPath);
+  }
+  else
+  {
+    fullPath = std::string("[New]: ").append(fullPath);
+  }
+  preflightUpdatedValue << fullPath << '\n';
+
+  fullPath = fmt::format("{}{}{}{}{}{}__init__.py", pluginPath, std::string{fs::path::preferred_separator}, "src", std::string{fs::path::preferred_separator}, pluginName,
+                         std::string{fs::path::preferred_separator});
+  if(std::filesystem::exists({fullPath}))
+  {
+    fullPath = std::string("[REPLACE]: ").append(fullPath);
+  }
+  else
+  {
+    fullPath = std::string("[New]: ").append(fullPath);
+  }
+  preflightUpdatedValue << fullPath << '\n';
+
+  fullPath = fmt::format("{}{}{}{}{}{}Plugin.py", pluginPath, std::string{fs::path::preferred_separator}, "src", std::string{fs::path::preferred_separator}, pluginName,
+                         std::string{fs::path::preferred_separator});
+  if(std::filesystem::exists({fullPath}))
+  {
+    fullPath = std::string("[REPLACE]: ").append(fullPath);
+  }
+  else
+  {
+    fullPath = std::string("[New]: ").append(fullPath);
   }
   preflightUpdatedValue << fullPath << '\n';
 
   for(const auto& filterName : filterList)
   {
-    fullPath = fmt::format("{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, filterName);
+    fullPath = fmt::format("{}{}{}{}{}{}{}.py", pluginPath, std::string{fs::path::preferred_separator}, "src", std::string{fs::path::preferred_separator}, pluginName,
+                           std::string{fs::path::preferred_separator}, filterName);
     if(std::filesystem::exists({fullPath}))
     {
-      fullPath = "[REPLACE]: " + fullPath;
+      fullPath = std::string("[REPLACE]: ").append(fullPath);
     }
     else
     {
-      fullPath = "[New]: " + fullPath;
+      fullPath = std::string("[New]: ").append(fullPath);
     }
     preflightUpdatedValue << fullPath << '\n';
   }
