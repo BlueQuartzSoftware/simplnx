@@ -168,7 +168,7 @@ usize QuadGeom::getNumberOfVerticesPerFace() const
 
 IGeometry::StatusCode QuadGeom::findElementSizes(bool recalculate)
 {
-  auto* quadSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* quadSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(quadSizes != nullptr && !recalculate)
   {
     return 0;
@@ -190,7 +190,7 @@ IGeometry::StatusCode QuadGeom::findElementSizes(bool recalculate)
 
 IGeometry::StatusCode QuadGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* quadsContainingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* quadsContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(quadsContainingVert != nullptr && !recalculate)
   {
     return 0;
@@ -211,7 +211,7 @@ IGeometry::StatusCode QuadGeom::findElementsContainingVert(bool recalculate)
 
 IGeometry::StatusCode QuadGeom::findElementNeighbors(bool recalculate)
 {
-  auto* quadNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* quadNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(quadNeighbors != nullptr && !recalculate)
   {
     return 0;
@@ -243,7 +243,7 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors(bool recalculate)
 
 IGeometry::StatusCode QuadGeom::findElementCentroids(bool recalculate)
 {
-  auto* quadCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* quadCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(quadCentroids != nullptr && !recalculate)
   {
     return 0;
@@ -285,7 +285,7 @@ void QuadGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape
 
 IGeometry::StatusCode QuadGeom::findEdges(bool recalculate)
 {
-  auto* edgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
+  auto* edgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
     return 0;
@@ -306,7 +306,7 @@ IGeometry::StatusCode QuadGeom::findEdges(bool recalculate)
 
 IGeometry::StatusCode QuadGeom::findUnsharedEdges(bool recalculate)
 {
-  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
     return 0;

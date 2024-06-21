@@ -147,7 +147,7 @@ usize ImageGeom::getNumberOfCells() const
 
 IGeometry::StatusCode ImageGeom::findElementSizes(bool recalculate)
 {
-  auto* voxelSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  auto* voxelSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(voxelSizes != nullptr && !recalculate)
   {
     return 0;
