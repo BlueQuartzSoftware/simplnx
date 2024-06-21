@@ -66,6 +66,10 @@ A clustering algorithm can be considered a kind of segmentation; this implementa
 | Face Ensemble | Face Ensemble |
 | Cell Ensemble | Cell Ensemble|
 
+## Note on Randomness
+
+It is not recommended to use iterative for the _Initalization Type_, as it was just included for backwards compatibility. The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Iterative produced identical results in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
+
 % Auto generated parameter table will be inserted here
 
 ## Notes on Hyperparameter Tuning
@@ -96,10 +100,6 @@ Out of the above table, lets focus in on a few specific aspects:
 This dataset is not the ideal case for this algorithm, but it is what we were able to source and make available. That said it still demonstrates the idea and potential application.
 
 _Note from Developers_: We are aware of a paper that outlines an algorithm that can reasonably predict the hyperparameter values, but at the current time implementation is left up to potential contributors [2].
-
-## Note on Randomness
-
-It is not recommended to use iterative for the _Initalization Type_, as it was just included for backwards compatibility. The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Iterative produced identical results in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
 
 ## References
 

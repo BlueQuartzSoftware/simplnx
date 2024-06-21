@@ -57,7 +57,7 @@ std::string DBSCANFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> DBSCANFilter::defaultTags() const
 {
-  return {className(), "DREAM3D Review", "Clustering"};
+  return {className(), "DBSCAN", "Clustering", "Segmentation", "Statistics"};
 }
 
 //------------------------------------------------------------------------------
@@ -89,12 +89,13 @@ Parameters DBSCANFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to cluster from", DataPath{}, nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Attribute Array to Cluster's parent group",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "Name of the ids array to be created in Attribute Array to Cluster's parent group",
                                                           "Cluster Ids"));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "name and path of Attribute Matrix to hold Cluster Data", DataPath{}));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "The complete path to the attribute matrix in which to store to hold Cluster Data", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_InitTypeIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(AlgType::Random)));
