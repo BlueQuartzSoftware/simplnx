@@ -93,9 +93,10 @@ public:
 
   /**
    * @brief
+   * recalculate If true, this function will recalculate the array. Otherwise, it will leave the array as is.
    * @return StatusCode
    */
-  virtual StatusCode findElementsContainingVert() = 0;
+  virtual StatusCode findElementsContainingVert(bool recalculate) = 0;
 
   /**
    * @brief
@@ -112,7 +113,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  virtual StatusCode findElementNeighbors() = 0;
+  virtual StatusCode findElementNeighbors(bool recalculate) = 0;
 
   /**
    * @brief
@@ -129,7 +130,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  virtual StatusCode findElementCentroids() = 0;
+  virtual StatusCode findElementCentroids(bool recalculate) = 0;
 
   /**
    * @brief

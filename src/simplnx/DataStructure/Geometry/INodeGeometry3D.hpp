@@ -71,7 +71,7 @@ public:
    * @brief Creates and assigns the face list array for the current values.
    * @return StatusCode
    */
-  virtual StatusCode findFaces() = 0;
+  virtual StatusCode findFaces(bool recalculate) = 0;
 
   /**
    * @brief Deletes the current face list array.
@@ -93,7 +93,7 @@ public:
   /**
    * @brief Creates and assigns the unshared face list array for the current values.
    */
-  virtual StatusCode findUnsharedFaces() = 0;
+  virtual StatusCode findUnsharedFaces(bool recalculate) = 0;
 
   /**
    * @brief Returns a pointer to the unshared face list array.

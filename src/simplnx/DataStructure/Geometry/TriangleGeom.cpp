@@ -167,65 +167,99 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
   return k_NumFaceVerts;
 }
 
-IGeometry::StatusCode TriangleGeom::findElementSizes()
+IGeometry::StatusCode TriangleGeom::findElementSizes(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
-  Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
-  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
+  auto* triangleSizes = getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+  if(triangleSizes != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(triangleSizes == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
+    triangleSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+  }
   if(triangleSizes == nullptr)
   {
     m_ElementSizesId.reset();
     return -1;
   }
+  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   m_ElementSizesId = triangleSizes->getId();
   return 1;
 }
 
-IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
+IGeometry::StatusCode TriangleGeom::findElementsContainingVert(bool recalculate)
 {
-  auto trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
+  auto* trianglesContainingVert = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  if(trianglesContainingVert != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(trianglesContainingVert == nullptr)
+  {
+    trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+  }
   if(trianglesContainingVert == nullptr)
   {
     m_CellContainingVertDataArrayId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   m_CellContainingVertDataArrayId = trianglesContainingVert->getId();
   return 1;
 }
 
-IGeometry::StatusCode TriangleGeom::findElementNeighbors()
+IGeometry::StatusCode TriangleGeom::findElementNeighbors(bool recalculate)
 {
-  StatusCode err;
-  if(getElementsContainingVert() == nullptr)
+  auto* triangleNeighbors = getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  if(triangleNeighbors != nullptr && !recalculate)
   {
-    err = findElementsContainingVert();
-    if(err < 0)
-    {
-      return err;
-    }
+    return 0;
   }
-  auto triangleNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
+
+  StatusCode err = findElementsContainingVert(recalculate);
+  if(err < 0)
+  {
+    m_CellNeighborsDataArrayId.reset();
+    return err;
+  }
+  if(triangleNeighbors == nullptr)
+  {
+    triangleNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+  }
   if(triangleNeighbors == nullptr)
   {
     m_CellNeighborsDataArrayId.reset();
     return -1;
   }
   m_CellNeighborsDataArrayId = triangleNeighbors->getId();
-  return err;
+  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
+  if(err < 0)
+  {
+    return err;
+  }
+  return 1;
 }
 
-IGeometry::StatusCode TriangleGeom::findElementCentroids()
+IGeometry::StatusCode TriangleGeom::findElementCentroids(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
-  auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
-  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
+  auto* triangleCentroids = getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  if(triangleCentroids != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(triangleCentroids == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
+    triangleCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+  }
   if(triangleCentroids == nullptr)
   {
     m_CellCentroidsDataArrayId.reset();
     return -1;
   }
+  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   m_CellCentroidsDataArrayId = triangleCentroids->getId();
   return 1;
 }
@@ -248,30 +282,46 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
   shape[5] = 1.0;
 }
 
-IGeometry::StatusCode TriangleGeom::findEdges()
+IGeometry::StatusCode TriangleGeom::findEdges(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  DataArray<uint64>* edgeList = DataArray<uint64>::Create(*getDataStructure(), k_Edges, std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
+  auto* edgeList = getDataStructureRef().getDataAs<UInt64Array>(m_EdgeDataArrayId);
+  if(edgeList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(edgeList == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+    edgeList = DataArray<uint64>::Create(*getDataStructure(), k_Edges, std::move(dataStore), getId());
+  }
   if(edgeList == nullptr)
   {
     m_EdgeDataArrayId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 
-IGeometry::StatusCode TriangleGeom::findUnsharedEdges()
+IGeometry::StatusCode TriangleGeom::findUnsharedEdges(bool recalculate)
 {
-  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
+  auto* unsharedEdgeList = getDataStructureRef().getDataAs<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
+  if(unsharedEdgeList != nullptr && !recalculate)
+  {
+    return 0;
+  }
+  if(unsharedEdgeList == nullptr)
+  {
+    auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+    unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
+  }
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
     return -1;
   }
+  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
   return 1;
 }

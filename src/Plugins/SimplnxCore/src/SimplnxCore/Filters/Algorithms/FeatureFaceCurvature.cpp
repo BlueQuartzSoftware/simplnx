@@ -56,11 +56,7 @@ Result<> FeatureFaceCurvature::operator()()
 
   // Make sure the Face Connectivity is created because the FindNRing algorithm needs this and will
   // assert if the data is NOT in the SurfaceMesh Data Container
-  const IGeometry::ElementDynamicList* vertLinks = triangleGeomPtr->getElementsContainingVert();
-  if(nullptr == vertLinks)
-  {
-    triangleGeomPtr->findElementsContainingVert();
-  }
+  triangleGeomPtr->findElementsContainingVert(false);
 
   int32_t maxFaceId = 0;
   for(int64_t t = 0; t < numTriangles; ++t)

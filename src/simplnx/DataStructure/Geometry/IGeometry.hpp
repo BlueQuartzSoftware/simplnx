@@ -100,7 +100,7 @@ public:
    * @brief
    * @return StatusCode
    */
-  virtual StatusCode findElementSizes() = 0;
+  virtual StatusCode findElementSizes(bool recalculate) = 0;
 
   /**
    * @brief
