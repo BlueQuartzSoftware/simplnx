@@ -1070,7 +1070,7 @@ Result<> WritePoleFigure::operator()()
         tupleShape[1] = pageHeight;
         tupleShape[2] = pageWidth;
         // Create an output array to hold the RGB formatted color image
-        auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}{}", m_InputValues->ImagePrefix, phase));
+        auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("Phase_{}", phase));
         auto arrayCreationResult = nx::core::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
         if(arrayCreationResult.invalid())
         {
