@@ -124,13 +124,13 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsImageGeometry_Key, "Save Output as Image Geometry", "Save the generated pole figure as an ImageGeometry", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Output Image Geometry", "The path to the created Image Geometry", DataPath({"PoleFigure"})));
 
-  params.insertSeparator(Parameters::Separator{"Output Intensity Data Arrays"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveIntensityDataArrays, "Save Intensity Images", "Save the Intensity Plots (x3)", true));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_IntensityGeometryPath, "Output Intensity Image Geometry", "", DataPath({"Intensity Data"})));
-  params.insert(std::make_unique<BoolParameter>(k_NormalizeToMRD, "Normalize Data to MRD", "The Pole Figure data should be normalized to MRD values", true));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot1Name, "Intensity Plot 1", "", "<001>"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot2Name, "Intensity Plot 2", "", "<011>"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot3Name, "Intensity Plot 3", "", "<111>"));
+  params.insertSeparator(Parameters::Separator{"Output Count Data Arrays"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveIntensityDataArrays, "Save Count Images", "Save the Count Plots (x3)", true));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_IntensityGeometryPath, "Output Count Image Geometry", "The path to the created Count Image Geometries", DataPath({"Intensity Data"})));
+  params.insert(std::make_unique<BoolParameter>(k_NormalizeToMRD, "Normalize Count Data to MRD", "The Pole Figure data should be normalized to MRD values", true));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot1Name, "Count Plot 1", "The counts data for the plot", "<001>"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot2Name, "Count Plot 2", "The counts data for the plot", "<011>"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_IntensityPlot3Name, "Count Plot 3", "The counts data for the plot", "<111>"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
