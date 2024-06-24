@@ -7,6 +7,7 @@
 
 #include <H5Apublic.h>
 
+#include <array>
 #include <iostream>
 #include <numeric>
 

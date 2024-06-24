@@ -38,6 +38,7 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <limits>
 #include <sstream>
