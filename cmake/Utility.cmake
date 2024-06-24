@@ -51,6 +51,8 @@ function(simplnx_enable_warnings)
 
   if(MSVC)
     target_compile_options(${ARG_TARGET}
+      PUBLIC
+        /Zc:__cplusplus # Enables the __cplusplus preprocessor macro to report an updated value for recent C++ language standards support. By default, Visual Studio always returns the value 199711L for the __cplusplus preprocessor macro.
       PRIVATE
         # Suppressed warnings
         /wd4275 # C4275: An exported class was derived from a class that wasn't exported.
