@@ -123,7 +123,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& j
   {
     if(!jsonScanNames.is_array())
     {
-      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
+      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_ScanNames));
     }
     const auto scanNameStrings = jsonScanNames.get<std::vector<std::string>>();
     std::list<std::string> scanNames;

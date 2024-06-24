@@ -150,7 +150,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJson(const nlohmann::json& json) c
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
+      return MakeErrorResult<std::any>(-6054, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_HDF5DataPaths));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
     std::vector<std::string> dataPaths;

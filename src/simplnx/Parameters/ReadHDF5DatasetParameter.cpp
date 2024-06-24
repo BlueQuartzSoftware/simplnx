@@ -108,7 +108,7 @@ Result<std::any> ReadHDF5DatasetParameter::fromJson(const nlohmann::json& json) 
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
+      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
     }
     std::vector<Error> errors;
     for(const auto& jsonImportInfo : jsonDataPaths)
