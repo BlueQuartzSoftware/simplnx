@@ -10,11 +10,9 @@ This **Filter** removes **Triangles** from the supplied **Triangle Geometry** th
 
 ## Data Handling
 
-For each of the vertex and edge data attribute matrices, the user can select to copy none, some or all of the associated data arrays
-into the newly created geometry. If the user wishes to not copy any of the data, just leave the choice to "Copy Selected XXX Data" [0]
-but do not populate the list with any selections.
+For each of the vertex and edge data attribute matrices, the user can select to copy none, some or all of the associated data arrays into the newly created geometry. If the user wishes to not copy any of the data, just leave the choice to "Copy Selected XXX Data" [0] but do not populate the list with any selections.
 
-*Note:* Since it cannot be known before run time how many **Vertices** will be removed, the new **Triangke Geometry** and all associated **Triangle** data to be copied will be initialized to have size 0.
+*Note:* Since it cannot be known before run time how many **Vertices** will be removed, the new **Triangle Geometry** and all associated **Triangle** data to be copied will be initialized to have size 0.
 
 ## Example Output
 
@@ -27,8 +25,6 @@ but do not populate the list with any selections.
 ![Resulting triangle geometry](Images/RemoveFlaggedTriangles_2.png)
 
 % Auto generated parameter table will be inserted here
-
-## Example Pipelines
 
 ## License & Copyright
 
