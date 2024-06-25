@@ -93,6 +93,14 @@
           "name": "openssl"
         }
       ]
+    },
+    "benchmark": {
+      "description": "Google Benchmark",
+      "dependencies": [
+        {
+          "name": "benchmark"
+        }
+      ]
     }
   }
 }
