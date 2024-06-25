@@ -113,7 +113,7 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 
   if constexpr(SplitTypeOptionsV::AllowEmptyInital)
   {
-    if(std::find(delimiters.cbegin(), delimiters.cend(), str[0]) != delimiters.cend())
+    if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
     {
       tokens.emplace_back("");
       startPos++;
@@ -122,7 +122,7 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 
   if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
   {
-    if(std::find(delimiters.cbegin(), delimiters.cend(), str[str.size() - 1]) != delimiters.cend())
+    if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
     {
       endPos--;
     }
@@ -130,10 +130,10 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 
   if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
   {
-    tokenize<false>(startPos, endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+    tokenize<false>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
     if constexpr(SplitTypeOptionsV::AllowEmptyFinal)
     {
-      if(std::find(delimiters.cbegin(), delimiters.cend(), str[str.size() - 1]) != delimiters.cend())
+      if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
       {
         tokens.emplace_back("");
       }
@@ -143,12 +143,12 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   {
     if constexpr(!SplitTypeOptionsV::AllowEmptyInital)
     {
-      if(std::find(delimiters.cbegin(), delimiters.cend(), str[0]) != delimiters.cend())
+      if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
       {
         startPos++;
       }
     }
-    tokenize<true>(startPos, endPos, delimiters.cbegin(), delimiters.cend(), tokens);
+    tokenize<true>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
   }
 
   tokens.shrink_to_fit();
