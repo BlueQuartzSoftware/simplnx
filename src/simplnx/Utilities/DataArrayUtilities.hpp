@@ -1258,7 +1258,8 @@ public:
 
       if(!copySucceeded)
       {
-        std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI, i)
+        std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI,
+                                 m_DestCellArray->getName(), i)
                   << std::endl;
         break;
       }
