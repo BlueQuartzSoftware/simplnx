@@ -80,12 +80,6 @@ struct GenerateTripleLinesImpl
     zP = udims[2];
   }
 
-  ~GenerateTripleLinesImpl() = default;
-  GenerateTripleLinesImpl(const GenerateTripleLinesImpl&) = default;           // Copy Constructor default Implemented
-  GenerateTripleLinesImpl(GenerateTripleLinesImpl&&) = delete;                 // Move Constructor Not Implemented
-  GenerateTripleLinesImpl& operator=(const GenerateTripleLinesImpl&) = delete; // Copy Assignment Not Implemented
-  GenerateTripleLinesImpl& operator=(GenerateTripleLinesImpl&&) = delete;      // Move Assignment Not Implemented
-
   void compute(usize zStart, usize zEnd, usize yStart, usize yEnd, usize xStart, usize xEnd) const
   {
     for(size_t k = zStart; k < zEnd; k++)

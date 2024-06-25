@@ -586,12 +586,6 @@ public:
   , m_FilterCallback(filterCallback)
   {
   }
-  ~ApplyTransformationToNodeGeometry() = default;
-
-  ApplyTransformationToNodeGeometry(const ApplyTransformationToNodeGeometry&) = default;           // Copy Constructor Not Implemented
-  ApplyTransformationToNodeGeometry(ApplyTransformationToNodeGeometry&&) = delete;                 // Move Constructor Not Implemented
-  ApplyTransformationToNodeGeometry& operator=(const ApplyTransformationToNodeGeometry&) = delete; // Copy Assignment Not Implemented
-  ApplyTransformationToNodeGeometry& operator=(ApplyTransformationToNodeGeometry&&) = delete;      // Move Assignment Not Implemented
 
   void convert(size_t start, size_t end) const
   {

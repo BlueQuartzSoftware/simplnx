@@ -24,12 +24,6 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
-  virtual ~ConvertQuaternionImpl() = default;
-
-  ConvertQuaternionImpl(const ConvertQuaternionImpl&) = default;           // Copy Constructor Default Implemented
-  ConvertQuaternionImpl(ConvertQuaternionImpl&&) = delete;                 // Move Constructor Not Implemented
-  ConvertQuaternionImpl& operator=(const ConvertQuaternionImpl&) = delete; // Copy Assignment Not Implemented
-  ConvertQuaternionImpl& operator=(ConvertQuaternionImpl&&) = delete;      // Move Assignment Not Implemented
 
   void convert(size_t start, size_t end) const
   {

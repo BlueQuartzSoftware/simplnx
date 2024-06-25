@@ -22,12 +22,6 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
-  RodriguesConvertorImpl(const RodriguesConvertorImpl&) = default;           // Copy Constructor
-  RodriguesConvertorImpl(RodriguesConvertorImpl&&) = delete;                 // Move Constructor Not Implemented
-  RodriguesConvertorImpl& operator=(const RodriguesConvertorImpl&) = delete; // Copy Assignment Not Implemented
-  RodriguesConvertorImpl& operator=(RodriguesConvertorImpl&&) = delete;      // Move Assignment Not Implemented
-
-  virtual ~RodriguesConvertorImpl() = default;
 
   void convert(size_t start, size_t end) const
   {
