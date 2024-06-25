@@ -20,12 +20,9 @@ jobs:
         os:
           - ubuntu-20.04
         cxx:
-          - g++-9
           - g++-10
           - clang++-10
         include:
-          - cxx: g++-9
-            cc: gcc-9
           - cxx: g++-10
             cc: gcc-10
           - cxx: clang++-10
