@@ -52,10 +52,6 @@ void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& sele
   {
     tupleTransferFunctions.push_back(std::make_shared<TransferTuple<bool>>(dataStructure, selectedDataPath, createdDataPath));
   }
-  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<size_t>>(dataStructure, selectedDataPath, createdDataPath));
-  }
 }
 
 } // namespace nx::core
