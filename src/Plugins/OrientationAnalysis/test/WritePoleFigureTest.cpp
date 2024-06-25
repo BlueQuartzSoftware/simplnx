@@ -62,7 +62,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars_v2");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v2/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
@@ -115,7 +115,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars_v2");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v2/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
