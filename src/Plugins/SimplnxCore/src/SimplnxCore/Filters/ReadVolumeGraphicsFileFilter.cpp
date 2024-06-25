@@ -120,10 +120,10 @@ Result<std::array<T, ParserArgs::UseDimension>> ParseArray(const std::vector<std
       }
     } catch(const std::invalid_argument& e)
     {
-      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(vgiParseErrorStr, parseUnit, tokens[index + 2]))};
+      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(fmt::runtime(vgiParseErrorStr), parseUnit, tokens[index + 2]))};
     } catch(const std::out_of_range& e)
     {
-      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[index + 2], parseUnit))};
+      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(fmt::runtime(vgiOutOfRangeErrorStr), tokens[index + 2], parseUnit))};
     }
   }
 
