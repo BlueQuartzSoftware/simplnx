@@ -115,7 +115,7 @@ Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructu
 
 Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   std::vector<Error> errors;
   for(usize i = 0; i < value.size(); i++)

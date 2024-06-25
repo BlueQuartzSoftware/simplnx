@@ -129,7 +129,7 @@ Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, c
 
 Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   if(value.empty())
   {

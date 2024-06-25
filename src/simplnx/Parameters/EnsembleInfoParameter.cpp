@@ -120,7 +120,7 @@ std::any EnsembleInfoParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
   std::vector<Error> errors;
 
   const auto& table = GetAnyRef<ValueType>(valueRef);

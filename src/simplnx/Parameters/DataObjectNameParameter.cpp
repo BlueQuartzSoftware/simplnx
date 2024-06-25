@@ -65,7 +65,7 @@ Result<> DataObjectNameParameter::validate(const std::any& value) const
 
 Result<> DataObjectNameParameter::validateName(const std::string& value) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   if(value.empty())
   {
