@@ -63,7 +63,7 @@ option(SIMPLNX_CONDA_BUILD "Enables conda-build specific layout" OFF)
 # ------------------------------------------------------------------------------
 # Enable all installation rules [DEFAULT=ON]
 # ------------------------------------------------------------------------------
-option(SIMPLNX_ENABLE_INSTALL "Enablesinstall rules" ON)
+option(SIMPLNX_ENABLE_INSTALL "Enable install rules" ON)
 
 # ------------------------------------------------------------------------------
 # Enable benchmarking utility
