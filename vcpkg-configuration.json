@@ -9,6 +9,7 @@
       "kind": "git",
       "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
       "packages": [
+        "benchmark",
         "blosc",
         "boost-mp11",
         "catch2",
