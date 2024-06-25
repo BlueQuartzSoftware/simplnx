@@ -147,7 +147,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
 
     for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
     {
-      uint8 value = featureArrayExemplary[i] == true ? 1 : 0;
+      uint8 value = featureArrayExemplary[i] ? 1 : 0;
       REQUIRE(value == createdFeatureArray[i]);
     }
   }
