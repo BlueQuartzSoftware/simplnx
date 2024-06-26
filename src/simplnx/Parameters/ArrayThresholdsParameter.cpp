@@ -74,7 +74,7 @@ Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, 
 
 Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& dataPath) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   if(dataPath.empty())
   {

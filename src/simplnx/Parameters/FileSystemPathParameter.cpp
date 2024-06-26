@@ -196,7 +196,7 @@ Result<> FileSystemPathParameter::validate(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
-  const std::string prefix = fmt::format("\n    Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   if(path.empty())
   {
@@ -207,7 +207,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
   {
     if(!path.has_extension())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension", prefix)}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string())}})};
     }
     std::string lowerExtension = nx::core::StringUtilities::toLower(path.extension().string());
     if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
