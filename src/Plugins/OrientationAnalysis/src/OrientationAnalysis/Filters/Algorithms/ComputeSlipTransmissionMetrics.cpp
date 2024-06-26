@@ -105,10 +105,10 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
   F7L.setLists(F7Lists);
   mPrimeL.setLists(mPrimeLists);
 
-  //for(usize i = 1; i < totalFeatures; i++)
+  // for(usize i = 1; i < totalFeatures; i++)
   //{
-  //  Float32NeighborList::SharedVectorType f1L(new std::vector<float32>(F1Lists[i]));
-  //  F1L.setList(static_cast<int32>(i), f1L);
+  //   Float32NeighborList::SharedVectorType f1L(new std::vector<float32>(F1Lists[i]));
+  //   F1L.setList(static_cast<int32>(i), f1L);
 
   //  Float32NeighborList::SharedVectorType f1sptL(new std::vector<float32>(F1sPtLists[i]));
   //  F1sptL.setList(static_cast<int32>(i), f1sptL);

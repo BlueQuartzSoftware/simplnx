@@ -397,7 +397,7 @@ std::vector<typename NeighborList<T>::VectorType> NeighborList<T>::getVectors() 
 {
   usize count = m_Store->size();
   std::vector<typename NeighborList<T>::VectorType> vectors(count);
-  for (usize i = 0; i < count; i++)
+  for(usize i = 0; i < count; i++)
   {
     vectors[i] = m_Store->at(i);
   }

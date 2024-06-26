@@ -310,7 +310,7 @@ public:
     index_type numComponents = getNumberOfComponents();
     index_type offset = tupleIndex * numComponents;
     usize count = values.size();
-    for (usize i = 0; i < count; i++)
+    for(usize i = 0; i < count; i++)
     {
       setValue(offset + i, values[i]);
     }

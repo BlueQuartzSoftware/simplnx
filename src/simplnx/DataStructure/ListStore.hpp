@@ -25,9 +25,9 @@ public:
   using shape_type = typename std::vector<uint64>;
 
   /**
-  * @brief Constructs a ListStore using the specified tuple shape and list size.
-  * @param tupleShape
-  * @param listSize
+   * @brief Constructs a ListStore using the specified tuple shape and list size.
+   * @param tupleShape
+   * @param listSize
    */
   ListStore(shape_type tupleShape, usize listSize = 10)
   : parent_type()
@@ -37,9 +37,9 @@ public:
   }
 
   /**
-  * @brief Creates a ListStore from a vector of vectors.
-  * @param vectors
-  */
+   * @brief Creates a ListStore from a vector of vectors.
+   * @param vectors
+   */
   ListStore(const typename std::vector<shared_vector_type>& vectors)
   : parent_type()
   {
@@ -47,8 +47,8 @@ public:
   }
 
   /**
-  * @brief Copy constructor
-  */
+   * @brief Copy constructor
+   */
   ListStore(const ListStore& other)
   : parent_type(other)
   , m_XtensorListSize(other.m_XtensorListSize)
@@ -57,8 +57,8 @@ public:
   }
 
   /**
-  * @brief Move constructor
-  */
+   * @brief Move constructor
+   */
   ListStore(ListStore&& copy) noexcept
   : parent_type(std::move(copy))
   , m_Array(std::move(copy.m_Array))
@@ -68,8 +68,8 @@ public:
   ~ListStore() = default;
 
   /**
-  * @brief Returns a reference to the underlying xtensor array.
-  * @return xarray_type&
+   * @brief Returns a reference to the underlying xtensor array.
+   * @return xarray_type&
    */
   xarray_type& xarray() override
   {
@@ -77,9 +77,9 @@ public:
   }
 
   /**
-  * @brief Returns a const reference to the underlying xtensor array.
-  * @return const xarray_type&
-  */
+   * @brief Returns a const reference to the underlying xtensor array.
+   * @return const xarray_type&
+   */
   const xarray_type& xarray() const override
   {
     return *m_Array.get();
@@ -107,7 +107,7 @@ protected:
 
     usize numTuples = this->getNumberOfLists();
     usize newTupleCount = std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<usize>());
-    
+
     // Avoid size 0
     if(newTupleCount == 0)
     {
@@ -126,7 +126,7 @@ protected:
     {
       for(usize tuple = 0; tuple < numTuples && tuple < newTupleCount; tuple++)
       {
-        usize offset = tuple * (internalSize); // New xarray
+        usize offset = tuple * (internalSize);       // New xarray
         usize offset2 = tuple * (m_XtensorListSize); // Current xarray
         // Copy individual list at tuple
         for(usize i = 0; i < m_XtensorListSize && i < internalSize; i++)
@@ -154,12 +154,12 @@ protected:
     usize newTupleCount = std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<usize>());
 
     // Avoid size 0
-    if (newTupleCount == 0)
+    if(newTupleCount == 0)
     {
       tupleShape = {1};
       newTupleCount = 1;
     }
-    if (internalSize == 0)
+    if(internalSize == 0)
     {
       internalSize = 1;
     }

@@ -105,7 +105,7 @@ Result<> ComputeMisorientations::operator()()
   auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
   outMisorientationList.setLists(tempMisorientationLists);
   // Set the vector for each list into the NeighborList Object
-  //for(size_t i = 1; i < totalFeatures; i++)
+  // for(size_t i = 1; i < totalFeatures; i++)
   //{
   //  // Construct a shared vector<float> through the std::vector<> copy constructor.
   //  NeighborList<float>::SharedVectorType sharedMisorientationList(new std::vector<float>(tempMisorientationLists[i]));

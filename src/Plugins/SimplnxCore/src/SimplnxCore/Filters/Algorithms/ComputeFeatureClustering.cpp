@@ -282,12 +282,12 @@ Result<> ComputeFeatureClustering::operator()()
 
   clusteringList.setLists(clusters);
 
-  //for(usize i = 1; i < totalFeatures; i++)
+  // for(usize i = 1; i < totalFeatures; i++)
   //{
-  //  // Set the vector for each list into the Clustering Object
-  //  NeighborList<float32>::SharedVectorType sharedClusterLst(new std::vector<float32>);
-  //  sharedClusterLst->assign(clusters[i].begin(), clusters[i].end());
-  //  clusteringList.setList(static_cast<int>(i), sharedClusterLst);
-  //}
+  //   // Set the vector for each list into the Clustering Object
+  //   NeighborList<float32>::SharedVectorType sharedClusterLst(new std::vector<float32>);
+  //   sharedClusterLst->assign(clusters[i].begin(), clusters[i].end());
+  //   clusteringList.setList(static_cast<int>(i), sharedClusterLst);
+  // }
   return {};
 }
