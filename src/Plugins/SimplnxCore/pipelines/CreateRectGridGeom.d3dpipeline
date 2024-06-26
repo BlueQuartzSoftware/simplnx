@@ -19,7 +19,7 @@
           ],
           "Header Line": 1,
           "Header Mode": 0,
-          "Input File Path": "/Users/bluequartz/Workspace-NX/DREAM3D-Build/NX-arm64-python-Debug/Bin/Data/Test_Data/RectGridBounds.csv",
+          "Input File Path": "Data/Test_Data/RectGridBounds.csv",
           "Skipped Array Mask": [
             false,
             false,

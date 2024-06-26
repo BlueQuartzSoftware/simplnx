@@ -20,7 +20,7 @@
           ],
           "Header Line": 1,
           "Header Mode": 0,
-          "Input File Path": "/Users/bluequartz/Workspace-NX/DREAM3D-Build/NX-arm64-python-Debug/Bin/Data/Test_Data/TetraConnectivity.csv",
+          "Input File Path": "Data/Test_Data/TetraConnectivity.csv",
           "Skipped Array Mask": [
             false,
             false,
@@ -77,7 +77,7 @@
           ],
           "Header Line": 1,
           "Header Mode": 0,
-          "Input File Path": "/Users/bluequartz/Workspace-NX/DREAM3D-Build/NX-arm64-python-Debug/Bin/Data/Test_Data/TetraVertexCoordinates.csv",
+          "Input File Path": "Data/Test_Data/TetraVertexCoordinates.csv",
           "Skipped Array Mask": [
             false,
             false,
