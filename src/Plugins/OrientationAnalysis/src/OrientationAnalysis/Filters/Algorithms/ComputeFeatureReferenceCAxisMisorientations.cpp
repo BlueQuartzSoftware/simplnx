@@ -10,7 +10,6 @@
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 
 #include <algorithm>
@@ -158,7 +157,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     index = i * avgMisComps;
     if(avgMis[index] == 0.0f)
     {
-      featAvgCAxisMis[i] = 0.0;
+      featAvgCAxisMis[i] = 0.0f;
     }
     else
     {
@@ -182,7 +181,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     }
     else
     {
-      featStdevCAxisMis[i] = std::sqrt((1 / avgMis[index]) * avgMis[index + 2]);
+      featStdevCAxisMis[i] = std::sqrt((1.0f / avgMis[index]) * avgMis[index + 2]);
     }
   }
 
