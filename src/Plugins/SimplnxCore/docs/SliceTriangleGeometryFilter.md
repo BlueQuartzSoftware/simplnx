@@ -10,6 +10,17 @@ This **Filter** slices an input **Triangle Geometry**, producing an **Edge Geome
 
 Additionally, if the input **Triangle Geometry** is labeled with an identifier array (such as different regions or features), the user may select this array and the resulting edges will inherit these identifiers.
 
+## Example Output
+
+Example Surface Mesh being sliced with a 0.25 slice spacing.
+
+![](Images/SliceTriangleGeometry_1.png)
+
+
+Example Surface Mesh being sliced with a 2.0 slice spacing.
+
+![](Images/SliceTriangleGeometry_2.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

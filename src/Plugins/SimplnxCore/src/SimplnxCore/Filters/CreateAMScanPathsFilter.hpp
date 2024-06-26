@@ -24,7 +24,7 @@ public:
   CreateAMScanPathsFilter& operator=(CreateAMScanPathsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StripeWidth_Key = "stripe_width";
+  static inline constexpr StringLiteral k_StripeWidth_Key = "hatch_length";
   static inline constexpr StringLiteral k_HatchSpacing_Key = "hatch_spacing";
   static inline constexpr StringLiteral k_Power_Key = "power";
   static inline constexpr StringLiteral k_Speed_Key = "speed";
