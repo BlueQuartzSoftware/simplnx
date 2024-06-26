@@ -78,7 +78,7 @@ Result<> ChoicesParameter::validate(const std::any& value) const
 
 Result<> ChoicesParameter::validateIndex(ValueType index) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   if(index >= m_Choices.size())
   {

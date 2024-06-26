@@ -143,7 +143,7 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
   const auto& value = GetAnyRef<ValueType>(valueRef);
 
