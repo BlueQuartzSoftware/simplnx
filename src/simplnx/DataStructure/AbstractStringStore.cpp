@@ -72,9 +72,9 @@ bool AbstractStringStore::operator==(const std::vector<std::string>& values) con
   {
     return false;
   }
-  for (usize i = 0; i < count; i++)
+  for(usize i = 0; i < count; i++)
   {
-    if (values[i] != getValue(i))
+    if(values[i] != getValue(i))
     {
       return false;
     }
@@ -86,4 +86,4 @@ bool AbstractStringStore::operator!=(const std::vector<std::string>& values) con
   bool equals = (*this) == values;
   return !equals;
 }
-}
+} // namespace nx::core

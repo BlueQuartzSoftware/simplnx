@@ -337,7 +337,7 @@ public:
   {
     usize count = lists.size();
     usize maxSize = 0;
-    for (const auto& list : lists)
+    for(const auto& list : lists)
     {
       maxSize = std::max(maxSize, list.size());
     }

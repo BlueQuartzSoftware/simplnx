@@ -107,7 +107,9 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
   // Output Variables
   auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
   outMisorientationList.setLists(tempMisorientationLists);
-} // namespace
+
+  return {};
+}
 
 // -----------------------------------------------------------------------------
 ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

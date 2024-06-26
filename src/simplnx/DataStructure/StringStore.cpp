@@ -13,7 +13,7 @@ StringStore::StringStore(const std::vector<std::string>& strings)
 {
   usize count = strings.size();
   m_xarray.resize({count});
-  for (usize i = 0; i < count; i++)
+  for(usize i = 0; i < count; i++)
   {
     m_xarray.flat(i) = strings[i];
   }
@@ -35,7 +35,7 @@ void StringStore::resize(usize count)
 {
   usize oldSize = size();
   auto data = xt::xarray<std::string>::from_shape({count});
-  for (usize i = 0; i < count && i < oldSize; i++)
+  for(usize i = 0; i < count && i < oldSize; i++)
   {
     data.flat(i) = m_xarray.flat(i);
   }
@@ -58,7 +58,7 @@ AbstractStringStore& StringStore::operator=(const std::vector<std::string>& valu
 {
   usize count = values.size();
   m_xarray = xt::xarray<std::string>::from_shape({count});
-  for (usize i = 0; i < count; i++)
+  for(usize i = 0; i < count; i++)
   {
     m_xarray.flat(i) = values[i];
   }

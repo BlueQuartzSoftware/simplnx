@@ -1,7 +1,7 @@
 #pragma once
 
-#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/DataStructure/AbstractStringStore.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 
 #include <mutex>
 
