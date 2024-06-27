@@ -23,7 +23,7 @@ inline float deg2rad(float deg)
   return deg * nx::core::Constants::k_PiOver180<float>;
 }
 
-inline float clamp(const float& lo, const float& hi, const float& v)
+inline float clamp(float lo, float hi, float v)
 {
   return std::max(lo, std::min(hi, v));
 }
