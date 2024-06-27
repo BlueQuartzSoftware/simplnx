@@ -1,6 +1,11 @@
 #ifndef RTREE_H
 #define RTREE_H
 
+/* ****************************************************************************
+ * This file comes from the https://github.com/nushoin/RTree repository.
+ * The file is under the MIT license as indicated within that repository
+ **************************************************************************** */
+
 // NOTE This file compiles under MSVC 6 SP5 and MSVC .Net 2003 it may not work on other compilers without modification.
 
 // NOTE These next few lines may be win32 specific, you may need to modify them to compile on other platform

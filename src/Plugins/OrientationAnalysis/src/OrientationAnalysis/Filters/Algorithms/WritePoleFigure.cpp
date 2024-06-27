@@ -5,7 +5,6 @@
 #include "OrientationAnalysis/utilities/IntersectionUtilities.hpp"
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/LatoRegular.hpp"
-#include "OrientationAnalysis/utilities/RTree.hpp"
 #include "OrientationAnalysis/utilities/TiffWriter.hpp"
 #include "OrientationAnalysis/utilities/delaunator.h"
 
@@ -18,6 +17,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/RTree.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
