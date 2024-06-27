@@ -83,38 +83,38 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Compare arrays
-  SECTION("Principal Curvature 1")
   {
+    INFO("Principal Curvature 1");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalCurvature1_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalCurvature1_Path);
   }
 
-  SECTION("Principal Curvature 2")
   {
+    INFO("Principal Curvature 2");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalCurvature2_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalCurvature2_Path);
   }
 
-  SECTION("Principal Direction 1")
   {
+    INFO("Principal Direction 1");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection1_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalDirection1_Path);
   }
 
-  SECTION("Principal Direction 2")
   {
+    INFO("Principal Direction 2");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection2_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalDirection2_Path);
   }
 
-  SECTION("Gaussian Curvatures")
   {
+    INFO("Gaussian Curvatures");
     DataPath path1 = faceAttribMatrixPath.createChildPath("GaussianCurvatures");
     ::CompareDataArrays(dataStructure, path1, k_GaussianCurvature_Path);
   }
 
-  SECTION("Mean Curvatures")
   {
+    INFO("Mean Curvatures");
     DataPath path1 = faceAttribMatrixPath.createChildPath("MeanCurvatures");
     ::CompareDataArrays(dataStructure, path1, k_MeanCurvature_Path);
   }
