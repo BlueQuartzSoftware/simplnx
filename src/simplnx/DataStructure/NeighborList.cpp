@@ -10,7 +10,7 @@ namespace nx::core
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
 : INeighborList(dataStructure, name, numTuples)
-, m_Store(std::make_shared<ListStore<T>>(std::vector<uint64>{numTuples}))
+, m_Store(std::make_shared<ListStore<T>>(std::vector<usize>{numTuples}))
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -48,7 +48,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std
 }
 
 template <typename T>
-NeighborList<T>::NeighborList<T>(const NeighborList<T>& other)
+NeighborList<T>::NeighborList(const NeighborList<T>& other)
 : INeighborList(other)
 , m_Store(other.m_Store)
 , m_IsAllocated(other.m_IsAllocated)
@@ -59,6 +59,11 @@ NeighborList<T>::NeighborList<T>(const NeighborList<T>& other)
 template <typename T>
 NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
 {
+  if(this == &rhs)
+  {
+    return *this;
+  }
+
   m_Store->copy(*rhs.m_Store.get());
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
@@ -283,7 +288,7 @@ template <typename T>
 void NeighborList<T>::setLists(const std::vector<std::vector<T>>& neighborLists)
 {
   usize totalFeatures = neighborLists.size();
-  uint64 reserveSize = 0;
+  usize reserveSize = 0;
   for(size_t i = 1; i < totalFeatures; i++)
   {
     reserveSize = std::max(reserveSize, neighborLists[i].size());
