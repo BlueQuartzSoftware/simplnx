@@ -23,7 +23,7 @@ public:
   using iterator = typename xarray_type::iterator;
   using const_iterator = typename xarray_type::const_iterator;
 
-  ~AbstractListStore() = default;
+  virtual ~AbstractListStore() = default;
 
   virtual xarray_type& xarray() = 0;
   virtual const xarray_type& xarray() const = 0;
@@ -153,7 +153,7 @@ public:
     return copyOfList(grainId);
   }
 
-  usize getListSize(uint64 grainId) const
+  usize getListSize(usize grainId) const
   {
     auto offset = grainId * xtensorListSize();
     return xarray().flat(offset);
@@ -219,17 +219,6 @@ public:
   virtual uint64 size() const
   {
     return getNumberOfLists();
-  }
-
-  /**
-   * @brief getListSize
-   * @param grainId
-   * @return int32
-   */
-  virtual int32 getListSize(int32 grainId) const
-  {
-    uint64 offset = (grainId * xtensorListSize()); // First element is list size
-    return xarray().flat(offset);
   }
 
   /**

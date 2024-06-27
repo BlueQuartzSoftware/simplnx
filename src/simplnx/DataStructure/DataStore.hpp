@@ -65,7 +65,7 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
-    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
 
@@ -89,7 +89,7 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
-    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
     if(buffer != nullptr)
@@ -183,12 +183,12 @@ public:
     return m_Array->data();
   }
 
-  XArrayType& xarray()
+  XArrayType& xarray() override
   {
     return *m_Array.get();
   }
 
-  const XArrayType& xarray() const
+  const XArrayType& xarray() const override
   {
     return *m_Array.get();
   }
@@ -257,7 +257,7 @@ public:
 
     usize newSize = getNumberOfComponents() * m_NumTuples;
 
-    std::vector<uint64> shape(m_TupleShape.begin(), m_TupleShape.end());
+    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
 
     if(m_Array.get() == nullptr) // Data was never allocated

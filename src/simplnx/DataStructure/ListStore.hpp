@@ -22,7 +22,7 @@ public:
   using xarray_type = typename parent_type::xarray_type;
   using iterator = typename parent_type::iterator;
   using const_iterator = typename parent_type::const_iterator;
-  using shape_type = typename std::vector<uint64>;
+  using shape_type = typename std::vector<usize>;
 
   /**
    * @brief Constructs a ListStore using the specified tuple shape and list size.
@@ -65,7 +65,7 @@ public:
   , m_XtensorListSize(std::move(copy.m_XtensorListSize))
   {
   }
-  ~ListStore() = default;
+  ~ListStore() override = default;
 
   /**
    * @brief Returns a reference to the underlying xtensor array.

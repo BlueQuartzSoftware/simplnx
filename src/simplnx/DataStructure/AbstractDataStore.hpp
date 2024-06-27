@@ -42,8 +42,9 @@ public:
   using XArrayType = typename xt::xarray<T>;
   using Iterator = typename XArrayType::iterator;
   using ConstIterator = typename XArrayType::const_iterator;
+  using XArrayShapeType = typename xt::xarray<T>::shape_type;
 
-  virtual ~AbstractDataStore() = default;
+  ~AbstractDataStore() override = default;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.

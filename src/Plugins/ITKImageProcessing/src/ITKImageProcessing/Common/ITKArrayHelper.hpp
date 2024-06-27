@@ -331,8 +331,8 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
   using ImageType = itk::Image<PixelT, Dimension>;
   using T = UnderlyingType_t<PixelT>;
   typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
-  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
-  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  typename DataStore<T>::ShapeType tDims(imageSize.rbegin(), imageSize.rend());
+  typename DataStore<T>::ShapeType cDims = GetComponentDimensions<PixelT>();
   if constexpr(Dimension == 2)
   {
     tDims.insert(tDims.begin(), 1);

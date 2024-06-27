@@ -1108,7 +1108,7 @@ public:
       using NeighborListType = NeighborList<T>;
       auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
       // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
-      if(destArray->getVectors().empty() || destArray->getList(0).size() == 0)
+      if(destArrayPtr->getVectors().empty() || destArrayPtr->getList(0).size() == 0)
       {
         destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
