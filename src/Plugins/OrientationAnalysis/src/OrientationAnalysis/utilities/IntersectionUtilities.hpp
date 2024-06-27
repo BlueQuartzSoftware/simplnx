@@ -9,9 +9,9 @@ namespace nx
 {
 namespace IntersectionUtilities
 {
-constexpr float k_Epsilon = 1e-8;
-constexpr uint32_t width = 310;
-constexpr uint32_t height = 150;
+inline constexpr float k_Epsilon = 1e-8;
+inline constexpr uint32_t width = 310;
+inline constexpr uint32_t height = 150;
 
 /**
  *@brief Bilinear Interpolator implements function to execute a 2D interpolation
