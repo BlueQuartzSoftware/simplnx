@@ -18,7 +18,7 @@ inline constexpr uint32_t height = 150;
  */
 using Vec3f = nx::core::Vec3<float>;
 
-inline float deg2rad(const float& deg)
+inline float deg2rad(float deg)
 {
   return deg * nx::core::Constants::k_PiOver180<float>;
 }
