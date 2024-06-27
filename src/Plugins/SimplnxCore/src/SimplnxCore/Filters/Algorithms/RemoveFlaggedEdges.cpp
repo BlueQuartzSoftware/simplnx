@@ -182,12 +182,12 @@ Result<> RemoveFlaggedEdges::operator()()
   dataAlg.execute(PopulateReducedGeometryEdgesImpl(originalEdgeGeom, reducedEdgeGeom, newEdgesIndexList, vertexListIndices));
 
   /** This section will copy any user defined Edge Data Arrays from the old to the reduced edge geometry **/
-  if(m_InputValues->EdgeDataHandling == k_CopySelectedEdgeArraysIdx)
+  if(m_InputValues->EdgeDataHandling == detail::k_CopySelectedEdgeArraysIdx)
   {
     TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->SelectedEdgeData, newEdgesIndexList, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->EdgeDataHandling == k_CopyAllEdgeArraysIdx)
+  else if(m_InputValues->EdgeDataHandling == detail::k_CopyAllEdgeArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->EdgeAttributeMatrixPath, ignorePaths);
@@ -198,12 +198,12 @@ Result<> RemoveFlaggedEdges::operator()()
   }
 
   /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
-  if(m_InputValues->VertexDataHandling == k_CopySelectedVertexArraysIdx)
+  if(m_InputValues->VertexDataHandling == detail::k_CopySelectedVertexArraysIdx)
   {
     TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->VertexDataHandling == k_CopyAllVertexArraysIdx)
+  else if(m_InputValues->VertexDataHandling == detail::k_CopyAllVertexArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);

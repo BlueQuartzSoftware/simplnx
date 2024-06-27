@@ -174,12 +174,12 @@ Result<> RemoveFlaggedTriangles::operator()()
   dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangleGeom, newTrianglesIndexList, vertexListIndices));
 
   /** This section will copy any user defined Triangle Data Arrays from the old to the reduced Triangle geometry **/
-  if(m_InputValues->TriangleDataHandling == k_CopySelectedTriangleArraysIdx)
+  if(m_InputValues->TriangleDataHandling == detail::k_CopySelectedTriangleArraysIdx)
   {
     TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), m_InputValues->SelectedTriangleData, newTrianglesIndexList, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->TriangleDataHandling == k_CopyAllTriangleArraysIdx)
+  else if(m_InputValues->TriangleDataHandling == detail::k_CopyAllTriangleArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->TriangleAttributeMatrixPath, ignorePaths);
@@ -191,12 +191,12 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
-  if(m_InputValues->VertexDataHandling == k_CopySelectedVertexArraysIdx)
+  if(m_InputValues->VertexDataHandling == detail::k_CopySelectedVertexArraysIdx)
   {
     TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->VertexDataHandling == k_CopyAllVertexArraysIdx)
+  else if(m_InputValues->VertexDataHandling == detail::k_CopyAllVertexArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);

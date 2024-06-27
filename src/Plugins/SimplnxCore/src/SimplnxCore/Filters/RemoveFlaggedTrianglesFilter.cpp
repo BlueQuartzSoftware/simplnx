@@ -58,32 +58,33 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
+  params.insertSeparator(Parameters::Separator{"Output Geometry"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Triangle Geometry", DataPath({"ReducedGeometry"})));
+
   // Vertex Data Handling
   params.insertSeparator(Parameters::Separator{"Vertex Data Handling"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_VertexDataHandling_Key, "Vertex Data Handling", "How to handle Data that resides on the triangles", k_CopySelectedVertexArraysIdx,
-                                                                    k_VertexDataHandlingChoices));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_VertexDataHandling_Key, "Vertex Data Handling", "How to handle Data that resides on the triangles",
+                                                                    detail::k_CopySelectedVertexArraysIdx, detail::k_VertexDataHandlingChoices));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_VertexDataSelectedAttributeMatrix_Key, "Vertex Data", "Vertex Attribute Matrix that will be copied to the reduced geometry", DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_VertexDataSelectedArrays_Key, "Vertex Attribute Arrays to Copy", "Vertex DataPaths to copy", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
 
-  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedAttributeMatrix_Key, k_CopyAllVertexArraysIdx);
-  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedArrays_Key, k_CopySelectedVertexArraysIdx);
+  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedAttributeMatrix_Key, detail::k_CopyAllVertexArraysIdx);
+  params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedArrays_Key, detail::k_CopySelectedVertexArraysIdx);
 
   // Triangle Data Handling
   params.insertSeparator(Parameters::Separator{"Triangle Data Handling"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_TriangleDataHandling_Key, "Triangle Data Handling", "How to handle Data that resides on the triangles",
-                                                                    k_CopySelectedTriangleArraysIdx, k_TriangleDataHandlingChoices));
+                                                                    detail::k_CopySelectedTriangleArraysIdx, detail::k_TriangleDataHandlingChoices));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_TriangleDataSelectedAttributeMatrix_Key, "Triangle Data", "Triangle Attribute Matrix that will be copied to the reduced geometry",
                                                                     DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TriangleDataSelectedArrays_Key, "Triangle Attribute Arrays to Copy", "Triangle DataPaths to copy", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
 
-  params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedArrays_Key, k_CopySelectedTriangleArraysIdx);
-  params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedAttributeMatrix_Key, k_CopyAllTriangleArraysIdx);
+  params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedArrays_Key, detail::k_CopySelectedTriangleArraysIdx);
+  params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedAttributeMatrix_Key, detail::k_CopyAllTriangleArraysIdx);
 
-  params.insertSeparator(Parameters::Separator{"Output Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Triangle Geometry", DataPath({"ReducedGeometry"})));
   return params;
 }
 
@@ -143,7 +144,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   // conditional blocks below.
   {
     const AttributeMatrix* srcTriangleAttrMatPtr = initialGeomPtr->getFaceAttributeMatrix();
-    if(pTriangleArrayHandling == k_CopySelectedTriangleArraysIdx)
+    if(pTriangleArrayHandling == detail::k_CopySelectedTriangleArraysIdx)
     {
       if(!selectedTriangleArrays.empty() && nullptr == srcTriangleAttrMatPtr)
       {
@@ -151,7 +152,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       }
       TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
     }
-    else if(pTriangleArrayHandling == k_CopyAllTriangleArraysIdx)
+    else if(pTriangleArrayHandling == detail::k_CopyAllTriangleArraysIdx)
     {
       if(nullptr == srcTriangleAttrMatPtr)
       {
@@ -173,7 +174,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   // conditional blocks below.
   {
     const AttributeMatrix* srcVertexAttrMatPtr = initialGeomPtr->getVertexAttributeMatrix();
-    if(pVertexArrayHandling == k_CopySelectedVertexArraysIdx)
+    if(pVertexArrayHandling == detail::k_CopySelectedVertexArraysIdx)
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
@@ -181,7 +182,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       }
       TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
-    else if(pVertexArrayHandling == k_CopyAllVertexArraysIdx)
+    else if(pVertexArrayHandling == detail::k_CopyAllVertexArraysIdx)
     {
       if(nullptr == srcVertexAttrMatPtr)
       {

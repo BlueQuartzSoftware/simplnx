@@ -21,7 +21,7 @@ namespace
 const std::string k_EdgeGeomName("Exemplar Edge Geometry");
 const DataPath k_EdgeGeomPath({k_EdgeGeomName});
 const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath("Edge Data").createChildPath(Constants::k_Mask);
-const DataPath k_ReducedGeomPath({"Reduced Geometry"});
+const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 
 const std::string k_VertexAttrMatName("Vertex Data");
 const std::string k_EdgeAttrMatName("Edge Data");
@@ -37,10 +37,10 @@ const std::string k_EdgeDataArray1Name("edge data 1");
 
 TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Valid Filter Execution", "[SimplnxCore][RemoveFlaggedEdgesFilter]")
 {
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "6_6_scan_path_test_data.tar.gz", "6_6_scan_path_test_data.dream3d");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_triangles_test_1.tar.gz", "remove_flagged_triangles_test_1");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_scan_path_test_data/6_6_scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/remove_flagged_edges_1.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Run a Multi-Threshold Filter

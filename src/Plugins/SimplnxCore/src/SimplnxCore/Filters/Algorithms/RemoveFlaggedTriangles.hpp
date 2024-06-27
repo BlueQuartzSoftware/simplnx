@@ -11,9 +11,10 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
-namespace
+namespace nx::core
 {
-
+namespace detail
+{
 const std::string k_CopySelectedTriangleData("Copy Selected Triangle Data");
 const std::string k_CopyAllTriangleData("Copy All Triangle Data");
 
@@ -27,11 +28,8 @@ const std::string k_CopyAllVertexData("Copy All Vertex Data");
 const nx::core::ChoicesParameter::Choices k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedVertexArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
+} // namespace detail
 
-} // namespace
-
-namespace nx::core
-{
 struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
 {
   DataPath TriangleGeometry;
