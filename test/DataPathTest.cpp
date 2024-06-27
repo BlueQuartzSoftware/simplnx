@@ -7,7 +7,7 @@ using namespace nx::core;
 namespace
 {
 const std::vector<std::string> k_CommonStringsVec = {"Path1/Path2", "Path1", "", " "};
-const std::vector<std::string> k_EdgeCaseStringsVec = {" / ", "Path1/ Path2", "Path1 / Path2 ", "Path1/ "};
+const std::vector<std::string> k_EdgeCaseStringsVec = {" / ", "Path1/ Path2", "Path1 / Path2 ", "Path1/ ", "/"};
 const std::vector<std::string> k_InvalidStringsVec = {"Path1/", "Path1//Path3"};
 
 bool CompareFromStringToExemplar(const std::string& input, const DataPath& exemplar)
@@ -49,6 +49,9 @@ TEST_CASE("Simplnx::Valid DataPath Creation", "[Simplnx][DataPath]")
 
   DataPath edgeExemplar4 = DataPath({"Path1"}).createChildPath(" ");
   REQUIRE(CompareFromStringToExemplar(k_EdgeCaseStringsVec[3], edgeExemplar4));
+
+  DataPath edgeExemplar5 = DataPath{};
+  REQUIRE(CompareFromStringToExemplar(k_EdgeCaseStringsVec[4], edgeExemplar5));
 }
 
 TEST_CASE("Simplnx::Invalid DataPath Creation", "[Simplnx][DataPath]")
@@ -58,4 +61,7 @@ TEST_CASE("Simplnx::Invalid DataPath Creation", "[Simplnx][DataPath]")
 
   DataPath invalidExemplar2 = DataPath{};
   REQUIRE(!CompareFromStringToExemplar(k_InvalidStringsVec[1], invalidExemplar2));
+
+  DataPath fromInvalidVector({"", "", ""});
+  REQUIRE(fromInvalidVector.toString().empty());
 }

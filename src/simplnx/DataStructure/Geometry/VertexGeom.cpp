@@ -12,11 +12,13 @@ using namespace nx::core;
 VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name)
 : INodeGeometry0D(dataStructure, std::move(name))
 {
+  m_UnitDimensionality = 0;
 }
 
 VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name, IdType importId)
 : INodeGeometry0D(dataStructure, std::move(name), importId)
 {
+  m_UnitDimensionality = 0;
 }
 
 VertexGeom::VertexGeom(const VertexGeom&) = default;

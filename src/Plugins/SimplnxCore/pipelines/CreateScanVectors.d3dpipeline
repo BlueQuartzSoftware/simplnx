@@ -1,0 +1,96 @@
+{
+  "isDisabled": false,
+  "name": "CreateScanVectors.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "face_attribute_matrix_name": "Face Data",
+        "face_normals_name": "Face Normals",
+        "output_triangle_geometry_path": "TriangleDataContainer",
+        "scale_factor": 1.0,
+        "scale_output": false,
+        "stl_file_path": "Data/STL_Models/Example_Triangle_Geometry.stl",
+        "vertex_attribute_matrix_name": "Vertex Data"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadStlFileFilter",
+        "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_region_ids_path": "TriangleDataContainer/Face Data/Region Ids",
+        "input_triangle_geometry_path": "TriangleDataContainer",
+        "num_triangles_name": "NumTriangles",
+        "triangle_attribute_matrix_name": "Cell Feature AM"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::LabelTriangleGeometryFilter",
+        "uuid": "7a7a2c6f-3b03-444d-8b8c-5976b0e5c82e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "edge_attribute_matrix_name": "Edge Data",
+        "have_region_ids": true,
+        "input_triangle_geometry_path": "TriangleDataContainer",
+        "output_edge_geometry_path": "Edge Geometry",
+        "region_ids_array_path": "TriangleDataContainer/Face Data/Region Ids",
+        "slice_attribute_matrix_name": "Slice Feature Data",
+        "slice_ids_array_name": "Slice Ids",
+        "slice_range_index": 0,
+        "slice_spacing_value": 0.33,
+        "z_end_value": 0.0,
+        "z_start_value": 0.0
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::SliceTriangleGeometryFilter",
+        "uuid": "754a47c0-149a-4109-a810-2b2968743895"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cad_region_ids_array_path": "Edge Geometry/Edge Data/Region Ids",
+        "cad_slice_data_container_path": "Edge Geometry",
+        "cad_slice_ids_array_path": "Edge Geometry/Edge Data/Slice Ids",
+        "hatch_attribute_matrix_name": "Vector Data",
+        "hatch_data_container_path": "ScanVectorGeometry",
+        "hatch_spacing": 0.33,
+        "power": 100.0,
+        "powers_array_name": "Powers",
+        "region_ids_array_name": "RegionIds",
+        "speed": 1000.0,
+        "stripe_width": 10.0,
+        "time_array_name": "Times",
+        "vertex_attribute_matrix_name": "Vector Node Data"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateAMScanPathsFilter",
+        "uuid": "b757be16-1418-4b69-b475-99e63d00a2e3"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/ScanVectors/ExampleAMScanVectors.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

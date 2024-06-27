@@ -11,11 +11,13 @@ using namespace nx::core;
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name)
 : INodeGeometry1D(dataStructure, std::move(name))
 {
+  m_UnitDimensionality = 1;
 }
 
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId)
 : INodeGeometry1D(dataStructure, std::move(name), importId)
 {
+  m_UnitDimensionality = 1;
 }
 
 DataObject::Type EdgeGeom::getDataObjectType() const
@@ -172,24 +174,29 @@ IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
   return 1;
 }
 
+usize EdgeGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
 IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* containsVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
-  if(containsVert != nullptr && !recalculate)
+  auto* edgesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  if(edgesContainingVert != nullptr && !recalculate)
   {
     return 0;
   }
-  if(containsVert == nullptr)
+  if(edgesContainingVert == nullptr)
   {
-    containsVert = ElementDynamicList::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    edgesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
   }
-  if(containsVert == nullptr)
+  if(edgesContainingVert == nullptr)
   {
     m_CellContainingVertDataArrayId.reset();
     return -1;
   }
-  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
-  m_CellContainingVertDataArrayId = containsVert->getId();
+  GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVert, getNumberOfVertices());
+  m_CellContainingVertDataArrayId = edgesContainingVert->getId();
   return 1;
 }
 
