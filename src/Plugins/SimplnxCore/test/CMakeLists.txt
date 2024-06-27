@@ -6,6 +6,8 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  CreateAMScanPathsTest.cpp
+  SliceTriangleGeometryTest.cpp
   # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
@@ -235,6 +237,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME DBSCAN_tests.tar.gz SHA512 fba3d6c02cde5eeeccad0153032e403c20826365c2362351b8e1048b3d385480e7fba828748196e03ffa95aff569420630b0506441d9da9893d25db40390fdf0)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME scan_path_test_data.tar.gz SHA512 3dc7104df9b49fb571caec0dca8fbeb327b477aa7d830c47e014b018d207be03e2333c51d113eef9efbbe49a6be9711e215c582bae1ed55a4ad07e157bd55344)
+
 endif()
 
 # -----------------------------------------------------------------------------

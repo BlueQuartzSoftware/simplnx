@@ -12,11 +12,13 @@ using namespace nx::core;
 TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name)
 : INodeGeometry2D(dataStructure, std::move(name))
 {
+  m_UnitDimensionality = 2;
 }
 
 TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name, IdType importId)
 : INodeGeometry2D(dataStructure, std::move(name), importId)
 {
+  m_UnitDimensionality = 2;
 }
 
 IGeometry::Type TriangleGeom::getGeomType() const
@@ -32,6 +34,11 @@ DataObject::Type TriangleGeom::getDataObjectType() const
 BaseGroup::GroupType TriangleGeom::getGroupType() const
 {
   return GroupType::TriangleGeom;
+}
+
+usize TriangleGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
 }
 
 TriangleGeom* TriangleGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)

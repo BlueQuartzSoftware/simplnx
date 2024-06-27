@@ -98,6 +98,12 @@ public:
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
+   *
+   * @return
+   */
+  usize getNumberOfVerticesPerEdge() const override;
+
+  /**
    * @brief
    * @return
    */

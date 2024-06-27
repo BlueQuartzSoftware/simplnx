@@ -33,6 +33,11 @@ BaseGroup::GroupType TetrahedralGeom::getGroupType() const
   return GroupType::TetrahedralGeom;
 }
 
+usize TetrahedralGeom::getNumberOfVerticesPerEdge() const
+{
+  return k_NumEdgeVerts;
+}
+
 TetrahedralGeom* TetrahedralGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataStructure, std::move(name)));

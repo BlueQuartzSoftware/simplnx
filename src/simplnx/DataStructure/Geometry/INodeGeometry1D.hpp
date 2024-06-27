@@ -67,6 +67,12 @@ public:
   usize getNumberOfEdges() const;
 
   /**
+   * @brief
+   * @return
+   */
+  virtual usize getNumberOfVerticesPerEdge() const = 0;
+
+  /**
    * @brief Sets the vertex IDs making up the specified edge. This method does
    * nothing if the edge list could not be found.
    * @param edgeId
