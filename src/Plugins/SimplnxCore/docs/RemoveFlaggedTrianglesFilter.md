@@ -26,6 +26,10 @@ For each of the vertex and edge data attribute matrices, the user can select to 
 
 % Auto generated parameter table will be inserted here
 
+## Example Pipeline
+
+*'remove_flagged_triangles_example'* in **SimplnxCore**
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
