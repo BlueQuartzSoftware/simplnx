@@ -176,6 +176,34 @@ print(f'id: {rect_grid_geom.id}')
 print(f'name: {rect_grid_geom.name}')
 
 # ------------------------------------------------------------------------------
+# Lets try a Vertex Geometry
+# For this we need the vertex data
+# ------------------------------------------------------------------------------
+array_path = nx.DataPath('Vertices')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.float32,
+                                    component_count=3,
+                                    tuple_dimensions=[[144]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+vertex_coords = data_structure[array_path].npview()
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
+vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
+                                         array_handling_index=1,  # Move the arrays from their original location.
+                                         output_geometry_path=nx.DataPath("Vertex Geometry"),
+                                         geometry_type_index=2,
+                                         vertex_attribute_matrix_name="Vertex Data",
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         )
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
+
+# ------------------------------------------------------------------------------
 # Lets try a Triangle Geometry
 # For this we need the vertex data and the Triangle connectivity data
 # ------------------------------------------------------------------------------
@@ -266,9 +294,142 @@ result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
                                          )
 nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
+# ------------------------------------------------------------------------------
+# Lets try a Quad Geometry
+# For this we need the vertex data and the Quad connectivity data
+# ------------------------------------------------------------------------------
+array_path = nx.DataPath('Vertices')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.float32,
+                                    component_count=3,
+                                    tuple_dimensions=[[144]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+vertex_coords = data_structure[array_path].npview()
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/VertexCoordinates.csv'
+vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+array_path = nx.DataPath('Faces')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.uint64,
+                                    component_count=4,
+                                    tuple_dimensions=[[121]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/QuadConnectivity.csv'
+edges_view = data_structure["Faces"].npview()
+edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
+                                         array_handling_index=1,  # Move the arrays from their original location.
+                                         output_geometry_path=nx.DataPath("Quad Geometry"),
+                                         geometry_type_index=5,
+                                         face_attribute_matrix_name="Face Data",
+                                         vertex_attribute_matrix_name="Vertex Data",
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         quadrilateral_list_path=nx.DataPath('Faces')
+                                         )
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
+
+# ------------------------------------------------------------------------------
+# Lets try a Tetrahedral Geometry
+# For this we need the vertex data and the Tetrahedral connectivity data
+# ------------------------------------------------------------------------------
+array_path = nx.DataPath('Vertices')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.float32,
+                                    component_count=3,
+                                    tuple_dimensions=[[9]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+vertex_coords = data_structure[array_path].npview()
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/TetraVertexCoordinates.csv'
+vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+array_path = nx.DataPath('Cells')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.uint64,
+                                    component_count=4,
+                                    tuple_dimensions=[[3]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/TetraConnectivity.csv'
+edges_view = data_structure["Cells"].npview()
+edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
+                                         array_handling_index=1,  # Move the arrays from their original location.
+                                         output_geometry_path=nx.DataPath("Tetra Geometry"),
+                                         geometry_type_index=6,
+                                         cell_attribute_matrix_name="Cell Data",
+                                         vertex_attribute_matrix_name="Vertex Data",
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         tetrahedral_list_path=nx.DataPath('Cells')
+                                         )
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
+
+# ------------------------------------------------------------------------------
+# Lets try a Hexahedral Geometry
+# For this we need the vertex data and the Hexahedral connectivity data
+# ------------------------------------------------------------------------------
+array_path = nx.DataPath('Vertices')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.float32,
+                                    component_count=3,
+                                    tuple_dimensions=[[20]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+vertex_coords = data_structure[array_path].npview()
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/HexaVertexCoordinates.csv'
+vertex_coords[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+array_path = nx.DataPath('Cells')
+result = nx.CreateDataArrayFilter.execute(data_structure,
+                                    numeric_type_index=nx.NumericType.uint64,
+                                    component_count=8,
+                                    tuple_dimensions=[[3]],
+                                    output_array_path=array_path,
+                                    initialization_value_str='0')
+nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
+
+
+# Read the CSV file into the DataArray using the numpy view
+file_path = nxtest.get_simplnx_source_dir() / 'test/Data/HexaConnectivity.csv'
+edges_view = data_structure["Cells"].npview()
+edges_view[:] = np.loadtxt(file_path, delimiter=',', skiprows=1)
+
+result = nx.CreateGeometryFilter.execute(data_structure=data_structure,
+                                         array_handling_index=1,  # Move the arrays from their original location.
+                                         output_geometry_path=nx.DataPath("Hexa Geometry"),
+                                         geometry_type_index=7,
+                                         cell_attribute_matrix_name="Cell Data",
+                                         vertex_attribute_matrix_name="Vertex Data",
+                                         vertex_list_path=nx.DataPath('Vertices'),
+                                         hexahedral_list_path=nx.DataPath('Cells')
+                                         )
+nxtest.check_filter_result(nx.CreateGeometryFilter, result)
 
 output_file_path = nxtest.get_test_temp_directory() / "geometry_examples.dream3d"
 result = nx.WriteDREAM3DFilter.execute(data_structure=data_structure, export_file_path=output_file_path,
                                        write_xdmf_file=True)
 nxtest.check_filter_result(nx.WriteDREAM3DFilter, result)
-

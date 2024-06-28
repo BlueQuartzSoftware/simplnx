@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
@@ -159,6 +160,10 @@ const std::string k_QuadGroupName = "QUAD_GEOMETRY";
 const std::string k_QuadFaceName = "SharedQuadList";
 const std::string k_EdgeFaceName = "SharedEdgeList";
 const std::string k_EdgeGroupName = "EDGE_GEOMETRY";
+const std::string k_TetraGroupName = "TETRA_GEOMETRY";
+const std::string k_TetraFaceName = "SharedCellList";
+const std::string k_HexaGroupName = "HEXA_GEOMETRY";
+const std::string k_HexaFaceName = "SharedCellList";
 const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 
 void CreateVertexGeometry(DataStructure& dataStructure)
@@ -299,6 +304,74 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   geometry->setVertices(*vertexArray);
 }
 
+void CreateTetrahedralGeometry(DataStructure& dataStructure)
+{
+  // Create a Tetrahedral Geometry
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TetraGroupName);
+  using MeshIndexType = IGeometry::MeshIndexType;
+  auto geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Tetrahedral", geometryGroup->getId());
+
+  // Create a Path in the DataStructure to place the geometry
+  DataPath path = DataPath({k_TetraGroupName, k_TetraFaceName});
+  std::string inputFile = fmt::format("{}/test/Data/TetraConnectivity.csv", unit_test::k_SourceDir.view());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(faceCount == 3);
+  // Create the default DataArray that will hold the FaceList and Vertices. We
+  // size these to 1 because the Csv parser will resize them to the appropriate number of typles
+  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  geometry->setPolyhedraList(*dataArray);
+
+  // Create the Vertex Array with a component size of 3
+  path = DataPath({k_TetraGroupName, k_VertexListName});
+  inputFile = fmt::format("{}/test/Data/TetraVertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 9);
+  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  geometry->setVertices(*vertexArray);
+}
+
+void CreateHexahedralGeometry(DataStructure& dataStructure)
+{
+  // Create a Hexahedral Geometry
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_HexaGroupName);
+  using MeshIndexType = IGeometry::MeshIndexType;
+  auto geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Hexahedral", geometryGroup->getId());
+
+  // Create a Path in the DataStructure to place the geometry
+  DataPath path = DataPath({k_HexaGroupName, k_HexaFaceName});
+  std::string inputFile = fmt::format("{}/test/Data/HexaConnectivity.csv", unit_test::k_SourceDir.view());
+  uint64 skipLines = 1;
+  char delimiter = ',';
+  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(faceCount == 3);
+  // Create the default DataArray that will hold the FaceList and Vertices. We
+  // size these to 1 because the Csv parser will resize them to the appropriate number of typles
+  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  geometry->setPolyhedraList(*dataArray);
+
+  // Create the Vertex Array with a component size of 3
+  path = DataPath({k_HexaGroupName, k_VertexListName});
+  inputFile = fmt::format("{}/test/Data/HexaVertexCoordinates.csv", unit_test::k_SourceDir.view());
+  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  REQUIRE(vertexCount == 20);
+  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  REQUIRE(result.valid());
+  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  geometry->setVertices(*vertexArray);
+}
+
 void CreateNeighborList(DataStructure& dataStructure)
 {
   const usize numItems = 50;
@@ -351,6 +424,8 @@ DataStructure CreateNodeBasedGeometries()
   CreateTriangleGeometry(dataStructure);
   CreateQuadGeometry(dataStructure);
   CreateEdgeGeometry(dataStructure);
+  CreateTetrahedralGeometry(dataStructure);
+  CreateHexahedralGeometry(dataStructure);
 
   return dataStructure;
 }
