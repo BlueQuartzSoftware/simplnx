@@ -40,7 +40,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
     // Create default Parameters for the filter.
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_InputEdgeGeometryPath_Key, std::make_any<DataPath>(::k_EdgeGeomPath));
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(::k_MaskPath));
-    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_InputEdgeGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
+    args.insertOrAssign(RemoveFlaggedEdgesFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
 
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_EdgeDataHandling_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
     args.insertOrAssign(RemoveFlaggedEdgesFilter::k_EdgeDataSelectedArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{::k_SliceIdsPath, ::k_RegionIdsPath}));

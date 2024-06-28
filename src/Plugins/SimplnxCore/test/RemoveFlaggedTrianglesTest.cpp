@@ -10,8 +10,7 @@ using namespace nx::core;
 
 namespace
 {
-fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/remove_flagged_triangles_test.dream3d", nx::core::unit_test::k_TestFilesDir));
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/data_to_generate_test/masked_triangle_geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 constexpr StringLiteral k_RegionIdsName = "Region Ids";
 constexpr StringLiteral k_FaceNormalsName = "Face Normals";
@@ -66,7 +65,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
     DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_FaceNormalsName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_FaceNormalsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
