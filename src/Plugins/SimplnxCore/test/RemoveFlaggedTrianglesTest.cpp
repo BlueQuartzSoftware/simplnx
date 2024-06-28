@@ -9,8 +9,6 @@ using namespace nx::core;
 
 namespace
 {
-namespace
-{
 fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/remove_flagged_triangles_test.dream3d", nx::core::unit_test::k_TestFilesDir));
 fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_triangles_test_1/data_to_generate_test/masked_triangle_geometry.dream3d", nx::core::unit_test::k_TestFilesDir));
 
@@ -24,7 +22,6 @@ const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 
 const DataPath k_VertexListPath = k_ReducedGeomPath.createChildPath("SharedVertexList");
 const DataPath k_TriangleListPath = k_ReducedGeomPath.createChildPath("SharedTriList");
-} // namespace
 } // namespace
 
 TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Valid Filter Execution", "[SimplnxCore][RemoveFlaggedTrianglesFilter]")

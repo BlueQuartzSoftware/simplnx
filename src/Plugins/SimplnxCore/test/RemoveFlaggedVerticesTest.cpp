@@ -9,6 +9,21 @@
 
 using namespace nx::core;
 
+namespace
+{
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_vertices_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+
+const std::string k_CopyTestName = "copy_test";
+const std::string k_DataName = "data";
+
+const DataPath k_VertexGeomPath({"VertexGeometry"});
+const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(Constants::k_Mask);
+const DataPath k_ReducedGeomPath({"ReducedGeometry"});
+const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
+
+const DataPath k_VertexListPath = k_ReducedGeomPath.createChildPath("SharedVertexList");
+} // namespace
+
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
   RemoveFlaggedVerticesFilter filter;
@@ -84,10 +99,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
   size_t reducedTupleCount = reducedVertexGeom->getNumberOfVertices();
   REQUIRE(reducedTupleCount == 75);
 
-  Int32Array& reducedFeatureIds = dataStructure.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_FeatureIds));
+  auto& reducedFeatureIds = dataStructure.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_FeatureIds));
   REQUIRE((reducedFeatureIds.getNumberOfTuples() == 75));
 
-  Int32Array& reducedSlipVectors = dataStructure.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_SlipVector));
+  auto& reducedSlipVectors = dataStructure.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_SlipVector));
   REQUIRE((reducedSlipVectors.getNumberOfTuples() == 75));
 
   for(size_t i = 0; i < reducedTupleCount; i++)
@@ -109,4 +124,45 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
   nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+}
+
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
+{
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
+
+  // Load DataStructure containing the base geometry and an exemplar cleaned geometry
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+
+  {
+    // Instantiate the filter and an Arguments Object
+    RemoveFlaggedVerticesFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(RemoveFlaggedVerticesFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(::k_VertexGeomPath));
+    args.insertOrAssign(RemoveFlaggedVerticesFilter::k_InputMaskPath_Key, std::make_any<DataPath>(::k_MaskPath));
+    args.insertOrAssign(RemoveFlaggedVerticesFilter::k_CreatedVertexGeometryPath_Key, std::make_any<DataPath>(::k_ReducedGeomPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  {
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_DataName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_DataName);
+
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+  }
+
+  {
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
+
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+  }
 }
