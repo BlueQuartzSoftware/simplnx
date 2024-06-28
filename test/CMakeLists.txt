@@ -88,3 +88,10 @@ catch_discover_tests(simplnx_test)
 
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME simpl_json_exemplars.tar.gz SHA512 550a1ad3c9c31b1093d961fdda2057d63a48f08c04d2831c70c1ec65d499f39b354a5a569903ff68e9b703ef45c23faba340aa0c61f9a927fbc845c15b87d05e )
 
+add_custom_target(Copy_simplnx_Test_Data ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${simplnx_SOURCE_DIR}/test/Data" "${DATA_DEST_DIR}/Test_Data"
+    WORKING_DIRECTORY "${simplnx_SOURCE_DIR}/test"
+    COMMENT "Copying ${simplnx_SOURCE_DIR}/test/Data data into Binary Directory"
+    COMMAND_EXPAND_LISTS
+    VERBATIM
+  )
