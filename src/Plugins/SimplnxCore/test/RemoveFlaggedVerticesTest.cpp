@@ -3,7 +3,6 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -15,6 +14,7 @@ fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_d
 
 const std::string k_CopyTestName = "copy_test";
 const std::string k_DataName = "data";
+const std::string k_VertexListName = "SharedVertexList";
 
 const DataPath k_VertexGeomPath({"VertexGeometry"});
 const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(Constants::k_Mask);
@@ -164,5 +164,12 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+  }
+
+  {
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_VertexListName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
+
+    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 }

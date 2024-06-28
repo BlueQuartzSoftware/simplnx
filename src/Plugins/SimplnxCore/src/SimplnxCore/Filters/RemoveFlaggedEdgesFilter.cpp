@@ -59,13 +59,13 @@ Parameters RemoveFlaggedEdgesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Edge Geometry", "The Edge Geometry that will be processed.", DataPath(),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputEdgeGeometryPath_Key, "Edge Geometry", "The Edge Geometry that will be processed.", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each edge as either true (remove) or false(keep).", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Edge Geometry", DataPath({"ReducedGeometry"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputEdgeGeometryPath_Key, "Created Geometry", "The name of the created Edge Geometry", DataPath({"ReducedGeometry"})));
 
   // Vertex Data Handling
   params.insertSeparator(Parameters::Separator{"Vertex Data Handling"});
@@ -104,8 +104,8 @@ IFilter::UniquePointer RemoveFlaggedEdgesFilter::clone() const
 IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
-  auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
+  auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
   auto pEdgeArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
   auto selectedEdgeArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
   auto selectedEdgeAttrMatPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
@@ -207,9 +207,9 @@ Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, con
 {
   RemoveFlaggedEdgesInputValues inputValues;
 
-  inputValues.EdgeGeometry = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.EdgeGeometry = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ReducedEdgeGeometry = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.ReducedEdgeGeometry = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
 
   inputValues.EdgeDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
   inputValues.EdgeAttributeMatrixPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
@@ -238,9 +238,9 @@ Result<Arguments> RemoveFlaggedEdgesFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_TriangleGeometryKey, k_InputEdgeGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ReducedTriangleGeometryKey, k_OutputEdgeGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
