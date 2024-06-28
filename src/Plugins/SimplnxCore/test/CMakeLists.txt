@@ -261,6 +261,7 @@ set(PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/remove_flagged_triangles_example.d3dpipeline"
 
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
