@@ -39,7 +39,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
-TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
+TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
   RemoveFlaggedVerticesFilter filter;
   DataStructure dataStructure;
