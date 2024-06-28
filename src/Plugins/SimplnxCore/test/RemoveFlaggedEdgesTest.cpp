@@ -12,10 +12,10 @@ namespace
 {
 fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_edges_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-const std::string k_RegionIdsName = "Region Ids";
-const std::string k_SliceIdsName = "Slice Ids";
-const std::string k_VertexListName = "SharedVertexList";
-const std::string k_EdgeListName = "SharedEdgeList";
+constexpr StringLiteral k_RegionIdsName = "Region Ids";
+constexpr StringLiteral k_SliceIdsName = "Slice Ids";
+constexpr StringLiteral k_VertexListName = "SharedVertexList";
+constexpr StringLiteral k_EdgeListName = "SharedEdgeList";
 
 const DataPath k_EdgeGeomPath({"Edge Geometry"});
 const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(Constants::k_Mask);

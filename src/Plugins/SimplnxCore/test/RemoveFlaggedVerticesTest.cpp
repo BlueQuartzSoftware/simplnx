@@ -12,9 +12,9 @@ namespace
 {
 fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_vertices_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-const std::string k_CopyTestName = "copy_test";
-const std::string k_DataName = "data";
-const std::string k_VertexListName = "SharedVertexList";
+constexpr StringLiteral k_CopyTestName = "copy_test";
+constexpr StringLiteral k_DataName = "data";
+constexpr StringLiteral k_VertexListName = "SharedVertexList";
 
 const DataPath k_VertexGeomPath({"VertexGeometry"});
 const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(Constants::k_Mask);
