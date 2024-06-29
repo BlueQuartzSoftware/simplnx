@@ -453,6 +453,57 @@ PYBIND11_MODULE(simplnx, mod)
   dataType.value("float64", DataType::float64);
   dataType.value("boolean", DataType::boolean);
 
+  mod.def(
+      "numpy_dtype_to_datatype",
+      [](const py::dtype& dtype) {
+        if(dtype.is(py::dtype::of<int8>()))
+        {
+          return DataType::int8;
+        }
+        if(dtype.is(py::dtype::of<uint8>()))
+        {
+          return DataType::uint8;
+        }
+        if(dtype.is(py::dtype::of<int16>()))
+        {
+          return DataType::int16;
+        }
+        if(dtype.is(py::dtype::of<uint16>()))
+        {
+          return DataType::uint16;
+        }
+        if(dtype.is(py::dtype::of<int32>()))
+        {
+          return DataType::int32;
+        }
+        if(dtype.is(py::dtype::of<uint32>()))
+        {
+          return DataType::uint32;
+        }
+        if(dtype.is(py::dtype::of<int64>()))
+        {
+          return DataType::int64;
+        }
+        if(dtype.is(py::dtype::of<uint64>()))
+        {
+          return DataType::uint64;
+        }
+        if(dtype.is(py::dtype::of<float32>()))
+        {
+          return DataType::float32;
+        }
+        if(dtype.is(py::dtype::of<float64>()))
+        {
+          return DataType::float64;
+        }
+        if(dtype.is(py::dtype::of<bool>()))
+        {
+          return DataType::boolean;
+        }
+        throw std::invalid_argument("Unable to convert dtype to DataType: Unsupported dtype.");
+      },
+      "Convert numpy dtype to simplnx DataType", "dtype"_a);
+
   py::enum_<ArrayHandlingType> arrayHandlingType(mod, "ArrayHandlingType");
   arrayHandlingType.value("Copy", ArrayHandlingType::Copy);
   arrayHandlingType.value("Move", ArrayHandlingType::Move);

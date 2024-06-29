@@ -108,6 +108,14 @@ except ImportError:
   pass
 # FILTER_END: WriteVtuFile
 
+# FILTER_START: ReadMeshFile
+try:
+  from DataAnalysisToolkit.ReadMeshFile import ReadMeshFile
+  _filters.append(ReadMeshFile)
+except ImportError:
+  pass
+# FILTER_END: ReadMeshFile
+
 import simplnx as nx
 
 class NXDataAnalysisToolkit:

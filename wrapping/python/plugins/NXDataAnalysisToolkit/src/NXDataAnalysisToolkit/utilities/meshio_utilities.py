@@ -4,6 +4,12 @@ import numpy as np
 from typing import List
 from pathlib import Path
 
+EDGE_TYPE_STR = 'line'
+TRIANGLE_TYPE_STR = 'triangle'
+QUAD_TYPE_STR = 'quad'
+TETRAHEDRAL_TYPE_STR = 'tetra'
+HEXAHEDRAL_TYPE_STR = 'hexahedron'
+
 def get_geometry_cell_tuple_dimensions(geom: nx.INodeGeometry0D) -> list:
     if geom.type == nx.DataObject.DataObjectType.EdgeGeom:
         return geom.edges.tdims
@@ -16,19 +22,19 @@ def create_meshio_cells_list(geom: nx.INodeGeometry0D) -> list:
     # Meshio requires the cells to be either int32 or int64, so use int64
     if geom.type == nx.DataObject.DataObjectType.EdgeGeom:
         cells_list = geom.edges.npview().astype(np.int64)
-        cells = [('line', cells_list)]
+        cells = [(EDGE_TYPE_STR, cells_list)]
     elif geom.type == nx.DataObject.DataObjectType.TriangleGeom:
         cells_list = geom.faces.npview().astype(np.int64)
-        cells = [('triangle', cells_list)]
+        cells = [(TRIANGLE_TYPE_STR, cells_list)]
     elif geom.type == nx.DataObject.DataObjectType.QuadGeom:
         cells_list = geom.faces.npview().astype(np.int64)
-        cells = [('quad', cells_list)]
+        cells = [(QUAD_TYPE_STR, cells_list)]
     elif geom.type == nx.DataObject.DataObjectType.TetrahedralGeom:
         cells_list = geom.polyhedra.npview().astype(np.int64)
-        cells = [('tetra', cells_list)]
-    else: # Hexhedral geometry
+        cells = [(TETRAHEDRAL_TYPE_STR, cells_list)]
+    else: # Hexahedral geometry
         cells_list = geom.polyhedra.npview().astype(np.int64)
-        cells = [('hexahedron', cells_list)]
+        cells = [(HEXAHEDRAL_TYPE_STR, cells_list)]
 
     return cells
 

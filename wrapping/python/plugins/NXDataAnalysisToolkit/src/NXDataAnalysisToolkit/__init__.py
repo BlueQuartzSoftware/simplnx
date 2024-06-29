@@ -102,5 +102,13 @@ except ImportError:
   pass
 # FILTER_END: WriteVtuFile
 
+# FILTER_START: ReadMeshFile
+try:
+  from .ReadMeshFile import ReadMeshFile
+  __all__.append('ReadMeshFile')
+except ImportError:
+  pass
+# FILTER_END: ReadMeshFile
+
 def get_plugin():
   return NXDataAnalysisToolkit()
