@@ -14,7 +14,7 @@ _filters = []
 
 # FILTER_START: CalculateHistogramFilter
 try:
-  from DataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
+  from NXDataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
   _filters.append(CalculateHistogramFilter)
 except ImportError:
   pass
@@ -22,7 +22,7 @@ except ImportError:
 
 # FILTER_START: InterpolateGridDataFilter
 try:
-  from DataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
+  from NXDataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
   _filters.append(InterpolateGridDataFilter)
 except ImportError:
   pass
@@ -30,7 +30,7 @@ except ImportError:
 
 # FILTER_START: CliReaderFilter
 try:
-  from DataAnalysisToolkit.CliReaderFilter import CliReaderFilter
+  from NXDataAnalysisToolkit.CliReaderFilter import CliReaderFilter
   _filters.append(CliReaderFilter)
 except ImportError:
   pass
@@ -38,7 +38,7 @@ except ImportError:
 
 # FILTER_START: ContourDetectionFilter
 try:
-  from DataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
+  from NXDataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
   _filters.append(ContourDetectionFilter)
 except ImportError:
   pass
@@ -46,7 +46,7 @@ except ImportError:
 
 # FILTER_START: NPSortArray
 try:
-  from DataAnalysisToolkit.NPSortArray import NPSortArray
+  from NXDataAnalysisToolkit.NPSortArray import NPSortArray
   _filters.append(NPSortArray)
 except ImportError:
   pass
@@ -54,7 +54,7 @@ except ImportError:
 
 # FILTER_START: ReadPeregrineHDF5File
 try:
-  from DataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
+  from NXDataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
   _filters.append(ReadPeregrineHDF5File)
 except ImportError:
   pass
@@ -62,7 +62,7 @@ except ImportError:
 
 import simplnx as nx
 
-class DataAnalysisToolkit:
+class NXDataAnalysisToolkit:
   def __init__(self) -> None:
     pass
 
@@ -70,7 +70,7 @@ class DataAnalysisToolkit:
     return nx.Uuid('7ce1af33-d790-4378-9f75-b81483ce7737')
 
   def name(self) -> str:
-    return 'DataAnalysisToolkit'
+    return 'NXDataAnalysisToolkit'
 
   def description(self) -> str:
     return 'A plugin containing Python DREAM3D filters that analyze data, specifically using Python libraries like numpy, scipy, and matplotlib.'

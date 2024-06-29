@@ -1,6 +1,6 @@
-from DataAnalysisToolkit.Plugin import DataAnalysisToolkit
+from NXDataAnalysisToolkit.Plugin import NXDataAnalysisToolkit
 
-__all__ = ['DataAnalysisToolkit', 'get_plugin']
+__all__ = ['NXDataAnalysisToolkit', 'get_plugin']
 
 """
 This section conditionally tries to import each filter
@@ -8,7 +8,7 @@ This section conditionally tries to import each filter
 
 # FILTER_START: CalculateHistogramFilter
 try:
-  from DataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
+  from NXDataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
   __all__.append('CalculateHistogramFilter')
 except ImportError:
   pass
@@ -16,7 +16,7 @@ except ImportError:
 
 # FILTER_START: InterpolateGridDataFilter
 try:
-  from DataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
+  from NXDataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
   __all__.append('InterpolateGridDataFilter')
 except ImportError:
   pass
@@ -24,7 +24,7 @@ except ImportError:
 
 # FILTER_START: CliReaderFilter
 try:
-  from DataAnalysisToolkit.CliReaderFilter import CliReaderFilter
+  from NXDataAnalysisToolkit.CliReaderFilter import CliReaderFilter
   __all__.append('CliReaderFilter')
 except ImportError:
   pass
@@ -32,7 +32,7 @@ except ImportError:
 
 # FILTER_START: ContourDetectionFilter
 try:
-  from DataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
+  from NXDataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
   __all__.append('ContourDetectionFilter')
 except ImportError:
   pass
@@ -40,7 +40,7 @@ except ImportError:
 
 # FILTER_START: NPSortArray
 try:
-  from DataAnalysisToolkit.NPSortArray import NPSortArray
+  from NXDataAnalysisToolkit.NPSortArray import NPSortArray
   __all__.append('NPSortArray')
 except ImportError:
   pass
@@ -48,11 +48,11 @@ except ImportError:
 
 # FILTER_START: ReadPeregrineHDF5File
 try:
-  from DataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
+  from NXDataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
   __all__.append('ReadPeregrineHDF5File')
 except ImportError:
   pass
 # FILTER_END: ReadPeregrineHDF5File
 
 def get_plugin():
-  return DataAnalysisToolkit()
+  return NXDataAnalysisToolkit()

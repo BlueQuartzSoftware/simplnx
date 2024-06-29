@@ -1,4 +1,4 @@
-{% set name = "simplnx.DataAnalysisToolkit" %}
+{% set name = "simplnx.NXDataAnalysisToolkit" %}
 {% set version = "1.0.0" %}
 
 package:
@@ -7,7 +7,7 @@ package:
 
 source:
   - path: ../
-    folder: DataAnalysisToolkit
+    folder: NXDataAnalysisToolkit
 
 build:
   noarch: python
@@ -30,7 +30,7 @@ requirements:
 
 test:
   imports:
-    - DataAnalysisToolkit
+    - NXDataAnalysisToolkit
   commands:
     - pip check
   requires:
