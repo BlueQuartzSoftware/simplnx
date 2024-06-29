@@ -56,7 +56,7 @@ class WriteMedFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteMedFile', '.med', 'med', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteMedFile', '.med', 'med', 'format', 'export', 'output', 'compute', 'generate', 'create']
   
   
   """

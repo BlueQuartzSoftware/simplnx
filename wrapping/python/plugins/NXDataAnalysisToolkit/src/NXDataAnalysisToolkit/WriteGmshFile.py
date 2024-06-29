@@ -56,7 +56,7 @@ class WriteGmshFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteGmshFile', '.msh', 'msh', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteGmshFile', '.msh', 'msh', 'format', 'export', 'output', 'compute', 'generate', 'create']
   
   
   """

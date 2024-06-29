@@ -56,7 +56,7 @@ class WriteAnsysFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteAnsysFile', '.msh', 'msh', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteAnsysFile', '.msh', 'msh', 'format', 'export', 'output', 'compute', 'generate', 'create']
   
   
   """

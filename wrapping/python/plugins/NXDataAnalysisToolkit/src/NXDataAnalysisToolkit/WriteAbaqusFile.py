@@ -56,7 +56,7 @@ class WriteAbaqusFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteAbaqusFile', 'inp', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteAbaqusFile', 'inp', 'format', 'output', 'export', 'abaqus', 'compute', 'generate', 'create']
 
   """
   This section should contain the 'keys' that store each parameter. The value of the key should be snake_case. The name

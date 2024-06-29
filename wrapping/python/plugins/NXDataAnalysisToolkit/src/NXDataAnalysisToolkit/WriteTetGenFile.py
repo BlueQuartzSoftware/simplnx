@@ -56,7 +56,7 @@ class WriteTetGenFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteTetGenFile', '.node', 'node', '.ele', 'ele', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteTetGenFile', '.node', 'node', '.ele', 'ele', 'format', 'export', 'output', 'compute', 'generate', 'create']
   
   
   """

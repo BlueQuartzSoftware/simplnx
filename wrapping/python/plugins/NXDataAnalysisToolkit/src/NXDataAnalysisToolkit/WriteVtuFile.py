@@ -56,7 +56,7 @@ class WriteVtuFile:
     :return: The default tags for the filter
     :rtype: list
     """
-    return ['python', 'WriteVtuFile', 'vtk', '.vtu', 'vtu', 'format', 'input', 'output', 'abaqus', 'compute', 'generate', 'create']
+    return ['python', 'WriteVtuFile', 'vtk', '.vtu', 'vtu', 'format', 'export', 'output', 'compute', 'generate', 'create']
   
   
   """
