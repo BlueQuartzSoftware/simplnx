@@ -1,4 +1,4 @@
-name: data_analysis_toolkit
+name: nx_data_analysis_toolkit
 channels:
   - conda-forge
   - defaults
