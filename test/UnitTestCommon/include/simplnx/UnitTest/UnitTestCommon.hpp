@@ -76,6 +76,8 @@ inline constexpr StringLiteral k_FaceData("FaceData");
 inline constexpr StringLiteral k_Face_Data("Face Data");
 inline constexpr StringLiteral k_FaceFeatureData("FaceFeatureData");
 inline constexpr StringLiteral k_VertexData("VertexData");
+inline constexpr StringLiteral k_Vertex_Data("Vertex Data");
+inline constexpr StringLiteral k_Edge_Data("Edge Data");
 inline constexpr StringLiteral k_GBCD_Name("GBCD");
 
 inline constexpr StringLiteral k_Centroids("Centroids");

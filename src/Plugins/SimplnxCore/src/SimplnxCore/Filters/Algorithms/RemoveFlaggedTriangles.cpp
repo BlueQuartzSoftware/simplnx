@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -93,7 +94,7 @@ Result<> RemoveFlaggedTriangles::operator()()
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54070, message);
   }
-  auto& reducedTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
+  auto& reducedTriangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
 
   // Set up allocated masks
   usize size = originalTriangle.getNumberOfFaces();
@@ -120,41 +121,41 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // flatten a list of the indices of vertices used by the triangles
-  std::vector<usize> VertexListIndices; // also used as a pseudo look up table in PopulateReducedGeometryTrianglesImpl
+  std::vector<usize> vertexListIndices; // also used as a pseudo look up table in PopulateReducedGeometryTrianglesImpl
   for(usize& index : newTrianglesIndexList)
   {
     usize vertIDs[3] = {0, 0, 0};
     originalTriangle.getFacePointIds(index, vertIDs);
-    VertexListIndices.push_back(vertIDs[0]);
-    VertexListIndices.push_back(vertIDs[1]);
-    VertexListIndices.push_back(vertIDs[2]);
+    vertexListIndices.push_back(vertIDs[0]);
+    vertexListIndices.push_back(vertIDs[1]);
+    vertexListIndices.push_back(vertIDs[2]);
   }
   if(getCancel())
   {
     return {};
   }
 
-  if(VertexListIndices.empty())
+  if(vertexListIndices.empty())
   {
     return MakeErrorResult(-67881, "Re-evaluate mask conditions - with current configuration all vertices will be dumped!");
   }
 
   // clear duplicate values out of vector
-  std::sort(VertexListIndices.begin(), VertexListIndices.end()); // orders ascending !!!!! Basis for later search !!!!!
-  auto dupes = std::unique(VertexListIndices.begin(), VertexListIndices.end());
-  VertexListIndices.erase(dupes, VertexListIndices.end());
+  std::sort(vertexListIndices.begin(), vertexListIndices.end()); // orders ascending !!!!! Basis for later search !!!!!
+  auto dupes = std::unique(vertexListIndices.begin(), vertexListIndices.end());
+  vertexListIndices.erase(dupes, vertexListIndices.end());
 
   // define new sizing
-  size = VertexListIndices.size();
-  reducedTriangle.resizeVertexList(size); // resize accordingly
-  reducedTriangle.getVertexAttributeMatrix()->resizeTuples({size});
+  size = vertexListIndices.size();
+  reducedTriangleGeom.resizeVertexList(size); // resize accordingly
+  reducedTriangleGeom.getVertexAttributeMatrix()->resizeTuples({size});
 
   // load reduced Geometry Vertex list according to used vertices
   Point3Df coords = {0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < size; i++)
   {
-    coords = originalTriangle.getVertexCoordinate(VertexListIndices[i]);
-    reducedTriangle.setVertexCoordinate(i, coords);
+    coords = originalTriangle.getVertexCoordinate(vertexListIndices[i]);
+    reducedTriangleGeom.setVertexCoordinate(i, coords);
   }
 
   if(getCancel())
@@ -164,13 +165,47 @@ Result<> RemoveFlaggedTriangles::operator()()
 
   // Set up preprocessing conditions (allocation for parallelization)
   size = newTrianglesIndexList.size();
-  reducedTriangle.resizeFaceList(size); // resize accordingly
-  reducedTriangle.getFaceAttributeMatrix()->resizeTuples({size});
+  reducedTriangleGeom.resizeFaceList(size); // resize accordingly
+  reducedTriangleGeom.getFaceAttributeMatrix()->resizeTuples({size});
 
   // parse triangles and reassign indexes to match new vertex list
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, size);
-  dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangle, newTrianglesIndexList, VertexListIndices));
+  dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangleGeom, newTrianglesIndexList, vertexListIndices));
+
+  /** This section will copy any user defined Triangle Data Arrays from the old to the reduced Triangle geometry **/
+  if(m_InputValues->TriangleDataHandling == detail::k_CopySelectedTriangleArraysIdx)
+  {
+    TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), m_InputValues->SelectedTriangleData, newTrianglesIndexList, m_ShouldCancel,
+                                                     m_MessageHandler);
+  }
+  else if(m_InputValues->TriangleDataHandling == detail::k_CopyAllTriangleArraysIdx)
+  {
+    std::vector<DataPath> ignorePaths;
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->TriangleAttributeMatrixPath, ignorePaths);
+    if(getChildrenResult.has_value())
+    {
+      TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), getChildrenResult.value(), newTrianglesIndexList, m_ShouldCancel,
+                                                       m_MessageHandler);
+    }
+  }
+
+  /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
+  if(m_InputValues->VertexDataHandling == detail::k_CopySelectedVertexArraysIdx)
+  {
+    TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
+                                                     m_MessageHandler);
+  }
+  else if(m_InputValues->VertexDataHandling == detail::k_CopyAllVertexArraysIdx)
+  {
+    std::vector<DataPath> ignorePaths;
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);
+    if(getChildrenResult.has_value())
+    {
+      TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel,
+                                                       m_MessageHandler);
+    }
+  }
 
   return {};
 }

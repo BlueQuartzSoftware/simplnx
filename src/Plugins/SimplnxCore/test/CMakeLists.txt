@@ -106,6 +106,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
+  RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RequireMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
@@ -232,12 +233,12 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME initialize_data_test_files.tar.gz SHA512 f04fe76ef96add4b775111ae7fc95233a7748a25501d9f00a8b2a162c87782b8cd2813e6e46ba7892e721976693da06965e624335dbb28224c9c5b877a05aa49)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_write_stl_file_test.tar.gz SHA512 05455dfb57724a14a3b2d92ad02ac335b5596ca4f353830ee60d84ffc858523136140328a1c95b6693331be9dc5c40a26e76f45ee54ab11e218f5efb6b2a4c38)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME label_triangle_geometry_test.tar.gz SHA512 9281fa954c842ca1881ba932d6d96b9c43601b466b6b7ae33721d1c886629ba68986a3ccaf774f5be577e8bfce145612f77a2b98af319e6aa35a3e0aeb607597)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME remove_flagged_triangles_test.tar.gz SHA512 cd5c6f3ea16a6d09e00e0c0bd0f941b27dca8a0beaeabb7262a2a6adaad83c829187c5d1aa433718123b628eaa839f016604c1134ced9f870723594b2df4be99)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_color_table_test.tar.gz SHA512 b5683c758964eb723267400b14047f8adb0d5365ee9ca93d1a6940e9b6ad198cd4739c1ca799eb787b7706e668dbc16ab8243642034cdba5b71d64c27e682d3f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME read_vtk_structured_points_test.tar.gz SHA512 e7a07a4e3901204c2562754cd71e0fdba1a46de2a5135bad2b6d66b40eefd0e63bed4dbe0ccd6ccadafb708ef63e20635d080aa3a35c172c4ced6986e0f75d5c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadSTLFileTest.tar.gz SHA512 975587206625ffa183160308934e767347de55a34a16272cf5c121114efa286b3c6939e3c6a397e8728fdefe1771bc024bd4c9b409afdff0b76f2f56fcb9eb69)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME DBSCAN_tests.tar.gz SHA512 fba3d6c02cde5eeeccad0153032e403c20826365c2362351b8e1048b3d385480e7fba828748196e03ffa95aff569420630b0506441d9da9893d25db40390fdf0)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME scan_path_test_data.tar.gz SHA512 3dc7104df9b49fb571caec0dca8fbeb327b477aa7d830c47e014b018d207be03e2333c51d113eef9efbbe49a6be9711e215c582bae1ed55a4ad07e157bd55344)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME remove_flagged_elements_data.tar.gz SHA512 6bd5b1d93a100bcf8e6d9aa88243cadf51c9f0dee85fc3c054f5fe489b6720991b41390cf4682862483dfee11595a2e384d8698f68c0245cf0521d275db450ee)
 
 endif()
 
@@ -260,6 +261,7 @@ set(PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/remove_flagged_triangles_example.d3dpipeline"
 
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"

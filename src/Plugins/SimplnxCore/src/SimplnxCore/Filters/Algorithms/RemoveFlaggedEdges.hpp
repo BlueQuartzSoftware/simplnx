@@ -15,12 +15,12 @@ namespace nx::core
 {
 namespace detail
 {
-const std::string k_CopySelectedTriangleData("Copy Selected Triangle Data");
-const std::string k_CopyAllTriangleData("Copy All Triangle Data");
+const std::string k_CopySelectedTriangleData("Copy Selected Edge Data");
+const std::string k_CopyAllEdgeData("Copy All Edge Data");
 
-const nx::core::ChoicesParameter::Choices k_TriangleDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllTriangleData};
-const nx::core::ChoicesParameter::ValueType k_CopySelectedTriangleArraysIdx = 0ULL;
-const nx::core::ChoicesParameter::ValueType k_CopyAllTriangleArraysIdx = 1ULL;
+const nx::core::ChoicesParameter::Choices k_EdgeDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllEdgeData};
+const nx::core::ChoicesParameter::ValueType k_CopySelectedEdgeArraysIdx = 0ULL;
+const nx::core::ChoicesParameter::ValueType k_CopyAllEdgeArraysIdx = 1ULL;
 
 const std::string k_CopySelectedVertexData("Copy Selected Vertex Data");
 const std::string k_CopyAllVertexData("Copy All Vertex Data");
@@ -30,15 +30,15 @@ const nx::core::ChoicesParameter::ValueType k_CopySelectedVertexArraysIdx = 0ULL
 const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
 } // namespace detail
 
-struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
+struct SIMPLNXCORE_EXPORT RemoveFlaggedEdgesInputValues
 {
-  DataPath TriangleGeometry;
+  DataPath EdgeGeometry;
   DataPath MaskArrayPath;
-  DataPath ReducedTriangleGeometry;
+  DataPath ReducedEdgeGeometry;
   // These variables are associated with the Edge Data Handling
-  nx::core::ChoicesParameter::ValueType TriangleDataHandling;
-  MultiArraySelectionParameter::ValueType SelectedTriangleData;
-  DataPath TriangleAttributeMatrixPath;
+  nx::core::ChoicesParameter::ValueType EdgeDataHandling;
+  MultiArraySelectionParameter::ValueType SelectedEdgeData;
+  DataPath EdgeAttributeMatrixPath;
   // These variables are associated with the Vertex Data Handling
   nx::core::ChoicesParameter::ValueType VertexDataHandling;
   MultiArraySelectionParameter::ValueType SelectedVertexData;
@@ -49,16 +49,16 @@ struct SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesInputValues
  * @class ConditionalSetValueFilter
 
  */
-class SIMPLNXCORE_EXPORT RemoveFlaggedTriangles
+class SIMPLNXCORE_EXPORT RemoveFlaggedEdges
 {
 public:
-  RemoveFlaggedTriangles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedTrianglesInputValues* inputValues);
-  ~RemoveFlaggedTriangles() noexcept = default;
+  RemoveFlaggedEdges(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedEdgesInputValues* inputValues);
+  ~RemoveFlaggedEdges() noexcept = default;
 
-  RemoveFlaggedTriangles(const RemoveFlaggedTriangles&) = delete;
-  RemoveFlaggedTriangles(RemoveFlaggedTriangles&&) noexcept = delete;
-  RemoveFlaggedTriangles& operator=(const RemoveFlaggedTriangles&) = delete;
-  RemoveFlaggedTriangles& operator=(RemoveFlaggedTriangles&&) noexcept = delete;
+  RemoveFlaggedEdges(const RemoveFlaggedEdges&) = delete;
+  RemoveFlaggedEdges(RemoveFlaggedEdges&&) noexcept = delete;
+  RemoveFlaggedEdges& operator=(const RemoveFlaggedEdges&) = delete;
+  RemoveFlaggedEdges& operator=(RemoveFlaggedEdges&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -66,7 +66,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const RemoveFlaggedTrianglesInputValues* m_InputValues = nullptr;
+  const RemoveFlaggedEdgesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
