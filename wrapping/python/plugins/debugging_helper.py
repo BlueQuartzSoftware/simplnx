@@ -14,9 +14,9 @@ import simplnx as nx
 # You will need to REPLACE the name of the plugin and the name of the filter
 # that you are trying to debug in the next 3 lines of code
 # ------------------------------------------------------------------------------
-import DataAnalysisToolkit
-nx.load_python_plugin(DataAnalysisToolkit)
-import DataAnalysisToolkit.CliReaderFilter
+import NXDataAnalysisToolkit
+nx.load_python_plugin(NXDataAnalysisToolkit)
+import NXDataAnalysisToolkit.CliReaderFilter
 
 
 """
@@ -80,7 +80,7 @@ def check_pipeline_execute_result(result: nx.IFilter.ExecuteResult) -> None:
 data_structure = nx.DataStructure()
 
 # Wrap the python filter in this "proxy" class from the target plugin so we can use it.
-pynx_filter = nx.PyFilter(DataAnalysisToolkit.CliReaderFilter())
+pynx_filter = nx.PyFilter(NXDataAnalysisToolkit.CliReaderFilter())
 
 # Execute the filter and check the result. We use the `execute2()` method to
 # run the filter.
