@@ -30,7 +30,7 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const BoolArray& mask, size_t numVerticesToKeep) const
+  void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
     using DataArrayType = DataArray<T>;
     const auto& sourceDataArray = dynamic_cast<const DataArrayType&>(sourceIDataArray);
@@ -42,7 +42,7 @@ struct RemoveFlaggedVerticesFunctor
     usize destTupleIndex = 0;
     for(usize inputIndex = 0; inputIndex < numInputTuples; inputIndex++)
     {
-      if(!mask[inputIndex])
+      if(!maskCompare->isTrue(inputIndex))
       {
         for(usize compIdx = 0; compIdx < nComps; compIdx++)
         {
@@ -92,11 +92,13 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array", "DataPath to the conditional array that will be used to decide which vertices are removed.",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array (Mask)",
+                                                          "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
                                                              DataPath()));
+
   return params;
 }
 
@@ -109,7 +111,6 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -132,12 +133,6 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   }
 
   const std::string vertexAttrMatName = inputVertexGeomPtr->getVertexAttributeMatrixDataPath().getTargetName();
-
-  const auto* maskArrayPtr = dataStructure.getDataAs<BoolArray>(maskArrayPath);
-  if(maskArrayPtr != nullptr)
-  {
-    dataArrayPaths.push_back(maskArrayPath);
-  }
 
   // Create vertex geometry
   const uint64 numVertices = inputVertexGeomPtr->getNumberOfVertices();
@@ -222,15 +217,25 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   const VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
-  auto& mask = dataStructure.getDataRefAs<BoolArray>(maskArrayPath);
+  std::unique_ptr<MaskCompare> maskCompare;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(dataStructure, maskArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskArrayPath.toString());
+    return MakeErrorResult(-54070, message);
+  }
 
-  const size_t numVerticesToKeep = std::count(mask.begin(), mask.end(), false);
+  const size_t numVerticesToKeep = maskCompare->getNumberOfTuples() - maskCompare->countTrueValues(); // We don't need component size since it must be 1
   const size_t numberOfVertices = vertexGeom.getNumberOfVertices();
 
   const std::vector<usize> tDims = {numVerticesToKeep};
 
   // Resize the reduced vertex geometry object
-  VertexGeom& reducedVertexGeom = dataStructure.getDataRefAs<VertexGeom>(reducedVertexPath);
+  auto& reducedVertexGeom = dataStructure.getDataRefAs<VertexGeom>(reducedVertexPath);
   reducedVertexGeom.resizeVertexList(numVerticesToKeep);
   reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
 
@@ -241,7 +246,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   for(size_t inputVertexIndex = 0; inputVertexIndex < numberOfVertices; inputVertexIndex++)
   {
     // If the mask value == FALSE we are keeping that vertex.
-    if(!mask[inputVertexIndex])
+    if(!maskCompare->isTrue(inputVertexIndex))
     {
       reducedVertexGeom.setVertexCoordinate(keepIndex, vertexGeom.getVertexCoordinate(inputVertexIndex));
       keepIndex++;
@@ -263,7 +268,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
     auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
     messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
 
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, mask, numVerticesToKeep);
+    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
   }
 
   return {};

@@ -8,29 +8,29 @@
 namespace nx::core
 {
 /**
- * @class RemoveFlaggedTrianglesFilter
+ * @class RemoveFlaggedEdgesFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT RemoveFlaggedTrianglesFilter : public IFilter
+class SIMPLNXCORE_EXPORT RemoveFlaggedEdgesFilter : public IFilter
 {
 public:
-  RemoveFlaggedTrianglesFilter() = default;
-  ~RemoveFlaggedTrianglesFilter() noexcept override = default;
+  RemoveFlaggedEdgesFilter() = default;
+  ~RemoveFlaggedEdgesFilter() noexcept override = default;
 
-  RemoveFlaggedTrianglesFilter(const RemoveFlaggedTrianglesFilter&) = delete;
-  RemoveFlaggedTrianglesFilter(RemoveFlaggedTrianglesFilter&&) noexcept = delete;
+  RemoveFlaggedEdgesFilter(const RemoveFlaggedEdgesFilter&) = delete;
+  RemoveFlaggedEdgesFilter(RemoveFlaggedEdgesFilter&&) noexcept = delete;
 
-  RemoveFlaggedTrianglesFilter& operator=(const RemoveFlaggedTrianglesFilter&) = delete;
-  RemoveFlaggedTrianglesFilter& operator=(RemoveFlaggedTrianglesFilter&&) noexcept = delete;
+  RemoveFlaggedEdgesFilter& operator=(const RemoveFlaggedEdgesFilter&) = delete;
+  RemoveFlaggedEdgesFilter& operator=(RemoveFlaggedEdgesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static inline constexpr StringLiteral k_InputEdgeGeometryPath_Key = "input_edge_geometry_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static inline constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
 
-  static inline constexpr StringLiteral k_TriangleDataHandling_Key = "triangle_data_handling_index";
-  static inline constexpr StringLiteral k_TriangleDataSelectedArrays_Key = "triangle_data_selected_array_paths";
-  static inline constexpr StringLiteral k_TriangleDataSelectedAttributeMatrix_Key = "triangle_data_selected_attribute_matrix_path";
+  static inline constexpr StringLiteral k_EdgeDataHandling_Key = "edge_data_handling_index";
+  static inline constexpr StringLiteral k_EdgeDataSelectedArrays_Key = "edge_data_selected_array_paths";
+  static inline constexpr StringLiteral k_EdgeDataSelectedAttributeMatrix_Key = "edge_data_selected_attribute_matrix_path";
 
   static inline constexpr StringLiteral k_VertexDataHandling_Key = "vertex_data_handling_index";
   static inline constexpr StringLiteral k_VertexDataSelectedArrays_Key = "vertex_data_selected_array_paths";
@@ -110,5 +110,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, RemoveFlaggedTrianglesFilter, "38155c61-2709-4731-be95-43745bb3f8d8");
-/* LEGACY UUID FOR THIS FILTER 379ccc67-16dd-530a-984f-177db9351bac */
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, RemoveFlaggedEdgesFilter, "48155f61-2709-4731-be95-43745bb3f8d8");

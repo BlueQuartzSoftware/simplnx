@@ -105,6 +105,7 @@ set(FilterList
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
+  RemoveFlaggedEdgesFilter
   RemoveFlaggedVerticesFilter
   RequireMinimumSizeFeaturesFilter
   RenameDataObjectFilter
@@ -200,6 +201,7 @@ set(AlgorithmList
   RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
+  RemoveFlaggedEdges
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
