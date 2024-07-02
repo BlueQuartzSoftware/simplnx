@@ -454,7 +454,7 @@ PYBIND11_MODULE(simplnx, mod)
   dataType.value("boolean", DataType::boolean);
 
   mod.def(
-      "numpy_dtype_to_datatype",
+      "convert_np_dtype_to_datatype",
       [](const py::dtype& dtype) {
         if(dtype.is(py::dtype::of<int8>()))
         {
