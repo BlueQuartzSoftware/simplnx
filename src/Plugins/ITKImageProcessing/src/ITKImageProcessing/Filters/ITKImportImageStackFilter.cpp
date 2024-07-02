@@ -39,39 +39,24 @@ const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac
 const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
 const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
+const Uuid k_ResampleImageGeomFilterId = *Uuid::FromString("9783ea2c-4cf7-46de-ab21-b40d91a48c5b");
+const FilterHandle k_ResampleImageGeomFilterHandle(k_ResampleImageGeomFilterId, k_SimplnxCorePluginId);
 
 // Parameter Keys
-constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
-constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
-constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-// constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation";
+constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+constexpr StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
+constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+// constexpr StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
   AxisAngle = 0,
   RotationMatrix = 1
 };
-
-} // namespace RotateSampleRefFrame
-
-namespace
-{
-const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
-const ChoicesParameter::ValueType k_NoImageTransform = 0;
-const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
-const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
-
-const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
-const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
-const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
-const Uuid k_ResampleImageGeomFilterId = *Uuid::FromString("9783ea2c-4cf7-46de-ab21-b40d91a48c5b");
-const FilterHandle k_ResampleImageGeomFilterHandle(k_ResampleImageGeomFilterId, k_SimplnxCorePluginId);
 
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
