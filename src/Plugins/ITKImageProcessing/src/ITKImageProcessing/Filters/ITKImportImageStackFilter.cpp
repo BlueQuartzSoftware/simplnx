@@ -60,6 +60,8 @@ const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac
 const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
 const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
+const Uuid k_ResampleImageGeomFilterId = *Uuid::FromString("9783ea2c-4cf7-46de-ab21-b40d91a48c5b");
+const FilterHandle k_ResampleImageGeomFilterHandle(k_ResampleImageGeomFilterId, k_SimplnxCorePluginId);
 
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
@@ -135,8 +137,8 @@ namespace cxITKImportImageStackFilter
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
-                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, VectorFloat32Parameter::ValueType luminosityValues, const IFilter::MessageHandler& messageHandler,
-                        const std::atomic_bool& shouldCancel)
+                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, VectorFloat32Parameter::ValueType luminosityValues, bool resample, float32 scalingFactor,
+                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
@@ -156,6 +158,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     return MakeErrorResult(-18542, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
   }
   auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+  auto resampleImageGeomFilter = filterListPtr->createFilter(k_ResampleImageGeomFilterHandle);
   Result<> outputResult = {};
 
   // Loop over all the files importing them one by one and copying the data into the data array
@@ -223,6 +226,27 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     {
       outputResult.warnings().emplace_back(Warning{
           -74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.", imageDataPath.getTargetName())});
+    }
+
+    // ======================= Resample Image Geometry Section ===================
+    if(resample && scalingFactor != 1.0f)
+    {
+      auto scaling = scalingFactor * 100;
+      const auto& importedImageGeom = importedDataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+      auto spacing = importedImageGeom.getSpacing() / scalingFactor;
+
+      Arguments resampleImageGeomArgs;
+      resampleImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
+      resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(1));
+      resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{scaling, scaling, scaling}));
+      resampleImageGeomArgs.insertOrAssign("spacing", std::make_any<VectorFloat32Parameter::ValueType>(spacing.toContainer<std::vector<float32>>()));
+
+      // Run resample image geometry filter and process results and messages
+      auto result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
+      if(result.invalid())
+      {
+        return result;
+      }
     }
 
     // Check the ImageGeometry of the imported Image matches the destination
@@ -314,6 +338,9 @@ Parameters ITKImportImageStackFilter::parameters() const
       std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "The filter will show an error if the images are already in grayscale format", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "RGB weights for the grayscale conversion using the luminosity algorithm.",
                                                          std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>({"Red", "Green", "Blue"})));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleImages_Key, "Scale Images", "Determines whether or not to scale each image as it is imported into the stack.", false));
+  params.insert(std::make_unique<Float32Parameter>(k_Scaling_Key, "Scaling",
+                                                   "The scaling of the 3D volume. For example, 0.1 is one-tenth the original number of pixels.  2.0 is double the number of pixels.", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input File List"});
   params.insert(
@@ -325,6 +352,7 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array", "ImageData"));
 
   params.linkParameters(k_ConvertToGrayScale_Key, k_ColorWeights_Key, true);
+  params.linkParameters(k_ScaleImages_Key, k_Scaling_Key, true);
 
   return params;
 }
@@ -348,6 +376,8 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
   auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
+  auto pScaleImagesValue = filterArgs.value<BoolParameter::ValueType>(k_ScaleImages_Key);
+  auto pScalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions = {};
@@ -407,6 +437,15 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto dims = createImageGeomActionPtr->dims();
   dims.back() = files.size();
 
+  if(pScaleImagesValue)
+  {
+    // Update the dimensions according to the scaling value
+    std::transform(dims.begin(), dims.end() - 1, dims.begin(), [pScalingValue](usize& elem) { return static_cast<usize>(static_cast<float32>(elem) * pScalingValue); });
+
+    // Update the spacing according to the scaling value
+    std::transform(spacing.begin(), spacing.end() - 1, spacing.begin(), [pScalingValue](auto& elem) { return elem / pScalingValue; });
+  }
+
   // Z Y X
   const std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
 
@@ -455,6 +494,8 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
   auto convertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto colorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
+  auto pScaleImagesValue = filterArgs.value<BoolParameter::ValueType>(k_ScaleImages_Key);
+  auto pScalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
 
   // const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
@@ -478,52 +519,52 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   {
   case NumericType::uint8: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    messageHandler, shouldCancel);
+                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int8: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                   messageHandler, shouldCancel);
+                                                                   pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint16: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     messageHandler, shouldCancel);
+                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int16: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    messageHandler, shouldCancel);
+                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     messageHandler, shouldCancel);
+                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    messageHandler, shouldCancel);
+                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     messageHandler, shouldCancel);
+                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    messageHandler, shouldCancel);
+                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::float32: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                      messageHandler, shouldCancel);
+                                                                      pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::float64: {
     readResult = cxITKImportImageStackFilter::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                      messageHandler, shouldCancel);
+                                                                      pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
     break;
   }
   default: {
