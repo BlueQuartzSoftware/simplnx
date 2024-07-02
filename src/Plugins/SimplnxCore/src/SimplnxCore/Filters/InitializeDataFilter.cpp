@@ -53,6 +53,8 @@ struct InitializeDataInputValues
   bool standardizeSeed;
 };
 
+// At the current time this code could be simplified with a bool in the incremental template, HOWEVER,
+// it was done this way to allow for expansion of operations down the line multiplication, division, etc.
 template <bool UseAddition, bool UseSubtraction>
 struct IncrementalOptions
 {

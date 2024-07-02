@@ -70,17 +70,7 @@ void FillDataStructure(DataStructure& dataStructure)
   testStore[3] = 2185;
 }
 
-template <bool UseRemove, bool UseExtract>
-struct TestTypeOptions
-{
-  static constexpr bool UsingRemove = UseRemove;
-  static constexpr bool UsingExtract = UseExtract;
-};
-
-using Remove = TestTypeOptions<true, false>;
-using Extract = TestTypeOptions<false, true>;
-
-template <class TestTypeOptions = Remove>
+template <bool RemoveV = true>
 void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& cellFeatureAMResult, const Int32Array& testArrayResult)
 {
   REQUIRE(featureIdsResult[0] == 0);
@@ -96,23 +86,23 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   REQUIRE(featureIdsResult[10] == 0);
   REQUIRE(featureIdsResult[11] == 1);
   REQUIRE(featureIdsResult[12] == 2);
-  if constexpr(TestTypeOptions::UsingRemove)
+  if constexpr(RemoveV)
   {
     REQUIRE(featureIdsResult[13] == 0);
     REQUIRE(featureIdsResult[14] == 0);
   }
-  if constexpr(TestTypeOptions::UsingExtract)
+  if constexpr(!RemoveV)
   {
     REQUIRE(featureIdsResult[13] == 3);
     REQUIRE(featureIdsResult[14] == 3);
   }
   REQUIRE(featureIdsResult[15] == 0);
 
-  if constexpr(TestTypeOptions::UsingRemove)
+  if constexpr(RemoveV)
   {
     REQUIRE(cellFeatureAMResult.getNumTuples() == 3);
   }
-  if constexpr(TestTypeOptions::UsingExtract)
+  if constexpr(!RemoveV)
   {
     REQUIRE(cellFeatureAMResult.getNumTuples() == 4);
   }
@@ -121,7 +111,7 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   REQUIRE(testArrayResult[1] == 4041);
   REQUIRE(testArrayResult[2] == 10128);
 
-  if constexpr(TestTypeOptions::UsingExtract)
+  if constexpr(!RemoveV)
   {
     REQUIRE(testArrayResult[3] == 2185);
   }
@@ -192,7 +182,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
   auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
-  ValidateResults<Extract>(featureIdsResult, cellFeatureAMResult, testArrayResult);
+  ValidateResults<false>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
   auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
@@ -227,7 +217,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   const auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   const auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
   const auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
-  ValidateResults(featureIdsResult, cellFeatureAMResult, testArrayResult);
+  ValidateResults<true>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
   auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
