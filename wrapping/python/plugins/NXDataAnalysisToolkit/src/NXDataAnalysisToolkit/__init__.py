@@ -1,4 +1,4 @@
-from .Plugin import DataAnalysisToolkit
+from .Plugin import NXDataAnalysisToolkit
 
 __all__ = ['NXDataAnalysisToolkit', 'get_plugin']
 
