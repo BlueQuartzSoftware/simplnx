@@ -23,7 +23,7 @@
 
 namespace
 {
- const std::string k_Delimiter = "|--";
+const std::string k_Delimiter = "|--";
 }
 
 namespace nx::core
@@ -31,7 +31,7 @@ namespace nx::core
 
 namespace Constants
 {
- const std::string DataStructureTag = "DataStructure";
+const std::string DataStructureTag = "DataStructure";
 }
 
 DataStructure::DataStructure()

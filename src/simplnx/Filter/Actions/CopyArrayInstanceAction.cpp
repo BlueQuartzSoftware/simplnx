@@ -9,7 +9,7 @@
 
 namespace
 {
- constexpr int32_t k_UnsupportedTypeError = -5001;
+constexpr int32_t k_UnsupportedTypeError = -5001;
 
 }
 using namespace nx::core;

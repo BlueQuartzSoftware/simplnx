@@ -24,7 +24,7 @@ std::mt19937_64::result_type k_Seed = 3412341234123412;
 std::uniform_real_distribution<> k_Distribution(k_RangeMin, k_RangeMax);
 
 template <class T>
- void hashCombine(size_t& seed, const T& obj)
+void hashCombine(size_t& seed, const T& obj)
 {
   std::hash<T> hasher;
   seed ^= hasher(obj) + 0x9e3779b9 + (seed << 6) + (seed >> 2);

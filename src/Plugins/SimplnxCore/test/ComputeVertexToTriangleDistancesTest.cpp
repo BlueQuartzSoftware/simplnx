@@ -12,10 +12,10 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
- constexpr StringLiteral k_DistancesName("Distances");
- constexpr StringLiteral k_ClosestTriangleIdsName("ClosestTriangleId");
- constexpr StringLiteral k_DistancesNameNX("DistancesNX");
- constexpr StringLiteral k_ClosestTriangleIdsNameNX("Closest Triangle Ids");
+constexpr StringLiteral k_DistancesName("Distances");
+constexpr StringLiteral k_ClosestTriangleIdsName("ClosestTriangleId");
+constexpr StringLiteral k_DistancesNameNX("DistancesNX");
+constexpr StringLiteral k_ClosestTriangleIdsNameNX("Closest Triangle Ids");
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter]")

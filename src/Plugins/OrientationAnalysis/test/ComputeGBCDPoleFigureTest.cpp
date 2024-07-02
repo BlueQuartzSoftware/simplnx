@@ -18,18 +18,18 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
- constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
- constexpr StringLiteral k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
- constexpr StringLiteral k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
- constexpr StringLiteral k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
- constexpr StringLiteral k_ExemplarCellData("Cell Data");
- constexpr StringLiteral k_Sigma3("Sigma 3");
- constexpr StringLiteral k_Sigma9("Sigma 9");
- constexpr StringLiteral k_Sigma11("Sigma 11");
- constexpr StringLiteral k_MRD("MRD");
+constexpr StringLiteral k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
+constexpr StringLiteral k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
+constexpr StringLiteral k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
+constexpr StringLiteral k_ExemplarCellData("Cell Data");
+constexpr StringLiteral k_Sigma3("Sigma 3");
+constexpr StringLiteral k_Sigma9("Sigma 9");
+constexpr StringLiteral k_Sigma11("Sigma 11");
+constexpr StringLiteral k_MRD("MRD");
 
- constexpr int32 k_Dimension = 300;
+constexpr int32 k_Dimension = 300;
 
 } // namespace
 

@@ -73,8 +73,8 @@ void FillDataStructure(DataStructure& dataStructure)
 template <bool UseRemove, bool UseExtract>
 struct TestTypeOptions
 {
-  static  constexpr bool UsingRemove = UseRemove;
-  static  constexpr bool UsingExtract = UseExtract;
+  static constexpr bool UsingRemove = UseRemove;
+  static constexpr bool UsingExtract = UseExtract;
 };
 
 using Remove = TestTypeOptions<true, false>;

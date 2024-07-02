@@ -11,8 +11,8 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
- constexpr StringLiteral k_FaceIPFColors("SurfaceMeshFaceIPFColors");
- constexpr StringLiteral k_NXFaceIPFColors("NXFaceIPFColors");
+constexpr StringLiteral k_FaceIPFColors("SurfaceMeshFaceIPFColors");
+constexpr StringLiteral k_NXFaceIPFColors("NXFaceIPFColors");
 
 DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
 DataPath featureDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_Grain_Data);

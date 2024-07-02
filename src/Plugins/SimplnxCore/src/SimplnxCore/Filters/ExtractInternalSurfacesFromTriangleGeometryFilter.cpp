@@ -29,7 +29,7 @@ constexpr int32 k_MissingVertexArray = -354;
 constexpr int32 k_MissingTriangleArray = -355;
 
 template <class T>
- void hashCombine(usize& seed, const T& obj)
+void hashCombine(usize& seed, const T& obj)
 {
   std::hash<T> hasher;
   seed ^= hasher(obj) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
