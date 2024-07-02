@@ -203,7 +203,7 @@ void Preferences::setPluginValue(const std::string& pluginName, const std::strin
 
 Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 {
-  if(!std::filesystem::create_directories(filepath.parent_path()))
+  if(!std::filesystem::exists(filepath.parent_path()) && !std::filesystem::create_directories(filepath.parent_path()))
   {
     return MakeErrorResult(k_FailedToCreateDirectory_Code, k_FailedToCreateDirectory_Message);
   }
