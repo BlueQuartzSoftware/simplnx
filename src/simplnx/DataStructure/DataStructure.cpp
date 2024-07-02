@@ -28,12 +28,6 @@ const std::string k_Delimiter = "|--";
 
 namespace nx::core
 {
-
-namespace Constants
-{
-const std::string DataStructureTag = "DataStructure";
-}
-
 DataStructure::DataStructure()
 : m_IsValid(true)
 {

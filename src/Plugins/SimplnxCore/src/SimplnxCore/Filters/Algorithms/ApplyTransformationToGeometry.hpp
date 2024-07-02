@@ -20,32 +20,29 @@ namespace nx::core
 {
 namespace detail
 {
+static inline constexpr StringLiteral k_NoTransform = "No Transform";
+static inline constexpr StringLiteral k_PrecomputedTransformationMatrix = "Pre-Computed Transformation Matrix (4x4)";
+static inline constexpr StringLiteral k_ManualTransformationMatrix = "Manual Transformation Matrix";
+static inline constexpr StringLiteral k_Rotation = "Rotation";
+static inline constexpr StringLiteral k_Translation = "Translation";
+static inline constexpr StringLiteral k_Scale = "Scale";
+static inline const ChoicesParameter::Choices k_TransformationChoices = {k_NoTransform, k_PrecomputedTransformationMatrix, k_ManualTransformationMatrix, k_Rotation, k_Translation, k_Scale};
 
-const std::string k_TempGeometryName = ".transformed_image_geometry";
+static inline constexpr ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
+static inline constexpr ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
+static inline constexpr ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
+static inline constexpr ChoicesParameter::ValueType k_RotationIdx = 3ULL;
+static inline constexpr ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
+static inline constexpr ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
-const std::string k_NoTransform("No Transform");
-const std::string k_PrecomputedTransformationMatrix("Pre-Computed Transformation Matrix (4x4)");
-const std::string k_ManualTransformationMatrix("Manual Transformation Matrix");
-const std::string k_Rotation("Rotation");
-const std::string k_Translation("Translation");
-const std::string k_Scale("Scale");
-const nx::core::ChoicesParameter::Choices k_TransformationChoices = {k_NoTransform, k_PrecomputedTransformationMatrix, k_ManualTransformationMatrix, k_Rotation, k_Translation, k_Scale};
+static inline constexpr StringLiteral k_NearestNeighborInterpolation = "Nearest Neighbor Resampling";
+static inline constexpr StringLiteral k_LinearInterpolation = "Linear Interpolation";
+static inline constexpr StringLiteral k_NoInterpolation = "No Interpolation";
+static inline const ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
 
-const nx::core::ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
-const nx::core::ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
-const nx::core::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
-const nx::core::ChoicesParameter::ValueType k_RotationIdx = 3ULL;
-const nx::core::ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
-const nx::core::ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
-
-const std::string k_NearestNeighborInterpolation("Nearest Neighbor Resampling");
-const std::string k_LinearInterpolation("Linear Interpolation");
-const std::string k_NoInterpolation("No Interpolation");
-const nx::core::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
-
-const nx::core::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
-const nx::core::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
-const nx::core::ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
+static inline constexpr ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
+static inline constexpr ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
+static inline constexpr ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT ApplyTransformationToGeometryInputValues

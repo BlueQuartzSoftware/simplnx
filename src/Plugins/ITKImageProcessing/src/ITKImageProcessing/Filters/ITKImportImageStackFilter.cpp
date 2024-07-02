@@ -27,8 +27,19 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-namespace RotateSampleRefFrame
+namespace
 {
+const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
+const ChoicesParameter::ValueType k_NoImageTransform = 0;
+const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
+const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
+
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
+const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_SimplnxCorePluginId);
+const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
+const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
+
 // Parameter Keys
 constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
 constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
@@ -37,8 +48,7 @@ constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image
 constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
 constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
 constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-
-// static  constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+// constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
@@ -137,7 +147,7 @@ namespace cxITKImportImageStackFilter
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
-                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, VectorFloat32Parameter::ValueType luminosityValues, bool resample, float32 scalingFactor,
+                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, bool resample, float32 scalingFactor,
                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

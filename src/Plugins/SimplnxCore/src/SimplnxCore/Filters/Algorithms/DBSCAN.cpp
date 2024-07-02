@@ -43,7 +43,7 @@ public:
       }
       if(m_Mask->isTrue(i))
       {
-        // directly inline to try to convince compiler to construct in place
+        // directly  to try to convince compiler to construct in place
         m_Neighborhoods[i] = epsilon_neighbors(i);
       }
     }

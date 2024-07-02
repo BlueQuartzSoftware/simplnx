@@ -22,29 +22,29 @@ namespace
 constexpr int32 k_FileDoesNotExist = -91501;
 constexpr int32 k_IncorrectTokenCount = -91502;
 constexpr int32 k_VgiParseError = -91503;
-const std::string k_Millimeter("mm");
+constexpr StringLiteral k_Millimeter = "mm";
 
 // File Block
-const std::string k_File1Block("[file1]");
-inline const std::string k_GeometryBlock("[geometry]");
+constexpr StringLiteral k_File1Block = "[file1]";
+constexpr StringLiteral k_GeometryBlock = "[geometry]";
 
-inline const std::string k_RegionOfInterestStart("RegionOfInterestStart");
-inline const std::string k_RegionOfInterestEnd("RegionOfInterestEnd");
+constexpr StringLiteral k_RegionOfInterestStart = "RegionOfInterestStart";
+constexpr StringLiteral k_RegionOfInterestEnd = "RegionOfInterestEnd";
 
-inline const std::string k_FileFormat("FileFormat");
-inline const std::string k_Size("Size");
-inline const std::string k_Name("Name");
-inline const std::string k_DataType("Datatype");
-inline const std::string k_DataRange("datarange");
-inline const std::string k_BitsPerElement("BitsPerElement");
-inline const std::string k_Status("status");
-inline const std::string k_RelativePosition("relativeposition");
-inline const std::string k_Position("position");
-inline const std::string k_Resolution("resolution");
-inline const std::string k_Scale("scale");
-inline const std::string k_Center("center");
-inline const std::string k_Rotate("rotate");
-inline const std::string k_Unit("unit");
+constexpr StringLiteral k_FileFormat = "FileFormat";
+constexpr StringLiteral k_Size = "Size";
+constexpr StringLiteral k_Name = "Name";
+constexpr StringLiteral k_DataType = "Datatype";
+constexpr StringLiteral k_DataRange = "datarange";
+constexpr StringLiteral k_BitsPerElement = "BitsPerElement";
+constexpr StringLiteral k_Status = "status";
+constexpr StringLiteral k_RelativePosition = "relativeposition";
+constexpr StringLiteral k_Position = "position";
+constexpr StringLiteral k_Resolution = "resolution";
+constexpr StringLiteral k_Scale = "scale";
+constexpr StringLiteral k_Center = "center";
+constexpr StringLiteral k_Rotate = "rotate";
+constexpr StringLiteral k_Unit = "unit";
 
 struct FileBlock
 {
@@ -73,8 +73,8 @@ struct GeometryBlock
 template <usize Dimension, bool USizeType = false>
 struct ParserArgs
 {
-  static inline constexpr usize UseDimension = Dimension;
-  static inline constexpr bool UseUSize = USizeType;
+  static constexpr usize UseDimension = Dimension;
+  static constexpr bool UseUSize = USizeType;
 };
 
 using ParseIntArray = ParserArgs<9>;

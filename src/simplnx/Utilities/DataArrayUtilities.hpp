@@ -29,14 +29,11 @@
 
 namespace fs = std::filesystem;
 
-namespace detail
-{
 #if defined(_MSC_VER)
 #define FSEEK64 _fseeki64
 #else
 #define FSEEK64 std::fseek
 #endif
-} // namespace detail
 
 #define SIMPLNX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                               \
   CONTAINER_TYPE value;                                                                                                                                                                                \

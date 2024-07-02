@@ -222,7 +222,7 @@ private:
     return {};
   }
 
-  inline Result<> parse_ull(const std::string& token, usize& value) const
+  Result<> parse_ull(const std::string& token, usize& value) const
   {
     try
     {

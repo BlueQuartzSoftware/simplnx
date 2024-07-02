@@ -14,9 +14,9 @@ namespace nx::core
 {
 namespace detail
 {
-const std::string k_LessThan("< [Less Than]");
-const std::string k_GreaterThan("> [Greater Than]");
-const nx::core::ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
+static inline constexpr StringLiteral k_LessThan = "< [Less Than]";
+static inline constexpr StringLiteral k_GreaterThan = "> [Greater Than]";
+static inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues

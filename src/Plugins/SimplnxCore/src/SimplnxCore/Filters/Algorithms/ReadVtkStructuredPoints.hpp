@@ -136,7 +136,7 @@ protected:
    * @param length Length of line
    * @return Integer error value
    */
-  Result<> readLine(std::istream& in, char* result, size_t length);
+  static Result<> readLine(std::istream& in, char* result, size_t length);
 
   /**
    * @brief readString Reas a string from the .vtk file
@@ -145,7 +145,7 @@ protected:
    * @param length Length of string
    * @return Integer error value
    */
-  Result<> readString(std::istream& in, char* result, size_t length);
+  static Result<> readString(std::istream& in, char* result, size_t length);
 
   /**
    * @brief lowerCase Converts a string to lower case
@@ -153,7 +153,7 @@ protected:
    * @param len Length of string
    * @return Integer error value
    */
-  char* lowerCase(char* str, size_t len);
+  static char* lowerCase(char* str, size_t len);
 
   /**
    * @brief readDataTypeSection Determines the type of data to be read from the .vtk file
@@ -193,7 +193,7 @@ protected:
 
   void setDatasetType(const std::string& dataSetType);
 
-  Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements);
+  static Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements);
 
 private:
   DataStructure& m_DataStructure;

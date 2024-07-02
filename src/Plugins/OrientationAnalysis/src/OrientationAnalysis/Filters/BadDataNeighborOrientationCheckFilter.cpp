@@ -16,11 +16,11 @@ using namespace nx::core;
 
 namespace
 {
-inline constexpr int32 k_MissingGeomError = -6800;
-inline constexpr int32 k_MissingInputArray = -6801;
-inline constexpr int32 k_IncorrectInputArray = -6802;
-inline constexpr int32 k_InvalidNumTuples = -6803;
-inline constexpr int32 k_InconsistentTupleCount = -6809;
+constexpr int32 k_MissingGeomError = -6800;
+constexpr int32 k_MissingInputArray = -6801;
+constexpr int32 k_IncorrectInputArray = -6802;
+constexpr int32 k_InvalidNumTuples = -6803;
+constexpr int32 k_InconsistentTupleCount = -6809;
 } // namespace
 
 namespace nx::core

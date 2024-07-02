@@ -24,15 +24,15 @@
 namespace RotateSampleRefFrame
 {
 // Parameter Keys
-static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
-static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+static constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
+static constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
+static constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+static constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+static constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+static constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+static constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
-// static inline constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+// static  constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
@@ -44,13 +44,13 @@ enum class RotationRepresentation : uint64_t
 
 namespace RenameDataObjectFilter
 {
-static inline constexpr nx::core::StringLiteral k_DataObject_Key = "data_object";
-static inline constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
+static constexpr nx::core::StringLiteral k_DataObject_Key = "data_object";
+static constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
 } // namespace RenameDataObjectFilter
 
 namespace DeleteDataFilter
 {
-static inline constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
+static constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
 }
 
 namespace
