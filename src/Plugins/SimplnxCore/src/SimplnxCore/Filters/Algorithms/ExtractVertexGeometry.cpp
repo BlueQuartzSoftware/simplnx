@@ -13,7 +13,7 @@ namespace
 struct CopyDataFunctor
 {
   template <typename T>
-  inline void copyTuple(const DataArray<T>& srcArray, DataArray<T>& destArray, usize srcTupleIdx, usize destTupleIndex)
+   void copyTuple(const DataArray<T>& srcArray, DataArray<T>& destArray, usize srcTupleIdx, usize destTupleIndex)
   {
     usize numComps = srcArray.getNumberOfComponents();
     for(usize cIdx = 0; cIdx < numComps; cIdx++)

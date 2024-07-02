@@ -80,7 +80,8 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_TransformationType_Key, "Transformation Type", "The type of transformation to perform.", k_RotationIdx, k_TransformationChoices));
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_TransformationType_Key, "Transformation Type", "The type of transformation to perform.", detail::k_RotationIdx, detail::k_TransformationChoices));
 
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
@@ -109,20 +110,20 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation (Image Geometry Only)",
                                                                     "Select the type of interpolation algorithm. (0)Nearest Neighbor, (1)Linear Interpolation, (3)No Interpolation",
-                                                                    k_NoInterpolationIdx, k_InterpolationChoices));
+                                                                    detail::k_NoInterpolationIdx, detail::k_InterpolationChoices));
 
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix (Image Geometry Only)",
                                                                     "The path to the Cell level data that should be interpolated. Only applies when selecting an Image Geometry.", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_TransformationType_Key, k_ComputedTransformationMatrix_Key, k_PrecomputedTransformationMatrixIdx);
-  params.linkParameters(k_TransformationType_Key, k_ManualTransformationMatrix_Key, k_ManualTransformationMatrixIdx);
-  params.linkParameters(k_TransformationType_Key, k_Rotation_Key, k_RotationIdx);
-  params.linkParameters(k_TransformationType_Key, k_Translation_Key, k_TranslationIdx);
-  params.linkParameters(k_TransformationType_Key, k_Scale_Key, k_ScaleIdx);
+  params.linkParameters(k_TransformationType_Key, k_ComputedTransformationMatrix_Key, detail::k_PrecomputedTransformationMatrixIdx);
+  params.linkParameters(k_TransformationType_Key, k_ManualTransformationMatrix_Key, detail::k_ManualTransformationMatrixIdx);
+  params.linkParameters(k_TransformationType_Key, k_Rotation_Key, detail::k_RotationIdx);
+  params.linkParameters(k_TransformationType_Key, k_Translation_Key, detail::k_TranslationIdx);
+  params.linkParameters(k_TransformationType_Key, k_Scale_Key, detail::k_ScaleIdx);
 
-  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_NearestNeighborInterpolationIdx);
-  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_LinearInterpolationIdx);
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_NearestNeighborInterpolationIdx);
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_LinearInterpolationIdx);
 
   return params;
 }
@@ -164,20 +165,20 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
-  const ImageGeom* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
   if(imageGeomPtr != nullptr)
   {
     switch(pTransformationMatrixTypeValue)
     {
-    case k_NoTransformIdx: // No-Op
+    case detail::k_NoTransformIdx: // No-Op
     {
       resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected. This filter will NOT modify any data."});
       transformationMatrixDesc = "No transformation matrix selected.";
       break;
     }
-    case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
+    case detail::k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
     {
-      const Float32Array* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
+      const auto* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
       if(nullptr == precomputedMatrixPtr)
       {
         return {
@@ -186,7 +187,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
       break;
     }
-    case k_ManualTransformationMatrixIdx: // Manual transformation matrix
+    case detail::k_ManualTransformationMatrixIdx: // Manual transformation matrix
     {
       const usize numTableRows = tableData.size();
       const usize numTableCols = tableData[0].size();
@@ -202,21 +203,21 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
-    case k_RotationIdx: // Rotation via axis-angle
+    case detail::k_RotationIdx: // Rotation via axis-angle
     {
       auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
       transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
-    case k_TranslationIdx: // Translation
+    case detail::k_TranslationIdx: // Translation
     {
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
       transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
-    case k_ScaleIdx: // Scale
+    case detail::k_ScaleIdx: // Scale
     {
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
       transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
@@ -243,7 +244,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     bool imageGeomInterpolationError = false;
 
     auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-    if(pInterpolationTypeValue == k_NoInterpolationIdx)
+    if(pInterpolationTypeValue == detail::k_NoInterpolationIdx)
     {
       errorMessage << "* Select either 'Nearest Neighbor Resampling' or 'Linear Interpolation' from the 'Image Geometry Resampling/Interpolation' parameter section.\n";
       imageGeomInterpolationError = true;
@@ -262,14 +263,14 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
     std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
 
-    if(pInterpolationTypeValue == k_LinearInterpolationIdx)
+    if(pInterpolationTypeValue == detail::k_LinearInterpolationIdx)
     {
       // Remove all the DataArrays from the src Cell AttributeMatrix and substitute with just what the user wants to interpolate on.
       selectedCellArrayNames.clear();
       for(const auto& arrayName : srcCellAttrMatrixPtr->getDataMap().getNames())
       {
         const DataPath dataArrayPath = pCellAttributeMatrixPath.createChildPath(arrayName);
-        const StringArray* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
+        const auto* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
         if(nullptr != strArrayPtr)
         {
           resultOutputActions.warnings().push_back(
@@ -277,7 +278,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           continue;
         }
 
-        const BoolArray* boolArrayPtr = dataStructure.getDataAs<BoolArray>(dataArrayPath);
+        const auto* boolArrayPtr = dataStructure.getDataAs<BoolArray>(dataArrayPath);
         if(nullptr != boolArrayPtr)
         {
           resultOutputActions.warnings().push_back(
@@ -285,7 +286,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           continue;
         }
 
-        const INeighborList* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
+        const auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
         if(nullptr != neighborListPtr)
         {
           resultOutputActions.warnings().push_back(
@@ -296,7 +297,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       }
     }
 
-    if(pTransformationMatrixTypeValue == k_TranslationIdx)
+    if(pTransformationMatrixTypeValue == detail::k_TranslationIdx)
     {
       // If the user is purely doing a translation then just adjust the origin and be done.
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
@@ -305,7 +306,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto spacingVec = imageGeomPtr->getSpacing();
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
-    else if(pTransformationMatrixTypeValue == k_ScaleIdx)
+    else if(pTransformationMatrixTypeValue == detail::k_ScaleIdx)
     {
       // If the user is purely doing a scaling then just adjust the spacing and be done.
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
@@ -375,7 +376,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
                                                                                                                               srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
-        if(pTransformationMatrixTypeValue == k_PrecomputedTransformationMatrixIdx)
+        if(pTransformationMatrixTypeValue == detail::k_PrecomputedTransformationMatrixIdx)
         {
           preflightUpdatedValues.push_back({"Transformed Image Geometry Info", K_UNKNOWN_PRECOMPUTED_MATRIX_STR});
         }

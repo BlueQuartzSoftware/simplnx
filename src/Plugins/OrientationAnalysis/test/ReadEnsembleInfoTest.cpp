@@ -16,9 +16,9 @@ using namespace unit_test;
 
 namespace
 {
-inline const std::string k_TestFileIni = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.ini";
-inline const std::string k_TestFileTxt = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.txt";
-inline const std::string k_TestFileDoc = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.doc";
+ const std::string k_TestFileIni = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.ini";
+ const std::string k_TestFileTxt = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.txt";
+ const std::string k_TestFileDoc = k_BinaryTestOutputDir.str() + "/EnsembleInfoTest.doc";
 
 // -----------------------------------------------------------------------------
 void WriteTestFile(const std::string& filePath, const std::string& groups)

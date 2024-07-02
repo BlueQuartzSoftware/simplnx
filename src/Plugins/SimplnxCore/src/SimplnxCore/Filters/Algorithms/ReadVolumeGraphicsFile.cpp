@@ -9,7 +9,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-inline const int32 k_VolBinaryAllocateMismatch = -91504;
+ const int32 k_VolBinaryAllocateMismatch = -91504;
 } // namespace
 
 // -----------------------------------------------------------------------------

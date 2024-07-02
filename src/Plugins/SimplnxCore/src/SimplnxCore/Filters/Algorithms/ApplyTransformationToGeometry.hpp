@@ -16,7 +16,9 @@
 
 #include <Eigen/Dense>
 
-namespace
+namespace nx::core
+{
+namespace detail
 {
 
 const std::string k_TempGeometryName = ".transformed_image_geometry";
@@ -44,10 +46,7 @@ const nx::core::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNei
 const nx::core::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 const nx::core::ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
-} // namespace
-
-namespace nx::core
-{
+} // namespace detail
 
 struct SIMPLNXCORE_EXPORT ApplyTransformationToGeometryInputValues
 {

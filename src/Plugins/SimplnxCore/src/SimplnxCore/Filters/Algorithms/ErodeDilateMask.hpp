@@ -10,7 +10,9 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-namespace
+namespace nx::core
+{
+namespace detail
 {
 const std::string k_DilateString("Dilate");
 const std::string k_ErodeString("Erode");
@@ -18,10 +20,7 @@ const nx::core::ChoicesParameter::Choices k_OperationChoices = {k_DilateString, 
 
 const nx::core::ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
-} // namespace
-
-namespace nx::core
-{
+} // namespace detail
 
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 {

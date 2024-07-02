@@ -15,8 +15,8 @@ using namespace nx::core::Constants;
 
 namespace
 {
-inline const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContainer"});
-inline const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
+ const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContainer"});
+ const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 } // namespace
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[SimplnxCore][CombineStlFilesFilter]")

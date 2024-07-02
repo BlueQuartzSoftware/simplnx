@@ -12,9 +12,9 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_FaceMisorientationColors("SurfaceMeshFaceMisorientationColors");
-inline constexpr StringLiteral k_NXFaceMisorientationColors("NXFaceMisorientationColors");
-inline constexpr StringLiteral k_AvgQuats("AvgQuats");
+ constexpr StringLiteral k_FaceMisorientationColors("SurfaceMeshFaceMisorientationColors");
+ constexpr StringLiteral k_NXFaceMisorientationColors("NXFaceMisorientationColors");
+ constexpr StringLiteral k_AvgQuats("AvgQuats");
 
 DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
 DataPath featureDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_Grain_Data);

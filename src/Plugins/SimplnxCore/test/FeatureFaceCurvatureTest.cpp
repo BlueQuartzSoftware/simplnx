@@ -10,7 +10,7 @@
 
 using namespace nx::core;
 
-inline void CompareDataArrays(const DataStructure& dataStructure, const DataPath& arrayPath1, const DataPath& arrayPath2)
+ void CompareDataArrays(const DataStructure& dataStructure, const DataPath& arrayPath1, const DataPath& arrayPath2)
 {
   const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(arrayPath1);
   const auto* dataArray2 = dataStructure.getDataAs<Float64Array>(arrayPath2);

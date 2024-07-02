@@ -15,7 +15,7 @@ using namespace nx::core;
 
 namespace unit_test
 {
-inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
+ constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
 }
 
 TEST_CASE("Array")

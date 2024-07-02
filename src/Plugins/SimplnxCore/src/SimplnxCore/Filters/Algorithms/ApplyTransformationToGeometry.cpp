@@ -32,13 +32,13 @@ const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
 Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 {
   // Pure translation for Image Geom, just return
-  if(m_InputValues->TransformationSelection == k_TranslationIdx)
+  if(m_InputValues->TransformationSelection == detail::k_TranslationIdx)
   {
     return {};
   }
 
   // Pure Scale for image geom, just return
-  if(m_InputValues->TransformationSelection == k_ScaleIdx)
+  if(m_InputValues->TransformationSelection == detail::k_ScaleIdx)
   {
     return {};
   }
@@ -72,7 +72,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
 
-  if(m_InputValues->TransformationSelection == k_PrecomputedTransformationMatrixIdx)
+  if(m_InputValues->TransformationSelection == detail::k_PrecomputedTransformationMatrixIdx)
   {
     // Adjust the destination objects because we didn't have the transformation matrix values during preflight
     auto& destCellDataAM = destImageGeom.getCellDataRef();
@@ -100,14 +100,14 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
 
-    if(m_InputValues->InterpolationSelection == k_NearestNeighborInterpolationIdx)
+    if(m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
     {
       m_MessageHandler(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
                                                                                               m_TransformationMatrix, false, &filterProgressCallback);
     }
-    else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
+    else if(m_InputValues->InterpolationSelection == detail::k_LinearInterpolationIdx)
     {
       m_MessageHandler(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
 
@@ -153,32 +153,32 @@ Result<> ApplyTransformationToGeometry::operator()()
 
   switch(m_InputValues->TransformationSelection)
   {
-  case k_NoTransformIdx: // No-Op
+  case detail::k_NoTransformIdx: // No-Op
   {
     return {};
   }
-  case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
+  case detail::k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
     const Float32Array& precomputed = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ComputedTransformationMatrix);
     m_TransformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(precomputed);
     break;
   }
-  case k_ManualTransformationMatrixIdx: // Manual transformation matrix
+  case detail::k_ManualTransformationMatrixIdx: // Manual transformation matrix
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(m_InputValues->ManualMatrixTableData);
     break;
   }
-  case k_RotationIdx: // Rotation via axis-angle
+  case detail::k_RotationIdx: // Rotation via axis-angle
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
     break;
   }
-  case k_TranslationIdx: // Translation
+  case detail::k_TranslationIdx: // Translation
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(m_InputValues->Translation);
     break;
   }
-  case k_ScaleIdx: // Scale
+  case detail::k_ScaleIdx: // Scale
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
     break;

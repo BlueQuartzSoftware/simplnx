@@ -38,8 +38,8 @@ using namespace nx::core::Constants;
 
 namespace nx::core::Constants
 {
-inline constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
-inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
+ constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
+ constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 } // namespace nx::core::Constants
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColors]")

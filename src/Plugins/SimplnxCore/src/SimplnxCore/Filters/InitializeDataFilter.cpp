@@ -56,8 +56,8 @@ struct InitializeDataInputValues
 template <bool UseAddition, bool UseSubtraction>
 struct IncrementalOptions
 {
-  static inline constexpr bool UsingAddition = UseAddition;
-  static inline constexpr bool UsingSubtraction = UseSubtraction;
+  static  constexpr bool UsingAddition = UseAddition;
+  static  constexpr bool UsingSubtraction = UseSubtraction;
 };
 
 using AdditionT = IncrementalOptions<true, false>;
@@ -268,7 +268,7 @@ void FillRandomForwarder(const std::vector<T>& range, usize numComp, ArgsT&&... 
   }
 }
 
-inline std::vector<std::string> standardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
+ std::vector<std::string> standardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
 {
   if(componentValues.size() == numComps)
   {

@@ -55,7 +55,7 @@ Parameters ErodeDilateMaskFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate (0) or erode (1)", 0ULL, ::k_OperationChoices));
+  params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate (0) or erode (1)", 0ULL, detail::k_OperationChoices));
   params.insert(std::make_unique<Int32Parameter>(k_NumIterations_Key, "Number of Iterations", "Number of erode/dilate iterations to perform", 1));
   params.insert(std::make_unique<BoolParameter>(k_XDirOn_Key, "X Direction", "Whether to erode/dilate in the X direction", true));
   params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "Whether to erode/dilate in the Y direction", true));

@@ -59,7 +59,7 @@ Parameters ErodeDilateBadDataFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate or erode", 0ULL, ::k_OperationChoices));
+  params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate or erode", 0ULL, detail::k_OperationChoices));
   params.insert(std::make_unique<Int32Parameter>(k_NumIterations_Key, "Number of Iterations", "The number of iterations to use for erosion/dilation", 2));
   params.insert(std::make_unique<BoolParameter>(k_XDirOn_Key, "X Direction", "Whether to erode/dilate in the X direction", true));
   params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "Whether to erode/dilate in the Y direction", true));
@@ -107,7 +107,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
 
-  if(pOperationValue != ::k_DilateIndex && pOperationValue != ::k_ErodeIndex)
+  if(pOperationValue != detail::k_DilateIndex && pOperationValue != detail::k_ErodeIndex)
   {
     MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Dilate) or 1 (Erode). {} was passed into the filter. ", pOperationValue));
   }

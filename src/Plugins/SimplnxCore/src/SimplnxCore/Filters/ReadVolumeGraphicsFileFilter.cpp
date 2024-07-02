@@ -19,13 +19,13 @@ using namespace nx::core;
 
 namespace
 {
-inline constexpr int32 k_FileDoesNotExist = -91501;
-inline constexpr int32 k_IncorrectTokenCount = -91502;
-inline constexpr int32 k_VgiParseError = -91503;
-inline const std::string k_Millimeter("mm");
+ constexpr int32 k_FileDoesNotExist = -91501;
+ constexpr int32 k_IncorrectTokenCount = -91502;
+ constexpr int32 k_VgiParseError = -91503;
+ const std::string k_Millimeter("mm");
 
 // File Block
-inline const std::string k_File1Block("[file1]");
+ const std::string k_File1Block("[file1]");
 inline const std::string k_GeometryBlock("[geometry]");
 
 inline const std::string k_RegionOfInterestStart("RegionOfInterestStart");

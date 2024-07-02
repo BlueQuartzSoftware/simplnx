@@ -53,7 +53,7 @@ Result<> ReadVtkStructuredPoints::operator()()
 namespace
 {
 constexpr usize kBufferSize = 1024ULL;
-inline constexpr usize DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
+ constexpr usize DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
 
 } // namespace
 
@@ -154,7 +154,7 @@ Result<nx::core::DataType> ConvertVtkDataType(const std::string& text)
 //   return {0};
 // }
 
-inline usize count_tokens(char* str, char delim, bool consecutiveDelimiters, usize endPos)
+ usize count_tokens(char* str, char delim, bool consecutiveDelimiters, usize endPos)
 {
   usize count = 0;
   for(usize i = 0; i < endPos; i++)

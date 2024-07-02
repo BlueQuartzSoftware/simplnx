@@ -17,11 +17,11 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
-inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
-inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
+ constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
+ constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+ constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
+ constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
+ constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
 
 inline constexpr StringLiteral k_Phi1Right("Phi1Right");
 inline constexpr StringLiteral k_PhiRight("PhiRight");
