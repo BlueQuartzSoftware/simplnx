@@ -153,7 +153,7 @@ class ReadMeshFile:
       cell_data_comp_dims = cell_data_array.shape[1:]
       if not cell_data_comp_dims:
           cell_data_comp_dims = [1]
-      output_actions.append_action(nx.CreateArrayAction(nx.numpy_dtype_to_datatype(cell_data_array.dtype), cell_data_tuple_dims, cell_data_comp_dims, cell_array_path))
+      output_actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(cell_data_array.dtype), cell_data_tuple_dims, cell_data_comp_dims, cell_array_path))
 
     # Create the point data arrays
     vertex_attr_mat_path = created_geometry_path.create_child_path(vertex_attr_matrix_name)
@@ -164,7 +164,7 @@ class ReadMeshFile:
       point_data_comp_dims = point_data_array.shape[1:]
       if not point_data_comp_dims:
           point_data_comp_dims = [1]
-      output_actions.append_action(nx.CreateArrayAction(nx.numpy_dtype_to_datatype(point_data_array.dtype), point_data_tuple_dims, point_data_comp_dims, point_array_path))
+      output_actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(point_data_array.dtype), point_data_tuple_dims, point_data_comp_dims, point_array_path))
 
     # Return the output_actions so the changes are reflected in the User Interface.
     return nx.IFilter.PreflightResult(output_actions=output_actions, warnings=warnings)
