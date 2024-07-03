@@ -40,14 +40,14 @@ Creating Geometries
 
 All the `simplnx` geometries can be created in Python using the following helper methods:
 
-+ CreateGeometry.create_image_geometry
-+ CreateGeometry.create_rect_grid_geometry
-+ CreateGeometry.create_vertex_geometry
-+ CreateGeometry.create_edge_geometry
-+ CreateGeometry.create_triangle_geometry
-+ CreateGeometry.create_quad_geometry
-+ CreateGeometry.create_tetrahedral_geometry
-+ CreateGeometry.create_hexahedral_geometry
++ create_image_geometry
++ create_rect_grid_geometry
++ create_vertex_geometry
++ create_edge_geometry
++ create_triangle_geometry
++ create_quad_geometry
++ create_tetrahedral_geometry
++ create_hexahedral_geometry
 
 The enumeration `ArrayHandlingType` defines how existing arrays will be handled when creating a new geometry. It includes the following values:
 
@@ -57,7 +57,7 @@ The enumeration `ArrayHandlingType` defines how existing arrays will be handled 
 Creating An Image Geometry
 ##########################
 
-To create an image geometry, use the `CreateGeometry.create_image_geometry` method. This method requires the following parameters:
+To create an image geometry, use the `create_image_geometry` method. This method requires the following parameters:
 
 - `data_structure`: The data structure where the geometry will be created.
 - `geometry_path`: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -73,7 +73,7 @@ Example usage:
    import simplnx as nx
 
    # Create an image geometry
-   result: nx.Result = nx.CreateGeometry.create_image_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Image Geometry"]), dimensions=[100, 150, 200], origin=[0, 5, -2], spacing=[0.5, 0.5, 0.5], cell_attr_matrix_name='Image Data')
+   result: nx.Result = nx.create_image_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Image Geometry"]), dimensions=[100, 150, 200], origin=[0, 5, -2], spacing=[0.5, 0.5, 0.5], cell_attr_matrix_name='Image Data')
    if result.valid():
       image_geom = data_structure[nx.DataPath(["Image Geometry"])]
       print("Image Geometry Created!")
@@ -82,7 +82,7 @@ Example usage:
 Creating A Rectilinear Grid Geometry
 ####################################
 
-To create a rectilinear grid geometry, use the `CreateGeometry.create_rect_grid_geometry` method. This method requires the following parameters:
+To create a rectilinear grid geometry, use the `create_rect_grid_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -99,7 +99,7 @@ Example usage:
    import simplnx as nx
 
    # Create a rect grid geometry
-   result = nx.CreateGeometry.create_rect_grid_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Rect Grid Geometry"]), x_bounds_path=nx.DataPath(["Foo"]), y_bounds_path=nx.DataPath(["Y Bounds"]), z_bounds_path=nx.DataPath(["Z Bounds"]), cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_rect_grid_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Rect Grid Geometry"]), x_bounds_path=nx.DataPath(["Foo"]), y_bounds_path=nx.DataPath(["Y Bounds"]), z_bounds_path=nx.DataPath(["Z Bounds"]), cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       rect_grid_geom = data_structure[nx.DataPath(["Rect Grid Geometry"])]
       print("Rect Grid Geometry Created!")
@@ -107,7 +107,7 @@ Example usage:
 Creating A Vertex Geometry
 ##########################
 
-To create a vertex geometry, use the `CreateGeometry.create_vertex_geometry` method. This method requires the following parameters:
+To create a vertex geometry, use the `create_vertex_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -122,7 +122,7 @@ Example usage:
    import simplnx as nx
 
    # Create a vertex geometry
-   result = nx.CreateGeometry.create_vertex_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Vertex Geometry"]), vertices_path=nx.DataPath("Vertices"), vertex_attr_matrix_name='Vertex Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_vertex_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Vertex Geometry"]), vertices_path=nx.DataPath("Vertices"), vertex_attr_matrix_name='Vertex Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       vertex_geom = data_structure[nx.DataPath("Vertex Geometry")]
       print("Vertex Geometry Created!")
@@ -130,7 +130,7 @@ Example usage:
 Creating An Edge Geometry
 #########################
 
-To create an edge geometry, use the `CreateGeometry.create_edge_geometry` method. This method requires the following parameters:
+To create an edge geometry, use the `create_edge_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -147,7 +147,7 @@ Example usage:
    import simplnx as nx
 
    # Create an edge geometry
-   result = nx.CreateGeometry.create_edge_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Edge Geometry"]), vertices_path=nx.DataPath("Vertices"), edge_list_path=nx.DataPath("Edge List"), vertex_attr_matrix_name='Vertex Data', edge_attr_matrix_name='Edge Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_edge_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Edge Geometry"]), vertices_path=nx.DataPath("Vertices"), edge_list_path=nx.DataPath("Edge List"), vertex_attr_matrix_name='Vertex Data', edge_attr_matrix_name='Edge Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       edge_geom = data_structure[nx.DataPath("Edge Geometry")]
       print("Edge Geometry Created!")
@@ -155,7 +155,7 @@ Example usage:
 Creating A Triangle Geometry
 ############################
 
-To create a triangle geometry, use the `CreateGeometry.create_triangle_geometry` method. This method requires the following parameters:
+To create a triangle geometry, use the `create_triangle_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -172,7 +172,7 @@ Example usage:
    import simplnx as nx
 
    # Create a triangle geometry
-   result = nx.CreateGeometry.create_triangle_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Triangle Geometry"]), vertices_path=nx.DataPath("Vertices"), triangle_list_path=nx.DataPath("Triangle List"), vertex_attr_matrix_name='Vertex Data', face_attr_matrix_name='Face Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_triangle_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Triangle Geometry"]), vertices_path=nx.DataPath("Vertices"), triangle_list_path=nx.DataPath("Triangle List"), vertex_attr_matrix_name='Vertex Data', face_attr_matrix_name='Face Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       triangle_geom = data_structure[nx.DataPath("Triangle Geometry")]
       print("Triangle Geometry Created!")
@@ -180,7 +180,7 @@ Example usage:
 Creating A Quadrilateral Geometry
 #################################
 
-To create a quadrilateral geometry, use the `CreateGeometry.create_quad_geometry` method. This method requires the following parameters:
+To create a quadrilateral geometry, use the `create_quad_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -197,7 +197,7 @@ Example usage:
    import simplnx as nx
 
    # Create a quad geometry
-   result = nx.CreateGeometry.create_quad_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Quad Geometry"]), vertices_path=nx.DataPath("Vertices"), quad_list_path=nx.DataPath("Quad List"), vertex_attr_matrix_name='Vertex Data', face_attr_matrix_name='Quad Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_quad_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Quad Geometry"]), vertices_path=nx.DataPath("Vertices"), quad_list_path=nx.DataPath("Quad List"), vertex_attr_matrix_name='Vertex Data', face_attr_matrix_name='Quad Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       quad_geom = data_structure[nx.DataPath("Quad Geometry")]
       print("Quad Geometry Created!")
@@ -205,7 +205,7 @@ Example usage:
 Creating A Tetrahedral Geometry
 ###############################
 
-To create a tetrahedral geometry, use the `CreateGeometry.create_tetrahedral_geometry` method. This method requires the following parameters:
+To create a tetrahedral geometry, use the `create_tetrahedral_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -222,7 +222,7 @@ Example usage:
    import simplnx as nx
 
    # Create a tetrahedral geometry
-   result = nx.CreateGeometry.create_tetrahedral_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Tetrahedral Geometry"]), vertices_path=nx.DataPath("Vertices"), tetrahedral_list_path=nx.DataPath("Tetrahedral List"), vertex_attr_matrix_name='Vertex Data', cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_tetrahedral_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Tetrahedral Geometry"]), vertices_path=nx.DataPath("Vertices"), tetrahedral_list_path=nx.DataPath("Tetrahedral List"), vertex_attr_matrix_name='Vertex Data', cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       tetrahedral_geom = data_structure[nx.DataPath("Tetrahedral Geometry")]
       print("Tetrahedral Geometry Created!")
@@ -230,7 +230,7 @@ Example usage:
 Creating A Hexahedral Geometry
 ##############################
 
-To create a hexahedral geometry, use the `CreateGeometry.create_hexahedral_geometry` method. This method requires the following parameters:
+To create a hexahedral geometry, use the `create_hexahedral_geometry` method. This method requires the following parameters:
 
 - **data_structure**: The data structure where the geometry will be created.
 - **geometry_path**: The :ref:`DataPath <DataPath>` where the geometry will be stored.
@@ -247,7 +247,7 @@ Example usage:
    import simplnx as nx
 
    # Create a hexahedral geometry
-   result = nx.CreateGeometry.create_hexahedral_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Hexahedral Geometry"]), vertices_path=nx.DataPath("Vertices"), hexahedral_list_path=nx.DataPath("Hexahedral List"), vertex_attr_matrix_name='Vertex Data', cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
+   result = nx.create_hexahedral_geometry(data_structure=data_structure, geometry_path=nx.DataPath(["Hexahedral Geometry"]), vertices_path=nx.DataPath("Vertices"), hexahedral_list_path=nx.DataPath("Hexahedral List"), vertex_attr_matrix_name='Vertex Data', cell_attr_matrix_name='Cell Data', array_handling=nx.ArrayHandlingType.Copy)
    if result.valid():
       hexahedral_geom = data_structure[nx.DataPath("Hexahedral Geometry")]
       print("Hexahedral Geometry Created!")

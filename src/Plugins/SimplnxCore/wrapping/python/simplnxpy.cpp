@@ -1526,9 +1526,7 @@ PYBIND11_MODULE(simplnx, mod)
   manualImportFinder.def("contains_module", &ManualImportFinder::containsModule, "mod_name"_a);
 
   // Geometry Helper Methods
-  py::module_ sub = mod.def_submodule("CreateGeometry", "Submodule that contains the CreateGeometry utility methods.");
-
-  sub.def(
+  mod.def(
       "create_image_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const std::vector<uint64>& dims, const std::vector<float32>& origin, const std::vector<float32>& spacing,
          const std::string& cellAttrMatrixName) {
@@ -1547,7 +1545,7 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "geometry_path"_a, "dimensions"_a, "origin"_a, "spacing"_a, "cell_attr_matrix_name"_a = "Cell Data");
 
-  sub.def(
+  mod.def(
       "create_rect_grid_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& xBoundsPath, const DataPath& yBoundsPath, const DataPath& zBoundsPath, const std::string& cellAttrMatrixName,
          ArrayHandlingType arrayHandling) {
@@ -1567,7 +1565,7 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "geometry_path"_a, "x_bounds_path"_a, "y_bounds_path"_a, "z_bounds_path"_a, "cell_attr_matrix_name"_a = "Cell Data", "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_vertex_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const std::string& vertexAttrMatrixName, ArrayHandlingType arrayHandling) {
         CreateGeometryFilter filter;
@@ -1584,7 +1582,7 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_edge_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& edgeListPath, const std::string& vertexAttrMatrixName, const std::string& edgeAttrMatrixName,
          ArrayHandlingType arrayHandling) {
@@ -1605,7 +1603,7 @@ PYBIND11_MODULE(simplnx, mod)
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "edge_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "edge_attr_matrix_name"_a = "Edge Data",
       "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_triangle_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& triangleListPath, const std::string& vertexAttrMatrixName,
          const std::string& faceAttrMatrixName, ArrayHandlingType arrayHandling) {
@@ -1626,7 +1624,7 @@ PYBIND11_MODULE(simplnx, mod)
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "triangle_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Face Data",
       "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_quad_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& quadListPath, const std::string& vertexAttrMatrixName, const std::string& faceAttrMatrixName,
          ArrayHandlingType arrayHandling) {
@@ -1647,7 +1645,7 @@ PYBIND11_MODULE(simplnx, mod)
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "quad_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Quad Data",
       "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_tetrahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& tetrahedralListPath, const std::string& vertexAttrMatrixName,
          const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
@@ -1668,7 +1666,7 @@ PYBIND11_MODULE(simplnx, mod)
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "tetrahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
       "array_handling"_a = ArrayHandlingType::Copy);
 
-  sub.def(
+  mod.def(
       "create_hexahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& hexahedralListPath, const std::string& vertexAttrMatrixName,
          const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
