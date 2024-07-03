@@ -77,18 +77,6 @@ public:
 
   void setPreflight(bool value);
 
-  /**
-   *
-   * @param readPointData
-   * @param readCellData
-   * @param pointGeometryPath
-   * @param imageGeometryPath
-   * @param vertAMName
-   * @param cellAMName
-   * @return
-   */
-  static nx::core::Result<OutputActions> PreflightFile(ReadVtkStructuredPointsInputValues& inputValues);
-
   enum class CurrentSectionType : uint32
   {
     NotSet = 0,
@@ -96,7 +84,6 @@ public:
     Cell = 2,
   };
 
-protected:
   nx::core::Result<OutputActions> getOutputActions() const
   {
     return m_OutputActions;
@@ -108,6 +95,7 @@ protected:
    */
   Result<> readFile();
 
+protected:
   /**
    * @brief readData Reads a section of data from the .vtk file
    * @param instream Incoming file stream
@@ -128,32 +116,6 @@ protected:
    * @return Byte size result
    */
   //  Result<usize> parseByteSize(const std::string& text);
-
-  /**
-   * @brief readLine Reads a line from the .vtk file
-   * @param in Incoming file stream
-   * @param result Char pointer to store line
-   * @param length Length of line
-   * @return Integer error value
-   */
-  static Result<> readLine(std::istream& in, char* result, size_t length);
-
-  /**
-   * @brief readString Reas a string from the .vtk file
-   * @param in Incoming file stream
-   * @param result Char pointer to store string
-   * @param length Length of string
-   * @return Integer error value
-   */
-  static Result<> readString(std::istream& in, char* result, size_t length);
-
-  /**
-   * @brief lowerCase Converts a string to lower case
-   * @param str Incoming string to convert
-   * @param len Length of string
-   * @return Integer error value
-   */
-  static char* lowerCase(char* str, size_t len);
 
   /**
    * @brief readDataTypeSection Determines the type of data to be read from the .vtk file
@@ -192,8 +154,6 @@ protected:
   void setFileIsBinary(bool value);
 
   void setDatasetType(const std::string& dataSetType);
-
-  static Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, size_t numElements);
 
 private:
   DataStructure& m_DataStructure;
