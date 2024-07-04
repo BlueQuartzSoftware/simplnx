@@ -187,7 +187,7 @@ void ComputeKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counte
 
   m_ProgressCounter += counter;
   auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() > 1000)
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
   {
     return;
   }
