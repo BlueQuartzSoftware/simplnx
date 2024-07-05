@@ -835,7 +835,7 @@ Result<> readLegacyDataArrayDims(const nx::core::HDF5::DatasetReader& dataArrayR
       return nx::core::MakeWarningVoidResult(Legacy::k_FailedReadingTupleDims_Code, ss);
     }
     tDims = tupleAttrib.readAsVector<usize>();
-    std::reverse(tDims.begin(), tDims.end()); // SIMPL writes the Tuple Dimensions in reverse order to this attribute
+    // std::reverse(tDims.begin(), tDims.end()); // SIMPL writes the Tuple Dimensions in reverse order to this attribute
   }
 
   return {};
@@ -868,10 +868,19 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
   return {};
 }
 
-Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
+/**
+ * @brief
+ * @param dataStructure
+ * @param dataArrayReader
+ * @param parentId
+ * @param amTDims
+ * @param preflight
+ * @return
+ */
+Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetReader& dataArrayReader, DataObject::IdType parentId, std::vector<uint64>& amTDims,
+                                        bool preflight = false)
 {
   auto size = H5Dget_storage_size(dataArrayReader.getId());
-  auto typeId = dataArrayReader.getTypeId();
 
   std::vector<usize> tDims;
   std::vector<usize> cDims;
@@ -883,6 +892,46 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
   }
 
   Result<IDataArray*> daResult;
+  // Let's do some sanity checking of the tuple dims and the comp dims
+  // This is here because some 3rd party apps are trying to write .dream3d
+  // files but are getting confused about the Tuple Dims and the component
+  // dims. This bit of code will try to fix the specific issue where the
+  // .dream3d file essentially had _all_ the dimensions shoved in the
+  // tuple dimensions.
+  if(!amTDims.empty()) // If the amTDims are empty we are just reading a Data Array without an Attribute Matrix so skip.
+  {
+    //
+    if(tDims.size() > amTDims.size() && cDims.size() == 1 && cDims[0] == 1)
+    {
+      daResult.warnings().push_back(
+          {-9543, fmt::format(".dream3d file Tuple and Component Dimensions are not correct. DataSet {} does not have correct component dimensions of they are missing.", dataArrayReader.getName())});
+      cDims.clear();
+      // Find the index of the first non-matching dimension value.
+      for(size_t idx = 0; idx < tDims.size(); idx++)
+      {
+        // If we are past the end of the AM Dimensions, then copy the value to the component dimensions
+        if(idx >= amTDims.size())
+        {
+          cDims.push_back(tDims[idx]);
+        }
+        else if(amTDims[idx] != tDims[idx]) // something went wrong here. Each vector should have the same exact values at the start of the vector
+        {
+          // The first parts of the dimensions should MATCH for this algorithm to work.
+          // This should not happen at all. If so, bail out now.
+          cDims.clear(); // just put things back the way they were and fail.
+          cDims.push_back(1ULL);
+          daResult.errors().push_back({-9545, fmt::format(".dream3d file Tuple and Component Dimensions are not correct. DataSet {} does not have correct component dimensions or they are missing. An "
+                                                          "attempt was made to correct this situation but ultimately failed.",
+                                                          dataArrayReader.getName())});
+          return daResult;
+        }
+      }
+      tDims.resize(amTDims.size());
+    }
+  }
+
+  auto typeId = dataArrayReader.getTypeId();
+
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
     daResult = createLegacyDataArray<float32>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
@@ -1092,7 +1141,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     }
     else
     {
-      Result<> result = ConvertResult(std::move(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight)));
+      Result<> result = ConvertResult(std::move(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), tDims, preflight)));
       daResults.push_back(result);
     }
   }
@@ -1154,7 +1203,8 @@ void readGenericGeomDims(IGeometry* geom, const nx::core::HDF5::GroupReader& geo
 Result<IDataArray*> readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const nx::core::HDF5::GroupReader& geomGroup, const std::string& arrayName, bool preflight)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
-  return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId(), preflight);
+  std::vector<uint64> tDims;
+  return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId(), tDims, preflight);
 }
 
 template <typename T>

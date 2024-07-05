@@ -145,16 +145,6 @@ function(download_test_data)
   file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
   file(REMOVE "${fetch_data_file}") # Remove the temporary file
 
-  if(ARGS_COPY_DATA)
-    configure_file(${simplnx_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
-                   ${fetch_data_file}
-                   @ONLY
-                   )
-    file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
-    file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
-    file(REMOVE "${fetch_data_file}")
-  endif()
-
   #-----
   # If we are installing the data files then we need to create a custom install
   # rule to ensure the archive contents are actually decompressed and available. Since
@@ -162,18 +152,7 @@ function(download_test_data)
   # location of the data. Running the unit tests might remove the decompressed data
   # as a by product.
   if(ARGS_INSTALL)
-    # If we did NOT already copy the data, then do that now during the build
-    if(NOT ARGS_COPY_DATA)
-      configure_file(${simplnx_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
-                    ${fetch_data_file}
-                    @ONLY
-                    )
-      file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
-      file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
-      file(REMOVE "${fetch_data_file}")
-    endif()
-
-    if(is_multi_config)
+     if(is_multi_config)
       set(CX_CONFIG_DIR "$<CONFIG>")
     else()
       set(CX_CONFIG_DIR ".")
