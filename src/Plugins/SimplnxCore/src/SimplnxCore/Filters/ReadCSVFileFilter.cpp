@@ -216,7 +216,7 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
 {
   std::string line;
   std::getline(inStream, line);
-
+  line = StringUtilities::replace(line, "\r", "");
   StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
   if(tokens.empty())
   {

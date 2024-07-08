@@ -14,6 +14,24 @@ The use of this **Filter** is similar to the use of the {ref}`Import Orientation
 
 ![Images/ConvertHexGridToSquareGridFilter_1.png](Images/ConvertHexGridToSquareGridFilter_1.png)
 
+## Example Output (Correct Spacing)
+
+This image shows a reasonable conversion where the X and Y Spacing are close to the original hex grid spacing.
+
+![Images/ConvertHexGridToSquareGrid_1.png](Images/ConvertHexGridToSquareGrid_1.png)
+
+## Example Output (Coarse Spacing)
+
+This image shows where the spacing is set a bit too large resulting in a more coarse sampling of the original hex grid data
+
+![Images/ConvertHexGridToSquareGrid_2.png](Images/ConvertHexGridToSquareGrid_2.png)
+
+## Example Output (Fine Spacing)
+
+This image shows where the spacing is set much too fine resulting in over sampling of the hex grid and a markedly larger file.
+
+![Images/ConvertHexGridToSquareGrid_3.png](Images/ConvertHexGridToSquareGrid_3.png)
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
