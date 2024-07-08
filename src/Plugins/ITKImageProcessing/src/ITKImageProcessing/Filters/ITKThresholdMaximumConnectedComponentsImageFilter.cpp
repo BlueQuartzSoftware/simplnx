@@ -21,7 +21,7 @@ using FilterOutputType = uint8;
 struct ITKThresholdMaximumConnectedComponentsImageFilterFunctor
 {
   uint32 minimumObjectSizeInPixels = 0u;
-  float64 upperBoundary = std::numeric_limits<double>::max();
+  float64 upperBoundary = 65536.0;
   uint8 insideValue = 1u;
   uint8 outsideValue = 0u;
 
@@ -86,7 +86,7 @@ Parameters ITKThresholdMaximumConnectedComponentsImageFilter::parameters() const
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
-      std::numeric_limits<double>::max()));
+      65536.0));
   params.insert(std::make_unique<UInt8Parameter>(
       k_InsideValue_Key, "Inside Value",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
