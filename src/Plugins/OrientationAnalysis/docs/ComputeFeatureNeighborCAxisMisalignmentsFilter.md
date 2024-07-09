@@ -12,6 +12,8 @@ This **Filter** determines, for each **Feature**, the C-axis misalignments with 
 
 **NOTE:** Only features with identical phase values and a crystal structure of **Hexagonal_High** will be calculated. If two features have different phase values or a crystal structure that is *not* Hexagonal_High then a value of NaN is set for the misorientation.
 
+Results from this filter can differ from its original version in DREAM3D 6.6 by around 0.0001. This version uses double precision in part of its calculation to improve agreement and accuracy between platforms (notably ARM).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
