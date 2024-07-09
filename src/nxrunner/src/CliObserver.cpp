@@ -15,11 +15,11 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   if(pipeline != nullptr)
   {
     startObservingNode(pipeline);
-    pipeline->getCancelledSignal().connect([=](void) { onCancelled(); });
-    pipeline->getFilterProgressSignal().connect([=](AbstractPipelineNode* node, int32_t progress, int32_t max, const std::string& msg) { onFilterProgress(node, progress, max, msg); });
-    pipeline->getFilterRunStateSignal().connect([=](AbstractPipelineNode* node, int32_t index, RunState state) { onRunStateChanged(node, state); });
-    pipeline->getFilterUpdateSignal().connect([=](AbstractPipelineNode* node, int32 index, const std::string& msg) { onFilterUpdate(node, msg); });
-    pipeline->getPipelineFaultSignal().connect([=](AbstractPipelineNode* node, FaultState state) { onFaultStateChanged(node, state); });
+    pipeline->getCancelledSignal().connect([this](void) { onCancelled(); });
+    pipeline->getFilterProgressSignal().connect([this](AbstractPipelineNode* node, int32_t progress, int32_t max, const std::string& msg) { onFilterProgress(node, progress, max, msg); });
+    pipeline->getFilterRunStateSignal().connect([this](AbstractPipelineNode* node, int32_t index, RunState state) { onRunStateChanged(node, state); });
+    pipeline->getFilterUpdateSignal().connect([this](AbstractPipelineNode* node, int32 index, const std::string& msg) { onFilterUpdate(node, msg); });
+    pipeline->getPipelineFaultSignal().connect([this](AbstractPipelineNode* node, FaultState state) { onFaultStateChanged(node, state); });
   }
   if(pipeline == nullptr)
   {

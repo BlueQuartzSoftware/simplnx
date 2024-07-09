@@ -102,8 +102,7 @@ void PluginLoader::loadPlugin()
   if(m_Handle == nullptr)
   {
     fmt::print(SIMPLNX_TEXT("Could not load library '{}' with the following error:\n"), m_Path.c_str());
-    fmt::print(GetErrorMessage());
-    fmt::print("\n");
+    fmt::print(SIMPLNX_TEXT("{}\n"), GetErrorMessage());
     return;
   }
 
@@ -112,7 +111,7 @@ void PluginLoader::loadPlugin()
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_CREATE_PLUGIN_FUNC_NAME "\" from library '{}' with the following error:\n"), m_Path.c_str());
-    fmt::print(GetErrorMessage());
+    fmt::print(SIMPLNX_TEXT("{}\n"), GetErrorMessage());
     return;
   }
 
@@ -121,7 +120,7 @@ void PluginLoader::loadPlugin()
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_DESTROY_PLUGIN_FUNC_NAME "\" from library '{}' with following error:\n"), m_Path.c_str());
-    fmt::print(GetErrorMessage());
+    fmt::print(SIMPLNX_TEXT("{}\n"), GetErrorMessage());
     return;
   }
 
@@ -138,7 +137,7 @@ void PluginLoader::unloadPlugin()
   if(!UnloadSharedLibrary(m_Handle))
   {
     fmt::print(SIMPLNX_TEXT("The following error occurred while unloading library '{}':\n"), m_Path.c_str());
-    fmt::print(GetErrorMessage());
+    fmt::print(SIMPLNX_TEXT("{}\n"), GetErrorMessage());
   }
   m_Handle = nullptr;
 }

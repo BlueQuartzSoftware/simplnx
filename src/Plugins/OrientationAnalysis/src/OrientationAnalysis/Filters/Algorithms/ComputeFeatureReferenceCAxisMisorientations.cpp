@@ -10,7 +10,6 @@
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 
 #include <algorithm>
@@ -78,11 +77,10 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  const int32 avgMisComps = 3;
+  static constexpr usize k_AvgMisComps = 3;
   const usize numQuatComps = quats.getNumberOfComponents();
-  std::vector<float32> avgMis(totalFeatures * avgMisComps, 0);
+  std::vector<float32> avgMis(totalFeatures * k_AvgMisComps, 0.0f);
 
-  float32 w = 0.0f;
   SizeVec3 uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath).getDimensions();
 
   // We have more points than can be allocated on a 32 bit machine. Assert Now.
@@ -94,52 +92,44 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   const auto xPoints = static_cast<int64>(uDims[0]);
   const auto yPoints = static_cast<int64>(uDims[1]);
   const auto zPoints = static_cast<int64>(uDims[2]);
-  int64 point = 0;
 
-  Matrix3fR g1T;
-  g1T.fill(0.0f);
-  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
-  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
-  Eigen::Vector3f avgCAxisMis = {0.0f, 0.0f, 0.0f};
-  usize index = 0;
+  const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
   for(int64 col = 0; col < xPoints; col++)
   {
     for(int64 row = 0; row < yPoints; row++)
     {
       for(int64 plane = 0; plane < zPoints; plane++)
       {
-        point = (plane * xPoints * yPoints) + (row * xPoints) + col;
-        const auto quatTupleIndex = point * numQuatComps;
-        const auto crystalStructureType = crystalStructures[cellPhases[point]];
+        int64 point = (plane * xPoints * yPoints) + (row * xPoints) + col;
+        const usize quatTupleIndex = point * numQuatComps;
+        const uint32 crystalStructureType = crystalStructures[cellPhases[point]];
         const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
         if(featureIds[point] > 0 && cellPhases[point] > 0 && isHex)
         {
-          OrientationF oMatrix =
-              OrientationTransformation::qu2om<QuatF, Orientation<float32>>({quats[quatTupleIndex], quats[quatTupleIndex + 1], quats[quatTupleIndex + 2], quats[quatTupleIndex + 3]});
+          OrientationD oMatrix =
+              OrientationTransformation::qu2om<QuatD, Orientation<float64>>({quats[quatTupleIndex], quats[quatTupleIndex + 1], quats[quatTupleIndex + 2], quats[quatTupleIndex + 3]});
           // transpose the g matrices so when caxis is multiplied by it, it will give the sample direction that the caxis is along
-          g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-          c1 = g1T * cAxis;
+          Matrix3dR g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
+          Eigen::Vector3d c1 = g1T * cAxis;
           // normalize so that the magnitude is 1
           c1.normalize();
 
-          avgCAxisMis[0] = avgCAxes[3 * featureIds[point]];
-          avgCAxisMis[1] = avgCAxes[3 * featureIds[point] + 1];
-          avgCAxisMis[2] = avgCAxes[3 * featureIds[point] + 2];
+          Eigen::Vector3d avgCAxisMis = {avgCAxes[3 * featureIds[point]], avgCAxes[3 * featureIds[point] + 1], avgCAxes[3 * featureIds[point] + 2]};
           // normalize so that the magnitude is 1
           avgCAxisMis.normalize();
-          w = ImageRotationUtilities::CosBetweenVectors(c1, avgCAxisMis);
-          w = std::clamp(w, -1.0f, 1.0f);
-          w = acosf(w);
-          w *= Constants::k_180OverPiF;
-          if(w > 90.0f)
+          float64 w = ImageRotationUtilities::CosBetweenVectors(c1, avgCAxisMis);
+          w = std::clamp(w, -1.0, 1.0);
+          w = std::acos(w);
+          w *= Constants::k_180OverPiD;
+          if(w > 90.0)
           {
-            w = 180.0f - w;
+            w = 180.0 - w;
           }
 
-          featRefCAxisMis[point] = w;
-          index = featureIds[point] * avgMisComps;
+          featRefCAxisMis[point] = static_cast<float32>(w);
+          usize index = featureIds[point] * k_AvgMisComps;
           avgMis[index]++;
-          avgMis[index + 1] += w;
+          avgMis[index + 1] += static_cast<float32>(w);
         }
         else
         {
@@ -155,10 +145,10 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     {
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working On Feature {} of {}", i, totalFeatures));
     }
-    index = i * avgMisComps;
+    usize index = i * k_AvgMisComps;
     if(avgMis[index] == 0.0f)
     {
-      featAvgCAxisMis[i] = 0.0;
+      featAvgCAxisMis[i] = 0.0f;
     }
     else
     {
@@ -170,19 +160,19 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   for(usize j = 0; j < totalPoints; j++)
   {
     gNum = featureIds[j];
-    avgMis[(gNum * avgMisComps) + 2] += ((featRefCAxisMis[j] - featAvgCAxisMis[gNum]) * (featRefCAxisMis[j] - featAvgCAxisMis[gNum]));
+    avgMis[(gNum * k_AvgMisComps) + 2] += ((featRefCAxisMis[j] - featAvgCAxisMis[gNum]) * (featRefCAxisMis[j] - featAvgCAxisMis[gNum]));
   }
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    index = i * avgMisComps;
+    usize index = i * k_AvgMisComps;
     if(avgMis[index] == 0.0f)
     {
       featStdevCAxisMis[i] = 0.0f;
     }
     else
     {
-      featStdevCAxisMis[i] = std::sqrt((1 / avgMis[index]) * avgMis[index + 2]);
+      featStdevCAxisMis[i] = std::sqrt((1.0f / avgMis[index]) * avgMis[index + 2]);
     }
   }
 

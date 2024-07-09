@@ -73,10 +73,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   std::vector<std::vector<float>> misalignmentLists;
   misalignmentLists.resize(totalFeatures);
 
-  float32 w = 0.0f;
-  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
-  Eigen::Vector3f c2{0.0f, 0.0f, 0.0f};
-  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
+  const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
   usize hexNeighborListSize = 0;
   uint32 phase1 = 0, phase2 = 0;
   usize nName = 0;
@@ -85,44 +82,43 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     phase1 = crystalStructures[featurePhases[i]];
 
     const usize quatTupleIndex1 = i * numQuatComps;
-    OrientationF oMatrix1 =
-        OrientationTransformation::qu2om<QuatF, OrientationF>({avgQuats[quatTupleIndex1], avgQuats[quatTupleIndex1 + 1], avgQuats[quatTupleIndex1 + 2], avgQuats[quatTupleIndex1 + 3]});
+    OrientationD oMatrix1 =
+        OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex1], avgQuats[quatTupleIndex1 + 1], avgQuats[quatTupleIndex1 + 2], avgQuats[quatTupleIndex1 + 3]});
 
     // transpose the g matrix so when c-axis is multiplied by it
     // it will give the sample direction that the c-axis is along
-    c1 = OrientationMatrixToGMatrixTranspose(oMatrix1) * cAxis;
+    Eigen::Vector3d c1 = OrientationMatrixToGMatrixTranspose(oMatrix1) * cAxis;
     // normalize so that the dot product can be taken below without
     // dividing by the magnitudes (they would be 1)
     c1.normalize();
     misalignmentLists[i].resize(neighborList[i].size(), -1.0f);
     for(usize j = 0; j < neighborList[i].size(); j++)
     {
-      w = std::numeric_limits<float>::max();
       nName = neighborList[i][j];
       phase2 = crystalStructures[featurePhases[nName]];
       hexNeighborListSize = neighborList[i].size();
       if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Hexagonal_High || phase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
       {
         const usize quatTupleIndex2 = nName * numQuatComps;
-        OrientationF oMatrix2 =
-            OrientationTransformation::qu2om<QuatF, OrientationF>({avgQuats[quatTupleIndex2], avgQuats[quatTupleIndex2 + 1], avgQuats[quatTupleIndex2 + 2], avgQuats[quatTupleIndex2 + 3]});
+        OrientationD oMatrix2 =
+            OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex2], avgQuats[quatTupleIndex2 + 1], avgQuats[quatTupleIndex2 + 2], avgQuats[quatTupleIndex2 + 3]});
 
         // transpose the g matrix so when c-axis is multiplied by it
         // it will give the sample direction that the c-axis is along
-        c2 = OrientationMatrixToGMatrixTranspose(oMatrix2) * cAxis;
+        Eigen::Vector3d c2 = OrientationMatrixToGMatrixTranspose(oMatrix2) * cAxis;
         // normalize so that the dot product can be taken below without
         // dividing by the magnitudes (they would be 1)
         c2.normalize();
 
-        w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
-        w = std::clamp(w, -1.0f, 1.0f);
-        w = acosf(w);
-        if(w > (Constants::k_PiF / 2))
+        float64 w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
+        w = std::clamp(w, -1.0, 1.0);
+        w = std::acos(w);
+        if(w > (Constants::k_PiD / 2.0))
         {
-          w = Constants::k_PiF - w;
+          w = Constants::k_PiD - w;
         }
 
-        misalignmentLists[i][j] = w * Constants::k_180OverPiF;
+        misalignmentLists[i][j] = static_cast<float32>(w * Constants::k_180OverPiD);
         if(m_InputValues->FindAvgMisals)
         {
           avgCAxisMisalignment[i] += misalignmentLists[i][j];

@@ -10,6 +10,8 @@ This **Filter** calculates the misorientation angle between the C-axis of each *
 
 This filter requires at least one Hexagonal crystal structure phase (Hexagonal-Low 6/m or Hexagonal-High 6/mmm). Although it is not recommended, you can give input data with mixed phase types and all non hexagonal phases will be skipped in the calculations.
 
+Results from this filter can differ from its original version in DREAM3D 6.6 by around 0.0001. This version uses double precision in part of its calculation to improve agreement and accuracy between platforms (notably ARM).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

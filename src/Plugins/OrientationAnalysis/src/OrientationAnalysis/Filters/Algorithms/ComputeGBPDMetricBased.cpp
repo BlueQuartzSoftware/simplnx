@@ -89,12 +89,6 @@ public:
     m_NSym = m_OrientationOps[m_Crystal]->getNumSymOps();
   }
 
-  virtual ~TrianglesSelector() = default;
-  TrianglesSelector(const TrianglesSelector&) = default;
-  TrianglesSelector(TrianglesSelector&&) noexcept = delete;
-  TrianglesSelector& operator=(const TrianglesSelector&) = delete;
-  TrianglesSelector& operator=(TrianglesSelector&&) noexcept = delete;
-
   void select(usize start, usize end) const
   {
     Eigen::Vector3d g1ea = {0.0, 0.0, 0.0};
@@ -205,12 +199,6 @@ public:
     m_OrientationOps = LaueOps::GetAllOrientationOps();
     m_NSym = m_OrientationOps[crystal]->getNumSymOps();
   }
-
-  virtual ~ProbeDistribution() = default;
-  ProbeDistribution(const ProbeDistribution&) = default;
-  ProbeDistribution(ProbeDistribution&&) noexcept = delete;
-  ProbeDistribution& operator=(const ProbeDistribution&) = delete;
-  ProbeDistribution& operator=(ProbeDistribution&&) noexcept = delete;
 
   void probe(usize start, usize end) const
   {

@@ -10,7 +10,7 @@ auto& MapAt(ContainerT& container, std::string_view key, const char* message)
   auto iter = container.find(key);
   if(iter == container.cend())
   {
-    throw std::invalid_argument(fmt::format(message, key));
+    throw std::invalid_argument(fmt::format(fmt::runtime(message), key));
   }
   return iter->second;
 }

@@ -28,11 +28,6 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
-  ~ResampleImageGeomImpl() = default;
-  ResampleImageGeomImpl(const ResampleImageGeomImpl&) = default;           // Copy Constructor default Implemented
-  ResampleImageGeomImpl(ResampleImageGeomImpl&&) = delete;                 // Move Constructor Not Implemented
-  ResampleImageGeomImpl& operator=(const ResampleImageGeomImpl&) = delete; // Copy Assignment Not Implemented
-  ResampleImageGeomImpl& operator=(ResampleImageGeomImpl&&) = delete;      // Move Assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void compute(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd, size_t zStart, size_t zEnd) const

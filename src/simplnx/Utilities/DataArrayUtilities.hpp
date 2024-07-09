@@ -987,7 +987,9 @@ public:
       {
         if(newDataStore.copyFrom(i, oldDataStore, oldIndexI, 1).invalid())
         {
-          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n\n", m_OldCellArray.getName(), oldIndexI, i);
+          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndexI,
+                                   m_NewCellArray.getName(), i)
+                    << std::endl;
           break;
         }
       }
@@ -1256,7 +1258,8 @@ public:
 
       if(!copySucceeded)
       {
-        std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI, i)
+        std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI,
+                                 m_DestCellArray->getName(), i)
                   << std::endl;
         break;
       }
@@ -1393,8 +1396,9 @@ public:
           }
           if(!copySucceeded)
           {
-            std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n\n", m_InputCellArray->getName(), rectGridIndex,
-                                     imageIndex);
+            std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), rectGridIndex,
+                                     m_DestCellArray->getName(), imageIndex)
+                      << std::endl;
             break;
           }
 

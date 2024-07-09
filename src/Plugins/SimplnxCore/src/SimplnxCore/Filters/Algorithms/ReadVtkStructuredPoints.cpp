@@ -258,7 +258,9 @@ Result<> ReadLine(std::istream& in, char* result, usize length)
 Result<> ReadString(std::istream& in, char* result, usize length)
 {
   in.width(length);
-  in >> result;
+  std::string temp;
+  in >> temp;
+  std::copy(temp.begin(), temp.end(), result);
   if(in.fail())
   {
     if(in.eof())

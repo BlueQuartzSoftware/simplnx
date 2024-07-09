@@ -28,12 +28,6 @@ public:
   , m_NewVerticesIndex(newVerticesIndex)
   {
   }
-  ~PopulateReducedGeometryEdgesImpl() = default;
-
-  PopulateReducedGeometryEdgesImpl(const PopulateReducedGeometryEdgesImpl&) = default;           // Copy Constructor Not Implemented
-  PopulateReducedGeometryEdgesImpl(PopulateReducedGeometryEdgesImpl&&) = delete;                 // Move Constructor Not Implemented
-  PopulateReducedGeometryEdgesImpl& operator=(const PopulateReducedGeometryEdgesImpl&) = delete; // Copy Assignment Not Implemented
-  PopulateReducedGeometryEdgesImpl& operator=(PopulateReducedGeometryEdgesImpl&&) = delete;      // Move Assignment Not Implemented
 
   void generate(usize start, usize end) const
   {

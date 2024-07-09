@@ -14,7 +14,7 @@ struct fmt::formatter<nx::core::Error>
 
   format_context::iterator format(const nx::core::Error& error, format_context& ctx) const
   {
-    return format_to(ctx.out(), "Error({}, {})", error.code, error.message);
+    return fmt::format_to(ctx.out(), "Error({}, {})", error.code, error.message);
   }
 };
 

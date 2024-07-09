@@ -64,12 +64,6 @@ public:
       }
     }
   }
-  virtual ~CreateColorMapImpl() = default;
-
-  CreateColorMapImpl(const CreateColorMapImpl&) = default;
-  CreateColorMapImpl(CreateColorMapImpl&&) noexcept = delete;
-  CreateColorMapImpl& operator=(const CreateColorMapImpl&) = delete;
-  CreateColorMapImpl& operator=(CreateColorMapImpl&&) noexcept = delete;
 
   template <typename K>
   void convert(size_t start, size_t end) const

@@ -299,6 +299,19 @@ bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
 }
 
 /**
+ * @brief closeEnough
+ * @param a
+ * @param b
+ * @param epsilon
+ * @return
+ */
+template <typename K>
+bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
+{
+  return (epsilon > std::abs(std::abs(a) - std::abs(b)));
+}
+
+/**
  * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
  * @param filepath
  * @return DataStructure
