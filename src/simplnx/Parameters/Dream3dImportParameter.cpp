@@ -100,7 +100,7 @@ Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) co
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name()));
+      return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
     std::vector<DataPath> dataPaths;

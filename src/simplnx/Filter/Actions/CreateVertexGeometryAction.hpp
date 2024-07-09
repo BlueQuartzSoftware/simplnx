@@ -108,7 +108,7 @@ public:
     const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
-      return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", m_InputVertices.toString()));
+      return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
     }
 
     // Create the VertexGeom

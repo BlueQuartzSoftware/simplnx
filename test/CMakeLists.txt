@@ -49,6 +49,8 @@ target_link_libraries(simplnx_test
     simplnx::UnitTestCommon
 )
 
+simplnx_enable_warnings(TARGET simplnx_test)
+
 #------------------------------------------------------------------------------
 # Require that the test plugins are built before tests because some tests
 # require loading from those plugins but don't want to link to them.

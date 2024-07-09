@@ -11,6 +11,8 @@ This **Filter** calculates *principal direction vectors* and the *principal curv
 Principal Curvatures 1 and 2 are the &kappa; <sub>1 </sub> and &kappa; <sub>2 </sub> from [1] and are the eigenvalues from the Wiengarten matrix. The Principal Directions 1 and 2 are the eigenvectors from the solution to the least squares fit algorithm. The Mean Curvature is (&kappa; <sub>1 </sub > + &kappa; <sub>2 </sub> ) / 2, while the Gaussian curvature is (&kappa; <sub>1 </sub> *
 &kappa; <sub>2 </sub>).
 
+The values of the principal directions can have their signs flipped. They are calculated using eigenvectors which are unique up to a sign.
+
 *Note*: Computing the Weingarten matrix values is an experimental feature, and there is no guarantee at this time that the values are correct.
 
 ![Curvature Coloring of a Feature](Images/FeatureFaceCurvatureFilter.png)

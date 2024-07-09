@@ -25,11 +25,6 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
-  ~PartitionCellBasedGeometryImpl() = default;
-  PartitionCellBasedGeometryImpl(const PartitionCellBasedGeometryImpl&) = default;           // Copy Constructor default Implemented
-  PartitionCellBasedGeometryImpl(PartitionCellBasedGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
-  PartitionCellBasedGeometryImpl& operator=(const PartitionCellBasedGeometryImpl&) = delete; // Copy Assignment Not Implemented
-  PartitionCellBasedGeometryImpl& operator=(PartitionCellBasedGeometryImpl&&) = delete;      // Move Assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void compute(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd, size_t zStart, size_t zEnd) const
@@ -96,11 +91,6 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
-  ~PartitionNodeBasedGeometryImpl() = default;
-  PartitionNodeBasedGeometryImpl(const PartitionNodeBasedGeometryImpl&) = default;           // Copy Constructor default Implemented
-  PartitionNodeBasedGeometryImpl(PartitionNodeBasedGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
-  PartitionNodeBasedGeometryImpl& operator=(const PartitionNodeBasedGeometryImpl&) = delete; // Copy Assignment Not Implemented
-  PartitionNodeBasedGeometryImpl& operator=(PartitionNodeBasedGeometryImpl&&) = delete;      // Move Assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void compute(size_t start, size_t end) const

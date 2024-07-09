@@ -52,13 +52,6 @@ public:
   {
   }
 
-  virtual ~ComputeArrayStatisticsByIndexImpl() = default;
-
-  ComputeArrayStatisticsByIndexImpl(const ComputeArrayStatisticsByIndexImpl&) = default;           // Copy Constructor Not Implemented
-  ComputeArrayStatisticsByIndexImpl(ComputeArrayStatisticsByIndexImpl&&) = delete;                 // Move Constructor Not Implemented
-  ComputeArrayStatisticsByIndexImpl& operator=(const ComputeArrayStatisticsByIndexImpl&) = delete; // Copy Assignment Not Implemented
-  ComputeArrayStatisticsByIndexImpl& operator=(ComputeArrayStatisticsByIndexImpl&&) = delete;      // Move Assignment Not Implemented
-
   void compute(usize start, usize end) const
   {
     std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();

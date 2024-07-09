@@ -4,6 +4,7 @@
 
 #include "fmt/format.h"
 
+#include <array>
 #include <iostream>
 
 #include <H5Apublic.h>

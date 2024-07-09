@@ -45,20 +45,6 @@ FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR&
 }
 
 //------------------------------------------------------------------------------
-float CosBetweenVectors(const Eigen::Vector3f& vectorA, const Eigen::Vector3f& vectorB)
-{
-  const float normA = vectorA.norm();
-  const float normB = vectorB.norm();
-
-  if(normA == 0.0f || normB == 0.0f)
-  {
-    return 1.0f;
-  }
-
-  return vectorA.dot(vectorB) / (normA * normB);
-}
-
-//------------------------------------------------------------------------------
 float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 {
   const float xAngle = std::abs(CosBetweenVectors(k_XAxis, axisNew));

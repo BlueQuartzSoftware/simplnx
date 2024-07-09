@@ -10,6 +10,13 @@ using namespace nx::core;
 
 namespace
 {
+enum class FloatComparison
+{
+  Standard,
+  Absolute
+};
+
+template <FloatComparison ComparisonValue = FloatComparison::Standard>
 void CompareDataArrays(const DataStructure& dataStructure, const DataPath& arrayPath1, const DataPath& arrayPath2)
 {
   const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(arrayPath1);
@@ -26,7 +33,15 @@ void CompareDataArrays(const DataStructure& dataStructure, const DataPath& array
 
   for(usize i = 0; i < length; i++)
   {
-    REQUIRE(UnitTest::CloseEnough<float64>(dataStore1[i], dataStore2[i]));
+    INFO(fmt::format("i = {} | d1 = {} | d2 = {}", i, dataStore1[i], dataStore2[i]));
+    if constexpr(ComparisonValue == FloatComparison::Standard)
+    {
+      REQUIRE(UnitTest::CloseEnough<float64>(dataStore1[i], dataStore2[i]));
+    }
+    else
+    {
+      REQUIRE(UnitTest::CloseEnoughAbs<float64>(dataStore1[i], dataStore2[i]));
+    }
   }
 }
 } // namespace
@@ -83,38 +98,48 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Compare arrays
-  SECTION("Principal Curvature 1")
   {
+    INFO("Principal Curvature 1");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalCurvature1_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalCurvature1_Path);
   }
 
-  SECTION("Principal Curvature 2")
   {
+    INFO("Principal Curvature 2");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalCurvature2_D3D");
     ::CompareDataArrays(dataStructure, path1, k_PrincipalCurvature2_Path);
   }
 
-  SECTION("Principal Direction 1")
+  /*
+   * The principal directions can be sign flipped. This is due to Eigen::SelfAdjointEigenSolver
+   * which returns unique eigenvectors up to a sign.
+   */
   {
+    INFO("Principal Direction 1");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection1_D3D");
-    ::CompareDataArrays(dataStructure, path1, k_PrincipalDirection1_Path);
+    DataPath path2 = k_PrincipalDirection1_Path;
+    const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(path1);
+    const auto* dataArray2 = dataStructure.getDataAs<Float64Array>(path2);
+    CompareDataArrays<FloatComparison::Absolute>(dataStructure, path1, path2);
   }
 
-  SECTION("Principal Direction 2")
   {
+    INFO("Principal Direction 2");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection2_D3D");
-    ::CompareDataArrays(dataStructure, path1, k_PrincipalDirection2_Path);
+    DataPath path2 = k_PrincipalDirection2_Path;
+    const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(path1);
+    const auto* dataArray2 = dataStructure.getDataAs<Float64Array>(path2);
+    CompareDataArrays<FloatComparison::Absolute>(dataStructure, path1, path2);
   }
 
-  SECTION("Gaussian Curvatures")
   {
+    INFO("Gaussian Curvatures");
     DataPath path1 = faceAttribMatrixPath.createChildPath("GaussianCurvatures");
     ::CompareDataArrays(dataStructure, path1, k_GaussianCurvature_Path);
   }
 
-  SECTION("Mean Curvatures")
   {
+    INFO("Mean Curvatures");
     DataPath path1 = faceAttribMatrixPath.createChildPath("MeanCurvatures");
     ::CompareDataArrays(dataStructure, path1, k_MeanCurvature_Path);
   }
