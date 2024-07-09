@@ -8,22 +8,17 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
-namespace
-{
-const std::string k_DilateString("Dilate");
-const std::string k_ErodeString("Erode");
-const nx::core::ChoicesParameter::Choices k_OperationChoices = {
-    k_DilateString,
-    k_ErodeString,
-};
-
-const nx::core::ChoicesParameter::ValueType k_DilateIndex = 0ULL;
-const nx::core::ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
-
-} // namespace
-
 namespace nx::core
 {
+namespace detail
+{
+static inline constexpr StringLiteral k_DilateString = "Dilate";
+static inline constexpr StringLiteral k_ErodeString = "Erode";
+static inline const ChoicesParameter::Choices k_OperationChoices = {k_DilateString, k_ErodeString};
+
+static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
+static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
+} // namespace detail
 
 struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 {

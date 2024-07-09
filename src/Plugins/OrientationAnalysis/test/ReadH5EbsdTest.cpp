@@ -13,7 +13,7 @@ using namespace nx::core;
 using namespace nx::core::UnitTest;
 namespace
 {
-inline const std::string k_MaterialName("MaterialName");
+const std::string k_MaterialName("MaterialName");
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[OrientationAnalysis][ReadH5Ebsd]")

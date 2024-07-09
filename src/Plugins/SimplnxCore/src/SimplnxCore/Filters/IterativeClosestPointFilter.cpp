@@ -41,17 +41,17 @@ struct VertexGeomAdaptor
     m_NumTuples = verts->getNumberOfTuples();
   }
 
-  inline const Derived& derived() const
+  const Derived& derived() const
   {
     return obj;
   }
 
-  inline usize kdtree_get_point_count() const
+  usize kdtree_get_point_count() const
   {
     return m_NumTuples;
   }
 
-  inline float kdtree_get_pt(const usize idx, const usize dim) const
+  float kdtree_get_pt(const usize idx, const usize dim) const
   {
     auto offset = idx * m_NumComponents;
     return (*verts)[offset + dim];

@@ -20,19 +20,19 @@ namespace nx::core
 
 namespace
 {
-inline constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
-inline constexpr StringLiteral k_LargeDataFormat = "";
-inline constexpr StringLiteral k_Plugin_Key = "plugins";
-inline constexpr StringLiteral k_DefaultFileName = "preferences.json";
-inline constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
+constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
+constexpr StringLiteral k_LargeDataFormat = "";
+constexpr StringLiteral k_Plugin_Key = "plugins";
+constexpr StringLiteral k_DefaultFileName = "preferences.json";
+constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 
-inline constexpr int32 k_FailedToCreateDirectory_Code = -585;
-inline constexpr int32 k_FileDoesNotExist_Code = -586;
-inline constexpr int32 k_FileCouldNotOpen_Code = -587;
+constexpr int32 k_FailedToCreateDirectory_Code = -585;
+constexpr int32 k_FileDoesNotExist_Code = -586;
+constexpr int32 k_FileCouldNotOpen_Code = -587;
 
-inline constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to the parent directory when saving Preferences";
-inline constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
-inline constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
+constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to the parent directory when saving Preferences";
+constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
+constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
 
 std::filesystem::path getHomeDirectory()
 {

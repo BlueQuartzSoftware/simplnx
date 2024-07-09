@@ -30,7 +30,7 @@ using GoodVoxelsArrayType = BoolArray;
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;
 constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
-inline constexpr int32 k_MissingGeomError = -440;
+constexpr int32 k_MissingGeomError = -440;
 
 } // namespace
 

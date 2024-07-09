@@ -49,7 +49,7 @@ public:
       const int64 neighbor = m_Neighbors[i];
       if(neighbor >= 0)
       {
-        if((featureName == 0 && m_FeatureIds[neighbor] > 0 && m_Operation == k_ErodeIndex) || (featureName > 0 && m_FeatureIds[neighbor] == 0 && m_Operation == k_DilateIndex))
+        if((featureName == 0 && m_FeatureIds[neighbor] > 0 && m_Operation == detail::k_ErodeIndex) || (featureName > 0 && m_FeatureIds[neighbor] == 0 && m_Operation == detail::k_DilateIndex))
         {
           m_DataArrayPtr->copyTuple(neighbor, i);
         }
@@ -167,11 +167,11 @@ Result<> ErodeDilateBadData::operator()()
               }
 
               const int32 feature = featureIds[neighborPoint];
-              if(m_InputValues->Operation == ::k_DilateIndex && feature > 0)
+              if(m_InputValues->Operation == detail::k_DilateIndex && feature > 0)
               {
                 neighbors[neighborPoint] = voxelIndex;
               }
-              if(feature > 0 && m_InputValues->Operation == k_ErodeIndex)
+              if(feature > 0 && m_InputValues->Operation == detail::k_ErodeIndex)
               {
                 featureCount[feature]++;
                 const int32 current = featureCount[feature];
@@ -182,7 +182,7 @@ Result<> ErodeDilateBadData::operator()()
                 }
               }
             }
-            if(m_InputValues->Operation == k_ErodeIndex)
+            if(m_InputValues->Operation == detail::k_ErodeIndex)
             {
               for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
               {

@@ -1,6 +1,5 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -8,14 +7,13 @@
 #include <catch2/catch.hpp>
 
 #include <cmath>
-#include <memory>
 #include <vector>
 
 using namespace nx::core;
 
-namespace unit_test
+namespace
 {
-inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
+constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
 }
 
 TEST_CASE("Array")
@@ -57,7 +55,7 @@ TEST_CASE("DataArrayCreation")
 
 TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  Application::GetOrCreateInstance()->loadPlugins(::k_BuildDir.view(), true);
 
   const std::string k_DataArrayName("DataArray");
   const DataPath k_DataPath({k_DataArrayName});
@@ -119,8 +117,8 @@ TEST_CASE("DataStore Test")
 
   std::vector<int32> newValues{1, 2, 3};
   dataStore.setTuple(1, newValues);
-  int64 offset = dataStore.getNumberOfComponents();
-  for(uint64 i = 0; i < newValues.size(); i++)
+  usize offset = dataStore.getNumberOfComponents();
+  for(usize i = 0; i < newValues.size(); i++)
   {
     REQUIRE(dataStore[offset + i] == newValues[i]);
     REQUIRE(dataStore.getComponentValue(1, i) == newValues[i]);
