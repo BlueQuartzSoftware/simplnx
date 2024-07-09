@@ -14,6 +14,7 @@
 #include <Eigen/Dense>
 
 #include <chrono>
+#include <concepts>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -107,11 +108,24 @@ SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, c
 
 /**
  * @brief Finds the Cosine of the angle between 2 vectors
+ * @tparam T
  * @param vectorA
  * @param vectorB
  * @return
  */
-SIMPLNX_EXPORT float CosBetweenVectors(const Eigen::Vector3f& vectorA, const Eigen::Vector3f& vectorB);
+template <std::floating_point T>
+T CosBetweenVectors(const Eigen::Vector3<T>& vectorA, const Eigen::Vector3<T>& vectorB)
+{
+  const T normA = vectorA.norm();
+  const T normB = vectorB.norm();
+
+  if(normA == static_cast<T>(0.0) || normB == static_cast<T>(0.0))
+  {
+    return static_cast<T>(1.0);
+  }
+
+  return vectorA.dot(vectorB) / (normA * normB);
+}
 
 /**
  * @brief Function for determining new ImageGeom Spacing between points for scaling
