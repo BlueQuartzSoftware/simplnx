@@ -347,37 +347,6 @@ Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool 
   }
   return {};
 }
-} // namespace
-
-// -----------------------------------------------------------------------------
-ReadVtkStructuredPoints::ReadVtkStructuredPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 ReadVtkStructuredPointsInputValues* inputValues)
-: m_DataStructure(dataStructure)
-, m_InputValues(inputValues)
-, m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
-{
-}
-
-// -----------------------------------------------------------------------------
-ReadVtkStructuredPoints::~ReadVtkStructuredPoints() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ReadVtkStructuredPoints::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::operator()()
-{
-  return readFile();
-}
-
-void ReadVtkStructuredPoints::setPreflight(bool value)
-{
-  m_Preflight = value;
-}
 
 Result<nx::core::DataType> ConvertVtkDataType(const std::string& text)
 {
@@ -423,6 +392,37 @@ Result<nx::core::DataType> ConvertVtkDataType(const std::string& text)
   }
 
   return MakeErrorResult<nx::core::DataType>(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr), fmt::format("Unable to convert VTK data type '{}' to NX data type.", text));
+}
+} // namespace
+
+// -----------------------------------------------------------------------------
+ReadVtkStructuredPoints::ReadVtkStructuredPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                 ReadVtkStructuredPointsInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+ReadVtkStructuredPoints::~ReadVtkStructuredPoints() noexcept = default;
+
+// -----------------------------------------------------------------------------
+const std::atomic_bool& ReadVtkStructuredPoints::getCancel()
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+Result<> ReadVtkStructuredPoints::operator()()
+{
+  return readFile();
+}
+
+void ReadVtkStructuredPoints::setPreflight(bool value)
+{
+  m_Preflight = value;
 }
 
 //// -----------------------------------------------------------------------------
