@@ -2,6 +2,11 @@
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 
+ #define NOMINMAX
+
+ #include <xtensor/xarray.hpp>
+ #include <xtensor/xchunked_array.hpp>
+ #include <xtensor/xstrides.hpp>
 #include <xtensor/xfunction.hpp>
 
 #include <fmt/core.h>
@@ -35,7 +40,8 @@ public:
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
-  using XArrayType = typename parent_type::XArrayType;
+  using XArrayType = typename xt::xarray<T>;
+  using XArrayShapeType = typename XArrayType::shape_type;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
@@ -66,7 +72,7 @@ public:
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_InitValue(initValue)
   {
-    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
+    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
 
@@ -90,7 +96,7 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
-    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
+    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
     if(buffer != nullptr)
@@ -185,12 +191,12 @@ public:
     return m_Array->data();
   }
 
-  XArrayType& xarray() override
+  XArrayType& xarray()
   {
     return *m_Array.get();
   }
 
-  const XArrayType& xarray() const override
+  const XArrayType& xarray() const
   {
     return *m_Array.get();
   }
@@ -259,7 +265,7 @@ public:
 
     usize newSize = getNumberOfComponents() * m_NumTuples;
 
-    typename AbstractDataStore<T>::XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
+    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
     shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
 
     if(m_Array.get() == nullptr) // Data was never allocated

@@ -27,7 +27,7 @@ public:
 private:
   const VertexStore& m_VertexStore;
   const std::vector<std::vector<size_t>>& m_NodesInBin;
-  nx::core::Int64DataStore& m_UniqueIds;
+  nx::core::Int64AbstractDataStore& m_UniqueIds;
 };
 
 /**

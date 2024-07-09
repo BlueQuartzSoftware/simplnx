@@ -614,7 +614,7 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
  * @return A Result<> type that contains any warnings or errors that occurred.
  */
 template <typename T>
-Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, AbstractDataStore<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
+Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataArray<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
 {
   FILE* inputFilePtr = std::fopen(binaryFilePath.string().c_str(), "rb");
   if(inputFilePtr == nullptr)
@@ -677,7 +677,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  if(!fs::exists(filename))
+  if(!std::filesystem::exists(filename))
   {
     std::cout << "File Does Not Exist:'" << filename << "'\n";
     return nullptr;
@@ -1911,6 +1911,7 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Args
 
 } // namespace CopyFromArray
 
+<<<<<<< HEAD
 namespace TransferGeometryElementData
 {
 /**
@@ -1977,4 +1978,61 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
+=======
+namespace Indexing
+{
+/**
+ * @brief Flatten N-dimensional position to an array index.
+ * @param position N-dimensional position
+ * @param shape Shape of the array to index
+ * @return uint64
+ */
+inline uint64 Flatten(const std::vector<uint64_t>& position, const std::vector<uint64_t>& shape)
+{
+  using index_type = uint64;
+  const size_t dimensions = position.size();
+
+  if(shape.size() != dimensions)
+  {
+    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
+  }
+
+  index_type index = 0;
+  index_type mult = 1;
+  const bool usingColumnMajor = true;
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    index += position[offset] * mult;
+    mult *= shape[offset];
+  }
+
+  return index;
+}
+
+/**
+ * @brief Find N-dimensional position from an array index and shape.
+ * @param index Array index
+ * @param shape Shape of the array to index
+ * @return std::vector<uint64>
+ */
+inline std::vector<uint64> FindPosition(uint64_t index, const std::vector<uint64_t>& shape)
+{
+  using index_type = uint64;
+  using shape_type = std::vector<index_type>;
+
+  const bool usingColumnMajor = true;
+  const size_t dimensions = shape.size();
+  shape_type position(dimensions);
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    position[offset] = index % shape[offset];
+    index /= shape[offset];
+  }
+  return position;
+}
+} // namespace Indexing
+
+>>>>>>> 7a82686f (Fix Out-of-Core errors)
 } // namespace nx::core

@@ -258,6 +258,8 @@ if(SIMPLNX_ENABLE_MULTICORE)
   target_link_libraries(simplnx PUBLIC TBB::tbb)
 endif()
 
+find_package(ghc_filesystem CONFIG REQUIRED)
+
 target_link_libraries(simplnx
   PUBLIC
   fmt::fmt
@@ -271,6 +273,7 @@ target_link_libraries(simplnx
   xtl
   xtensor
   xtensor-io
+  ghcFilesystem::ghc_filesystem
 )
 
 if(UNIX)
