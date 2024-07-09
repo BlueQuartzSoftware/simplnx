@@ -17,27 +17,27 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
-inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
-inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
+constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
+constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
+constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
+constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
 
-inline constexpr StringLiteral k_Phi1Right("Phi1Right");
-inline constexpr StringLiteral k_PhiRight("PhiRight");
-inline constexpr StringLiteral k_Phi2Right("Phi2Right");
-inline constexpr StringLiteral k_Phi1Left("Phi1Left");
-inline constexpr StringLiteral k_PhiLeft("PhiLeft");
-inline constexpr StringLiteral k_Phi2Left("Phi2Left");
-inline constexpr StringLiteral k_TriangleNormal0("TriangleNormal0");
-inline constexpr StringLiteral k_TriangleNormal1("TriangleNormal1");
-inline constexpr StringLiteral k_TriangleNormal2("TriangleNormal2");
-inline constexpr StringLiteral k_SurfaceArea("SurfaceArea");
+constexpr StringLiteral k_Phi1Right("Phi1Right");
+constexpr StringLiteral k_PhiRight("PhiRight");
+constexpr StringLiteral k_Phi2Right("Phi2Right");
+constexpr StringLiteral k_Phi1Left("Phi1Left");
+constexpr StringLiteral k_PhiLeft("PhiLeft");
+constexpr StringLiteral k_Phi2Left("Phi2Left");
+constexpr StringLiteral k_TriangleNormal0("TriangleNormal0");
+constexpr StringLiteral k_TriangleNormal1("TriangleNormal1");
+constexpr StringLiteral k_TriangleNormal2("TriangleNormal2");
+constexpr StringLiteral k_SurfaceArea("SurfaceArea");
 
-inline constexpr StringLiteral k_ExemplarTriangleDumperResults("ExemplarTriangleDumperResults");
-inline constexpr StringLiteral k_NXTriangleDumperResults("NXTriangleDumperResults");
+constexpr StringLiteral k_ExemplarTriangleDumperResults("ExemplarTriangleDumperResults");
+constexpr StringLiteral k_NXTriangleDumperResults("NXTriangleDumperResults");
 
-inline constexpr float32 k_EPSILON = 0.001;
+constexpr float32 k_EPSILON = 0.001;
 
 } // namespace
 

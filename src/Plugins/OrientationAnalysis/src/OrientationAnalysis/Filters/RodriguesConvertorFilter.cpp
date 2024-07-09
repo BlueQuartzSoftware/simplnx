@@ -16,8 +16,8 @@
 using namespace nx::core;
 namespace
 {
-inline constexpr int32 k_IncorrectInputArray = -7300;
-inline constexpr int32 k_MissingInputArray = -7301;
+constexpr int32 k_IncorrectInputArray = -7300;
+constexpr int32 k_MissingInputArray = -7301;
 } // namespace
 
 namespace nx::core

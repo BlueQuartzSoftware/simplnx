@@ -18,7 +18,7 @@ using namespace nx::core;
 
 namespace
 {
-inline constexpr StringLiteral k_TriangleBounds("Triangle Bounds");
+constexpr StringLiteral k_TriangleBounds("Triangle Bounds");
 }
 
 namespace nx::core

@@ -19,8 +19,21 @@ using namespace nx::core;
 
 namespace
 {
-
+Result<OutputActions> PreflightFile(ReadVtkStructuredPointsInputValues& inputValues)
+{
+  DataStructure dataStructure;
+  const IFilter::MessageHandler mesgHandler;
+  const std::atomic_bool shouldCancel = {false};
+  ReadVtkStructuredPoints instance(dataStructure, mesgHandler, shouldCancel, &inputValues);
+  instance.setPreflight(true);
+  auto result = instance.readFile();
+  if(result.invalid())
+  {
+    return ConvertResultTo<OutputActions>(std::move(result), {});
+  }
+  return instance.getOutputActions();
 }
+} // namespace
 
 namespace nx::core
 {
@@ -117,7 +130,7 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   inputValues.PointAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
-  resultOutputActions = ReadVtkStructuredPoints::PreflightFile(inputValues);
+  resultOutputActions = ::PreflightFile(inputValues);
 
   sw.stop();
   sw.print(std::cout);

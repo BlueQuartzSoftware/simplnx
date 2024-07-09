@@ -23,17 +23,11 @@
 
 namespace
 {
-inline const std::string k_Delimiter = "|--";
+const std::string k_Delimiter = "|--";
 }
 
 namespace nx::core
 {
-
-namespace Constants
-{
-inline const std::string DataStructureTag = "DataStructure";
-}
-
 DataStructure::DataStructure()
 : m_IsValid(true)
 {

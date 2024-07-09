@@ -56,7 +56,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Threshold Value", "The value to of the threshold", 0.1F));
-  params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "The operator to use for comparisons. 0=Less, 1=Greater Than", 0, ::k_OperationChoices));
+  params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "The operator to use for comparisons. 0=Less, 1=Greater Than", 0, detail::k_OperationChoices));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "The algorithm will keep looping until all pixels have been evaluated", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});

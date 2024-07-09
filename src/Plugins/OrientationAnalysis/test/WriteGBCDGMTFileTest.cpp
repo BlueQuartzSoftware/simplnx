@@ -22,20 +22,20 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
-inline constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
-inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
-inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
+constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
+constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
+constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
+constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
 
-inline constexpr StringLiteral k_ExemplarGMT1("ExemplarGMT1");
-inline constexpr StringLiteral k_ExemplarGMT2("ExemplarGMT2");
-inline constexpr StringLiteral k_ExemplarGMT3("ExemplarGMT3");
-inline constexpr StringLiteral k_GMT1("GMT1");
-inline constexpr StringLiteral k_GMT2("GMT2");
-inline constexpr StringLiteral k_GMT3("GMT3");
+constexpr StringLiteral k_ExemplarGMT1("ExemplarGMT1");
+constexpr StringLiteral k_ExemplarGMT2("ExemplarGMT2");
+constexpr StringLiteral k_ExemplarGMT3("ExemplarGMT3");
+constexpr StringLiteral k_GMT1("GMT1");
+constexpr StringLiteral k_GMT2("GMT2");
+constexpr StringLiteral k_GMT3("GMT3");
 
 } // namespace
 

@@ -27,27 +27,6 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-namespace RotateSampleRefFrame
-{
-// Parameter Keys
-static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
-static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-
-// static inline constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
-
-enum class RotationRepresentation : uint64_t
-{
-  AxisAngle = 0,
-  RotationMatrix = 1
-};
-
-} // namespace RotateSampleRefFrame
-
 namespace
 {
 const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
@@ -62,6 +41,22 @@ const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa
 const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
 const Uuid k_ResampleImageGeomFilterId = *Uuid::FromString("9783ea2c-4cf7-46de-ab21-b40d91a48c5b");
 const FilterHandle k_ResampleImageGeomFilterHandle(k_ResampleImageGeomFilterId, k_SimplnxCorePluginId);
+
+// Parameter Keys
+constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation";
+constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+constexpr StringLiteral k_CreatedImageGeometry_Key = "output_image_geometry_path";
+constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+// constexpr StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+
+enum class RotationRepresentation : uint64_t
+{
+  AxisAngle = 0,
+  RotationMatrix = 1
+};
 
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
@@ -137,7 +132,7 @@ namespace cxITKImportImageStackFilter
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
-                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, VectorFloat32Parameter::ValueType luminosityValues, bool resample, float32 scalingFactor,
+                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, bool resample, float32 scalingFactor,
                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);

@@ -18,7 +18,7 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-inline constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
 } // namespace
 

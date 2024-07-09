@@ -10,15 +10,14 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
-namespace
-{
-const std::string k_LessThan("< [Less Than]");
-const std::string k_GreaterThan("> [Greater Than]");
-const nx::core::ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
-} // namespace
-
 namespace nx::core
 {
+namespace detail
+{
+inline constexpr StringLiteral k_LessThan = "< [Less Than]";
+inline constexpr StringLiteral k_GreaterThan = "> [Greater Than]";
+inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
+} // namespace detail
 
 struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 {

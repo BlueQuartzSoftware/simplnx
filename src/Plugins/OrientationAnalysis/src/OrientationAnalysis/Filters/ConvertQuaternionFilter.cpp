@@ -20,8 +20,8 @@ namespace
 {
 const ChoicesParameter::Choices k_Choices = {"To Scalar Vector ( w, [x, y, z] )", "To Vector Scalar ( [x, y, z], w )"};
 
-inline constexpr int32 k_IncorrectInputArray = -7000;
-inline constexpr int32 k_MissingInputArray = -7001;
+constexpr int32 k_IncorrectInputArray = -7000;
+constexpr int32 k_MissingInputArray = -7001;
 } // namespace
 
 namespace nx::core

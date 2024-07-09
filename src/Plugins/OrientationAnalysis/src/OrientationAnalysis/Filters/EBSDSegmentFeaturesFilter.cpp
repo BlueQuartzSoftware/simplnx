@@ -19,10 +19,10 @@ using namespace nx::core;
 
 namespace
 {
-inline constexpr int32 k_MissingGeomError = -440;
-inline constexpr int32 k_IncorrectInputArray = -600;
-inline constexpr int32 k_MissingInputArray = -601;
-inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -602;
+constexpr int32 k_MissingGeomError = -440;
+constexpr int32 k_IncorrectInputArray = -600;
+constexpr int32 k_MissingInputArray = -601;
+constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -602;
 } // namespace
 
 namespace nx::core

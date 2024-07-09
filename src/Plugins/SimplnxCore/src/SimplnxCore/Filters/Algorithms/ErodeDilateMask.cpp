@@ -91,11 +91,11 @@ Result<> ErodeDilateMask::operator()()
                 continue;
               }
 
-              if(m_InputValues->Operation == k_DilateIndex && mask[neighpoint])
+              if(m_InputValues->Operation == detail::k_DilateIndex && mask[neighpoint])
               {
                 maskCopy[voxelIndex] = true;
               }
-              if(m_InputValues->Operation == k_ErodeIndex && mask[neighpoint])
+              if(m_InputValues->Operation == detail::k_ErodeIndex && mask[neighpoint])
               {
                 maskCopy[neighpoint] = false;
               }

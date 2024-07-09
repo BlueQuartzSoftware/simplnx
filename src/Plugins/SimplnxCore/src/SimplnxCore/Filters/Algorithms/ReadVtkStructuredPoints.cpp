@@ -14,152 +14,29 @@ using namespace nx::core;
 
 namespace
 {
-const std::string k_DatasetKeyword = "DATASET";
-const std::string k_StructuredPointsKeyword = "STRUCTURED_POINTS";
-const std::string k_DimensionsKeyword = "DIMENSIONS";
-const std::string k_SpacingKeyword = "SPACING";
-const std::string k_OriginKeyword = "ORIGIN";
-const std::string k_PointDataKeyword = "POINT_DATA";
-const std::string k_CellDataKeyword = "CELL_DATA";
-const std::string k_ScalarsKeyword = "SCALARS";
-const std::string k_VectorsKeyword = "VECTORS";
-} // namespace
-
-// -----------------------------------------------------------------------------
-ReadVtkStructuredPoints::ReadVtkStructuredPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 ReadVtkStructuredPointsInputValues* inputValues)
-: m_DataStructure(dataStructure)
-, m_InputValues(inputValues)
-, m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
-{
-}
-
-// -----------------------------------------------------------------------------
-ReadVtkStructuredPoints::~ReadVtkStructuredPoints() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ReadVtkStructuredPoints::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::operator()()
-{
-  return readFile();
-}
-
-namespace
-{
 constexpr usize kBufferSize = 1024ULL;
-inline constexpr usize DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
+constexpr usize DEFAULT_BLOCKSIZE = 1048576; // This is evenly divisible by 2,4, & 8.
 
-} // namespace
+constexpr StringLiteral k_DatasetKeyword = "DATASET";
+constexpr StringLiteral k_StructuredPointsKeyword = "STRUCTURED_POINTS";
+constexpr StringLiteral k_DimensionsKeyword = "DIMENSIONS";
+constexpr StringLiteral k_SpacingKeyword = "SPACING";
+constexpr StringLiteral k_OriginKeyword = "ORIGIN";
+constexpr StringLiteral k_PointDataKeyword = "POINT_DATA";
+constexpr StringLiteral k_CellDataKeyword = "CELL_DATA";
+constexpr StringLiteral k_ScalarsKeyword = "SCALARS";
+constexpr StringLiteral k_VectorsKeyword = "VECTORS";
 
-void ReadVtkStructuredPoints::setPreflight(bool value)
-{
-  m_Preflight = value;
-}
+constexpr char k_VolumeDelimiter = ' ';
 
-Result<nx::core::DataType> ConvertVtkDataType(const std::string& text)
-{
-  if(text == "unsigned_char")
-  {
-    return {nx::core::DataType::uint8};
-  }
-  if(text == "char")
-  {
-    return {nx::core::DataType::int8};
-  }
-  if(text == "unsigned_short")
-  {
-    return {nx::core::DataType::uint16};
-  }
-  if(text == "short")
-  {
-    return {nx::core::DataType::int16};
-  }
-  if(text == "unsigned_int")
-  {
-    return {nx::core::DataType::uint32};
-  }
-  if(text == "int")
-  {
-    return {nx::core::DataType::int32};
-  }
-  if(text == "unsigned_long")
-  {
-    return {nx::core::DataType::uint64};
-  }
-  if(text == "long")
-  {
-    return {nx::core::DataType::int64};
-  }
-  if(text == "float")
-  {
-    return {nx::core::DataType::float32};
-  }
-  if(text == "double")
-  {
-    return {nx::core::DataType::float64};
-  }
-
-  return MakeErrorResult<nx::core::DataType>(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr), fmt::format("Unable to convert VTK data type '{}' to NX data type.", text));
-}
-
-//// -----------------------------------------------------------------------------
-// Result<usize> ReadVtkStructuredPoints::parseByteSize(const std::string& text)
-//{
-//   if(text == "unsigned_char")
-//   {
-//     return {1};
-//   }
-//   if(text == "char")
-//   {
-//     return {1};
-//   }
-//   if(text == "unsigned_short")
-//   {
-//     return {2};
-//   }
-//   if(text == "short")
-//   {
-//     return {2};
-//   }
-//   if(text == "unsigned_int")
-//   {
-//     return {4};
-//   }
-//   if(text == "int")
-//   {
-//     return {4};
-//   }
-//   if(text == "unsigned_long")
-//   {
-//     return {8};
-//   }
-//   if(text == "long")
-//   {
-//     return {8};
-//   }
-//   if(text == "float")
-//   {
-//     return {4};
-//   }
-//   if(text == "double")
-//   {
-//     return {8};
-//   }
-//   return {0};
-// }
-
-inline usize count_tokens(char* str, char delim, bool consecutiveDelimiters, usize endPos)
+// consecutiveDelimiters removed because it was never used in function
+// numerous optimizations can be made to
+usize count_tokens(const char* str, usize endPos)
 {
   usize count = 0;
   for(usize i = 0; i < endPos; i++)
   {
-    if(str[i] == delim && str[i + 1] != delim && str[i + 1] != '\0')
+    if(str[i] == k_VolumeDelimiter && str[i + 1] != k_VolumeDelimiter && str[i + 1] != '\0')
     {
       count++;
     }
@@ -198,7 +75,7 @@ int32 skipVolume(std::istream& in, bool binary, usize numElements)
     {
       std::fill(buffer.begin(), buffer.end(), '\0');             // Splat Zeros across everything
       err = CsvParser::ReadLine(in, buffer.data(), BUFFER_SIZE); // Read BUFFER_SIZE worth of data.
-      foundItems += count_tokens(buffer.data(), ' ', false, BUFFER_SIZE + 1);
+      foundItems += count_tokens(buffer.data(), BUFFER_SIZE + 1);
     }
   }
   return err;
@@ -303,8 +180,7 @@ Result<> readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool b
 {
   using DataArrayType = DataArray<T>;
 
-  DataArrayType& dataArrayRef = dataStructurePtr->getDataRefAs<DataArrayType>(dataArrayPath);
-  //  usize numTuples = dataArrayRef.getNumberOfTuples();
+  auto& dataArrayRef = dataStructurePtr->getDataRefAs<DataArrayType>(dataArrayPath);
   std::vector<usize> tDims = dataArrayRef.getTupleShape();
   std::vector<usize> cDims = dataArrayRef.getComponentShape();
 
@@ -359,14 +235,14 @@ Result<> readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool b
 }
 
 // -----------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::readLine(std::istream& in, char* result, usize length)
+Result<> ReadLine(std::istream& in, char* result, usize length)
 {
   in.getline(result, length);
   if(in.fail())
   {
     if(in.eof())
     {
-      return MakeErrorResult(to_underlying(ErrorCodes::ReadLineErr), "Failed to read line: Reached end of file.");
+      return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLineErr), "Failed to read line: Reached end of file.");
     }
     if(in.gcount() == length)
     {
@@ -379,7 +255,7 @@ Result<> ReadVtkStructuredPoints::readLine(std::istream& in, char* result, usize
 }
 
 // --------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::readString(std::istream& in, char* result, usize length)
+Result<> ReadString(std::istream& in, char* result, usize length)
 {
   in.width(length);
   in >> result;
@@ -387,26 +263,26 @@ Result<> ReadVtkStructuredPoints::readString(std::istream& in, char* result, usi
   {
     if(in.eof())
     {
-      return MakeErrorResult(to_underlying(ErrorCodes::ReadStringEofErr), "Failed to read string: Reached end of the file.");
+      return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringEofErr), "Failed to read string: Reached end of the file.");
     }
     else if(in.bad())
     {
-      return MakeErrorResult(to_underlying(ErrorCodes::ReadStringReadErr), "Failed to read string: Read error on input operation.");
+      return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringReadErr), "Failed to read string: Read error on input operation.");
     }
     else if(in.fail())
     {
-      return MakeErrorResult(to_underlying(ErrorCodes::ReadStringLogicalIOErr), "Failed to read string: Logical error on i/o operation.");
+      return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringLogicalIOErr), "Failed to read string: Logical error on i/o operation.");
     }
     else
     {
-      return MakeErrorResult(to_underlying(ErrorCodes::ReadStringUnknownErr), "Failed to read string: Unknown error.");
+      return MakeErrorResult(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadStringUnknownErr), "Failed to read string: Unknown error.");
     }
   }
   return {};
 }
 
 // -----------------------------------------------------------------------------
-char* ReadVtkStructuredPoints::lowerCase(char* str, const usize len)
+char* LowerCase(char* str, const usize len)
 {
   usize i;
   char* s;
@@ -417,6 +293,183 @@ char* ReadVtkStructuredPoints::lowerCase(char* str, const usize len)
   }
   return str;
 }
+
+// ------------------------------------------------------------------------
+Result<> preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, usize numElements)
+{
+  switch(nxDType)
+  {
+  case nx::core::DataType::int8: {
+    skipVolume<int8>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::uint8: {
+    skipVolume<uint8>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::int16: {
+    skipVolume<int16>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::uint16: {
+    skipVolume<uint16>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::int32: {
+    skipVolume<int32>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::uint32: {
+    skipVolume<uint32>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::int64: {
+    skipVolume<int64>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::uint64: {
+    skipVolume<uint64>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::float32: {
+    skipVolume<float32>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::float64: {
+    skipVolume<float64>(in, binary, numElements);
+    break;
+  }
+  case nx::core::DataType::boolean: {
+    break;
+  }
+  default:
+    break;
+  }
+  return {};
+}
+
+Result<nx::core::DataType> ConvertVtkDataType(const std::string& text)
+{
+  if(text == "unsigned_char")
+  {
+    return {nx::core::DataType::uint8};
+  }
+  if(text == "char")
+  {
+    return {nx::core::DataType::int8};
+  }
+  if(text == "unsigned_short")
+  {
+    return {nx::core::DataType::uint16};
+  }
+  if(text == "short")
+  {
+    return {nx::core::DataType::int16};
+  }
+  if(text == "unsigned_int")
+  {
+    return {nx::core::DataType::uint32};
+  }
+  if(text == "int")
+  {
+    return {nx::core::DataType::int32};
+  }
+  if(text == "unsigned_long")
+  {
+    return {nx::core::DataType::uint64};
+  }
+  if(text == "long")
+  {
+    return {nx::core::DataType::int64};
+  }
+  if(text == "float")
+  {
+    return {nx::core::DataType::float32};
+  }
+  if(text == "double")
+  {
+    return {nx::core::DataType::float64};
+  }
+
+  return MakeErrorResult<nx::core::DataType>(to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr), fmt::format("Unable to convert VTK data type '{}' to NX data type.", text));
+}
+} // namespace
+
+// -----------------------------------------------------------------------------
+ReadVtkStructuredPoints::ReadVtkStructuredPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                 ReadVtkStructuredPointsInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+ReadVtkStructuredPoints::~ReadVtkStructuredPoints() noexcept = default;
+
+// -----------------------------------------------------------------------------
+const std::atomic_bool& ReadVtkStructuredPoints::getCancel()
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+Result<> ReadVtkStructuredPoints::operator()()
+{
+  return readFile();
+}
+
+void ReadVtkStructuredPoints::setPreflight(bool value)
+{
+  m_Preflight = value;
+}
+
+//// -----------------------------------------------------------------------------
+// Result<usize> ReadVtkStructuredPoints::parseByteSize(const std::string& text)
+//{
+//   if(text == "unsigned_char")
+//   {
+//     return {1};
+//   }
+//   if(text == "char")
+//   {
+//     return {1};
+//   }
+//   if(text == "unsigned_short")
+//   {
+//     return {2};
+//   }
+//   if(text == "short")
+//   {
+//     return {2};
+//   }
+//   if(text == "unsigned_int")
+//   {
+//     return {4};
+//   }
+//   if(text == "int")
+//   {
+//     return {4};
+//   }
+//   if(text == "unsigned_long")
+//   {
+//     return {8};
+//   }
+//   if(text == "long")
+//   {
+//     return {8};
+//   }
+//   if(text == "float")
+//   {
+//     return {4};
+//   }
+//   if(text == "double")
+//   {
+//     return {8};
+//   }
+//   return {0};
+// }
 
 void ReadVtkStructuredPoints::setComment(const std::string& comment)
 {
@@ -431,21 +484,6 @@ void ReadVtkStructuredPoints::setFileIsBinary(bool value)
 void ReadVtkStructuredPoints::setDatasetType(const std::string& dataSetType)
 {
   m_DatasetType = dataSetType;
-}
-
-nx::core::Result<OutputActions> ReadVtkStructuredPoints::PreflightFile(ReadVtkStructuredPointsInputValues& inputValues)
-{
-  DataStructure dataStructure;
-  const IFilter::MessageHandler mesgHandler;
-  const std::atomic_bool shouldCancel = {false};
-  ReadVtkStructuredPoints instance(dataStructure, mesgHandler, shouldCancel, &inputValues);
-  instance.setPreflight(true);
-  auto result = instance.readFile();
-  if(result.invalid())
-  {
-    return ConvertResultTo<OutputActions>(std::move(result), {});
-  }
-  return instance.getOutputActions();
 }
 
 // -----------------------------------------------------------------------------
@@ -463,14 +501,14 @@ Result<> ReadVtkStructuredPoints::readFile()
   std::string line;
   // char* buffer = buf.data();
 
-  auto result = readLine(in, buf.data(), kBufferSize); // Read Line 1 - VTK Version Info
+  auto result = ReadLine(in, buf.data(), kBufferSize); // Read Line 1 - VTK Version Info
   if(result.invalid())
   {
     return result;
   }
   std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
 
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 2 - User Comment
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 2 - User Comment
   if(result.invalid())
   {
     return result;
@@ -478,7 +516,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   setComment(std::string(buf.data()));
   std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
 
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 3 - BINARY or ASCII
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 3 - BINARY or ASCII
   if(result.invalid())
   {
     return result;
@@ -500,7 +538,7 @@ Result<> ReadVtkStructuredPoints::readFile()
 
   // Read Line 4 - Type of Dataset
   std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
-  result = readLine(in, buf.data(), kBufferSize);
+  result = ReadLine(in, buf.data(), kBufferSize);
   if(result.invalid())
   {
     return result;
@@ -528,9 +566,8 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   setDatasetType(dataset);
 
-  bool ok = false;
   std::fill(buf.begin(), buf.end(), '\0');        // Splat nulls across the vector
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 5 which is the Dimension values
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 5 which is the Dimension values
   if(result.invalid())
   {
     return result;
@@ -575,7 +612,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   cellDims[2] = pointDims[2] - 1;
 
   std::fill(buf.begin(), buf.end(), '\0');        // Splat nulls across the vector
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 6 which is the Scaling values
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 6 which is the Scaling values
   if(result.invalid())
   {
     return result;
@@ -615,7 +652,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   spacing[2] = convertResultF32.value();
 
   std::fill(buf.begin(), buf.end(), '\0');        // Splat nulls across the vector
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 7 which is the Origin values
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 7 which is the Origin values
   if(result.invalid())
   {
     return result;
@@ -668,7 +705,7 @@ Result<> ReadVtkStructuredPoints::readFile()
 
   // Read the first key word which should be POINT_DATA or CELL_DATA
   std::fill(buf.begin(), buf.end(), '\0');        // Splat nulls across the vector
-  result = readLine(in, buf.data(), kBufferSize); // Read Line 8 which is the first type of data we are going to read
+  result = ReadLine(in, buf.data(), kBufferSize); // Read Line 8 which is the first type of data we are going to read
   if(result.invalid())
   {
     return result;
@@ -744,10 +781,10 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
   std::vector<char> buf(kBufferSize, '\0');
 
   // Read keywords until end-of-file
-  while(readString(in, buf.data(), kBufferSize).valid())
+  while(ReadString(in, buf.data(), kBufferSize).valid())
   {
     // read scalar data
-    if(strncmp(lowerCase(buf.data(), kBufferSize), "scalars", 7) == 0)
+    if(strncmp(LowerCase(buf.data(), kBufferSize), "scalars", 7) == 0)
     {
       auto result = readScalarData(in, numValues);
       if(result.invalid())
@@ -862,7 +899,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
       std::string sectionType = std::string(tokens[0]);
       // Read the number of values
       std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
-      readString(in, buf.data(), kBufferSize);
+      ReadString(in, buf.data(), kBufferSize);
       auto convertResultI32 = nx::core::ConvertTo<int32>::convert({buf.data()});
       return {convertResultI32.value()};
     }
@@ -931,8 +968,8 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
 
   //  char buffer[1024];
 
-  std::fill(line.begin(), line.end(), '\0');         // Splat nulls across the vector
-  if(this->readLine(in, line.data(), 256).invalid()) // Read the rest of the line
+  std::fill(line.begin(), line.end(), '\0');     // Splat nulls across the vector
+  if(::ReadLine(in, line.data(), 256).invalid()) // Read the rest of the line
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read scalar header for file: {}", m_InputValues->InputFile.string()));
   }
@@ -953,8 +990,8 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   }
 
   // Done with that line in the file
-  std::fill(line.begin(), line.end(), '\0');         // Splat nulls across the vector
-  if(this->readLine(in, line.data(), 256).invalid()) // Read the rest of the line
+  std::fill(line.begin(), line.end(), '\0');     // Splat nulls across the vector
+  if(::ReadLine(in, line.data(), 256).invalid()) // Read the rest of the line
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableLineErr), fmt::format("Cannot read LOOKUP_TABLE line for file: {}", m_InputValues->InputFile.string()));
   }
@@ -1039,6 +1076,7 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   return {};
 }
 
+// !!! Does Nothing !!!
 // ------------------------------------------------------------------------
 Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32 numPts)
 {
@@ -1280,58 +1318,4 @@ void ReadVtkStructuredPoints::readData(std::istream& instream)
   }
 
 #endif
-}
-
-// ------------------------------------------------------------------------
-Result<> ReadVtkStructuredPoints::preflightSkipVolume(nx::core::DataType nxDType, std::istream& in, bool binary, usize numElements)
-{
-  switch(nxDType)
-  {
-  case nx::core::DataType::int8: {
-    skipVolume<int8>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::uint8: {
-    skipVolume<uint8>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::int16: {
-    skipVolume<int16>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::uint16: {
-    skipVolume<uint16>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::int32: {
-    skipVolume<int32>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::uint32: {
-    skipVolume<uint32>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::int64: {
-    skipVolume<int64>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::uint64: {
-    skipVolume<uint64>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::float32: {
-    skipVolume<float32>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::float64: {
-    skipVolume<float64>(in, binary, numElements);
-    break;
-  }
-  case nx::core::DataType::boolean: {
-    break;
-  }
-  default:
-    break;
-  }
-  return {};
 }

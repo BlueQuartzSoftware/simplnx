@@ -20,10 +20,10 @@ namespace
 using FeatureIdsArrayType = Int32Array;
 using GoodVoxelsArrayType = BoolArray;
 
-inline constexpr int32 k_MissingGeomError = -71440;
-inline constexpr int32 k_IncorrectInputArray = -71441;
-inline constexpr int32 k_MissingInputArray = -71442;
-inline constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -71443;
+constexpr int32 k_MissingGeomError = -71440;
+constexpr int32 k_IncorrectInputArray = -71441;
+constexpr int32 k_MissingInputArray = -71442;
+constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -71443;
 } // namespace
 
 namespace nx::core

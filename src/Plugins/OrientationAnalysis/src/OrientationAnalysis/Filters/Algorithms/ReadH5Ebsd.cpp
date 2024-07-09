@@ -9,7 +9,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
@@ -21,40 +20,22 @@
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/H5AngVolumeReader.h"
 
-namespace RotateSampleRefFrame
+namespace
 {
 // Parameter Keys
-static inline constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
-static inline constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-static inline constexpr nx::core::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-static inline constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-static inline constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-static inline constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-
-// static inline constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
+constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
+constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+// constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
   AxisAngle = 0,
   RotationMatrix = 1
 };
-
-} // namespace RotateSampleRefFrame
-
-namespace RenameDataObjectFilter
-{
-static inline constexpr nx::core::StringLiteral k_DataObject_Key = "data_object";
-static inline constexpr nx::core::StringLiteral k_NewName_Key = "new_name";
-} // namespace RenameDataObjectFilter
-
-namespace DeleteDataFilter
-{
-static inline constexpr nx::core::StringLiteral k_DataPath_Key = "removed_data_path";
-}
-
-namespace
-{
 
 /**
  * @brief loadInfo Reads the values for the phase type, crystal structure
@@ -72,7 +53,7 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   reader->setSliceEnd(mInputValues->endSlice);
 
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
-  if(phases.size() == 0)
+  if(phases.empty())
   {
     return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
   }
@@ -83,16 +64,16 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
   nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  nx::core::UInt32Array& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
+  auto& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
   xtalData.getIDataStore()->resizeTuples(tDims);
 
   nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
-  nx::core::Float32Array& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
+  auto& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
   latticData.getIDataStore()->resizeTuples(tDims);
 
   // Reshape the Material Names here also.
   nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::MaterialName);
-  nx::core::StringArray& matNameData = mDataStructure.getDataRefAs<nx::core::StringArray>(matNamesDataath);
+  auto& matNameData = mDataStructure.getDataRefAs<nx::core::StringArray>(matNamesDataath);
   matNameData.resizeTuples(tDims);
 
   // Initialize the zero'th element to unknowns. The other elements will
@@ -126,7 +107,7 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
 
 template <typename H5EbsdReaderType, typename T>
 void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
-              nx::core::DataPath cellAttributeMatrixPath, size_t totalPoints)
+              const nx::core::DataPath& cellAttributeMatrixPath, size_t totalPoints)
 {
   using DataArrayType = nx::core::DataArray<T>;
   for(const auto& arrayName : arrayNames)
@@ -135,7 +116,7 @@ void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdRead
     {
       T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
       nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
-      DataArrayType& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
+      auto& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
       for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
       {
         destination[tupleIndex] = source[tupleIndex];
@@ -209,7 +190,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
   nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  nx::core::UInt32Array& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
+  auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
   auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));            // get the phase data from the EbsdReader
@@ -285,8 +266,6 @@ ReadH5Ebsd::~ReadH5Ebsd() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadH5Ebsd::operator()()
 {
-  using FloatVec3Type = std::array<float, 3>;
-
   // Get the Size and Spacing of the Volume
   H5EbsdVolumeInfo::Pointer volumeInfoReader = H5EbsdVolumeInfo::New();
   volumeInfoReader->setFileName(m_InputValues->inputFilePath);
@@ -397,13 +376,12 @@ Result<> ReadH5Ebsd::operator()()
       }
       Arguments args;
 
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
-      args.insertOrAssign(RotateSampleRefFrame::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
+      args.insertOrAssign(::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+      args.insertOrAssign(::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxisAngle_Key,
-                          std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
+      args.insertOrAssign(::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(::RotationRepresentation::AxisAngle)));
+      args.insertOrAssign(::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
+      args.insertOrAssign(::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Preflight the filter and check result
       m_MessageHandler(nx::core::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
