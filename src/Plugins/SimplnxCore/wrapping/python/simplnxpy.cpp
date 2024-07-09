@@ -87,9 +87,13 @@
 
 #include <fmt/ranges.h>
 
+#include <filesystem>
+
 using namespace nx::core;
 using namespace nx::core::CxPybind;
+
 namespace py = pybind11;
+namespace fs = std::filesystem;
 
 using namespace pybind11::literals;
 

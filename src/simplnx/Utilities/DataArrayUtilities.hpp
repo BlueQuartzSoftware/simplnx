@@ -1911,7 +1911,7 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Args
 
 } // namespace CopyFromArray
 
-<<<<<<< HEAD
+
 namespace TransferGeometryElementData
 {
 /**
@@ -1978,7 +1978,7 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
-=======
+
 namespace Indexing
 {
 /**
@@ -2034,5 +2034,4 @@ inline std::vector<uint64> FindPosition(uint64_t index, const std::vector<uint64
 }
 } // namespace Indexing
 
->>>>>>> 7a82686f (Fix Out-of-Core errors)
 } // namespace nx::core

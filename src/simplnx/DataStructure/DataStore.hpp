@@ -2,12 +2,12 @@
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 
- #define NOMINMAX
+#define NOMINMAX
 
- #include <xtensor/xarray.hpp>
- #include <xtensor/xchunked_array.hpp>
- #include <xtensor/xstrides.hpp>
+#include <xtensor/xarray.hpp>
+#include <xtensor/xchunked_array.hpp>
 #include <xtensor/xfunction.hpp>
+#include <xtensor/xstrides.hpp>
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
