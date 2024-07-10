@@ -70,7 +70,7 @@ template <class T>
 class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
 {
 public:
-  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor<T>)
+  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor)
 
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;
