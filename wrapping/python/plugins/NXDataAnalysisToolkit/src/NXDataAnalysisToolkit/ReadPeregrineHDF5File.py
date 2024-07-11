@@ -11,8 +11,6 @@ class ReadPeregrineHDF5File:
   of the value should be ALL_CAPITOL_KEY
   """
   # HDF5 Dataset Paths
-  CAMERA_DATA_0_H5_PATH = '/slices/camera_data/visible/0'
-  CAMERA_DATA_1_H5_PATH = '/slices/camera_data/visible/1'
   PART_IDS_H5_PATH = '/slices/part_ids'
   SAMPLE_IDS_H5_PATH = '/slices/sample_ids'
   SEGMENTATION_RESULTS_H5_PARENT_PATH = '/slices/segmentation_results'
@@ -80,7 +78,7 @@ class ReadPeregrineHDF5File:
    
   # Parameter Keys
   INPUT_FILE_PATH_KEY = 'input_file_path'
-  READ_SLICES_SUBVOLUME_KEY = 'read_slices_subvolume'
+  ENABLE_SLICES_SUBVOLUME_KEY = 'enable_slices_subvolume'
   SLICES_SUBVOLUME_MINMAX_X_KEY = 'slices_subvolume_minmax_x'
   SLICES_SUBVOLUME_MINMAX_Y_KEY = 'slices_subvolume_minmax_y'
   SLICES_SUBVOLUME_MINMAX_Z_KEY = 'slices_subvolume_minmax_z'
@@ -91,22 +89,22 @@ class ReadPeregrineHDF5File:
   READ_ANOMALY_DETECTION_KEY = 'read_anomaly_detection'
   READ_X_RAY_CT_KEY = 'read_x_ray_ct'
   READ_SCAN_DATASETS_KEY = 'read_scan_datasets'
-  SEGMENTATION_RESULTS_KEY = 'segmentation_results'
+  SEGMENTATION_RESULTS_VALUES_KEY = 'segmentation_results_values'
   SLICE_DATA_KEY = 'slice_data'
   SLICE_DATA_CELL_ATTR_MAT_KEY = 'slice_data_cell_attr_mat'
-  CAMERA_DATA_0_ARRAY_NAME_KEY = 'camera_data_0_array_name'
-  CAMERA_DATA_1_ARRAY_NAME_KEY = 'camera_data_1_array_name'
+  CAMERA_DATA_HDF5_PARENT_PATH_KEY = 'camera_data_hdf5_parent_path'
+  CAMERA_DATA_DATASETS_KEY = 'camera_data_datasets'
   PART_IDS_ARRAY_NAME_KEY = 'part_ids_array_name'
   SAMPLE_IDS_ARRAY_NAME_KEY = 'sample_ids_array_name'
   REGISTERED_DATA_KEY = 'registered_data'
   REGISTERED_DATA_CELL_ATTR_MAT_KEY = 'registered_data_cell_attr_mat'
   ANOMALY_DETECTION_ARRAY_NAME_KEY = 'anomaly_detection_array_name'
   XRAY_CT_ARRAY_NAME_KEY = 'xray_ct_array_name'
-  READ_REGISTERED_DATA_SUBVOLUME_KEY = 'read_registered_data_subvolume'
+  ENABLE_REGISTERED_DATA_SUBVOLUME_KEY = 'enable_registered_data_subvolume'
   REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY = 'registered_data_subvolume_minmax_x'
   REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY = 'registered_data_subvolume_minmax_y'
   REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY = 'registered_data_subvolume_minmax_z'
-  READ_SCAN_DATA_SUBVOLUME_KEY = 'read_scan_data_subvolume'
+  ENABLE_SCAN_DATA_SUBVOLUME_KEY = 'enable_scan_data_subvolume'
   SCAN_DATA_SUBVOLUME_MINMAX_KEY = 'scan_data_subvolume_minmax'
   SCAN_DATA_KEY = 'scan_data'
   SCAN_DATA_CELL_ATTR_MAT_KEY = 'scan_data_cell_attr_mat'
@@ -128,15 +126,15 @@ class ReadPeregrineHDF5File:
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, 'Read Segmentation Results', 'Specifies whether or not to read the segmentation results from the input file.', True))
-    params.insert(nx.StringParameter(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_KEY, 'Segmentation Results (comma-delimited)', 'The segmentation results numbers that will be read, separated by commas', '0,1,2,3,4,5,6,7,8,9,10,11'))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY, 'Segmentation Results (comma-delimited)', 'The segmentation results numbers that will be read, separated by commas', '0,1,2,3,4,5,6,7,8,9,10,11'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, 'Read Camera Data', 'Specifies whether or not to read the camera data from the input file.', True))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY, 'Camera Data 0 Array Name', 'The name of the camera data 0 array.', 'Camera Data 0'))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY, 'Camera Data 1 Array Name', 'The name of the camera data 1 array.', 'Camera Data 1'))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY, 'Camera Data HDF5 Parent Path', 'The path to the HDF5 parent group that contains the camera data datasets.', 'slices/camera_data'))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY, 'Camera Data Datasets (comma-delimited)', 'The camera data datasets that will be read, separated by commas', '0,1,2'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_PART_IDS_KEY, 'Read Part Ids', 'Specifies whether or not to read the part ids from the input file.', True))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, 'Part Ids Array Name', 'The name of the part ids array.', 'Part Ids'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY, 'Read Sample Ids', 'Specifies whether or not to read the sample ids from the input file.', True))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY, 'Sample Ids Array Name', 'The name of the sample ids array.', 'Sample Ids'))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, 'Read Slices Subvolume', 'Specifies whether or not to read a subvolume of the slices from the input file.', False))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, 'Enable Slices Subvolume', 'Specifies whether or not to read a subvolume of the slices from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, 'Slices Subvolume X Bounds', 'The min/max bounds (inclusive) of the X dimension for the Slices subvolume.', [0, 99], ['X Min', 'X Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, 'Slices Subvolume Y Bounds', 'The min/max bounds (inclusive) of the Y dimension for the Slices subvolume.', [0, 99], ['Y Min', 'Y Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY, 'Slices Subvolume Z Bounds', 'The min/max bounds (inclusive) of the Z dimension for the Slices subvolume.', [0, 99], ['Z Min', 'Z Max']))
@@ -148,7 +146,7 @@ class ReadPeregrineHDF5File:
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, 'Anomaly Detection Array Name', 'The name of the Anomaly Detection array.', 'Anomaly Detection'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_X_RAY_CT_KEY, 'Read X-Ray CT', 'Specifies whether or not to read the x-ray CT (part of the registered data) from the input file.', True))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.XRAY_CT_ARRAY_NAME_KEY, 'X-Ray CT Array Name', 'The name of the X-Ray CT array.', 'X-Ray CT'))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY, 'Read Registered Data Subvolume', 'Specifies whether or not to read a subvolume of the registered data from the input file.', False))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY, 'Enable Registered Data Subvolume', 'Specifies whether or not to read a subvolume of the registered data from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY, 'Registered Data Subvolume X Bounds', 'The min/max bounds (inclusive) of the X dimension for the Registered Data subvolume.', [0, 99], ['X Min', 'X Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY, 'Registered Data Subvolume Y Bounds', 'The min/max bounds (inclusive) of the Y dimension for the Registered Data subvolume.', [0, 99], ['Y Min', 'Y Max']))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY, 'Registered Data Subvolume Z Bounds', 'The min/max bounds (inclusive) of the Z dimension for the Registered Data subvolume.', [0, 99], ['Z Min', 'Z Max']))
@@ -161,18 +159,18 @@ class ReadPeregrineHDF5File:
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY, 'Scan Data Vertex List Array Name', 'The name of the Scan Data vertex list array.', 'Vertices'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY, 'Scan Data Edge List Array Name', 'The name of the Scan Data edge list array.', 'Edges'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME, 'Scan Data Time of Travel Array Name', 'The name of the Scan Data Time of Travel array.', 'Time of Travel'))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY, 'Read Scan Data Subvolume', 'Specifies whether or not to read a subvolume of the scan data from the input file.', False))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.ENABLE_SCAN_DATA_SUBVOLUME_KEY, 'Enable Scan Data Subvolume', 'Specifies whether or not to read a subvolume of the scan data from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, 'Scan Data Slice Bounds', 'The min/max slice bounds (inclusive) for the Scan Data subvolume.', [0, 1], ['Min', 'Max']))
 
-    params.link_parameters(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, ReadPeregrineHDF5File.SEGMENTATION_RESULTS_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_PART_IDS_KEY, ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY, ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY, ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, True)
@@ -183,7 +181,7 @@ class ReadPeregrineHDF5File:
     params.link_parameters(ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY, ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY, ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY, ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME, True)
-    params.link_parameters(ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.ENABLE_SCAN_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, True)
 
     return params
 
@@ -267,18 +265,18 @@ class ReadPeregrineHDF5File:
 
   def _preflight_slice_datasets(self, h5_file_reader: h5py.File, origin: List[float], spacing: List[float], filter_args: dict, actions: nx.OutputActions, preflight_updated_values: List[nx.IFilter.PreflightValue]) -> Result:
     read_segmentation_results: bool = filter_args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
-    segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_KEY]
+    segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY]
     read_camera_data: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
     read_part_ids: bool = filter_args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
     read_sample_ids: bool = filter_args[ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY]
-    read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY]
+    read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY]
     slices_subvolume_minmax_x: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY]
     slices_subvolume_minmax_y: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY]
     slices_subvolume_minmax_z: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY]
     slice_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.SLICE_DATA_KEY]
     slice_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY]
-    camera_data_0_array_name: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY]
-    camera_data_1_array_name: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY]
+    camera_data_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY]
+    camera_data_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY]
     part_ids_array_name: str = filter_args[ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY]
     sample_ids_array_name: str = filter_args[ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY]
 
@@ -299,19 +297,22 @@ class ReadPeregrineHDF5File:
 
     # Optionally read the camera data
     if read_camera_data:
-      if dims is None:
-        dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, ReadPeregrineHDF5File.CAMERA_DATA_0_H5_PATH)
-        if dims_result.invalid():
-          return dims_result
-        dims = dims_result.value
-      else:
-        dims_result = self._validate_dataset_dimensions(h5_file_reader, ReadPeregrineHDF5File.CAMERA_DATA_0_H5_PATH, dims)
-        if dims_result.invalid():
-          return Result(errors=dims_result.errors)
+      camera_data_datasets_str = camera_data_datasets_str.strip()
+      camera_data_datasets = camera_data_datasets_str.split(',')
+      if len(camera_data_datasets) == 0:
+        return Result(errors=[nx.Error(-3001, 'The camera data datasets are empty.  Please input the camera data dataset names that this filter should read from the input file, separated by commas.')])
 
-      validate_result = self._validate_dataset_dimensions(h5_file_reader, ReadPeregrineHDF5File.CAMERA_DATA_1_H5_PATH, dims)
-      if validate_result.invalid():
-        return Result(errors=validate_result.errors)
+      for camera_data_dataset in camera_data_datasets:
+        camera_data_dataset_path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+        if dims is None:
+          dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, str(camera_data_dataset_path))
+          if dims_result.invalid():
+            return dims_result
+          dims = dims_result.value
+        else:
+          dims_result = self._validate_dataset_dimensions(h5_file_reader, str(camera_data_dataset_path), dims)
+          if dims_result.invalid():
+            return Result(errors=dims_result.errors)
 
     # Optionally read the part ids dataset
     if read_part_ids:
@@ -373,11 +374,9 @@ class ReadPeregrineHDF5File:
 
     # Optionally create the camera data arrays
     if read_camera_data:
-      camera_data_0_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(camera_data_0_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.float32, subvolume_dims if read_slices_subvolume else dims, [1], camera_data_0_path))
-      
-      camera_data_1_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(camera_data_1_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.float32, subvolume_dims if read_slices_subvolume else dims, [1], camera_data_1_path))
+      for camera_data_dataset in camera_data_datasets:
+        camera_data_dataset_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
+        actions.append_action(nx.CreateArrayAction(nx.DataType.float32, subvolume_dims if read_slices_subvolume else dims, [1], camera_data_dataset_path))
 
     # Optionally create the part ids data array
     if read_part_ids:
@@ -394,7 +393,7 @@ class ReadPeregrineHDF5File:
   def _preflight_registered_datasets(self, h5_file_reader: h5py.File, origin: List[float], spacing: List[float], filter_args: dict, actions: nx.OutputActions, preflight_updated_values: List[nx.IFilter.PreflightValue]) -> Result:
     registered_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_KEY]
     registered_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY]
-    read_registered_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY]
+    read_registered_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY]
     registered_data_subvolume_minmax_x: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY]
     registered_data_subvolume_minmax_y: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY]
     registered_data_subvolume_minmax_z: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY]
@@ -468,7 +467,7 @@ class ReadPeregrineHDF5File:
     vertex_list_array_name: str = filter_args[ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY]
     edge_list_array_name: str = filter_args[ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY]
     time_of_travel_array_name: str = filter_args[ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME]
-    read_scan_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY]
+    read_scan_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SCAN_DATA_SUBVOLUME_KEY]
     scan_data_subvolume_minmax: list = filter_args[ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY]
 
     if not read_scan_datasets:
@@ -486,7 +485,7 @@ class ReadPeregrineHDF5File:
     try:
       num_scans: int = sum(1 for item in group_reader.values() if isinstance(item, h5py.Dataset))
     except Exception as e:
-      return make_error_result(code=-4032, message=f"Error counting objects at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.name}': {e}")
+      return make_error_result(code=-4032, message=f"Error counting objects at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.filename}': {e}")
     
     if scan_data_subvolume_minmax[1] > num_scans - 1:
       return make_error_result(code=-4033, message=f"The scan data subvolume maximum value ({scan_data_subvolume_minmax[1]}) cannot be larger than the largest scan number ({num_scans - 1}).")
@@ -515,7 +514,7 @@ class ReadPeregrineHDF5File:
         return Result(errors=scan_dims_result.errors)
       scan_dims: List[int] = scan_dims_result.value
       if len(scan_dims) != 2:
-        return make_error_result(code=-4035, message=f"Scan dataset at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.name}' MUST have 2 dimensions, but instead it has {len(scan_dims)} dimensions.")
+        return make_error_result(code=-4035, message=f"Scan dataset at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.filename}' MUST have 2 dimensions, but instead it has {len(scan_dims)} dimensions.")
       num_edges += scan_dims[0]
     
     actions.append_action(nx.CreateEdgeGeometryAction(scan_data_edge_geom_path, num_edges, 0, scan_data_vertex_attr_mat_name, scan_data_edge_attr_mat_name, vertex_list_array_name, edge_list_array_name))
@@ -527,14 +526,14 @@ class ReadPeregrineHDF5File:
 
   def _open_hdf5_data_object(self, h5_file_reader: h5py.File, h5_dataset_path: str) -> Result:
     if h5_dataset_path not in h5_file_reader:
-      return make_error_result(code=-4001, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.name}': Object does not exist!")
+      return make_error_result(code=-4001, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.filename}': Object does not exist!")
 
     try:
       dataset = h5_file_reader[h5_dataset_path]
     except KeyError as e:
-      return make_error_result(code=-4002, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.name}': {e}")
+      return make_error_result(code=-4002, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.filename}': {e}")
     except Exception as e:
-      return make_error_result(code=-4003, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.name}': {e}")
+      return make_error_result(code=-4003, message=f"Error opening object at path '{h5_dataset_path}' in HDF5 file '{h5_file_reader.filename}': {e}")
 
     return Result(value=dataset)
 
@@ -549,7 +548,7 @@ class ReadPeregrineHDF5File:
   def _validate_dataset_dimensions(self, h5_file_reader: h5py.File, h5_dataset_path: str, sliceDims: List[int]) -> Result:
     dims_result = self._read_dataset_dimensions(h5_file_reader, h5_dataset_path)
     if dims_result.invalid():
-      return nx.IFilter.PreflightResult(nx.OutputActions(), dims_result.errors)
+      return Result(errors=dims_result.errors)
     
     dims = dims_result.value
     if dims != sliceDims:
@@ -643,18 +642,18 @@ class ReadPeregrineHDF5File:
   
   def _read_slice_datasets(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, filter_args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
     read_segmentation_results: bool = filter_args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
-    segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_KEY]
+    segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY]
     read_camera_data: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
     read_part_ids: bool = filter_args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
     read_sample_ids: bool = filter_args[ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY]
-    read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_SLICES_SUBVOLUME_KEY]
+    read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY]
     slices_subvolume_minmax_x: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY]
     slices_subvolume_minmax_y: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY]
     slices_subvolume_minmax_z: list = filter_args[ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Z_KEY]
     slice_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.SLICE_DATA_KEY]
     slice_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY]
-    camera_data_0_array_name: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_0_ARRAY_NAME_KEY]
-    camera_data_1_array_name: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_1_ARRAY_NAME_KEY]
+    camera_data_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY]
+    camera_data_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY]
     part_ids_array_name: str = filter_args[ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY]
     sample_ids_array_name: str = filter_args[ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY]
 
@@ -686,36 +685,24 @@ class ReadPeregrineHDF5File:
       if should_cancel:
         return Result()
 
-      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading Camera Dataset 0...'))
-      camera_data_0_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(camera_data_0_array_name)
-      camera_data_0_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, ReadPeregrineHDF5File.CAMERA_DATA_0_H5_PATH)
-      if camera_data_0_h5_result.invalid():
-        return Result(errors=camera_data_0_h5_result.errors)
-      camera_data_0_h5 = camera_data_0_h5_result.value
-      camera_data_0_nx: np.array = data_structure[camera_data_0_nx_path].npview()
-      camera_data_0_nx = np.squeeze(camera_data_0_nx)
+      for camera_data_dataset in camera_data_datasets_str:
+        if should_cancel:
+          return Result()
+    
+        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Reading Camera Dataset "{camera_data_dataset}"...'))
+        camera_data_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
+        camera_data_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+        camera_data_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, str(camera_data_h5_path))
+        if camera_data_h5_result.invalid():
+          return Result(errors=camera_data_h5_result.errors)
+        camera_data_h5 = camera_data_h5_result.value
+        camera_data_nx: np.array = data_structure[camera_data_nx_path].npview()
+        camera_data_nx = np.squeeze(camera_data_nx)
 
-      if read_slices_subvolume:
-        camera_data_0_nx[:] = camera_data_0_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
-      else:
-        camera_data_0_nx[:] = camera_data_0_h5
-
-      if should_cancel:
-        return Result()
-
-      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading Camera Dataset 1...'))
-      camera_data_1_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(camera_data_1_array_name)
-      camera_data_1_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, ReadPeregrineHDF5File.CAMERA_DATA_1_H5_PATH)
-      if camera_data_1_h5_result.invalid():
-        return Result(errors=camera_data_1_h5_result.errors)
-      camera_data_1_h5 = camera_data_1_h5_result.value
-      camera_data_1_nx: np.array = data_structure[camera_data_1_nx_path].npview()
-      camera_data_1_nx = np.squeeze(camera_data_1_nx)
-      
-      if read_slices_subvolume:
-        camera_data_1_nx[:] = camera_data_1_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
-      else:
-        camera_data_1_nx[:] = camera_data_1_h5
+        if read_slices_subvolume:
+          camera_data_nx[:] = camera_data_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
+        else:
+          camera_data_nx[:] = camera_data_h5
     
     if read_part_ids:
       message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading Part Ids...'))
@@ -752,7 +739,7 @@ class ReadPeregrineHDF5File:
   def _read_registered_datasets(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, filter_args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
     registered_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_KEY]
     registered_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY]
-    read_registered_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_REGISTERED_DATA_SUBVOLUME_KEY]
+    read_registered_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY]
     registered_data_subvolume_minmax_x: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_X_KEY]
     registered_data_subvolume_minmax_y: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Y_KEY]
     registered_data_subvolume_minmax_z: list = filter_args[ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY]
@@ -839,7 +826,7 @@ class ReadPeregrineHDF5File:
     vertex_list_array_name: str = filter_args[ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY]
     edge_list_array_name: str = filter_args[ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY]
     time_of_travel_array_name: str = filter_args[ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME]
-    read_scan_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.READ_SCAN_DATA_SUBVOLUME_KEY]
+    read_scan_data_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SCAN_DATA_SUBVOLUME_KEY]
     scan_data_subvolume_minmax: list = filter_args[ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY]
 
     vertex_attr_mat_path: nx.DataPath = scan_data_edge_geom_path.create_child_path(scan_data_vertex_attr_mat_name)
@@ -870,11 +857,11 @@ class ReadPeregrineHDF5File:
       
       # Read the Z thickness value
       if ReadPeregrineHDF5File.LAYER_THICKNESS_PATH not in h5_file_reader.attrs:
-        return make_error_result(code=-3007, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist in HDF5 file '{h5_file_reader.name}', so the scan datasets cannot be read!")
+        return make_error_result(code=-3007, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!")
       try:
         z_thickness: float = h5_file_reader.attrs[ReadPeregrineHDF5File.LAYER_THICKNESS_PATH]
       except Exception as e:
-        return make_error_result(code=-3008, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed in HDF5 file '{h5_file_reader.name}', so the scan datasets cannot be read!\n\n{e}")
+        return make_error_result(code=-3008, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!\n\n{e}")
 
       # Calculate the start and end values for the scans
       z_start: int = 0
@@ -882,7 +869,7 @@ class ReadPeregrineHDF5File:
       try:
         z_end: int = sum(1 for item in scan_group_reader.values() if isinstance(item, h5py.Dataset))
       except Exception as e:
-        return make_error_result(code=-4032, message=f"Error counting objects at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.name}': {e}")
+        return make_error_result(code=-4032, message=f"Error counting objects at path '{ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH}' in HDF5 file '{h5_file_reader.filename}': {e}")
       
       if read_scan_data_subvolume:
         z_start = scan_data_subvolume_minmax[0]
