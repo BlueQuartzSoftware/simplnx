@@ -134,7 +134,7 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
 {
   using ImageType = itk::Image<PixelT, Dimensions>;
 
-  auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
+  auto& typedDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
 
   typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
   if(Is2DFormat(filePath) && Dimensions == 3)
@@ -165,12 +165,16 @@ struct WriteImageFunctor
 template <class T>
 void CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize nComp, usize index, usize indexNew)
 {
-  const auto& currentDataTyped = dynamic_cast<const DataStore<T>&>(currentData);
-  auto& sliceDataTyped = dynamic_cast<DataStore<T>&>(sliceData);
+  const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
+  auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
 
+  #if 0
   const T* sourcePtr = currentDataTyped.data() + (nComp * index);
   T* destPtr = sliceDataTyped.data() + (nComp * indexNew);
   std::memcpy(destPtr, sourcePtr, currentData.getTypeSize() * nComp);
+  #endif
+
+  sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1);
 }
 
 void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, const IDataStore& currentData, IDataStore& sliceData)

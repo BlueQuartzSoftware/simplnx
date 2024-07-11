@@ -44,6 +44,10 @@ TEST_CASE("ITKImageProcessing::ITKLabelContourImageFilter(default)", "[ITKImageP
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "d742c05a8d8aa9b41f58b8d2aad6b5d0");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "d742c05a8d8aa9b41f58b8d2aad6b5d0");
+  }
 }

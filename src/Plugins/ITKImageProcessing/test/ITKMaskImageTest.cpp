@@ -53,8 +53,12 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][IT
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "c57d7fda3e42374881c3c3181d15bf90");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "c57d7fda3e42374881c3c3181d15bf90");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessing][ITKMaskImageFilter][cthead1]")
@@ -96,8 +100,12 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessin
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "0ef8943803bb4a21b2015b53f0164f1c");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "0ef8943803bb4a21b2015b53f0164f1c");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][ITKMaskImageFilter][rgb]")
@@ -140,8 +148,12 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][I
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "3dad4a416a7b6a198a4a916d65d7654f");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "3dad4a416a7b6a198a4a916d65d7654f");
+  }
 }
 
 // Disabled this test because requires masking value which doesn't exist in the original
@@ -185,7 +197,11 @@ TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMask
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "3eb703113d03f38e7b8db4b180079a39");
+  }
 }
 #endif

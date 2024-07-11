@@ -37,6 +37,8 @@ Result<> WriteImage(DataStructure& dataStructure, const fs::path& filePath, cons
 Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath,
                        float64 tolerance);
 
+bool IsArrayInMemory(DataStructure& dataStructure, const DataPath& outputDataPath);
+
 std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputDataPath);
 
 void RemoveFiles(const fs::path& dirPath, const std::string& filePattern);

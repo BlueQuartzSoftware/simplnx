@@ -47,6 +47,10 @@ TEST_CASE("ITKImageProcessing::ITKBlackTopHatImageFilter(BlackTopHapErode)", "[I
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "445a5da6221f6d976d169b70c5538614");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "445a5da6221f6d976d169b70c5538614");
+  }
 }

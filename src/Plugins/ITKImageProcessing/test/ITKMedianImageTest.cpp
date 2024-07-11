@@ -47,9 +47,13 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  // REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
-  REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    // REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
+    REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImageFilter][by23]")
@@ -80,7 +84,11 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  // REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");
-  REQUIRE(md5Hash == "4afeba184100773dc279a776b1ae493b");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    // REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");
+    REQUIRE(md5Hash == "4afeba184100773dc279a776b1ae493b");
+  }
 }

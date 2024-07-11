@@ -44,8 +44,12 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(default)", "[ITKIm
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "58af064e929f08f9d5bacc8be44ed92e");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "58af064e929f08f9d5bacc8be44ed92e");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting)", "[ITKImageProcessing][ITKRelabelComponentImage][no_sorting]")
@@ -76,8 +80,12 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting)", "[IT
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "0231da8387aa665ddff9c2645e71f213");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "0231da8387aa665ddff9c2645e71f213");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting2)", "[ITKImageProcessing][ITKRelabelComponentImage][no_sorting2]")
@@ -109,6 +117,10 @@ TEST_CASE("ITKImageProcessing::ITKRelabelComponentImageFilter(no_sorting2)", "[I
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "4c81464832a0270041334abd744b94b0");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "4c81464832a0270041334abd744b94b0");
+  }
 }

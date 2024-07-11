@@ -47,8 +47,12 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "095f00a68a84df4396914fa758f34dcc");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "095f00a68a84df4396914fa758f34dcc");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWithBorder)",
@@ -83,6 +87,10 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "506d365dd92db16c2ade264fca46890c");
+    // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "506d365dd92db16c2ade264fca46890c");
+  }
 }

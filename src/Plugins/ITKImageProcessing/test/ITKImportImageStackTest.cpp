@@ -296,8 +296,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKIm
   const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageDataPtr != nullptr);
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-  REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+  // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
+    REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Even X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -447,8 +451,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[I
   const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageDataPtr != nullptr);
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-  REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+  // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
+    REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -510,8 +518,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProces
   const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageDataPtr != nullptr);
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-  REQUIRE(md5Hash == "8b0b0393d6779156c88544bc4d75d3fc");
+  // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
+    REQUIRE(md5Hash == "8b0b0393d6779156c88544bc4d75d3fc");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -576,8 +588,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[I
   const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageDataPtr != nullptr);
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-  REQUIRE(md5Hash == "5969f0ae7507bfae14de3cb470d53e60");
+  // md5 hash only works on in-memory DataStore<T>
+  if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
+    REQUIRE(md5Hash == "5969f0ae7507bfae14de3cb470d53e60");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims", "[ITKImageProcessing][ITKImportImageStackFilter]")

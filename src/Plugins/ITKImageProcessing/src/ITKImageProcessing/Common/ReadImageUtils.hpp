@@ -36,7 +36,7 @@ struct ReadImageIntoArrayFunctor
     using T = ITK::UnderlyingType_t<PixelT>;
 
     auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
+    auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     typename ReaderType::Pointer reader = ReaderType::New();
     reader->SetFileName(filePath);
@@ -44,9 +44,7 @@ struct ReadImageIntoArrayFunctor
     reader->Update();
     typename ImageType::Pointer outputImage = reader->GetOutput();
 
-    auto imageStore = ITK::ConvertImageToDataStore(*outputImage);
-
-    dataStore = std::move(imageStore);
+    ITK::ConvertImageToDataStore(*outputImage, dataStore);
 
     return {};
   }

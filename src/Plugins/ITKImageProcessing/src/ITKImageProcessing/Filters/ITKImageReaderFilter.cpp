@@ -160,11 +160,12 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   auto newDataType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
-  const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
-  if(!inputArrayPtr->getDataFormat().empty())
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataArrayPath.toString()));
-  }
+
+  //const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
+  //if(!inputArrayPtr->getDataFormat().empty())
+  //{
+  //  return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataArrayPath.toString()));
+  //}
 
   std::string fileNameString = fileName.string();
 
