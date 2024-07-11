@@ -42,7 +42,7 @@ protected:
   Result<> parseIndexOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
   Result<> parseCommaOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
   Result<> parseArray(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
-  Result<> checkForAmbiguousArrayName(std::string strItem, std::string warningMsg);
+  Result<> checkForAmbiguousArrayName(const std::string& strItem, std::string warningMsg);
 
 private:
   const DataStructure& m_DataStructure;

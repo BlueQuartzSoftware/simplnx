@@ -44,7 +44,7 @@ struct CreateCalculatorArrayFunctor
   template <typename T>
   CalculatorItem::Pointer operator()(DataStructure& dataStructure, bool allocate, const IDataArray* iDataArrayPtr)
   {
-    const DataArray<T>* inputDataArray = dynamic_cast<const DataArray<T>*>(iDataArrayPtr);
+    const auto* inputDataArray = dynamic_cast<const DataArray<T>*>(iDataArrayPtr);
     CalculatorItem::Pointer itemPtr = CalculatorArray<T>::New(dataStructure, inputDataArray, ICalculatorArray::Array, allocate);
     return itemPtr;
   }
@@ -55,15 +55,22 @@ struct CopyArrayFunctor
   template <typename T>
   void operator()(DataStructure& dataStructure, const DataPath& calculatedArrayPath, const Float64Array* inputArray)
   {
+    const auto& inputDataStore = inputArray->getDataStoreRef();
     if(nullptr != inputArray)
     {
-      DataArray<T>& convertedArray = dataStructure.getDataRefAs<DataArray<T>>(calculatedArrayPath);
+      auto& convertedDataStore = dataStructure.getDataAsUnsafe<DataArray<T>>(calculatedArrayPath)->getDataStoreRef();
 
-      int count = inputArray->getSize();
-      for(int i = 0; i < count; i++)
+      const usize count = inputDataStore.getSize();
+      for(usize i = 0; i < count; i++)
       {
-        double val = (*inputArray)[i];
-        convertedArray[i] = val;
+        if constexpr(std::is_same_v<float64, T>)
+        {
+          convertedDataStore[i] = inputDataStore[i];
+        }
+        else
+        {
+          convertedDataStore[i] = static_cast<T>(inputDataStore[i]);
+        }
       }
     }
   }
@@ -74,11 +81,17 @@ struct InitializeArrayFunctor
   template <typename T>
   void operator()(DataStructure& dataStructure, const DataPath& calculatedArrayPath, const Float64Array* inputArray)
   {
-    DataArray<T>& convertedArray = dataStructure.getDataRefAs<DataArray<T>>(calculatedArrayPath);
+    auto& convertedDataStore = dataStructure.getDataAsUnsafe<DataArray<T>>(calculatedArrayPath)->getDataStoreRef();
     if(nullptr != inputArray && inputArray->getSize() == 1)
     {
-      const T& initializeValue = inputArray->at(0);
-      convertedArray.fill(initializeValue);
+      if constexpr(std::is_same_v<float64, T>)
+      {
+        convertedDataStore.fill(inputArray->at(0));
+      }
+      else
+      {
+        convertedDataStore.fill(static_cast<T>(inputArray->at(0)));
+      }
     }
   }
 };
@@ -318,14 +331,13 @@ std::vector<std::string> ArrayCalculatorParser::getRegularExpressionMatches()
   std::vector<std::string> itemList;
   // Match all array names that start with two alphabetical characters and have spaces.  Match all numbers, decimal or integer.
   // Match one letter array names.  Match all special character operators.
-  std::regex regExp("(\"((\\[)?\\d+(\\.\\d+)?(\\])?|(\\[)?\\.\\d+(\\])?|\\w{1,1}((\\w|\\s|\\d)*(\\w|\\d){1,1})?|\\S)\")|(((\\[)?\\d+(\\.\\d+)?(\\])?|(\\[)?\\.\\d+(\\])?|\\w{1,1}((\\w|\\s|\\d)"
-                    "*(\\w|\\d){1,1})?|\\S))");
+  std::regex regExp(R"lit(("((\[)?\d+(\.\d+)?(\])?|(\[)?\.\d+(\])?|\w{1,1}((\w|\s|\d)*(\w|\d){1,1})?|\S)")|(((\[)?\d+(\.\d+)?(\])?|(\[)?\.\d+(\])?|\w{1,1}((\w|\s|\d)*(\w|\d){1,1})?|\S)))lit");
 
   auto regExpMatchBegin = std::sregex_iterator(m_InfixEquation.begin(), m_InfixEquation.end(), regExp);
   auto regExpMatchEnd = std::sregex_iterator();
   for(std::sregex_iterator i = regExpMatchBegin; i != regExpMatchEnd; ++i)
   {
-    std::smatch match = *i;
+    const std::smatch& match = *i;
     itemList.push_back(match.str());
   }
 
@@ -436,7 +448,7 @@ Result<> ArrayCalculatorParser::parseCommaOperator(std::string token, std::vecto
   // For example, if we have root( 4*4, 2*3 ), then we need it to be root( (4*4), (2*3) )
   parsedInfix.push_back(RightParenthesisItem::New());
 
-  std::vector<CalculatorItem::Pointer>::iterator iter = parsedInfix.end();
+  auto iter = parsedInfix.end();
   iter--;
   while(iter != parsedInfix.begin())
   {
@@ -473,7 +485,7 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
   }
 
   DataPath tokenArrayPath = m_SelectedGroupPath.empty() ? DataPath({token}) : m_SelectedGroupPath.createChildPath(token);
-  const IDataArray* dataArray = m_DataStructure.getDataAs<IDataArray>(tokenArrayPath);
+  const auto* dataArray = m_DataStructure.getDataAs<IDataArray>(tokenArrayPath);
   if(firstArray_NumTuples < 0 && firstArray_Name.empty())
   {
     firstArray_NumTuples = dataArray->getNumberOfTuples();
@@ -491,7 +503,7 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
 }
 
 // -----------------------------------------------------------------------------
-Result<> ArrayCalculatorParser::checkForAmbiguousArrayName(std::string strItem, std::string warningMsg)
+Result<> ArrayCalculatorParser::checkForAmbiguousArrayName(const std::string& strItem, std::string warningMsg)
 {
   if(m_IsPreflight && ContainsDataArrayName(m_DataStructure, m_SelectedGroupPath, strItem))
   {

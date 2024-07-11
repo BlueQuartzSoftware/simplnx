@@ -129,7 +129,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
-  INodeGeometry0D& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
 
   IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
@@ -159,7 +159,7 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   case detail::k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
-    const Float32Array& precomputed = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ComputedTransformationMatrix);
+    const auto& precomputed = m_DataStructure.getDataAsUnsafe<Float32Array>(m_InputValues->ComputedTransformationMatrix)->getDataStoreRef();
     m_TransformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(precomputed);
     break;
   }

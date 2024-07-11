@@ -140,7 +140,7 @@ std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed)
+ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);

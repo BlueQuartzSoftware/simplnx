@@ -69,7 +69,7 @@ SIMPLNX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRo
  * @param precomputed
  * @return
  */
-SIMPLNX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed);
+SIMPLNX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed);
 
 /**
  * @brief
