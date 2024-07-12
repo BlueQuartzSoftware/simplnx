@@ -65,7 +65,7 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
   }
   else
   {
-    results = readDream3dShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
+    results = readUserShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
   }
   return results;
 }
