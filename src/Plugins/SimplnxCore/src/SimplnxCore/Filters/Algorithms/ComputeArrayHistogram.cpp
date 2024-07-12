@@ -7,7 +7,6 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <tuple>
 
@@ -19,7 +18,7 @@ template <typename DataArrayType>
 class GenerateHistogramFromData
 {
 public:
-  GenerateHistogramFromData(ComputeArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
+  GenerateHistogramFromData(ComputeArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, AbstractDataStore<float64>& histogram, std::atomic<usize>& overflow,
                             std::tuple<bool, float64, float64>& range, size_t progressIncrement)
   : m_Filter(filter)
   , m_NumBins(numBins)
@@ -34,7 +33,7 @@ public:
 
   void operator()() const
   {
-    const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray);
+    const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray).getDataStoreRef();
     auto end = inputArray.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
@@ -96,7 +95,7 @@ private:
   const int32 m_NumBins = 1;
   std::tuple<bool, float64, float64>& m_Range;
   const IDataArray& m_InputArray;
-  Float64Array& m_Histogram;
+  AbstractDataStore<float64>& m_Histogram;
   std::atomic<usize>& m_Overflow;
   size_t m_ProgressIncrement = 100;
 };
@@ -167,7 +166,7 @@ Result<> ComputeArrayHistogram::operator()()
       return {};
     }
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
-    auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
+    auto& histogram = m_DataStructure.getDataAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i))->getDataStoreRef();
     ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, *this, numBins, inputData, histogram, overflow, range, progressIncrement);
 
     if(overflow > 0)
