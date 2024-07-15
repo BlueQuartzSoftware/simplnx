@@ -13,107 +13,68 @@ You may need the following python packages installed to see every filter
 _filters = []
 
 # FILTER_START: CalculateHistogramFilter
-try:
-  from NXDataAnalysisToolkit.CalculateHistogramFilter import CalculateHistogramFilter
-  _filters.append(CalculateHistogramFilter)
-except ImportError:
-  pass
+from .CalculateHistogramFilter import CalculateHistogramFilter
+_filters.append(CalculateHistogramFilter)
 # FILTER_END: CalculateHistogramFilter
 
 # FILTER_START: InterpolateGridDataFilter
-try:
-  from NXDataAnalysisToolkit.InterpolateGridDataFilter import InterpolateGridDataFilter
-  _filters.append(InterpolateGridDataFilter)
-except ImportError:
-  pass
+from .InterpolateGridDataFilter import InterpolateGridDataFilter
+_filters.append(InterpolateGridDataFilter)
 # FILTER_END: InterpolateGridDataFilter
 
 # FILTER_START: CliReaderFilter
-try:
-  from NXDataAnalysisToolkit.CliReaderFilter import CliReaderFilter
-  _filters.append(CliReaderFilter)
-except ImportError:
-  pass
+from .CliReaderFilter import CliReaderFilter
+_filters.append(CliReaderFilter)
 # FILTER_END: CliReaderFilter
 
 # FILTER_START: ContourDetectionFilter
-try:
-  from NXDataAnalysisToolkit.ContourDetectionFilter import ContourDetectionFilter
-  _filters.append(ContourDetectionFilter)
-except ImportError:
-  pass
+from .ContourDetectionFilter import ContourDetectionFilter
+_filters.append(ContourDetectionFilter)
 # FILTER_END: ContourDetectionFilter
 
 # FILTER_START: NPSortArray
-try:
-  from NXDataAnalysisToolkit.NPSortArray import NPSortArray
-  _filters.append(NPSortArray)
-except ImportError:
-  pass
+from .NPSortArray import NPSortArray
+_filters.append(NPSortArray)
 # FILTER_END: NPSortArray
 
 # FILTER_START: ReadPeregrineHDF5File
-try:
-  from NXDataAnalysisToolkit.ReadPeregrineHDF5File import ReadPeregrineHDF5File
-  _filters.append(ReadPeregrineHDF5File)
-except ImportError:
-  pass
+from .ReadPeregrineHDF5File import ReadPeregrineHDF5File
+_filters.append(ReadPeregrineHDF5File)
 # FILTER_END: ReadPeregrineHDF5File
 
 # FILTER_START: WriteAbaqusFile
-try:
-  from DataAnalysisToolkit.WriteAbaqusFile import WriteAbaqusFile
-  _filters.append(WriteAbaqusFile)
-except ImportError:
-  pass
+from .WriteAbaqusFile import WriteAbaqusFile
+_filters.append(WriteAbaqusFile)
 # FILTER_END: WriteAbaqusFile
 
 # FILTER_START: WriteAnsysFile
-try:
-  from DataAnalysisToolkit.WriteAnsysFile import WriteAnsysFile
-  _filters.append(WriteAnsysFile)
-except ImportError:
-  pass
+from .WriteAnsysFile import WriteAnsysFile
+_filters.append(WriteAnsysFile)
 # FILTER_END: WriteAnsysFile
 
 # FILTER_START: WriteMedFile
-try:
-  from DataAnalysisToolkit.WriteMedFile import WriteMedFile
-  _filters.append(WriteMedFile)
-except ImportError:
-  pass
+from .WriteMedFile import WriteMedFile
+_filters.append(WriteMedFile)
 # FILTER_END: WriteMedFile
 
 # FILTER_START: WriteGmshFile
-try:
-  from DataAnalysisToolkit.WriteGmshFile import WriteGmshFile
-  _filters.append(WriteGmshFile)
-except ImportError:
-  pass
+from .WriteGmshFile import WriteGmshFile
+_filters.append(WriteGmshFile)
 # FILTER_END: WriteGmshFile
 
 # FILTER_START: WriteTetGenFile
-try:
-  from DataAnalysisToolkit.WriteTetGenFile import WriteTetGenFile
-  _filters.append(WriteTetGenFile)
-except ImportError:
-  pass
+from .WriteTetGenFile import WriteTetGenFile
+_filters.append(WriteTetGenFile)
 # FILTER_END: WriteTetGenFile
 
 # FILTER_START: WriteVtuFile
-try:
-  from DataAnalysisToolkit.WriteVtuFile import WriteVtuFile
-  _filters.append(WriteVtuFile)
-except ImportError:
-  pass
+from .WriteVtuFile import WriteVtuFile
+_filters.append(WriteVtuFile)
 # FILTER_END: WriteVtuFile
 
 # FILTER_START: ReadMeshFile
-try:
-  from DataAnalysisToolkit.ReadMeshFile import ReadMeshFile
-  _filters.append(ReadMeshFile)
-except ImportError:
-  pass
+from .ReadMeshFile import ReadMeshFile
+_filters.append(ReadMeshFile)
 # FILTER_END: ReadMeshFile
 
 import simplnx as nx

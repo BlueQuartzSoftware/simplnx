@@ -117,11 +117,8 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
       if(line == lastMarkerLine && insertToken)
       {
         outFile << "# FILTER_START: " << filterName << "\n"
-                << "try:\n"
-                << "  from " << pluginName << "." << filterName << " import " << filterName << "\n"
-                << "  __all__.append('" << filterName << "')\n"
-                << "except ImportError:\n"
-                << "  pass\n"
+                << "from ." << filterName << " import " << filterName << "\n"
+                << "__all__.append('" << filterName << "')\n"
                 << "# FILTER_END: " << filterName << "\n\n";
       }
       outFile << line << '\n'; // Write the line out to the file
@@ -161,11 +158,8 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
       if(line == lastMarkerLine && insertToken)
       {
         outFile << "# FILTER_START: " << filterName << "\n"
-                << "try:\n"
-                << "  from " << pluginName << "." << filterName << " import " << filterName << "\n"
-                << "  _filters.append(" << filterName << ")\n"
-                << "except ImportError:\n"
-                << "  pass\n"
+                << "from ." << filterName << " import " << filterName << "\n"
+                << "_filters.append(" << filterName << ")\n"
                 << "# FILTER_END: " << filterName << "\n\n";
       }
       outFile << line << '\n'; // Write the line out to the file
@@ -305,11 +299,8 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
   for(const auto& name : filterList)
   {
     ss << "# FILTER_START: " << name << "\n"
-       << "try:\n"
-       << "  from " << pluginName << "." << name << " import " << name << "\n"
-       << "  _filters.append(" << name << ")\n"
-       << "except ImportError:\n"
-       << "  pass\n"
+       << "from ." << name << " import " << name << "\n"
+       << "_filters.append(" << name << ")\n"
        << "# FILTER_END: " << name << "\n\n";
   }
   content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", ss.str());
@@ -413,11 +404,8 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       for(const auto& name : filterList)
       {
         ss << "# FILTER_START: " << name << "\n"
-           << "try:\n"
-           << "  from " << pluginName << "." << name << " import " << name << "\n"
-           << "  __all__.append('" << name << "')\n"
-           << "except ImportError:\n"
-           << "  pass\n"
+           << "from ." << name << " import " << name << "\n"
+           << "__all__.append('" << name << "')\n"
            << "# FILTER_END: " << name << "\n\n";
       }
       content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", ss.str());
