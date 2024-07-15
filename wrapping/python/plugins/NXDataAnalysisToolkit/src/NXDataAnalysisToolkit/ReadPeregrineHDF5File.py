@@ -370,23 +370,41 @@ class ReadPeregrineHDF5File:
     if read_segmentation_results:
       for segmentation_result in segmentation_results_list:
         segmentation_result_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path('Segmentation Result ' + segmentation_result)
-        actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, subvolume_dims if read_slices_subvolume else dims, [1], segmentation_result_path))
+        segmentation_result_h5_path = Path(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_H5_PARENT_PATH) / segmentation_result
+        dset_type_result: Result = self._read_dataset_type(h5_file_reader, segmentation_result_h5_path.as_posix())
+        if dset_type_result.invalid():
+          return dset_type_result
+        dset_type = dset_type_result.value
+        actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], segmentation_result_path))
 
     # Optionally create the camera data arrays
     if read_camera_data:
       for camera_data_dataset in camera_data_datasets:
         camera_data_dataset_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
-        actions.append_action(nx.CreateArrayAction(nx.DataType.float32, subvolume_dims if read_slices_subvolume else dims, [1], camera_data_dataset_path))
+        camera_data_dataset_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+        dset_type_result: Result = self._read_dataset_type(h5_file_reader, camera_data_dataset_h5_path.as_posix())
+        if dset_type_result.invalid():
+          return dset_type_result
+        dset_type = dset_type_result.value
+        actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], camera_data_dataset_path))
 
     # Optionally create the part ids data array
     if read_part_ids:
       part_ids_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(part_ids_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.uint32, subvolume_dims if read_slices_subvolume else dims, [1], part_ids_path))
+      dset_type_result: Result = self._read_dataset_type(h5_file_reader, ReadPeregrineHDF5File.PART_IDS_H5_PATH)
+      if dset_type_result.invalid():
+        return dset_type_result
+      dset_type = dset_type_result.value
+      actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], part_ids_path))
     
     # Optionally create the sample ids data array
     if read_sample_ids:
       sample_ids_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(sample_ids_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.uint32, subvolume_dims if read_slices_subvolume else dims, [1], sample_ids_path))
+      dset_type_result: Result = self._read_dataset_type(h5_file_reader, ReadPeregrineHDF5File.SAMPLE_IDS_H5_PATH)
+      if dset_type_result.invalid():
+        return dset_type_result
+      dset_type = dset_type_result.value
+      actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], sample_ids_path))
 
     return Result()
 
@@ -451,11 +469,19 @@ class ReadPeregrineHDF5File:
 
     if read_anomaly_detection:
       anomaly_detection_path: nx.DataPath = registered_data_image_geom_path.create_child_path(registered_data_cell_attr_mat_name).create_child_path(anomaly_detection_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, registered_dims, [1], anomaly_detection_path))
+      dset_type_result: Result = self._read_dataset_type(h5_file_reader, ReadPeregrineHDF5File.REGISTERED_ANOMALY_DETECTION_H5_PATH)
+      if dset_type_result.invalid():
+        return dset_type_result
+      dset_type = dset_type_result.value
+      actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), registered_dims, [1], anomaly_detection_path))
 
     if read_x_ray_ct:
       xray_ct_path: nx.DataPath = registered_data_image_geom_path.create_child_path(registered_data_cell_attr_mat_name).create_child_path(xray_ct_array_name)
-      actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, registered_dims, [1], xray_ct_path))
+      dset_type_result: Result = self._read_dataset_type(h5_file_reader, ReadPeregrineHDF5File.REGISTERED_XRAY_CT_H5_PATH)
+      if dset_type_result.invalid():
+        return dset_type_result
+      dset_type = dset_type_result.value
+      actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), registered_dims, [1], xray_ct_path))
 
     return Result()
 
@@ -544,6 +570,14 @@ class ReadPeregrineHDF5File:
     dataset: h5py.Dataset = result.value
 
     return Result(value=list(dataset.shape))
+  
+  def _read_dataset_type(self, h5_file_reader: h5py.File, h5_dataset_path: str) -> Result[List[int]]:
+    result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, h5_dataset_path)
+    if result.invalid():
+      return Result(errors=result.errors)
+    dataset: h5py.Dataset = result.value
+
+    return Result(value=dataset.dtype)
 
   def _validate_dataset_dimensions(self, h5_file_reader: h5py.File, h5_dataset_path: str, sliceDims: List[int]) -> Result:
     dims_result = self._read_dataset_dimensions(h5_file_reader, h5_dataset_path)
@@ -559,9 +593,9 @@ class ReadPeregrineHDF5File:
   def _read_slice_dimensions(self, h5_file_reader: h5py.File, segmentation_results_list: List[str]) -> Result[List[int]]:
     slice_dims: List[int] = []
     for segmentation_result in segmentation_results_list:
-      segmentation_result_path = ReadPeregrineHDF5File.SEGMENTATION_RESULTS_H5_PARENT_PATH + '/' + segmentation_result
+      segmentation_result_path = Path(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_H5_PARENT_PATH) / segmentation_result
 
-      dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, segmentation_result_path)
+      dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, segmentation_result_path.as_posix())
       if dims_result.invalid():
         return dims_result
 
@@ -570,7 +604,7 @@ class ReadPeregrineHDF5File:
         # Set the slice dimensions for the first time
         slice_dims = dims
       else:
-        result: Result = self._validate_dataset_dimensions(h5_file_reader, segmentation_result_path, slice_dims)
+        result: Result = self._validate_dataset_dimensions(h5_file_reader, segmentation_result_path.as_posix(), slice_dims)
         if result.invalid():
           return Result(errors=result.errors)
 
