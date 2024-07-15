@@ -303,14 +303,14 @@ class ReadPeregrineHDF5File:
         return Result(errors=[nx.Error(-3001, 'The camera data datasets are empty.  Please input the camera data dataset names that this filter should read from the input file, separated by commas.')])
 
       for camera_data_dataset in camera_data_datasets:
-        camera_data_dataset_path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+        camera_data_dataset_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
         if dims is None:
-          dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, str(camera_data_dataset_path))
+          dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix())
           if dims_result.invalid():
             return dims_result
           dims = dims_result.value
         else:
-          dims_result = self._validate_dataset_dimensions(h5_file_reader, str(camera_data_dataset_path), dims)
+          dims_result = self._validate_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix(), dims)
           if dims_result.invalid():
             return Result(errors=dims_result.errors)
 
@@ -509,7 +509,7 @@ class ReadPeregrineHDF5File:
     num_edges: int = 0
     for i in range(z_start, z_end):
       scan_path = Path(ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH) / str(i)
-      scan_dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, str(scan_path))
+      scan_dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, scan_path.as_posix())
       if scan_dims_result.invalid():
         return Result(errors=scan_dims_result.errors)
       scan_dims: List[int] = scan_dims_result.value
@@ -670,7 +670,7 @@ class ReadPeregrineHDF5File:
         segmentation_result_nx = data_structure[segmentation_result_nx_path].npview()
         segmentation_result_nx = np.squeeze(segmentation_result_nx)
         segmentation_result_h5_path = Path(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_H5_PARENT_PATH) / segmentation_result
-        segmentation_result_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, str(segmentation_result_h5_path))
+        segmentation_result_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, segmentation_result_h5_path.as_posix())
         if segmentation_result_h5_result.invalid():
           return segmentation_result_h5_result
         segmentation_result_h5 = segmentation_result_h5_result.value
@@ -692,7 +692,7 @@ class ReadPeregrineHDF5File:
         message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Reading Camera Dataset "{camera_data_dataset}"...'))
         camera_data_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
         camera_data_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
-        camera_data_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, str(camera_data_h5_path))
+        camera_data_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, camera_data_h5_path.as_posix())
         if camera_data_h5_result.invalid():
           return Result(errors=camera_data_h5_result.errors)
         camera_data_h5 = camera_data_h5_result.value
@@ -887,8 +887,8 @@ class ReadPeregrineHDF5File:
         
         # Read the scan data into memory as vertices and edges
         scan_path = Path(ReadPeregrineHDF5File.SCANS_GROUP_H5_PATH) / str(z)
-        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Reading Scan Dataset '{str(scan_path)}' ({z - z_start + 1}/{z_end - z_start + 1})..."))
-        scan_data_result: Result[Tuple[np.array, np.array, np.array]] = self._read_scan_data(h5_file_reader, str(scan_path), z * z_thickness)
+        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Reading Scan Dataset '{scan_path.as_posix()}' ({z - z_start + 1}/{z_end - z_start + 1})..."))
+        scan_data_result: Result[Tuple[np.array, np.array, np.array]] = self._read_scan_data(h5_file_reader, scan_path.as_posix(), z * z_thickness)
         if scan_data_result.invalid():
           return scan_data_result
         vertices, edges, tot = scan_data_result.value
