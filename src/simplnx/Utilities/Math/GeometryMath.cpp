@@ -56,7 +56,7 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D
 
 BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFace(const TriangleGeom& faces, int32 faceId)
 {
-  std::array<Point3Df, 3> points;
+  std::array<Point3Df, 3> points = {};
   faces.getFaceCoordinates(faceId, points);
 
   Point3Df ll = points[0];
@@ -114,7 +114,66 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFace(const TriangleGeom&
   return {ll, ur};
 }
 
-BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const TriangleGeom& faces, const std::vector<int32>& faceIds)
+BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId)
+{
+  std::array<Point3Df, 3> points = GeometryMath::detail::GetFaceCoordinates<float32>(cache, faceId);
+
+  Point3Df ll = points[0];
+  Point3Df ur = points[0];
+
+  if(points[1][0] < ll[0])
+  {
+    ll[0] = points[1][0];
+  }
+  if(points[1][0] > ur[0])
+  {
+    ur[0] = points[1][0];
+  }
+  if(points[1][1] < ll[1])
+  {
+    ll[1] = points[1][1];
+  }
+  if(points[1][1] > ur[1])
+  {
+    ur[1] = points[1][1];
+  }
+  if(points[1][2] < ll[2])
+  {
+    ll[2] = points[1][2];
+  }
+  if(points[1][2] > ur[2])
+  {
+    ur[2] = points[1][2];
+  }
+  if(points[2][0] < ll[0])
+  {
+    ll[0] = points[2][0];
+  }
+  if(points[2][0] > ur[0])
+  {
+    ur[0] = points[2][0];
+  }
+  if(points[2][1] < ll[1])
+  {
+    ll[1] = points[2][1];
+  }
+  if(points[2][1] > ur[1])
+  {
+    ur[1] = points[2][1];
+  }
+  if(points[2][2] < ll[2])
+  {
+    ll[2] = points[2][2];
+  }
+  if(points[2][2] > ur[2])
+  {
+    ur[2] = points[2][2];
+  }
+
+  return {ll, ur};
+}
+
+BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds)
 {
   Point3Df ll(0, 0, 0);
   Point3Df ur(0, 0, 0);
@@ -124,9 +183,11 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const TriangleGeom
     return {ll, ur};
   }
 
+  detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+
   for(const auto& id : faceIds)
   {
-    auto bounds = FindBoundingBoxOfFace(faces, id);
+    auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id);
     Point3Df min = bounds.getMinPoint();
     Point3Df max = bounds.getMaxPoint();
 

@@ -239,21 +239,25 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   std::vector<int32> linkLoc(numFaces, 0);
 
   std::vector<BoundingBox3Df> faceBBs;
-  // traverse data again to get the faces belonging to each feature
-  for(int32 i = 0; i < numFaces; i++)
   {
-    g1 = faceLabelsSM[2 * i];
-    g2 = faceLabelsSM[2 * i + 1];
-    if(g1 > 0)
+    // !!! DO NOT USE GeometryStoreCache ELSEWHERE, SPECIAL CASE !!!
+    GeometryMath::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+    // traverse data again to get the faces belonging to each feature
+    for(int32 i = 0; i < numFaces; i++)
     {
-      faceLists[g1][(linkLoc[g1])++] = i;
+      g1 = faceLabelsSM[2 * i];
+      g2 = faceLabelsSM[2 * i + 1];
+      if(g1 > 0)
+      {
+        faceLists[g1][(linkLoc[g1])++] = i;
+      }
+      if(g2 > 0)
+      {
+        faceLists[g2][(linkLoc[g2])++] = i;
+      }
+      // find bounding box for each face
+      faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i));
     }
-    if(g2 > 0)
-    {
-      faceLists[g2][(linkLoc[g2])++] = i;
-    }
-    // find bounding box for each face
-    faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(triangleGeom, i));
   }
 
   // Check for user canceled flag.

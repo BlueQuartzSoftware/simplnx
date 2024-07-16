@@ -23,6 +23,51 @@ class VertexGeom;
 
 namespace GeometryMath
 {
+namespace detail
+{
+struct GeometryStoreCache
+{
+  GeometryStoreCache(const AbstractDataStore<float32>& verticesStore, const AbstractDataStore<IGeometry::MeshIndexType>& facesStore, usize numVertsPerFace)
+  : VerticesStoreRef(verticesStore)
+  , FacesStoreRef(facesStore)
+  , NumVertsPerFace(numVertsPerFace)
+  {
+  }
+
+  const AbstractDataStore<float32>& VerticesStoreRef;
+  const AbstractDataStore<IGeometry::MeshIndexType>& FacesStoreRef;
+  usize NumVertsPerFace;
+};
+
+template <typename T>
+concept FloatType = std::is_floating_point_v<T>;
+
+template <FloatType FloatT>
+std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId)
+{
+  std::array<Point3D<FloatT>, 3> points;
+  std::vector<usize> verts(cache.NumVertsPerFace);
+  {
+    const usize offset = faceId * cache.NumVertsPerFace;
+    if(offset + cache.NumVertsPerFace <= cache.FacesStoreRef.getSize())
+    {
+      for(usize i = 0; i < cache.NumVertsPerFace; i++)
+      {
+        verts[i] = cache.FacesStoreRef.at(offset + i);
+      }
+    }
+  }
+  for(usize index = 0; index < verts.size(); index++)
+  {
+    const usize offset = verts[index] * 3;
+    for(usize i = 0; i < 3; i++)
+    {
+      points[index][i] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + i));
+    }
+  }
+  return points;
+}
+} // namespace detail
 /**
  * @brief Returns the cosine between two angles defined by a point along each
  * vector. The vectors are assumed to cross at (0,0,0).
@@ -341,14 +386,6 @@ T GetLengthOfRayInBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
 
 /**
- * @brief Returns the BoundingBox around the specified face.
- * @param faces
- * @param faceId
- * @return nx::core::BoundingBox<float32>
- */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFace(const nx::core::TriangleGeom& faces, int32 faceId);
-
-/**
  * @brief Returns the BoundingBox around the specified face manipulated by the
  * provided rotation matrix.
  * @param faces
@@ -359,11 +396,27 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFace(const nx::core::Tr
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfRotatedFace(nx::core::TriangleGeom& faces, int32 faceId, float32 g[3][3]);
 
 /**
+ * @brief Returns the BoundingBox around the specified face.
+ * @param faces
+ * @param faceId
+ * @return nx::core::BoundingBox<float32>
+ */
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const nx::core::TriangleGeom& faces, int32 faceId);
+
+/**
+ * @brief Returns the BoundingBox around the specified face.
+ * @param faces
+ * @param faceId
+ * @return nx::core::BoundingBox<float32>
+ */
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId);
+
+/**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& faces, const std::vector<int32>& faceIds);
+nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds);
 
 /**
  * @brief Returns the bounding box around the specified faces manipulated by the
@@ -525,7 +578,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
  * @return bool
  */
 template <typename T>
-char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0, crossings = 0;
@@ -536,11 +589,12 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
     return 'o';
   }
 
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
+  // Standard mersenne_twister_engine random seed
+  // std::mt19937_64 generator(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::mt19937_64 generator(std::mt19937_64::default_seed);
   std::uniform_real_distribution<T> distribution(0.0, 1.0);
+
+  detail::GeometryStoreCache cache(triangleGeomRef.getVertices()->getDataStoreRef(), triangleGeomRef.getFaces()->getDataStoreRef(), triangleGeomRef.getNumberOfVerticesPerFace());
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
@@ -548,6 +602,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
     crossings = 0;
 
     std::array<T, 3> eulerAngles;
+
     float rand1 = distribution(generator);
     float rand2 = distribution(generator);
 
@@ -570,8 +625,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
       }
       else
       {
-        std::array<Point3D<T>, 3> coords;
-        faces.getFaceCoordinates(faceIds[face], coords);
+        std::array<Point3D<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face]);
         code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
       }
 
