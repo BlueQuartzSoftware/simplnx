@@ -195,6 +195,92 @@
       }
     },
     {
+      "name": "ci-windows-v143-ooc",
+      "displayName": "ci-windows-v143-ooc",
+      "description": "Build configuration for Azure Out-of-Core builds",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },        
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "python;tests;parallel;itk;ebsd;compressors"
+        },
+        "SIMPLNX_ENABLE_COMPRESSORS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "FileStore;SimplnxReview"
+        },
+        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_SimplnxReview_SOURCE_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/SimplnxReview"
+        },
+        "SIMPLNX_FileStore_SOURCE_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/FileStore"
+        }
+      }
+    },
+    {
+      "name": "ci-linux-x64-ooc",
+      "displayName": "ci-linux-x64-ooc",
+      "description": "Build configuration for Azure Out-of-Core builds",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/python"
+        },        
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "python;tests;parallel;itk;ebsd;compressors"
+        },
+        "SIMPLNX_ENABLE_COMPRESSORS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "FileStore;SimplnxReview"
+        },
+        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_SimplnxReview_SOURCE_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/SimplnxReview"
+        },
+        "SIMPLNX_FileStore_SOURCE_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/FileStore"
+        }
+      }
+    },
+    {
       "name": "conda",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/../build",
