@@ -185,9 +185,9 @@ Parameters CropImageGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UsePhysicalBounds_Key, "Use Physical Units For Bounds", "If true define physical coordinates for bounds, If false define voxel indices for bounds", false));
-  params.insert(std::make_unique<BoolParameter>(k_CropXDim_Key, "Crop X Dimension", "This box determines whether or not to crop the X dimension.", true));
-  params.insert(std::make_unique<BoolParameter>(k_CropYDim_Key, "Crop Y Dimension", "This box determines whether or not to crop the Y dimension.", true));
-  params.insert(std::make_unique<BoolParameter>(k_CropZDim_Key, "Crop Z Dimension", "This box determines whether or not to crop the Z dimension.", true));
+  params.insert(std::make_unique<BoolParameter>(k_CropXDim_Key, "Crop X Dimension", "Enable cropping in the X dimension.", true));
+  params.insert(std::make_unique<BoolParameter>(k_CropYDim_Key, "Crop Y Dimension", "Enable cropping in the Y dimension.", true));
+  params.insert(std::make_unique<BoolParameter>(k_CropZDim_Key, "Crop Z Dimension", "Enable cropping in the Z dimension.", true));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of voxels of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound in voxels of the volume to crop out", std::vector<uint64>{0, 0, 0},
