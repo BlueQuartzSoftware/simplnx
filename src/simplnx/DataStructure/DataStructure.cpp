@@ -567,7 +567,7 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataOb
     {
       return false;
     }
-    if(!parentContainer->insert(dataObject))
+    if(parentContainer->insert(dataObject).invalid())
     {
       return false;
     }
@@ -658,7 +658,7 @@ bool DataStructure::insertIntoParent(const std::shared_ptr<DataObject>& dataObje
     return false;
   }
 
-  if(!parentGroup->insert(dataObject))
+  if(parentGroup->insert(dataObject).invalid())
   {
     return false;
   }
@@ -692,7 +692,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
     return false;
   }
 
-  if(!newParent->insert(target))
+  if(newParent->insert(target).invalid())
   {
     return false;
   }

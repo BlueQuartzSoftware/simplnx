@@ -252,7 +252,7 @@ public:
    * @param obj
    * @return bool
    */
-  Result<bool> insert(const std::weak_ptr<DataObject>& obj);
+  Result<> insert(const std::weak_ptr<DataObject>& obj);
 
   /**
    * Attempts to remove the specified DataObject from the container. Returns
@@ -374,7 +374,7 @@ protected:
    * @param obj
    * @return bool
    */
-  virtual Result<bool> canInsert(const DataObject* obj) const;
+  virtual Result<> canInsert(const DataObject* obj) const;
 
   /**
    * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap

@@ -126,6 +126,6 @@ protected:
    * @param obj
    * @return bool
    */
-  Result<bool> canInsert(const DataObject* obj) const override;
+  Result<> canInsert(const DataObject* obj) const override;
 };
 } // namespace nx::core
