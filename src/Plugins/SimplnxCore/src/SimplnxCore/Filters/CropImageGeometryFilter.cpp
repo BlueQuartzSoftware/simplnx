@@ -255,7 +255,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   uint64& yMin = s_HeaderCache[m_InstanceId].yMin;
   uint64& zMax = s_HeaderCache[m_InstanceId].zMax;
   uint64& zMin = s_HeaderCache[m_InstanceId].zMin;
-  
+
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
     return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!")};
@@ -368,13 +368,13 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
     // if we have made it here the coordinate bounds are valid so figure out and assign index values to xMax, xMin, ...
     auto srcSpacing = srcImageGeomPtr->getSpacing();
-    xMin = (min[0] < srcOrigin[0]) ? 0 : static_cast<uint64>(std::floor((min[0] - srcOrigin[0]) / spacing[0]));
-    yMin = (min[1] < srcOrigin[1]) ? 0 : static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1]));
-    zMin = (min[2] < srcOrigin[2]) ? 0 : static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2]));
+    xMin = (pCropXDim && min[0] >= srcOrigin[0]) ? static_cast<uint64>(std::floor((min[0] - srcOrigin[0]) / spacing[0])) : 0;
+    yMin = (pCropYDim && min[1] >= srcOrigin[1]) ? static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1])) : 0;
+    zMin = (pCropZDim && min[2] >= srcOrigin[2]) ? static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2])) : 0;
 
-    xMax = (max[0] > maxPoint[0]) ? srcImageGeomPtr->getNumXCells() - 1 : static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0]));
-    yMax = (max[1] > maxPoint[1]) ? srcImageGeomPtr->getNumYCells() - 1 : static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1]));
-    zMax = (max[2] > maxPoint[2]) ? srcImageGeomPtr->getNumZCells() - 1 : static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2]));
+    xMax = (pCropXDim && max[0] <= maxPoint[0]) ? static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0])) : srcImageGeomPtr->getNumXCells() - 1;
+    yMax = (pCropYDim && max[1] <= maxPoint[1]) ? static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1])) : srcImageGeomPtr->getNumYCells() - 1;
+    zMax = (pCropZDim && max[2] <= maxPoint[2]) ? static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2])) : srcImageGeomPtr->getNumZCells() - 1;
   }
 
   if(pCropXDim && xMax > srcImageGeomPtr->getNumXCells() - 1)
