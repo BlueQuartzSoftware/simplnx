@@ -242,6 +242,11 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   {
     // !!! DO NOT USE GeometryStoreCache ELSEWHERE, SPECIAL CASE !!!
     GeometryMath::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+
+    // initialize temp storage 'verts' vector to avoid expensive
+    // calls during tight loops below
+    std::vector<usize> verts(cache.NumVertsPerFace);
+
     // traverse data again to get the faces belonging to each feature
     for(int32 i = 0; i < numFaces; i++)
     {
@@ -256,7 +261,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
         faceLists[g2][(linkLoc[g2])++] = i;
       }
       // find bounding box for each face
-      faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i));
+      faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i, verts));
     }
   }
 

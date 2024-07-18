@@ -43,27 +43,25 @@ template <typename T>
 concept FloatType = std::is_floating_point_v<T>;
 
 template <FloatType FloatT>
-std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId)
+std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId, std::vector<usize>& verts)
 {
   std::array<Point3D<FloatT>, 3> points;
-  std::vector<usize> verts(cache.NumVertsPerFace);
   {
     const usize offset = faceId * cache.NumVertsPerFace;
     if(offset + cache.NumVertsPerFace <= cache.FacesStoreRef.getSize())
     {
       for(usize i = 0; i < cache.NumVertsPerFace; i++)
       {
-        verts[i] = cache.FacesStoreRef.at(offset + i);
+        verts[i] = cache.FacesStoreRef[offset + i];
       }
     }
   }
-  for(usize index = 0; index < verts.size(); index++)
+  for(usize index = 0; index < cache.NumVertsPerFace; index++)
   {
     const usize offset = verts[index] * 3;
-    for(usize i = 0; i < 3; i++)
-    {
-      points[index][i] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + i));
-    }
+    points[index][0] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset));
+    points[index][1] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 1));
+    points[index][2] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 2));
   }
   return points;
 }
@@ -401,7 +399,7 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfRotatedFace(nx::core::T
  * @param faceId
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId);
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId, std::vector<usize>& verts);
 
 /**
  * @param TriangleGeom* faces
@@ -588,6 +586,10 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
 
   detail::GeometryStoreCache cache(triangleGeomRef.getVertices()->getDataStoreRef(), triangleGeomRef.getFaces()->getDataStoreRef(), triangleGeomRef.getNumberOfVerticesPerFace());
 
+  // initialize temp storage 'verts' vector to avoid expensive
+  // calls during tight loops below
+  std::vector<usize> verts(cache.NumVertsPerFace);
+
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
   {
@@ -617,7 +619,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
       }
       else
       {
-        std::array<Point3D<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face]);
+        std::array<Point3D<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face], verts);
         code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
       }
 
