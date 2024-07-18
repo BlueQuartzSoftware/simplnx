@@ -22,6 +22,9 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_UsePhysicalBounds_Key = "use_physical_bounds";
+  static inline constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
+  static inline constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
+  static inline constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
   static inline constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
   static inline constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
   static inline constexpr StringLiteral k_MinCoord_Key = "min_coord";
