@@ -256,7 +256,7 @@ inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::Boun
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(nx::core::Ray<T> ray, const nx::core::BoundingBox3D<T>& bounds)
+bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
 {
   auto origin = ray.getOrigin();
   auto end = ray.getEndPoint();
@@ -394,14 +394,6 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INod
  * @return nx::core::BoundingBox<float32>
  */
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfRotatedFace(nx::core::TriangleGeom& faces, int32 faceId, float32 g[3][3]);
-
-/**
- * @brief Returns the BoundingBox around the specified face.
- * @param faces
- * @param faceId
- * @return nx::core::BoundingBox<float32>
- */
-nx::core::BoundingBox3Df FindBoundingBoxOfFace(const nx::core::TriangleGeom& faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
