@@ -127,7 +127,11 @@ bool Parameters::isParameterActive(std::string_view key, const Arguments& args) 
 
     const IParameter* groupParameter = at(groupKey).get();
 
-    isActive |= func(*groupParameter, value, associatedValue);
+    isActive = func(*groupParameter, value, associatedValue);
+    if(isActive)
+    {
+      break;
+    }
   }
 
   return isActive;
