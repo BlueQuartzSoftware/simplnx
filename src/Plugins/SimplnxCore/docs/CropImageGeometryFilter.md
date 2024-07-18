@@ -4,6 +4,7 @@
 
 This **Filter** allows the user to crop a region of interest (ROI) from an **Image Geometry**.  The input parameters are in units of voxels or physical coordinates.  
 
+It is possible to also crop specific dimensions of the **Image Geometry** by toggling **Crop X Dimension**, **Crop Y Dimension**, and **Crop Z Dimension** ON and OFF.
 
 ## WARNING: NeighborList Removal
 
