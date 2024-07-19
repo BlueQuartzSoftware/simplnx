@@ -256,11 +256,31 @@ inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::Boun
 template <typename T>
 bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
 {
-  const auto& origin = ray.getOrigin();
+  const auto& origin = ray.getOriginRef();
   const auto& min = bounds.getMinPoint();
   const auto& max = bounds.getMaxPoint();
 
-  auto end = ray.getEndPoint();
+  auto end = ray.getEndPointRef();
+
+  return !((min[0] > origin[0]) && (min[0] > end[0]) && (min[1] > origin[1]) && (min[1] > end[1]) && (min[2] > origin[2]) && (min[2] > end[2]) &&
+           (max[0] < origin[0]) && (max[0] < end[0]) && (max[1] < origin[1]) && (max[1] < end[1]) && (max[2] < origin[2]) && (max[2] < end[2]));
+}
+
+/**
+ * @brief [Optimized Overload] Returns true if a ray intersects the specified box. Returns false
+ * otherwise.
+ * @param ray
+ * @param bounds
+ * @return bool
+ */
+template <typename T>
+bool DoesRayIntersectBox(const nx::core::Ray<T, true>& ray, const nx::core::BoundingBox3D<T>& bounds)
+{
+  const auto& origin = ray.getOriginRef();
+  const auto& min = bounds.getMinPoint();
+  const auto& max = bounds.getMaxPoint();
+
+  const auto& end = ray.getEndPointRef();
 
   return !((min[0] > origin[0]) && (min[0] > end[0]) && (min[1] > origin[1]) && (min[1] > end[1]) && (min[2] > origin[2]) && (min[2] > end[2]) &&
            (max[0] < origin[0]) && (max[0] < end[0]) && (max[1] < origin[1]) && (max[1] < end[1]) && (max[2] < origin[2]) && (max[2] < end[2]));
@@ -447,6 +467,52 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
 }
 
 /**
+ * @brief [Optimized Overload] Returns true if the specified Ray crosses into or out of the triangle
+ * defined by its corner points. Returns false otherwise.
+ *
+ * Tangential intersections where the Ray touches the triangle but does not
+ * enter or leave will return false.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @return bool
+ */
+template <typename T>
+char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T, true>& ray)
+{
+  T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPointRef());
+  T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPointRef());
+  T vol2 = FindTetrahedronVolume(ray.getOrigin(), p2, p0, ray.getEndPointRef());
+
+  bool hasPos = vol0 > 0 || vol1 > 0 || vol2 > 0;
+  bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
+  int32 zeroCount = !vol0 + !vol1 + !vol2;
+
+  if(!(hasPos && hasNeg))
+  {
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
+  }
+
+  return '0';
+}
+
+/**
  * @brief Returns true if the specified Ray intersects a plan defined by three
  * points along the surface. Returns false otherwise.
  * @param ray
@@ -457,6 +523,53 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
  */
 template <typename T>
 char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+{
+  Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
+  T d = FindPlaneCoefficients(p0, normal);
+
+  T numerator = d - ray.getOrigin().dot(normal);
+
+  Point3D<T> rq = ray.getEndPoint() - ray.getOrigin();
+  T denominator = rq.dot(normal);
+
+  if(denominator == 0.0)
+  {
+    if(numerator == 0.0)
+    {
+      return 'p';
+    }
+
+    return '0';
+  }
+
+  T t = numerator / denominator;
+  if(t > 0.0 && t < 1.0)
+  {
+    return '1';
+  }
+  else if(numerator == 0.0)
+  {
+    return 'q';
+  }
+  else if(numerator == denominator)
+  {
+    return 'r';
+  }
+
+  return '0';
+}
+
+/**
+ * @brief [Optimized Overload] Returns true if the specified Ray intersects a plan defined by three
+ * points along the surface. Returns false otherwise.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @return bool
+ */
+template <typename T>
+char RayIntersectsPlane(const Ray<T, true>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
   T d = FindPlaneCoefficients(p0, normal);
@@ -531,6 +644,43 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
 }
 
 /**
+ * @brief [Optimized Overload] Checks if the specified Ray intersects a triangle defined by the
+ * corner points. The inter parameter is updated to reflect the points at which
+ * the ray intersects the triangle. Returns the number of points at which the
+ * Ray intersects the triangle.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @param inter
+ * @return char
+ */
+template <typename T>
+char RayIntersectsTriangle(const Ray<T, true>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+{
+  char code = RayIntersectsPlane(ray, p0, p1, p2);
+
+  // Specifically use if-else chain to try to get the compiler to make
+  // switch-like optimizations over the chain because 'code' is unbounded
+  if(code == '1')
+  {
+    return RayCrossesTriangle(p0, p1, p2, ray);
+  }
+  else if(code == 'q')
+  {
+    return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
+  }
+  else if(code == 'r')
+  {
+    return IsPointInTriangle(p0, p1, p2, ray.getEndPointRef());
+  }
+  else
+  {
+    return code;
+  }
+}
+
+/**
  * @breif !!!Uses unseeded randomness, but only for validity checks [SHOULD not affect outcomes]!!! Determines if a point is in the polyhedron
  * @param faces the geometry to query
  * @param faceIds the list of feature ids
@@ -579,8 +729,8 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
     eulerAngles[0] = w * std::cos(t);
     eulerAngles[1] = w * std::sin(t);
 
-    // Generate and add ray to point to find other end
-    Ray<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
+    // Generate and add ray to point to find other end [optimized version with lifetime caching]
+    Ray<T, true> ray(point, ZXZEuler(eulerAngles.data()), radius);
 
     bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)

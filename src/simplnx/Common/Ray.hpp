@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <utility>
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/EulerAngle.hpp"
@@ -16,7 +17,7 @@ namespace nx::core
  * simplify and better describe values used in GeometryMath. The rays initial alignment
  * is assumed to be with the Y-axis.
  */
-template <typename T>
+template <typename T, bool CacheEndV = false>
 class Ray
 {
 public:
@@ -41,11 +42,15 @@ public:
    * @param ang
    * @param length
    */
-  Ray(const PointType& origin, const ZXZEulerType& ang, LengthType length)
+  Ray(const PointType& origin, ZXZEulerType ang, LengthType length)
   : m_Origin(origin)
-  , m_Angle(ang)
+  , m_Angle(std::move(ang))
   , m_Length(length)
   {
+    if constexpr(CacheEndV)
+    {
+      m_Endpoint = calculateEndpoint();
+    }
   }
 
   /**
@@ -85,11 +90,10 @@ public:
    * @brief Returns the origin point.
    * @return const PointType&
    */
-  const PointType& getOrigin() const
+  const PointType& getOriginRef() const
   {
     return m_Origin;
   }
-
 
   /**
    * @brief Returns the Euler angle describing the Ray's direction.
@@ -143,24 +147,19 @@ public:
    */
   PointType getEndPoint() const
   {
-    if(!m_Endpoint.toArray().empty())
+    if constexpr(CacheEndV)
     {
-    const auto sin1 = std::sin(m_Angle[0]);
-    const auto sin2 = std::sin(m_Angle[1]);
-    const auto sin3 = std::sin(m_Angle[2]);
-
-    const auto cos1 = std::cos(m_Angle[0]);
-    const auto cos2 = std::cos(m_Angle[1]);
-    const auto cos3 = std::cos(m_Angle[2]);
-
-    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
-    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
-    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
-    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
-
-    m_Endpoint = m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+      return m_Endpoint;
     }
+    else
+    {
+      return calculateEndpoint();
+    }
+  }
 
+  template <bool E = CacheEndV, class = std::enable_if_t<E, bool>>
+  const PointType& getEndPointRef() const
+  {
     return m_Endpoint;
   }
 
@@ -234,5 +233,23 @@ private:
 
   // Optional caching for speed
   PointType m_Endpoint = {};
+
+  PointType calculateEndpoint() const
+  {
+    const auto sin1 = std::sin(m_Angle[0]);
+    const auto sin2 = std::sin(m_Angle[1]);
+    const auto sin3 = std::sin(m_Angle[2]);
+
+    const auto cos1 = std::cos(m_Angle[0]);
+    const auto cos2 = std::cos(m_Angle[1]);
+    const auto cos3 = std::cos(m_Angle[2]);
+
+    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
+    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
+    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
+    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
+
+    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+  }
 };
 } // namespace nx::core
