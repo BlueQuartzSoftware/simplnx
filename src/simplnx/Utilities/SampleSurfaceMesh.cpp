@@ -40,12 +40,11 @@ public:
   {
     for(usize iter = start; iter < end; iter++)
     {
-      float32 radius = 0.0f;
       usize numPoints = m_Points.size();
 
       // find bounding box for current feature
       BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds[iter]));
-      radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint());
+      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
 
       // check points in vertex array to see if they are in the bounding box of the feature
       for(usize i = 0; i < numPoints; i++)
@@ -108,7 +107,7 @@ public:
 
     // find bounding box for current feature
     BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds));
-    float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint());
+    float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
 
     usize pointsVisited = 0;
     // check points in vertex array to see if they are in the bounding box of the feature

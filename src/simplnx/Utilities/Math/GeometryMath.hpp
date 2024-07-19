@@ -243,7 +243,7 @@ inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::Boun
 {
   const auto& min = box.getMinPoint();
   const auto& max = box.getMaxPoint();
-  return (min[0] <= point[0]) && (point[0] <= max[0]) && (min[1] <= point[1]) && (point[1] <= max[1]) && (min[2] <= point[2]) && (point[2] <= max[2]);
+  return !(min[0] > point[0]) && !(point[0] > max[0]) && !(min[1] > point[1]) && !(point[1] > max[1]) && !(min[2] > point[2]) && !(point[2] > max[2]);
 }
 
 /**
@@ -260,10 +260,12 @@ bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBo
   const auto& min = bounds.getMinPoint();
   const auto& max = bounds.getMaxPoint();
 
-  auto end = ray.getEndPointRef();
+  auto end = ray.getEndPoint();
 
-  return !((min[0] > origin[0]) && (min[0] > end[0]) && (min[1] > origin[1]) && (min[1] > end[1]) && (min[2] > origin[2]) && (min[2] > end[2]) &&
-           (max[0] < origin[0]) && (max[0] < end[0]) && (max[1] < origin[1]) && (max[1] < end[1]) && (max[2] < origin[2]) && (max[2] < end[2]));
+  // The line should have one point fall in the box since the length
+  // is half the bounding box diameter
+  return !((min[0] > origin[0]) && (min[0] > end[0])) && !((min[1] > origin[1]) && (min[1] > end[1])) && !((min[2] > origin[2]) && (min[2] > end[2])) && !((max[0] < origin[0]) && (max[0] < end[0])) &&
+         !((max[1] < origin[1]) && (max[1] < end[1])) && !((max[2] < origin[2]) && (max[2] < end[2]));
 }
 
 /**
@@ -282,8 +284,10 @@ bool DoesRayIntersectBox(const nx::core::Ray<T, true>& ray, const nx::core::Boun
 
   const auto& end = ray.getEndPointRef();
 
-  return !((min[0] > origin[0]) && (min[0] > end[0]) && (min[1] > origin[1]) && (min[1] > end[1]) && (min[2] > origin[2]) && (min[2] > end[2]) &&
-           (max[0] < origin[0]) && (max[0] < end[0]) && (max[1] < origin[1]) && (max[1] < end[1]) && (max[2] < origin[2]) && (max[2] < end[2]));
+  // The line should have one point fall in the box since the length
+  // is half the bounding box diameter
+  return !((min[0] > origin[0]) && (min[0] > end[0])) && !((min[1] > origin[1]) && (min[1] > end[1])) && !((min[2] > origin[2]) && (min[2] > end[2])) && !((max[0] < origin[0]) && (max[0] < end[0])) &&
+         !((max[1] < origin[1]) && (max[1] < end[1])) && !((max[2] < origin[2]) && (max[2] < end[2]));
 }
 
 /**
@@ -734,13 +738,11 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
         doNextCheck = true;
         break;
       }
-
       /* If ray hits face at interior point, increment crossings. */
       else if(code == 'f')
       {
         crossings++;
       }
-
       /* If query endpoint q sits on a V/E/F, return that code. */
       else if(code == 'V' || code == 'E' || code == 'F')
       {
