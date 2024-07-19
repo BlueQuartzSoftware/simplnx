@@ -82,6 +82,16 @@ public:
   }
 
   /**
+   * @brief Returns the origin point.
+   * @return const PointType&
+   */
+  const PointType& getOrigin() const
+  {
+    return m_Origin;
+  }
+
+
+  /**
    * @brief Returns the Euler angle describing the Ray's direction.
    * @return ZXZEulerType
    */
@@ -133,6 +143,8 @@ public:
    */
   PointType getEndPoint() const
   {
+    if(!m_Endpoint.toArray().empty())
+    {
     const auto sin1 = std::sin(m_Angle[0]);
     const auto sin2 = std::sin(m_Angle[1]);
     const auto sin3 = std::sin(m_Angle[2]);
@@ -146,7 +158,10 @@ public:
     Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
     Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
 
-    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+    m_Endpoint = m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+    }
+
+    return m_Endpoint;
   }
 
   /**
@@ -216,5 +231,8 @@ private:
   PointType m_Origin;
   ZXZEulerType m_Angle;
   LengthType m_Length;
+
+  // Optional caching for speed
+  PointType m_Endpoint = {};
 };
 } // namespace nx::core

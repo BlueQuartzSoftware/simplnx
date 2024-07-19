@@ -256,36 +256,14 @@ inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::Boun
 template <typename T>
 bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
 {
-  auto origin = ray.getOrigin();
-  auto end = ray.getEndPoint();
-  auto min = bounds.getMinPoint();
-  auto max = bounds.getMaxPoint();
+  const auto& origin = ray.getOrigin();
+  const auto& min = bounds.getMinPoint();
+  const auto& max = bounds.getMaxPoint();
 
-  if((min[0] > origin[0]) && (min[0] > end[0]))
-  {
-    return false;
-  }
-  if((max[0] < origin[0]) && (max[0] < end[0]))
-  {
-    return false;
-  }
-  if((min[1] > origin[1]) && (min[1] > end[1]))
-  {
-    return false;
-  }
-  if((max[1] < origin[1]) && (max[1] < end[1]))
-  {
-    return false;
-  }
-  if((min[2] > origin[2]) && (min[2] > end[2]))
-  {
-    return false;
-  }
-  if((max[2] < origin[2]) && (max[2] < end[2]))
-  {
-    return false;
-  }
-  return true;
+  auto end = ray.getEndPoint();
+
+  return !((min[0] > origin[0]) && (min[0] > end[0]) && (min[1] > origin[1]) && (min[1] > end[1]) && (min[2] > origin[2]) && (min[2] > end[2]) &&
+           (max[0] < origin[0]) && (max[0] < end[0]) && (max[1] < origin[1]) && (max[1] < end[1]) && (max[2] < origin[2]) && (max[2] < end[2]));
 }
 
 /**
