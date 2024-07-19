@@ -241,8 +241,8 @@ T FindDistanceFromPlane(const nx::core::Point3D<T>& p0, const nx::core::Point3D<
 template <typename T>
 inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::BoundingBox3D<T>& box)
 {
-  auto min = box.getMinPoint();
-  auto max = box.getMaxPoint();
+  const auto& min = box.getMinPoint();
+  const auto& max = box.getMaxPoint();
   return (min[0] <= point[0]) && (point[0] <= max[0]) && (min[1] <= point[1]) && (point[1] <= max[1]) && (min[2] <= point[2]) && (point[2] <= max[2]);
 }
 
@@ -534,9 +534,9 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
 
   // Specifically use if-else chain to try to get the compiler to make
   // switch-like optimizations over the chain because 'code' is unbounded
-  if(code == '0')
+  if(code == '1')
   {
-    return '0';
+    return RayCrossesTriangle(p0, p1, p2, ray);
   }
   else if(code == 'q')
   {
@@ -545,14 +545,6 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
   else if(code == 'r')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getEndPoint());
-  }
-  else if(code == 'p')
-  {
-    return 'p';
-  }
-  else if(code == '1')
-  {
-    return RayCrossesTriangle(p0, p1, p2, ray);
   }
   else
   {
@@ -618,7 +610,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
       char code = '?';
       if(!DoesRayIntersectBox(ray, faceBBs[faceIds[face]]))
       {
-        code = '0';
+        continue;
       }
       else
       {
@@ -644,7 +636,6 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
       {
         return (code);
       }
-
     } /* End check each face */
     if(doNextCheck)
     {
