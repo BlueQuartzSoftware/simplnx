@@ -321,30 +321,31 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
   T area1 = FindTriangleArea(point, p1, p2);
   T area2 = FindTriangleArea(point, p2, p0);
 
-  if((area0 == 0 && area1 > 0 && area2 > 0) || (area1 == 0 && area0 > 0 && area2 > 0) || (area2 == 0 && area0 > 0 && area1 > 0))
+  bool hasPos = area0 > 0 || area1 > 0 || area2 > 0;
+  bool hasNeg = area0 < 0 || area1 < 0 || area2 < 0;
+  int32 zeroCount = !area0 + !area1 + !area2;
+
+  if(!(hasPos && hasNeg))
   {
-    return 'E';
+    if(zeroCount == 0)
+    {
+      return 'F';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'E';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'V';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
   }
-  if((area0 == 0 && area1 < 0 && area2 < 0) || (area1 == 0 && area0 < 0 && area2 < 0) || (area2 == 0 && area0 < 0 && area1 < 0))
-  {
-    return 'E';
-  }
-  if((area0 > 0 && area1 > 0 && area2 > 0) || (area0 < 0 && area1 < 0 && area2 < 0))
-  {
-    return 'F';
-  }
-  if((area0 == 0 && area1 == 0 && area2 == 0))
-  {
-    return '?';
-  }
-  else if((area0 == 0 && area1 == 0) || (area0 == 0 && area2 == 0) || (area1 == 0 && area2 == 0))
-  {
-    return 'V';
-  }
-  else
-  {
-    return '0';
-  }
+
+  return '0';
 }
 
 /**
@@ -440,30 +441,31 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPoint());
   T vol2 = FindTetrahedronVolume(ray.getOrigin(), p2, p0, ray.getEndPoint());
 
-  if((vol0 > 0 && vol1 > 0 && vol2 > 0) || (vol0 < 0 && vol1 < 0 && vol2 < 0))
+  bool hasPos = vol0 > 0 || vol1 > 0 || vol2 > 0;
+  bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
+  int32 zeroCount = !vol0 + !vol1 + !vol2;
+
+  if(!(hasPos && hasNeg))
   {
-    return 'f';
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
   }
-  if((vol0 > 0 || vol1 > 0 || vol2 > 0) && (vol0 < 0 || vol1 < 0 || vol2 < 0))
-  {
-    return '0';
-  }
-  if((vol0 == 0 && vol1 == 0 && vol2 == 0))
-  {
-    return '?';
-  }
-  if((vol0 == 0 && vol1 == 0) || (vol0 == 0 && vol2 == 0) || (vol1 == 0 && vol2 == 0))
-  {
-    return 'v';
-  }
-  else if(vol0 == 0 || vol1 == 0 || vol2 == 0)
-  {
-    return 'e';
-  }
-  else
-  {
-    return '?';
-  }
+
+  return '0';
 }
 
 /**
@@ -501,11 +503,11 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
   {
     return '1';
   }
-  if(numerator == 0.0)
+  else if(numerator == 0.0)
   {
     return 'q';
   }
-  if(numerator == denominator)
+  else if(numerator == denominator)
   {
     return 'r';
   }
@@ -530,19 +532,21 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
 {
   char code = RayIntersectsPlane(ray, p0, p1, p2);
 
+  // Specifically use if-else chain to try to get the compiler to make
+  // switch-like optimizations over the chain because 'code' is unbounded
   if(code == '0')
   {
     return '0';
   }
-  if(code == 'q')
+  else if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
-  if(code == 'r')
+  else if(code == 'r')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getEndPoint());
   }
-  if(code == 'p')
+  else if(code == 'p')
   {
     return 'p';
   }
@@ -580,8 +584,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   }
 
   // Standard mersenne_twister_engine random seed
-  // std::mt19937_64 generator(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
-  std::mt19937_64 generator(std::mt19937_64::default_seed);
+  std::mt19937_64 generator(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
   std::uniform_real_distribution<T> distribution(0.0, 1.0);
 
   detail::GeometryStoreCache cache(triangleGeomRef.getVertices()->getDataStoreRef(), triangleGeomRef.getFaces()->getDataStoreRef(), triangleGeomRef.getNumberOfVerticesPerFace());
@@ -623,7 +626,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
         code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
       }
 
-      /* If ray is degenerate, then goto outer while to generate another. */
+      /* If ray is degenerate, then go to outer while to generate another. */
       if(code == 'p' || code == 'v' || code == 'e' || code == '?')
       {
         doNextCheck = true;
@@ -653,7 +656,8 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   } /* End while loop */
 
   /* q strictly interior to polyhedron if an odd number of crossings. */
-  if((crossings % 2) == 1)
+  // Bitwise & for speed
+  if(crossings & 1)
   {
     return 'i';
   }
