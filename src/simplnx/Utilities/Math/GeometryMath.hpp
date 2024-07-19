@@ -323,27 +323,21 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
   bool hasNeg = area0 < 0 || area1 < 0 || area2 < 0;
   int32 zeroCount = !area0 + !area1 + !area2;
 
-  if(!(hasPos && hasNeg))
-  {
-    if(zeroCount == 0)
-    {
-      return 'F';
-    }
-    else if(zeroCount == 1)
-    {
-      return 'E';
-    }
-    else if(zeroCount == 2)
-    {
-      return 'V';
-    }
-    else if(zeroCount == 3)
-    {
-      return '?';
-    }
-  }
+  char code = '?';
 
-  return '0';
+  bool secondaryCond = !zeroCount;
+  code = secondaryCond * 'F' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 1;
+  code = secondaryCond * 'E' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 2;
+  code = secondaryCond * 'V' + !secondaryCond * code;
+
+  bool primaryCond = !(hasPos && hasNeg);
+  code = !primaryCond * '0' + primaryCond * code;
+
+  return code;
 }
 
 /**
@@ -433,7 +427,7 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::T
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
+char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPoint());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPoint());
@@ -443,27 +437,21 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
   bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
   int32 zeroCount = !vol0 + !vol1 + !vol2;
 
-  if(!(hasPos && hasNeg))
-  {
-    if(zeroCount == 0)
-    {
-      return 'f';
-    }
-    else if(zeroCount == 1)
-    {
-      return 'e';
-    }
-    else if(zeroCount == 2)
-    {
-      return 'v';
-    }
-    else if(zeroCount == 3)
-    {
-      return '?';
-    }
-  }
+  char code = '?';
 
-  return '0';
+  bool secondaryCond = !zeroCount;
+  code = secondaryCond * 'f' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 1;
+  code = secondaryCond * 'e' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 2;
+  code = secondaryCond * 'v' + !secondaryCond * code;
+
+  bool primaryCond = !(hasPos && hasNeg);
+  code = !primaryCond * '0' + primaryCond * code;
+
+  return code;
 }
 
 /**
@@ -479,7 +467,7 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T, true>& ray)
+char RayCrossesTriangle(const Ray<T, true>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPointRef());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPointRef());
@@ -489,27 +477,21 @@ char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
   bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
   int32 zeroCount = !vol0 + !vol1 + !vol2;
 
-  if(!(hasPos && hasNeg))
-  {
-    if(zeroCount == 0)
-    {
-      return 'f';
-    }
-    else if(zeroCount == 1)
-    {
-      return 'e';
-    }
-    else if(zeroCount == 2)
-    {
-      return 'v';
-    }
-    else if(zeroCount == 3)
-    {
-      return '?';
-    }
-  }
+  char code = '?';
 
-  return '0';
+  bool secondaryCond = !zeroCount;
+  code = secondaryCond * 'f' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 1;
+  code = secondaryCond * 'e' + !secondaryCond * code;
+
+  secondaryCond = zeroCount == 2;
+  code = secondaryCond * 'v' + !secondaryCond * code;
+
+  bool primaryCond = !(hasPos && hasNeg);
+  code = !primaryCond * '0' + primaryCond * code;
+
+  return code;
 }
 
 /**
@@ -627,7 +609,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
   // switch-like optimizations over the chain because 'code' is unbounded
   if(code == '1')
   {
-    return RayCrossesTriangle(p0, p1, p2, ray);
+    return RayCrossesTriangle(ray, p0, p1, p2);
   }
   else if(code == 'q')
   {
@@ -664,7 +646,7 @@ char RayIntersectsTriangle(const Ray<T, true>& ray, const nx::core::Point3D<T>& 
   // switch-like optimizations over the chain because 'code' is unbounded
   if(code == '1')
   {
-    return RayCrossesTriangle(p0, p1, p2, ray);
+    return RayCrossesTriangle(ray, p0, p1, p2);
   }
   else if(code == 'q')
   {
