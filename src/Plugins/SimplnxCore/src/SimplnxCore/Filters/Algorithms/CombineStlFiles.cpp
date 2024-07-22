@@ -82,6 +82,16 @@ const std::atomic_bool& CombineStlFiles::getCancel()
 Result<> CombineStlFiles::operator()()
 {
   DataStructure tempDataStructure;
+  std::vector<fs::path> paths;
+  const std::string ext(".stl");
+  // Just count up the stl files in the directory
+  for(const auto& entry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
+  {
+    if(fs::is_regular_file(entry) && entry.path().extension() == ext)
+      paths.emplace_back(entry.path().filename());
+  }
+
+  int32 currentIndex = 0;
   for(const auto& dirEntry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
   {
     if(getCancel())
@@ -90,6 +100,8 @@ Result<> CombineStlFiles::operator()()
     }
 
     const fs::path& stlFilePath = dirEntry.path();
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("({}/{}) Reading {}", currentIndex++, paths.size(), stlFilePath.string()));
+
     if(fs::is_regular_file(stlFilePath) && StringUtilities::toLower(stlFilePath.extension().string()) == ".stl")
     {
       ReadStlFileFilter stlFileReader;
@@ -144,6 +156,8 @@ Result<> CombineStlFiles::operator()()
   usize faceLabelOffset = 0;
   usize vertexLabelOffset = 0;
 
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving final triangle geometry data..."));
+
   // Loop over each temp geometry and copy the data into the destination geometry
   for(auto* currentGeometry : stlGeometries)
   {
@@ -167,11 +181,7 @@ Result<> CombineStlFiles::operator()()
 
     if(m_InputValues->LabelFaces)
     {
-      auto& faceLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FaceFileIndexArrayPath);
-      //      for(usize tuple = faceLabelOffset; tuple < faceLabelOffset + currentGeomNumTriangles; tuple++)
-      //      {
-      //        faceLabels[tuple] = fileIndex;
-      //      }
+      auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceFileIndexArrayPath);
       std::fill(faceLabels.begin() + faceLabelOffset, faceLabels.begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
     }
 
@@ -179,11 +189,7 @@ Result<> CombineStlFiles::operator()()
 
     if(m_InputValues->LabelVertices)
     {
-      auto& vertexLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->VertexFileIndexArrayPath);
-      //      for(usize tuple = vertexLabelOffset; tuple < vertexLabelOffset + currentGeomNumVertices; tuple++)
-      //      {
-      //        vertexLabels[tuple] = fileIndex;
-      //      }
+      auto& vertexLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFileIndexArrayPath);
       std::fill(vertexLabels.begin() + vertexLabelOffset, vertexLabels.begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
     }
     vertexLabelOffset += currentGeomNumVertices;

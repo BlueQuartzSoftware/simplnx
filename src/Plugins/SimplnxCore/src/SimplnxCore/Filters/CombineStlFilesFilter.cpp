@@ -61,12 +61,14 @@ Parameters CombineStlFilesFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilesPath_Key, "Path to STL Files", "The path to the folder containing all the STL files to be combined", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_LabelFaces_Key, "Label Triangles", "When true, each triangle will get an index associated with the index of the STL file", true));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelName_Key, "Created Face Labels", "The name of the face labels data array", "FileIndex"));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_LabelFaces_Key, "Generate Triangle Part Numbers", "When true, each triangle will get an index associated with the index of the STL file", true));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelName_Key, "Created Part Number Array", "The name of the part numbers data array", "Part Number"));
   params.linkParameters(k_LabelFaces_Key, k_FaceLabelName_Key, true);
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_LabelVertices_Key, "Label Vertices", "When true, each vertex will get an index associated with the index of the STL file", true));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Vertex Labels", "The name of the vertex labels data array", "FileIndex"));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_LabelVertices_Key, "Generate Vertex Part Numbers", "When true, each vertex will get an index associated with the index of the STL file", true));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Part Number Labels", "The name of the part numbers data array", "Part Number"));
   params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
@@ -140,7 +142,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   if(createFaceLabels)
   {
     auto facePath = faceAttributeMatrixDataPath.createChildPath(faceLabelsName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, std::vector<usize>{1}, std::vector<usize>{1}, facePath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, facePath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -148,7 +150,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   if(createVertexLabels)
   {
     auto vertexPath = pTriangleDataContainerNameValue.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(vertexLabelsName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, std::vector<usize>{1}, std::vector<usize>{1}, vertexPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, vertexPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
