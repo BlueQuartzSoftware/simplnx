@@ -116,6 +116,17 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   return result;
 }
 
+/**
+ * @brief
+ * @param path
+ * @param numTriangles
+ * @param header
+ * @param triangles
+ * @param vertices
+ * @param featureIds
+ * @param featureId
+ * @return
+ */
 Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices,
                           const Int32Array& featureIds, const int32 featureId)
 {
@@ -168,6 +179,7 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   nonstd::span<uint16> attrByteCountPtr(reinterpret_cast<uint16*>(data.data() + 48), 2);
   attrByteCountPtr[0] = 0;
 
+  const usize numComps = featureIds.getNumberOfComponents();
   // Loop over all the triangles for this spin
   for(IGeometry::MeshIndexType triangle = 0; triangle < numTriangles; ++triangle)
   {
@@ -176,13 +188,12 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
     IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
     IGeometry::MeshIndexType nId2 = triangles[triangle * 3 + 2];
 
-    if(featureIds[triangle * 2] == featureId)
+    if(featureIds[triangle * numComps] == featureId)
     {
       // winding = 0; // 0 = Write it using forward spin
     }
-    else if(featureIds[triangle * 2 + 1] == featureId)
+    else if(numComps > 1 && featureIds[triangle * numComps + 1] == featureId)
     {
-      // winding = 1; // Write it using backward spin
       // Switch the 2 node indices
       IGeometry::MeshIndexType temp = nId1;
       nId1 = nId2;
@@ -222,7 +233,7 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
     {
       fclose(filePtr);
       return {MakeWarningVoidResult(
-          -27873, fmt::format("Error Writing STL File '{}'. Not enough elements written for Feature Id {}. Wrote {} of 50. No file written.", path.filename().string(), featureId, totalWritten))};
+          -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount, totalWritten))};
     }
     triCount++;
   }
@@ -262,7 +273,7 @@ Result<> WriteStlFile::operator()()
 
   auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
 
-  if(groupingType == GroupingType::None)
+  if(groupingType == GroupingType::SingleFile)
   {
     auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputStlFile);
     if(atomicFileResult.invalid())
@@ -309,75 +320,109 @@ Result<> WriteStlFile::operator()()
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
   std::vector<Result<AtomicFile>> fileList;
 
-  { // Scope to cut overhead and ensure file lock is released on windows
+  if(groupingType == GroupingType::Features)
+  {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-    // Store all the unique Spins
-    if(groupingType == GroupingType::Features)
+
+    // Faster and more memory efficient since we don't need phases
+    std::unordered_set<int32> uniqueGrainIds(featureIds.cbegin(), featureIds.cend());
+
+    fileList.reserve(uniqueGrainIds.size());
+
+    usize fileIndex = 0;
+    for(const auto featureId : uniqueGrainIds)
     {
-      // Faster and more memory efficient since we don't need phases
-      std::unordered_set<int32> uniqueGrainIds(featureIds.cbegin(), featureIds.cend());
-
-      fileList.reserve(uniqueGrainIds.size());
-
-      usize fileIndex = 0;
-      for(const auto featureId : uniqueGrainIds)
+      // Generate the output file
+      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId)));
+      if(fileList[fileIndex].invalid())
       {
-        // Generate the output file
-        fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId)));
-        if(fileList[fileIndex].invalid())
-        {
-          return ConvertResult(std::move(fileList[fileIndex]));
-        }
-
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-
-        auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices,
-                                         featureIds, featureId);
-        // if valid Loop over all the triangles for this spin
-        if(result.invalid())
-        {
-          return result;
-        }
-
-        fileIndex++;
+        return ConvertResult(std::move(fileList[fileIndex]));
       }
+
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
+
+      auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices,
+                                       featureIds, featureId);
+      // if valid Loop over all the triangles for this spin
+      if(result.invalid())
+      {
+        return result;
+      }
+
+      fileIndex++;
     }
-    if(groupingType == GroupingType::FeaturesAndPhases)
+  }
+  if(groupingType == GroupingType::FeaturesAndPhases)
+  {
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
+
+    std::map<int32, int32> uniqueGrainIdToPhase;
+
+    const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
+    for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
-      std::map<int32, int32> uniqueGrainIdToPhase;
+      uniqueGrainIdToPhase.emplace(featureIds[i * 2], featurePhases[i * 2]);
+      uniqueGrainIdToPhase.emplace(featureIds[i * 2 + 1], featurePhases[i * 2 + 1]);
+    }
 
-      const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
-      for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
+    // Loop over the unique feature Ids
+    usize fileIndex = 0;
+    for(const auto& [featureId, value] : uniqueGrainIdToPhase)
+    {
+      // Generate the output file
+      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId)));
+
+      if(fileList[fileIndex].invalid())
       {
-        uniqueGrainIdToPhase.emplace(featureIds[i * 2], featurePhases[i * 2]);
-        uniqueGrainIdToPhase.emplace(featureIds[i * 2 + 1], featurePhases[i * 2 + 1]);
+        return ConvertResult(std::move(fileList[fileIndex]));
       }
 
-      // Loop over the unique feature Ids
-      usize fileIndex = 0;
-      for(const auto& [featureId, value] : uniqueGrainIdToPhase)
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
+
+      auto result =
+          ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles,
+                             {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds, featureId);
+      // if valid loop over all the triangles for this spin
+      if(result.invalid())
       {
-        // Generate the output file
-        fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId)));
-
-        if(fileList[fileIndex].invalid())
-        {
-          return ConvertResult(std::move(fileList[fileIndex]));
-        }
-
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-
-        auto result =
-            ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles,
-                               {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds, featureId);
-        // if valid loop over all the triangles for this spin
-        if(result.invalid())
-        {
-          return result;
-        }
-
-        fileIndex++;
+        return result;
       }
+
+      fileIndex++;
+    }
+  }
+
+  // Group Triangles by Part Number which is a single component Int32 Array
+  if(groupingType == GroupingType::PartNumber)
+  {
+    const auto& partNumbers = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PartNumberPath);
+    // Faster and more memory efficient since we don't need phases
+    // Build up a list of the unique Part Numbers
+    std::unordered_set<int32> uniquePartNumbers(partNumbers.cbegin(), partNumbers.cend());
+    fileList.reserve(uniquePartNumbers.size()); // Reserved enough file names
+
+    // Loop over each Part Number and write a file
+    usize fileIndex = 0;
+    for(const auto currentPartNumber : uniquePartNumbers)
+    {
+      // Generate the output file
+      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber)));
+      if(fileList[fileIndex].invalid())
+      {
+        return ConvertResult(std::move(fileList[fileIndex]));
+      }
+
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
+
+      auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices,
+                                       partNumbers, currentPartNumber);
+      // If Result is invalid, report an error
+      if(result.invalid())
+      {
+        return result;
+      }
+
+      fileIndex++;
     }
   }
 

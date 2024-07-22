@@ -17,7 +17,8 @@ enum class GroupingType : ChoicesParameter::ValueType
 {
   Features,
   FeaturesAndPhases,
-  None
+  SingleFile,
+  PartNumber
 };
 
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
@@ -29,6 +30,7 @@ struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
   DataPath FeatureIdsPath;
   DataPath FeaturePhasesPath;
   DataPath TriangleGeomPath;
+  DataPath PartNumberPath;
 };
 
 /**
