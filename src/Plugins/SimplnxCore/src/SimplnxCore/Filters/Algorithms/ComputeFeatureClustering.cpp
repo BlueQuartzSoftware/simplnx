@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 
 #include <random>
+#include <simplnx/Utilities/DataArrayUtilities.hpp>
 
 using namespace nx::core;
 
@@ -34,14 +35,12 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   freq.resize(static_cast<size_t>(currentNumBins + 1));
 
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(userSeedValue);
+  std::mt19937_64 generator(userSeedValue); // Standard mersenne_twister_engine seeded
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
   randomCentroids.resize(largeNumber * 3);
 
-  // Generating all of the random points and storing their coordinates in randomCentroids
+  // Generating all the random points and storing their coordinates in randomCentroids
   for(usize i = 0; i < largeNumber; i++)
   {
     const auto featureOwnerIdx = static_cast<usize>(distribution(generator) * totalPoints);
@@ -61,7 +60,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
 
   distanceList.resize(largeNumber);
 
-  // Calculating all of the distances and storing them in the distance list
+  // Calculating all the distances and storing them in the distance list
   for(size_t i = 1; i < largeNumber; i++)
   {
     const float32 x = randomCentroids[3 * i];
@@ -132,17 +131,25 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
 Result<> ComputeFeatureClustering::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& equivalentDiameters = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath);
-  const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
   auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->ClusteringListArrayName);
-  auto& rdf = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RDFArrayName);
-  auto& minMaxDistances = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MaxMinArrayName);
-  BoolArray* biasedFeatures = nullptr;
+  auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
+  auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
+  std::unique_ptr<MaskCompare> maskCompare;
   if(m_InputValues->RemoveBiasedFeatures)
   {
-    biasedFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->BiasedFeaturesArrayPath);
+    try
+    {
+      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->BiasedFeaturesArrayPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->BiasedFeaturesArrayPath.toString());
+      return MakeErrorResult(-54070, message);
+    }
   }
 
   float32 x = 0.0f, y = 0.0f, z = 0.0f;
@@ -154,13 +161,12 @@ Result<> ComputeFeatureClustering::operator()()
   int32 totalPptFeatures = 0;
   float32 min = std::numeric_limits<float32>::max();
   float32 max = 0.0f;
-  float32 value = 0.0f;
 
   std::vector<std::vector<float32>> clusters;
   std::vector<float32> oldCount(m_InputValues->NumberOfBins);
   std::vector<float32> randomRDF;
 
-  const usize totalFeatures = featurePhases.getNumberOfTuples();
+  const usize totalFeatures = featurePhasesStore.getNumberOfTuples();
 
   SizeVec3 dims = imageGeometry.getDimensions();
   FloatVec3 spacing = imageGeometry.getSpacing();
@@ -175,7 +181,7 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(featurePhases[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
       totalPptFeatures++;
     }
@@ -185,24 +191,24 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(featurePhases[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
       if(i % 1000 == 0)
       {
         m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
       }
 
-      x = centroids[3 * i];
-      y = centroids[3 * i + 1];
-      z = centroids[3 * i + 2];
+      x = centroidsStore[3 * i];
+      y = centroidsStore[3 * i + 1];
+      z = centroidsStore[3 * i + 2];
 
       for(usize j = i + 1; j < totalFeatures; j++)
       {
-        if(featurePhases[i] == featurePhases[j])
+        if(featurePhasesStore[i] == featurePhasesStore[j])
         {
-          xn = centroids[3 * j];
-          yn = centroids[3 * j + 1];
-          zn = centroids[3 * j + 2];
+          xn = centroidsStore[3 * j];
+          yn = centroidsStore[3 * j + 1];
+          zn = centroidsStore[3 * j + 2];
 
           r = sqrtf((x - xn) * (x - xn) + (y - yn) * (y - yn) + (z - zn) * (z - zn));
 
@@ -215,11 +221,10 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(featurePhases[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
-      for(usize j = 0; j < clusters[i].size(); j++)
+      for(auto value : clusters[i])
       {
-        value = clusters[i][j];
         if(value > max)
         {
           max = value;
@@ -234,27 +239,49 @@ Result<> ComputeFeatureClustering::operator()()
 
   const float32 stepSize = (max - min) / m_InputValues->NumberOfBins;
 
-  minMaxDistances[(m_InputValues->PhaseNumber * 2)] = max;
-  minMaxDistances[(m_InputValues->PhaseNumber * 2) + 1] = min;
+  minMaxDistancesStore[(m_InputValues->PhaseNumber * 2)] = max;
+  minMaxDistancesStore[(m_InputValues->PhaseNumber * 2) + 1] = min;
 
-  for(usize i = 1; i < totalFeatures; i++)
+  if(m_InputValues->RemoveBiasedFeatures && maskCompare != nullptr)
   {
-    if(featurePhases[i] == m_InputValues->PhaseNumber)
+    for(usize i = 1; i < totalFeatures; i++)
     {
-      if(m_InputValues->RemoveBiasedFeatures && (*biasedFeatures)[i])
+      if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
       {
-        continue;
-      }
-
-      for(usize j = 0; j < clusters[i].size(); j++)
-      {
-        ensemble = featurePhases[i];
-        bin = (clusters[i][j] - min) / stepSize;
-        if(bin >= m_InputValues->NumberOfBins)
+        if(maskCompare->isTrue(i))
         {
-          bin = m_InputValues->NumberOfBins - 1;
+          continue;
         }
-        rdf[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+
+        for(usize j = 0; j < clusters[i].size(); j++)
+        {
+          ensemble = featurePhasesStore[i];
+          bin = (clusters[i][j] - min) / stepSize;
+          if(bin >= m_InputValues->NumberOfBins)
+          {
+            bin = m_InputValues->NumberOfBins - 1;
+          }
+          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+        }
+      }
+    }
+  }
+  else
+  {
+    for(usize i = 1; i < totalFeatures; i++)
+    {
+      if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
+      {
+        for(usize j = 0; j < clusters[i].size(); j++)
+        {
+          ensemble = featurePhasesStore[i];
+          bin = (clusters[i][j] - min) / stepSize;
+          if(bin >= m_InputValues->NumberOfBins)
+          {
+            bin = m_InputValues->NumberOfBins - 1;
+          }
+          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+        }
       }
     }
   }
@@ -269,15 +296,12 @@ Result<> ComputeFeatureClustering::operator()()
 
   // Scale the random distribution by the number of distances in this particular instance
   const float32 normFactor = totalPptFeatures * (totalPptFeatures - 1);
-  for(usize i = 0; i < randomRDF.size(); i++)
-  {
-    randomRDF[i] *= normFactor;
-  }
+  std::transform(randomRDF.begin(), randomRDF.end(), randomRDF.begin(), [normFactor](float32 value) { return value * normFactor; });
 
   for(usize i = 0; i < m_InputValues->NumberOfBins; i++)
   {
-    oldCount[i] = rdf[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
-    rdf[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
+    oldCount[i] = rdfStore[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i];
+    rdfStore[(m_InputValues->NumberOfBins * m_InputValues->PhaseNumber) + i] = oldCount[i] / randomRDF[i + 1];
   }
 
   for(usize i = 1; i < totalFeatures; i++)
