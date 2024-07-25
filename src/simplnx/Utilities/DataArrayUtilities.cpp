@@ -245,7 +245,9 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   Result<> results = {};
   const usize numFeatures = featureArrayPtr->getNumberOfTuples();
 
-  for(const int32& featureId : featureIds)
+  auto& featureIdsStore = featureIds.getDataStoreRef();
+
+  for(const int32& featureId : featureIdsStore)
   {
     if(featureId < 0)
     {

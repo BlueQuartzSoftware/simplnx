@@ -30,10 +30,11 @@ Result<> ComputeLargestCrossSections::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& largestCrossSections = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath);
-  const usize numFeatures = largestCrossSections.getNumberOfTuples();
+  auto& featureIdsStore = featureIds.getDataStoreRef();
+  auto& largestCrossSectStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath)->getDataStoreRef();
+  const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 
-  // Validate the largestCrossSections array is the proper size
+  // Validate the largestCrossSectStore array is the proper size
   auto validateResults = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds);
   if(validateResults.invalid())
   {
@@ -93,16 +94,16 @@ Result<> ComputeLargestCrossSections::operator()()
       {
         kStride = k * stride3;
         point = iStride + jStride + kStride;
-        gNum = featureIds[point];
+        gNum = featureIdsStore[point];
         featureCounts[gNum]++;
       }
     }
     for(size_t g = 1; g < numFeatures; g++)
     {
       area = featureCounts[g] * resScalar;
-      if(area > largestCrossSections[g])
+      if(area > largestCrossSectStore[g])
       {
-        largestCrossSections[g] = area;
+        largestCrossSectStore[g] = area;
       }
     }
   }

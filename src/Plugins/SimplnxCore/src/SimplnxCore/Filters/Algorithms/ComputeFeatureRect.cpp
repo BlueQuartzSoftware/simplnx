@@ -34,21 +34,22 @@ const std::atomic_bool& ComputeFeatureRect::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureRect::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& corners = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
-  auto& cornersDataStore = corners.getDataStoreRef();
+  const auto* featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStore = featureIds->getDataStoreRef();
+  auto* corners = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
+  auto& cornersStore = corners->getDataStoreRef();
 
   // Create corners array, which stores pixel coordinates for the top-left and bottom-right coordinates of each feature object
-  for(usize i = 0; i < corners.getNumberOfTuples(); i++)
+  for(usize i = 0; i < cornersStore.getNumberOfTuples(); i++)
   {
-    cornersDataStore.setComponent(i, 0, std::numeric_limits<uint32>::max());
-    cornersDataStore.setComponent(i, 1, std::numeric_limits<uint32>::max());
-    cornersDataStore.setComponent(i, 2, std::numeric_limits<uint32>::max());
-    cornersDataStore.setComponent(i, 3, std::numeric_limits<uint32>::min());
-    cornersDataStore.setComponent(i, 4, std::numeric_limits<uint32>::min());
-    cornersDataStore.setComponent(i, 5, std::numeric_limits<uint32>::min());
+    cornersStore.setComponent(i, 0, std::numeric_limits<uint32>::max());
+    cornersStore.setComponent(i, 1, std::numeric_limits<uint32>::max());
+    cornersStore.setComponent(i, 2, std::numeric_limits<uint32>::max());
+    cornersStore.setComponent(i, 3, std::numeric_limits<uint32>::min());
+    cornersStore.setComponent(i, 4, std::numeric_limits<uint32>::min());
+    cornersStore.setComponent(i, 5, std::numeric_limits<uint32>::min());
   }
-  std::vector<usize> imageDims = featureIds.getTupleShape();
+  std::vector<usize> imageDims = featureIdsStore.getTupleShape();
 
   /*
    * Array dimension ordering is flipped compared to geometry dimension ordering.
@@ -75,17 +76,17 @@ Result<> ComputeFeatureRect::operator()()
       {
         index = IndexFromCoord(imageDims, x, y, z); // Index into featureIds array
 
-        const int32 featureId = featureIds[index];
+        const int32 featureId = featureIdsStore[index];
         if(featureId == 0)
         {
           continue;
         }
 
-        if(featureId >= corners.getNumberOfTuples())
+        if(featureId >= cornersStore.getNumberOfTuples())
         {
           const DataPath parentPath = m_InputValues->FeatureRectArrayPath.getParent();
           return MakeErrorResult(-31000, fmt::format("The parent data object '{}' of output array '{}' has a smaller tuple count than the maximum feature id in '{}'", parentPath.getTargetName(),
-                                                     corners.getName(), featureIds.getName()));
+                                                     corners->getName(), featureIds->getName()));
         }
 
         const uint32 indices[3] = {x, y, z}; // Sequence dependent DO NOT REORDER
@@ -94,11 +95,11 @@ Result<> ComputeFeatureRect::operator()()
         {
           if(l > 2)
           {
-            corners[featureShift + l] = std::max(corners[featureShift + l], indices[l - 3]);
+            cornersStore[featureShift + l] = std::max(cornersStore[featureShift + l], indices[l - 3]);
           }
           else
           {
-            corners[featureShift + l] = std::min(corners[featureShift + l], indices[l]);
+            cornersStore[featureShift + l] = std::min(cornersStore[featureShift + l], indices[l]);
           }
         }
       }

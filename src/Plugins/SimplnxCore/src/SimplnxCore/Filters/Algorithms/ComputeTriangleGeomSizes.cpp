@@ -22,7 +22,7 @@ constexpr usize k_22 = 8;
 
 // -----------------------------------------------------------------------------
 template <typename T>
-T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const DataArray<T>& vertexCoords)
+T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const AbstractDataStore<T>& vertexCoords)
 {
   // This is a 3x3 matrix laid out in typical "C" order where the columns raster the fastest, then the rows
   std::array<T, 9> volumeMatrix = {
@@ -35,7 +35,6 @@ T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const DataArray<T>&
                   (volumeMatrix[k_02] * (volumeMatrix[k_10] * volumeMatrix[k_21] - volumeMatrix[k_11] * volumeMatrix[k_20]));
   return determinant / 6.0f;
 }
-
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -61,12 +60,12 @@ const std::atomic_bool& ComputeTriangleGeomSizes::getCancel()
 Result<> ComputeTriangleGeomSizes::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = IGeometry::SharedVertexList;
+  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
-  const SharedVertexListType& vertexCoords = triangleGeom.getVerticesRef();
-  const Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath);
+  const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
+  const auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
 
   std::set<int32> featureSet;
 
@@ -85,7 +84,7 @@ Result<> ComputeTriangleGeomSizes::operator()()
   AttributeMatrix::ShapeType tDims = {featureSet.size() + 1};
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   featAttrMat.resizeTuples(tDims);
-  auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
+  auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
 
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
 
