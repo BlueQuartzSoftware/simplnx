@@ -664,7 +664,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     indexAlgArrays.push_back(mostPopulatedBinPtr);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-    if(IParallelAlgorithm::CheckArraysInMemory(indexAlgArrays))
+    if(detail::CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
       const size_t grainSize = 500;
