@@ -14,6 +14,7 @@ struct SIMPLNXCORE_EXPORT ConvertDataInputValues
   DataType ScalarType;
   DataPath SelectedArrayPath;
   DataPath OutputArrayName;
+  bool RescaleValues = false;
 };
 
 /**

@@ -337,6 +337,9 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_Scaling_Key, "Scaling",
                                                    "The scaling of the 3D volume. For example, 0.1 is one-tenth the original number of pixels.  2.0 is double the number of pixels.", 1.0));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", NumericType::int32));
+
   params.insertSeparator(Parameters::Separator{"Input File List"});
   params.insert(
       std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List", "The list of 2D image files to be read in to a 3D volume", GeneratedFileListParameter::ValueType{}));
@@ -348,6 +351,7 @@ Parameters ITKImportImageStackFilter::parameters() const
 
   params.linkParameters(k_ConvertToGrayScale_Key, k_ColorWeights_Key, true);
   params.linkParameters(k_ScaleImages_Key, k_Scaling_Key, true);
+  params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
 
   return params;
 }
@@ -373,6 +377,9 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto pScaleImagesValue = filterArgs.value<BoolParameter::ValueType>(k_ScaleImages_Key);
   auto pScalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
+
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto numericType = filterArgs.value<NumericType>(k_ImageDataType_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions = {};
@@ -403,6 +410,8 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, std::make_any<DataObjectNameParameter::ValueType>(cellDataName));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, std::make_any<DataObjectNameParameter::ValueType>(pImageDataArrayNameValue));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
+  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(pChangeDataType));
+  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<NumericTypeParameter::ValueType>(numericType));
 
   const ITKImageReaderFilter imageReader;
   PreflightResult imageReaderResult = imageReader.preflight(dataStructure, imageReaderArgs, messageHandler, shouldCancel);
@@ -453,7 +462,19 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
                                                         nx::core::DataTypeToString(createArrayActionPtr->type())));
   }
 
-  if(pConvertToGrayScaleValue)
+  if(pChangeDataType && !pConvertToGrayScaleValue && createArrayActionPtr->componentDims().at(0) != 1)
+  {
+    return MakePreflightErrorResult(
+        -23506, fmt::format("Changing the array type requires the input image data to be a scalar value OR the image data can be RGB but you must also select 'Convert to Grayscale'",
+                            nx::core::DataTypeToString(createArrayActionPtr->type())));
+  }
+
+  if(pChangeDataType)
+  {
+    auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), arrayDims, std::vector<size_t>{1ULL}, imageDataPath);
+    resultOutputActions.value().appendAction(std::move(action));
+  }
+  else if(pConvertToGrayScaleValue)
   {
     auto* filterListPtr = Application::Instance()->getFilterList();
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))

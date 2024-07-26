@@ -1,25 +1,34 @@
 #include "ITKImageReaderFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
+#include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 
 #include <filesystem>
 
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 namespace fs = std::filesystem;
 
 using namespace nx::core;
+
+namespace
+{
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_ConvertDataArrayFilterId = *Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5");
+
+const FilterHandle k_ConvertDataArrayFilterHandle(k_ConvertDataArrayFilterId, k_SimplnxCorePluginId);
+} // namespace
 
 namespace nx::core
 {
@@ -73,6 +82,11 @@ Parameters ITKImageReaderFilter::parameters() const
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float64>{1, 1, 1},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
+  params.insert(std::make_unique<NumericTypeParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", NumericType::int32));
+
+  params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
+
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, std::make_any<bool>(true));
@@ -109,6 +123,8 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto numericType = filterArgs.value<NumericType>(k_ImageDataType_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -119,6 +135,8 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.OriginAtCenterOfGeometry = shouldCenterOrigin;
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
+  imageReaderOptions.ChangeDataType = pChangeDataType;
+  imageReaderOptions.ImageDataType = numericType;
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
@@ -138,9 +156,14 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   //  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto numericType = filterArgs.value<NumericType>(k_ImageDataType_Key);
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
-
+  if(pChangeDataType)
+  {
+    imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath("." + imageDataArrayName);
+  }
   const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
   if(!inputArrayPtr->getDataFormat().empty())
   {
@@ -152,6 +175,32 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
 
   auto result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+
+  // Convert the image into the final DataArray
+  if(pChangeDataType)
+  {
+    // First delete the final destination DataArray that is already created.
+    imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
+    dataStructure.removeData(imageDataArrayPath);
+
+    // Construct the tempDataPath where the image data was read into
+    DataPath tempDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath("." + imageDataArrayName);
+    // Run the "Convert Data Array" Filter to convert the data in the temp path into the final array at imageDataPath
+    auto* filterListPtr = Application::Instance()->getFilterList();
+    auto convertImageGeomFilter = filterListPtr->createFilter(k_ConvertDataArrayFilterHandle);
+    Arguments args;
+    args.insertOrAssign("scalar_type_index", std::make_any<NumericTypeParameter::ValueType>(numericType));
+    args.insertOrAssign("array_to_convert_path", std::make_any<DataPath>(tempDataArrayPath));
+    args.insertOrAssign("converted_array_name", std::make_any<std::string>(imageDataArrayName));
+    args.insertOrAssign("delete_original_array", std::make_any<bool>(false));
+    // This filter put in a deferred delete action for the temp array so we do not have to worry about deleting it.
+    // Execute the Convert Data Array filter
+    auto result2 = convertImageGeomFilter->execute(dataStructure, args).result;
+    if(result2.invalid())
+    {
+      return result2;
+    }
+  }
 
   return result;
 }

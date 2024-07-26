@@ -174,6 +174,8 @@ struct ImageReaderOptions
   bool OverrideSpacing = false;
   FloatVec3 Origin;
   FloatVec3 Spacing;
+  bool ChangeDataType = false;
+  NumericType ImageDataType = NumericType::uint8;
 };
 
 //------------------------------------------------------------------------------

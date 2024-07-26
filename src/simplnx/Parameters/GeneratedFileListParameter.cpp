@@ -164,7 +164,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     if(!fs::exists(currentFilePath))
     {
-      errors.push_back({-4003, fmt::format("FILE DOES NOT EXIST: '{}'", currentFilePath)});
+      errors.push_back({-4003, fmt::format("{}FILE DOES NOT EXIST: '{}'", prefix, currentFilePath)});
     }
   }
 

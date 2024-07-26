@@ -302,27 +302,27 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
   switch(dataType)
   {
   case DataType::int8:
-    return ConvertDataArray<int8>(std::dynamic_pointer_cast<DataArray<int8>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<int8>(std::dynamic_pointer_cast<DataArray<int8>>(dataArray), dataFormat);
   case DataType::int16:
-    return ConvertDataArray<int16>(std::dynamic_pointer_cast<DataArray<int16>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<int16>(std::dynamic_pointer_cast<DataArray<int16>>(dataArray), dataFormat);
   case DataType::int32:
-    return ConvertDataArray<int32>(std::dynamic_pointer_cast<DataArray<int32>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<int32>(std::dynamic_pointer_cast<DataArray<int32>>(dataArray), dataFormat);
   case DataType::int64:
-    return ConvertDataArray<int64>(std::dynamic_pointer_cast<DataArray<int64>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<int64>(std::dynamic_pointer_cast<DataArray<int64>>(dataArray), dataFormat);
   case DataType::uint8:
-    return ConvertDataArray<uint8>(std::dynamic_pointer_cast<DataArray<uint8>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<uint8>(std::dynamic_pointer_cast<DataArray<uint8>>(dataArray), dataFormat);
   case DataType::uint16:
-    return ConvertDataArray<uint16>(std::dynamic_pointer_cast<DataArray<uint16>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<uint16>(std::dynamic_pointer_cast<DataArray<uint16>>(dataArray), dataFormat);
   case DataType::uint32:
-    return ConvertDataArray<uint32>(std::dynamic_pointer_cast<DataArray<uint32>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<uint32>(std::dynamic_pointer_cast<DataArray<uint32>>(dataArray), dataFormat);
   case DataType::uint64:
-    return ConvertDataArray<uint64>(std::dynamic_pointer_cast<DataArray<uint64>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<uint64>(std::dynamic_pointer_cast<DataArray<uint64>>(dataArray), dataFormat);
   case DataType::boolean:
-    return ConvertDataArray<bool>(std::dynamic_pointer_cast<DataArray<bool>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<bool>(std::dynamic_pointer_cast<DataArray<bool>>(dataArray), dataFormat);
   case DataType::float32:
-    return ConvertDataArray<float32>(std::dynamic_pointer_cast<DataArray<float32>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<float32>(std::dynamic_pointer_cast<DataArray<float32>>(dataArray), dataFormat);
   case DataType::float64:
-    return ConvertDataArray<float64>(std::dynamic_pointer_cast<DataArray<float64>>(dataArray), dataFormat);
+    return ConvertDataArrayDataStore<float64>(std::dynamic_pointer_cast<DataArray<float64>>(dataArray), dataFormat);
   default:
     return false;
   }
