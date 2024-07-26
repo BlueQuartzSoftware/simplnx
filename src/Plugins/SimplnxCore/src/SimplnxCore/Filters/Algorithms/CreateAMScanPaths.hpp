@@ -12,7 +12,6 @@
 
 namespace nx::core
 {
-
 struct SIMPLNXCORE_EXPORT CreateAMScanPathsInputValues
 {
   float32 StripeWidth;
@@ -49,9 +48,6 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
-
-protected:
-  char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX);
 
 private:
   DataStructure& m_DataStructure;

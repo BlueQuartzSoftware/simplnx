@@ -15,8 +15,8 @@ public:
   ErodeDilateBadDataTransferDataImpl() = delete;
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32Array& featureIds, const std::vector<int64>& neighbors,
-                                     const std::shared_ptr<IDataArray>& dataArrayPtr)
+  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
@@ -63,7 +63,7 @@ private:
   ChoicesParameter::ValueType m_Operation = 0;
   std::vector<int64> m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
-  const Int32Array& m_FeatureIds;
+  const Int32AbstractDataStore& m_FeatureIds;
 };
 } // namespace
 
@@ -94,7 +94,7 @@ void ErodeDilateBadData::updateProgress(const std::string& progMessage)
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   std::vector<int64> neighbors(totalPoints, -1);
@@ -234,6 +234,7 @@ Result<> ErodeDilateBadData::operator()()
       {
         continue;
       }
+
       taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
