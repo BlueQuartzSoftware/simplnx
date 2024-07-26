@@ -12,6 +12,30 @@ using namespace nx::core;
 
 namespace
 {
+// -----------------------------------------------------------------------------
+bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays)
+{
+  if(arrays.empty())
+  {
+    return true;
+  }
+
+  for(const auto* arrayPtr : arrays)
+  {
+    if(arrayPtr == nullptr)
+    {
+      continue;
+    }
+
+    if(!arrayPtr->getIDataStoreRef().getDataFormat().empty())
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 template <typename T>
 class ComputeArrayStatisticsByIndexImpl
 {
@@ -664,7 +688,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     indexAlgArrays.push_back(mostPopulatedBinPtr);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-    if(detail::CheckArraysInMemory(indexAlgArrays))
+    if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
       const size_t grainSize = 500;

@@ -47,9 +47,4 @@ private:
   bool m_RunParallel = false;
 #endif
 };
-
-namespace detail
-{
-bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays);
-}
 } // namespace nx::core
