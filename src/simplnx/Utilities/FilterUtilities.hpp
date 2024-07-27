@@ -2,6 +2,7 @@
 
 #include "ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
@@ -94,6 +95,9 @@ auto RunTemplateClass(DataType dataType, ArgsT&&... args)
       return ClassT<float64>(std::forward<ArgsT>(args)...)();
     }
   }
+  std::stringstream ss;
+  ss << "FilterUtilities::RunTemplateClass<> Error: dataType did not match any known type. DataType was " << to_underlying(dataType);
+  throw std::runtime_error(ss.str());
 }
 
 template <class FuncT, class... ArgsT>
