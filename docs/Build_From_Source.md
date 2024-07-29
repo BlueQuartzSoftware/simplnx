@@ -6,19 +6,19 @@
 |--------------|---------------|---------|
 | boost-mp11  | <https://github.com/boostorg/mp11>  | 1.77.0 |
 | catch2  | <https://github.com/catchorg/Catch2>  | 2.13.6 |
-| eigen3  |  <https://gitlab.com/libeigen/eigen.git> | 3.3.9 |
-| expected-lite  | <https://github.com/martinmoene/expected-lite>  | 0.5.0 |
-| fmt  | <https://github.com/fmtlib/fmt>  | 10.0.0 |
-| hdf5  | <https://github.com/HDFGroup/hdf5/>  | 1.12.1 |
+| eigen3  |  <https://gitlab.com/libeigen/eigen.git> | 3.4.0 |
+| expected-lite  | <https://github.com/martinmoene/expected-lite>  | 0.5.1 |
+| fmt  | <https://github.com/fmtlib/fmt>  | 10.1.1 |
+| hdf5  | <https://github.com/HDFGroup/hdf5/>  | 1.14.4.3 |
 | itk  | <https://github.com/InsightSoftwareConsortium/ITK.git>  | 5.2.1 |
-| nlohmann-json  | <https://github.com/nlohmann/json/>  | 3.11.2 |
-| pybind11  | <https://github.com/pybind/pybind11.git>  | 2.10 |
+| nlohmann-json  | <https://github.com/nlohmann/json/>  | 3.11.12 |
+| pybind11  | <https://github.com/pybind/pybind11.git>  | 2.12 |
 | span-lite  | <https://github.com/martinmoene/span-lite>  | 0.10.3 |
-| tbb  | <https://github.com/oneapi-src/onetbb>  | 2021.10.0 |
-| ebsdlib  | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.23 |
-| h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.8 |
-| nod  |<https://github.com/fr00b0/nod.git>  | 0.5.2 |
-| reproc  |<https://github.com/DaanDeMeyer/reproc>  | 14.2.4 |
+| tbb  | <https://github.com/oneapi-src/onetbb>  | 2021.4.0 |
+| ebsdlib  | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.30 |
+| h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.13 |
+| nod  | <https://github.com/fr00b0/nod.git>  | 0.5.4 |
+| reproc  | <https://github.com/DaanDeMeyer/reproc>  | 14.2.4 |
 
 ## Prerequisites ##
 
@@ -26,8 +26,8 @@ In order to compile `simplnx` you will need a C++17 compiler suite installed on 
 
 + Compiler
   + Windows Visual Studio 2019 v142 toolset
-  + macOS 11.0 and Xcode 12.4 or higher
-  + Linux with GCC Version 9.0 or higher or clang.
+  + macOS 12.0 and Xcode 14.2 or higher
+  + Linux with GCC Version 11.0 or higher or clang 14.
 
 ## Install vcpkg ##
 
