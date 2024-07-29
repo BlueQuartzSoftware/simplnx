@@ -5,7 +5,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -83,6 +85,14 @@ Parameters CombineStlFilesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex level attribute matrix to be created with the geometry",
                                                           TriangleGeom::k_VertexDataName));
 
+  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created feature attribute matrix", "Cell Feature Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_ActiveArrayName_Key, "Active",
+      "Specifies if the Feature is still in the sample (true if the Feature is in the sample and false if it is not). At the end of the Filter, all Features will be Active", "Active"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_FileListName_Key, "File List Array", "The path to a String array that will store the input paths of each file that was read.", "STL File List"));
+
   return params;
 }
 
@@ -130,6 +140,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
                                                                                        CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
+
   DataPath faceAttributeMatrixDataPath = pTriangleDataContainerNameValue.createChildPath(pFaceAttributeMatrixNameValue);
   // Create the Triangle Normals path
   {
@@ -154,6 +165,25 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
+  {
+    auto pCellFeatureAttributeMatrixName = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
+    auto pActiveArrayName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
+    auto fileListArrayName = filterArgs.value<std::string>(k_FileListName_Key);
+
+    auto pCellFeatureAttributeMatrixPath = pTriangleDataContainerNameValue.createChildPath(pCellFeatureAttributeMatrixName);
+    auto activeArrayPath = pCellFeatureAttributeMatrixPath.createChildPath(pActiveArrayName);
+    auto fileListPath = pCellFeatureAttributeMatrixPath.createChildPath(fileListArrayName);
+
+    // Create output feature data structure items
+    auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellFeatureAttributeMatrixPath, std::vector<usize>{stlFiles.size() + 1});
+    auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{stlFiles.size() + 1}, std::vector<usize>{1}, activeArrayPath);
+    auto createFileListAction = std::make_unique<CreateStringArrayAction>(std::vector<size_t>{stlFiles.size() + 1}, fileListPath);
+
+    resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
+    resultOutputActions.value().appendAction(std::move(createActiveAction));
+    resultOutputActions.value().appendAction(std::move(createFileListAction));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -175,6 +205,10 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
 
   inputValues.LabelVertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
   inputValues.VertexFileIndexArrayPath = DataPath({inputValues.TriangleDataContainerName.getTargetName(), pVertexAttributeMatrixNameValue, filterArgs.value<std::string>(k_VertexLabelName_Key)});
+
+  inputValues.CellFeatureAttributeMatrixName = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
+  inputValues.ActiveArrayName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
+  inputValues.FileListArrayName = filterArgs.value<std::string>(k_FileListName_Key);
 
   return CombineStlFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
@@ -21,6 +22,9 @@ struct SIMPLNXCORE_EXPORT CombineStlFilesInputValues
   bool LabelFaces;
   DataPath VertexFileIndexArrayPath;
   bool LabelVertices;
+  DataObjectNameParameter::ValueType CellFeatureAttributeMatrixName;
+  DataObjectNameParameter::ValueType ActiveArrayName;
+  DataObjectNameParameter::ValueType FileListArrayName;
 };
 
 /**

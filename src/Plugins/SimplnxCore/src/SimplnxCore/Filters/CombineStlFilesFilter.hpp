@@ -33,6 +33,9 @@ public:
   static inline constexpr StringLiteral k_FaceLabelName_Key = "face_label_name";
   static inline constexpr StringLiteral k_LabelVertices_Key = "label_vertices";
   static inline constexpr StringLiteral k_VertexLabelName_Key = "vertex_label_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
+  static inline constexpr StringLiteral k_FileListName_Key = "output_file_list_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
