@@ -6,6 +6,9 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
@@ -243,6 +246,154 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   fclose(filePtr);
   return result;
 }
+
+class MultiWriteStlFileImpl
+{
+public:
+  MultiWriteStlFileImpl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices,
+                        const Int32Array& featureIds, const int32 featureId)
+  : m_Path(path)
+  , m_NumTriangles(numTriangles)
+  , m_Header(header)
+  , m_Triangles(triangles)
+  , m_Vertices(vertices)
+  , m_FeatureIds(featureIds)
+  , m_FeatureId(featureId)
+  {
+  }
+  ~MultiWriteStlFileImpl() = default;
+
+  void operator()() const
+  {
+    Result<> result;
+
+    // Create output file writer in binary write out mode to ensure cross-compatibility
+    FILE* filePtr = fopen(m_Path.string().c_str(), "wb");
+
+    if(filePtr == nullptr)
+    {
+      fclose(filePtr);
+      std::cout << fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()) << "\n";
+      return;
+      // return {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()))};
+    }
+
+    int32 triCount = 0;
+
+    { // Scope header output processing to keep overhead low and increase readability
+      if(m_Header.size() >= 80)
+      {
+        result = MakeWarningVoidResult(-27874,
+                                       fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
+                                                   m_Path.filename().string(), m_Header.length()));
+      }
+
+      std::array<char, 80> stlFileHeader = {};
+      stlFileHeader.fill(0);
+      size_t headLength = 80;
+      if(m_Header.length() < 80)
+      {
+        headLength = static_cast<size_t>(m_Header.length());
+      }
+
+      // std::string c_str = header;
+      memcpy(stlFileHeader.data(), m_Header.data(), headLength);
+      // Return the number of bytes written - which should be 80
+      fwrite(stlFileHeader.data(), 1, 80, filePtr);
+    }
+
+    fwrite(&triCount, 1, 4, filePtr);
+    triCount = 0; // Reset this to Zero. Increment for every triangle written
+
+    size_t totalWritten = 0;
+    std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
+    std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
+
+    std::array<char, 50> data = {};
+    nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
+    nonstd::span<float32> vert1Ptr(reinterpret_cast<float32*>(data.data() + 12), 3);
+    nonstd::span<float32> vert2Ptr(reinterpret_cast<float32*>(data.data() + 24), 3);
+    nonstd::span<float32> vert3Ptr(reinterpret_cast<float32*>(data.data() + 36), 3);
+    nonstd::span<uint16> attrByteCountPtr(reinterpret_cast<uint16*>(data.data() + 48), 2);
+    attrByteCountPtr[0] = 0;
+
+    const usize numComps = m_FeatureIds.getNumberOfComponents();
+    // Loop over all the triangles for this spin
+    for(IGeometry::MeshIndexType triangle = 0; triangle < m_NumTriangles; ++triangle)
+    {
+      // Get the true indices of the 3 nodes
+      IGeometry::MeshIndexType nId0 = m_Triangles[triangle * 3];
+      IGeometry::MeshIndexType nId1 = m_Triangles[triangle * 3 + 1];
+      IGeometry::MeshIndexType nId2 = m_Triangles[triangle * 3 + 2];
+
+      if(m_FeatureIds[triangle * numComps] == m_FeatureId)
+      {
+        // winding = 0; // 0 = Write it using forward spin
+      }
+      else if(numComps > 1 && m_FeatureIds[triangle * numComps + 1] == m_FeatureId)
+      {
+        // Switch the 2 node indices
+        IGeometry::MeshIndexType temp = nId1;
+        nId1 = nId2;
+        nId2 = temp;
+      }
+      else
+      {
+        continue; // We do not match either spin so move to the next triangle
+      }
+
+      vert1Ptr[0] = static_cast<float>(m_Vertices[nId0 * 3]);
+      vert1Ptr[1] = static_cast<float>(m_Vertices[nId0 * 3 + 1]);
+      vert1Ptr[2] = static_cast<float>(m_Vertices[nId0 * 3 + 2]);
+
+      vert2Ptr[0] = static_cast<float>(m_Vertices[nId1 * 3]);
+      vert2Ptr[1] = static_cast<float>(m_Vertices[nId1 * 3 + 1]);
+      vert2Ptr[2] = static_cast<float>(m_Vertices[nId1 * 3 + 2]);
+
+      vert3Ptr[0] = static_cast<float>(m_Vertices[nId2 * 3]);
+      vert3Ptr[1] = static_cast<float>(m_Vertices[nId2 * 3 + 1]);
+      vert3Ptr[2] = static_cast<float>(m_Vertices[nId2 * 3 + 2]);
+
+      // Compute the normal
+      vecA[0] = vert2Ptr[0] - vert1Ptr[0];
+      vecA[1] = vert2Ptr[1] - vert1Ptr[1];
+      vecA[2] = vert2Ptr[2] - vert1Ptr[2];
+
+      vecB[0] = vert3Ptr[0] - vert1Ptr[0];
+      vecB[1] = vert3Ptr[1] - vert1Ptr[1];
+      vecB[2] = vert3Ptr[2] - vert1Ptr[2];
+
+      MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
+      MatrixMath::Normalize3x1(normalPtr.data());
+
+      totalWritten = fwrite(data.data(), 1, 50, filePtr);
+      if(totalWritten != 50)
+      {
+        fclose(filePtr);
+        std::cout << fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", m_Path.filename().string(), triCount, totalWritten)
+                  << "\n";
+        break;
+        //        return {MakeWarningVoidResult(
+        //            -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount,
+        //            totalWritten))};
+      }
+      triCount++;
+    }
+
+    fseek(filePtr, 80L, SEEK_SET);
+    fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+    fclose(filePtr);
+  }
+
+private:
+  const fs::path m_Path;
+  const IGeometry::MeshIndexType m_NumTriangles;
+  const std::string m_Header;
+  const IGeometry::MeshIndexArrayType& m_Triangles;
+  const Float32Array& m_Vertices;
+  const Int32Array& m_FeatureIds;
+  const int32 m_FeatureId;
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -401,6 +552,10 @@ Result<> WriteStlFile::operator()()
     std::unordered_set<int32> uniquePartNumbers(partNumbers.cbegin(), partNumbers.cend());
     fileList.reserve(uniquePartNumbers.size()); // Reserved enough file names
 
+    // The writing of the files can happen in parallel as much as the Operating System will allow
+    ParallelTaskAlgorithm taskRunner;
+    taskRunner.setParallelizationEnabled(true);
+
     // Loop over each Part Number and write a file
     usize fileIndex = 0;
     for(const auto currentPartNumber : uniquePartNumbers)
@@ -414,16 +569,11 @@ Result<> WriteStlFile::operator()()
 
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
 
-      auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices,
-                                       partNumbers, currentPartNumber);
-      // If Result is invalid, report an error
-      if(result.invalid())
-      {
-        return result;
-      }
-
+      taskRunner.execute(MultiWriteStlFileImpl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles,
+                                               vertices, partNumbers, currentPartNumber));
       fileIndex++;
     }
+    taskRunner.wait();
   }
 
   for(auto& atomicFile : fileList)
