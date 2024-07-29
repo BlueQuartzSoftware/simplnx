@@ -10,6 +10,33 @@
 
 namespace nx::core
 {
+
+/**
+ * @brief Returns the templated value for the byte pattern 0xAB based on the byte count of the template parameter
+ * @tparam T
+ * @return
+ */
+template <typename T>
+constexpr T GetMudflap() noexcept
+{
+  if constexpr(sizeof(T) == 1)
+  {
+    return std::bit_cast<T>(static_cast<uint8>(0xAB));
+  }
+  if constexpr(sizeof(T) == 2)
+  {
+    return std::bit_cast<T>(static_cast<uint16>(0xABAB));
+  }
+  if constexpr(sizeof(T) == 4)
+  {
+    return std::bit_cast<T>(static_cast<uint32>(0xABABABAB));
+  }
+  if constexpr(sizeof(T) == 8)
+  {
+    return std::bit_cast<T>(static_cast<uint64>(0xABABABABABABABAB));
+  }
+}
+
 /**
  * @brief Returns the NumericType associated with T.
  * @tparam T

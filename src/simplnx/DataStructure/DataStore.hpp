@@ -84,46 +84,7 @@ public:
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
     // Because no init value is passed into the constructor, we will use a "mudflap" style value that is easy to debug.
-    if constexpr(sizeof(T) == 1)
-    {
-      m_InitValue = 0xAB;
-    }
-    if constexpr(sizeof(T) == 2)
-    {
-      m_InitValue = 0xABAB;
-    }
-    if constexpr(sizeof(T) == 4)
-    {
-      union InitValue {
-        uint32 i32;
-        float32 f32;
-      } initValue;
-      initValue.i32 = 0xABABABAB;
-      if constexpr(std::is_floating_point_v<T>)
-      {
-        m_InitValue = initValue.f32;
-      }
-      else
-      {
-        m_InitValue = initValue.i32;
-      }
-    }
-    if constexpr(sizeof(T) == 8)
-    {
-      union InitValue {
-        uint64 i64;
-        float64 f64;
-      } initValue;
-      initValue.i64 = 0xABABABABABABABAB;
-      if constexpr(std::is_floating_point_v<T>)
-      {
-        m_InitValue = initValue.f64;
-      }
-      else
-      {
-        m_InitValue = initValue.i64;
-      }
-    }
+    m_InitValue = GetMudflap<T>();
   }
 
   /**
@@ -291,12 +252,10 @@ public:
 
     // If we are sizing to a larger number of tuples, initialize the leftover array with the init
     // value that was passed in during construction.
-    if(m_InitValue.has_value())
+    T initValue = m_InitValue.has_value() ? *m_InitValue : GetMudflap<T>();
+    for(usize i = oldSize; i < newSize; i++)
     {
-      for(usize i = oldSize; i < newSize; i++)
-      {
-        data[i] = *m_InitValue;
-      }
+      data[i] = initValue;
     }
 
     m_Data.reset(data);
