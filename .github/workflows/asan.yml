@@ -8,7 +8,7 @@ jobs:
   build:
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -45,8 +45,8 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         env:
-          CC: clang-10
-          CXX: clang++-10
+          CC: clang-14
+          CXX: clang++-14
         run: |
           cmake --preset ci-asan ${{github.workspace}}
       - name: Build
