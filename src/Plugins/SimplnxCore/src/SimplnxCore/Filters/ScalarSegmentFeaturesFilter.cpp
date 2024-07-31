@@ -108,20 +108,13 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto activeArrayName = args.value<std::string>(k_ActiveArrayName_Key);
   DataPath featureIdsPath = inputDataPath.replaceName(featureIdsName);
 
-  bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
-  DataPath goodVoxelsPath;
-  if(useGoodVoxels)
-  {
-    goodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
-  }
-
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
   if(dataStructure.getDataAs<IGridGeometry>(gridGeomPath) == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName()))};
   }
 
   const auto* gridGeometryPtr = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
@@ -129,34 +122,38 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   const std::vector<usize> cellTupleDims = {gridDims[2], gridDims[1], gridDims[0]};
   std::vector<DataPath> dataPaths;
 
-  usize numTuples = 0;
   std::string createdArrayFormat = "";
   // Input Array
   if(const auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(inputDataPath))
   {
     createdArrayFormat = inputDataArrayPtr->getDataFormat();
-    numTuples = inputDataArrayPtr->getNumberOfTuples();
-    if(inputDataArrayPtr->getNumberOfComponents() == 1)
+    if(inputDataArrayPtr->getNumberOfComponents() != 1)
     {
-      dataPaths.push_back(inputDataPath);
+      return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, fmt::format("Input Array must be a an array with a single component.", inputDataArrayPtr->getNumberOfComponents()))};
     }
-    else
-    {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Input Array must be a scalar array"}})};
-    }
+    dataPaths.push_back(inputDataPath);
   }
   else
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, "Input Array must be specified"}})};
+    return {MakeErrorResult<OutputActions>(k_MissingInputArray, "Input Array must be specified")};
   }
 
-  // Good Voxels
+  // Validate the GoodVoxels/Mask Array combination
+  bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
+  DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    const nx::core::IDataArray* goodVoxelsArrayPtr = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArrayPtr)
+    goodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
+
+    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
+    if(nullptr == goodVoxelsArray)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
+    }
+    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
+    {
+      return {
+          MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8.", goodVoxelsPath.toString()))};
     }
     dataPaths.push_back(goodVoxelsPath);
   }
@@ -171,15 +168,17 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, createdArrayFormat);
 
   // Create the Feature Attribute Matrix
-  auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{numTuples});
-  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat);
+  auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{1});
+  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat);
 
-  OutputActions actions;
-  actions.appendAction(std::move(createAttributeMatrixAction));
-  actions.appendAction(std::move(createActiveAction));
-  actions.appendAction(std::move(createFeatureIdsAction));
+  nx::core::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
-  return {std::move(actions)};
+  resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
+  resultOutputActions.value().appendAction(std::move(createActiveAction));
+  resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
+
+  return {resultOutputActions, preflightUpdatedValues};
 }
 
 // -----------------------------------------------------------------------------
@@ -188,15 +187,15 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
 {
   ScalarSegmentFeaturesInputValues inputValues;
 
-  inputValues.pInputDataPath = args.value<DataPath>(k_InputArrayPathKey);
-  inputValues.pScalarTolerance = args.value<int>(k_ScalarToleranceKey);
-  inputValues.pShouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.replaceName(args.value<std::string>(k_FeatureIdsName_Key));
-  inputValues.pUseGoodVoxels = args.value<bool>(k_UseMask_Key);
-  inputValues.pGoodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
-  inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
-  inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.InputDataPath = args.value<DataPath>(k_InputArrayPathKey);
+  inputValues.ScalarTolerance = args.value<int>(k_ScalarToleranceKey);
+  inputValues.RandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
+  inputValues.FeatureIdsArrayPath = inputValues.InputDataPath.replaceName(args.value<std::string>(k_FeatureIdsName_Key));
+  inputValues.UseMask = args.value<bool>(k_UseMask_Key);
+  inputValues.MaskArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.ImageGeometryPath = args.value<DataPath>(k_GridGeomPath_Key);
+  inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
+  inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

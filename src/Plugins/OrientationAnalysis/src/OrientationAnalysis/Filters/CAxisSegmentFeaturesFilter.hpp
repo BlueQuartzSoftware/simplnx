@@ -24,10 +24,9 @@ public:
   CAxisSegmentFeaturesFilter& operator=(CAxisSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_RandomizeFeatureIds_Key = "randomize_feature_ids";
   static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
@@ -35,6 +34,7 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
+  static inline constexpr StringLiteral k_RandomizeFeatureIds_Key = "randomize_feature_ids";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

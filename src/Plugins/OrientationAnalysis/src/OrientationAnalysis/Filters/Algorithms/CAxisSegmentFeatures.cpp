@@ -58,9 +58,9 @@ Result<> CAxisSegmentFeatures::operator()()
     }
   }
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayName);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0);
-  auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayName);
+  auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   active->fill(1);
 
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration

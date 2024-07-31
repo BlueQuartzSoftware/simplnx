@@ -18,15 +18,15 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
 {
-  DataPath pInputDataPath;
-  int pScalarTolerance = 0;
-  bool pShouldRandomizeFeatureIds = false;
-  DataPath pActiveArrayPath;
-  DataPath pFeatureIdsPath;
-  bool pUseGoodVoxels = false;
-  DataPath pGoodVoxelsPath;
-  DataPath pGridGeomPath;
-  DataPath pCellFeaturesPath;
+  int ScalarTolerance = 0;
+  bool UseMask;
+  bool RandomizeFeatureIds;
+  DataPath ImageGeometryPath;
+  DataPath InputDataPath;
+  DataPath MaskArrayPath;
+  DataPath FeatureIdsArrayPath;
+  DataPath CellFeatureAttributeMatrixPath;
+  DataPath ActiveArrayPath;
 };
 
 /**
