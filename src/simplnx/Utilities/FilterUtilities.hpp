@@ -3,7 +3,6 @@
 #include "ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/Common/TypeUtilities.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Filter/IFilter.hpp"
