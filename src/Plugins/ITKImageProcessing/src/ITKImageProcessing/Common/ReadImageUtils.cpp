@@ -82,11 +82,8 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     if(imageReaderOptions.ChangeDataType)
     {
-      DataPath tempPath = imageGeomPath.createChildPath(cellDataName).createChildPath("." + arrayName);
-      actions.appendAction(std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(imageReaderOptions.ImageDataType), std::move(arrayDims), std::move(cDims),
-                                                               imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
-      actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), tempPath));
-      actions.appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath, DeleteDataAction::DeleteType::JustObject));
+      actions.appendAction(
+          std::make_unique<CreateArrayAction>(imageReaderOptions.ImageDataType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
     }
     else
     {

@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
@@ -48,6 +49,22 @@ struct ReadImageIntoArrayFunctor
     dataStore = std::move(imageStore);
 
     return {};
+  }
+
+  //------------------------------------------------------------------------------
+  template <class PixelT, uint32 Dimension>
+  Result<> operator()(DataStructure& dataStructure, const std::string& filePath, const DataPath& arrayPath, const DataType& dataType) const
+  {
+    using ImageType = itk::Image<PixelT, Dimension>;
+    using ReaderType = itk::ImageFileReader<ImageType>;
+
+    typename ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filePath);
+
+    reader->Update();
+    typename ImageType::Pointer outputImage = reader->GetOutput();
+
+    return ExecuteNeighborFunction(ITK::ConvertImageToDatastoreFunctor{}, dataType, dataStructure, arrayPath, *outputImage);;
   }
 };
 
@@ -175,7 +192,7 @@ struct ImageReaderOptions
   FloatVec3 Origin;
   FloatVec3 Spacing;
   bool ChangeDataType = false;
-  NumericType ImageDataType = NumericType::uint8;
+  DataType ImageDataType = DataType::uint8;
 };
 
 //------------------------------------------------------------------------------
