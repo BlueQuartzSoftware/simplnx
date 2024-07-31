@@ -247,12 +247,16 @@ Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType n
   return result;
 }
 
+/**
+ * @brief This class provides an interface to write the STL Files in parallel
+ */
 class MultiWriteStlFileImpl
 {
 public:
-  MultiWriteStlFileImpl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices,
-                        const Int32Array& featureIds, const int32 featureId)
-  : m_Path(path)
+  MultiWriteStlFileImpl(WriteStlFile* filter, const fs::path path, const IGeometry::MeshIndexType numTriangles, const std::string header, const IGeometry::MeshIndexArrayType& triangles,
+                        const Float32Array& vertices, const Int32Array& featureIds, const int32 featureId)
+  : m_Filter(filter)
+  , m_Path(path)
   , m_NumTriangles(numTriangles)
   , m_Header(header)
   , m_Triangles(triangles)
@@ -265,17 +269,15 @@ public:
 
   void operator()() const
   {
-    Result<> result;
-
     // Create output file writer in binary write out mode to ensure cross-compatibility
     FILE* filePtr = fopen(m_Path.string().c_str(), "wb");
 
     if(filePtr == nullptr)
     {
       fclose(filePtr);
-      std::cout << fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()) << "\n";
+      m_Filter->sendThreadSafeProgressMessage(
+          {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()))});
       return;
-      // return {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()))};
     }
 
     int32 triCount = 0;
@@ -283,9 +285,9 @@ public:
     { // Scope header output processing to keep overhead low and increase readability
       if(m_Header.size() >= 80)
       {
-        result = MakeWarningVoidResult(-27874,
-                                       fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
-                                                   m_Path.filename().string(), m_Header.length()));
+        m_Filter->sendThreadSafeProgressMessage(MakeWarningVoidResult(
+            -27874, fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
+                                m_Path.filename().string(), m_Header.length())));
       }
 
       std::array<char, 80> stlFileHeader = {};
@@ -370,12 +372,9 @@ public:
       if(totalWritten != 50)
       {
         fclose(filePtr);
-        std::cout << fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", m_Path.filename().string(), triCount, totalWritten)
-                  << "\n";
+        m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(
+            -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", m_Path.filename().string(), triCount, totalWritten))});
         break;
-        //        return {MakeWarningVoidResult(
-        //            -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount,
-        //            totalWritten))};
       }
       triCount++;
     }
@@ -386,6 +385,7 @@ public:
   }
 
 private:
+  WriteStlFile* m_Filter = nullptr;
   const fs::path m_Path;
   const IGeometry::MeshIndexType m_NumTriangles;
   const std::string m_Header;
@@ -468,6 +468,10 @@ Result<> WriteStlFile::operator()()
     }
   }
 
+  // The writing of the files can happen in parallel as much as the Operating System will allow
+  ParallelTaskAlgorithm taskRunner;
+  taskRunner.setParallelizationEnabled(true);
+
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
   std::vector<Result<AtomicFile>> fileList;
 
@@ -489,20 +493,18 @@ Result<> WriteStlFile::operator()()
       {
         return ConvertResult(std::move(fileList[fileIndex]));
       }
-
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-
-      auto result = ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices,
-                                       featureIds, featureId);
-      // if valid Loop over all the triangles for this spin
-      if(result.invalid())
-      {
-        return result;
-      }
-
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles,
+                                               vertices, featureIds, featureId));
       fileIndex++;
+      if(m_HasErrors)
+      {
+        break;
+      }
     }
+    taskRunner.wait();
   }
+
   if(groupingType == GroupingType::FeaturesAndPhases)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
@@ -527,20 +529,17 @@ Result<> WriteStlFile::operator()()
       {
         return ConvertResult(std::move(fileList[fileIndex]));
       }
-
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-
-      auto result =
-          ::MultiWriteOutStl(fileList[fileIndex].value().tempFilePath(), nTriangles,
-                             {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds, featureId);
-      // if valid loop over all the triangles for this spin
-      if(result.invalid())
-      {
-        return result;
-      }
-
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles,
+                                               {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds,
+                                               featureId));
       fileIndex++;
+      if(m_HasErrors)
+      {
+        break;
+      }
     }
+    taskRunner.wait();
   }
 
   // Group Triangles by Part Number which is a single component Int32 Array
@@ -552,10 +551,6 @@ Result<> WriteStlFile::operator()()
     std::unordered_set<int32> uniquePartNumbers(partNumbers.cbegin(), partNumbers.cend());
     fileList.reserve(uniquePartNumbers.size()); // Reserved enough file names
 
-    // The writing of the files can happen in parallel as much as the Operating System will allow
-    ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(true);
-
     // Loop over each Part Number and write a file
     usize fileIndex = 0;
     for(const auto currentPartNumber : uniquePartNumbers)
@@ -566,26 +561,40 @@ Result<> WriteStlFile::operator()()
       {
         return ConvertResult(std::move(fileList[fileIndex]));
       }
-
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
-
-      taskRunner.execute(MultiWriteStlFileImpl(fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles,
-                                               vertices, partNumbers, currentPartNumber));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)},
+                                               triangles, vertices, partNumbers, currentPartNumber));
       fileIndex++;
+      if(m_HasErrors)
+      {
+        break;
+      }
     }
     taskRunner.wait();
   }
 
+  // Commit all the temp files
   for(auto& atomicFile : fileList)
   {
     Result<> commitResult = atomicFile.value().commit();
     if(commitResult.invalid())
     {
-      return commitResult;
+      m_Result = MergeResults(m_Result, commitResult);
     }
   }
 
-  return {};
+  return m_Result;
+}
+
+// -----------------------------------------------------------------------------
+void WriteStlFile::sendThreadSafeProgressMessage(Result<> result)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  if(result.invalid())
+  {
+    m_HasErrors = true;
+    m_Result = MergeResults(m_Result, result);
+  }
 }
 
 // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast, cppcoreguidelines-pro-bounds-pointer-arithmetic)
