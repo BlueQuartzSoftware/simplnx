@@ -4,14 +4,13 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 
+#include <bit>
 #include <optional>
 #include <stdexcept>
 #include <vector>
-#include <bit>
 
 namespace nx::core
 {
-
 /**
  * @brief Returns the templated value for the byte pattern 0xAB based on the byte count of the template parameter
  * @tparam T
