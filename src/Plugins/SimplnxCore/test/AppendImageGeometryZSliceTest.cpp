@@ -124,7 +124,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     AppendImageGeometryZSliceFilter filter;
     Arguments args;
 
-    args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
+    args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({k_CroppedTopHalfPath}));
     args.insertOrAssign(AppendImageGeometryZSliceFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(k_CroppedBottomHalfPath));
     args.insertOrAssign(AppendImageGeometryZSliceFilter::k_CheckResolution_Key, std::make_any<bool>(true));
     args.insertOrAssign(AppendImageGeometryZSliceFilter::k_SaveAsNewGeometry_Key, std::make_any<bool>(true));
@@ -170,7 +170,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: InValid Filter Executio
 
   SECTION("Mismatching Dimensions")
   {
-    args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometry_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath3));
+    args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({k_InvalidTestGeometryPath3}));
     args.insertOrAssign(AppendImageGeometryZSliceFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
   }
   SECTION("Mismatching Spacing")
@@ -193,7 +193,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryZSliceFilter: InValid Filter Executio
       SIMPLNX_RESULT_REQUIRE_VALID(cropResult.result)
     }
     {
-      args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometry_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath1));
+      args.insertOrAssign(AppendImageGeometryZSliceFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({k_InvalidTestGeometryPath1}));
       args.insertOrAssign(AppendImageGeometryZSliceFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfPath));
     }
   }

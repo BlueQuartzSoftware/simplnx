@@ -1032,27 +1032,15 @@ private:
 namespace CopyFromArray
 {
 /**
- * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
- */
-template <class K>
-void AppendData(const K& inputArray, K& destArray, usize offset)
-{
-  const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
-  for(usize i = 0; i < numElements; ++i)
-  {
-    destArray[offset + i] = inputArray.at(i);
-  }
-}
-
-/**
  * @brief Copies all of the data from the inputArray into the destination array using the given tuple offsets.
  */
 template <class K>
-bool CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize srcTupleOffset, usize totalSrcTuples)
+Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize srcTupleOffset, usize totalSrcTuples)
 {
   if(destTupleOffset >= destArray.getNumberOfTuples())
   {
-    return false;
+    return MakeErrorResult(
+        -2032, fmt::format("The destination tuple offset ({}) is not smaller than the total number of tuples in the destination array ({})", destTupleOffset, destArray.getNumberOfTuples()));
   }
 
   const usize sourceNumComponents = inputArray.getNumberOfComponents();
@@ -1060,12 +1048,15 @@ bool CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize sr
 
   if(sourceNumComponents != numComponents)
   {
-    return false;
+    return MakeErrorResult(-2033,
+                           fmt::format("The number of components of the input array ({}) does not match the number of components of the destination array ({})", sourceNumComponents, numComponents));
   }
 
-  if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > destArray.getNumberOfTuples() * numComponents)
+  auto elementsToCopy = totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents;
+  auto availableElements = destArray.getNumberOfTuples() * numComponents;
+  if(elementsToCopy > availableElements)
   {
-    return false;
+    return MakeErrorResult(-2034, fmt::format("The total number of elements to copy ({}) is larger than the total available elements ({}).", elementsToCopy, availableElements));
   }
 
   auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
@@ -1073,8 +1064,227 @@ bool CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize sr
   auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
   std::copy(srcBegin, srcEnd, dstBegin);
 
-  return true;
+  return {};
 }
+
+template <bool UseXDirectionV, bool UseYDirectionV, bool UseZDirectionV>
+struct ConcatenateOptions
+{
+  static inline constexpr bool UsingXDirection = UseXDirectionV;
+  static inline constexpr bool UsingYDirection = UseYDirectionV;
+  static inline constexpr bool UsingZDirection = UseZDirectionV;
+};
+
+using AppendXOption = ConcatenateOptions<true, false, false>;
+using AppendYOption = ConcatenateOptions<false, true, false>;
+using AppendZOption = ConcatenateOptions<false, false, true>;
+using CombineXOption = AppendXOption;
+using CombineYOption = AppendYOption;
+using CombineZOption = AppendZOption;
+
+template <class K>
+Result<> ExecAppendXData(const std::vector<const K*>& inputArrays, K& destArray, usize destTupleOffset)
+{
+  //  std::vector<int> strideValues(inputArrays.size());
+  //  std::vector<int> srcArrayTupleOffsets(inputArrays.size(), 0);
+  //
+  //  // Using std::transform and lambda function to calculate stride values
+  //  std::transform(inputArrays.begin(), inputArrays.end(), strideValues.begin(), [](const K* array) {
+  //    auto shape = array->getTupleShape();
+  //    return shape[1] * shape[2];
+  //  });
+  //
+  //  auto destNumTuples = destArray.getNumberOfTuples();
+  //  usize inputArray1TupleOffset = 0;
+  //  usize inputArray2TupleOffset = 0;
+  //
+  //  while(destTupleOffset < destNumTuples)
+  //  {
+  //    for(usize i = 0; i < inputArrays.size(); ++i)
+  //    {
+  //      const K* inputArray = inputArrays[i];
+  //      auto result = CopyData<K>(*inputArray, destArray, destTupleOffset, srcArrayTupleOffsets[i], strideValues[i]);
+  //      if(result.invalid())
+  //      {
+  //        return result;
+  //      }
+  //      destTupleOffset += strideValues[i];
+  //      srcArrayTupleOffsets[i] += strideValues[i];
+  //    }
+  //  }
+
+  return {};
+}
+
+template <class K>
+Result<> ExecAppendYData(const std::vector<const K*>& inputArrays, K& destArray, const std::vector<usize>& originalDestDims, usize destTupleOffset)
+{
+  return {};
+}
+
+template <class K>
+Result<> ExecAppendZData(const std::vector<const K*>& inputArrays, K& destArray, usize destTupleOffset)
+{
+  for(const auto* inputArray : inputArrays)
+  {
+    auto result = CopyData<K>(*inputArray, destArray, destTupleOffset, 0, inputArray->getNumberOfTuples());
+    if(result.invalid())
+    {
+      return result;
+    }
+    destTupleOffset += inputArray->getNumberOfTuples();
+  }
+
+  return {};
+}
+
+template <class K, class ConcatenateOptions = AppendZOption>
+Result<> ExecAppendData(const std::vector<const K*>& inputArrays, K& destArray, const std::vector<usize>& originalDestDims, usize destTupleOffset)
+{
+  if constexpr(ConcatenateOptions::UsingXDirection)
+  {
+    return ExecAppendXData<K>(inputArrays, destArray, destTupleOffset);
+  }
+  if constexpr(ConcatenateOptions::UsingYDirection)
+  {
+    return ExecAppendYData<K>(inputArrays, destArray, originalDestDims, destTupleOffset);
+  }
+  return ExecAppendZData<K>(inputArrays, destArray, destTupleOffset);
+}
+
+template <class K>
+Result<> ExecCombineXData(const std::vector<const K*>& inputArrays, K& destArray)
+{
+  std::vector<usize> strideValues(inputArrays.size());
+  std::vector<usize> srcArrayTupleOffsets(inputArrays.size(), 0);
+
+  // Using std::transform and lambda function to calculate stride values
+  std::transform(inputArrays.begin(), inputArrays.end(), strideValues.begin(), [](const K* array) {
+    auto shape = array->getTupleShape();
+    return shape[2];
+  });
+
+  auto destNumTuples = destArray.getNumberOfTuples();
+  usize inputArray1TupleOffset = 0;
+  usize inputArray2TupleOffset = 0;
+  usize destTupleOffset = 0;
+
+  while(destTupleOffset < destNumTuples)
+  {
+    for(usize i = 0; i < inputArrays.size(); ++i)
+    {
+      const K* inputArray = inputArrays[i];
+      auto result = CopyData<K>(*inputArray, destArray, destTupleOffset, srcArrayTupleOffsets[i], strideValues[i]);
+      if(result.invalid())
+      {
+        return result;
+      }
+      destTupleOffset += strideValues[i];
+      srcArrayTupleOffsets[i] += strideValues[i];
+    }
+  }
+
+  return {};
+}
+
+template <class K>
+Result<> ExecCombineYData(const std::vector<const K*>& inputArrays, K& destArray)
+{
+  return {};
+}
+
+template <class K>
+Result<> ExecCombineZData(const std::vector<const K*>& inputArrays, K& destArray)
+{
+  usize tupleOffset = 0;
+  for(const auto* inputArray : inputArrays)
+  {
+    auto result = CopyData<K>(*inputArray, destArray, tupleOffset, 0, inputArray->getNumberOfTuples());
+    if(result.invalid())
+    {
+      return result;
+    }
+    tupleOffset += inputArray->getNumberOfTuples();
+  }
+
+  return {};
+}
+
+template <class K, class ConcatenateOptions = CombineZOption>
+Result<> ExecCombineData(const std::vector<const K*>& inputArrays, K& destArray)
+{
+  if constexpr(ConcatenateOptions::UsingXDirection)
+  {
+    return ExecCombineXData<K>(inputArrays, destArray);
+  }
+  if constexpr(ConcatenateOptions::UsingYDirection)
+  {
+    return ExecCombineYData<K>(inputArrays, destArray);
+  }
+  return ExecCombineZData<K>(inputArrays, destArray);
+}
+
+enum class Direction
+{
+  X,
+  Y,
+  Z
+};
+
+/**
+ * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+ */
+template <class K>
+Result<> AppendData(const std::vector<const K*>& inputArrays, K& destArray, const std::vector<usize>& originalDestDims, usize tupleOffset, Direction direction = Direction::Z)
+{
+  // Use switch here because it is a bounded logic chain potentially allowing compiler to make jump table or similar optimizations
+  switch(direction)
+  {
+  case Direction::X: {
+    return ExecAppendData<K, AppendXOption>(inputArrays, destArray, originalDestDims, tupleOffset);
+  }
+  case Direction::Y: {
+    return ExecAppendData<K, AppendYOption>(inputArrays, destArray, originalDestDims, tupleOffset);
+  }
+  case Direction::Z: {
+    return ExecAppendData<K, AppendZOption>(inputArrays, destArray, originalDestDims, tupleOffset);
+  }
+  }
+}
+
+/**
+ * @brief Combines all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+ */
+template <class K>
+Result<> CombineData(const std::vector<const K*>& inputArrays, K& destArray, Direction direction = Direction::Z)
+{
+  // Use switch here because it is a bounded logic chain potentially allowing compiler to make jump table or similar optimizations
+  switch(direction)
+  {
+  case Direction::X: {
+    return ExecCombineData<K, CombineXOption>(inputArrays, destArray);
+  }
+  case Direction::Y: {
+    return ExecCombineData<K, CombineYOption>(inputArrays, destArray);
+  }
+  case Direction::Z: {
+    return ExecCombineData<K, CombineZOption>(inputArrays, destArray);
+  }
+  }
+}
+
+///**
+// * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+// */
+// template <class K>
+// void AppendData(const K& inputArray, K& destArray, usize offset)
+//{
+//  const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
+//  for(usize i = 0; i < numElements; ++i)
+//  {
+//    destArray[offset + i] = inputArray.at(i);
+//  }
+//}
 
 /**
  * @brief This class will append all of the data from the input array of any IArray type to the given destination array of the same IArray type starting at the given tupleOffset. This class DOES NOT
@@ -1084,11 +1294,13 @@ template <typename T>
 class AppendArray
 {
 public:
-  AppendArray(IArray& destCellArray, const IArray& inputCellArray, usize tupleOffset)
+  AppendArray(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<usize>& originalDestDims, usize tupleOffset, Direction direction = Direction::Z)
   : m_ArrayType(destCellArray.getArrayType())
-  , m_InputCellArray(&inputCellArray)
+  , m_InputCellArrays(inputCellArrays)
   , m_DestCellArray(&destCellArray)
+  , m_OriginalDestDims(originalDestDims)
   , m_TupleOffset(tupleOffset)
+  , m_Direction(direction)
   {
   }
 
@@ -1101,7 +1313,6 @@ public:
 
   void operator()() const
   {
-    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
       using NeighborListType = NeighborList<T>;
@@ -1111,24 +1322,40 @@ public:
       {
         destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
-      AppendData<NeighborListType>(*dynamic_cast<const NeighborListType*>(m_InputCellArray), *destArrayPtr, offset);
+
+      std::vector<const NeighborListType*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const NeighborListType* { return dynamic_cast<const NeighborListType*>(elem); });
+
+      AppendData<NeighborListType>(castedArrays, *destArrayPtr, m_OriginalDestDims, m_TupleOffset, m_Direction);
     }
     if(m_ArrayType == IArray::ArrayType::DataArray)
     {
       using DataArrayType = DataArray<T>;
-      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *dynamic_cast<DataArrayType*>(m_DestCellArray), offset);
+      std::vector<const DataArrayType*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+      AppendData<DataArrayType>(castedArrays, *dynamic_cast<DataArrayType*>(m_DestCellArray), m_OriginalDestDims, m_TupleOffset, m_Direction);
     }
     if(m_ArrayType == IArray::ArrayType::StringArray)
     {
-      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray), *dynamic_cast<StringArray*>(m_DestCellArray), offset);
+      std::vector<const StringArray*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
+      AppendData<StringArray>(castedArrays, *dynamic_cast<StringArray*>(m_DestCellArray), m_OriginalDestDims, m_TupleOffset, m_Direction);
     }
   }
 
 private:
   IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  const IArray* m_InputCellArray = nullptr;
+  std::vector<const IArray*> m_InputCellArrays;
   IArray* m_DestCellArray = nullptr;
+  std::vector<usize> m_OriginalDestDims;
   usize m_TupleOffset;
+  Direction m_Direction = Direction::Z;
 };
 
 /**
@@ -1139,11 +1366,11 @@ template <typename T>
 class CombineArrays
 {
 public:
-  CombineArrays(const IArray& inputCellArray1, const IArray& inputCellArray2, IArray& destCellArray)
+  CombineArrays(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, Direction direction = Direction::Z)
   : m_ArrayType(destCellArray.getArrayType())
-  , m_InputCellArray1(&inputCellArray1)
-  , m_InputCellArray2(&inputCellArray2)
+  , m_InputCellArrays(inputCellArrays)
   , m_DestCellArray(&destCellArray)
+  , m_Direction(direction)
   {
   }
 
@@ -1165,27 +1392,36 @@ public:
       {
         destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
       }
-      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray1), *destArray, 0);
-      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray2), *destArray, m_InputCellArray1->getNumberOfTuples());
+      std::vector<const NeighborListT*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const NeighborListT* { return dynamic_cast<const NeighborListT*>(elem); });
+      CombineData<NeighborListT>(castedArrays, *destArray, m_Direction);
     }
     if(m_ArrayType == IArray::ArrayType::DataArray)
     {
       using DataArrayType = DataArray<T>;
-      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray1), *dynamic_cast<DataArrayType*>(m_DestCellArray), 0);
-      AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray2), *dynamic_cast<DataArrayType*>(m_DestCellArray), m_InputCellArray1->getSize());
+      std::vector<const DataArrayType*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+      CombineData<DataArrayType>(castedArrays, *dynamic_cast<DataArrayType*>(m_DestCellArray), m_Direction);
     }
     if(m_ArrayType == IArray::ArrayType::StringArray)
     {
-      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray1), *dynamic_cast<StringArray*>(m_DestCellArray), 0);
-      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray2), *dynamic_cast<StringArray*>(m_DestCellArray), m_InputCellArray1->getSize());
+      std::vector<const StringArray*> castedArrays;
+      castedArrays.reserve(m_InputCellArrays.size());
+      std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
+                     [](const IArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
+      CombineData<StringArray>(castedArrays, *dynamic_cast<StringArray*>(m_DestCellArray), m_Direction);
     }
   }
 
 private:
   IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  const IArray* m_InputCellArray1 = nullptr;
-  const IArray* m_InputCellArray2 = nullptr;
+  std::vector<const IArray*> m_InputCellArrays;
   IArray* m_DestCellArray = nullptr;
+  Direction m_Direction = Direction::Z;
 };
 
 /**
@@ -1218,7 +1454,7 @@ public:
     for(usize i = 0; i < m_NewToOldIndices.size(); i++)
     {
       int64 oldIndexI = m_NewToOldIndices[i];
-      bool copySucceeded = true;
+      Result<> copySucceeded;
       if(m_ArrayType == IArray::ArrayType::NeighborListArray)
       {
         using NeighborListT = NeighborList<T>;
@@ -1256,7 +1492,7 @@ public:
         }
       }
 
-      if(!copySucceeded)
+      if(copySucceeded.invalid())
       {
         std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI,
                                  m_DestCellArray->getName(), i)
@@ -1357,7 +1593,7 @@ public:
           const int64 rectGridIndex = (m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex) + xIndex;
 
           // Use the computed index to copy the data from the RectGrid to the Image Geometry
-          bool copySucceeded = true;
+          Result<> copySucceeded;
           if(m_ArrayType == IArray::ArrayType::NeighborListArray)
           {
             using NeighborListT = NeighborList<T>;
@@ -1394,7 +1630,7 @@ public:
               destArray[imageIndex] = "";
             }
           }
-          if(!copySucceeded)
+          if(copySucceeded.invalid())
           {
             std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), rectGridIndex,
                                      m_DestCellArray->getName(), imageIndex)
@@ -1426,22 +1662,29 @@ private:
  * @brief This function will make use of the AppendData class with the bool data type only to append data from the input IArray to the destination IArray at the given tupleOffset. This function DOES
  * NOT do any bounds checking!
  */
-inline void RunAppendBoolAppend(IArray& destCellArray, const IArray& inputCellArray, usize tupleOffset)
+inline void RunAppendBoolAppend(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<usize>& originalDestDims, usize tupleOffset,
+                                Direction direction = Direction::Z)
 {
   using DataArrayType = DataArray<bool>;
-  const usize offset = tupleOffset * destCellArray.getNumberOfComponents();
-  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray), *dynamic_cast<DataArrayType*>(&destCellArray), offset);
+  std::vector<const DataArrayType*> castedArrays;
+  castedArrays.reserve(inputCellArrays.size());
+  std::transform(inputCellArrays.cbegin(), inputCellArrays.cend(), std::back_inserter(castedArrays),
+                 [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+  AppendData<DataArrayType>(castedArrays, *dynamic_cast<DataArrayType*>(&destCellArray), originalDestDims, tupleOffset, direction);
 }
 
 /**
- * @brief This function will make use of the AppendData class with the bool data type only to combine data from the input IArrays to the destination IArray. This function DOES
+ * @brief This function will make use of the CombineData method with the bool data type only to combine data from the input IArrays to the destination IArray. This function DOES
  * NOT do any bounds checking!
  */
-inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& inputCellArray2, IArray& destCellArray)
+inline void RunCombineBoolAppend(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, Direction direction = Direction::Z)
 {
   using DataArrayType = DataArray<bool>;
-  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray1), *dynamic_cast<DataArrayType*>(&destCellArray), 0);
-  AppendData<DataArrayType>(*dynamic_cast<const DataArrayType*>(&inputCellArray2), *dynamic_cast<DataArrayType*>(&destCellArray), inputCellArray1.getSize());
+  std::vector<const DataArrayType*> castedArrays;
+  castedArrays.reserve(inputCellArrays.size());
+  std::transform(inputCellArrays.cbegin(), inputCellArrays.cend(), std::back_inserter(castedArrays),
+                 [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+  CombineData<DataArrayType>(castedArrays, *dynamic_cast<DataArrayType*>(&destCellArray), direction);
 }
 
 /**

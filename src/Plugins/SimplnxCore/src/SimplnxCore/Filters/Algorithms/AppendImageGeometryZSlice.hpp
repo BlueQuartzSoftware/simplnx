@@ -6,17 +6,19 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 namespace nx::core
 {
 
 struct SIMPLNXCORE_EXPORT AppendImageGeometryZSliceInputValues
 {
-  DataPath InputGeometryPath;
+  std::vector<DataPath> InputGeometriesPaths;
   DataPath DestinationGeometryPath;
   DataPath NewGeometryPath;
   bool CheckResolution;
   bool SaveAsNewGeometry;
+  CopyFromArray::Direction Direction;
 };
 
 /**
