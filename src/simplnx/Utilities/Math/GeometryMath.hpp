@@ -690,7 +690,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   }
 
   // Standard mersenne_twister_engine random seed
-  std::mt19937_64 generator(static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::mt19937_64 generator(std::mt19937_64::default_seed);
   std::uniform_real_distribution<T> distribution(0.0, 1.0);
 
   detail::GeometryStoreCache cache(triangleGeomRef.getVertices()->getDataStoreRef(), triangleGeomRef.getFaces()->getDataStoreRef(), triangleGeomRef.getNumberOfVerticesPerFace());
