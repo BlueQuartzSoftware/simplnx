@@ -58,8 +58,6 @@ Result<> AppendImageGeometryZSlice::operator()()
     destCellData->resizeTuples(newDims);
   }
 
-  const usize tupleOffset = std::accumulate(destGeomDims.begin(), destGeomDims.end(), 1, std::multiplies<>());
-
   ParallelTaskAlgorithm taskRunner;
   for(const auto& [dataId, dataObject] : *newCellData)
   {
@@ -114,7 +112,9 @@ Result<> AppendImageGeometryZSlice::operator()()
     else
     {
       m_MessageHandler(fmt::format("Appending data into array {}", newCellDataPath.createChildPath(name).toString()));
-      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, destGeomDims.toContainer<std::vector<usize>>(), tupleOffset, m_InputValues->Direction);
+      auto destGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
+      std::reverse(destGeomDimsVec.begin(), destGeomDimsVec.end());
+      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, destGeomDimsVec, m_InputValues->Direction);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
