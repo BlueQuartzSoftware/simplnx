@@ -104,9 +104,6 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   if(seed >= 0)
   {
     featureIds->setValue(static_cast<usize>(seed), gnum);
-    //    std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
-    //    cellFeatureAM.resizeTuples(tDims); // This will resize the actives array
-    //    activeArray[gnum] = 1;
   }
   return seed;
 }
