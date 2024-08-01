@@ -111,6 +111,11 @@ public:
   void setOrigin(const PointType& origin)
   {
     m_Origin = origin;
+
+    if constexpr(CacheEndV)
+    {
+      m_Endpoint = calculateEndpoint();
+    }
   }
 
   /**
@@ -138,6 +143,11 @@ public:
   void setLength(LengthType length)
   {
     m_Length = length;
+
+    if constexpr(CacheEndV)
+    {
+      m_Endpoint = calculateEndpoint();
+    }
   }
 
   /**
