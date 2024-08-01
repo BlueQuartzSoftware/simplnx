@@ -146,7 +146,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedEdgeArrays.empty() && nullptr == srcEdgeAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
@@ -154,7 +154,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(nullptr == srcEdgeAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {MakeErrorResult<OutputActions>(-5652, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -176,7 +176,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
@@ -184,7 +184,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(nullptr == srcVertexAttrMatPtr)
       {
-        return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {MakeErrorResult<OutputActions>(-5654, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 

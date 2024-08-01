@@ -235,7 +235,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
     if(selectedCellData == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {MakeErrorResult<OutputActions>(-5851, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
