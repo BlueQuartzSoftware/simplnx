@@ -4,9 +4,6 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -51,7 +48,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>(computedCellDataName));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     // Are we going to randomize the featureIds when completed.
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -63,18 +60,10 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
 
     UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
     size_t numFeatures = actives.getNumberOfTuples();
-    std::cout << "NumFeatures: " << numFeatures << std::endl;
     REQUIRE(numFeatures == 847);
   }
 
-  {
-    // Write out the DataStructure for later viewing/debugging
-    std::string filePath = fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir);
-    // std::cout << "Writing file to: " << filePath << std::endl;
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePath);
-    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
-
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
-  }
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

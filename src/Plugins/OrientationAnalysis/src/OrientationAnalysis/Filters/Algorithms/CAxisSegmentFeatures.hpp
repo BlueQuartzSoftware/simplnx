@@ -22,7 +22,7 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
   DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath FeatureIdsArrayPath;
-  DataPath CellFeatureAttributeMatrixName;
+  DataPath CellFeatureAttributeMatrixPath;
   DataPath ActiveArrayPath;
 };
 

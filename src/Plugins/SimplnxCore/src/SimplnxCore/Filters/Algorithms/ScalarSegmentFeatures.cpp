@@ -222,7 +222,7 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Resize the Feature Attribute Matrix
-  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures) + 1};
+  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures)};
   auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 
@@ -284,7 +284,6 @@ bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighb
   {
     CompareFunctor* func = m_CompareFunctor.get();
     return (*func)((usize)(referencepoint), (usize)(neighborpoint), gnum);
-    //     | Functor  ||calling the operator() method of the CompareFunctor Class |
   }
 
   return false;

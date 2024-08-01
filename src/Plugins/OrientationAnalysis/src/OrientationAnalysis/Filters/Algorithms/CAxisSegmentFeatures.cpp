@@ -63,19 +63,30 @@ Result<> CAxisSegmentFeatures::operator()()
   auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   active->fill(1);
 
-  // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
+  // Run the segmentation algorithm
   execute(imageGeometry);
-
-  const auto totalFeatures = static_cast<int64>(active->getNumberOfTuples());
-  if(totalFeatures < 2)
+  // Sanity check the result.
+  if(this->m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-8362, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high");
+    return {MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures))};
   }
 
-  // By default we randomize grains
+  // Resize the Feature Attribute Matrix
+  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures)};
+  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
+
+  // make sure all values are initialized and "re-reserve" index 0
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArray->getDataStore()->fill(1);
+  (*activeArray)[0] = 0;
+
+  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // allows users visualizing the data to better discern each grain otherwise the coloring
+  // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->RandomizeFeatureIds)
   {
-    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
+    randomizeFeatureIds(m_FeatureIdsArray, this->m_FoundFeatures + 1);
   }
 
   return {};
@@ -111,7 +122,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixName);
+    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
     featureIds[static_cast<usize>(seed)] = gnum;
     const std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
     cellFeatureAM.resizeTuples(tDims); // This will resize the active array

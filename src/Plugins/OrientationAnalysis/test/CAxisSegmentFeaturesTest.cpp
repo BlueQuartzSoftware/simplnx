@@ -4,7 +4,6 @@
 
 #include "OrientationAnalysis/Filters/CAxisSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "OrientationAnalysisTestUtils.hpp"
 
 #include <filesystem>
 
@@ -53,6 +52,12 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+  {
+    DataPath activeArrayDataPath = k_DataContainerPath.createChildPath(k_ComputedCellFeatureData).createChildPath(k_ActiveName);
+    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
+    size_t numFeatures = actives.getNumberOfTuples();
+    REQUIRE(numFeatures == 31228);
   }
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group

@@ -84,6 +84,12 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Valid Execution", "[Orienta
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
+  {
+    DataPath activeArrayDataPath = k_DataContainerPath.createChildPath(k_Grain_Data).createChildPath(k_ActiveName);
+    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
+    size_t numFeatures = actives.getNumberOfTuples();
+    REQUIRE(numFeatures == 5416);
+  }
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsArrayPath);
