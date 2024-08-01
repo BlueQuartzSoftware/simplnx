@@ -60,7 +60,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
 
     UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
     size_t numFeatures = actives.getNumberOfTuples();
-    REQUIRE(numFeatures == 847);
+    REQUIRE(numFeatures == 848);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
