@@ -271,7 +271,6 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    // auto& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->pActiveArrayPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
     //  std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
     //  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->pCellFeaturesPath);
