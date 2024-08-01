@@ -133,7 +133,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = nx.AppendImageGeometryZSliceFilter()
+nx_filter = nx.AppendImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -149,7 +149,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.get_data_directory() / "Output/Examples/AppendImageGeometryZSlice.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/AppendImageGeometry.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

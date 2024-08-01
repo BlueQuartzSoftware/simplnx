@@ -13,7 +13,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
   AlignSectionsListTest.cpp
-  AppendImageGeometryZSliceTest.cpp
+  AppendImageGeometryTest.cpp
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp

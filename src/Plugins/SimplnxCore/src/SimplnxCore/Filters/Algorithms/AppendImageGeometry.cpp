@@ -1,4 +1,4 @@
-#include "AppendImageGeometryZSlice.hpp"
+#include "AppendImageGeometry.hpp"
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
@@ -8,8 +8,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-AppendImageGeometryZSlice::AppendImageGeometryZSlice(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     AppendImageGeometryZSliceInputValues* inputValues)
+AppendImageGeometry::AppendImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -18,16 +17,16 @@ AppendImageGeometryZSlice::AppendImageGeometryZSlice(DataStructure& dataStructur
 }
 
 // -----------------------------------------------------------------------------
-AppendImageGeometryZSlice::~AppendImageGeometryZSlice() noexcept = default;
+AppendImageGeometry::~AppendImageGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& AppendImageGeometryZSlice::getCancel()
+const std::atomic_bool& AppendImageGeometry::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> AppendImageGeometryZSlice::operator()()
+Result<> AppendImageGeometry::operator()()
 {
   Result<> results = {};
 

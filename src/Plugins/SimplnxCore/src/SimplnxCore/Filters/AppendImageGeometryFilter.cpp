@@ -1,7 +1,7 @@
-#include "AppendImageGeometryZSliceFilter.hpp"
+#include "AppendImageGeometryFilter.hpp"
 
 #include "ComputeArrayStatisticsFilter.hpp"
-#include "SimplnxCore/Filters/Algorithms/AppendImageGeometryZSlice.hpp"
+#include "SimplnxCore/Filters/Algorithms/AppendImageGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -26,37 +26,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string AppendImageGeometryZSliceFilter::name() const
+std::string AppendImageGeometryFilter::name() const
 {
-  return FilterTraits<AppendImageGeometryZSliceFilter>::name.str();
+  return FilterTraits<AppendImageGeometryFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string AppendImageGeometryZSliceFilter::className() const
+std::string AppendImageGeometryFilter::className() const
 {
-  return FilterTraits<AppendImageGeometryZSliceFilter>::className;
+  return FilterTraits<AppendImageGeometryFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid AppendImageGeometryZSliceFilter::uuid() const
+Uuid AppendImageGeometryFilter::uuid() const
 {
-  return FilterTraits<AppendImageGeometryZSliceFilter>::uuid;
+  return FilterTraits<AppendImageGeometryFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string AppendImageGeometryZSliceFilter::humanName() const
+std::string AppendImageGeometryFilter::humanName() const
 {
-  return "Append Z Slice (Image Geometry)";
+  return "Append Image Geometry";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> AppendImageGeometryZSliceFilter::defaultTags() const
+std::vector<std::string> AppendImageGeometryFilter::defaultTags() const
 {
   return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------
-Parameters AppendImageGeometryZSliceFilter::parameters() const
+Parameters AppendImageGeometryFilter::parameters() const
 {
   Parameters params;
 
@@ -81,14 +81,14 @@ Parameters AppendImageGeometryZSliceFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AppendImageGeometryZSliceFilter::clone() const
+IFilter::UniquePointer AppendImageGeometryFilter::clone() const
 {
-  return std::make_unique<AppendImageGeometryZSliceFilter>();
+  return std::make_unique<AppendImageGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pInputGeometriesPathsValue = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
@@ -307,10 +307,10 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> AppendImageGeometryZSliceFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel) const
 {
-  AppendImageGeometryZSliceInputValues inputValues;
+  AppendImageGeometryInputValues inputValues;
 
   inputValues.InputGeometriesPaths = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   inputValues.DestinationGeometryPath = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
@@ -319,7 +319,7 @@ Result<> AppendImageGeometryZSliceFilter::executeImpl(DataStructure& dataStructu
   inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
   inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
 
-  return AppendImageGeometryZSlice(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return AppendImageGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -332,9 +332,9 @@ constexpr StringLiteral k_CheckResolutionKey = "CheckResolution";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> AppendImageGeometryZSliceFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = AppendImageGeometryZSliceFilter().getDefaultArguments();
+  Arguments args = AppendImageGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

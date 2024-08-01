@@ -221,14 +221,14 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::AppendImageGeometryZSliceFilter",
+        "name": "nx::core::AppendImageGeometryFilter",
         "uuid": "c62c5c89-5ea8-4948-99ca-51cbc5b54b05"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/AppendImageGeometryZSlice.dream3d",
+        "export_file_path": "Data/Output/Examples/AppendImageGeometry.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",

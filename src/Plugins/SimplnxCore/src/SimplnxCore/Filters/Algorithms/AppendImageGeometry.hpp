@@ -11,7 +11,7 @@
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT AppendImageGeometryZSliceInputValues
+struct SIMPLNXCORE_EXPORT AppendImageGeometryInputValues
 {
   std::vector<DataPath> InputGeometriesPaths;
   DataPath DestinationGeometryPath;
@@ -22,19 +22,19 @@ struct SIMPLNXCORE_EXPORT AppendImageGeometryZSliceInputValues
 };
 
 /**
- * @class AppendImageGeometryZSlice
+ * @class AppendImageGeometry
  * @brief This filter allows the user to append an Image Geometry onto the "end" of another Image Geometry.
  */
-class SIMPLNXCORE_EXPORT AppendImageGeometryZSlice
+class SIMPLNXCORE_EXPORT AppendImageGeometry
 {
 public:
-  AppendImageGeometryZSlice(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryZSliceInputValues* inputValues);
-  ~AppendImageGeometryZSlice() noexcept;
+  AppendImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryInputValues* inputValues);
+  ~AppendImageGeometry() noexcept;
 
-  AppendImageGeometryZSlice(const AppendImageGeometryZSlice&) = delete;
-  AppendImageGeometryZSlice(AppendImageGeometryZSlice&&) noexcept = delete;
-  AppendImageGeometryZSlice& operator=(const AppendImageGeometryZSlice&) = delete;
-  AppendImageGeometryZSlice& operator=(AppendImageGeometryZSlice&&) noexcept = delete;
+  AppendImageGeometry(const AppendImageGeometry&) = delete;
+  AppendImageGeometry(AppendImageGeometry&&) noexcept = delete;
+  AppendImageGeometry& operator=(const AppendImageGeometry&) = delete;
+  AppendImageGeometry& operator=(AppendImageGeometry&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -42,7 +42,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const AppendImageGeometryZSliceInputValues* m_InputValues = nullptr;
+  const AppendImageGeometryInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

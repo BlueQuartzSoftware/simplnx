@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class AppendImageGeometryZSliceFilter
+ * @class AppendImageGeometryFilter
  * @brief This filter allows the user to append an Image Geometry onto the "end" of another Image Geometry.
  */
-class SIMPLNXCORE_EXPORT AppendImageGeometryZSliceFilter : public IFilter
+class SIMPLNXCORE_EXPORT AppendImageGeometryFilter : public IFilter
 {
 public:
-  AppendImageGeometryZSliceFilter() = default;
-  ~AppendImageGeometryZSliceFilter() noexcept override = default;
+  AppendImageGeometryFilter() = default;
+  ~AppendImageGeometryFilter() noexcept override = default;
 
-  AppendImageGeometryZSliceFilter(const AppendImageGeometryZSliceFilter&) = delete;
-  AppendImageGeometryZSliceFilter(AppendImageGeometryZSliceFilter&&) noexcept = delete;
+  AppendImageGeometryFilter(const AppendImageGeometryFilter&) = delete;
+  AppendImageGeometryFilter(AppendImageGeometryFilter&&) noexcept = delete;
 
-  AppendImageGeometryZSliceFilter& operator=(const AppendImageGeometryZSliceFilter&) = delete;
-  AppendImageGeometryZSliceFilter& operator=(AppendImageGeometryZSliceFilter&&) noexcept = delete;
+  AppendImageGeometryFilter& operator=(const AppendImageGeometryFilter&) = delete;
+  AppendImageGeometryFilter& operator=(AppendImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputGeometries_Key = "input_image_geometries_paths";
@@ -105,5 +105,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, AppendImageGeometryZSliceFilter, "c62c5c89-5ea8-4948-99ca-51cbc5b54b05");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, AppendImageGeometryFilter, "c62c5c89-5ea8-4948-99ca-51cbc5b54b05");
 /* LEGACY UUID FOR THIS FILTER 52b2918a-4fb5-57aa-97d4-ccc084b89572 */
