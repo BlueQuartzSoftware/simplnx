@@ -25,7 +25,7 @@ Lists available commands or displays details regarding a specific command.
 
 Executes the pipeline at the target filepath while printing the output to the terminal. Optionally, a log file is created at the specified filepath where the output is saved.
 
-For example, ```--execute bash D:/Directory/pipeline.d3pipeline -l D:/Logs/pipeline.log``` will attempt to execute the pipeline at `D:/Directory/pipeline.d3pipeline` and saves the output to `D:/Logs/pipeline.log`.
+For example, ```--execute D:/Directory/pipeline.d3pipeline -l D:/Logs/pipeline.log``` will attempt to execute the pipeline at `D:/Directory/pipeline.d3pipeline` and saves the output to `D:/Logs/pipeline.log`.
 
 ### Preflight
 
@@ -36,7 +36,7 @@ For example, ```--execute bash D:/Directory/pipeline.d3pipeline -l D:/Logs/pipel
 
 Preflights the pipeline at the target filepath while printing the output to the terminal. Optionally, a log file is created at the specified filepath where the output is saved.
 
-For example, ```--preflight bash D:/Directory/pipeline.d3pipeline -l D:/Logs/pipeline.log``` will attempt to preflight the pipeline at `D:/Directory/pipeline.d3pipeline` and saves the output to `D:/Logs/pipeline.log`.
+For example, ```--preflight D:/Directory/pipeline.d3pipeline -l D:/Logs/pipeline.log``` will attempt to preflight the pipeline at `D:/Directory/pipeline.d3pipeline` and saves the output to `D:/Logs/pipeline.log`.
 
 ### Convert
 
@@ -52,4 +52,4 @@ Converts a SIMPL pipeline at the target filepath to a simplnx pipeline. If any e
 
 The second option (convert-output / co) also saves the converted pipeline to file based on the name of the converted pipeline using the simplnx pipeline extension (`.d3pipeline`).
 
-For example, ```--convert-output bash D:/Directory/SIMPL.json``` will attempt to convert the SIMPL pipeline at `D:/Directory/SIMPL.json` and save the converted pipeline to `D:/Directory/SIMPL.d3pipeline`
+For example, ```--convert-output D:/Directory/SIMPL.json``` will attempt to convert the SIMPL pipeline at `D:/Directory/SIMPL.json` and save the converted pipeline to `D:/Directory/SIMPL.d3pipeline`
