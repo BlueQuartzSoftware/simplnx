@@ -151,13 +151,13 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const nx::core::Tr
     ll[2] = min[2] * static_cast<float32>(swap) + ll[2] * static_cast<float32>(!swap);
 
     swap = max[0] > ur[0];
-    ur[0] = min[0] * static_cast<float32>(swap) + ur[0] * static_cast<float32>(!swap);
+    ur[0] = max[0] * static_cast<float32>(swap) + ur[0] * static_cast<float32>(!swap);
 
     swap = max[1] > ur[1];
-    ur[1] = min[1] * static_cast<float32>(swap) + ur[1] * static_cast<float32>(!swap);
+    ur[1] = max[1] * static_cast<float32>(swap) + ur[1] * static_cast<float32>(!swap);
 
     swap = max[2] > ur[2];
-    ur[2] = min[2] * static_cast<float32>(swap) + ur[2] * static_cast<float32>(!swap);
+    ur[2] = max[2] * static_cast<float32>(swap) + ur[2] * static_cast<float32>(!swap);
   }
 
   return {ll, ur};
