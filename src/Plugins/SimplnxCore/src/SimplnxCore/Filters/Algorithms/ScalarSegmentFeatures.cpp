@@ -134,25 +134,26 @@ ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::operator()()
 {
-  if(m_InputValues->pUseGoodVoxels)
+  if(m_InputValues->UseMask)
   {
     try
     {
-      m_GoodVoxels = InstantiateMaskCompare(m_DataStructure, m_InputValues->pGoodVoxelsPath);
+      m_GoodVoxels = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->pGoodVoxelsPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
       return MakeErrorResult(-54110, message);
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->pGridGeomPath);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->pFeatureIdsPath);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
-  IDataArray* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->pInputDataPath);
+
+  IDataArray* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
   size_t inDataPoints = inputDataArray->getNumberOfTuples();
   nx::core::DataType dataType = inputDataArray->getDataType();
 
@@ -161,47 +162,47 @@ Result<> ScalarSegmentFeatures::operator()()
   switch(dataType)
   {
   case nx::core::DataType::int8: {
-    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArray, inDataPoints, static_cast<int8>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArray, inDataPoints, static_cast<int8>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::uint8: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArray, inDataPoints, static_cast<uint8>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArray, inDataPoints, static_cast<uint8>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::boolean: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints, static_cast<bool>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints, static_cast<bool>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::int16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArray, inDataPoints, static_cast<int16>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArray, inDataPoints, static_cast<int16>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::uint16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArray, inDataPoints, static_cast<uint16>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArray, inDataPoints, static_cast<uint16>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::int32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArray, inDataPoints, static_cast<int32>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArray, inDataPoints, static_cast<int32>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::uint32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArray, inDataPoints, static_cast<uint32>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArray, inDataPoints, static_cast<uint32>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::int64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArray, inDataPoints, static_cast<int64>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArray, inDataPoints, static_cast<int64>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::uint64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArray, inDataPoints, static_cast<uint64>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArray, inDataPoints, static_cast<uint64>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::float32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArray, inDataPoints, static_cast<float32>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArray, inDataPoints, static_cast<float32>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   case nx::core::DataType::float64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArray, inDataPoints, static_cast<float64>(m_InputValues->pScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArray, inDataPoints, static_cast<float64>(m_InputValues->ScalarTolerance), featureIds);
     break;
   }
   default:
@@ -212,29 +213,30 @@ Result<> ScalarSegmentFeatures::operator()()
     m_CompareFunctor = std::shared_ptr<SegmentFeatures::CompareFunctor>(new SegmentFeatures::CompareFunctor()); // The default CompareFunctor which ALWAYS returns false for the comparison
   }
 
-  //  // Add compare function to arguments
-  //  Arguments newArgs = args;
-  //  newArgs.insert(k_CompareFunctKey, compare.get());
-
+  // Run the segmentation algorithm
   execute(gridGeom);
-
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->pActiveArrayPath);
-  auto totalFeatures = activeArray->getNumberOfTuples();
-  if(totalFeatures < 2)
+  // Sanity check the result.
+  if(this->m_FoundFeatures < 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
+    return {MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures))};
   }
 
+  // Resize the Feature Attribute Matrix
+  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
+  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
+
   // make sure all values are initialized and "re-reserve" index 0
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   activeArray->getDataStore()->fill(1);
   (*activeArray)[0] = 0;
 
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
   // would look like a smooth gradient. This is a user input parameter
-  if(m_InputValues->pShouldRandomizeFeatureIds)
+  if(m_InputValues->RandomizeFeatureIds)
   {
-    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
+    randomizeFeatureIds(m_FeatureIdsArray, this->m_FoundFeatures + 1);
   }
 
   return {};
@@ -253,7 +255,7 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   {
     if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if(!m_InputValues->pUseGoodVoxels || m_GoodVoxels->isTrue(randpoint))
+      if(!m_InputValues->UseMask || m_GoodVoxels->isTrue(randpoint))
       {
         seed = randpoint;
       }
@@ -269,11 +271,7 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    auto& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->pActiveArrayPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
-    std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
-    auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->pCellFeaturesPath);
-    cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
   }
   return seed;
 }
@@ -282,11 +280,10 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
   auto featureIds = m_FeatureIdsArray->getDataStore();
-  if(featureIds->getValue(neighborpoint) == 0 && (!m_InputValues->pUseGoodVoxels || m_GoodVoxels->isTrue(neighborpoint)))
+  if(featureIds->getValue(neighborpoint) == 0 && (!m_InputValues->UseMask || m_GoodVoxels->isTrue(neighborpoint)))
   {
     CompareFunctor* func = m_CompareFunctor.get();
     return (*func)((usize)(referencepoint), (usize)(neighborpoint), gnum);
-    //     | Functor  ||calling the operator() method of the CompareFunctor Class |
   }
 
   return false;

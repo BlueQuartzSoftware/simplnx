@@ -22,11 +22,11 @@
 
 ## Prerequisites ##
 
-In order to compile `simplnx` you will need a C++17 compiler suite installed on your computer.
+In order to compile `simplnx` you will need a C++20 compiler suite installed on your computer.
 
 + Compiler
   + Windows Visual Studio 2019 v142 toolset
-  + macOS 12.0 and Xcode 14.2 or higher
+  + macOS 12.5 and Xcode 14.2 or higher
   + Linux with GCC Version 11.0 or higher or clang 14.
 
 ## Install vcpkg ##

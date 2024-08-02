@@ -250,37 +250,37 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   if(cellArrayPaths.empty())
   {
-    return {MakeErrorResult<OutputActions>(-5550, "At least one data array must be selected.")};
+    return {MakeErrorResult<OutputActions>(-3550, "At least one data array must be selected.")};
   }
 
   std::vector<Error> errors;
 
   if(xMax < xMin)
   {
-    errors.push_back(Error{-5551, fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
+    errors.push_back(Error{-3551, fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
   }
   if(yMax < yMin)
   {
-    errors.push_back(Error{-5552, fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
+    errors.push_back(Error{-3552, fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
   }
   if(zMax < zMin)
   {
-    errors.push_back(Error{-5553, fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
+    errors.push_back(Error{-3553, fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
   {
-    errors.push_back(Error{-5557, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
+    errors.push_back(Error{-3554, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
   }
   if(yMax > (static_cast<int64>(imageGeom.getNumYCells()) - 1))
   {
-    errors.push_back(Error{-5558, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
+    errors.push_back(Error{-3555, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
   }
   if(zMax > (static_cast<int64>(imageGeom.getNumZCells()) - 1))
   {
-    errors.push_back(Error{-5559, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
+    errors.push_back(Error{-3556, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
   SizeVec3 imageDims = imageGeom.getDimensions();

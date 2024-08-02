@@ -21,43 +21,52 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->gridGeomPath);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->quatsArrayPath);
-  m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  if(m_InputValues->useGoodVoxels)
+  m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  if(m_InputValues->UseMask)
   {
     try
     {
-      m_GoodVoxelsArray = std::move(InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath));
+      m_GoodVoxelsArray = std::move(InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath));
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
       return MakeErrorResult(-485090, message);
     }
   }
-  m_CrystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  m_CrystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
+  // Run the segmentation algorithm
   execute(gridGeom);
-
-  auto* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->activeArrayPath);
-  auto totalFeatures = activeArray->getNumberOfTuples();
-  if(totalFeatures < 2)
+  // Sanity check the result.
+  if(this->m_FoundFeatures < 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
+    return {MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures))};
   }
+
+  // Resize the Feature Attribute Matrix
+  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
+  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
+
+  // make sure all values are initialized and "re-reserve" index 0
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArray->getDataStore()->fill(1);
+  (*activeArray)[0] = 0;
 
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
   // would look like a smooth gradient. This is a user input parameter
-  if(m_InputValues->shouldRandomizeFeatureIds)
+  if(m_InputValues->RandomizeFeatureIds)
   {
-    randomizeFeatureIds(m_FeatureIdsArray, totalFeatures);
+    randomizeFeatureIds(m_FeatureIdsArray, this->m_FoundFeatures + 1);
   }
 
   return {};
@@ -78,7 +87,7 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   {
     if(featureIds->getValue(randPoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->useGoodVoxels || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases->getValue(randPoint) > 0)
+      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases->getValue(randPoint) > 0)
       {
         seed = static_cast<int64>(randPoint);
       }
@@ -94,12 +103,7 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    auto& activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->activeArrayPath)->getDataStoreRef();
-    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrixPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
-    std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
-    cellFeatureAM.resizeTuples(tDims); // This will resize the actives array
-    activeArray[gnum] = 1;
   }
   return seed;
 }
@@ -139,7 +143,7 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighbor
       OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
       w = axisAngle[3];
     }
-    if(w < m_InputValues->misorientationTolerance)
+    if(w < m_InputValues->MisorientationTolerance)
     {
       group = true;
       featureIds[neighborPoint] = gnum;

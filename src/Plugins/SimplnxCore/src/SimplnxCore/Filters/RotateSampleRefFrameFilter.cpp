@@ -426,7 +426,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     const AttributeMatrix* selectedCellData = selectedImageGeom.getCellData();
     if(selectedCellData == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {MakeErrorResult<OutputActions>(-5951, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));

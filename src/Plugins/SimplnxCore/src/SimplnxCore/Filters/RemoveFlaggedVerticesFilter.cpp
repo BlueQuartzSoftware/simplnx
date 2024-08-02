@@ -152,7 +152,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     const AttributeMatrix* selectedCellDataPtr = inputVertexGeomPtr->getVertexAttributeMatrix();
     if(selectedCellDataPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
+      return {MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
     }
     const std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(vertexGeomPath.createChildPath(cellDataName));

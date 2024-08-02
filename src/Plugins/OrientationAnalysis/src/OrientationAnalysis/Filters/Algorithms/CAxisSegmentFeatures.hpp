@@ -21,9 +21,9 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
   DataPath CellPhasesArrayPath;
   DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
-  DataPath FeatureIdsArrayName;
-  DataPath CellFeatureAttributeMatrixName;
-  DataPath ActiveArrayName;
+  DataPath FeatureIdsArrayPath;
+  DataPath CellFeatureAttributeMatrixPath;
+  DataPath ActiveArrayPath;
 };
 
 /**

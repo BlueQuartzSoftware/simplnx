@@ -4,7 +4,6 @@
 
 #include "OrientationAnalysis/Filters/CAxisSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "OrientationAnalysisTestUtils.hpp"
 
 #include <filesystem>
 
@@ -34,7 +33,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
@@ -54,16 +53,18 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+  {
+    DataPath activeArrayDataPath = k_DataContainerPath.createChildPath(k_ComputedCellFeatureData).createChildPath(k_ActiveName);
+    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
+    size_t numFeatures = actives.getNumberOfTuples();
+    REQUIRE(numFeatures == 31229);
+  }
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedFeatureIds = dataStructure.getDataRefAs<Int32Array>(k_CellAttributeMatrix.createChildPath(k_ComputedFeatureIds));
     const auto& exemplarFeatureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsArrayPath);
     UnitTest::CompareDataArrays<int32>(generatedFeatureIds, exemplarFeatureIds);
-
-    const auto& generatedActive = dataStructure.getDataRefAs<UInt8Array>(k_DataContainerPath.createChildPath(k_ComputedCellFeatureData).createChildPath(k_ActiveName));
-    const auto& exemplarActive = dataStructure.getDataRefAs<BoolArray>(k_CellFeatureDataPath.createChildPath(k_ActiveName));
-    REQUIRE(generatedActive.size() == exemplarActive.size());
   }
 }
 
@@ -84,7 +85,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execu
   Arguments args;
 
   // Invalid crystal structure type : should fail in execute
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));

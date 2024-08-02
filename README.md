@@ -11,7 +11,7 @@
 
 DREAM3D-NX is a user-friendly and versatile desktop application that leverages the open-source ‘simplnx’ software library to enable users to manipulate, analyze, and visualize multidimensional, multimodal data with ease. With its advanced reconstruction, quantification, meshing, data organization, and visualization capabilities, DREAM3D-NX has emerged as a go-to tool for the materials science community to reconstruct and quantify 3D microstructures. Its flexibility and adaptability make it suitable for a broad range of multidimensional data analysis applications beyond materials science and engineering domain.
 
-`simplnx` is a rewrite of the [SIMPL](https://www.github.com/bluequartzsoftware/simpl) library upon which [DREAM3D](https://www.github.com/bluequartzsoftware/dream3d) is written. This library aims to be fully C++17 compliant, removes the need for Qt5 at the library level and brings more flexible data organization and grouping options. The library is under active development by BlueQuartz Software at the current time.
+`simplnx` is a rewrite of the [SIMPL](https://www.github.com/bluequartzsoftware/simpl) library upon which [DREAM3D](https://www.github.com/bluequartzsoftware/dream3d) is written. This library aims to be fully C++20 compliant, removes the need for Qt5 at the library level and brings more flexible data organization and grouping options. The library is under active development by BlueQuartz Software at the current time.
 
 ## Project Vision
 

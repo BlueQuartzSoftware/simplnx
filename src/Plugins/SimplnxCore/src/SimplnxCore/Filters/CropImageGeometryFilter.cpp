@@ -276,17 +276,17 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     if(pCropXDim && xMax < xMin)
     {
       const std::string errMsg = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-      return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4011, errMsg)};
     }
     if(pCropYDim && yMax < yMin)
     {
       const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      return {MakeErrorResult<OutputActions>(-5551, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4012, errMsg)};
     }
     if(pCropZDim && zMax < zMin)
     {
       const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      return {MakeErrorResult<OutputActions>(-5552, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4013, errMsg)};
     }
   }
 
@@ -446,7 +446,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     const AttributeMatrix* selectedCellData = srcImageGeomPtr->getCellData();
     if(selectedCellData == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));

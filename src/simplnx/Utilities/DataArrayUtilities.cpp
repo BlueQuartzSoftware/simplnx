@@ -240,7 +240,7 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   const auto* featureArrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
   if(featureArrayPtr == nullptr)
   {
-    return MakeErrorResult(-5550, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
+    return MakeErrorResult(-5350, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
   }
   Result<> results = {};
   const usize numFeatures = featureArrayPtr->getNumberOfTuples();
@@ -250,13 +250,13 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
     if(featureId < 0)
     {
       results = MakeErrorResult(
-          -5555, fmt::format("Feature Ids array with name '{}' has negative values within the array. The first negative value encountered was '{}'. All values must be positive within the array",
+          -5355, fmt::format("Feature Ids array with name '{}' has negative values within the array. The first negative value encountered was '{}'. All values must be positive within the array",
                              featureIds.getName(), featureId));
       return results;
     }
     if(static_cast<usize>(featureId) >= numFeatures)
     {
-      results = MakeErrorResult(-5551, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected feature array '{}'",
+      results = MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected feature array '{}'",
                                                    featureIds.getName(), featureId, numFeatures, arrayPath.toString()));
       return results;
     }

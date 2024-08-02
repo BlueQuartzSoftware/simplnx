@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter Invalid Params", "[SimplnxCore][
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
   REQUIRE(preflightErrors.size() == 1);
-  REQUIRE(preflightErrors[0].code == -5550);
+  REQUIRE(preflightErrors[0].code == -4011);
 
   k_MinVector = {10, 10, 10};
   k_MaxVector = {20, 1, 20};
@@ -150,7 +150,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter Invalid Params", "[SimplnxCore][
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
   REQUIRE(preflightErrors.size() == 1);
-  REQUIRE(preflightErrors[0].code == -5551);
+  REQUIRE(preflightErrors[0].code == -4012);
 
   k_MinVector = {10, 10, 10};
   k_MaxVector = {20, 20, 1};
@@ -160,7 +160,7 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter Invalid Params", "[SimplnxCore][
   preflightResult = filter.preflight(dataStructure, args);
   preflightErrors = preflightResult.outputActions.errors();
   REQUIRE(preflightErrors.size() == 1);
-  REQUIRE(preflightErrors[0].code == -5552);
+  REQUIRE(preflightErrors[0].code == -4013);
 }
 
 TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore][CropImageGeometryFilter]")

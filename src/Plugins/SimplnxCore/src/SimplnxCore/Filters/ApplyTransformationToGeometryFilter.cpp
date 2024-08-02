@@ -347,7 +347,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         const AttributeMatrix* selectedCellDataPtr = selectedImageGeom.getCellData();
         if(selectedCellDataPtr == nullptr)
         {
-          return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+          return {MakeErrorResult<OutputActions>(-5581, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
         }
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This is needed so that we don't attempt to copy it later on
