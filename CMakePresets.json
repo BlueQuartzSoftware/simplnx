@@ -78,6 +78,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-linux-dynamic"
+        },
+        "SIMPLNX_BUILD_PYTHON_DOCS": {
+          "type": "BOOL",
+          "value": "OFF"
         }
       }
     },
