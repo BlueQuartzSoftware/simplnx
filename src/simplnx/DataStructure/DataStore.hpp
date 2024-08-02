@@ -60,11 +60,12 @@ public:
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_InitValue(initValue)
   {
     resizeTuples(m_TupleShape);
-    if(initValue.has_value())
+    if(m_InitValue.has_value())
     {
-      std::fill_n(data(), this->getSize(), *initValue);
+      std::fill_n(data(), this->getSize(), *m_InitValue);
     }
   }
 
@@ -82,6 +83,8 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
+    // Because no init value is passed into the constructor, we will use a "mudflap" style value that is easy to debug.
+    m_InitValue = GetMudflap<T>();
   }
 
   /**
@@ -94,6 +97,7 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
+  , m_InitValue(other.m_InitValue)
   {
     const usize count = other.getSize();
     auto* data = new value_type[count];
@@ -112,6 +116,7 @@ public:
   , m_Data(std::move(other.m_Data))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
+  , m_InitValue(other.m_InitValue)
   {
   }
 
@@ -244,6 +249,15 @@ public:
     {
       data[i] = m_Data.get()[i];
     }
+
+    // If we are sizing to a larger number of tuples, initialize the leftover array with the init
+    // value that was passed in during construction.
+    T initValue = m_InitValue.has_value() ? *m_InitValue : GetMudflap<T>();
+    for(usize i = oldSize; i < newSize; i++)
+    {
+      data[i] = initValue;
+    }
+
     m_Data.reset(data);
   }
 
@@ -364,6 +378,7 @@ private:
   std::unique_ptr<value_type[]> m_Data = nullptr;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
+  std::optional<T> m_InitValue;
 };
 
 // Declare aliases

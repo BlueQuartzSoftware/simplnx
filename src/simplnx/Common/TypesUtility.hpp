@@ -4,12 +4,51 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 
+#if defined(__clang__) && defined(__clang_major__) && defined(__APPLE__)
+#if __clang_major__ > 14
+#include <bit>
+namespace bs = std;
+#else
+#include "Bit.hpp"
+namespace bs = nx::core;
+#endif
+#else
+#include <bit>
+namespace bs = std;
+#endif
+
 #include <optional>
 #include <stdexcept>
 #include <vector>
 
 namespace nx::core
 {
+/**
+ * @brief Returns the templated value for the byte pattern 0xAB based on the byte count of the template parameter
+ * @tparam T
+ * @return
+ */
+template <typename T>
+constexpr T GetMudflap() noexcept
+{
+  if constexpr(sizeof(T) == 1)
+  {
+    return bs::bit_cast<T>(static_cast<uint8>(0xAB));
+  }
+  if constexpr(sizeof(T) == 2)
+  {
+    return bs::bit_cast<T>(static_cast<uint16>(0xABAB));
+  }
+  if constexpr(sizeof(T) == 4)
+  {
+    return bs::bit_cast<T>(static_cast<uint32>(0xABABABAB));
+  }
+  if constexpr(sizeof(T) == 8)
+  {
+    return bs::bit_cast<T>(static_cast<uint64>(0xABABABABABABABAB));
+  }
+}
+
 /**
  * @brief Returns the NumericType associated with T.
  * @tparam T
