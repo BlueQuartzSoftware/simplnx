@@ -30,6 +30,7 @@ These notices must be retained in any copies of any part of this
 documentation and/or software.
 
 */
+#include "simplnx/simplnx_export.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -44,7 +45,10 @@ documentation and/or software.
 //      MD5(std::string).hexdigest()
 //
 // assumes that char is 8 bit and int is 32 bit
-class MD5
+namespace nx::core
+{
+
+class SIMPLNX_EXPORT MD5
 {
 public:
   typedef unsigned int size_type; // must be 32bit
@@ -89,3 +93,5 @@ private:
 };
 
 std::string md5(const std::string str);
+
+} // namespace nx::core

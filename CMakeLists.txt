@@ -548,6 +548,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.hpp
 )
 
 set(SIMPLNX_GENERATED_HEADERS
@@ -743,6 +744,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp
 )
 
 # Add Core FilterParameters

@@ -17,7 +17,8 @@ enum class GroupingType : ChoicesParameter::ValueType
 {
   Features,
   FeaturesAndPhases,
-  None
+  SingleFile,
+  PartNumber
 };
 
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
@@ -29,6 +30,7 @@ struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
   DataPath FeatureIdsPath;
   DataPath FeaturePhasesPath;
   DataPath TriangleGeomPath;
+  DataPath PartNumberPath;
 };
 
 /**
@@ -49,11 +51,17 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void sendThreadSafeProgressMessage(Result<> result);
+
 private:
   DataStructure& m_DataStructure;
   const WriteStlFileInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_ProgressMessage_Mutex;
+
+  mutable bool m_HasErrors = false;
+  Result<> m_Result;
 };
 
 } // namespace nx::core

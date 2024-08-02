@@ -58,11 +58,11 @@ Parameters WriteStlFileFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
-                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "None [Single File]"})); // sequence dependent DO NOT REORDER
+                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "Single File", "Part Index"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(
-      std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)", "Triangle"));
+  params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "Output STL File Prefix",
+                                                  "The prefix name of created files (other values will be appended later - including the .stl extension)", "Triangle"));
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlFile_Key, "Output STL File", "STL File to dump the Triangle Geometry to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{".stl"}, FileSystemPathParameter::PathType::OutputFile, false));
@@ -74,7 +74,8 @@ Parameters WriteStlFileFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-
+  params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
   //------------ Group by Features -------------
   params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::Features));
@@ -88,7 +89,12 @@ Parameters WriteStlFileFilter::parameters() const
   params.linkParameters(k_GroupingType_Key, k_FeaturePhasesPath_Key, to_underlying(GroupingType::FeaturesAndPhases));
 
   //--------------- Single File ----------------
-  params.linkParameters(k_GroupingType_Key, k_OutputStlFile_Key, to_underlying(GroupingType::None));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlFile_Key, to_underlying(GroupingType::SingleFile));
+
+  //--------------- Part Number ----------------
+  params.linkParameters(k_GroupingType_Key, k_OutputStlDirectory_Key, to_underlying(GroupingType::PartNumber));
+  params.linkParameters(k_GroupingType_Key, k_OutputStlPrefix_Key, to_underlying(GroupingType::PartNumber));
+  params.linkParameters(k_GroupingType_Key, k_PartNumberPath_Key, to_underlying(GroupingType::PartNumber));
 
   return params;
 }
@@ -108,6 +114,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   auto pTriangleGeomPathValue = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto pFeatureIdsPathValue = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   auto pFeaturePhasesPathValue = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  auto pPartNumberPathValue = filterArgs.value<DataPath>(k_PartNumberPath_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -125,14 +132,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
         -27871, fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}", triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max()));
   }
 
-  if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
-  {
-    if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
-    {
-      return MakePreflightErrorResult(-27872, fmt::format("Feature Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
-    }
-  }
-  if(pGroupingTypeValue != GroupingType::None)
+  if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
     if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
     {
@@ -140,6 +140,21 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
     }
   }
 
+  if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
+  {
+    if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
+    {
+      return MakePreflightErrorResult(-27872, fmt::format("Feature Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
+    }
+  }
+
+  if(pGroupingTypeValue == GroupingType::PartNumber)
+  {
+    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue); featureIds == nullptr)
+    {
+      return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
+    }
+  }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -157,7 +172,7 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-
+  inputValues.PartNumberPath = filterArgs.value<DataPath>(k_PartNumberPath_Key);
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
