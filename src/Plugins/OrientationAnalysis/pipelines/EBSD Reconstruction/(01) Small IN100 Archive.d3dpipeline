@@ -17,7 +17,7 @@
         },
         "output_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
         "reference_frame_index": 0,
-        "stacking_orde_index": 1,
+        "stacking_order_index": 1,
         "z_spacing": 0.25
       },
       "filter": {

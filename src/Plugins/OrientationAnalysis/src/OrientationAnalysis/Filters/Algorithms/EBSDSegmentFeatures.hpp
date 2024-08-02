@@ -22,17 +22,17 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 {
-  float32 misorientationTolerance;
-  bool useGoodVoxels;
-  bool shouldRandomizeFeatureIds;
-  DataPath gridGeomPath;
-  DataPath quatsArrayPath;
-  DataPath cellPhasesArrayPath;
-  DataPath goodVoxelsArrayPath;
-  DataPath crystalStructuresArrayPath;
-  DataPath featureIdsArrayPath;
-  DataPath cellFeatureAttributeMatrixPath;
-  DataPath activeArrayPath;
+  float32 MisorientationTolerance;
+  bool UseMask;
+  bool RandomizeFeatureIds;
+  DataPath ImageGeometryPath;
+  DataPath QuatsArrayPath;
+  DataPath CellPhasesArrayPath;
+  DataPath MaskArrayPath;
+  DataPath CrystalStructuresArrayPath;
+  DataPath FeatureIdsArrayPath;
+  DataPath CellFeatureAttributeMatrixPath;
+  DataPath ActiveArrayPath;
 };
 
 /**

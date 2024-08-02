@@ -135,7 +135,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   }
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
-
+  m_FoundFeatures = gnum;
   return {};
 }
 
