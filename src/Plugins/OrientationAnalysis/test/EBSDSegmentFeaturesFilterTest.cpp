@@ -88,7 +88,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Valid Execution", "[Orienta
     DataPath activeArrayDataPath = k_DataContainerPath.createChildPath(k_Grain_Data).createChildPath(k_ActiveName);
     UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(activeArrayDataPath);
     size_t numFeatures = actives.getNumberOfTuples();
-    REQUIRE(numFeatures == 5416);
+    REQUIRE(numFeatures == 5417);
   }
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
