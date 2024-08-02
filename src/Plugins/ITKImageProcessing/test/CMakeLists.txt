@@ -98,8 +98,6 @@ target_sources(${PLUGIN_NAME}UnitTest
   PRIVATE
     ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.cpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.cpp
 )
 
 # -----------------------------------------------------------------------------

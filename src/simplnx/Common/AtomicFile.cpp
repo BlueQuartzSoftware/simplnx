@@ -41,7 +41,7 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
       atomicFile.m_FilePath = fs::absolute(atomicFile.m_FilePath);
     } catch(const std::filesystem::filesystem_error& error)
     {
-      return MakeErrorResult<AtomicFile>(-15780, fmt::format("When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what()));
+      return MakeErrorResult<AtomicFile>(-15780, fmt::format("AtomicFile Error: When attempting to create an absolute path, AtomicFile encountered the following error: '{}'", error.what()));
     }
   }
 
@@ -95,7 +95,7 @@ Result<> AtomicFile::commit()
 {
   if(!fs::exists(m_TempFilePath))
   {
-    return MakeErrorResult(-15780, m_TempFilePath.string() + " does not exist");
+    return MakeErrorResult(-15781, fmt::format("AtomicFile Commit Error: {} does not exist", m_TempFilePath.string()));
   }
 
   try
@@ -103,7 +103,8 @@ Result<> AtomicFile::commit()
     fs::rename(m_TempFilePath, m_FilePath);
   } catch(const std::filesystem::filesystem_error& error)
   {
-    return MakeErrorResult(-15780, fmt::format("When attempting to move the temp file to the end absolute path, AtomicFile encountered the following error on rename(): '{}'", error.what()));
+    return MakeErrorResult(
+        -15782, fmt::format("AtomicFile Commit Error: When attempting to move the temp file to the end absolute path, AtomicFile encountered the following error on rename(): '{}'", error.what()));
   }
 
   return {};

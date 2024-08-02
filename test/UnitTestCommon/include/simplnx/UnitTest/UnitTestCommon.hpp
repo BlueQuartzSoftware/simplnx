@@ -19,6 +19,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
@@ -209,6 +210,17 @@ const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 namespace UnitTest
 {
 inline constexpr float EPSILON = 0.0001;
+
+template <class T>
+std::string ComputeMD5Hash(const std::vector<T>& outputDataArray)
+{
+  const T* dataPtr = outputDataArray.data();
+  usize arraySize = outputDataArray.size();
+  MD5 md5;
+  md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
+  md5.finalize();
+  return md5.hexdigest();
+}
 
 /**
  * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when

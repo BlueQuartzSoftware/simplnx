@@ -82,25 +82,52 @@ const std::atomic_bool& CombineStlFiles::getCancel()
 Result<> CombineStlFiles::operator()()
 {
   DataStructure tempDataStructure;
-  for(const auto& dirEntry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
+  std::vector<fs::path> paths;
+  const std::string ext(".stl");
+
+  // Just count up the stl files in the directory
+  size_t index = 0;
+  for(const auto& entry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
   {
+    if(fs::is_regular_file(entry) && StringUtilities::toLower(entry.path().extension().string()) == ext)
+    {
+      paths.emplace_back(entry);
+    }
+  }
+
+  // Sort the paths for something sort of reasonable.
+  std::sort(paths.begin(), paths.end());
+
+  auto pCellFeatureAttributeMatrixPath = m_InputValues->TriangleDataContainerName.createChildPath(m_InputValues->CellFeatureAttributeMatrixName);
+  auto activeArrayPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->ActiveArrayName);
+  auto fileListPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->FileListArrayName);
+
+  auto activeArray = m_DataStructure.getDataRefAs<UInt8Array>(activeArrayPath);
+  activeArray[0] = 0;
+  auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
+
+  int32 currentIndex = 1;
+  for(const auto& filePath : paths)
+  {
+    std::string stlFilePath = filePath.string();
     if(getCancel())
     {
       return {};
     }
 
-    const fs::path& stlFilePath = dirEntry.path();
-    if(fs::is_regular_file(stlFilePath) && StringUtilities::toLower(stlFilePath.extension().string()) == ".stl")
+    fileListStrArray[currentIndex] = stlFilePath;
+    activeArray[currentIndex] = 1;
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("({}/{}) Reading {}", currentIndex, paths.size(), stlFilePath));
+    currentIndex++;
+
+    ReadStlFileFilter stlFileReader;
+    Arguments args;
+    args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
+    args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({filePath.stem().string()})));
+    auto executeResult = stlFileReader.execute(tempDataStructure, args);
+    if(executeResult.result.invalid())
     {
-      ReadStlFileFilter stlFileReader;
-      Arguments args;
-      args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
-      args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
-      auto executeResult = stlFileReader.execute(tempDataStructure, args);
-      if(executeResult.result.invalid())
-      {
-        return executeResult.result;
-      }
+      return executeResult.result;
     }
   }
 
@@ -144,6 +171,8 @@ Result<> CombineStlFiles::operator()()
   usize faceLabelOffset = 0;
   usize vertexLabelOffset = 0;
 
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving final triangle geometry data..."));
+
   // Loop over each temp geometry and copy the data into the destination geometry
   for(auto* currentGeometry : stlGeometries)
   {
@@ -167,11 +196,7 @@ Result<> CombineStlFiles::operator()()
 
     if(m_InputValues->LabelFaces)
     {
-      auto& faceLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FaceFileIndexArrayPath);
-      //      for(usize tuple = faceLabelOffset; tuple < faceLabelOffset + currentGeomNumTriangles; tuple++)
-      //      {
-      //        faceLabels[tuple] = fileIndex;
-      //      }
+      auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceFileIndexArrayPath);
       std::fill(faceLabels.begin() + faceLabelOffset, faceLabels.begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
     }
 
@@ -179,11 +204,7 @@ Result<> CombineStlFiles::operator()()
 
     if(m_InputValues->LabelVertices)
     {
-      auto& vertexLabels = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->VertexFileIndexArrayPath);
-      //      for(usize tuple = vertexLabelOffset; tuple < vertexLabelOffset + currentGeomNumVertices; tuple++)
-      //      {
-      //        vertexLabels[tuple] = fileIndex;
-      //      }
+      auto& vertexLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFileIndexArrayPath);
       std::fill(vertexLabels.begin() + vertexLabelOffset, vertexLabels.begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
     }
     vertexLabelOffset += currentGeomNumVertices;
