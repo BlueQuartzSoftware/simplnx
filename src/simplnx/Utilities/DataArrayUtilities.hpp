@@ -1109,7 +1109,7 @@ Result<> ShiftData(K& destArray, const std::vector<usize>& originalDestDims, usi
     {
       return result;
     }
-    srcTupleOffset -= originalDestDims[2];
+    srcTupleOffset -= destArrayStrideValue;
     destTupleOffset = destTupleOffset - inputArraysStrideValue - destArrayStrideValue;
   }
   return {};
@@ -1129,7 +1129,7 @@ Result<> ShiftAndAppendData(const std::vector<const K*>& inputArrays, K& destArr
   }
 
   // Append the input arrays
-  ExecAppendData(inputArrays, destArray, strideValues, originalDestDims[2]);
+  ExecAppendData(inputArrays, destArray, strideValues, destArrayStrideValue);
 
   return {};
 }
