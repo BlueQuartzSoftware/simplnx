@@ -304,10 +304,22 @@ Result<> ExecutePipeline(Pipeline& pipeline)
 Result<> ExecutePipeline(const Argument& arg)
 {
   std::string pipelinePath = arg.value;
+  cliOut << "Executing Pipeline: " << pipelinePath << "\n";
+
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
+
+  if(pipelinePath.ends_with(".json"))
+  {
+    cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
+    cliOut << "  You will need to run `nxrunner --convert-output [PATH TO .JSON FILE]` to first convert the\n";
+    cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
+    cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
+    return nx::core::ConvertResult(std::move(loadPipelineResult));
+  }
+
   if(loadPipelineResult.invalid())
   {
-    cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
+    cliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
@@ -330,16 +342,27 @@ Result<> ExecutePipeline(const Argument& arg)
 Result<> PreflightPipeline(const Argument& arg)
 {
   std::string pipelinePath = arg.value;
+  cliOut << "Preflight Pipeline: " << pipelinePath << "\n";
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
+
+  if(pipelinePath.ends_with(".json"))
+  {
+    cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
+    cliOut << "  You will need to run `nxrunner --convert-output [PATH TO .JSON FILE]` to first convert the\n";
+    cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
+    cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
+    return nx::core::ConvertResult(std::move(loadPipelineResult));
+  }
+
   if(loadPipelineResult.invalid())
   {
-    cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
+    cliOut << fmt::format("Error: Could not load pipeline at path: '{}'", pipelinePath);
     cliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
   if(!loadPipelineResult.m_Warnings.empty())
   {
-    cliOut << "Input Pipeline Warnings"
+    cliOut << "Preflight Pipeline: Input Pipeline Warnings"
            << "\n";
     for(const auto& warning : loadPipelineResult.m_Warnings)
     {
@@ -354,19 +377,40 @@ Result<> PreflightPipeline(const Argument& arg)
   return PreflightPipeline(pipeline);
 }
 
-Result<> ConvertPipeline(const Argument& arg, bool saveConverted = false)
+Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool saveConverted)
 {
   std::string pipelinePath = arg.value;
-  auto loadPipelineResult = Pipeline::FromSIMPLFile(pipelinePath);
-  if(loadPipelineResult.invalid())
+  cliOut << fmt::format("Input File: '{}'", pipelinePath);
+  cliOut.endline();
+
+  nx::core::Result<nx::core::Pipeline> loadPipelineResult;
+  if(pipelinePath.ends_with(".json"))
   {
-    cliOut << fmt::format("Could not convert pipeline at path: '{}'", pipelinePath);
-    cliOut.endline();
+    loadPipelineResult = Pipeline::FromSIMPLFile(pipelinePath);
+  }
+  else if(pipelinePath.ends_with(".d3dpipeline"))
+  {
+    cliOut << "Input file is already a DREAM3D-NX formatted pipeline file. A sanity check will be run instead. Any warnings will be printed\n";
+    loadPipelineResult = nx::core::Pipeline::FromFile(pipelinePath, true);
+    saveConverted = false;
+
+    for(const auto warning : loadPipelineResult.warnings())
+    {
+      cliOut << fmt::format("Warning ({}): {}\n", warning.code, warning.message);
+    }
+  }
+  else
+  {
+    cliOut << "Error: Input file extension is not recognized. Aborting execution now.\n";
     return ConvertResult(std::move(loadPipelineResult));
   }
 
-  cliOut << fmt::format("Converted SIMPL pipeline at path: '{}'\n", pipelinePath);
-  cliOut.endline();
+  if(loadPipelineResult.invalid())
+  {
+    cliOut << fmt::format("Error: Could not convert pipeline at path: '{}'", pipelinePath);
+    cliOut.endline();
+    return ConvertResult(std::move(loadPipelineResult));
+  }
 
   Pipeline pipeline = std::move(loadPipelineResult.value());
   if(saveConverted)
@@ -380,12 +424,14 @@ Result<> ConvertPipeline(const Argument& arg, bool saveConverted = false)
     fout << pipeline.toJson().dump(4);
     fout.flush();
 
-    cliOut << fmt::format("Saved converted pipeline at path: '{}'\n", pipelinePath);
+    cliOut << fmt::format("Converted File: '{}'", pipelinePath);
     cliOut.endline();
   }
-
-  cliOut << pipeline.toJson().dump(4);
-  cliOut.endline();
+  if(printConvertedPipeline)
+  {
+    cliOut << pipeline.toJson().dump(4);
+    cliOut.endline();
+  }
   return ConvertResult(std::move(loadPipelineResult));
 }
 
@@ -596,6 +642,7 @@ int main(int argc, char* argv[])
   case ArgumentType::Execute: {
     try
     {
+      cliOut << "###### EXECUTE MODE ########\n";
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
     }
@@ -616,6 +663,7 @@ int main(int argc, char* argv[])
   case ArgumentType::Preflight: {
     try
     {
+      cliOut << "###### PREFLIGHT MODE ########\n";
       auto result = PreflightPipeline(arguments[0]);
       results.push_back(result);
     }
@@ -634,12 +682,12 @@ int main(int argc, char* argv[])
     break;
   }
   case ArgumentType::Convert: {
-    auto result = ConvertPipeline(arguments[0]);
+    auto result = ConvertPipeline(arguments[0], true, false);
     results.push_back(result);
     break;
   }
   case ArgumentType::ConvertOutput: {
-    auto result = ConvertPipeline(arguments[0], true);
+    auto result = ConvertPipeline(arguments[0], false, true);
     results.push_back(result);
     break;
   }
