@@ -29,6 +29,45 @@
 
 namespace nx::core::ITK
 {
+namespace detail
+{
+template <typename OriginT>
+struct TypeConversionValidateFunctor
+{
+  template <typename DestT>
+  bool operator()()
+  {
+    if constexpr(std::is_same_v<OriginT, DestT>)
+    {
+      // This won't actually fail, but it prevents an unnecessary copy
+      return false;
+    }
+    if constexpr(std::is_signed_v<OriginT> || std::is_signed_v<DestT>)
+    {
+      return false;
+    }
+    if constexpr(std::is_same_v<OriginT, bool> || std::is_same_v<DestT, bool>)
+    {
+      return false;
+    }
+
+    // Currently only works on uint8, uint16, or uint32
+    return true;
+  }
+};
+
+struct PreflightTypeConversionValidateFunctor
+{
+  template <typename OriginT>
+  bool operator()(const DataType& destType)
+  {
+    return ExecuteNeighborFunction(TypeConversionValidateFunctor<OriginT>{}, destType);
+  }
+};
+
+DataType ConvertChoiceToDataType(usize choice);
+} // namespace detail
+
 struct ImageGeomData
 {
   SizeVec3 dims{};
@@ -344,11 +383,11 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
   return dataStore;
 }
 
-template<typename T>
+template <typename T>
 concept NotBoolT = !std::is_same_v<T, bool>;
 
 template <NotBoolT NewStoreT, class PixelT, uint32 Dimension>
-Result<> ConvertImageToDataStore(AbstractDataStore<NewStoreT>& dataStore, itk::Image<PixelT, Dimension>& image)
+Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<PixelT, Dimension>& image)
 {
   using ImageType = itk::Image<PixelT, Dimension>;
   using T = UnderlyingType_t<PixelT>;
@@ -366,23 +405,19 @@ Result<> ConvertImageToDataStore(AbstractDataStore<NewStoreT>& dataStore, itk::I
   pixelContainer->ContainerManageMemoryOff();
   if constexpr(std::is_same_v<NewStoreT, T>)
   {
-    std::unique_ptr<T[]> newData(rawBufferPtr);
-    dataStore = DataStore<T>(std::move(newData), std::move(tDims), std::move(cDims));
+    std::copy(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data());
   }
   else
   {
-    std::unique_ptr<NewStoreT[]> newData = std::make_unique<NewStoreT[]>(sizeof(NewStoreT) * pixelContainer->Size());
     if constexpr(!std::is_signed_v<NewStoreT> && !std::is_signed_v<T>) // bool would slip through, but it is disallowed
     {
       constexpr auto destMaxV = static_cast<float64>(std::numeric_limits<NewStoreT>::max());
       constexpr auto originMaxV = std::numeric_limits<T>::max();
-      std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), newData.get(), [](auto value) {
+      std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data(), [](auto value) {
         float64 ratio = static_cast<float64>(value) / originMaxV;
         return static_cast<NewStoreT>(ratio * destMaxV);
       });
     }
-
-    dataStore = DataStore<NewStoreT>(std::move(newData), std::move(tDims), std::move(cDims));
   }
 
   return {};
@@ -394,7 +429,7 @@ struct ConvertImageToDatastoreFunctor
   Result<> operator()(DataStructure& dataStructure, const DataPath& arrayPath, Args&&... args)
   {
     auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
+    DataStore<T>& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
 
     return ConvertImageToDataStore(dataStore, std::forward<Args>(args)...);
   }
@@ -881,4 +916,4 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
     return MakeErrorResult<ResultT>(-222, exception.GetDescription());
   }
 }
-} // namespace nx::core
+} // namespace nx::core::ITK

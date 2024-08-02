@@ -21,23 +21,6 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-namespace
-{
-DataType ConvertChoiceToDataType(ChoicesParameter::ValueType choice)
-{
-  switch(choice)
-  {
-  case 0:
-    return DataType::uint8;
-  case 1:
-    return DataType::uint16;
-  case 2:
-    return DataType::uint32;
-  }
-  return DataType::uint8;
-}
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -145,7 +128,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
   imageReaderOptions.ChangeDataType = pChangeDataType;
-  imageReaderOptions.ImageDataType = ConvertChoiceToDataType(choiceType);
+  imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(choiceType);
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
@@ -166,7 +149,7 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
-  auto newDataType = ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
+  auto newDataType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
   const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);

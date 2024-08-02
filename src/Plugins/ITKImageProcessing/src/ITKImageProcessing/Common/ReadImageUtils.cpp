@@ -80,7 +80,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
     actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), origin.toContainer<CreateImageGeometryAction::OriginType>(),
                                                                      spacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName));
 
-    if(imageReaderOptions.ChangeDataType)
+    if(imageReaderOptions.ChangeDataType && ExecuteNeighborFunction(ITK::detail::PreflightTypeConversionValidateFunctor{}, *numericType, imageReaderOptions.ImageDataType))
     {
       actions.appendAction(
           std::make_unique<CreateArrayAction>(imageReaderOptions.ImageDataType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));

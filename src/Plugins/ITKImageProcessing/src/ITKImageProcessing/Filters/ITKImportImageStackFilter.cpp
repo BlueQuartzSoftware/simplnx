@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <itkImageFileReader.h>
 #include <itkImageIOBase.h>
@@ -133,7 +134,7 @@ namespace cxITKImportImageStackFilter
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
                         ChoicesParameter::ValueType transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, bool resample, float32 scalingFactor,
-                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+                        bool changeDataType, ChoicesParameter::ValueType destType, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
@@ -172,6 +173,8 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       args.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
       args.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageArrayName));
       args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, std::make_any<fs::path>(filePath));
+      args.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(changeDataType));
+      args.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(destType));
 
       auto executeResult = imageReader.execute(importedDataStructure, args);
       if(executeResult.result.invalid())
@@ -470,12 +473,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
                             nx::core::DataTypeToString(createArrayActionPtr->type())));
   }
 
-  if(pChangeDataType)
-  {
-//    auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), arrayDims, std::vector<size_t>{1ULL}, imageDataPath);
-//    resultOutputActions.value().appendAction(std::move(action));
-  }
-  else if(pConvertToGrayScaleValue)
+  if(pConvertToGrayScaleValue)
   {
     auto* filterListPtr = Application::Instance()->getFilterList();
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
@@ -514,6 +512,9 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   auto pScaleImagesValue = filterArgs.value<BoolParameter::ValueType>(k_ScaleImages_Key);
   auto pScalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
 
+  auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto destType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
+
   // const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   std::vector<std::string> files = inputFileListInfo.generate();
@@ -531,62 +532,91 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   {
     return MakeErrorResult(-4, fmt::format("Unsupported pixel component: {}", imageIO->GetComponentTypeAsString(component)));
   }
+
   Result<> readResult;
-  switch(*numericType)
+  if(changeDataType &&
+     ExecuteNeighborFunction(nx::core::ITK::detail::PreflightTypeConversionValidateFunctor{}, ConvertNumericTypeToDataType(*numericType), ITK::detail::ConvertChoiceToDataType(destType)))
   {
-  case NumericType::uint8: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
+    switch(ITK::detail::ConvertChoiceToDataType(destType))
+    {
+    case DataType::uint8: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case DataType::uint16: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                       colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case DataType::uint32: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                       colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    default: {
+      throw std::runtime_error("Unsupported Conversion type");
+    }
+    }
   }
-  case NumericType::int8: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                   pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::uint16: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::int16: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::uint32: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::int32: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::uint64: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                     pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::int64: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                    pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::float32: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                      pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  case NumericType::float64: {
-    readResult = cxITKImportImageStackFilter::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                                      pScaleImagesValue, pScalingValue, messageHandler, shouldCancel);
-    break;
-  }
-  default: {
-    throw std::runtime_error("Unsupported array type");
-  }
+  else
+  {
+    switch(*numericType)
+    {
+    case NumericType::uint8: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::int8: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                     pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::uint16: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                       colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::int16: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::uint32: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                       colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::int32: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::uint64: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                       colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::int64: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::float32: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                        colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    case NumericType::float64: {
+      readResult = cxITKImportImageStackFilter::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
+                                                                        colorWeightsValue, pScaleImagesValue, pScalingValue, changeDataType, destType, messageHandler, shouldCancel);
+      break;
+    }
+    default: {
+      throw std::runtime_error("Unsupported array type");
+    }
+    }
   }
 
   return readResult;
