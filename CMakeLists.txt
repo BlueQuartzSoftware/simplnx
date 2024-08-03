@@ -118,6 +118,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(FETCH_FILE_PATH "${simplnx_BINARY_DIR}/simplnx_fetch_remote_files.cmake")
 set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
 file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
+# This file is programmatically generated from the CMake file ${CMAKE_CURRENT_LIST_FILE}
 # This file has the commands to download each of the test files.
 # The WORKING_DIRECTORY is set to the following CMake code:
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>

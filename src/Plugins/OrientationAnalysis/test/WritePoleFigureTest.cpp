@@ -36,7 +36,7 @@ void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPat
   usize exemplaryNumComp = exemplaryDataArray.getNumberOfComponents();
   usize generatedNumComp = generatedDataArray.getNumberOfComponents();
 
-  REQUIRE(exemplaryNumComp == 4);
+  REQUIRE(exemplaryNumComp == 3);
   REQUIRE(generatedNumComp == 3);
 
   REQUIRE(compIndex < exemplaryNumComp);
@@ -62,10 +62,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v2/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -86,8 +86,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]", "Cell Data", fmt::format("{}{}", k_ImagePrefix, 1)});
-  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure", "CellData", "Image"});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
+  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure", "Cell Data", "Phase_1"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
   args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
@@ -115,10 +115,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v2/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -130,7 +130,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
   args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
   args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
@@ -139,12 +139,12 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]", "Cell Data", fmt::format("{}{}", k_ImagePrefix, 1)});
-  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked", "CellData", "Image"});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
+  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked", "Cell Data", "Phase_1"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
   args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "ThresholdArray"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Mask"})));
   args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
   args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
 
@@ -169,10 +169,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v2.tar.gz", "PoleFigure_Exemplars_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v2/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -180,25 +180,25 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color"));
+  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("fw-ar-IF1-aptr12-corr Pole Figure Masked Color"));
   args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
   args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
   args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
   args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
   args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(true));
   args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color [CALCULATED]"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr Pole Figure Masked Color [CALCULATED]"})));
 
-  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color [CALCULATED]", "Cell Data", fmt::format("{}{}", k_ImagePrefix, 1)});
-  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Discrete Pole Figure Masked Color", "CellData", "Image"});
+  DataPath calculatedImageData({"fw-ar-IF1-aptr12-corr Pole Figure Masked Color [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
+  DataPath exemplarImageData({"fw-ar-IF1-aptr12-corr Pole Figure Masked Color", "Cell Data", "Phase_1"});
 
   args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
   args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "ThresholdArray"})));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Mask"})));
   args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
   args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
 
