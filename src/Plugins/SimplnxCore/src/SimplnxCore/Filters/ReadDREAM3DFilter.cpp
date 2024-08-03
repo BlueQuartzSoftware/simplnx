@@ -95,21 +95,21 @@ Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Argu
 nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
 {
   auto json = IFilter::toJson(args);
-  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
-  nx::core::HDF5::FileReader d3dReader(importData.FilePath);
-  if(d3dReader.isValid())
-  {
-    std::string fileVersion = DREAM3D::GetFileVersion(d3dReader);
-    // File version checking should be more robust
-    if(fileVersion == DREAM3D::k_CurrentFileVersion)
-    {
-      Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
-      if(pipelineResult.valid())
-      {
-        json[k_ImportedPipeline] = pipelineResult.value().toJson();
-      }
-    }
-  }
+  // auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
+  // nx::core::HDF5::FileReader d3dReader(importData.FilePath);
+  // if(d3dReader.isValid())
+  //{
+  //   std::string fileVersion = DREAM3D::GetFileVersion(d3dReader);
+  //   // File version checking should be more robust
+  //   if(fileVersion == DREAM3D::k_CurrentFileVersion)
+  //   {
+  //     Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
+  //     if(pipelineResult.valid())
+  //     {
+  //       json[k_ImportedPipeline] = pipelineResult.value().toJson();
+  //     }
+  //   }
+  // }
   return json;
 }
 
