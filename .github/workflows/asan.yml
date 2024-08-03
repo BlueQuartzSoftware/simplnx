@@ -55,6 +55,5 @@ jobs:
       - name: Test
         run: |
           export LD_PRELOAD=$($CXX -print-file-name=libclang_rt.asan-x86_64.so)
-          ctest --preset ci-asan -E "PY"
-          export ASAN_OPTIONS=detect_leaks=0
-          ctest --preset ci-asan -R "PY"
+          export LSAN_OPTIONS=suppressions=${{github.workspace}}/utilites/leak_suppressions.txt
+          ctest --preset ci-asan
