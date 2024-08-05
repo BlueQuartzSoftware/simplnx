@@ -1224,14 +1224,17 @@ Result<> CombineData(const std::vector<const K*>& inputArrays, K& destArray, Dir
   case Direction::X: {
     // Calculate the number of tuples in the X direction for each array
     strideValues = CalculateXStrideValues(inputArrays);
+    break;
   }
   case Direction::Y: {
     // Calculate the number of tuples in the X and Y directions for each array
     strideValues = CalculateXYStrideValues(inputArrays);
+    break;
   }
   case Direction::Z: {
     // Calculate the number of tuples in all directions (total number of tuples) for each array
     strideValues = CalculateXYZStrideValues(inputArrays);
+    break;
   }
   }
 
