@@ -1,5 +1,5 @@
 {% set name = "simplnx" %}
-{% set version = "1.5.0" %}
+{% set version = "24.08.03" %}
 
 package:
   name: {{ name|lower }}
@@ -26,7 +26,7 @@ source:
   - url: https://raw.githubusercontent.com/BlueQuartzSoftware/simplnx-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
     folder: nod
   - git_url: https://github.com/insightsoftwareconsortium/ITK
-    git_rev: v5.2.1
+    git_rev: v5.4.0
     folder: itk
 
 build:
@@ -35,7 +35,7 @@ build:
     - SIMPLNX_CMAKE_PRESET=conda-win # [win]
     - SIMPLNX_CMAKE_PRESET=conda-linux # [linux]
     - SIMPLNX_CMAKE_PRESET=conda-osx # [osx]
-    - ITK_VERSION=5.2.1
+    - ITK_VERSION=5.4.0
 
 requirements:
   build:
@@ -50,8 +50,7 @@ requirements:
     - boost_mp11
     - eigen
     - fmt =10
-    - hdf5 >=1.14.3 # [py>=312]
-    - hdf5 =1.12 # [py<=311]
+    - hdf5 >=1.14.3
     - nlohmann_json
     - pybind11 >=2.10
     - reproc-cpp
@@ -67,8 +66,7 @@ requirements:
     - python
     - numpy
     - fmt =10
-    - hdf5 >=1.14.3 # [py>=312]
-    - hdf5 =1.12 # [py<=311]
+    - hdf5 >=1.14.3
     - reproc-cpp
     - tbb
     - zlib
