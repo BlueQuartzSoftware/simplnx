@@ -9,7 +9,7 @@ cxx_compiler:
 # you MUST run a full `conda build .` on a MacOS machine (Both ARM64 and x64) running
 # at least MacOS 14.5 Sonoma with Xcode 15.4
 c_compiler_version: # [unix]
-  - 10.4.0 # [linux]
+  - 11.4.0 # [linux]
   - 16.0.6 # [osx]
 
 # The OS X compiler version needs to stay at 16.0.6 due to issues generating code
@@ -17,8 +17,9 @@ c_compiler_version: # [unix]
 # you MUST run a full `conda build .` on a MacOS machine (Both ARM64 and x64) running
 # at least MacOS 14.5 Sonoma with Xcode 15.4
 cxx_compiler_version:
-  - 10.4.0 # [linux]
+  - 11.4.0 # [linux]
   - 16.0.6 # [osx]
 
 python:
     - 3.12
+    - 3.11
