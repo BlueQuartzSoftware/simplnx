@@ -8,6 +8,8 @@ jobs:
   build:
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+      CC: clang-14
+      CXX: clang++-14
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -44,17 +46,14 @@ jobs:
           setapikey "${{secrets.GITHUB_TOKEN}}" \
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
-        env:
-          CC: clang-14
-          CXX: clang++-14
         run: |
           cmake --preset ci-asan ${{github.workspace}}
       - name: Build
         run: |
+          export LD_LIBRARY_PATH=$($CXX -print-file-name=libclang_rt.asan-x86_64.so)
           cmake --build --preset ci-asan
       - name: Test
         run: |
-          export LD_PRELOAD=$(clang++-14 -print-file-name=libclang_rt.asan-x86_64.so)
-          ctest --preset ci-asan -E "PY"
-          export ASAN_OPTIONS=detect_leaks=0
-          ctest --preset ci-asan -R "PY"
+          export LD_PRELOAD=$($CXX -print-file-name=libclang_rt.asan-x86_64.so)
+          export LSAN_OPTIONS=suppressions=${{github.workspace}}/utilites/leak_suppressions.txt
+          ctest --preset ci-asan
