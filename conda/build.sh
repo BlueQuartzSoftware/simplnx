@@ -68,7 +68,7 @@ cmake -S "../EbsdLib" -B . -G "Ninja" $CMAKE_ARGS \
   -D TBB_STATUS_PRINTED:BOOL=ON \
   -D CMP_HDF5_USE_CONFIG:BOOL=OFF \
   -D GVS_GIT_HASH:STRING="d7db8a3a5f11b97ca56b9864de710f552d9dccf4" \
-  -D H5Support_DIR:PATH="$PREFIX/share/H5Support/H5Support"
+  -D H5Support_DIR:PATH="$PREFIX/share/H5Support"
 
 cmake --build . --target all
 

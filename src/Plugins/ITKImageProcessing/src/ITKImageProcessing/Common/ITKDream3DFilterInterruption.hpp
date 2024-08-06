@@ -2,7 +2,6 @@
 
 #include "itkConfigure.h"
 
-
 #include <itkCommand.h>
 #include <itkProcessObject.h>
 
@@ -33,7 +32,7 @@ public:
   }
 
   /** Run-time type information (and related methods). */
-#if defined(ITK_VERSION_MAJOR) && ITK_VERSION_MINOR == 2
+#if defined(ITK_VERSION_MAJOR) && ITK_VERSION_MAJOR == 5 && defined(ITK_VERSION_MINOR) && ITK_VERSION_MINOR == 2
   itkTypeMacro(Dream3DFilterInterruption, itk::Command);
 #else
   itkOverrideGetNameOfClassMacro(Dream3DFilterInterruption);

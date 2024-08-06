@@ -21,5 +21,7 @@ cxx_compiler_version:
   - 16.0.6 # [osx]
 
 python:
-    - 3.12
-    - 3.11
+    - 3.12 # [osx and arm64]
+    - 3.12 # [win64 or linux]
+    - 3.11  
+    
