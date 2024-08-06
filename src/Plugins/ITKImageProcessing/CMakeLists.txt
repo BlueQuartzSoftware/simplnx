@@ -36,10 +36,6 @@ set(ItkComponents
   ITKWatersheds
 )
 
-if(ITK_VERSION_MAJOR EQUAL 5 AND ITK_VERSION_MINOR EQUAL 2)
-  list(APPEND ItkComponents ITKMathematicalMorphology)
-endif()
-
 find_package(ITK COMPONENTS ${ItkComponents} REQUIRED)
 
 get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
