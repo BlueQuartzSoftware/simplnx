@@ -34,7 +34,11 @@ public:
   }
 
   /** Run-time type information (and related methods). */
+#if defined(ITK_VERSION_MAJOR) && ITK_VERSION_MAJOR == 5 && defined(ITK_VERSION_MINOR) && ITK_VERSION_MINOR == 2
   itkTypeMacro(ProgressObserver, itk::Command);
+#else
+  itkOverrideGetNameOfClassMacro(ProgressObserver);
+#endif
 
   void Execute(itk::Object* caller, const itk::EventObject& event) override
   {

@@ -1,14 +1,27 @@
+# Some clients of the conda package are still compiling on VS2019 (v142) tools. 
+# DO NOT CHANGE THIS Value unless those clients are able to move up to a newer
+# toolset. There is no ETA on this.
 cxx_compiler:
   - vs2019 # [win]
 
+# The OS X compiler version needs to stay at 16.0.6 due to issues generating code
+# with anything newer. If you _THINK_ you want to update this compiler version
+# you MUST run a full `conda build .` on a MacOS machine (Both ARM64 and x64) running
+# at least MacOS 14.5 Sonoma with Xcode 15.4
 c_compiler_version: # [unix]
-  - 10.4.0 # [linux]
-  - 17.0.6 # [osx]
+  - 11.4.0 # [linux]
+  - 16.0.6 # [osx]
 
+# The OS X compiler version needs to stay at 16.0.6 due to issues generating code
+# with anything newer. If you _THINK_ you want to update this compiler version
+# you MUST run a full `conda build .` on a MacOS machine (Both ARM64 and x64) running
+# at least MacOS 14.5 Sonoma with Xcode 15.4
 cxx_compiler_version:
-  - 10.4.0 # [linux]
-  - 17.0.6 # [osx]
+  - 11.4.0 # [linux]
+  - 16.0.6 # [osx]
 
 python:
-    - 3.12
-
+    - 3.12 # [osx and arm64]
+    - 3.12 # [win64 or linux]
+    - 3.11  
+    
