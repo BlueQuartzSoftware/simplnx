@@ -116,7 +116,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
-  auto choiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
+  auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -128,7 +128,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
   imageReaderOptions.ChangeDataType = pChangeDataType;
-  imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(choiceType);
+  imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 

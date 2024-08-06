@@ -34,6 +34,8 @@ public:
   static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
   static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
+  static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
   static inline constexpr StringLiteral k_ParentDataGroup_Key = "parent_data_group";
   static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
   static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";

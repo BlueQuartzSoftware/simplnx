@@ -18,6 +18,8 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
   bool changeOrigin = false;
   bool convertToGrayScale = false;
   bool parentDataGroup = false;
+  bool changeDataType = false;
+  DataType destType = DataType::uint8;
   fs::path inputFilePath = {};
   IGeometry::LengthUnit lengthUnit = IGeometry::LengthUnit::Micrometer;
   std::vector<float32> origin = {};
