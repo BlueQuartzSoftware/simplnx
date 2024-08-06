@@ -8,7 +8,6 @@
 
 namespace nx::core
 {
-
 /**
  * @class Ray
  * @brief The Ray class describes a ray or line segment in 3D space. Using

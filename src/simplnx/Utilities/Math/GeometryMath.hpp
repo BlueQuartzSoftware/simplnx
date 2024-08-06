@@ -39,10 +39,7 @@ struct GeometryStoreCache
   usize NumVertsPerFace;
 };
 
-template <typename T>
-concept FloatType = std::is_floating_point_v<T>;
-
-template <FloatType FloatT>
+template <std::floating_point FloatT>
 std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId, std::vector<usize>& verts)
 {
   std::array<Point3D<FloatT>, 3> points;
@@ -759,8 +756,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
   } /* End while loop */
 
   /* q strictly interior to polyhedron if an odd number of crossings. */
-  // Bitwise & for speed
-  if(crossings & 1)
+  if(crossings % 2 != 0)
   {
     return 'i';
   }
