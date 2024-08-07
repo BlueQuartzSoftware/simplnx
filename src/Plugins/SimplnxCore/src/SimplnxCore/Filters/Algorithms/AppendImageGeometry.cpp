@@ -75,15 +75,24 @@ Result<> AppendImageGeometry::operator()()
     }
 
     std::vector<const IArray*> inputDataArrays;
+    std::vector<std::vector<usize>> inputTupleShapes;
     if(m_InputValues->SaveAsNewGeometry)
     {
       inputDataArrays.push_back(destDataArray);
+
+      auto tupleShape = destGeometry.getDimensions().toContainer<std::vector<usize>>();
+      std::reverse(tupleShape.begin(), tupleShape.end());
+      inputTupleShapes.push_back(tupleShape);
     }
 
     for(const auto& inputGeometryPath : m_InputValues->InputGeometriesPaths)
     {
       const auto& inputGeometry = m_DataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
       const DataPath inputCellDataPath = inputGeometryPath.createChildPath(inputGeometry.getCellData()->getName());
+
+      auto tupleShape = inputGeometry.getDimensions().toContainer<std::vector<usize>>();
+      std::reverse(tupleShape.begin(), tupleShape.end());
+      inputTupleShapes.push_back(tupleShape);
 
       if(m_DataStructure.getData(inputCellDataPath.createChildPath(name)) == nullptr)
       {
@@ -106,14 +115,14 @@ Result<> AppendImageGeometry::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, m_InputValues->Direction);
+      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, m_InputValues->Direction);
     }
     else
     {
       m_MessageHandler(fmt::format("Appending data into array {}", newCellDataPath.createChildPath(name).toString()));
       auto destGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
       std::reverse(destGeomDimsVec.begin(), destGeomDimsVec.end());
-      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, destGeomDimsVec, m_InputValues->Direction);
+      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, inputTupleShapes, destGeomDimsVec, m_InputValues->Direction);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
