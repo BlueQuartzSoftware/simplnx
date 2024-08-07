@@ -308,7 +308,7 @@ inline std::vector<std::string> LoadPythonPlugins(const std::set<std::string>& p
 inline py::module_ GetImportlibMetadata()
 {
   auto sys = py::module_::import("sys");
-  if(sys.attr("version_info").attr("__lt__")(py::make_tuple(3, 10)))
+  if(sys.attr("version_info").attr("__lt__")(py::make_tuple(3, 10)).cast<bool>())
   {
     return py::module_::import("importlib_metadata");
   }
