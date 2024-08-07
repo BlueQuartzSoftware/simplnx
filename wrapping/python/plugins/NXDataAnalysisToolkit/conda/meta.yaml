@@ -11,22 +11,25 @@ source:
 
 build:
   noarch: python
-  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  script: {{ PYTHON }} -m pip install {{ SRC_DIR }}/NXDataAnalysisToolkit -vv --no-deps --no-build-isolation
   number: 0
 
 requirements:
   build:
-    - python >=3.10
+    - python >=3.12
     - pytest
     - pip
+    - hatchling
   run:
-    - python >=3.10
+    - python >=3.12
     - matplotlib
     - numpy
     - opencv
     - scipy
     - h5py
     - pillow
+    - meshio
+    - dream3dnx
 
 test:
   imports:
@@ -39,4 +42,4 @@ test:
 about:
   home: https://www.dream3d.io/
   license: BSD
-  summary: DREAM3D-NX consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
+  summary: NXDataAnalysisToolkit is a python based plugin for DREAM3D-NX that adds additional filters. These filters can be used from DREAM3D-NX itself or from a python script.

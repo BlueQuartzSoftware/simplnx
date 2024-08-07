@@ -36,7 +36,7 @@ Error & Warning Reporting
          print(f"{filter.name()} :: No errors running the filter")
 
 Creating Geometries
-------------------
+--------------------
 
 All the `simplnx` geometries can be created in Python using the following helper methods:
 
