@@ -21,7 +21,7 @@ using FilterOutputType = uint8;
 struct ITKThresholdMaximumConnectedComponentsImageFilterFunctor
 {
   uint32 minimumObjectSizeInPixels = 0u;
-  float64 upperBoundary = 65536.0;
+  float64 upperBoundary = 65536.0f;
   uint8 insideValue = 1u;
   uint8 outsideValue = 0u;
 
@@ -31,7 +31,23 @@ struct ITKThresholdMaximumConnectedComponentsImageFilterFunctor
     using FilterType = itk::ThresholdMaximumConnectedComponentsImageFilter<InputImageT, OutputImageT>;
     auto filter = FilterType::New();
     filter->SetMinimumObjectSizeInPixels(minimumObjectSizeInPixels);
-    filter->SetUpperBoundary(static_cast<typename InputImageT::PixelType>(std::min<double>(upperBoundary, itk::NumericTraits<typename InputImageT::PixelType>::max())));
+
+    if constexpr(std::is_same_v<typename InputImageT::PixelType, int64>)
+    {
+      auto upBound = std::min<typename InputImageT::PixelType>(upperBoundary, itk::NumericTraits<typename InputImageT::PixelType>::max());
+      filter->SetUpperBoundary(upBound);
+    }
+    else if constexpr(std::is_same_v<typename InputImageT::PixelType, uint64>)
+    {
+      auto upBound = std::min<typename InputImageT::PixelType>(upperBoundary, itk::NumericTraits<typename InputImageT::PixelType>::max());
+      filter->SetUpperBoundary(upBound);
+    }
+    else
+    {
+      auto upBound = static_cast<typename InputImageT::PixelType>(std::min<double>(upperBoundary, itk::NumericTraits<typename InputImageT::PixelType>::max()));
+      filter->SetUpperBoundary(upBound);
+    }
+
     filter->SetInsideValue(insideValue);
     filter->SetOutsideValue(outsideValue);
     return filter;
