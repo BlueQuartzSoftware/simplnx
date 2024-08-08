@@ -16,7 +16,7 @@ namespace nx::core
  * simplify and better describe values used in GeometryMath. The rays initial alignment
  * is assumed to be with the Y-axis.
  */
-template <typename T, bool CacheEndV = false>
+template <typename T>
 class Ray
 {
 public:
@@ -46,10 +46,6 @@ public:
   , m_Angle(std::move(ang))
   , m_Length(length)
   {
-    if constexpr(CacheEndV)
-    {
-      m_Endpoint = calculateEndpoint();
-    }
   }
 
   /**
@@ -107,21 +103,16 @@ public:
    * @brief Sets a new origin point.
    * @param origin
    */
-  void setOrigin(const PointType& origin)
+  virtual void setOrigin(const PointType& origin)
   {
     m_Origin = origin;
-
-    if constexpr(CacheEndV)
-    {
-      m_Endpoint = calculateEndpoint();
-    }
   }
 
   /**
    * @brief Sets a new Euler angle.
    * @param ang
    */
-  void setEuler(const ZXZEulerType& ang)
+  virtual void setEuler(const ZXZEulerType& ang)
   {
     m_Angle = ang;
   }
@@ -139,14 +130,9 @@ public:
    * @brief Sets a new ray length.
    * @param length
    */
-  void setLength(LengthType length)
+  virtual void setLength(LengthType length)
   {
     m_Length = length;
-
-    if constexpr(CacheEndV)
-    {
-      m_Endpoint = calculateEndpoint();
-    }
   }
 
   /**
@@ -154,22 +140,9 @@ public:
    * Based on the assumption the point is initially aligned with the global axis' and the that this vector specifically aligned with the local y-axis.
    * @return PointType
    */
-  PointType getEndPoint() const
+  virtual PointType getEndPoint() const
   {
-    if constexpr(CacheEndV)
-    {
-      return m_Endpoint;
-    }
-    else
-    {
-      return calculateEndpoint();
-    }
-  }
-
-  template <bool E = CacheEndV, class = std::enable_if_t<E, bool>>
-  const PointType& getEndPointRef() const
-  {
-    return m_Endpoint;
+    return calculateEndpoint();
   }
 
   /**
@@ -235,13 +208,9 @@ public:
   }
 
 protected:
-private:
   PointType m_Origin;
   ZXZEulerType m_Angle;
   LengthType m_Length;
-
-  // Optional caching for speed
-  PointType m_Endpoint = {};
 
   PointType calculateEndpoint() const
   {
@@ -260,5 +229,104 @@ private:
 
     return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
   }
+};
+
+template <typename T>
+class CachedRay : public Ray<T>
+{
+public:
+  /**
+   * @brief Creates a Ray from an origin point, ZXZEuler angle, and target length.
+   * @param origin
+   * @param ang
+   * @param length
+   */
+  CachedRay(const Ray<T>::PointType& origin, Ray<T>::ZXZEulerType ang, Ray<T>::LengthType length)
+  : Ray<T>(origin, std::move(ang), length)
+  {
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  /**
+   * @brief Copy constructor
+   * @param other
+   */
+  CachedRay(const CachedRay& other)
+  : m_Endpoint(other.m_Endpoint)
+  , Ray<T>(other)
+  {
+  }
+
+  /**
+   * @brief Move constructor
+   * @param other
+   */
+  CachedRay(CachedRay&& other) noexcept
+  : m_Endpoint(std::move(other.m_Endpoint))
+  , Ray<T>(std::move(other))
+  {
+  }
+
+  ~CachedRay() = default;
+
+  /**
+   * @brief Copy assignment operator
+   * @param rhs
+   * @return CachedRay&
+   */
+  CachedRay& operator=(const CachedRay& rhs)
+  {
+    this->m_Origin = rhs.m_Origin;
+    this->m_Angle = rhs.m_Angle;
+    this->m_Length = rhs.m_Length;
+    m_Endpoint = rhs.m_Endpoint;
+    return *this;
+  }
+
+  /**
+   * @brief Move assignment operator
+   * @param rhs
+   * @return Ray&
+   */
+  CachedRay& operator=(CachedRay&& rhs) noexcept
+  {
+    this->m_Origin = std::move(rhs.m_Origin);
+    this->m_Angle = std::move(rhs.m_Angle);
+    this->m_Length = std::move(rhs.m_Length);
+    m_Endpoint = std::move(rhs.m_Endpoint);
+    return *this;
+  }
+
+  void setOrigin(const Ray<T>::PointType& origin) override
+  {
+    this->m_Origin = origin;
+    m_Endpoint = Ray<T>::calculateEndpoint();
+  }
+
+  void setLength(Ray<T>::LengthType length) override
+  {
+    this->m_Length = length;
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  void setEuler(const Ray<T>::ZXZEulerType& ang) override
+  {
+    this->m_Angle = ang;
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  const Ray<T>::PointType& getEndPointRef() const
+  {
+    return m_Endpoint;
+  }
+
+  Ray<T>::PointType getEndPoint() const override
+  {
+    return m_Endpoint;
+  }
+
+private:
+  // Optional caching for speed
+  Ray<T>::PointType m_Endpoint = {};
 };
 } // namespace nx::core

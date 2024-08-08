@@ -273,7 +273,7 @@ bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBo
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(const nx::core::Ray<T, true>& ray, const nx::core::BoundingBox3D<T>& bounds)
+bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
 {
   const auto& origin = ray.getOriginRef();
   const auto& min = bounds.getMinPoint();
@@ -468,7 +468,7 @@ char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const Ray<T, true>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPointRef());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPointRef());
@@ -552,7 +552,7 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
  * @return bool
  */
 template <typename T>
-char RayIntersectsPlane(const Ray<T, true>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
   T d = FindPlaneCoefficients(p0, normal);
@@ -639,7 +639,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
  * @return char
  */
 template <typename T>
-char RayIntersectsTriangle(const Ray<T, true>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
 {
   char code = RayIntersectsPlane(ray, p0, p1, p2);
 
@@ -713,7 +713,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
     eulerAngles[1] = w * std::sin(t);
 
     // Generate and add ray to point to find other end [optimized version with lifetime caching]
-    Ray<T, true> ray(point, ZXZEuler(eulerAngles.data()), radius);
+    CachedRay<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
 
     bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)
