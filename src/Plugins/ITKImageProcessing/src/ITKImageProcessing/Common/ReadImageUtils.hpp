@@ -3,6 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -48,6 +49,29 @@ struct ReadImageIntoArrayFunctor
     dataStore = std::move(imageStore);
 
     return {};
+  }
+
+  //------------------------------------------------------------------------------
+  template <class PixelT, uint32 Dimension>
+  Result<> operator()(DataStructure& dataStructure, const std::string& filePath, const DataPath& arrayPath, const DataType& dataType) const
+  {
+    using ImageType = itk::Image<PixelT, Dimension>;
+    using ReaderType = itk::ImageFileReader<ImageType>;
+
+    if(!ExecuteNeighborFunction(ITK::detail::TypeConversionValidateFunctor<typename itk::NumericTraits<PixelT>::ValueType>{}, dataType))
+    {
+      // Not valid for conversion executing overload
+      return operator()<PixelT, Dimension>(dataStructure, arrayPath, filePath);
+    }
+
+    typename ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filePath);
+
+    reader->Update();
+    typename ImageType::Pointer outputImage = reader->GetOutput();
+
+    return ExecuteNeighborFunction(ITK::ConvertImageToDatastoreFunctor{}, dataType, dataStructure, arrayPath, *outputImage);
+    ;
   }
 };
 
@@ -174,6 +198,8 @@ struct ImageReaderOptions
   bool OverrideSpacing = false;
   FloatVec3 Origin;
   FloatVec3 Spacing;
+  bool ChangeDataType = false;
+  DataType ImageDataType = DataType::uint8;
 };
 
 //------------------------------------------------------------------------------

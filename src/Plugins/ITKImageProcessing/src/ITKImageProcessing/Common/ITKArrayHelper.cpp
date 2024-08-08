@@ -6,6 +6,20 @@
 
 using namespace nx::core;
 
+DataType ITK::detail::ConvertChoiceToDataType(types::usize choice)
+{
+  switch(choice)
+  {
+  case 0:
+    return DataType::uint8;
+  case 1:
+    return DataType::uint16;
+  case 2:
+    return DataType::uint32;
+  }
+  return DataType::uint8;
+}
+
 bool ITK::DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
 {
   return imageGeom.getNumberOfCells() == dataStore.getNumberOfTuples();

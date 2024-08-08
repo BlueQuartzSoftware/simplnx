@@ -38,6 +38,9 @@ public:
   static inline constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
 
+  static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
+  static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

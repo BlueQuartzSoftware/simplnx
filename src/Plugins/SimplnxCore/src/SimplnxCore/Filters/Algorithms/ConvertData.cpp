@@ -8,12 +8,12 @@ using namespace nx::core;
 
 namespace Detail
 {
-template <typename O, typename D>
+template <typename InputType, typename OutputType>
 class ConvertDataAlg
 {
 public:
-  using InputStoreType = AbstractDataStore<O>;
-  using OutputStoreType = AbstractDataStore<D>;
+  using InputStoreType = AbstractDataStore<InputType>;
+  using OutputStoreType = AbstractDataStore<OutputType>;
 
   ConvertDataAlg(InputStoreType& inputStore, OutputStoreType& outputStore)
   : m_InputStore(inputStore)
@@ -23,31 +23,30 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    // std::cout << "\tConvertDataAlg: " << start << " to " << end << std::endl;
 
     for(size_t v = start; v < end; ++v)
     {
-      // std::cout << "\tConvertDataAlg: index " << v << std::endl;
-
-      if constexpr(std::is_same<O, D>::value)
+      if constexpr(std::is_same<InputType, OutputType>::value)
       {
         // inputArray and destination arrays have the same type
         m_OutputStore.setValue(v, m_InputStore.getValue(v));
       }
-      else if constexpr(std::is_same<O, bool>::value)
+      else if constexpr(std::is_same<InputType, bool>::value)
       {
         // inputArray array is a boolean array
         m_OutputStore.setValue(v, (m_InputStore.getValue(v) ? 1 : 0));
       }
-      else if constexpr(std::is_same<D, bool>::value)
+      else if constexpr(std::is_same<OutputType, bool>::value)
       {
         // Destination array is a boolean array
         m_OutputStore.setValue(v, (m_InputStore.getValue(v) != 0));
       }
+
       else
       {
         // All other cases
-        m_OutputStore.setValue(v, static_cast<D>(m_InputStore.getValue(v)));
+        OutputType sourceValue = static_cast<OutputType>(m_InputStore.getValue(v));
+        m_OutputStore.setValue(v, sourceValue);
       }
     }
   }

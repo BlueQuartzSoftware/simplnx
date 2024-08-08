@@ -1,6 +1,5 @@
 #include "ITKImportFijiMontage.hpp"
 
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 
@@ -201,7 +200,7 @@ private:
 
       // Ensure that we are dealing with in-core memory ONLY
       const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
-      if(inputArrayPtr->getDataFormat() != "")
+      if(!inputArrayPtr->getDataFormat().empty())
       {
         return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
       }
@@ -213,8 +212,17 @@ private:
       image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
       // Use ITKUtils to read the image into the DataStructure
-      Result<> imageReaderResult =
-          cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
+      Result<> imageReaderResult;
+      if(m_InputValues->changeDataType)
+      {
+        imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, bound.Filepath.string(),
+                                                                                                                        imageDataPath, m_InputValues->destType);
+      }
+      else
+      {
+        imageReaderResult =
+            cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
+      }
       if(imageReaderResult.invalid())
       {
         for(const auto& error : imageReaderResult.errors())
