@@ -193,7 +193,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  auto [dimension, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, appendDimension] =
+  auto [dimensionStr, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, appendDimension] =
       GENERATE(std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
                                std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, 0),
                std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
@@ -201,7 +201,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
                std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
                                std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, 2));
 
-  SECTION(fmt::format("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution - {}", dimension))
+  SECTION(fmt::format("{}", dimensionStr))
   {
     // Crop bottom half
     cropGeometry(dataStructure, k_DataContainerPath, bottomPath, minBottom, maxBottom);
@@ -215,31 +215,27 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     // Create neighbor lists and string arrays
     createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
 
+    DataPath appendedCellDataPath;
     SECTION("Append Geometry")
     {
       appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {});
-
-      const DataPath appendedCellDataPath = bottomPath.createChildPath(k_CellData);
-      const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
-      REQUIRE(numAppendedArrays == 8);
-
-      CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+      appendedCellDataPath = bottomPath.createChildPath(k_CellData);
     }
 
     SECTION("New Geometry")
     {
       appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath);
-
-      const DataPath appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
-      const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
-      REQUIRE(numAppendedArrays == 8);
-
-      CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+      appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
     }
+
+    const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
+    REQUIRE(numAppendedArrays == 8);
+
+    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
   }
 }
 
-TEST_CASE("SimplnxCore::AppendImageGeometryFilter: InValid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
+TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
