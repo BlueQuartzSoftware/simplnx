@@ -2,7 +2,7 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D-NX Python Docs (v24.06.05)
+DREAM3D-NX Python Docs (v24.08.03)
 ===================================
 
 Installation
@@ -85,15 +85,16 @@ How to use SIMPLNX from Python
    :maxdepth: 1
    :caption: Release Notes
 
-   ReleaseNotes_240605
-   ReleaseNotes_130
-   ReleaseNotes_127
-   ReleaseNotes_126
-   ReleaseNotes_124
-   ReleaseNotes_123
-   ReleaseNotes_121
-   ReleaseNotes_120
-   ReleaseNotes_110
+   release_notes/ReleaseNotes_240803
+   release_notes/ReleaseNotes_240605
+   release_notes/ReleaseNotes_130
+   release_notes/ReleaseNotes_127
+   release_notes/ReleaseNotes_126
+   release_notes/ReleaseNotes_124
+   release_notes/ReleaseNotes_123
+   release_notes/ReleaseNotes_121
+   release_notes/ReleaseNotes_120
+   release_notes/ReleaseNotes_110
 
 Indices and tables
 ==================
