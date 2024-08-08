@@ -19,12 +19,15 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-const DataPath k_CroppedBottomHalfZPath({"CroppedBottomHalfZ"});
-const DataPath k_CroppedTopHalfZPath({"CroppedTopHalfZ"});
-const DataPath k_CroppedBottomHalfXPath({"CroppedBottomHalfX"});
-const DataPath k_CroppedTopHalfXPath({"CroppedTopHalfX"});
-const DataPath k_CroppedBottomHalfYPath({"CroppedBottomHalfY"});
-const DataPath k_CroppedTopHalfYPath({"CroppedTopHalfY"});
+const DataPath k_CroppedBottomZPath({"CroppedBottomZ"});
+const DataPath k_CroppedMiddleZPath({"CroppedMiddleZ"});
+const DataPath k_CroppedTopZPath({"CroppedTopZ"});
+const DataPath k_CroppedBottomXPath({"CroppedBottomX"});
+const DataPath k_CroppedMiddleXPath({"CroppedMiddleX"});
+const DataPath k_CroppedTopXPath({"CroppedTopX"});
+const DataPath k_CroppedBottomYPath({"CroppedBottomY"});
+const DataPath k_CroppedMiddleYPath({"CroppedMiddleY"});
+const DataPath k_CroppedTopYPath({"CroppedTopY"});
 const DataPath k_AppendedGeometryPath({"AppendedGeometry"});
 const DataPath k_InvalidTestGeometryPath1({"Image2dDataContainer"});
 const DataPath k_InvalidTestGeometryPath2({"Resampled_2D_ImageGeom"});
@@ -48,8 +51,9 @@ void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, co
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
-void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minTopVoxel,
-                                        const std::vector<uint64>& maxTopVoxel, const DataPath& bottomHalfPath, const DataPath& topHalfPath)
+void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minMiddleVoxel,
+                                        const std::vector<uint64>& maxMiddleVoxel, const std::vector<uint64>& minTopVoxel, const std::vector<uint64>& maxTopVoxel, const DataPath& bottomPath,
+                                        const DataPath& middlePath, const DataPath& topPath)
 {
   // Create a neighbor list and string array for the original input geometry and manually divide them up to the two cropped halves since CropImageGeometryFilter only supports IDataArrays
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DataContainerPath.createChildPath(k_CellData));
@@ -68,16 +72,18 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
 
   const auto* stringArray = StringArray::CreateWithValues(dataStructure, "StringArray", stringArrayValues, cellDataAM.getId());
 
-  const auto& croppedTopHalfAM = dataStructure.getDataRefAs<AttributeMatrix>(topHalfPath.createChildPath(k_CellData));
-  const auto& croppedBottomHalfAM = dataStructure.getDataRefAs<AttributeMatrix>(bottomHalfPath.createChildPath(k_CellData));
-  const auto numTuplesTop = croppedTopHalfAM.getNumTuples();
-  const auto numTuplesBottom = croppedBottomHalfAM.getNumTuples();
-  REQUIRE(numTuplesTop + numTuplesBottom == numTuples);
+  const auto& croppedTopAM = dataStructure.getDataRefAs<AttributeMatrix>(topPath.createChildPath(k_CellData));
+  const auto& croppedMiddleAM = dataStructure.getDataRefAs<AttributeMatrix>(middlePath.createChildPath(k_CellData));
+  const auto& croppedBottomAM = dataStructure.getDataRefAs<AttributeMatrix>(bottomPath.createChildPath(k_CellData));
+  const auto numTuplesTop = croppedTopAM.getNumTuples();
+  const auto numTuplesMiddle = croppedMiddleAM.getNumTuples();
+  const auto numTuplesBottom = croppedBottomAM.getNumTuples();
+  REQUIRE(numTuplesTop + numTuplesMiddle + numTuplesBottom == numTuples);
 
   usize xCount = maxTopVoxel[0] - minBottomVoxel[0] + 1;
   usize yCount = maxTopVoxel[1] - minBottomVoxel[1] + 1;
 
-  auto* neighborListBottom = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesBottom, croppedBottomHalfAM.getId());
+  auto* neighborListBottom = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesBottom, croppedBottomAM.getId());
   neighborListBottom->resizeTotalElements(numTuplesBottom);
   std::vector<std::string> stringValuesBottom(numTuplesBottom);
   usize i = 0;
@@ -96,8 +102,30 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       }
     }
   }
-  StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesBottom, croppedBottomHalfAM.getId());
-  auto* neighborListTop = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesTop, croppedTopHalfAM.getId());
+  StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesBottom, croppedBottomAM.getId());
+
+  auto* neighborListMiddle = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesMiddle, croppedMiddleAM.getId());
+  neighborListMiddle->resizeTotalElements(numTuplesMiddle);
+  std::vector<std::string> stringValuesMiddle(numTuplesMiddle);
+  i = 0;
+  for(usize z = minMiddleVoxel[2]; z <= maxMiddleVoxel[2]; ++z)
+  {
+    for(usize y = minMiddleVoxel[1]; y <= maxMiddleVoxel[1]; ++y)
+    {
+      for(usize x = minMiddleVoxel[0]; x <= maxMiddleVoxel[0]; ++x)
+      {
+        usize srcIdx = (z * yCount + y) * xCount + x;
+        std::vector<float32> list = neighborList->copyOfList(srcIdx);
+        neighborListMiddle->setList(i, std::make_shared<std::vector<float32>>(list));
+        std::string strVal = stringArray->at(srcIdx);
+        stringValuesMiddle[i] = strVal;
+        i++;
+      }
+    }
+  }
+  StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesMiddle, croppedMiddleAM.getId());
+
+  auto* neighborListTop = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesTop, croppedTopAM.getId());
   neighborListTop->resizeTotalElements(numTuplesTop);
   std::vector<std::string> stringValueTop(numTuplesTop);
   i = 0;
@@ -116,20 +144,24 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       }
     }
   }
-  StringArray::CreateWithValues(dataStructure, "StringArray", stringValueTop, croppedTopHalfAM.getId());
+  StringArray::CreateWithValues(dataStructure, "StringArray", stringValueTop, croppedTopAM.getId());
 }
 
-void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const DataPath& inputPath, uint64 appendDimension, const DataPath& newGeometryPath)
+void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt)
 {
   AppendImageGeometryFilter filter;
   Arguments args;
 
-  args.insertOrAssign(AppendImageGeometryFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({inputPath}));
+  args.insertOrAssign(AppendImageGeometryFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>(inputPaths));
   args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(destinationPath));
   args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(appendDimension));
   args.insertOrAssign(AppendImageGeometryFilter::k_CheckResolution_Key, std::make_any<bool>(true));
-  args.insertOrAssign(AppendImageGeometryFilter::k_SaveAsNewGeometry_Key, std::make_any<bool>(true));
-  args.insertOrAssign(AppendImageGeometryFilter::k_NewGeometry_Key, std::make_any<DataPath>(newGeometryPath));
+  args.insertOrAssign(AppendImageGeometryFilter::k_SaveAsNewGeometry_Key, std::make_any<bool>(newGeometryPathOpt.has_value()));
+
+  if(newGeometryPathOpt.has_value())
+  {
+    args.insertOrAssign(AppendImageGeometryFilter::k_NewGeometry_Key, std::make_any<DataPath>(newGeometryPathOpt.value()));
+  }
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -137,13 +169,17 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  // rename the cell data attribute matrix for easier comparison with exemplar data
-  RenameDataObjectFilter renameFilter;
-  Arguments renameArgs;
-  renameArgs.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_CellData));
-  renameArgs.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(newGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
-  auto renameResult = renameFilter.execute(dataStructure, renameArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(renameResult.result)
+  if(newGeometryPathOpt.has_value())
+  {
+    auto newGeometryPath = newGeometryPathOpt.value();
+    // rename the cell data attribute matrix for easier comparison with exemplar data
+    RenameDataObjectFilter renameFilter;
+    Arguments renameArgs;
+    renameArgs.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_CellData));
+    renameArgs.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(newGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
+    auto renameResult = renameFilter.execute(dataStructure, renameArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(renameResult.result)
+  }
 }
 
 } // namespace
@@ -157,33 +193,49 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  auto [dimension, minBottom, maxBottom, minTop, maxTop, bottomHalfPath, topHalfPath, appendDimension] =
-      GENERATE(std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{94, 200, 116}, std::vector<uint64>{95, 0, 0}, std::vector<uint64>{188, 200, 116},
-                               k_CroppedBottomHalfXPath, k_CroppedTopHalfXPath, 0),
-               std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 99, 116}, std::vector<uint64>{0, 100, 0}, std::vector<uint64>{188, 200, 116},
-                               k_CroppedBottomHalfYPath, k_CroppedTopHalfYPath, 1),
-               std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 50}, std::vector<uint64>{0, 0, 51}, std::vector<uint64>{188, 200, 116},
-                               k_CroppedBottomHalfZPath, k_CroppedTopHalfZPath, 2));
+  auto [dimension, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, appendDimension] =
+      GENERATE(std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
+                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, 0),
+               std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
+                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, 1),
+               std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
+                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, 2));
 
   SECTION(fmt::format("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution - {}", dimension))
   {
     // Crop bottom half
-    cropGeometry(dataStructure, k_DataContainerPath, bottomHalfPath, minBottom, maxBottom);
+    cropGeometry(dataStructure, k_DataContainerPath, bottomPath, minBottom, maxBottom);
+
+    // Crop middle half
+    cropGeometry(dataStructure, k_DataContainerPath, middlePath, minMiddle, maxMiddle);
 
     // Crop top half
-    cropGeometry(dataStructure, k_DataContainerPath, topHalfPath, minTop, maxTop);
+    cropGeometry(dataStructure, k_DataContainerPath, topPath, minTop, maxTop);
 
     // Create neighbor lists and string arrays
-    createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minTop, maxTop, bottomHalfPath, topHalfPath);
+    createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
 
-    // Append geometries and compare with original
-    appendGeometries(dataStructure, bottomHalfPath, topHalfPath, appendDimension, k_AppendedGeometryPath);
+    SECTION("Append Geometry")
+    {
+      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {});
 
-    const DataPath appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
-    const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
-    REQUIRE(numAppendedArrays == 8);
+      const DataPath appendedCellDataPath = bottomPath.createChildPath(k_CellData);
+      const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
+      REQUIRE(numAppendedArrays == 8);
 
-    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+      CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+    }
+
+    SECTION("New Geometry")
+    {
+      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath);
+
+      const DataPath appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
+      const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
+      REQUIRE(numAppendedArrays == 8);
+
+      CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+    }
   }
 }
 
@@ -207,6 +259,18 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: InValid Filter Execution", "[
   {
     args.insertOrAssign(AppendImageGeometryFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({k_InvalidTestGeometryPath3}));
     args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
+    SECTION("X Dimension")
+    {
+      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(0));
+    }
+    SECTION("Y Dimension")
+    {
+      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(1));
+    }
+    SECTION("Z Dimension")
+    {
+      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(2));
+    }
   }
   SECTION("Mismatching Spacing")
   {
@@ -219,7 +283,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: InValid Filter Execution", "[
       cropArgs.insert(CropImageGeometryFilter::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{10, 10, 0}));
       //   cropArgs.insert(CropImageGeometryFilter::k_UpdateOrigin_Key, std::make_any<bool>(true));
       cropArgs.insert(CropImageGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InvalidTestGeometryPath2));
-      cropArgs.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_CroppedTopHalfZPath));
+      cropArgs.insert(CropImageGeometryFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_CroppedTopZPath));
       cropArgs.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
       cropArgs.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
       cropArgs.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
@@ -229,7 +293,19 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: InValid Filter Execution", "[
     }
     {
       args.insertOrAssign(AppendImageGeometryFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>({k_InvalidTestGeometryPath1}));
-      args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(k_CroppedTopHalfZPath));
+      args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(k_CroppedTopZPath));
+      SECTION("X Dimension")
+      {
+        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(0));
+      }
+      SECTION("Y Dimension")
+      {
+        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(1));
+      }
+      SECTION("Z Dimension")
+      {
+        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(2));
+      }
     }
   }
 
