@@ -1198,7 +1198,7 @@ Result<> AppendData(const std::vector<const K*>& inputArrays, const std::vector<
     std::vector<usize> strideValues = CalculateXYStrideValues(inputTupleShapes);
     return ShiftAndAppendData(inputArrays, destArray, originalDestDims, strideValues, originalDestDims[1] * originalDestDims[2]);
   }
-  case Direction::Z: {
+  default: {
     return AppendZData(inputArrays, inputTupleShapes, destArray, originalDestDims);
   }
   }
