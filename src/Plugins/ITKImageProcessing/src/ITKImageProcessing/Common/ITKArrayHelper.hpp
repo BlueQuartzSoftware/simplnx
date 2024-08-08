@@ -27,10 +27,47 @@
 #include <type_traits>
 #include <vector>
 
-namespace nx::core
+namespace nx::core::ITK
 {
-namespace ITK
+namespace detail
 {
+template <typename OriginT>
+struct TypeConversionValidateFunctor
+{
+  template <typename DestT>
+  bool operator()()
+  {
+    if constexpr(std::is_same_v<OriginT, DestT>)
+    {
+      // This won't actually fail, but it prevents an unnecessary copy
+      return false;
+    }
+    if constexpr(std::is_signed_v<OriginT> || std::is_signed_v<DestT>)
+    {
+      return false;
+    }
+    if constexpr(std::is_same_v<OriginT, bool> || std::is_same_v<DestT, bool>)
+    {
+      return false;
+    }
+
+    // Currently only works on uint8, uint16, or uint32
+    return true;
+  }
+};
+
+struct PreflightTypeConversionValidateFunctor
+{
+  template <typename OriginT>
+  bool operator()(const DataType& destType)
+  {
+    return ExecuteNeighborFunction(TypeConversionValidateFunctor<OriginT>{}, destType);
+  }
+};
+
+DataType ConvertChoiceToDataType(usize choice);
+} // namespace detail
+
 struct ImageGeomData
 {
   SizeVec3 dims{};
@@ -345,6 +382,58 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
   DataStore<T> dataStore(std::move(newData), std::move(tDims), std::move(cDims));
   return dataStore;
 }
+
+template <typename T>
+concept NotBoolT = !std::is_same_v<T, bool>;
+
+template <NotBoolT NewStoreT, class PixelT, uint32 Dimension>
+Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<PixelT, Dimension>& image)
+{
+  using ImageType = itk::Image<PixelT, Dimension>;
+  using T = UnderlyingType_t<PixelT>;
+  typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
+  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
+  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  if constexpr(Dimension == 2)
+  {
+    tDims.insert(tDims.begin(), 1);
+  }
+  typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
+
+  // ITK use the global new allocator
+  auto* rawBufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
+  pixelContainer->ContainerManageMemoryOff();
+  if constexpr(std::is_same_v<NewStoreT, T>)
+  {
+    std::copy(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data());
+  }
+  else
+  {
+    if constexpr(!std::is_signed_v<NewStoreT> && !std::is_signed_v<T>) // bool would slip through, but it is disallowed
+    {
+      constexpr auto destMaxV = static_cast<float64>(std::numeric_limits<NewStoreT>::max());
+      constexpr auto originMaxV = std::numeric_limits<T>::max();
+      std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data(), [](auto value) {
+        float64 ratio = static_cast<float64>(value) / originMaxV;
+        return static_cast<NewStoreT>(ratio * destMaxV);
+      });
+    }
+  }
+
+  return {};
+}
+
+struct ConvertImageToDatastoreFunctor
+{
+  template <typename T, class... Args>
+  Result<> operator()(DataStructure& dataStructure, const DataPath& arrayPath, Args&&... args)
+  {
+    auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
+    DataStore<T>& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
+
+    return ConvertImageToDataStore(dataStore, std::forward<Args>(args)...);
+  }
+};
 
 // Could replace with class type non-type template parameters in C++20
 
@@ -827,5 +916,4 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
     return MakeErrorResult<ResultT>(-222, exception.GetDescription());
   }
 }
-} // namespace ITK
-} // namespace nx::core
+} // namespace nx::core::ITK

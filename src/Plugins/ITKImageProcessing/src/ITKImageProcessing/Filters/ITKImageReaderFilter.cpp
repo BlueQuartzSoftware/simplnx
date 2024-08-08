@@ -1,21 +1,21 @@
 #include "ITKImageReaderFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 
 #include <filesystem>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace fs = std::filesystem;
 
@@ -73,6 +73,12 @@ Parameters ITKImageReaderFilter::parameters() const
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float64>{1, 1, 1},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
+                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
+
+  params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
+
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, std::make_any<bool>(true));
@@ -109,6 +115,8 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -119,6 +127,8 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.OriginAtCenterOfGeometry = shouldCenterOrigin;
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
+  imageReaderOptions.ChangeDataType = pChangeDataType;
+  imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
@@ -138,9 +148,10 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   //  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto newDataType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
-
   const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
   if(!inputArrayPtr->getDataFormat().empty())
   {
@@ -149,9 +160,15 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
 
   std::string fileNameString = fileName.string();
 
-  ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
-
-  auto result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+  Result<> result = {};
+  if(pChangeDataType)
+  {
+    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, fileNameString, imageDataArrayPath, newDataType);
+  }
+  else
+  {
+    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+  }
 
   return result;
 }

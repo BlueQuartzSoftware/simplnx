@@ -488,7 +488,7 @@ std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T
 }
 
 template <typename T>
-bool ConvertDataArray(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
+bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
 {
   if(dataArray == nullptr)
   {

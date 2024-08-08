@@ -1,5 +1,10 @@
 #include "ReadImageUtils.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+
+using namespace nx::core;
+
 namespace cxItkImageReaderFilter
 {
 
@@ -74,8 +79,16 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), origin.toContainer<CreateImageGeometryAction::OriginType>(),
                                                                      spacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName));
-    actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
 
+    if(imageReaderOptions.ChangeDataType && ExecuteNeighborFunction(ITK::detail::PreflightTypeConversionValidateFunctor{}, *numericType, imageReaderOptions.ImageDataType))
+    {
+      actions.appendAction(
+          std::make_unique<CreateArrayAction>(imageReaderOptions.ImageDataType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
+    }
+    else
+    {
+      actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), imageGeomPath.createChildPath(cellDataName).createChildPath(arrayName)));
+    }
   } catch(const itk::ExceptionObject& err)
   {
     return MakeErrorResult<OutputActions>(-55557, fmt::format("ITK exception was thrown while processing input file: {}", err.what()));

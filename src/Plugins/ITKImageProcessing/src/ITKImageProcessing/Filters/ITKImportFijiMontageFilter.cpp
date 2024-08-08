@@ -2,6 +2,7 @@
 
 #include "Algorithms/ITKImportFijiMontage.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -84,6 +85,9 @@ Parameters ITKImportFijiMontageFilter::parameters() const
       std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "The filter will show an error if the images are already in grayscale format", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "The luminosity values for the conversion", std::vector<float32>{0.2125f, 0.7154f, 0.0721f},
                                                          std::vector<std::string>(3)));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
+                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ParentDataGroup_Key, "Parent Imported Images Under a DataGroup", "Create a new DataGroup to hold the  imported images", true));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -93,6 +97,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "The name of the import image data", "Image"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, true);
   params.linkParameters(k_ConvertToGrayScale_Key, k_ColorWeights_Key, true);
   params.linkParameters(k_ParentDataGroup_Key, k_DataGroupName_Key, true);
@@ -120,6 +125,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto pDataContainerPathValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
   auto pImageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
+  auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions = {};
@@ -132,6 +139,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   inputValues.inputFilePath = pInputFileValue;
   inputValues.origin = pOriginValue;
   inputValues.imagePrefix = pDataContainerPathValue;
+  inputValues.changeDataType = pChangeDataType;
+  inputValues.destType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
 
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
   if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue) || s_HeaderCache[m_InstanceId].valuesChanged(inputValues))
@@ -175,6 +184,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
     imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
     imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageDataProxy.getTargetName()));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(pChangeDataType));
+    imageImportArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(pChoiceType));
 
     auto result = imageImportFilter.preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
     if(result.outputActions.invalid())
@@ -230,6 +241,8 @@ Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.imagePrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
   inputValues.cellAMName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
   inputValues.imageDataArrayName = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
+  inputValues.changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
+  inputValues.destType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
 
   ITKImportFijiMontage(dataStructure, messageHandler, shouldCancel, &inputValues, s_HeaderCache.find(m_InstanceId)->second)();
 
