@@ -61,8 +61,6 @@ Parameters AppendImageGeometryFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  //  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometry_Key, "Input Image Geometry", "The incoming image geometry (cell data) that is to be appended.", DataPath{},
-  //                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<MultiPathSelectionParameter>(k_InputGeometries_Key, "Input Image Geometries",
                                                               "The incoming image geometries (cell data) that will be appended to the destination image geometry.", std::vector<DataPath>{}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_DestinationGeometry_Key, "Destination Image Geometry",
@@ -338,7 +336,7 @@ Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_InputAttributeMatrixKey, k_InputGeometries_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_InputAttributeMatrixKey, k_InputGeometries_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CheckResolutionKey, k_CheckResolution_Key));
 
