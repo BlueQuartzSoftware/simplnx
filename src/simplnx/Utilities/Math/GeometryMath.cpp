@@ -69,47 +69,54 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFace(const detail::Geome
   Point3Df ll = points[0];
   Point3Df ur = points[0];
 
-  // Avoid Branch Prediction misses by exclusively doing multiplication operations
-  // C++ (§4.5/4):
-  // An r-value of type bool can be converted to an r-value of type int,
-  // with false becoming zero and true becoming one.
-  //
-  // The standard guarantees the same for float
-  bool swap = points[1][0] < ll[0];
-  ll[0] = points[1][0] * static_cast<float32>(swap) + ll[0] * static_cast<float32>(!swap);
-
-  swap = points[1][1] < ll[1];
-  ll[1] = points[1][1] * static_cast<float32>(swap) + ll[1] * static_cast<float32>(!swap);
-
-  swap = points[1][2] < ll[2];
-  ll[2] = points[1][2] * static_cast<float32>(swap) + ll[2] * static_cast<float32>(!swap);
-
-  swap = points[2][0] < ll[0];
-  ll[0] = points[2][0] * static_cast<float32>(swap) + ll[0] * static_cast<float32>(!swap);
-
-  swap = points[2][1] < ll[1];
-  ll[1] = points[2][1] * static_cast<float32>(swap) + ll[1] * static_cast<float32>(!swap);
-
-  swap = points[2][2] < ll[2];
-  ll[2] = points[2][2] * static_cast<float32>(swap) + ll[2] * static_cast<float32>(!swap);
-
-  swap = points[1][0] > ur[0];
-  ur[0] = points[1][0] * static_cast<float32>(swap) + ur[0] * static_cast<float32>(!swap);
-
-  swap = points[1][1] > ur[1];
-  ur[1] = points[1][1] * static_cast<float32>(swap) + ur[1] * static_cast<float32>(!swap);
-
-  swap = points[1][2] > ur[2];
-  ur[2] = points[1][2] * static_cast<float32>(swap) + ur[2] * static_cast<float32>(!swap);
-
-  swap = points[2][0] > ur[0];
-  ur[0] = points[2][0] * static_cast<float32>(swap) + ur[0] * static_cast<float32>(!swap);
-
-  swap = points[2][1] > ur[1];
-  ur[1] = points[2][1] * static_cast<float32>(swap) + ur[1] * static_cast<float32>(!swap);
-
-  swap = points[2][2] > ur[2];
-  ur[2] = points[2][2] * static_cast<float32>(swap) + ur[2] * static_cast<float32>(!swap);
+  if(points[1][0] < ll[0])
+  {
+    ll[0] = points[1][0];
+  }
+  if(points[1][0] > ur[0])
+  {
+    ur[0] = points[1][0];
+  }
+  if(points[1][1] < ll[1])
+  {
+    ll[1] = points[1][1];
+  }
+  if(points[1][1] > ur[1])
+  {
+    ur[1] = points[1][1];
+  }
+  if(points[1][2] < ll[2])
+  {
+    ll[2] = points[1][2];
+  }
+  if(points[1][2] > ur[2])
+  {
+    ur[2] = points[1][2];
+  }
+  if(points[2][0] < ll[0])
+  {
+    ll[0] = points[2][0];
+  }
+  if(points[2][0] > ur[0])
+  {
+    ur[0] = points[2][0];
+  }
+  if(points[2][1] < ll[1])
+  {
+    ll[1] = points[2][1];
+  }
+  if(points[2][1] > ur[1])
+  {
+    ur[1] = points[2][1];
+  }
+  if(points[2][2] < ll[2])
+  {
+    ll[2] = points[2][2];
+  }
+  if(points[2][2] > ur[2])
+  {
+    ur[2] = points[2][2];
+  }
 
   return {ll, ur};
 }
@@ -135,29 +142,30 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const nx::core::Tr
     Point3Df min = bounds.getMinPoint();
     Point3Df max = bounds.getMaxPoint();
 
-    // Avoid Branch Prediction misses by exclusively doing multiplication operations
-    // C++ (§4.5/4):
-    // An r-value of type bool can be converted to an r-value of type int,
-    // with false becoming zero and true becoming one.
-    //
-    // The standard guarantees the same for float
-    bool swap = min[0] < ll[0];
-    ll[0] = min[0] * static_cast<float32>(swap) + ll[0] * static_cast<float32>(!swap);
-
-    swap = min[1] < ll[1];
-    ll[1] = min[1] * static_cast<float32>(swap) + ll[1] * static_cast<float32>(!swap);
-
-    swap = min[2] < ll[2];
-    ll[2] = min[2] * static_cast<float32>(swap) + ll[2] * static_cast<float32>(!swap);
-
-    swap = max[0] > ur[0];
-    ur[0] = max[0] * static_cast<float32>(swap) + ur[0] * static_cast<float32>(!swap);
-
-    swap = max[1] > ur[1];
-    ur[1] = max[1] * static_cast<float32>(swap) + ur[1] * static_cast<float32>(!swap);
-
-    swap = max[2] > ur[2];
-    ur[2] = max[2] * static_cast<float32>(swap) + ur[2] * static_cast<float32>(!swap);
+    if(min[0] < ll[0])
+    {
+      ll[0] = min[0];
+    }
+    if(min[1] < ll[1])
+    {
+      ll[1] = min[1];
+    }
+    if(min[2] < ll[2])
+    {
+      ll[2] = min[2];
+    }
+    if(max[0] > ur[0])
+    {
+      ur[0] = max[0];
+    }
+    if(max[1] > ur[1])
+    {
+      ur[1] = max[1];
+    }
+    if(max[2] > ur[2])
+    {
+      ur[2] = max[2];
+    }
   }
 
   return {ll, ur};

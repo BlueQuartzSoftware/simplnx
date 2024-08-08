@@ -324,21 +324,27 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
   bool hasNeg = area0 < 0 || area1 < 0 || area2 < 0;
   int32 zeroCount = !area0 + !area1 + !area2;
 
-  char code = '?';
+  if(!(hasPos && hasNeg))
+  {
+    if(zeroCount == 0)
+    {
+      return 'F';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'E';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'V';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
+  }
 
-  bool secondaryCond = !zeroCount;
-  code = secondaryCond * 'F' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 1;
-  code = secondaryCond * 'E' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 2;
-  code = secondaryCond * 'V' + !secondaryCond * code;
-
-  bool primaryCond = !(hasPos && hasNeg);
-  code = !primaryCond * '0' + primaryCond * code;
-
-  return code;
+  return '0';
 }
 
 /**
@@ -438,21 +444,27 @@ char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
   bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
   int32 zeroCount = !vol0 + !vol1 + !vol2;
 
-  char code = '?';
+  if(!(hasPos && hasNeg))
+  {
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
+  }
 
-  bool secondaryCond = !zeroCount;
-  code = secondaryCond * 'f' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 1;
-  code = secondaryCond * 'e' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 2;
-  code = secondaryCond * 'v' + !secondaryCond * code;
-
-  bool primaryCond = !(hasPos && hasNeg);
-  code = !primaryCond * '0' + primaryCond * code;
-
-  return code;
+  return '0';
 }
 
 /**
@@ -478,21 +490,27 @@ char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
   bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
   int32 zeroCount = !vol0 + !vol1 + !vol2;
 
-  char code = '?';
+  if(!(hasPos && hasNeg))
+  {
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
+  }
 
-  bool secondaryCond = !zeroCount;
-  code = secondaryCond * 'f' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 1;
-  code = secondaryCond * 'e' + !secondaryCond * code;
-
-  secondaryCond = zeroCount == 2;
-  code = secondaryCond * 'v' + !secondaryCond * code;
-
-  bool primaryCond = !(hasPos && hasNeg);
-  code = !primaryCond * '0' + primaryCond * code;
-
-  return code;
+  return '0';
 }
 
 /**
