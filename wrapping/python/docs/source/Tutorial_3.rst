@@ -35,7 +35,7 @@ When Creating a New Plugin (**Use Existing Plugin** is unchecked)
 - **Filter Names (comma-separated)**: This field allows you to specify the programmatic names of the filters you want to create. Each filter name should be separated by a comma.  For example, `FirstFilter,SecondFilter`.
 
 When Using an Existing Plugin (**Use Existing Plugin** is checked)
-*****************************************************************
+*******************************************************************
 
 - **Existing Plugin Location**: This specifies the directory of the existing plugin to which you want to add new filters. You can select the directory by clicking the `Browse` button.
 
