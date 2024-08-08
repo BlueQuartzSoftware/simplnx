@@ -241,7 +241,7 @@ public:
    * @param ang
    * @param length
    */
-  CachedRay(const Ray<T>::PointType& origin, Ray<T>::ZXZEulerType ang, Ray<T>::LengthType length)
+  CachedRay(const typename Ray<T>::PointType& origin, typename Ray<T>::ZXZEulerType ang, typename Ray<T>::LengthType length)
   : Ray<T>(origin, std::move(ang), length)
   {
     m_Endpoint = this->calculateEndpoint();
@@ -297,36 +297,36 @@ public:
     return *this;
   }
 
-  void setOrigin(const Ray<T>::PointType& origin) override
+  void setOrigin(const typename Ray<T>::PointType& origin) override
   {
     this->m_Origin = origin;
-    m_Endpoint = Ray<T>::calculateEndpoint();
+    m_Endpoint = this->calculateEndpoint();
   }
 
-  void setLength(Ray<T>::LengthType length) override
+  void setLength(typename Ray<T>::LengthType length) override
   {
     this->m_Length = length;
     m_Endpoint = this->calculateEndpoint();
   }
 
-  void setEuler(const Ray<T>::ZXZEulerType& ang) override
+  void setEuler(const typename Ray<T>::ZXZEulerType& ang) override
   {
     this->m_Angle = ang;
     m_Endpoint = this->calculateEndpoint();
   }
 
-  const Ray<T>::PointType& getEndPointRef() const
+  const typename Ray<T>::PointType& getEndPointRef() const
   {
     return m_Endpoint;
   }
 
-  Ray<T>::PointType getEndPoint() const override
+  typename Ray<T>::PointType getEndPoint() const override
   {
     return m_Endpoint;
   }
 
 private:
   // Optional caching for speed
-  Ray<T>::PointType m_Endpoint = {};
+  typename Ray<T>::PointType m_Endpoint = {};
 };
 } // namespace nx::core
