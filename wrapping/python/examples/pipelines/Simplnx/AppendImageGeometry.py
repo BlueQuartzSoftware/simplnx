@@ -139,7 +139,7 @@ result = nx_filter.execute(
     data_structure=data_structure,
     check_resolution=True,
     destination_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
-    input_image_geometry_path=nx.DataPath("CroppedTopHalf"),
+    input_image_geometries_paths=[nx.DataPath("CroppedTopHalf")],
     output_image_geometry_path=nx.DataPath("AppendedImageGeom"),
     save_as_new_geometry=True
 )
