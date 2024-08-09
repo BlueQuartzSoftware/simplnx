@@ -1,13 +1,13 @@
 #pragma once
 
 #include <stdexcept>
+#include <utility>
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/EulerAngle.hpp"
 
 namespace nx::core
 {
-
 /**
  * @class Ray
  * @brief The Ray class describes a ray or line segment in 3D space. Using
@@ -41,9 +41,9 @@ public:
    * @param ang
    * @param length
    */
-  Ray(const PointType& origin, const ZXZEulerType& ang, LengthType length)
+  Ray(const PointType& origin, ZXZEulerType ang, LengthType length)
   : m_Origin(origin)
-  , m_Angle(ang)
+  , m_Angle(std::move(ang))
   , m_Length(length)
   {
   }
@@ -82,6 +82,15 @@ public:
   }
 
   /**
+   * @brief Returns the origin point.
+   * @return const PointType&
+   */
+  const PointType& getOriginRef() const
+  {
+    return m_Origin;
+  }
+
+  /**
    * @brief Returns the Euler angle describing the Ray's direction.
    * @return ZXZEulerType
    */
@@ -94,7 +103,7 @@ public:
    * @brief Sets a new origin point.
    * @param origin
    */
-  void setOrigin(const PointType& origin)
+  virtual void setOrigin(const PointType& origin)
   {
     m_Origin = origin;
   }
@@ -103,7 +112,7 @@ public:
    * @brief Sets a new Euler angle.
    * @param ang
    */
-  void setEuler(const ZXZEulerType& ang)
+  virtual void setEuler(const ZXZEulerType& ang)
   {
     m_Angle = ang;
   }
@@ -121,7 +130,7 @@ public:
    * @brief Sets a new ray length.
    * @param length
    */
-  void setLength(LengthType length)
+  virtual void setLength(LengthType length)
   {
     m_Length = length;
   }
@@ -131,22 +140,9 @@ public:
    * Based on the assumption the point is initially aligned with the global axis' and the that this vector specifically aligned with the local y-axis.
    * @return PointType
    */
-  PointType getEndPoint() const
+  virtual PointType getEndPoint() const
   {
-    const auto sin1 = std::sin(m_Angle[0]);
-    const auto sin2 = std::sin(m_Angle[1]);
-    const auto sin3 = std::sin(m_Angle[2]);
-
-    const auto cos1 = std::cos(m_Angle[0]);
-    const auto cos2 = std::cos(m_Angle[1]);
-    const auto cos3 = std::cos(m_Angle[2]);
-
-    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
-    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
-    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
-    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
-
-    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+    return calculateEndpoint();
   }
 
   /**
@@ -212,9 +208,125 @@ public:
   }
 
 protected:
-private:
   PointType m_Origin;
   ZXZEulerType m_Angle;
   LengthType m_Length;
+
+  PointType calculateEndpoint() const
+  {
+    const auto sin1 = std::sin(m_Angle[0]);
+    const auto sin2 = std::sin(m_Angle[1]);
+    const auto sin3 = std::sin(m_Angle[2]);
+
+    const auto cos1 = std::cos(m_Angle[0]);
+    const auto cos2 = std::cos(m_Angle[1]);
+    const auto cos3 = std::cos(m_Angle[2]);
+
+    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
+    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
+    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
+    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
+
+    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+  }
+};
+
+template <typename T>
+class CachedRay : public Ray<T>
+{
+public:
+  /**
+   * @brief Creates a Ray from an origin point, ZXZEuler angle, and target length.
+   * @param origin
+   * @param ang
+   * @param length
+   */
+  CachedRay(const typename Ray<T>::PointType& origin, typename Ray<T>::ZXZEulerType ang, typename Ray<T>::LengthType length)
+  : Ray<T>(origin, std::move(ang), length)
+  {
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  /**
+   * @brief Copy constructor
+   * @param other
+   */
+  CachedRay(const CachedRay& other)
+  : m_Endpoint(other.m_Endpoint)
+  , Ray<T>(other)
+  {
+  }
+
+  /**
+   * @brief Move constructor
+   * @param other
+   */
+  CachedRay(CachedRay&& other) noexcept
+  : m_Endpoint(std::move(other.m_Endpoint))
+  , Ray<T>(std::move(other))
+  {
+  }
+
+  ~CachedRay() = default;
+
+  /**
+   * @brief Copy assignment operator
+   * @param rhs
+   * @return CachedRay&
+   */
+  CachedRay& operator=(const CachedRay& rhs)
+  {
+    this->m_Origin = rhs.m_Origin;
+    this->m_Angle = rhs.m_Angle;
+    this->m_Length = rhs.m_Length;
+    m_Endpoint = rhs.m_Endpoint;
+    return *this;
+  }
+
+  /**
+   * @brief Move assignment operator
+   * @param rhs
+   * @return Ray&
+   */
+  CachedRay& operator=(CachedRay&& rhs) noexcept
+  {
+    this->m_Origin = std::move(rhs.m_Origin);
+    this->m_Angle = std::move(rhs.m_Angle);
+    this->m_Length = std::move(rhs.m_Length);
+    m_Endpoint = std::move(rhs.m_Endpoint);
+    return *this;
+  }
+
+  void setOrigin(const typename Ray<T>::PointType& origin) override
+  {
+    this->m_Origin = origin;
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  void setLength(typename Ray<T>::LengthType length) override
+  {
+    this->m_Length = length;
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  void setEuler(const typename Ray<T>::ZXZEulerType& ang) override
+  {
+    this->m_Angle = ang;
+    m_Endpoint = this->calculateEndpoint();
+  }
+
+  const typename Ray<T>::PointType& getEndPointRef() const
+  {
+    return m_Endpoint;
+  }
+
+  typename Ray<T>::PointType getEndPoint() const override
+  {
+    return m_Endpoint;
+  }
+
+private:
+  // Optional caching for speed
+  typename Ray<T>::PointType m_Endpoint = {};
 };
 } // namespace nx::core

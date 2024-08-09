@@ -40,12 +40,11 @@ public:
   {
     for(usize iter = start; iter < end; iter++)
     {
-      float32 radius = 0.0f;
       usize numPoints = m_Points.size();
 
       // find bounding box for current feature
       BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds[iter]));
-      radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint());
+      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
 
       // check points in vertex array to see if they are in the bounding box of the feature
       for(usize i = 0; i < numPoints; i++)
@@ -108,7 +107,7 @@ public:
 
     // find bounding box for current feature
     BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds));
-    float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint());
+    float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) / 2;
 
     usize pointsVisited = 0;
     // check points in vertex array to see if they are in the bounding box of the feature
@@ -239,21 +238,30 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   std::vector<int32> linkLoc(numFaces, 0);
 
   std::vector<BoundingBox3Df> faceBBs;
-  // traverse data again to get the faces belonging to each feature
-  for(int32 i = 0; i < numFaces; i++)
   {
-    g1 = faceLabelsSM[2 * i];
-    g2 = faceLabelsSM[2 * i + 1];
-    if(g1 > 0)
+    // !!! DO NOT USE GeometryStoreCache ELSEWHERE, SPECIAL CASE !!!
+    GeometryMath::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+
+    // initialize temp storage 'verts' vector to avoid expensive
+    // calls during tight loops below
+    std::vector<usize> verts(cache.NumVertsPerFace);
+
+    // traverse data again to get the faces belonging to each feature
+    for(int32 i = 0; i < numFaces; i++)
     {
-      faceLists[g1][(linkLoc[g1])++] = i;
+      g1 = faceLabelsSM[2 * i];
+      g2 = faceLabelsSM[2 * i + 1];
+      if(g1 > 0)
+      {
+        faceLists[g1][(linkLoc[g1])++] = i;
+      }
+      if(g2 > 0)
+      {
+        faceLists[g2][(linkLoc[g2])++] = i;
+      }
+      // find bounding box for each face
+      faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i, verts));
     }
-    if(g2 > 0)
-    {
-      faceLists[g2][(linkLoc[g2])++] = i;
-    }
-    // find bounding box for each face
-    faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(triangleGeom, i));
   }
 
   // Check for user canceled flag.
