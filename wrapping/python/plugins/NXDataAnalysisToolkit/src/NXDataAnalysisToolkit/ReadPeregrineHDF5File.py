@@ -729,7 +729,9 @@ class ReadPeregrineHDF5File:
       if should_cancel:
         return Result()
 
-      for camera_data_dataset in camera_data_datasets_str:
+      camera_data_datasets_str = camera_data_datasets_str.strip()
+      camera_data_datasets = camera_data_datasets_str.split(',')
+      for camera_data_dataset in camera_data_datasets:
         if should_cancel:
           return Result()
     
