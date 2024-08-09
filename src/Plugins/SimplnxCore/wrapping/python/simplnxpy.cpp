@@ -501,7 +501,7 @@ PYBIND11_MODULE(simplnx, mod)
           return DataType::boolean;
         }
 
-        std::string dtypeStr = py::str(dtype);
+        std::string dtypeStr = py::str(static_cast<py::object>(dtype));
         throw std::invalid_argument(fmt::format("Unable to convert dtype to DataType: Unsupported dtype '{}'.", dtypeStr));
       },
       "Convert numpy dtype to simplnx DataType", "dtype"_a);
