@@ -222,9 +222,11 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
     if(!fs::exists(directoryPath))
     {
-      if(!fs::create_directories(directoryPath))
+      std::error_code err;
+      if(!fs::create_directories(directoryPath, err))
       {
-        return MakeErrorResult(-11022, fmt::format("Unable to create output directory {}", directoryPath.string()));
+        return MakeErrorResult(-11022,
+                               fmt::format("Unable to create output directory '{}'. Operating system returned error '{}' with message\n    '{}'", directoryPath.string(), err.value(), err.message()));
       }
     }
     return OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, dataStructure, directoryPath.string(), messageHandler, shouldCancel, fileExtension, false, delimiter, includeIndex,
