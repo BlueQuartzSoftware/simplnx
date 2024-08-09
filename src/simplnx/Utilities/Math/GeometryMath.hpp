@@ -23,6 +23,46 @@ class VertexGeom;
 
 namespace GeometryMath
 {
+namespace detail
+{
+struct GeometryStoreCache
+{
+  GeometryStoreCache(const AbstractDataStore<float32>& verticesStore, const AbstractDataStore<IGeometry::MeshIndexType>& facesStore, usize numVertsPerFace)
+  : VerticesStoreRef(verticesStore)
+  , FacesStoreRef(facesStore)
+  , NumVertsPerFace(numVertsPerFace)
+  {
+  }
+
+  const AbstractDataStore<float32>& VerticesStoreRef;
+  const AbstractDataStore<IGeometry::MeshIndexType>& FacesStoreRef;
+  usize NumVertsPerFace;
+};
+
+template <std::floating_point FloatT>
+std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId, std::vector<usize>& verts)
+{
+  std::array<Point3D<FloatT>, 3> points;
+  {
+    const usize offset = faceId * cache.NumVertsPerFace;
+    if(offset + cache.NumVertsPerFace <= cache.FacesStoreRef.getSize())
+    {
+      for(usize i = 0; i < cache.NumVertsPerFace; i++)
+      {
+        verts[i] = cache.FacesStoreRef[offset + i];
+      }
+    }
+  }
+  for(usize index = 0; index < cache.NumVertsPerFace; index++)
+  {
+    const usize offset = verts[index] * 3;
+    points[index][0] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset));
+    points[index][1] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 1));
+    points[index][2] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 2));
+  }
+  return points;
+}
+} // namespace detail
 /**
  * @brief Returns the cosine between two angles defined by a point along each
  * vector. The vectors are assumed to cross at (0,0,0).
@@ -198,9 +238,9 @@ T FindDistanceFromPlane(const nx::core::Point3D<T>& p0, const nx::core::Point3D<
 template <typename T>
 inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::BoundingBox3D<T>& box)
 {
-  auto min = box.getMinPoint();
-  auto max = box.getMaxPoint();
-  return (min[0] <= point[0]) && (point[0] <= max[0]) && (min[1] <= point[1]) && (point[1] <= max[1]) && (min[2] <= point[2]) && (point[2] <= max[2]);
+  const auto& min = box.getMinPoint();
+  const auto& max = box.getMaxPoint();
+  return !(min[0] > point[0]) && !(point[0] > max[0]) && !(min[1] > point[1]) && !(point[1] > max[1]) && !(min[2] > point[2]) && !(point[2] > max[2]);
 }
 
 /**
@@ -211,38 +251,40 @@ inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::Boun
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(nx::core::Ray<T> ray, const nx::core::BoundingBox3D<T>& bounds)
+bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
 {
-  auto origin = ray.getOrigin();
-  auto end = ray.getEndPoint();
-  auto min = bounds.getMinPoint();
-  auto max = bounds.getMaxPoint();
+  const auto& origin = ray.getOriginRef();
+  const auto& min = bounds.getMinPoint();
+  const auto& max = bounds.getMaxPoint();
 
-  if((min[0] > origin[0]) && (min[0] > end[0]))
-  {
-    return false;
-  }
-  if((max[0] < origin[0]) && (max[0] < end[0]))
-  {
-    return false;
-  }
-  if((min[1] > origin[1]) && (min[1] > end[1]))
-  {
-    return false;
-  }
-  if((max[1] < origin[1]) && (max[1] < end[1]))
-  {
-    return false;
-  }
-  if((min[2] > origin[2]) && (min[2] > end[2]))
-  {
-    return false;
-  }
-  if((max[2] < origin[2]) && (max[2] < end[2]))
-  {
-    return false;
-  }
-  return true;
+  auto end = ray.getEndPoint();
+
+  // The line should have one point fall in the box since the length
+  // is half the bounding box diameter
+  return !((min[0] > origin[0]) && (min[0] > end[0])) && !((min[1] > origin[1]) && (min[1] > end[1])) && !((min[2] > origin[2]) && (min[2] > end[2])) && !((max[0] < origin[0]) && (max[0] < end[0])) &&
+         !((max[1] < origin[1]) && (max[1] < end[1])) && !((max[2] < origin[2]) && (max[2] < end[2]));
+}
+
+/**
+ * @brief [Optimized Overload] Returns true if a ray intersects the specified box. Returns false
+ * otherwise.
+ * @param ray
+ * @param bounds
+ * @return bool
+ */
+template <typename T>
+bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
+{
+  const auto& origin = ray.getOriginRef();
+  const auto& min = bounds.getMinPoint();
+  const auto& max = bounds.getMaxPoint();
+
+  const auto& end = ray.getEndPointRef();
+
+  // The line should have one point fall in the box since the length
+  // is half the bounding box diameter
+  return !((min[0] > origin[0]) && (min[0] > end[0])) && !((min[1] > origin[1]) && (min[1] > end[1])) && !((min[2] > origin[2]) && (min[2] > end[2])) && !((max[0] < origin[0]) && (max[0] < end[0])) &&
+         !((max[1] < origin[1]) && (max[1] < end[1])) && !((max[2] < origin[2]) && (max[2] < end[2]));
 }
 
 /**
@@ -278,30 +320,31 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
   T area1 = FindTriangleArea(point, p1, p2);
   T area2 = FindTriangleArea(point, p2, p0);
 
-  if((area0 == 0 && area1 > 0 && area2 > 0) || (area1 == 0 && area0 > 0 && area2 > 0) || (area2 == 0 && area0 > 0 && area1 > 0))
+  bool hasPos = area0 > 0 || area1 > 0 || area2 > 0;
+  bool hasNeg = area0 < 0 || area1 < 0 || area2 < 0;
+  int32 zeroCount = !area0 + !area1 + !area2;
+
+  if(!(hasPos && hasNeg))
   {
-    return 'E';
+    if(zeroCount == 0)
+    {
+      return 'F';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'E';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'V';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
   }
-  if((area0 == 0 && area1 < 0 && area2 < 0) || (area1 == 0 && area0 < 0 && area2 < 0) || (area2 == 0 && area0 < 0 && area1 < 0))
-  {
-    return 'E';
-  }
-  if((area0 > 0 && area1 > 0 && area2 > 0) || (area0 < 0 && area1 < 0 && area2 < 0))
-  {
-    return 'F';
-  }
-  if((area0 == 0 && area1 == 0 && area2 == 0))
-  {
-    return '?';
-  }
-  else if((area0 == 0 && area1 == 0) || (area0 == 0 && area2 == 0) || (area1 == 0 && area2 == 0))
-  {
-    return 'V';
-  }
-  else
-  {
-    return '0';
-  }
+
+  return '0';
 }
 
 /**
@@ -341,14 +384,6 @@ T GetLengthOfRayInBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
 
 /**
- * @brief Returns the BoundingBox around the specified face.
- * @param faces
- * @param faceId
- * @return nx::core::BoundingBox<float32>
- */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFace(const nx::core::TriangleGeom& faces, int32 faceId);
-
-/**
  * @brief Returns the BoundingBox around the specified face manipulated by the
  * provided rotation matrix.
  * @param faces
@@ -359,11 +394,19 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFace(const nx::core::Tr
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfRotatedFace(nx::core::TriangleGeom& faces, int32 faceId, float32 g[3][3]);
 
 /**
+ * @brief Returns the BoundingBox around the specified face.
+ * @param faces
+ * @param faceId
+ * @return nx::core::BoundingBox<float32>
+ */
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId, std::vector<usize>& verts);
+
+/**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& faces, const std::vector<int32>& faceIds);
+nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds);
 
 /**
  * @brief Returns the bounding box around the specified faces manipulated by the
@@ -391,36 +434,83 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::T
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
+char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPoint());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPoint());
   T vol2 = FindTetrahedronVolume(ray.getOrigin(), p2, p0, ray.getEndPoint());
 
-  if((vol0 > 0 && vol1 > 0 && vol2 > 0) || (vol0 < 0 && vol1 < 0 && vol2 < 0))
+  bool hasPos = vol0 > 0 || vol1 > 0 || vol2 > 0;
+  bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
+  int32 zeroCount = !vol0 + !vol1 + !vol2;
+
+  if(!(hasPos && hasNeg))
   {
-    return 'f';
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
   }
-  if((vol0 > 0 || vol1 > 0 || vol2 > 0) && (vol0 < 0 || vol1 < 0 || vol2 < 0))
+
+  return '0';
+}
+
+/**
+ * @brief [Optimized Overload] Returns true if the specified Ray crosses into or out of the triangle
+ * defined by its corner points. Returns false otherwise.
+ *
+ * Tangential intersections where the Ray touches the triangle but does not
+ * enter or leave will return false.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @return bool
+ */
+template <typename T>
+char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+{
+  T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPointRef());
+  T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPointRef());
+  T vol2 = FindTetrahedronVolume(ray.getOrigin(), p2, p0, ray.getEndPointRef());
+
+  bool hasPos = vol0 > 0 || vol1 > 0 || vol2 > 0;
+  bool hasNeg = vol0 < 0 || vol1 < 0 || vol2 < 0;
+  int32 zeroCount = !vol0 + !vol1 + !vol2;
+
+  if(!(hasPos && hasNeg))
   {
-    return '0';
+    if(zeroCount == 0)
+    {
+      return 'f';
+    }
+    else if(zeroCount == 1)
+    {
+      return 'e';
+    }
+    else if(zeroCount == 2)
+    {
+      return 'v';
+    }
+    else if(zeroCount == 3)
+    {
+      return '?';
+    }
   }
-  if((vol0 == 0 && vol1 == 0 && vol2 == 0))
-  {
-    return '?';
-  }
-  if((vol0 == 0 && vol1 == 0) || (vol0 == 0 && vol2 == 0) || (vol1 == 0 && vol2 == 0))
-  {
-    return 'v';
-  }
-  else if(vol0 == 0 || vol1 == 0 || vol2 == 0)
-  {
-    return 'e';
-  }
-  else
-  {
-    return '?';
-  }
+
+  return '0';
 }
 
 /**
@@ -458,11 +548,58 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
   {
     return '1';
   }
-  if(numerator == 0.0)
+  else if(numerator == 0.0)
   {
     return 'q';
   }
-  if(numerator == denominator)
+  else if(numerator == denominator)
+  {
+    return 'r';
+  }
+
+  return '0';
+}
+
+/**
+ * @brief [Optimized Overload] Returns true if the specified Ray intersects a plan defined by three
+ * points along the surface. Returns false otherwise.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @return bool
+ */
+template <typename T>
+char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+{
+  Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
+  T d = FindPlaneCoefficients(p0, normal);
+
+  T numerator = d - ray.getOrigin().dot(normal);
+
+  Point3D<T> rq = ray.getEndPoint() - ray.getOrigin();
+  T denominator = rq.dot(normal);
+
+  if(denominator == 0.0)
+  {
+    if(numerator == 0.0)
+    {
+      return 'p';
+    }
+
+    return '0';
+  }
+
+  T t = numerator / denominator;
+  if(t > 0.0 && t < 1.0)
+  {
+    return '1';
+  }
+  else if(numerator == 0.0)
+  {
+    return 'q';
+  }
+  else if(numerator == denominator)
   {
     return 'r';
   }
@@ -487,25 +624,56 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
 {
   char code = RayIntersectsPlane(ray, p0, p1, p2);
 
-  if(code == '0')
+  // Specifically use if-else chain to try to get the compiler to make
+  // switch-like optimizations over the chain because 'code' is unbounded
+  if(code == '1')
   {
-    return '0';
+    return RayCrossesTriangle(ray, p0, p1, p2);
   }
-  if(code == 'q')
+  else if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
-  if(code == 'r')
+  else if(code == 'r')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getEndPoint());
   }
-  if(code == 'p')
+  else
   {
-    return 'p';
+    return code;
   }
-  else if(code == '1')
+}
+
+/**
+ * @brief [Optimized Overload] Checks if the specified Ray intersects a triangle defined by the
+ * corner points. The inter parameter is updated to reflect the points at which
+ * the ray intersects the triangle. Returns the number of points at which the
+ * Ray intersects the triangle.
+ * @param ray
+ * @param p0
+ * @param p1
+ * @param p2
+ * @param inter
+ * @return char
+ */
+template <typename T>
+char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+{
+  char code = RayIntersectsPlane(ray, p0, p1, p2);
+
+  // Specifically use if-else chain to try to get the compiler to make
+  // switch-like optimizations over the chain because 'code' is unbounded
+  if(code == '1')
   {
-    return RayCrossesTriangle(p0, p1, p2, ray);
+    return RayCrossesTriangle(ray, p0, p1, p2);
+  }
+  else if(code == 'q')
+  {
+    return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
+  }
+  else if(code == 'r')
+  {
+    return IsPointInTriangle(p0, p1, p2, ray.getEndPointRef());
   }
   else
   {
@@ -525,7 +693,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
  * @return bool
  */
 template <typename T>
-char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0, crossings = 0;
@@ -536,11 +704,15 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
     return 'o';
   }
 
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  generator.seed(seed);
+  // Standard mersenne_twister_engine random seed
+  std::mt19937_64 generator(std::mt19937_64::default_seed);
   std::uniform_real_distribution<T> distribution(0.0, 1.0);
+
+  detail::GeometryStoreCache cache(triangleGeomRef.getVertices()->getDataStoreRef(), triangleGeomRef.getFaces()->getDataStoreRef(), triangleGeomRef.getNumberOfVerticesPerFace());
+
+  // initialize temp storage 'verts' vector to avoid expensive
+  // calls during tight loops below
+  std::vector<usize> verts(cache.NumVertsPerFace);
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
@@ -548,6 +720,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
     crossings = 0;
 
     std::array<T, 3> eulerAngles;
+
     float rand1 = distribution(generator);
     float rand2 = distribution(generator);
 
@@ -557,8 +730,8 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
     eulerAngles[0] = w * std::cos(t);
     eulerAngles[1] = w * std::sin(t);
 
-    // Generate and add ray to point to find other end
-    Ray<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
+    // Generate and add ray to point to find other end [optimized version with lifetime caching]
+    CachedRay<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
 
     bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)
@@ -566,34 +739,30 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
       char code = '?';
       if(!DoesRayIntersectBox(ray, faceBBs[faceIds[face]]))
       {
-        code = '0';
+        continue;
       }
       else
       {
-        std::array<Point3D<T>, 3> coords;
-        faces.getFaceCoordinates(faceIds[face], coords);
+        std::array<Point3D<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face], verts);
         code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
       }
 
-      /* If ray is degenerate, then goto outer while to generate another. */
+      /* If ray is degenerate, then go to outer while to generate another. */
       if(code == 'p' || code == 'v' || code == 'e' || code == '?')
       {
         doNextCheck = true;
         break;
       }
-
       /* If ray hits face at interior point, increment crossings. */
       else if(code == 'f')
       {
         crossings++;
       }
-
       /* If query endpoint q sits on a V/E/F, return that code. */
       else if(code == 'V' || code == 'E' || code == 'F')
       {
         return (code);
       }
-
     } /* End check each face */
     if(doNextCheck)
     {
@@ -605,7 +774,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& faces, const std::vector<
   } /* End while loop */
 
   /* q strictly interior to polyhedron if an odd number of crossings. */
-  if((crossings % 2) == 1)
+  if(crossings % 2 != 0)
   {
     return 'i';
   }
