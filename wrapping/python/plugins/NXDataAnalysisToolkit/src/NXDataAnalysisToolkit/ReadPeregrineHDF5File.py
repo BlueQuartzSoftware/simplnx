@@ -78,6 +78,8 @@ class ReadPeregrineHDF5File:
    
   # Parameter Keys
   INPUT_FILE_PATH_KEY = 'input_file_path'
+  OVERRIDE_LAYER_THICKNESS_KEY = 'override_layer_thickness'
+  LAYER_THICKNESS_KEY = 'layer_thickness'
   ENABLE_SLICES_SUBVOLUME_KEY = 'enable_slices_subvolume'
   SLICES_SUBVOLUME_MINMAX_X_KEY = 'slices_subvolume_minmax_x'
   SLICES_SUBVOLUME_MINMAX_Y_KEY = 'slices_subvolume_minmax_y'
@@ -121,6 +123,8 @@ class ReadPeregrineHDF5File:
 
     params.insert(nx.Parameters.Separator("Input Parameters"))
     params.insert(nx.FileSystemPathParameter(ReadPeregrineHDF5File.INPUT_FILE_PATH_KEY, 'Input Peregrine HDF5 File', 'The input Peregrine HDF5 file that will be read.', '', {'.hdf5', '.h5'}, nx.FileSystemPathParameter.PathType.InputFile, False))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.OVERRIDE_LAYER_THICKNESS_KEY, 'Override Layer Thickness', 'Specifies whether or not to override the layer thickness found in the input file.', False))
+    params.insert(nx.Float64Parameter(ReadPeregrineHDF5File.LAYER_THICKNESS_KEY, 'Layer Thickness', 'The layer thickness that will be used to override the layer thickness found in the input file.', 0.05))
 
     params.insert(nx.Parameters.Separator("Slice Data Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
@@ -162,6 +166,7 @@ class ReadPeregrineHDF5File:
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.ENABLE_SCAN_DATA_SUBVOLUME_KEY, 'Enable Scan Data Subvolume', 'Specifies whether or not to read a subvolume of the scan data from the input file.', False))
     params.insert(nx.VectorUInt64Parameter(ReadPeregrineHDF5File.SCAN_DATA_SUBVOLUME_MINMAX_KEY, 'Scan Data Slice Bounds', 'The min/max slice bounds (inclusive) for the Scan Data subvolume.', [0, 1], ['Min', 'Max']))
 
+    params.link_parameters(ReadPeregrineHDF5File.OVERRIDE_LAYER_THICKNESS_KEY, ReadPeregrineHDF5File.LAYER_THICKNESS_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_X_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY, ReadPeregrineHDF5File.SLICES_SUBVOLUME_MINMAX_Y_KEY, True)
@@ -193,6 +198,8 @@ class ReadPeregrineHDF5File:
     :rtype: nx.IFilter.PreflightResult
     """
     input_file_path = args[ReadPeregrineHDF5File.INPUT_FILE_PATH_KEY]
+    override_layer_thickness: bool = args[ReadPeregrineHDF5File.OVERRIDE_LAYER_THICKNESS_KEY]
+    layer_thickness: bool = args[ReadPeregrineHDF5File.LAYER_THICKNESS_KEY]
     read_segmentation_results: bool = args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
     read_camera_data: bool = args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
     read_part_ids: bool = args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
@@ -214,7 +221,7 @@ class ReadPeregrineHDF5File:
     except Exception as e:
        return nx.IFilter.PreflightResult(errors=[nx.Error(-2012, f"Error opening file '{str(input_file_path)}': {e}")])
 
-    spacing_result: Result = self._calculate_spacing(h5_file_reader)
+    spacing_result: Result = self._calculate_spacing(h5_file_reader, layer_thickness if override_layer_thickness else None)
     if not spacing_result.valid():
       return nx.IFilter.PreflightResult(errors=spacing_result.errors)
 
@@ -571,7 +578,7 @@ class ReadPeregrineHDF5File:
 
     return Result(value=list(dataset.shape))
   
-  def _read_dataset_type(self, h5_file_reader: h5py.File, h5_dataset_path: str) -> Result[List[int]]:
+  def _read_dataset_type(self, h5_file_reader: h5py.File, h5_dataset_path: str) -> Result[h5py.Datatype]:
     result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, h5_dataset_path)
     if result.invalid():
       return Result(errors=result.errors)
@@ -635,7 +642,7 @@ class ReadPeregrineHDF5File:
 
     return Result()
 
-  def _calculate_spacing(self, h5_file_reader: h5py.File) -> Result[List[float]]:
+  def _calculate_spacing(self, h5_file_reader: h5py.File, layer_thickness: float = None) -> Result[List[float]]:
     if ReadPeregrineHDF5File.X_REAL_DIMENSION_PATH not in h5_file_reader.attrs:
        return make_error_result(code=-3007, message=f"Attribute at path '{ReadPeregrineHDF5File.X_REAL_DIMENSION_PATH}' does not exist, so the X spacing cannot be calculated!")
     try:
@@ -664,12 +671,15 @@ class ReadPeregrineHDF5File:
     except KeyError:
       return make_error_result(code=-3014, message=f"Attribute at path '{ReadPeregrineHDF5File.Y_CAMERA_DIMENSION_PATH}' cannot be accessed, so the Y spacing cannot be calculated!")
 
-    if ReadPeregrineHDF5File.LAYER_THICKNESS_PATH not in h5_file_reader.attrs:
-       return make_error_result(code=-3015, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist, so the Z spacing cannot be calculated!")
-    try:
-      z_spacing = h5_file_reader.attrs[ReadPeregrineHDF5File.LAYER_THICKNESS_PATH]
-    except KeyError:
-      return make_error_result(code=-3016, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed, so the Z spacing cannot be calculated!")
+    if layer_thickness is None:
+      if ReadPeregrineHDF5File.LAYER_THICKNESS_PATH not in h5_file_reader.attrs:
+        return make_error_result(code=-3015, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist, so the Z spacing cannot be calculated!")
+      try:
+        z_spacing = h5_file_reader.attrs[ReadPeregrineHDF5File.LAYER_THICKNESS_PATH]
+      except KeyError:
+        return make_error_result(code=-3016, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed, so the Z spacing cannot be calculated!")
+    else:
+      z_spacing = layer_thickness
 
     spacing = [float(x_real_dim / x_camera_dim), float(y_real_dim / y_camera_dim), float(z_spacing)]
     return Result(value=spacing)
@@ -853,6 +863,8 @@ class ReadPeregrineHDF5File:
     return Result(value=(vertices,edges,tot))
   
   def _read_scan_datasets(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, filter_args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
+    override_layer_thickness: bool = filter_args[ReadPeregrineHDF5File.OVERRIDE_LAYER_THICKNESS_KEY]
+    layer_thickness: float = filter_args[ReadPeregrineHDF5File.LAYER_THICKNESS_KEY]
     read_scan_datasets: bool = filter_args[ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY]
     scan_data_edge_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.SCAN_DATA_KEY]
     scan_data_vertex_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.SCAN_DATA_VERTEX_ATTR_MAT_KEY]
@@ -889,13 +901,16 @@ class ReadPeregrineHDF5File:
         return Result(errors=result.errors)
       scan_group_reader: h5py.Group = result.value
       
-      # Read the Z thickness value
-      if ReadPeregrineHDF5File.LAYER_THICKNESS_PATH not in h5_file_reader.attrs:
-        return make_error_result(code=-3007, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!")
-      try:
-        z_thickness: float = h5_file_reader.attrs[ReadPeregrineHDF5File.LAYER_THICKNESS_PATH]
-      except Exception as e:
-        return make_error_result(code=-3008, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!\n\n{e}")
+      if override_layer_thickness:
+        z_thickness = layer_thickness
+      else:
+        # Read the Z thickness value
+        if ReadPeregrineHDF5File.LAYER_THICKNESS_PATH not in h5_file_reader.attrs:
+          return make_error_result(code=-3007, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' does not exist in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!")
+        try:
+          z_thickness: float = h5_file_reader.attrs[ReadPeregrineHDF5File.LAYER_THICKNESS_PATH]
+        except Exception as e:
+          return make_error_result(code=-3008, message=f"Attribute at path '{ReadPeregrineHDF5File.LAYER_THICKNESS_PATH}' cannot be accessed in HDF5 file '{h5_file_reader.filename}', so the scan datasets cannot be read!\n\n{e}")
 
       # Calculate the start and end values for the scans
       z_start: int = 0
