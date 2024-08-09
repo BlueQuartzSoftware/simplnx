@@ -9,7 +9,7 @@ import copy
 import re
 from typing import List, Tuple
 from pathlib import Path
-from NXDataAnalysisToolkit.common.Result import Result, make_error_result
+from .common.Result import Result, make_error_result
 
 class Polyline(object):
     def __init__(self, layer_id, z_height, data: dict, poly_id, dir, n, xvals, yvals) -> Result:
