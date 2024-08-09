@@ -97,7 +97,7 @@ class #PYTHON_FILTER_NAME#:
 
     # Validate that the number of tuples > 0, otherwise return immediately with an error message
     if num_tuples == 0:
-      return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-65020, "The number of tuples should be at least 1.")])
+      return nx.IFilter.PreflightResult(errors=[nx.Error(-65020, "The number of tuples should be at least 1.")])
 
     # Append a "CreateArrayAction" 
     output_actions.append_action(nx.CreateArrayAction(nx.DataType.float32, [num_tuples], [1], data_array_path))

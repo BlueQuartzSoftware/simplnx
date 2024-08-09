@@ -456,51 +456,53 @@ PYBIND11_MODULE(simplnx, mod)
   mod.def(
       "convert_np_dtype_to_datatype",
       [](const py::dtype& dtype) {
-        if(dtype.is(py::dtype::of<int8>()))
+        if((dtype.attr("__eq__")(py::dtype::of<int8>())).cast<bool>())
         {
           return DataType::int8;
         }
-        if(dtype.is(py::dtype::of<uint8>()))
+        if((dtype.attr("__eq__")(py::dtype::of<uint8>())).cast<bool>())
         {
           return DataType::uint8;
         }
-        if(dtype.is(py::dtype::of<int16>()))
+        if((dtype.attr("__eq__")(py::dtype::of<int16>())).cast<bool>())
         {
           return DataType::int16;
         }
-        if(dtype.is(py::dtype::of<uint16>()))
+        if((dtype.attr("__eq__")(py::dtype::of<uint16>())).cast<bool>())
         {
           return DataType::uint16;
         }
-        if(dtype.is(py::dtype::of<int32>()))
+        if((dtype.attr("__eq__")(py::dtype::of<int32>())).cast<bool>())
         {
           return DataType::int32;
         }
-        if(dtype.is(py::dtype::of<uint32>()))
+        if((dtype.attr("__eq__")(py::dtype::of<uint32>())).cast<bool>())
         {
           return DataType::uint32;
         }
-        if(dtype.is(py::dtype::of<int64>()))
+        if((dtype.attr("__eq__")(py::dtype::of<int64>())).cast<bool>())
         {
           return DataType::int64;
         }
-        if(dtype.is(py::dtype::of<uint64>()))
+        if((dtype.attr("__eq__")(py::dtype::of<uint64>())).cast<bool>())
         {
           return DataType::uint64;
         }
-        if(dtype.is(py::dtype::of<float32>()))
+        if((dtype.attr("__eq__")(py::dtype::of<float32>())).cast<bool>())
         {
           return DataType::float32;
         }
-        if(dtype.is(py::dtype::of<float64>()))
+        if((dtype.attr("__eq__")(py::dtype::of<float64>())).cast<bool>())
         {
           return DataType::float64;
         }
-        if(dtype.is(py::dtype::of<bool>()))
+        if((dtype.attr("__eq__")(py::dtype::of<bool>())).cast<bool>())
         {
           return DataType::boolean;
         }
-        throw std::invalid_argument("Unable to convert dtype to DataType: Unsupported dtype.");
+
+        std::string dtypeStr = py::str(static_cast<py::object>(dtype));
+        throw std::invalid_argument(fmt::format("Unable to convert dtype to DataType: Unsupported dtype '{}'.", dtypeStr));
       },
       "Convert numpy dtype to simplnx DataType", "dtype"_a);
 
