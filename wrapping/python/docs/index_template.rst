@@ -2,7 +2,7 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D-NX Python Docs (v24.08.03)
+DREAM3D-NX Python Docs (v24.08.10)
 ===================================
 
 Installation
