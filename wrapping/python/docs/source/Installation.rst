@@ -1,7 +1,7 @@
 Installation
 ============
 
-Latest Version: 24.08.03
+Latest Version: 24.08.10
 -------------------------
 
 The *simplnx* library can be installed through an Anaconda packages from the *BlueQuartzSoftware* channel. This can be achieved
