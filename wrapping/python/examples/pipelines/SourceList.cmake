@@ -13,7 +13,7 @@ AddPythonTest(NAME "PY::ITKImageProcessing::03_Porosity_Mesh_Export" FILE "${Itk
 # clean up its output file(s)
 #------------------------------------------------------------------------------
 set(SIMPLNX_PYTHON_TESTS  
-  AppendImageGeometryZSlice
+  AppendImageGeometry
   ApplyTransformation_Demo
   ApplyTransformation_Image
   ApplyTransformation_Node

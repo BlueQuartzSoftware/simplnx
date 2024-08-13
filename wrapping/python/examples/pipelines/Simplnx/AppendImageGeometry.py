@@ -133,13 +133,13 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = nx.AppendImageGeometryZSliceFilter()
+nx_filter = nx.AppendImageGeometryFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
     check_resolution=True,
     destination_image_geometry_path=nx.DataPath("CroppedBottomHalf"),
-    input_image_geometry_path=nx.DataPath("CroppedTopHalf"),
+    input_image_geometries_paths=[nx.DataPath("CroppedTopHalf")],
     output_image_geometry_path=nx.DataPath("AppendedImageGeom"),
     save_as_new_geometry=True
 )
@@ -149,7 +149,7 @@ nxtest.check_filter_result(nx_filter, result)
 # Instantiate Filter
 nx_filter = nx.WriteDREAM3DFilter()
 # Set Output File Path
-output_file_path = nxtest.get_data_directory() / "Output/Examples/AppendImageGeometryZSlice.dream3d"
+output_file_path = nxtest.get_data_directory() / "Output/Examples/AppendImageGeometry.dream3d"
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
