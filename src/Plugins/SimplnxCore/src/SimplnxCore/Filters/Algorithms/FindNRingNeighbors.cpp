@@ -2,10 +2,7 @@
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
-#include <fmt/format.h>
-
 #include <sstream>
-#include <string>
 
 namespace nx::core
 {
@@ -46,7 +43,6 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
   bool check0 = faceLabels[triangleId * 2] == m_InputValues->RegionId0 && faceLabels[triangleId * 2 + 1] == m_InputValues->RegionId1;
   bool check1 = faceLabels[triangleId * 2 + 1] == m_InputValues->RegionId0 && faceLabels[triangleId * 2] == m_InputValues->RegionId1;
 
-#if 1
   if(!check0 && !check1)
   {
     std::stringstream ss;
@@ -54,7 +50,6 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
     ss << "Region Ids are: " << faceLabels[m_InputValues->TriangleId * 2] << " & " << faceLabels[m_InputValues->TriangleId * 2 + 1] << "\n";
     return MakeErrorResult(err, ss.str());
   }
-#endif
 
   // Add our seed triangle
   m_NRingTriangles.insert(triangleId);
@@ -66,9 +61,8 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
     UniqueFaceIds_t lcvTriangles(m_NRingTriangles);
 
     // Now that we have the 1 ring triangles, get the 2 Ring neighbors from that list
-    for(UniqueFaceIds_t::iterator triIter = lcvTriangles.begin(); triIter != lcvTriangles.end(); ++triIter)
+    for(auto triangleIdx : lcvTriangles)
     {
-      int64_t triangleIdx = *triIter;
       // For each node, get the triangle ids that the node belongs to
       for(int32_t i = 0; i < 3; ++i)
       {
@@ -79,7 +73,7 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
         // Copy all the triangles into our "2Ring" set which will be the unique set of triangle ids
         for(uint16_t t = 0; t < tCount; ++t)
         {
-          int64_t tid = data[t];
+          IGeometry::MeshIndexType tid = data[t];
           check0 = faceLabels[tid * 2] == m_InputValues->RegionId0 && faceLabels[tid * 2 + 1] == m_InputValues->RegionId1;
           check1 = faceLabels[tid * 2 + 1] == m_InputValues->RegionId0 && faceLabels[tid * 2] == m_InputValues->RegionId1;
 

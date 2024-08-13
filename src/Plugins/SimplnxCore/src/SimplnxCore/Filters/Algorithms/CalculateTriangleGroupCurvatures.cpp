@@ -54,7 +54,7 @@ namespace
  * @param data The data to extract from
  * @return Shared pointer to the extracted data
  */
-std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, CalculateTriangleGroupCurvatures::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
+std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
 {
   IDataStore::ShapeType cDims = {3ULL};
 
@@ -146,7 +146,6 @@ CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 void subtractVector3d(Float64AbstractDataStore& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
-  // auto& ptr = data.getDataStoreRef();
   for(size_t i = 0; i < count; ++i)
   {
     const usize offset = i * 3;
@@ -213,7 +212,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       throw std::runtime_error("NRingNeighbor returned an error.");
     }
 
-    UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
+    FindNRingNeighbors::UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
     if(triPatch.size() <= 1)
     {
       throw std::runtime_error("NRingNeighbor failed to find more than one triangles.");

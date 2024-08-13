@@ -611,9 +611,9 @@ class FlyingEdgesAlgorithm
   using TCube = std::array<T, 8>;
 
 public:
-  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, const T isoVal, TriangleGeom& triangleGeom, Float32Array& normals)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const AbstractDataStore<T>& dataStore, const T isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals)
   : m_Image(image)
-  , m_DataArray(dynamic_cast<const DataArray<T>&>(iDataArray))
+  , m_DataStore(dataStore)
   , m_IsoVal(isoVal)
   , m_TriangleGeom(triangleGeom)
   , m_NX(image.getDimensions()[0])
@@ -623,9 +623,9 @@ public:
   , m_TriCounter((m_NY - 1) * (m_NZ - 1))
   , m_EdgeCases((m_NX - 1) * m_NY * m_NZ)
   , m_CubeCases((m_NX - 1) * (m_NY - 1) * (m_NZ - 1))
-  , m_Tris(m_TriangleGeom.getFacesRef())
-  , m_Points(m_TriangleGeom.getVerticesRef())
-  , m_Normals(normals)
+  , m_TrisStore(m_TriangleGeom.getFaces()->getDataStoreRef())
+  , m_PointsStore(m_TriangleGeom.getVertices()->getDataStoreRef())
+  , m_NormalsStore(normals)
   {
   }
 
@@ -645,13 +645,13 @@ public:
       for(usize j = 0; j != m_NY; ++j)
       {
         auto curEdgeCases = m_EdgeCases.begin() + (m_NX - 1) * (k * m_NY + j);
-        T curPointValue = m_DataArray[m_NX * (k * m_NY + j)];
+        T curPointValue = m_DataStore[m_NX * (k * m_NY + j)];
 
         std::array<bool, 2> isGE = {};
         isGE[0] = (curPointValue >= m_IsoVal);
         for(int i = 1; i != m_NX; ++i)
         {
-          isGE[i % 2] = (m_DataArray[(m_NX * (k * m_NY + j)) + i] >= m_IsoVal);
+          isGE[i % 2] = (m_DataStore[(m_NX * (k * m_NY + j)) + i] >= m_IsoVal);
 
           curEdgeCases[i - 1] = calcCaseEdge(isGE[(i + 1) % 2], isGE[i % 2]);
         }
@@ -887,7 +887,7 @@ public:
 
     m_TriangleGeom.resizeFaceList(triAccum);
     m_TriangleGeom.resizeVertexList(pointAccum);
-    m_Normals.getIDataStoreRef().resizeTuples({pointAccum});
+    m_NormalsStore.resizeTuples({pointAccum});
   }
   ///////////////////////////////////////////////////////////////////////////////
 
@@ -1097,9 +1097,9 @@ public:
           const char* caseTri = util::caseTriangles[caseId]; // size 16
           for(int idx = 0; caseTri[idx] != -1; idx += 3)
           {
-            m_Tris[triIdx * 3] = globalIdxs[caseTri[idx]];
-            m_Tris[triIdx * 3 + 1] = globalIdxs[caseTri[idx + 1]];
-            m_Tris[triIdx * 3 + 2] = globalIdxs[caseTri[idx + 2]];
+            m_TrisStore[triIdx * 3] = globalIdxs[caseTri[idx]];
+            m_TrisStore[triIdx * 3 + 1] = globalIdxs[caseTri[idx + 1]];
+            m_TrisStore[triIdx * 3 + 2] = globalIdxs[caseTri[idx + 2]];
             triIdx++;
           }
         }
@@ -1134,7 +1134,7 @@ private:
   };
 
   const ImageGeom& m_Image;
-  const DataArray<T>& m_DataArray;
+  const AbstractDataStore<T>& m_DataStore;
   const T m_IsoVal;
   TriangleGeom& m_TriangleGeom;
 
@@ -1148,9 +1148,9 @@ private:
   std::vector<uint8> m_EdgeCases; // size (m_NX-1)*m_NY*m_NZ
   std::vector<uint8> m_CubeCases; // size (m_NX-1)*(m_NY-1)*(m_NZ-1)
 
-  IGeometry::SharedVertexList& m_Points; //
-  IGeometry::SharedTriList& m_Tris;      //
-  Float32Array& m_Normals;               // The output
+  AbstractDataStore<IGeometry::SharedVertexList::value_type>& m_PointsStore; //
+  AbstractDataStore<IGeometry::SharedTriList::value_type>& m_TrisStore;      //
+  Float32AbstractDataStore& m_NormalsStore;                                  // The output
 
   /////////////////////////////////////////////////////////////
 
@@ -1162,18 +1162,18 @@ private:
   {
     auto pointsArray = interpolateOnCube(pointCube, isoValCube, edgeNum);
 
-    m_Points[idx] = pointsArray[0];
-    m_Points[idx + 1] = pointsArray[1];
-    m_Points[idx + 2] = pointsArray[2];
+    m_PointsStore[idx] = pointsArray[0];
+    m_PointsStore[idx + 1] = pointsArray[1];
+    m_PointsStore[idx + 2] = pointsArray[2];
 
     auto normalsArray = interpolateOnCube(gradCube, isoValCube, edgeNum);
 
-    m_Normals[idx] = normalsArray[0];
-    m_Normals[idx + 1] = normalsArray[1];
-    m_Normals[idx + 2] = normalsArray[2];
+    m_NormalsStore[idx] = normalsArray[0];
+    m_NormalsStore[idx + 1] = normalsArray[1];
+    m_NormalsStore[idx + 2] = normalsArray[2];
   }
 
-  bool isCutEdge(usize const& i, usize const& j, usize const& k) const
+  [[nodiscard]] bool isCutEdge(usize const& i, usize const& j, usize const& k) const
   {
     // Assuming m_EdgeCases are all set
     usize edgeCaseIdx = k * (m_NX - 1) * m_NY + j * (m_NX - 1) + i;
@@ -1213,7 +1213,7 @@ private:
     return false;
   }
 
-  inline uint8 calcCaseEdge(bool const& prevEdge, bool const& currEdge) const
+  [[nodiscard]] inline uint8 calcCaseEdge(bool const& prevEdge, bool const& currEdge) const
   {
     // o -- is greater than or equal to
     // case 0: (i-1) o-----o (i) | (_,j,k)
@@ -1230,7 +1230,7 @@ private:
       return 3;
   }
 
-  inline uint8 calcCubeCase(uint8 const& ec0, uint8 const& ec1, uint8 const& ec2, uint8 const& ec3) const
+  [[nodiscard]] inline uint8 calcCubeCase(uint8 const& ec0, uint8 const& ec1, uint8 const& ec2, uint8 const& ec3) const
   {
     // ec0 | (_,j,k)
     // ec1 | (_,j+1,k)
@@ -1305,7 +1305,7 @@ private:
     return vals;
   }
 
-  cube getPosCube(usize i, usize j, usize k) const
+  [[nodiscard]] cube getPosCube(usize i, usize j, usize k) const
   {
     cube pos;
     const FloatVec3 zeroPos = m_Image.getOrigin();
@@ -1350,7 +1350,7 @@ private:
     return pos;
   }
 
-  cube getGradCube(usize i, usize j, usize k) const
+  [[nodiscard]] cube getGradCube(usize i, usize j, usize k) const
   {
     cube grad;
 
@@ -1368,10 +1368,10 @@ private:
 
   inline T getData(usize i, usize j, usize k) const
   {
-    return m_DataArray[k * m_NX * m_NY + j * m_NX + i];
+    return m_DataStore[k * m_NX * m_NY + j * m_NX + i];
   }
 
-  std::array<float32, 3> computeGradient(usize i, usize j, usize k) const
+  [[nodiscard]] std::array<float32, 3> computeGradient(usize i, usize j, usize k) const
   {
     std::array<std::array<float32, 2>, 3> x = {};
     std::array<float32, 3> run = {};
@@ -1381,58 +1381,58 @@ private:
 
     if(i == 0)
     {
-      x[0][0] = m_DataArray[dataIdx + 1];
-      x[0][1] = m_DataArray[dataIdx];
+      x[0][0] = m_DataStore[dataIdx + 1];
+      x[0][1] = m_DataStore[dataIdx];
       run[0] = spacing[0];
     }
     else if(i == (m_NX - 1))
     {
-      x[0][0] = m_DataArray[dataIdx];
-      x[0][1] = m_DataArray[dataIdx - 1];
+      x[0][0] = m_DataStore[dataIdx];
+      x[0][1] = m_DataStore[dataIdx - 1];
       run[0] = spacing[0];
     }
     else
     {
-      x[0][0] = m_DataArray[dataIdx + 1];
-      x[0][1] = m_DataArray[dataIdx - 1];
+      x[0][0] = m_DataStore[dataIdx + 1];
+      x[0][1] = m_DataStore[dataIdx - 1];
       run[0] = 2 * spacing[0];
     }
 
     if(j == 0)
     {
-      x[1][0] = m_DataArray[dataIdx + m_NX];
-      x[1][1] = m_DataArray[dataIdx];
+      x[1][0] = m_DataStore[dataIdx + m_NX];
+      x[1][1] = m_DataStore[dataIdx];
       run[1] = spacing[1];
     }
     else if(j == (m_NY - 1))
     {
-      x[1][0] = m_DataArray[dataIdx];
-      x[1][1] = m_DataArray[dataIdx - m_NX];
+      x[1][0] = m_DataStore[dataIdx];
+      x[1][1] = m_DataStore[dataIdx - m_NX];
       run[1] = spacing[1];
     }
     else
     {
-      x[1][0] = m_DataArray[dataIdx + m_NX];
-      x[1][1] = m_DataArray[dataIdx - m_NX];
+      x[1][0] = m_DataStore[dataIdx + m_NX];
+      x[1][1] = m_DataStore[dataIdx - m_NX];
       run[1] = 2 * spacing[1];
     }
 
     if(k == 0)
     {
-      x[2][0] = m_DataArray[dataIdx + m_NX * m_NY];
-      x[2][1] = m_DataArray[dataIdx];
+      x[2][0] = m_DataStore[dataIdx + m_NX * m_NY];
+      x[2][1] = m_DataStore[dataIdx];
       run[2] = spacing[2];
     }
     else if(k == (m_NZ - 1))
     {
-      x[2][0] = m_DataArray[dataIdx];
-      x[2][1] = m_DataArray[dataIdx - m_NX * m_NY];
+      x[2][0] = m_DataStore[dataIdx];
+      x[2][1] = m_DataStore[dataIdx - m_NX * m_NY];
       run[2] = spacing[2];
     }
     else
     {
-      x[2][0] = m_DataArray[dataIdx + m_NX * m_NY];
-      x[2][1] = m_DataArray[dataIdx - m_NX * m_NY];
+      x[2][0] = m_DataStore[dataIdx + m_NX * m_NY];
+      x[2][1] = m_DataStore[dataIdx - m_NX * m_NY];
       run[2] = 2 * spacing[2];
     }
 
