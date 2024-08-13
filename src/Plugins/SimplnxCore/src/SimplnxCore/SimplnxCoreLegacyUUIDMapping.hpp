@@ -101,7 +101,7 @@
 #include "SimplnxCore/Filters/ComputeLargestCrossSectionsFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
-#include "SimplnxCore/Filters/AppendImageGeometryZSliceFilter.hpp"
+#include "SimplnxCore/Filters/AppendImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureClusteringFilter.hpp"
 #include "SimplnxCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
@@ -230,7 +230,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), {nx::core::FilterTraits<ComputeLargestCrossSectionsFilter>::uuid, &ComputeLargestCrossSectionsFilter::FromSIMPLJson}}, // ComputeLargestCrossSections
     {nx::core::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), {nx::core::FilterTraits<WriteStlFileFilter>::uuid, &WriteStlFileFilter::FromSIMPLJson}}, // WriteStlFile
     {nx::core::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), {nx::core::FilterTraits<AddBadDataFilter>::uuid, &AddBadDataFilter::FromSIMPLJson}}, // AddBadData
-    {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryZSliceFilter>::uuid, &AppendImageGeometryZSliceFilter::FromSIMPLJson}}, // AppendImageGeometryZSlice
+    {nx::core::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), {nx::core::FilterTraits<AppendImageGeometryFilter>::uuid, &AppendImageGeometryFilter::FromSIMPLJson}}, // AppendImageGeometry
     {nx::core::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), {nx::core::FilterTraits<ComputeFeatureClusteringFilter>::uuid, &ComputeFeatureClusteringFilter::FromSIMPLJson}}, // ComputeFeatureClustering
     {nx::core::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), {nx::core::FilterTraits<WriteAbaqusHexahedronFilter>::uuid, &WriteAbaqusHexahedronFilter::FromSIMPLJson}}, // AbaqusHexahedronWriter
     {nx::core::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), {nx::core::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid, &NearestPointFuseRegularGridsFilter::FromSIMPLJson}}, // NearestPointFuseRegularGrids
