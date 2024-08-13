@@ -451,8 +451,8 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
-    resultOutputActions.value().appendAction(
-        std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
+        destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName, srcImageGeomPtr->getUnits()));
 
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
