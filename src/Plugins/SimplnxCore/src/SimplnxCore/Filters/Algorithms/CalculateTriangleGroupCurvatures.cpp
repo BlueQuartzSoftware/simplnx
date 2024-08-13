@@ -230,7 +230,6 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // If something got removed, redo this part again.
     if(triPatch.size() != beforeSize)
     {
-      beforeSize = triPatch.size();
       patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     }
 
@@ -289,7 +288,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       MatrixMath::Multiply3x3with3x1(rot, &patchNormals->data()[m * 3], out);
       ::memcpy(&patchNormals->data()[m * 3], out, 3 * sizeof(double));
 
-      // We rotate the normals now but we dont use them yet. If we start using part 3 of Goldfeathers paper then we
+      // We rotate the normals now, but we don't use them yet. If we start using part 3 of Goldfeathers paper then we
       // will need the normals.
     }
 
@@ -340,7 +339,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
         typedef Eigen::Matrix<double, USE_NORMALS, 1> Vector7d;
         Vector7d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C, D, E, F & G constants we can solve the Eigen value/vector problem
-        // to get the principal curvatures and pricipal directions.
+        // to get the principal curvatures and principal directions.
         M << sln1(0), sln1(1), sln1(1), sln1(2);
       }
 

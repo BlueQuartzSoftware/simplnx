@@ -10,13 +10,13 @@ namespace
 struct RemoveComponentsFunctor
 {
   template <class ScalarType>
-  void operator()(IDataArray& originalArray, IDataArray& resizedArray, usize componentIndexToRemove) // Due to logic structure originalArray cannot be const
+  void operator()(IDataArray* originalArray, IDataArray* resizedArray, usize componentIndexToRemove) // Due to logic structure originalArray cannot be const
   {
-    const auto& originalArrayRef = dynamic_cast<const DataArray<ScalarType>&>(originalArray);
-    auto& resizedArrayRef = dynamic_cast<DataArray<ScalarType>&>(resizedArray);
+    const auto& originalStoreRef = dynamic_cast<const DataArray<ScalarType>*>(originalArray)->getDataStoreRef();
+    auto& resizedStoreRef = dynamic_cast<DataArray<ScalarType>*>(resizedArray)->getDataStoreRef();
 
-    const usize originalTupleCount = originalArrayRef.getNumberOfTuples();
-    const usize originalCompCount = originalArrayRef.getNumberOfComponents();
+    const usize originalTupleCount = originalStoreRef.getNumberOfTuples();
+    const usize originalCompCount = originalStoreRef.getNumberOfComponents();
 
     usize distanceToShuffle = 0;
     for(usize tuple = 0; tuple < originalTupleCount; tuple++)
@@ -29,7 +29,7 @@ struct RemoveComponentsFunctor
           continue;
         }
         const usize index = tuple * originalCompCount + comp;
-        resizedArrayRef[index - distanceToShuffle] = originalArrayRef[index];
+        resizedStoreRef[index - distanceToShuffle] = originalStoreRef[index];
       }
     }
 
@@ -40,15 +40,13 @@ struct RemoveComponentsFunctor
 struct ExtractComponentsFunctor
 {
   template <class ScalarType>
-  void operator()(IDataArray& inputArray, IDataArray& extractedCompArray, usize componentIndexToExtract) // Due to logic structure inputArray cannot be const
+  void operator()(IDataArray* inputArray, IDataArray* extractedCompArray, usize componentIndexToExtract) // Due to logic structure inputArray cannot be const
   {
-    const auto& inputArrayRef = dynamic_cast<const DataArray<ScalarType>&>(inputArray);
-    auto& extractedArrayRef = dynamic_cast<DataArray<ScalarType>&>(extractedCompArray);
+    const auto& inputStoreRef = dynamic_cast<const DataArray<ScalarType>*>(inputArray)->getDataStoreRef();
+    auto& extractedStoreRef = dynamic_cast<DataArray<ScalarType>*>(extractedCompArray)->getDataStoreRef();
 
-    const usize inputTupleCount = inputArrayRef.getNumberOfTuples();
-    const usize inputCompCount = inputArrayRef.getNumberOfComponents();
-
-    const usize extractedCompCount = extractedArrayRef.getNumberOfComponents();
+    const usize inputTupleCount = inputStoreRef.getNumberOfTuples();
+    const usize inputCompCount = inputStoreRef.getNumberOfComponents();
 
     for(usize tuple = 0; tuple < inputTupleCount; tuple++)
     {
@@ -56,7 +54,7 @@ struct ExtractComponentsFunctor
       {
         if(comp == componentIndexToExtract)
         {
-          extractedArrayRef[tuple] = inputArrayRef[tuple * inputCompCount + comp]; // extracted array will always have comp count of 1
+          extractedStoreRef[tuple] = inputStoreRef[tuple * inputCompCount + comp]; // extracted array will always have comp count of 1
         }
       }
     }
@@ -92,23 +90,23 @@ Result<> ExtractComponentAsArray::operator()()
   const bool removeComponentsFromArrayBool = m_InputValues->RemoveComponentsFromArray;
   const auto compToRemoveNum = static_cast<usize>(abs(m_InputValues->CompNumber));
   // this will be the original array if components are not being removed, else it is resized array
-  auto& baseArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->BaseArrayPath);
+  auto* baseArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath);
   if((!removeComponentsFromArrayBool) && moveComponentsToNewArrayBool)
   {
-    ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayRef.getDataType(), baseArrayRef, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
+    ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayPtr->getDataType(), baseArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
     return {};
   }
   // will not exist if remove components is not occurring, hence the early bailout ^
-  auto& tempArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components is not true, hence the early bailout ^
+  auto* tempArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components is not true, hence the early bailout ^
 
   if(moveComponentsToNewArrayBool)
   {
-    auto& extractedCompArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->NewArrayPath);
-    ExecuteDataFunction(ExtractComponentsFunctor{}, tempArrayRef.getDataType(), tempArrayRef, extractedCompArrayRef, compToRemoveNum);
+    auto* extractedCompArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath);
+    ExecuteDataFunction(ExtractComponentsFunctor{}, tempArrayPtr->getDataType(), tempArrayPtr, extractedCompArrayPtr, compToRemoveNum);
   }
 
   // remove by default, because the only case where they weren't removed was covered at start
-  ExecuteDataFunction(RemoveComponentsFunctor{}, tempArrayRef.getDataType(), tempArrayRef, baseArrayRef, compToRemoveNum);
+  ExecuteDataFunction(RemoveComponentsFunctor{}, tempArrayPtr->getDataType(), tempArrayPtr, baseArrayPtr, compToRemoveNum);
 
   return {};
 }
