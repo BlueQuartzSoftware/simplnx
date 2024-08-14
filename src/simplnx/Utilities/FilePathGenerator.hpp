@@ -3,6 +3,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
