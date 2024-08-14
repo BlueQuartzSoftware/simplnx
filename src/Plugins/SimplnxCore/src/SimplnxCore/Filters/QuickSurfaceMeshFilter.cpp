@@ -7,7 +7,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -49,7 +48,7 @@ std::string QuickSurfaceMeshFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> QuickSurfaceMeshFilter::defaultTags() const
 {
-  return {className(), "Surface Meshing", "Generation", "Create", "Triangle", "Geoemtry"};
+  return {className(), "Surface Meshing", "Generation", "Create", "Triangle", "Geometry"};
 }
 
 //------------------------------------------------------------------------------
@@ -104,8 +103,6 @@ IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel) const
 {
-  auto pGenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
-  auto pFixProblemVoxelsValue = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);

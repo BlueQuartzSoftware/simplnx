@@ -601,7 +601,7 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
  * @return A Result<> type that contains any warnings or errors that occurred.
  */
 template <typename T>
-Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
+Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, AbstractDataStore<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
 {
   FILE* inputFilePtr = std::fopen(binaryFilePath.string().c_str(), "rb");
   if(inputFilePtr == nullptr)
@@ -681,7 +681,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), *dataArrayPtr);
+  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArrayPtr->getDataStoreRef());
   if(result.invalid())
   {
     return nullptr;

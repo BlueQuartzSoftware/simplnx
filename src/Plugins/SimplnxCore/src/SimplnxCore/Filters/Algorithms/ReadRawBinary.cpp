@@ -47,9 +47,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_RbrFileNotOpen = -1000;
 constexpr int32 k_RbrFileTooSmall = -1010;
-constexpr int32 k_RbrFileTooBig = -1020;
 
 // -----------------------------------------------------------------------------
 int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSize, usize skipHeaderBytes)
@@ -62,20 +60,20 @@ int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSiz
   {
     return 1;
   }
-  // File Size and Allocated Size are equal so we are good to go
+  // File Size and Allocated Size are equal, so we are good to go
   return 0;
 }
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
+Result<> ReadBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
-  constexpr usize k_DefaultBlocksize = 1000000;
+  constexpr usize k_DefaultBlockSize = 1000000;
 
-  auto& dataArray = dynamic_cast<DataArray<T>&>(dataArrayPtr);
+  auto* dataArray = dynamic_cast<DataArray<T>*>(dataArrayPtr);
 
   const usize fileSize = fs::file_size(filename);
-  const usize numBytesToRead = dataArray.getSize() * sizeof(T);
+  const usize numBytesToRead = dataArray->getSize() * sizeof(T);
   const int32 err = SanityCheckFileSizeVersusAllocatedSize(numBytesToRead, fileSize, skipHeaderBytes);
 
   if(err < 0)
@@ -83,7 +81,7 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
     return MakeErrorResult(k_RbrFileTooSmall, "The file size is smaller than the allocated size");
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArray, skipHeaderBytes, k_DefaultBlocksize);
+  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArray->getDataStoreRef(), skipHeaderBytes, k_DefaultBlockSize);
   if(result.invalid())
   {
     return result;
@@ -91,7 +89,7 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
 
   if(endian != static_cast<ChoicesParameter::ValueType>(nx::core::endian::native))
   {
-    dataArray.byteSwapElements();
+    dataArray->byteSwapElements();
   }
 
   return result;
@@ -118,9 +116,9 @@ Result<> ReadRawBinary::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadRawBinary::execute()
 {
-  IDataArray& binaryIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
+  auto* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
-  if(binaryIDataArray.getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))
+  if(binaryIDataArray->getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))
   {
     // This was already validated in preflight, so something more fundamental has gone wrong
     throw std::runtime_error(fmt::format("Failed to acquire DataArray from path '{}' with the correct number of components.", m_InputValues.createdAttributeArrayPathValue.toString()));

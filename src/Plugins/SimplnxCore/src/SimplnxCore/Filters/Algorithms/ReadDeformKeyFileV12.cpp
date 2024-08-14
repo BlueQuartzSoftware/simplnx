@@ -2,7 +2,6 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -207,13 +206,13 @@ private:
     }
     for(usize comp = 0; comp < numComp; comp++)
     {
-      float32 value = 0.0f;
+      float32 value;
       try
       {
         value = std::stof(tokens[comp]);
       } catch(const std::exception& e)
       {
-        std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", m_LineCount, data.getName(),
+        std::string msg = fmt::format(R"(Error at line {}: Unable to convert data array {}'s string value "{}" to float.  Threw standard exception with text: "{}")", m_LineCount, data.getName(),
                                       tokens[comp], e.what());
         return MakeErrorResult(-2008, msg);
       }
@@ -229,7 +228,7 @@ private:
       value = std::stoull(token);
     } catch(const std::exception& e)
     {
-      std::string msg = fmt::format("Error at line {}: Unable to convert string value \"{}\" to unsigned long long.  Threw standard exception with text: \"{}\"", StringUtilities::number(m_LineCount),
+      std::string msg = fmt::format(R"(Error at line {}: Unable to convert string value "{}" to unsigned long long.  Threw standard exception with text: "{}")", StringUtilities::number(m_LineCount),
                                     token, e.what());
       return MakeErrorResult(-2000, msg);
     }
@@ -445,13 +444,13 @@ private:
         {
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
-            auto data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
+            auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
             setResult = setTuple(0, data, tokens);
           }
         }
         else
         {
-          auto data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
+          auto& data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
           setResult = setTuple(0, data, tokens);
         }
         if(setResult.invalid())
@@ -502,13 +501,13 @@ private:
         {
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
-            auto data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
+            auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
             setResult = setTuple(0, data, tokens);
           }
         }
         else
         {
-          auto data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
+          auto& data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
           setResult = setTuple(tupleIndex, data, tokens);
         }
         if(setResult.invalid())
@@ -520,7 +519,7 @@ private:
     return {};
   }
 
-  Result<> readVertexCoordinates(IGeometry::SharedVertexList* vertex, usize numVerts)
+  Result<> readVertexCoordinates(AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex, usize numVerts)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -537,31 +536,31 @@ private:
 
       try
       {
-        vertex->operator[](3 * i) = std::stof(tokens[1]);
+        vertex[3 * i] = std::stof(tokens[1]);
       } catch(const std::exception& e)
       {
-        std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 1st string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
+        std::string msg = fmt::format(R"(Error at line {}: Unable to convert vertex coordinate {}'s 1st string value "{}" to float.  Threw standard exception with text: "{}")",
                                       StringUtilities::number(m_LineCount), StringUtilities::number(i + 1), tokens[1], e.what());
         return MakeErrorResult(-2001, std::move(msg));
       }
 
       try
       {
-        vertex->operator[](3 * i + 1) = std::stof(tokens[2]);
+        vertex[3 * i + 1] = std::stof(tokens[2]);
       } catch(const std::exception& e)
       {
-        std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 2nd string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
+        std::string msg = fmt::format(R"(Error at line {}: Unable to convert vertex coordinate {}'s 2nd string value "{}" to float.  Threw standard exception with text: "{}")",
                                       StringUtilities::number(m_LineCount), StringUtilities::number(i + 1), tokens[2], e.what());
         return MakeErrorResult(-2002, std::move(msg));
       }
 
-      vertex->operator[](3 * i + 2) = 0.0f;
+      vertex[3 * i + 2] = 0.0f;
     }
 
     return {};
   }
 
-  Result<> readQuadGeometry(IGeometry::MeshIndexArrayType& quads, usize numCells)
+  Result<> readQuadGeometry(AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>& quads, usize numCells)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -582,7 +581,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg =
-            fmt::format("Error at line {}: Unable to convert quad {}'s 1st string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", m_LineCount, (i + 1), tokens[1], e.what());
+            fmt::format(R"(Error at line {}: Unable to convert quad {}'s 1st string value "{}" to integer.  Threw standard exception with text: "{}")", m_LineCount, (i + 1), tokens[1], e.what());
         return MakeErrorResult(-2004, msg);
       }
 
@@ -592,7 +591,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg =
-            fmt::format("Error at line {}: Unable to convert quad {}'s 2nd string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", m_LineCount, (i + 1), tokens[2], e.what());
+            fmt::format(R"(Error at line {}: Unable to convert quad {}'s 2nd string value "{}" to integer.  Threw standard exception with text: "{}")", m_LineCount, (i + 1), tokens[2], e.what());
         return MakeErrorResult(-2005, msg);
       }
 
@@ -602,7 +601,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg =
-            fmt::format("Error at line {}: Unable to convert quad {}'s 3rd string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", m_LineCount, (i + 1), tokens[3], e.what());
+            fmt::format(R"(Error at line {}: Unable to convert quad {}'s 3rd string value "{}" to integer.  Threw standard exception with text: "{}")", m_LineCount, (i + 1), tokens[3], e.what());
         return MakeErrorResult(-2006, msg);
       }
 
@@ -612,7 +611,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg =
-            fmt::format("Error at line {}: Unable to convert quad {}'s 4th string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", m_LineCount, (i + 1), tokens[4], e.what());
+            fmt::format(R"(Error at line {}: Unable to convert quad {}'s 4th string value "{}" to integer.  Threw standard exception with text: "{}")", m_LineCount, (i + 1), tokens[4], e.what());
         return MakeErrorResult(-2007, msg);
       }
     }
@@ -631,7 +630,7 @@ private:
       {
         return {};
       }
-      bool isWord = false;
+      bool isWord;
       std::vector<std::string> tokens;
       // Read the line. This line _Should_ be the start of "section" of data.
       {
@@ -679,7 +678,7 @@ private:
         if(m_Allocate)
         {
           // Grab vertex list from quad geom
-          IGeometry::SharedVertexList* vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices();
+          AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices()->getDataStoreRef();
 
           auto vertexResult = readVertexCoordinates(vertex, numVerts);
           if(vertexResult.invalid())
@@ -707,7 +706,7 @@ private:
         {
           auto& quadGeom = m_DataStructure.getDataRefAs<QuadGeom>(m_QuadGeomPath);
           quadGeom.setSpatialDimensionality(2);
-          IGeometry::MeshIndexArrayType& quads = quadGeom.getFacesRef();
+          AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>& quads = quadGeom.getFaces()->getDataStoreRef();
           auto quadResult = readQuadGeometry(quads, numCells);
           if(quadResult.invalid())
           {
@@ -746,18 +745,21 @@ private:
           // for either vertex or cell arrays.
 
           // This data is not able to be read.  Display a status message that explains why, based on what information we have available.
-          if(!vertHit && quadHit)
+          if(vertHit != quadHit)
           {
-            std::string msg = fmt::format(
-                "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({}), and the vertex tuple count has not been read yet.  Skipping...",
-                dataArrayName, tupleCount, m_Cache.cellAttrMatTupleCount);
-            m_Filter->updateProgress(msg);
-          }
-          else if(vertHit && !quadHit)
-          {
-            std::string msg = fmt::format(
-                "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
-                dataArrayName, tupleCount, m_Cache.vertexAttrMatTupleCount);
+            std::string msg;
+            if(vertHit)
+            {
+              msg = fmt::format(
+                  "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
+                  dataArrayName, tupleCount, m_Cache.vertexAttrMatTupleCount);
+            }
+            else // quadHit == true
+            {
+              msg = fmt::format(
+                  "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({}), and the vertex tuple count has not been read yet.  Skipping...",
+                  dataArrayName, tupleCount, m_Cache.cellAttrMatTupleCount);
+            }
             m_Filter->updateProgress(msg);
           }
           else
