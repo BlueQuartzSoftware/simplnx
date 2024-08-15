@@ -829,6 +829,11 @@ target_include_directories(simplnx
     $<INSTALL_INTERFACE:include>
 )
 
+cmake_dependent_option(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST "Forces test files to download before simplnx builds" OFF "SIMPLNX_DOWNLOAD_TEST_FILES" OFF)
+if(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST)
+  add_dependencies(simplnx Fetch_Remote_Data_Files)
+endif()
+
 # ------------------------------------------------------------------------------
 # CLI Executable
 # ------------------------------------------------------------------------------
