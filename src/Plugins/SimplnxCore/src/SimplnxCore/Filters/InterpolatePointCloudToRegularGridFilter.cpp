@@ -30,8 +30,7 @@ struct MapPointCloudDataByKernelFunctor
   template <typename T>
   void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
   {
-    auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
-    auto& inputData = inputDataArray->getDataStoreRef();
+    auto& inputData = source->getIDataStoreRefAs<AbstractDataStore<T>>();
     auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
 
     usize index = 0;

@@ -36,9 +36,7 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>
 
   points.reserve(dims[0] * dims[1] * dims[2]);
 
-  std::random_device randomDevice;        // Will be used to obtain a seed for the random number engine
-  std::mt19937 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(m_InputValues->SeedValue);
+  std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
   std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
   for(usize k = 0; k < dims[2]; k++)

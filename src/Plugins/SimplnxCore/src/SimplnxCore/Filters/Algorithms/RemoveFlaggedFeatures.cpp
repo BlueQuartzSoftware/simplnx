@@ -14,9 +14,8 @@ using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
 {
-  const usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 uDims = imageGeom.getDimensions();
 
   int64 dims[3] = {static_cast<int64>(uDims[0]), static_cast<int64>(uDims[1]), static_cast<int64>(uDims[2])};
@@ -28,7 +27,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32Array& featureIds, std::vector
   auto progressIncrement = dims[2] / 100;
   usize progressCounter = 0;
   int32 featureName;
-  int64 kStride = 0, jStride = 0;
+  int64 kStride, jStride;
   for(int64 k = 0; k < dims[2]; k++)
   {
     if(shouldCancel)
@@ -56,8 +55,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32Array& featureIds, std::vector
           continue;
         }
         shouldLoop = true;
-        int32 neighbor;
-        int32 current = 0;
+        int32 current;
         int32 most = 0;
         std::vector<int32> numHits(6, 0);
         std::vector<int32> discoveredFeatures = {};
@@ -121,7 +119,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32Array& featureIds, std::vector
   return shouldLoop;
 }
 
-std::vector<bool> FlagFeatures(Int32Array& featureIds, std::unique_ptr<MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
+std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_ptr<MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
 {
   bool good = false;
   usize totalPoints = featureIds.getNumberOfTuples();
@@ -161,7 +159,7 @@ std::vector<bool> FlagFeatures(Int32Array& featureIds, std::unique_ptr<MaskCompa
   return activeObjects;
 }
 
-void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
+void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
 
@@ -287,7 +285,7 @@ void RemoveFlaggedFeatures::sendThreadSafeProgressMessage(size_t counter)
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
 
@@ -402,7 +400,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
     if(m_InputValues->FillRemovedFeatures)
     {
-      bool shouldLoop = false;
+      bool shouldLoop;
       usize count = 0;
       do
       {

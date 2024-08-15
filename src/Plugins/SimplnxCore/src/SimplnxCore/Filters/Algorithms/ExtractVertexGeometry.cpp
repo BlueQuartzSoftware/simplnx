@@ -25,10 +25,8 @@ struct CopyDataFunctor
   template <typename T>
   void operator()(const IDataArray* srcIArray, IDataArray* destIArray, const std::vector<bool>& maskArray)
   {
-    using DataArrayType = DataArray<T>;
-
-    const auto& srcArray = dynamic_cast<const DataArrayType*>(srcIArray)->getDataStoreRef();
-    auto& destArray = dynamic_cast<DataArrayType*>(destIArray)->getDataStoreRef();
+    const auto& srcArray = srcIArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& destArray = destIArray->getIDataStoreRefAs<AbstractDataStore<T>>();
 
     bool useMask = !maskArray.empty();
     usize destTupleIdx = 0;

@@ -18,8 +18,8 @@ public:
   ComputeKMeansTemplate(ComputeKMeans* filter, const IDataArray* inputIDataArray, IDataArray* meansIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
                         Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
-  , m_InputArray(dynamic_cast<const DataArrayT*>(inputIDataArray)->getDataStoreRef())
-  , m_Means(dynamic_cast<DataArrayT*>(meansIDataArray)->getDataStoreRef())
+  , m_InputArray(inputIDataArray->getIDataStoreRefAs<AbstractDataStoreT>())
+  , m_Means(meansIDataArray->getIDataStoreRefAs<AbstractDataStoreT>())
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
   , m_FeatureIds(fIds)
@@ -100,7 +100,6 @@ public:
   }
 
 private:
-  using DataArrayT = DataArray<T>;
   using AbstractDataStoreT = AbstractDataStore<T>;
   ComputeKMeans* m_Filter;
   const AbstractDataStoreT& m_InputArray;

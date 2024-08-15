@@ -9,7 +9,6 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
 

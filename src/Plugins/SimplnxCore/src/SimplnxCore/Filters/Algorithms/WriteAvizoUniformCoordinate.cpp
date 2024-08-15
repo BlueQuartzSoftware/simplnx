@@ -87,12 +87,12 @@ Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
 {
   fprintf(outputFile, "@1\n");
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getIDataStoreRefAs<DataStore<int32>>();
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   if(m_InputValues->WriteBinaryFile)
   {
-    fwrite(featureIds.getIDataStoreAs<Int32DataStore>()->data(), sizeof(int32), totalPoints, outputFile);
+    fwrite(featureIds.data(), sizeof(int32), totalPoints, outputFile);
   }
   else
   {

@@ -36,7 +36,7 @@ public:
    * @brief
    */
   template <typename T>
-  void filterDataLessThan(const DataArray<T>& m_Input, T trueValue, T falseValue)
+  void filterDataLessThan(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
     T value = static_cast<T>(m_ComparisonValue);
@@ -50,7 +50,7 @@ public:
    * @brief
    */
   template <typename T>
-  void filterDataGreaterThan(const DataArray<T>& m_Input, T trueValue, T falseValue)
+  void filterDataGreaterThan(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
     T value = static_cast<T>(m_ComparisonValue);
@@ -64,7 +64,7 @@ public:
    * @brief
    */
   template <typename T>
-  void filterDataEqualTo(const DataArray<T>& m_Input, T trueValue, T falseValue)
+  void filterDataEqualTo(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
     T value = static_cast<T>(m_ComparisonValue);
@@ -78,7 +78,7 @@ public:
    * @brief
    */
   template <typename T>
-  void filterDataNotEqualTo(const DataArray<T>& m_Input, T trueValue, T falseValue)
+  void filterDataNotEqualTo(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
   {
     size_t m_NumValues = m_Input.getNumberOfTuples();
     T value = static_cast<T>(m_ComparisonValue);
@@ -89,7 +89,7 @@ public:
   }
 
   template <typename Type>
-  void filterData(const DataArray<Type>& input, Type trueValue, Type falseValue)
+  void filterData(const AbstractDataStore<Type>& input, Type trueValue, Type falseValue)
   {
     if(m_ComparisonOperator == ArrayThreshold::ComparisonType::LessThan)
     {
@@ -131,8 +131,8 @@ struct ExecuteThresholdHelper
   template <typename Type, typename MaskType>
   void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray& iDataArray, Type trueValue, Type falseValue)
   {
-    const auto& dataArray = dynamic_cast<const DataArray<Type>&>(iDataArray);
-    helper.template filterData<Type>(dataArray, trueValue, falseValue);
+    const auto& dataStore = iDataArray.getIDataStoreRefAs<AbstractDataStore<Type>>();
+    helper.template filterData<Type>(dataStore, trueValue, falseValue);
   }
 };
 
@@ -145,7 +145,7 @@ struct ExecuteThresholdHelper
  * @param inverse
  */
 template <typename T>
-void InsertThreshold(usize numItems, DataArray<T>& currentArray, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newArrayPtr, bool inverse, T trueValue, T falseValue)
+void InsertThreshold(usize numItems, AbstractDataStore<T>& currentStore, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newArrayPtr, bool inverse, T trueValue, T falseValue)
 {
   for(usize i = 0; i < numItems; i++)
   {
@@ -157,11 +157,11 @@ void InsertThreshold(usize numItems, DataArray<T>& currentArray, nx::core::IArra
 
     if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
     {
-      currentArray[i] = (currentArray[i] == trueValue || newArrayPtr[i] == trueValue) ? trueValue : falseValue;
+      currentStore[i] = (currentStore[i] == trueValue || newArrayPtr[i] == trueValue) ? trueValue : falseValue;
     }
-    else if(currentArray[i] == falseValue || newArrayPtr[i] == falseValue)
+    else if(currentStore[i] == falseValue || newArrayPtr[i] == falseValue)
     {
-      currentArray[i] = falseValue;
+      currentStore[i] = falseValue;
     }
   }
 }
@@ -177,10 +177,10 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  auto& outputResultArray = dataStructure.getDataRefAs<DataArray<T>>(outputResultArrayPath);
+  auto& outputResultStore = dataStructure.getDataAs<DataArray<T>>(outputResultArrayPath)->getDataStoreRef();
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultArray.getNumberOfTuples();
+  size_t totalTuples = outputResultStore.getNumberOfTuples();
   std::vector<T> tempResultVector(totalTuples, falseValue);
 
   nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue->getComparisonType();
@@ -204,13 +204,13 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
     {
-      outputResultArray[i] = tempResultVector[i];
+      outputResultStore[i] = tempResultVector[i];
     }
   }
   else
   {
     // insert into current threshold
-    InsertThreshold<T>(totalTuples, outputResultArray, unionOperator, tempResultVector, inverse, trueValue, falseValue);
+    InsertThreshold<T>(totalTuples, outputResultStore, unionOperator, tempResultVector, inverse, trueValue, falseValue);
   }
 }
 
@@ -266,10 +266,10 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
 
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  auto& outputResultArray = dataStructure.getDataRefAs<DataArray<T>>(outputResultArrayPath);
+  auto& outputResultStore = dataStructure.getDataAs<DataArray<T>>(outputResultArrayPath)->getDataStoreRef();
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultArray.getNumberOfTuples();
+  size_t totalTuples = outputResultStore.getNumberOfTuples();
   std::vector<T> tempResultVector(totalTuples, falseValue);
 
   T firstValueFound = 0;
@@ -300,13 +300,13 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
     // copy the temp uint8 vector to the final uint8 result array
     for(size_t i = 0; i < totalTuples; i++)
     {
-      outputResultArray[i] = tempResultVector[i];
+      outputResultStore[i] = tempResultVector[i];
     }
   }
   else
   {
     // insert into current threshold
-    InsertThreshold<T>(totalTuples, outputResultArray, inputComparisonSet->getUnionOperator(), tempResultVector, inverse, trueValue, falseValue);
+    InsertThreshold<T>(totalTuples, outputResultStore, inputComparisonSet->getUnionOperator(), tempResultVector, inverse, trueValue, falseValue);
   }
 }
 

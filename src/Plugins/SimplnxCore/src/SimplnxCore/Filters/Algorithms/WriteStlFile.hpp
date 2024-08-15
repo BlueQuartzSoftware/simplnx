@@ -51,7 +51,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void sendThreadSafeProgressMessage(Result<> result);
+  void sendThreadSafeProgressMessage(Result<>&& result);
 
 private:
   DataStructure& m_DataStructure;

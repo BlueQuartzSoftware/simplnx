@@ -23,9 +23,9 @@ public:
   IComparisonFunctor& operator=(const IComparisonFunctor&) = delete; // Copy Assignment Not Implemented
   IComparisonFunctor& operator=(IComparisonFunctor&&) = delete;      // Move Assignment Not Implemented
 
-  virtual bool compare(T left, T right) const = 0;
-  virtual bool compare1(T left, T right) const = 0;
-  virtual bool compare2(T left, T right) const = 0;
+  [[nodiscard]] virtual bool compare(T left, T right) const = 0;
+  [[nodiscard]] virtual bool compare1(T left, T right) const = 0;
+  [[nodiscard]] virtual bool compare2(T left, T right) const = 0;
 };
 
 template <typename T>
@@ -40,15 +40,15 @@ public:
   LessThanComparison& operator=(const LessThanComparison&) = delete; // Copy Assignment Not Implemented
   LessThanComparison& operator=(LessThanComparison&&) = delete;      // Move Assignment Not Implemented
 
-  bool compare(T left, T right) const override
+  [[nodiscard]] bool compare(T left, T right) const override
   {
     return left < right;
   }
-  bool compare1(T left, T right) const override
+  [[nodiscard]] bool compare1(T left, T right) const override
   {
     return left >= right;
   }
-  bool compare2(T left, T right) const override
+  [[nodiscard]] bool compare2(T left, T right) const override
   {
     return left > right;
   }
@@ -65,15 +65,15 @@ public:
   GreaterThanComparison& operator=(const GreaterThanComparison&) = delete; // Copy Assignment Not Implemented
   GreaterThanComparison& operator=(GreaterThanComparison&&) = delete;      // Move Assignment Not Implemented
 
-  bool compare(T left, T right) const override
+  [[nodiscard]] bool compare(T left, T right) const override
   {
     return left > right;
   }
-  bool compare1(T left, T right) const override
+  [[nodiscard]] bool compare1(T left, T right) const override
   {
     return left <= right;
   }
-  bool compare2(T left, T right) const override
+  [[nodiscard]] bool compare2(T left, T right) const override
   {
     return left < right;
   }
@@ -82,8 +82,8 @@ public:
 struct ExecuteTemplate
 {
   template <typename T>
-  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, const DataArray<T>& inputArray, int64 neighbor, float thresholdValue, float32& best, std::vector<int64_t>& bestNeighbor,
-                     size_t i) const
+  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, const AbstractDataStore<T>& inputArray, int64 neighbor, float thresholdValue, float32& best,
+                     std::vector<int64_t>& bestNeighbor, size_t i) const
   {
     if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
     {
@@ -93,14 +93,12 @@ struct ExecuteTemplate
   }
 
   template <typename T>
-  void operator()(const ImageGeom& imageGeom, IDataArray& inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
+  void operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
                   const IFilter::MessageHandler& messageHandler)
   {
-    using DataArrayType = DataArray<T>;
+    const auto& inputStore = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    const auto& inputArray = dynamic_cast<const DataArrayType&>(inputIDataArray);
-
-    const size_t totalPoints = inputArray.getNumberOfTuples();
+    const size_t totalPoints = inputStore.getNumberOfTuples();
 
     Vec3 udims = imageGeom.getDimensions();
     std::array<int64, 3> dims = {
@@ -140,48 +138,48 @@ struct ExecuteTemplate
         break;
       }
 
-      int64 progIncrement = static_cast<int64_t>(totalPoints / 50);
+      auto progIncrement = static_cast<int64_t>(totalPoints / 50);
       int64 prog = 1;
       int64 progressInt = 0;
       for(size_t i = 0; i < totalPoints; i++)
       {
-        if(comparator->compare(inputArray[i], thresholdValue))
+        if(comparator->compare(inputStore[i], thresholdValue))
         {
           column = i % dims[0];
           row = (i / dims[0]) % dims[1];
           plane = i / (dims[0] * dims[1]);
           count++;
-          float32 best = inputArray[i];
+          float32 best = inputStore[i];
 
           neighbor = static_cast<int64>(i) + neighborPoints[0];
           if(plane != 0)
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
           neighbor = static_cast<int64>(i) + neighborPoints[1];
           if(row != 0)
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
           neighbor = static_cast<int64>(i) + neighborPoints[2];
           if(column != 0)
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
           neighbor = static_cast<int64>(i) + neighborPoints[3];
           if(column != (dims[0] - 1))
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
           neighbor = static_cast<int64>(i) + neighborPoints[4];
           if(row != (dims[1] - 1))
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
           neighbor = static_cast<int64>(i) + neighborPoints[5];
           if(plane != (dims[2] - 1))
           {
-            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
           }
         }
         if(int64_t(i) > prog)
@@ -254,10 +252,10 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel()
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
 
-  auto& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray.getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel,
+  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel,
                       m_MessageHandler);
 
   return {};

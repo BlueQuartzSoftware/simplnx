@@ -11,20 +11,20 @@ namespace
 struct SplitArraysFunctor
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const SplitAttributeArrayInputValues* inputValues)
+  void operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, const SplitAttributeArrayInputValues* inputValues)
   {
-    auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputValues->InputArrayPath);
-    usize numTuples = inputArray.getNumberOfTuples();
-    usize numComponents = inputArray.getNumberOfComponents();
+    const auto& inputStore = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    usize numTuples = inputStore.getNumberOfTuples();
+    usize numComponents = inputStore.getNumberOfComponents();
     for(const auto& j : inputValues->ExtractComponents)
     {
       std::string arrayName = inputValues->InputArrayPath.getTargetName() + inputValues->SplitArraysSuffix + StringUtilities::number(j);
       DataPath splitArrayPath = inputValues->InputArrayPath.replaceName(arrayName);
-      auto& splitArray = dataStructure.getDataRefAs<DataArray<T>>(splitArrayPath);
+      auto& splitStore = dataStructure.getDataAs<DataArray<T>>(splitArrayPath)->getDataStoreRef();
 
       for(usize i = 0; i < numTuples; i++)
       {
-        splitArray[i] = inputArray[numComponents * i + j];
+        splitStore[i] = inputStore[numComponents * i + j];
       }
     }
   }
@@ -52,9 +52,9 @@ const std::atomic_bool& SplitAttributeArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SplitAttributeArray::operator()()
 {
-  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
 
-  ExecuteDataFunction(SplitArraysFunctor{}, inputArray.getDataType(), m_DataStructure, m_InputValues);
+  ExecuteDataFunction(SplitArraysFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, m_InputValues);
 
   return {};
 }

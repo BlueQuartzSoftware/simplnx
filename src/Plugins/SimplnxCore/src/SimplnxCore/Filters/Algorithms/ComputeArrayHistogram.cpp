@@ -14,7 +14,7 @@ using namespace nx::core;
 
 namespace
 {
-template <typename DataArrayType>
+template <typename Type>
 class GenerateHistogramFromData
 {
 public:
@@ -33,8 +33,8 @@ public:
 
   void operator()() const
   {
-    const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray).getDataStoreRef();
-    auto end = inputArray.getSize();
+    const auto& inputStore = m_InputArray.getIDataStoreRefAs<AbstractDataStore<Type>>();
+    auto end = inputStore.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
     float64 min = 0.0;
@@ -46,7 +46,7 @@ public:
     }
     else
     {
-      auto minMax = std::minmax_element(inputArray.begin(), inputArray.end());
+      auto minMax = std::minmax_element(inputStore.begin(), inputStore.end());
       min = (static_cast<float64>(*minMax.first) - 1);  // ensure upper limit encapsulates max value
       max = (static_cast<float64>(*minMax.second) + 1); // ensure lower limit encapsulates min value
     }
@@ -71,7 +71,7 @@ public:
         {
           return;
         }
-        const auto bin = std::floor((inputArray[i] - min) / increment);
+        const auto bin = std::floor((inputStore[i] - min) / increment);
         if((bin >= 0) && (bin < m_NumBins))
         {
           m_Histogram[bin * 2 + 1]++;

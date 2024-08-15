@@ -7,9 +7,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 
-namespace nx::core
-{
-namespace Sampling
+namespace nx::core::Sampling
 {
 inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& newGeomPath, const DataPath& destCellFeatAttributeMatrixPath, const DataPath& featureIdsArrayPath,
                                  const DataPath& destFeatureIdsArrayPath, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel = false)
@@ -28,9 +26,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
     return MakeErrorResult(-600, "The number of Features is 0 and should be greater than 0");
   }
 
-  auto& destFeatureIdsRef = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsArrayPath);
-
-  auto& featureIds = destFeatureIdsRef.getDataStoreRef();
+  auto& destFeatureIds = dataStructure.getDataAs<Int32Array>(destFeatureIdsArrayPath)->getDataStoreRef();
   // Find the unique set of feature ids
   for(usize i = 0; i < totalPoints; ++i)
   {
@@ -39,7 +35,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
       break;
     }
 
-    int32 currentFeatureId = featureIds[i];
+    int32 currentFeatureId = destFeatureIds[i];
     if(currentFeatureId < 0)
     {
       std::string ss = fmt::format("FeatureIds values MUST be >= ZERO. Negative FeatureId found at index {} into the resampled feature ids array", i);
@@ -58,12 +54,11 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
     }
   }
 
-  if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIdsRef, totalFeatures, messageHandler, shouldCancel))
+  if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIds, totalFeatures, messageHandler, shouldCancel))
   {
     std::string ss = fmt::format("An error occurred while trying to remove the inactive objects from Attribute Matrix '{}'", destCellFeatAttributeMatrixPath.toString());
     return MakeErrorResult(-606, ss);
   }
   return {};
 }
-} // namespace Sampling
-} // namespace nx::core
+} // namespace nx::core::Sampling

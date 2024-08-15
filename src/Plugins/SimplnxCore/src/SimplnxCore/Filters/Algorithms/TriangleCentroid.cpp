@@ -1,7 +1,6 @@
 #include "TriangleCentroid.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
@@ -19,7 +18,7 @@ namespace
 class CalculateCentroidsImpl
 {
 public:
-  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float64Array* centroids, const std::atomic_bool& shouldCancel)
+  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& centroids, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Centroids(centroids)
   , m_ShouldCancel(shouldCancel)
@@ -39,9 +38,9 @@ public:
       std::array<Point3Df, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
-      (*m_Centroids)[triangleIndex * 3] = (vertCoords[0].getX() + vertCoords[1].getX() + vertCoords[2].getX()) / 3.0F;
-      (*m_Centroids)[triangleIndex * 3 + 1] = (vertCoords[0].getY() + vertCoords[1].getY() + vertCoords[2].getY()) / 3.0F;
-      (*m_Centroids)[triangleIndex * 3 + 2] = (vertCoords[0].getZ() + vertCoords[1].getZ() + vertCoords[2].getZ()) / 3.0F;
+      m_Centroids[triangleIndex * 3] = (vertCoords[0].getX() + vertCoords[1].getX() + vertCoords[2].getX()) / 3.0F;
+      m_Centroids[triangleIndex * 3 + 1] = (vertCoords[0].getY() + vertCoords[1].getY() + vertCoords[2].getY()) / 3.0F;
+      m_Centroids[triangleIndex * 3 + 2] = (vertCoords[0].getZ() + vertCoords[1].getZ() + vertCoords[2].getZ()) / 3.0F;
     }
   }
 
@@ -52,7 +51,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64Array* m_Centroids = nullptr;
+  Float64AbstractDataStore& m_Centroids;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -83,12 +82,12 @@ Result<> TriangleCentroid::operator()()
   const AttributeMatrix& faceAttributeMatrix = triangleGeom->getFaceAttributeMatrixRef();
 
   const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
-  auto* centroidsArray = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath);
+  auto& centroidsStore = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath)->getDataStoreRef();
 
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateCentroidsImpl(triangleGeom, centroidsArray, m_ShouldCancel));
+  dataAlg.execute(CalculateCentroidsImpl(triangleGeom, centroidsStore, m_ShouldCancel));
 
   return {};
 }

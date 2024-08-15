@@ -26,9 +26,9 @@ public:
     return Pointer(static_cast<Self*>(nullptr));
   }
 
-  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64Array& outputDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters, const Int32Array& featureIds,
-                     ClusterUtilities::DistanceMetric distMetric)
-  : m_InputData(dynamic_cast<const DataArrayT&>(inputIDataArray))
+  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
+                     const Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric distMetric)
+  : m_InputData(inputIDataArray.getIDataStoreRefAs<AbstractDataStoreT>())
   , m_OutputData(outputDataArray)
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
@@ -121,10 +121,10 @@ public:
   }
 
 private:
-  using DataArrayT = DataArray<T>;
-  const DataArrayT& m_InputData;
-  Float64Array& m_OutputData;
-  const Int32Array& m_FeatureIds;
+  using AbstractDataStoreT = AbstractDataStore<T>;
+  const AbstractDataStoreT& m_InputData;
+  Float64AbstractDataStore& m_OutputData;
+  const Int32AbstractDataStore& m_FeatureIds;
   const std::unique_ptr<MaskCompare>& m_Mask;
   usize m_NumClusters;
   ClusterUtilities::DistanceMetric m_DistMetric;
@@ -158,7 +158,7 @@ const std::atomic_bool& Silhouette::getCancel()
 // -----------------------------------------------------------------------------
 Result<> Silhouette::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   std::unordered_set<int32> uniqueIds;
 
   usize numTuples = featureIds.getNumberOfTuples();
@@ -179,7 +179,8 @@ Result<> Silhouette::operator()()
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54080, message);
   }
-  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SilhouetteArrayPath),
-                                                             maskCompare, uniqueIds.size(), featureIds, m_InputValues->DistanceMetric);
+  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray,
+                                                             m_DataStructure.getDataAs<Float64Array>(m_InputValues->SilhouetteArrayPath)->getDataStoreRef(), maskCompare, uniqueIds.size(), featureIds,
+                                                             m_InputValues->DistanceMetric);
   return {};
 }

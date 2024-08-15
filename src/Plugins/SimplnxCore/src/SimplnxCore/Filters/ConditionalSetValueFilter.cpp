@@ -39,18 +39,18 @@ struct ReplaceValueInArrayFunctor
   template <typename ScalarType>
   void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
   {
-    auto& dataArray = dynamic_cast<DataArray<ScalarType>&>(workingArray);
+    auto& dataStore = workingArray.getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
     auto removeVal = convertFromStringToType<ScalarType>(removeValue);
     auto replaceVal = convertFromStringToType<ScalarType>(replaceValue);
 
-    const auto size = dataArray.getNumberOfTuples() * dataArray.getNumberOfComponents();
+    const auto size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
 
     for(usize index = 0; index < size; index++)
     {
-      if(dataArray[index] == removeVal)
+      if(dataStore[index] == removeVal)
       {
-        dataArray[index] = replaceVal;
+        dataStore[index] = replaceVal;
       }
     }
   }

@@ -2,55 +2,57 @@
 
 namespace nx::core
 {
-
 void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdDataPath,
                               std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
 {
   auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
 
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
+  switch(inputDataArray->getDataType())
   {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<float>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::int8: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int8>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<double>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::uint8: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint8>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int8_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::int16: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int16>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint8_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::uint16: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint16>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int16_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::int32: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int32>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint16_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::uint32: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint32>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int32_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::int64: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int64>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint32_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::uint64: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint64>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int64_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::float32: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<float32>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
-  {
-    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<uint64_t>>(dataStructure, selectedDataPath, createdDataPath));
+  case DataType::float64: {
+    tupleTransferFunctions.push_back(std::make_shared<TransferTuple<float64>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
   }
-  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
-  {
+  case DataType::boolean: {
     tupleTransferFunctions.push_back(std::make_shared<TransferTuple<bool>>(dataStructure, selectedDataPath, createdDataPath));
+    break;
+  }
   }
 }
 

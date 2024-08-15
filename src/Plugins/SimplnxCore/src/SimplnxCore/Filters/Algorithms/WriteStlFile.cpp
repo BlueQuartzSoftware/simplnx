@@ -19,7 +19,10 @@ using namespace nx::core;
 
 namespace
 {
-Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices)
+using TriStore = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
+using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+
+Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const TriStore& triangles, const VertexStore& vertices)
 {
   Result<> result;
 
@@ -120,141 +123,13 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
 }
 
 /**
- * @brief
- * @param path
- * @param numTriangles
- * @param header
- * @param triangles
- * @param vertices
- * @param featureIds
- * @param featureId
- * @return
- */
-Result<> MultiWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const IGeometry::MeshIndexArrayType& triangles, const Float32Array& vertices,
-                          const Int32Array& featureIds, const int32 featureId)
-{
-  Result<> result;
-  // Create output file writer in binary write out mode to ensure cross-compatibility
-  FILE* filePtr = fopen(path.string().c_str(), "wb");
-
-  if(filePtr == nullptr)
-  {
-    fclose(filePtr);
-    return {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", path.string(), path.filename().string()))};
-  }
-
-  int32 triCount = 0;
-
-  { // Scope header output processing to keep overhead low and increase readability
-    if(header.size() >= 80)
-    {
-      result = MakeWarningVoidResult(-27874,
-                                     fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
-                                                 path.filename().string(), header.length()));
-    }
-
-    std::array<char, 80> stlFileHeader = {};
-    stlFileHeader.fill(0);
-    size_t headLength = 80;
-    if(header.length() < 80)
-    {
-      headLength = static_cast<size_t>(header.length());
-    }
-
-    // std::string c_str = header;
-    memcpy(stlFileHeader.data(), header.data(), headLength);
-    // Return the number of bytes written - which should be 80
-    fwrite(stlFileHeader.data(), 1, 80, filePtr);
-  }
-
-  fwrite(&triCount, 1, 4, filePtr);
-  triCount = 0; // Reset this to Zero. Increment for every triangle written
-
-  size_t totalWritten = 0;
-  std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
-  std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
-
-  std::array<char, 50> data = {};
-  nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
-  nonstd::span<float32> vert1Ptr(reinterpret_cast<float32*>(data.data() + 12), 3);
-  nonstd::span<float32> vert2Ptr(reinterpret_cast<float32*>(data.data() + 24), 3);
-  nonstd::span<float32> vert3Ptr(reinterpret_cast<float32*>(data.data() + 36), 3);
-  nonstd::span<uint16> attrByteCountPtr(reinterpret_cast<uint16*>(data.data() + 48), 2);
-  attrByteCountPtr[0] = 0;
-
-  const usize numComps = featureIds.getNumberOfComponents();
-  // Loop over all the triangles for this spin
-  for(IGeometry::MeshIndexType triangle = 0; triangle < numTriangles; ++triangle)
-  {
-    // Get the true indices of the 3 nodes
-    IGeometry::MeshIndexType nId0 = triangles[triangle * 3];
-    IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
-    IGeometry::MeshIndexType nId2 = triangles[triangle * 3 + 2];
-
-    if(featureIds[triangle * numComps] == featureId)
-    {
-      // winding = 0; // 0 = Write it using forward spin
-    }
-    else if(numComps > 1 && featureIds[triangle * numComps + 1] == featureId)
-    {
-      // Switch the 2 node indices
-      IGeometry::MeshIndexType temp = nId1;
-      nId1 = nId2;
-      nId2 = temp;
-    }
-    else
-    {
-      continue; // We do not match either spin so move to the next triangle
-    }
-
-    vert1Ptr[0] = static_cast<float>(vertices[nId0 * 3]);
-    vert1Ptr[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
-    vert1Ptr[2] = static_cast<float>(vertices[nId0 * 3 + 2]);
-
-    vert2Ptr[0] = static_cast<float>(vertices[nId1 * 3]);
-    vert2Ptr[1] = static_cast<float>(vertices[nId1 * 3 + 1]);
-    vert2Ptr[2] = static_cast<float>(vertices[nId1 * 3 + 2]);
-
-    vert3Ptr[0] = static_cast<float>(vertices[nId2 * 3]);
-    vert3Ptr[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
-    vert3Ptr[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
-
-    // Compute the normal
-    vecA[0] = vert2Ptr[0] - vert1Ptr[0];
-    vecA[1] = vert2Ptr[1] - vert1Ptr[1];
-    vecA[2] = vert2Ptr[2] - vert1Ptr[2];
-
-    vecB[0] = vert3Ptr[0] - vert1Ptr[0];
-    vecB[1] = vert3Ptr[1] - vert1Ptr[1];
-    vecB[2] = vert3Ptr[2] - vert1Ptr[2];
-
-    MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
-    MatrixMath::Normalize3x1(normalPtr.data());
-
-    totalWritten = fwrite(data.data(), 1, 50, filePtr);
-    if(totalWritten != 50)
-    {
-      fclose(filePtr);
-      return {MakeWarningVoidResult(
-          -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount, totalWritten))};
-    }
-    triCount++;
-  }
-
-  fseek(filePtr, 80L, SEEK_SET);
-  fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
-  fclose(filePtr);
-  return result;
-}
-
-/**
  * @brief This class provides an interface to write the STL Files in parallel
  */
 class MultiWriteStlFileImpl
 {
 public:
-  MultiWriteStlFileImpl(WriteStlFile* filter, const fs::path path, const IGeometry::MeshIndexType numTriangles, const std::string header, const IGeometry::MeshIndexArrayType& triangles,
-                        const Float32Array& vertices, const Int32Array& featureIds, const int32 featureId)
+  MultiWriteStlFileImpl(WriteStlFile* filter, const fs::path path, const IGeometry::MeshIndexType numTriangles, const std::string header, const TriStore& triangles, const VertexStore& vertices,
+                        const Int32AbstractDataStore& featureIds, const int32 featureId)
   : m_Filter(filter)
   , m_Path(path)
   , m_NumTriangles(numTriangles)
@@ -389,9 +264,9 @@ private:
   const fs::path m_Path;
   const IGeometry::MeshIndexType m_NumTriangles;
   const std::string m_Header;
-  const IGeometry::MeshIndexArrayType& m_Triangles;
-  const Float32Array& m_Vertices;
-  const Int32Array& m_FeatureIds;
+  const TriStore& m_Triangles;
+  const VertexStore& m_Vertices;
+  const Int32AbstractDataStore& m_FeatureIds;
   const int32 m_FeatureId;
 };
 } // namespace
@@ -418,8 +293,8 @@ const std::atomic_bool& WriteStlFile::getCancel()
 Result<> WriteStlFile::operator()()
 {
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
-  const Float32Array& vertices = triangleGeom.getVerticesRef();
-  const IGeometry::MeshIndexArrayType& triangles = triangleGeom.getFacesRef();
+  const ::VertexStore& vertices = triangleGeom.getVertices()->getDataStoreRef();
+  const ::TriStore& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
 
   auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
@@ -474,11 +349,10 @@ Result<> WriteStlFile::operator()()
 
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
   std::vector<Result<AtomicFile>> fileList;
+  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
 
   if(groupingType == GroupingType::Features)
   {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-
     // Faster and more memory efficient since we don't need phases
     std::unordered_set<int32> uniqueGrainIds(featureIds.cbegin(), featureIds.cend());
 
@@ -507,8 +381,6 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::FeaturesAndPhases)
   {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-
     std::map<int32, int32> uniqueGrainIdToPhase;
 
     const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
@@ -545,7 +417,7 @@ Result<> WriteStlFile::operator()()
   // Group Triangles by Part Number which is a single component Int32 Array
   if(groupingType == GroupingType::PartNumber)
   {
-    const auto& partNumbers = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PartNumberPath);
+    const auto& partNumbers = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PartNumberPath)->getDataStoreRef();
     // Faster and more memory efficient since we don't need phases
     // Build up a list of the unique Part Numbers
     std::unordered_set<int32> uniquePartNumbers(partNumbers.cbegin(), partNumbers.cend());
@@ -587,7 +459,7 @@ Result<> WriteStlFile::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void WriteStlFile::sendThreadSafeProgressMessage(Result<> result)
+void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   if(result.invalid())

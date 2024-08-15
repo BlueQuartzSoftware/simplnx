@@ -35,7 +35,7 @@ public:
 
   virtual void transfer(size_t faceIndex, size_t firstcIndex) = 0;
 
-  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, DataArray<int32>& faceLabels) = 0;
+  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) = 0;
 
 protected:
   AbstractTupleTransfer() = default;
@@ -106,7 +106,7 @@ public:
     }
   }
 
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, DataArray<int32>& faceLabels) override
+  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) override
   {
     // Only copy the data if the FaceLabel is NOT -1, indicating that the data is NOT on the exterior
     if(faceLabels[faceIndex * 2] != -1)

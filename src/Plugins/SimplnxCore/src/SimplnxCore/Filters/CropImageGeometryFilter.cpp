@@ -72,8 +72,8 @@ class CropImageGeomDataArray
 {
 public:
   CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
-  : m_OldCellArray(dynamic_cast<const DataArray<T>&>(oldCellArray))
-  , m_NewCellArray(dynamic_cast<DataArray<T>&>(newCellArray))
+  : m_OldCellStore(oldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_NewCellStore(newCellArray.getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcImageGeom(srcImageGeom)
   , m_Bounds(bounds)
   , m_ShouldCancel(shouldCancel)
@@ -95,11 +95,9 @@ public:
 protected:
   void convert() const
   {
-    size_t numComps = m_OldCellArray.getNumberOfComponents();
-    const auto& oldCellData = m_OldCellArray.getDataStoreRef();
+    size_t numComps = m_OldCellStore.getNumberOfComponents();
 
-    auto& dataStore = m_NewCellArray.getDataStoreRef();
-    std::fill(dataStore.begin(), dataStore.end(), static_cast<T>(-1));
+    m_NewCellStore.fill(static_cast<T>(-1));
 
     auto srcDims = m_SrcImageGeom.getDimensions();
 
@@ -117,7 +115,7 @@ protected:
           uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
           for(size_t compIndex = 0; compIndex < numComps; compIndex++)
           {
-            dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
+            m_NewCellStore.setValue(destTupleIndex * numComps + compIndex, m_OldCellStore.getValue(srcIndex * numComps + compIndex));
           }
           destTupleIndex++;
         }
@@ -126,8 +124,8 @@ protected:
   }
 
 private:
-  const DataArray<T>& m_OldCellArray;
-  DataArray<T>& m_NewCellArray;
+  const AbstractDataStore<T>& m_OldCellStore;
+  AbstractDataStore<T>& m_NewCellStore;
   const ImageGeom& m_SrcImageGeom;
   std::array<uint64, 6> m_Bounds;
   const std::atomic_bool& m_ShouldCancel;

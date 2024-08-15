@@ -12,7 +12,6 @@
 
 namespace nx::core
 {
-
 /**
  * @brief RemoveInactiveObjects This assumes a single Dimension TupleShape, i.e., a Linear array, (1D)
  *
@@ -26,7 +25,7 @@ namespace nx::core
  * @param shouldCancel
  * @return
  */
-SIMPLNX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds,
+SIMPLNX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
                                           size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
 /**
