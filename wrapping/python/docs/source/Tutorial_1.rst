@@ -26,7 +26,7 @@ that you are interested in running.
 
       conda config --add channels conda-forge
       conda config --set channel_priority strict
-      conda create -c bluequartzsoftware -n nxpython python=3.12 dream3dnx
+      conda create -c bluequartzsoftware -n nxpython python=3.12 dream3dnx matplotlib
       conda activate nxpython
   
 .. _Tutorial_1_Intro:
@@ -107,7 +107,7 @@ inline instantiate the filter and execute it all in the same line. Some things t
 
 .. code:: python
 
-    result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+    result = nx.CreateDataGroupFilter.execute(data_structure=data_structure, 
                                     data_object_path=nx.DataPath("Top Level Group"))
     print(f'{data_structure.hierarchy_to_str()}')
 
@@ -129,7 +129,7 @@ Let's try to add a bunch of groups to the :ref:`DataStructure` object by using a
     for i in range(1, 6):
     
         current_data_group_path = nx.DataPath(f"Top Level Group {i}")
-        result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+        result = nx.CreateDataGroupFilter.execute(data_structure=data_structure, 
                                             data_object_path=current_data_group_path)
     print(f'{data_structure.hierarchy_to_str()}')
 
@@ -178,9 +178,9 @@ If you were to integrate this into your own code, then we would get the followin
 
 .. code:: python
 
-    result = nx.CreateDataGroup.execute(data_structure=data_structure, 
+    result = nx.CreateDataGroupFilter.execute(data_structure=data_structure, 
                                     data_object_path=nx.DataPath("Top Level Group"))
-    check_filter_result( nx.CreateDataGroup(), result)
+    check_filter_result( nx.CreateDataGroupFilter(), result)
 
 
 ################################################
@@ -196,9 +196,9 @@ from the :ref:`DataArray`, enough to get the name, tuple shape and component sha
 
     result = nx.CreateDataArrayFilter().execute(data_structure=data_structure, 
                                             component_count=1, 
-                                            initialization_value="0", 
-                                            numeric_type=nx.NumericType.float32, 
-                                            output_data_array=nx.DataPath("Top Level Group/2D Array"), 
+                                            initialization_value_str="0", 
+                                            numeric_type_index=nx.NumericType.float32, 
+                                            output_array_path=nx.DataPath("Top Level Group/2D Array"), 
                                             tuple_dimensions=[[5,4]])
     check_filter_result( nx.CreateDataArrayFilter(), result)
     print(f'{data_structure.hierarchy_to_str()}')
