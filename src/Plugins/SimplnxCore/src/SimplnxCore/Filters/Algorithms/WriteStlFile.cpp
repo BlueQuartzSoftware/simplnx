@@ -349,10 +349,11 @@ Result<> WriteStlFile::operator()()
 
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
   std::vector<Result<AtomicFile>> fileList;
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
 
   if(groupingType == GroupingType::Features)
   {
+    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+
     // Faster and more memory efficient since we don't need phases
     std::unordered_set<int32> uniqueGrainIds(featureIds.cbegin(), featureIds.cend());
 
@@ -381,6 +382,8 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::FeaturesAndPhases)
   {
+    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+
     std::map<int32, int32> uniqueGrainIdToPhase;
 
     const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
