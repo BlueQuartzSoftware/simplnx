@@ -4,7 +4,6 @@
 #include "SimplnxCore/utils/ICalculatorArray.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"

@@ -325,7 +325,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   {
     return {MakeErrorResult<OutputActions>(-57201, "Value entered for number of bins must be a non-zero, positive value."), {}};
   }
-  usize numBins = static_cast<usize>(pNumBinsValue);
+  auto numBins = static_cast<usize>(pNumBinsValue);
 
   std::vector<DataPath> inputDataArrayPaths;
 

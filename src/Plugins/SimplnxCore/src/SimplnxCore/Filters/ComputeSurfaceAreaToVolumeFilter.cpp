@@ -94,7 +94,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Get the Cell Data Array so we get the tuple shape correct
+  // Get the Cell Data Array, so we get the tuple shape correct
   const auto* featureDataArray = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
   if(nullptr == featureDataArray)
   {

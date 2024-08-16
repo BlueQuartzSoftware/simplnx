@@ -91,8 +91,6 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args) const;
-
   /**
    * @brief
    * @param data

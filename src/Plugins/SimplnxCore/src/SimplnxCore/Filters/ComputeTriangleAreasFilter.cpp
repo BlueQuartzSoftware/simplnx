@@ -26,7 +26,7 @@ constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -75769;
 class CalculateAreasImpl
 {
 public:
-  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64Array& areas, const std::atomic_bool& shouldCancel)
+  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& areas, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Areas(areas)
   , m_ShouldCancel(shouldCancel)
@@ -62,7 +62,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64Array& m_Areas;
+  Float64AbstractDataStore& m_Areas;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -132,7 +132,7 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
   nx::core::Result<OutputActions> resultOutputActions;
 
   // The parameter will have validated that the Triangle Geometry exists and is the correct type
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
@@ -164,7 +164,7 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
 
   DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
-  auto& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);
+  auto& faceAreas = dataStructure.getDataAs<Float64Array>(pCalculatedAreasDataPath)->getDataStoreRef();
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;

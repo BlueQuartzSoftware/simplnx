@@ -76,58 +76,30 @@ WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const 
   return results;
 }
 
-/**
- * @brief The FindDifferenceMapImpl class implements a threaded algorithm that computes the difference map
- * between two arrays
- */
-template <typename DataType>
-class FindDifferenceMapImpl
-{
-  using store_type = AbstractDataStore<DataType>;
-
-public:
-  FindDifferenceMapImpl(IDataArray* firstArray, IDataArray* secondArray, IDataArray* differenceMap)
-  : m_FirstArray(firstArray)
-  , m_SecondArray(secondArray)
-  , m_DifferenceMap(differenceMap)
-  {
-  }
-  virtual ~FindDifferenceMapImpl() = default;
-
-  void generate(size_t start, size_t end) const
-  {
-    auto firstArray = dynamic_cast<store_type*>(m_FirstArray->getIDataStore());
-    auto secondArray = dynamic_cast<store_type*>(m_SecondArray->getIDataStore());
-    auto differenceMap = dynamic_cast<store_type*>(m_DifferenceMap->getIDataStore());
-
-    int32 numComps = firstArray->getNumberOfComponents();
-
-    for(usize i = start; i < end; i++)
-    {
-      for(int32 j = 0; j < numComps; j++)
-      {
-        auto firstVal = firstArray->getValue(numComps * i + j);
-        auto secondVal = secondArray->getValue(numComps * i + j);
-        auto diffVal = firstVal > secondVal ? firstVal - secondVal : secondVal - firstVal;
-        differenceMap->setValue(numComps * i + j, diffVal);
-      }
-    }
-  }
-
-private:
-  IDataArray* m_FirstArray;
-  IDataArray* m_SecondArray;
-  IDataArray* m_DifferenceMap;
-};
-
 struct ExecuteFindDifferenceMapFunctor
 {
   template <typename DataType>
   void operator()(IDataArray* firstArrayPtr, IDataArray* secondArrayPtr, IDataArray* differenceMapPtr)
   {
-    size_t numTuples = firstArrayPtr->getNumberOfTuples();
-    FindDifferenceMapImpl<DataType> serial(firstArrayPtr, secondArrayPtr, differenceMapPtr);
-    serial.generate(0, numTuples);
+    using store_type = AbstractDataStore<DataType>;
+
+    auto& firstArray = firstArrayPtr->getIDataStoreRefAs<store_type>();
+    auto& secondArray = secondArrayPtr->getIDataStoreRefAs<store_type>();
+    auto& differenceMap = differenceMapPtr->getIDataStoreRefAs<store_type>();
+
+    usize numTuples = firstArray.getNumberOfTuples();
+    int32 numComps = firstArray.getNumberOfComponents();
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      for(int32 j = 0; j < numComps; j++)
+      {
+        auto firstVal = firstArray[numComps * i + j];
+        auto secondVal = secondArray[numComps * i + j];
+        auto diffVal = firstVal > secondVal ? firstVal - secondVal : secondVal - firstVal;
+        differenceMap[numComps * i + j] = diffVal;
+      }
+    }
   }
 };
 } // namespace
@@ -255,12 +227,11 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
-  auto firstInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
-  auto secondInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
-  auto differenceMapArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
+  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
+  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
+  auto* differenceMapArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
 
-  auto dataType = firstInputArray->getDataType();
-  ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, dataType, firstInputArray, secondInputArray, differenceMapArray);
+  ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, firstInputArray->getDataType(), firstInputArray, secondInputArray, differenceMapArray);
 
   return {};
 }

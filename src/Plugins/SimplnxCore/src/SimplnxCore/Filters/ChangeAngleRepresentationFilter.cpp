@@ -27,7 +27,7 @@ constexpr uint64 RadiansToDegrees = 1;
 class ChangeAngleRepresentationImpl
 {
 public:
-  ChangeAngleRepresentationImpl(Float32Array& angles, float factor)
+  ChangeAngleRepresentationImpl(Float32AbstractDataStore& angles, float factor)
   : m_Angles(angles)
   , m_ConvFactor(factor)
   {
@@ -48,8 +48,8 @@ public:
   }
 
 private:
-  Float32Array& m_Angles;
-  float m_ConvFactor = 0.0F;
+  Float32AbstractDataStore& m_Angles;
+  float32 m_ConvFactor = 0.0F;
 };
 } // namespace
 
@@ -129,7 +129,7 @@ Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructu
   auto pConversionTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
   auto pAnglesDataPathValue = filterArgs.value<DataPath>(k_AnglesArrayPath_Key);
 
-  Float32Array& angles = dataStructure.getDataRefAs<Float32Array>(pAnglesDataPathValue);
+  auto& angles = dataStructure.getDataAs<Float32Array>(pAnglesDataPathValue)->getDataStoreRef();
 
   float conversionFactor = 1.0f;
   if(pConversionTypeValue == EulerAngleConversionType::DegreesToRadians)

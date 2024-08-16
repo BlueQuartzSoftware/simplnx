@@ -56,7 +56,6 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     }
     return origin;
   }
-  break;
   case IGeometry::Type::Vertex: {
     auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
     const auto& vertices = vertex.getVertices()->getDataStoreRef();
@@ -74,7 +73,6 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     }
     return origin;
   }
-  break;
   case IGeometry::Type::Edge: {
     const auto& edge = dynamic_cast<const EdgeGeom&>(geometry);
     const auto& vertices = edge.getVertices()->getDataStoreRef();
@@ -92,7 +90,6 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     }
     return origin;
   }
-  break;
   // 2D
   case IGeometry::Type::Triangle:
     [[fallthrough]];
@@ -425,12 +422,7 @@ IFilter::UniquePointer AlignGeometriesFilter::clone() const
 IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel) const
 {
-  auto movingGeometryPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
-  auto targetGeometryPath = filterArgs.value<DataPath>(k_TargetGeometry_Key);
   auto alignmentType = filterArgs.value<uint64>(k_AlignmentType_Key);
-
-  auto* movingGeometry = dataStructure.getDataAs<IGeometry>(movingGeometryPath);
-  auto* targetGeometry = dataStructure.getDataAs<IGeometry>(targetGeometryPath);
 
   if(alignmentType != 0 && alignmentType != 1)
   {

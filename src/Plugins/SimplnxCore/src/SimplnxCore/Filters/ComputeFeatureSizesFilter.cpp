@@ -138,11 +138,10 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
                                                 const std::atomic_bool& shouldCancel) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
-  auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  const auto& featureIds = featureIdsArray.getDataStoreRef();
 
-  usize totalPoints = featureIdsArray.getNumberOfTuples();
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(k_CellFeatureIdsArrayPath_Key)).getDataStoreRef();
+
+  usize totalPoints = featureIds.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
   auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
@@ -152,16 +151,10 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   if(nullptr != imageGeom)
   {
     auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto volumesName = args.value<std::string>(k_VolumesName_Key);
-    auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
-    auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
 
-    DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
-    DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
-    DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
-    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
+    auto& volumes = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_VolumesName_Key)))->getDataStoreRef();
+    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_EquivalentDiametersName_Key)))->getDataStoreRef();
+    auto& numElements = dataStructure.getDataAs<Int32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_NumElementsName_Key)))->getDataStoreRef();
 
     usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
     usize maxValue = featureIds[featureIdsMaxIdx];
@@ -202,7 +195,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
           std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
           return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
         }
-        volumes[i] = static_cast<double>(featureCounts[i]) * static_cast<double>(res_scalar);
+        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
 
         float32 rad = volumes[i] / k_PI;
         float32 diameter = (2 * sqrtf(rad));
@@ -222,7 +215,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
           return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
         }
 
-        volumes[i] = static_cast<double>(featureCounts[i]) * static_cast<double>(res_scalar);
+        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
 
         float32 rad = volumes[i] / vol_term;
         float32 diameter = 2.0f * powf(rad, 0.3333333333f);
@@ -242,15 +235,11 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   }
   else
   {
-    auto volumesPath = args.value<DataPath>(k_VolumesName_Key);
-    auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersName_Key);
-    auto numElementsPath = args.value<DataPath>(k_NumElementsName_Key);
+    auto& volumes = dataStructure.getDataAs<Float32Array>(args.value<DataPath>(k_VolumesName_Key))->getDataStoreRef();
+    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(args.value<DataPath>(k_EquivalentDiametersName_Key))->getDataStoreRef();
+    auto& numElements = dataStructure.getDataAs<Int32Array>(args.value<DataPath>(k_NumElementsName_Key))->getDataStoreRef();
 
-    auto& volumes = dataStructure.getDataRefAs<Float32Array>(volumesPath);
-    auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(equivalentDiametersPath);
-    auto& numElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
-
-    usize numfeatures = volumes.getNumberOfTuples();
+    usize numFeatures = volumes.getNumberOfTuples();
 
     int32_t err = geom->findElementSizes(false);
     if(err < 0)
@@ -261,7 +250,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 
     const Float32Array* elemSizes = geom->getElementSizes();
 
-    std::vector<float> featureCounts(numfeatures, 1);
+    std::vector<float> featureCounts(numFeatures, 1);
 
     for(size_t j = 0; j < totalPoints; j++)
     {
@@ -272,7 +261,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
       volumes[gnum] = temp2 + (*elemSizes)[j];
     }
     float vol_term = (4.0f / 3.0f) * k_PI;
-    for(size_t i = 1; i < numfeatures; i++)
+    for(size_t i = 1; i < numFeatures; i++)
     {
       numElements[i] = static_cast<int32>(featureCounts[i]);
       float rad = volumes[i] / vol_term;
