@@ -117,7 +117,6 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
   auto surfaceMeshFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
   auto surfaceMeshTriangleCentroidsPath = filterArgs.value<DataPath>(k_FaceCentroidsPath_Key);
 
-  auto computePrincipalCurvature = filterArgs.value<bool>(k_ComputePrincipalDirection_Key);
   auto computePrincipalDirection = filterArgs.value<bool>(k_ComputePrincipalDirection_Key);
   auto computeGaussianCurvature = filterArgs.value<bool>(k_ComputeGaussianCurvature_Key);
   auto computeMeanCurvature = filterArgs.value<bool>(k_ComputeMeanCurvaturePath_Key);
@@ -133,9 +132,9 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
 
   std::vector<DataPath> dataArrays;
 
-  const TriangleGeom* triangles = dataStructure.getDataAs<TriangleGeom>(triangleGeomPath);
+  const auto* triangles = dataStructure.getDataAs<TriangleGeom>(triangleGeomPath);
   const DataPath triangleMatrixPath = triangles->getFaceAttributeMatrixDataPath();
-  const AttributeMatrix* triangleMatrix = dataStructure.getDataAs<AttributeMatrix>(triangleMatrixPath);
+  const auto* triangleMatrix = dataStructure.getDataAs<AttributeMatrix>(triangleMatrixPath);
 
   {
     dataArrays.push_back(surfaceMeshPrincipalCurvature1Path);
@@ -203,7 +202,6 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
 Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel) const
 {
-
   FeatureFaceCurvatureInputValues inputValues;
 
   inputValues.NRingCount = filterArgs.value<int32>(k_NeighborhoodRing_Key);

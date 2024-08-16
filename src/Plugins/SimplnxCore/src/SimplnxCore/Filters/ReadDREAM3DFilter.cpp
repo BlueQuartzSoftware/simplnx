@@ -1,12 +1,9 @@
 #include "ReadDREAM3DFilter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -15,7 +12,6 @@
 
 namespace
 {
-constexpr nx::core::StringLiteral k_ImportedPipeline = "Imported Pipeline";
 constexpr nx::core::int32 k_NoImportPathError = -1;
 constexpr nx::core::int32 k_FailedOpenFileReaderError = -25;
 } // namespace
@@ -112,15 +108,6 @@ nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
   // }
   return json;
 }
-
-namespace
-{
-namespace SIMPL
-{
-constexpr StringLiteral k_OverwriteExistingDataContainersKey = "OverwriteExistingDataContainers";
-constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
-} // namespace SIMPL
-} // namespace
 
 Result<Arguments> ReadDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 {

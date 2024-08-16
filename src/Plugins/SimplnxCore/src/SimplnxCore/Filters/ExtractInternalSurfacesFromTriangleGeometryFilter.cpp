@@ -9,13 +9,11 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
 
 #include <limits>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include <unordered_map>
 
 using namespace nx::core;

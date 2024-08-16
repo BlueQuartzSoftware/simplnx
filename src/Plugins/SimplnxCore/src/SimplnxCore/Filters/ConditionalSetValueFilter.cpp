@@ -6,12 +6,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -124,7 +120,6 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
-  auto pInvertMask = filterArgs.value<bool>(k_InvertMask_Key);
 
   const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
 
@@ -140,7 +135,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(useConditionalValue)
   {
     // Validate that the Conditional Array is of the correct type
-    const IDataArray* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+    const auto* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
 
     if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
     {
@@ -191,9 +186,9 @@ Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, co
   else
   {
     auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
-    auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
-    ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, removeValueString, replaceValueString);
+    ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, filterArgs.value<std::string>(k_RemoveValue_Key), replaceValueString);
   }
+
   return {};
 }
 

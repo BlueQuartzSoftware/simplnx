@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -184,8 +182,6 @@ constexpr StringLiteral k_ConversionAlgorithmKey = "ConversionAlgorithm";
 constexpr StringLiteral k_ColorWeightsKey = "ColorWeights";
 constexpr StringLiteral k_ColorChannelKey = "ColorChannel";
 constexpr StringLiteral k_InputDataArrayVectorKey = "InputDataArrayVector";
-constexpr StringLiteral k_CreateNewAttributeMatrixKey = "CreateNewAttributeMatrix";
-constexpr StringLiteral k_OutputAttributeMatrixNameKey = "OutputAttributeMatrixName";
 constexpr StringLiteral k_OutputArrayPrefixKey = "OutputArrayPrefix";
 } // namespace SIMPL
 } // namespace

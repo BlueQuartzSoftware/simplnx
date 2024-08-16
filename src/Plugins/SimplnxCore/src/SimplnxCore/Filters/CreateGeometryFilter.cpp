@@ -27,10 +27,9 @@ using namespace nx::core;
 
 namespace nx::core
 {
-
 namespace
 {
-Result<> checkGeometryArraysCompatible(const Float32Array& vertices, const UInt64Array& cells, bool treatWarningsAsErrors, const std::string& cellType)
+Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices, const UInt64AbstractDataStore& cells, bool treatWarningsAsErrors, const std::string& cellType)
 {
   Result<> warningResults;
   usize numVertices = vertices.getNumberOfTuples();
@@ -52,11 +51,11 @@ Result<> checkGeometryArraysCompatible(const Float32Array& vertices, const UInt6
   return warningResults;
 }
 
-Result<> checkGridBoundsResolution(const Float32Array& bounds, bool treatWarningsAsErrors, const std::string& boundType)
+Result<> checkGridBoundsResolution(const Float32AbstractDataStore& bounds, bool treatWarningsAsErrors, const std::string& boundType)
 {
   Result<> warningResults;
-  float val = bounds[0];
-  for(size_t i = 1; i < bounds.getNumberOfTuples(); i++)
+  float32 val = bounds[0];
+  for(usize i = 1; i < bounds.getNumberOfTuples(); i++)
   {
     if(val > bounds[i])
     {
@@ -312,7 +311,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   {
     auto pEdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     auto pEdgeAMName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
-    if(const auto edgeList = dataStructure.getDataAs<UInt64Array>(pEdgeListPath); edgeList == nullptr)
+    if(const auto* edgeList = dataStructure.getDataAs<UInt64Array>(pEdgeListPath); edgeList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9845, fmt::format("Cannot find selected edge list at path '{}'", pEdgeListPath.toString())}})};
     }
@@ -323,7 +322,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
   {
     auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
-    if(const auto triangleList = dataStructure.getDataAs<UInt64Array>(pTriangleListPath); triangleList == nullptr)
+    if(const auto* triangleList = dataStructure.getDataAs<UInt64Array>(pTriangleListPath); triangleList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString())}})};
     }
@@ -334,7 +333,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_QuadGeometry) // QuadGeom
   {
     auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
-    if(const auto quadList = dataStructure.getDataAs<UInt64Array>(pQuadListPath); quadList == nullptr)
+    if(const auto* quadList = dataStructure.getDataAs<UInt64Array>(pQuadListPath); quadList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString())}})};
     }
@@ -345,7 +344,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
   {
     auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
-    if(const auto tetList = dataStructure.getDataAs<UInt64Array>(pTetListPath); tetList == nullptr)
+    if(const auto* tetList = dataStructure.getDataAs<UInt64Array>(pTetListPath); tetList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString())}})};
     }
@@ -356,7 +355,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
   {
     auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
-    if(const auto hexList = dataStructure.getDataAs<UInt64Array>(pHexListPath); hexList == nullptr)
+    if(const auto* hexList = dataStructure.getDataAs<UInt64Array>(pHexListPath); hexList == nullptr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString())}})};
     }
@@ -376,9 +375,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
-  // auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
 
-  auto iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
+  auto* iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
   auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
   iGeometry->setUnits(lengthUnit);
 
@@ -414,8 +412,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   {
     auto sharedEdgeListArrayPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
-    const auto& edgesList = dataStructure.getDataRefAs<UInt64Array>(destEdgeListPath);
-    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& edgesList = dataStructure.getDataAs<UInt64Array>(destEdgeListPath)->getDataStoreRef();
+    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = checkGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
     if(results.invalid())
     {
@@ -426,8 +424,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   if(geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry)
   {
     const DataPath destFaceListPath = geometryPath.createChildPath(sharedFaceListArrayPath.getTargetName());
-    const auto& faceList = dataStructure.getDataRefAs<UInt64Array>(destFaceListPath);
-    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& faceList = dataStructure.getDataAs<UInt64Array>(destFaceListPath)->getDataStoreRef();
+    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = checkGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
     if(results.invalid())
     {
@@ -438,8 +436,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   if(geometryType == k_TetGeometry || geometryType == k_HexGeometry)
   {
     const DataPath destCellListPath = geometryPath.createChildPath(sharedCellListArrayPath.getTargetName());
-    const auto& cellList = dataStructure.getDataRefAs<UInt64Array>(destCellListPath);
-    const auto& vertexList = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()));
+    const auto& cellList = dataStructure.getDataAs<UInt64Array>(destCellListPath)->getDataStoreRef();
+    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = checkGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
     if(results.invalid())
     {
@@ -452,9 +450,9 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
     auto xBoundsArrayPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
     auto yBoundsArrayPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
     auto zBoundsArrayPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-    const auto& srcXBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()));
-    const auto& srcYBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()));
-    const auto& srcZBounds = dataStructure.getDataRefAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()));
+    const auto& srcXBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& srcYBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& srcZBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()))->getDataStoreRef();
     auto xResults = checkGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
     auto yResults = checkGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
     auto zResults = checkGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");

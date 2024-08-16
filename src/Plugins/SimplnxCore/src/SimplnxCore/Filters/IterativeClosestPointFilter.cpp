@@ -9,7 +9,6 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <Eigen/Geometry>
@@ -28,7 +27,7 @@ template <typename Derived>
 struct VertexGeomAdaptor
 {
   const Derived& obj;
-  Float32Array* verts;
+  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>* verts;
   size_t m_NumComponents = 0;
   size_t m_NumTuples = 0;
 
@@ -36,25 +35,25 @@ struct VertexGeomAdaptor
   : obj(obj_)
   {
     // These values never change for the lifetime of this object so cache them now.
-    verts = derived()->getVertices();
+    verts = derived()->getVertices()->getDataStore();
     m_NumComponents = verts->getNumberOfComponents();
     m_NumTuples = verts->getNumberOfTuples();
   }
 
-  const Derived& derived() const
+  [[nodiscard]] const Derived& derived() const
   {
     return obj;
   }
 
-  usize kdtree_get_point_count() const
+  [[nodiscard]] usize kdtree_get_point_count() const
   {
     return m_NumTuples;
   }
 
-  float kdtree_get_pt(const usize idx, const usize dim) const
+  [[nodiscard]] float kdtree_get_pt(const usize idx, const usize dim) const
   {
     auto offset = idx * m_NumComponents;
-    return (*verts)[offset + dim];
+    return verts->getValue(offset + dim);
   }
 
   template <class BBOX>
@@ -169,40 +168,34 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
 
   if(movingVertexGeom == nullptr)
   {
-    auto ss = fmt::format("Moving Vertex Geometry not found at path '{}'", movingVertexPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+    return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry not found at path '{}'", movingVertexPath.toString()));
   }
   if(targetVertexGeom == nullptr)
   {
-    auto ss = fmt::format("Target Vertex Geometry not found at path '{}'", targetVertexPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+    return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry not found at path '{}'", targetVertexPath.toString()));
   }
 
   if(movingVertexGeom->getVertices() == nullptr)
   {
-    auto ss = fmt::format("Moving Vertex Geometry does not contain a vertex array");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+    return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry does not contain a vertex array"));
   }
   if(targetVertexGeom->getVertices() == nullptr)
   {
-    auto ss = fmt::format("Target Vertex Geometry does not contain a vertex array");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertices, ss}})};
+    return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry does not contain a vertex array"));
   }
 
-  Float32Array& movingVerticesRef = *(movingVertexGeom->getVertices());
-  if(movingVerticesRef.empty())
+  Float32AbstractDataStore& movingStore = movingVertexGeom->getVertices()->getDataStoreRef();
+  if(movingStore.getNumberOfTuples() == 0)
   {
-    auto ss = fmt::format("Moving Vertex Geometry does not contain any vertices");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
+    return MakeErrorResult(k_EmptyVertices, fmt::format("Moving Vertex Geometry does not contain any vertices"));
   }
-  Float32Array& targetVerticesRef = *(targetVertexGeom->getVertices());
-  if(targetVerticesRef.empty())
+  Float32AbstractDataStore& targetStore = targetVertexGeom->getVertices()->getDataStoreRef();
+  if(targetStore.getNumberOfTuples() == 0)
   {
-    auto ss = fmt::format("Target Vertex Geometry does not contain any vertices");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyVertices, ss}})};
+    return MakeErrorResult(k_EmptyVertices, fmt::format("Target Vertex Geometry does not contain any vertices"));
   }
-  auto* movingStore = movingVerticesRef.getDataStore();
-  std::vector<float32> movingVector(movingStore->begin(), movingStore->end());
+
+  std::vector<float32> movingVector(movingStore.begin(), movingStore.end());
   float32* movingCopyPtr = movingVector.data();
   DataStructure tmp;
 
@@ -247,9 +240,9 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
       nanoflann::KNNResultSet<float> results(nn);
       results.init(&identifier, &dist);
       index.findNeighbors(results, movingCopyPtr + (3 * j), nanoflann::SearchParams());
-      dynTargetPtr[3 * j + 0] = targetVerticesRef[3 * identifier + 0];
-      dynTargetPtr[3 * j + 1] = targetVerticesRef[3 * identifier + 1];
-      dynTargetPtr[3 * j + 2] = targetVerticesRef[3 * identifier + 2];
+      dynTargetPtr[3 * j + 0] = targetStore[3 * identifier + 0];
+      dynTargetPtr[3 * j + 1] = targetStore[3 * identifier + 1];
+      dynTargetPtr[3 * j + 2] = targetStore[3 * identifier + 2];
     }
 
     Eigen::Map<PointCloud> moving_(movingCopyPtr, 3, numMovingVerts);
@@ -276,17 +269,17 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
     counter++;
   }
 
-  auto* transformPtr = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStore();
+  auto& transformStore = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStoreRef();
 
   if(applyTransformation)
   {
     for(usize j = 0; j < numMovingVerts; j++)
     {
-      Eigen::Vector4f position(movingVerticesRef[3 * j + 0], movingVerticesRef[3 * j + 1], movingVerticesRef[3 * j + 2], 1);
+      Eigen::Vector4f position(movingStore[3 * j + 0], movingStore[3 * j + 1], movingStore[3 * j + 2], 1);
       Eigen::Vector4f transformedPosition = globalTransform * position;
       for(usize k = 0; k < 3; k++)
       {
-        movingVerticesRef[3 * j + k] = transformedPosition.data()[k];
+        movingStore[3 * j + k] = transformedPosition.data()[k];
       }
     }
   }
@@ -294,7 +287,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
   globalTransform.transposeInPlace();
   for(usize j = 0; j < 16; j++)
   {
-    (*transformPtr)[j] = globalTransform.data()[j];
+    transformStore[j] = globalTransform.data()[j];
   }
 
   return {};
@@ -308,7 +301,6 @@ constexpr StringLiteral k_MovingVertexGeometryKey = "MovingVertexGeometry";
 constexpr StringLiteral k_TargetVertexGeometryKey = "TargetVertexGeometry";
 constexpr StringLiteral k_IterationsKey = "Iterations";
 constexpr StringLiteral k_ApplyTransformKey = "ApplyTransform";
-constexpr StringLiteral k_TransformAttributeMatrixNameKey = "TransformAttributeMatrixName";
 constexpr StringLiteral k_TransformArrayNameKey = "TransformArrayName";
 } // namespace SIMPL
 } // namespace

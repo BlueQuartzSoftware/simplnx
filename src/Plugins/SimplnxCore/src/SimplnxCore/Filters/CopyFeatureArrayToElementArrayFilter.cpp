@@ -17,26 +17,23 @@ using namespace nx::core;
 
 namespace
 {
-
 template <typename T>
 class CopyFeatureArrayToElementArrayImpl
 {
 public:
-  CopyFeatureArrayToElementArrayImpl(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const Int32Array& featureIdsArray, const DataPath& createdArrayPath,
-                                     const std::atomic_bool& shouldCancel)
-  : m_DataStructure(dataStructure)
-  , m_SelectedFeatureArrayPath(selectedFeatureArrayPath)
-  , m_FeatureIdsArray(featureIdsArray)
-  , m_CreatedArrayPath(createdArrayPath)
+  using StoreType = AbstractDataStore<T>;
+
+  CopyFeatureArrayToElementArrayImpl(const IDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
+  : m_SelectedFeature(selectedFeatureArray->getIDataStoreRefAs<StoreType>())
+  , m_FeatureIdsStore(featureIdsStore)
+  , m_CreatedStore(createdArray->getIDataStoreRefAs<StoreType>())
   , m_ShouldCancel(shouldCancel)
   {
   }
 
   void operator()(const Range& range) const
   {
-    const DataArray<T>& selectedFeatureArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_SelectedFeatureArrayPath);
-    auto& createdArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_CreatedArrayPath);
-    const usize totalFeatureArrayComponents = selectedFeatureArray.getNumberOfComponents();
+    const usize totalFeatureArrayComponents = m_SelectedFeature.getNumberOfComponents();
 
     for(usize i = range.min(); i < range.max(); ++i)
     {
@@ -45,21 +42,18 @@ public:
         return;
       }
 
-      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-      const int32 featureIdx = m_FeatureIdsArray[i];
-
       for(usize faComp = 0; faComp < totalFeatureArrayComponents; faComp++)
       {
-        createdArray[totalFeatureArrayComponents * i + faComp] = selectedFeatureArray[totalFeatureArrayComponents * featureIdx + faComp];
+        // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
+        m_CreatedStore[totalFeatureArrayComponents * i + faComp] = m_SelectedFeature[totalFeatureArrayComponents * m_FeatureIdsStore[i] + faComp];
       }
     }
   }
 
 private:
-  DataStructure& m_DataStructure;
-  const DataPath& m_SelectedFeatureArrayPath;
-  const Int32Array& m_FeatureIdsArray;
-  const DataPath& m_CreatedArrayPath;
+  const StoreType& m_SelectedFeature;
+  const Int32AbstractDataStore& m_FeatureIdsStore;
+  StoreType& m_CreatedStore;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -169,11 +163,11 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
   const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   const auto createdArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
-    const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
+    const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
     messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating number of featureIds in input array '{}'...", selectedFeatureArrayPath.toString())});
     auto results = ValidateNumFeaturesInArray(dataStructure, selectedFeatureArrayPath, featureIds);
@@ -185,7 +179,8 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
     messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, featureIds.getNumberOfTuples());
-    ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray.getDataType(), dataAlg, dataStructure, selectedFeatureArrayPath, featureIds, createdArrayPath, shouldCancel);
+    ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray->getDataType(), dataAlg, selectedFeatureArray, featureIds.getDataStoreRef(),
+                                                                  dataStructure.getDataAs<IDataArray>(createdArrayPath), shouldCancel);
   }
 
   return {};

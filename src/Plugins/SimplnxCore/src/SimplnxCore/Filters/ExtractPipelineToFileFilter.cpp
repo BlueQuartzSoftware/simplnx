@@ -13,11 +13,6 @@
 
 namespace fs = std::filesystem;
 
-namespace
-{
-constexpr nx::core::StringLiteral k_ImportedPipeline = "Imported Pipeline";
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------

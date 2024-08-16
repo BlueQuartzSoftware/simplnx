@@ -7,7 +7,6 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -95,13 +94,10 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pInputFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
-
   auto pQuadGeomPathValue = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
   auto pVertexAMNameValue = filterArgs.value<std::string>(k_VertexAMName_Key);
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
 
-  // Declare the preflightResult variable
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -189,7 +185,6 @@ namespace
 namespace SIMPL
 {
 constexpr StringLiteral k_DEFORMInputFileKey = "DEFORMInputFile";
-constexpr StringLiteral k_VerboseOutputKey = "VerboseOutput";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";

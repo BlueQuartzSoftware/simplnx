@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <stdexcept>
@@ -20,15 +21,17 @@ namespace
 {
 constexpr int32 k_EmptyParameterError = -123;
 
-template <class T>
-void CreateAndInitArray(DataStructure& dataStructure, const DataPath& path, const std::string& initValue)
+struct CreateAndInitArrayFunctor
 {
-  Result<T> result = ConvertTo<T>::convert(initValue);
-  T value = result.value();
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
-  auto& dataStore = dataArray.getDataStoreRef();
-  dataStore.fill(value);
-}
+  template <class T>
+  void operator()(IDataArray* iDataArray, const std::string& initValue)
+  {
+    Result<T> result = ConvertTo<T>::convert(initValue);
+
+    auto* dataStore = iDataArray->getIDataStoreAs<AbstractDataStore<T>>();
+    dataStore->fill(result.value());
+  }
+};
 } // namespace
 
 namespace nx::core
@@ -175,55 +178,10 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
-  auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto path = args.value<DataPath>(k_DataPath_Key);
   auto initValue = args.value<std::string>(k_InitializationValue_Key);
 
-  switch(numericType)
-  {
-  case NumericType::int8: {
-    CreateAndInitArray<int8>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::uint8: {
-    CreateAndInitArray<uint8>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::int16: {
-    CreateAndInitArray<int16>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::uint16: {
-    CreateAndInitArray<uint16>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::int32: {
-    CreateAndInitArray<int32>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::uint32: {
-    CreateAndInitArray<uint32>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::int64: {
-    CreateAndInitArray<int64>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::uint64: {
-    CreateAndInitArray<uint64>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::float32: {
-    CreateAndInitArray<float32>(dataStructure, path, initValue);
-    break;
-  }
-  case NumericType::float64: {
-    CreateAndInitArray<float64>(dataStructure, path, initValue);
-    break;
-  }
-  default:
-    throw std::runtime_error("Invalid NumericType used");
-  }
+  ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(args.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), initValue);
 
   return {};
 }
@@ -234,10 +192,7 @@ namespace SIMPL
 {
 constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
 constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_InitializationTypeKey = "InitializationType";
 constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
-constexpr StringLiteral k_InitializationRangeKey = "InitializationRange";
-constexpr StringLiteral k_StartingIndexValueKey = "StartingIndexValue";
 constexpr StringLiteral k_NewArrayKey = "NewArray";
 } // namespace SIMPL
 } // namespace

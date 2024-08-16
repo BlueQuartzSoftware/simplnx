@@ -9,11 +9,10 @@
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include <nonstd/span.hpp>
+#include <span>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -43,59 +42,6 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
   }
 
   return cDims;
-}
-
-template <typename T>
-Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader)
-{
-  using StoreType = DataStore<T>;
-  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
-  if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
-  {
-    return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
-                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                                dataArray.getNumberOfComponents()))};
-  }
-
-  return {};
-}
-
-template <typename T>
-Result<> fillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader)
-{
-  uint64 installedMemory = Memory::GetTotalMemory();
-  if(installedMemory <= dataArray.getSize() * sizeof(T))
-  {
-    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data. Installed memory is {} bytes", dataArray.getName(),
-                                               datasetReader.getNumElements(), installedMemory));
-  }
-
-  auto& absDataStore = dataArray.getDataStoreRef();
-  std::vector<T> data(absDataStore.getSize());
-  nonstd::span<T> span{data.data(), data.size()};
-  if(!datasetReader.readIntoSpan<T>(span))
-  {
-    return {MakeErrorResult(-21003, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
-                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                                dataArray.getNumberOfComponents()))};
-  }
-  std::copy(data.begin(), data.end(), absDataStore.begin());
-
-  return {};
-}
-
-template <typename T>
-Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader)
-{
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
-  if(dataArray.getDataFormat().empty())
-  {
-    return fillDataStore(dataArray, dataArrayPath, datasetReader);
-  }
-  else
-  {
-    return fillOocDataStore(dataArray, dataArrayPath, datasetReader);
-  }
 }
 } // namespace
 
@@ -162,7 +108,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
   if(inputFile.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20001, "The HDF5 file path is empty.  Please select an HDF5 file."}})};
+    return MakePreflightErrorResult(-20001, "The HDF5 file path is empty.  Please select an HDF5 file.");
   }
 
   fs::path inputFilePath(inputFile);
@@ -170,20 +116,20 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
   if(!fs::exists(inputFilePath))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20003, fmt::format("The selected file '{}' does not exist.", inputFilePath.filename().string())}})};
+    return MakePreflightErrorResult(-20003, fmt::format("The selected file '{}' does not exist.", inputFilePath.filename().string()));
   }
 
   if(datasetImportInfoList.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20004, "No dataset has been checked.  Please check a dataset."}})};
+    return MakePreflightErrorResult(-20004, "No dataset has been checked.  Please check a dataset.");
   }
 
   if(pSelectedAttributeMatrixValue.has_value())
   {
     if(dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue.value()) == nullptr && dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20005, fmt::format("The selected data path '{}' does not exist. Make sure you are selecting a DataGroup or AttributeMatrix.", pSelectedAttributeMatrixValue.value().toString())}})};
+      return MakePreflightErrorResult(
+          -20005, fmt::format("The selected data path '{}' does not exist. Make sure you are selecting a DataGroup or AttributeMatrix.", pSelectedAttributeMatrixValue.value().toString()));
     }
   }
 
@@ -194,7 +140,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
   hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile)}})};
+    return MakePreflightErrorResult(-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }
 
   for(const auto& datasetImportInfo : datasetImportInfoList)
@@ -202,7 +148,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     std::string datasetPath = datasetImportInfo.dataSetPath;
     if(datasetPath.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20007, "Cannot import an empty dataset path"}})};
+      return MakePreflightErrorResult(-20007, "Cannot import an empty dataset path");
     }
 
     // Read dataset into DREAM.3D structure
@@ -212,22 +158,22 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
     if(dims.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20008, fmt::format("Error reading dimensions from dataset with path '{}'", datasetPath)}})};
+      return MakePreflightErrorResult(-20008, fmt::format("Error reading dimensions from dataset with path '{}'", datasetPath));
     }
 
     std::string cDimsStr = datasetImportInfo.componentDimensions;
     if(cDimsStr.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20009, fmt::format("The component dimensions are empty for dataset with path '{}'.  Please enter the component dimensions, using comma-separated values (ex: 4x2 would be '4, 2').",
-                                    datasetPath)}})};
+      return MakePreflightErrorResult(
+          -20009,
+          fmt::format("The component dimensions are empty for dataset with path '{}'.  Please enter the component dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
     }
 
     std::vector<size_t> cDims = createDimensionVector(cDimsStr);
     if(cDims.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20010, fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+      return MakePreflightErrorResult(-20010,
+                                      fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
     }
 
     std::vector<size_t> tDims;
@@ -236,16 +182,15 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       std::string tDimsStr = datasetImportInfo.tupleDimensions;
       if(tDimsStr.empty())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{
-            Error{-20011, fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').",
-                                      datasetPath)}})};
+        return MakePreflightErrorResult(
+            -20011, fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
       }
 
       tDims = createDimensionVector(tDimsStr);
       if(tDims.empty())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{
-            Error{-20012, fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+        return MakePreflightErrorResult(-20012,
+                                        fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath));
       }
     }
     else
@@ -323,7 +268,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
                             "'{}' =/= '{}'",
                             datasetPath, StringUtilities::number(numOfTuples), StringUtilities::number(totalComponents), StringUtilities::number(numOfTuples * totalComponents),
                             StringUtilities::number(hdf5TotalElements), StringUtilities::number(numOfTuples * totalComponents), StringUtilities::number(hdf5TotalElements));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20013, stream.str()}})};
+      return MakePreflightErrorResult(-20013, stream.str());
     }
 
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
@@ -332,16 +277,15 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     {
       stream.clear();
       stream << "The selected dataset '" << pSelectedAttributeMatrixValue.value().toString() << "/" << objectName << "' already exists.";
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-20014, stream.str()}})};
+      return MakePreflightErrorResult(-20014, stream.str());
     }
     else
     {
       Result<HDF5::Type> type = datasetReader.getDataType();
       if(type.invalid())
       {
-        return {
-            nonstd::make_unexpected(std::vector<Error>{Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set",
-                                                                                 datasetPath, fmt::underlying(datasetReader.getType()))}})};
+        return MakePreflightErrorResult(-20015, fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath,
+                                                            fmt::underlying(datasetReader.getType())));
       }
       DataType dataType = nx::core::HDF5::toCommonType(type.value()).value();
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
@@ -366,7 +310,7 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
   hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
-    return {MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile))};
+    return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }
 
   std::map<std::string, hid_t> openedParentPathsMap;
@@ -423,15 +367,15 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
       break;
     }
     default: {
-      return {MakeErrorResult(-21001,
-                              fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)))};
+      return MakeErrorResult(-21001,
+                             fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)));
     }
     }
     if(fillArrayResults.invalid())
     {
       return fillArrayResults;
     }
-  } // End For Loop over dataset imoprt info list
+  } // End For Loop over dataset import info list
 
   return {};
 }

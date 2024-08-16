@@ -12,10 +12,8 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -58,9 +56,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // Create the parameter descriptors that are needed for this filter
-  // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "The number of sample points to use", 1000));
-  // params.insert(std::make_unique<DataPathSelectionParameter>(k_ParentGeometry_Key, "Source Geometry for Number of Sample Points", "", DataPath{}, true));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
@@ -85,8 +81,6 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
-  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{},
-  // DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
                                                              "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
   params.insertSeparator(Parameters::Separator{"Output Vertex Attribute Matrix"});
@@ -94,8 +88,6 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
       std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry", INodeGeometry0D::k_VertexDataName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
-  //  params.linkParameters(k_SamplesNumberType_Key, k_ParentGeometry_Key, 1);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
@@ -121,8 +113,6 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
   DataPath pVertexGroupDataPath = pVertexGeometryDataPath.createChildPath(pVertexGroupDataName);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
-
-  PreflightResult preflightResult;
 
   nx::core::Result<OutputActions> resultOutputActions = {};
 
@@ -217,11 +207,9 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_SamplesNumberTypeKey = "SamplesNumberType";
 constexpr StringLiteral k_NumberOfSamplesKey = "NumberOfSamples";
 constexpr StringLiteral k_UseMaskKey = "UseMask";
 constexpr StringLiteral k_TriangleGeometryKey = "TriangleGeometry";
-constexpr StringLiteral k_ParentGeometryKey = "ParentGeometry";
 constexpr StringLiteral k_TriangleAreasArrayPathKey = "TriangleAreasArrayPath";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";

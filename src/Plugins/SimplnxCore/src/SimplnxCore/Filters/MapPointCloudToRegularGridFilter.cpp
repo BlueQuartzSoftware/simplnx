@@ -12,7 +12,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -21,31 +20,36 @@ namespace nx::core
 {
 namespace
 {
-constexpr int64 k_MissingVertexGeom = -2600;
 constexpr int64 k_BadGridDimensions = -2601;
 constexpr int64 k_InvalidVertexGeometry = -2602;
 constexpr int64 k_IncompatibleMaskVoxelArrays = -2603;
+constexpr int64 k_MaskSelectedArrayInvalid = -2604;
 
-void createRegularGrid(DataStructure& dataStructure, const Arguments& args)
+Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& args)
 {
   const auto samplingGridType = args.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
+
+  if(samplingGridType == 1)
+  {
+    return {};
+  }
+
   const auto vertexGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key);
   const auto newImageGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key);
   const auto useMask = args.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key);
   const auto maskArrayPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key);
 
-  if(samplingGridType == 1)
-  {
-    return;
-  }
-
   const auto* pointCloud = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   auto* image = dataStructure.getDataAs<ImageGeom>(newImageGeomPath);
 
-  int64 numVerts = pointCloud->getNumberOfVertices();
-  auto* vertex = pointCloud->getVertices();
+  usize numVerts = pointCloud->getNumberOfVertices();
+  auto& vertex = pointCloud->getVertices()->getDataStoreRef();
 
-  const auto* mask = dataStructure.getDataAs<BoolArray>(maskArrayPath);
+  const auto* mask = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
+  if(useMask && mask == nullptr)
+  {
+    return MakeErrorResult(k_MaskSelectedArrayInvalid, "Use Mask was selected but mask array doesn't exist.");
+  }
 
   // Find the largest/smallest (x,y,z) dimensions of the incoming data to be used to define the maximum dimensions for the regular grid
   std::vector<float32> meshMaxExtents;
@@ -58,31 +62,31 @@ void createRegularGrid(DataStructure& dataStructure, const Arguments& args)
 
   for(int64_t i = 0; i < numVerts; i++)
   {
-    if(!useMask || (useMask && (*mask)[i]))
+    if(!useMask || mask->getValue(i))
     {
-      if((*vertex)[3 * i] > meshMaxExtents[0])
+      if(vertex[3 * i] > meshMaxExtents[0])
       {
-        meshMaxExtents[0] = (*vertex)[3 * i];
+        meshMaxExtents[0] = vertex[3 * i];
       }
-      if((*vertex)[3 * i + 1] > meshMaxExtents[1])
+      if(vertex[3 * i + 1] > meshMaxExtents[1])
       {
-        meshMaxExtents[1] = (*vertex)[3 * i + 1];
+        meshMaxExtents[1] = vertex[3 * i + 1];
       }
-      if((*vertex)[3 * i + 2] > meshMaxExtents[2])
+      if(vertex[3 * i + 2] > meshMaxExtents[2])
       {
-        meshMaxExtents[2] = (*vertex)[3 * i + 2];
+        meshMaxExtents[2] = vertex[3 * i + 2];
       }
-      if((*vertex)[3 * i] < meshMinExtents[0])
+      if(vertex[3 * i] < meshMinExtents[0])
       {
-        meshMinExtents[0] = (*vertex)[3 * i];
+        meshMinExtents[0] = vertex[3 * i];
       }
-      if((*vertex)[3 * i + 1] < meshMinExtents[1])
+      if(vertex[3 * i + 1] < meshMinExtents[1])
       {
-        meshMinExtents[1] = (*vertex)[3 * i + 1];
+        meshMinExtents[1] = vertex[3 * i + 1];
       }
-      if((*vertex)[3 * i + 2] < meshMinExtents[2])
+      if(vertex[3 * i + 2] < meshMinExtents[2])
       {
-        meshMinExtents[2] = (*vertex)[3 * i + 2];
+        meshMinExtents[2] = vertex[3 * i + 2];
       }
     }
   }
@@ -180,6 +184,8 @@ void createRegularGrid(DataStructure& dataStructure, const Arguments& args)
   image->setSpacing(iRes[0], iRes[1], iRes[2]);
   image->setOrigin(iOrigin[0], iOrigin[1], iOrigin[2]);
   image->getCellData()->resizeTuples({iDims[2], iDims[1], iDims[0]});
+
+  return {};
 }
 } // namespace
 
@@ -329,7 +335,11 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   {
     // Create the regular grid
     messageHandler("Creating Regular Grid");
-    createRegularGrid(dataStructure, args);
+    auto result = CreateRegularGrid(dataStructure, args);
+    if(result.invalid())
+    {
+      return result;
+    }
     image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_CreatedImageGeometryPath_Key));
   }
   else if(samplingGridType == 1)
@@ -339,10 +349,14 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
 
   const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
-  auto& voxelIndices = dataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
-  const auto* mask = dataStructure.getDataAs<BoolArray>(maskArrayPath);
+  auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
+  const auto* mask = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
+  if(useMask && mask == nullptr)
+  {
+    return MakeErrorResult(k_MaskSelectedArrayInvalid, "Use Mask was selected but mask array doesn't exist.");
+  }
 
-  int64 numVerts = vertices.getNumberOfVertices();
+  usize numVerts = vertices.getNumberOfVertices();
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   FloatVec3 origin = image->getOrigin();
@@ -353,7 +367,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
 
   for(int64 i = 0; i < numVerts; i++)
   {
-    if(!useMask || (useMask && (*mask)[i]))
+    if(!useMask || mask->getValue(i))
     {
       auto coords = vertices.getVertexCoordinate(i);
       const auto indexResult = image->getIndex(coords[0], coords[1], coords[2]);

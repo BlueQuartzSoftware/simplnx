@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ArrayThreshold.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <algorithm>
@@ -129,9 +128,9 @@ public:
 struct ExecuteThresholdHelper
 {
   template <typename Type, typename MaskType>
-  void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray& iDataArray, Type trueValue, Type falseValue)
+  void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray* iDataArray, Type trueValue, Type falseValue)
   {
-    const auto& dataStore = iDataArray.getIDataStoreRefAs<AbstractDataStore<Type>>();
+    const auto& dataStore = iDataArray->getIDataStoreRefAs<AbstractDataStore<Type>>();
     helper.template filterData<Type>(dataStore, trueValue, falseValue);
   }
 };
@@ -167,17 +166,14 @@ void InsertThreshold(usize numItems, AbstractDataStore<T>& currentStore, nx::cor
 }
 
 template <typename T>
-void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStructure& dataStructure, DataPath& outputResultArrayPath, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                    T falseValue)
+void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse,
+                    T trueValue, T falseValue)
 {
   if(nullptr == comparisonValue)
   {
     err = -1;
     return;
   }
-  // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
-  // was essentially done in the preflight part.
-  auto& outputResultStore = dataStructure.getDataAs<DataArray<T>>(outputResultArrayPath)->getDataStoreRef();
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultStore.getNumberOfTuples();
@@ -191,9 +187,9 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
 
   ThresholdFilterHelper<T> helper(compOperator, compValue, tempResultVector);
 
-  const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
+  const auto* iDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
 
-  ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray, trueValue, falseValue);
+  ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray->getDataType(), helper, iDataArray, trueValue, falseValue);
 
   if(replaceInput)
   {
@@ -214,59 +210,26 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
 }
 
-/**
- * @brief thresholdValue
- * @param comparisonValue
- * @param dataStructure
- * @param outputResultArrayPath
- * @param err
- * @param replaceInput
- * @param inverse
- */
-void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStructure& dataStructure, DataPath& outputResultArrayPath, DataType maskArrayType, int32_t& err, bool replaceInput,
-                    bool inverse, float64 trueValue, float64 falseValue)
+struct ThresholdValueFunctor
 {
-  switch(maskArrayType)
+  template <typename T>
+  void operator()(std::shared_ptr<ArrayThreshold>& comparisonValue, const DataStructure& dataStructure, IDataArray* outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+                  T falseValue)
   {
-  case DataType::int8:
-    return ThresholdValue<int8>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int16:
-    return ThresholdValue<int16>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int32:
-    return ThresholdValue<int32>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int64:
-    return ThresholdValue<int64>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint8:
-    return ThresholdValue<uint8>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint16:
-    return ThresholdValue<uint16>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint32:
-    return ThresholdValue<uint32>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint64:
-    return ThresholdValue<uint64>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::float32:
-    return ThresholdValue<float32>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::float64:
-    return ThresholdValue<float64>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::boolean:
-    [[fallthrough]];
-  default:
-    return ThresholdValue<bool>(comparisonValue, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
+    // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
+    // was essentially done in the preflight part.
+    ThresholdValue(comparisonValue, dataStructure, outputResultArray->getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
-}
+};
 
 template <typename T>
-void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataStructure& dataStructure, DataPath& outputResultArrayPath, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                  T falseValue)
+void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse,
+                  T trueValue, T falseValue)
 {
   if(nullptr == inputComparisonSet)
   {
     return;
   }
-
-  // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
-  // was essentially done in the preflight part.
-  auto& outputResultStore = dataStructure.getDataAs<DataArray<T>>(outputResultArrayPath)->getDataStoreRef();
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultStore.getNumberOfTuples();
@@ -280,13 +243,14 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
     if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
     {
       std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ThresholdSet<T>(comparisonSet, dataStructure, outputResultArrayPath, err, !firstValueFound, false, trueValue, falseValue);
+      ThresholdSet<T>(comparisonSet, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
       firstValueFound = true;
     }
     else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
     {
       std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      ThresholdValue<T>(comparisonValue, dataStructure, outputResultArrayPath, err, !firstValueFound, false, trueValue, falseValue);
+
+      ThresholdValue<T>(comparisonValue, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
       firstValueFound = true;
     }
   }
@@ -310,37 +274,22 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
   }
 }
 
-void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataStructure& dataStructure, DataPath& outputResultArrayPath, DataType maskArrayType, int32_t& err, bool replaceInput,
-                  bool inverse, float64 trueValue, float64 falseValue)
+struct ThresholdSetFunctor
 {
-  switch(maskArrayType)
+  template <typename T>
+  void operator()(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, const DataStructure& dataStructure, IDataArray* outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+                  T falseValue)
   {
-  case DataType::int8:
-    return ThresholdSet<int8>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int16:
-    return ThresholdSet<int16>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int32:
-    return ThresholdSet<int32>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::int64:
-    return ThresholdSet<int64>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint8:
-    return ThresholdSet<uint8>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint16:
-    return ThresholdSet<uint16>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint32:
-    return ThresholdSet<uint32>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::uint64:
-    return ThresholdSet<uint64>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::float32:
-    return ThresholdSet<float32>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::float64:
-    return ThresholdSet<float64>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
-  case DataType::boolean:
-    [[fallthrough]];
-  default:
-    return ThresholdSet<bool>(inputComparisonSet, dataStructure, outputResultArrayPath, err, replaceInput, inverse, trueValue, falseValue);
+    if(outputResultArray == nullptr)
+    {
+      return;
+    }
+
+    // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
+    // was essentially done in the preflight part.
+    ThresholdSet<T>(inputComparisonSet, dataStructure, outputResultArray->getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
-}
+};
 
 struct CheckCustomValueInBounds
 {
@@ -370,7 +319,6 @@ struct CheckCustomValueInBounds
     return {};
   }
 };
-
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -552,13 +500,15 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
     if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
     {
       std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ThresholdSet(comparisonSet, dataStructure, maskArrayPath, maskArrayType, err, !firstValueFound, thresholdsObject.isInverted(), trueValue, falseValue);
+      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, comparisonSet, dataStructure, dataStructure.getDataAs<IDataArray>(maskArrayPath), err, !firstValueFound, thresholdsObject.isInverted(),
+                          trueValue, falseValue);
       firstValueFound = true;
     }
     else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
     {
       std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      ThresholdValue(comparisonValue, dataStructure, maskArrayPath, maskArrayType, err, !firstValueFound, thresholdsObject.isInverted(), trueValue, falseValue);
+      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, comparisonValue, dataStructure, dataStructure.getDataAs<IDataArray>(maskArrayPath), err, !firstValueFound,
+                          thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
   }
