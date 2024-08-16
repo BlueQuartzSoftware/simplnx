@@ -298,7 +298,7 @@ Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const A
   const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
   auto* inputData = dataStructure.getDataAs<IDataArray>(goodVoxelsArrayPath);
-  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(goodVoxelsArrayPath);
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
 
   ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles);
 
