@@ -60,4 +60,4 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
 
   return fileList;
 }
-} // namespace nx::core
+} // namespace nx::core::FilePathGenerator

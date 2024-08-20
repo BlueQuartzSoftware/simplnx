@@ -1812,6 +1812,6 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
                                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler);
 
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
-                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
+                                           const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
 } // namespace nx::core
