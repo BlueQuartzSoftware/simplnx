@@ -111,11 +111,8 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFlaggedFeaturesArrayPathValue = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
   auto operationType = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
-  auto fillGaps = filterArgs.value<BoolParameter::ValueType>(k_FillRemovedFeatures_Key);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(featureIdsPtr == nullptr)
@@ -178,7 +175,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

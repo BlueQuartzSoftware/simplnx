@@ -19,7 +19,8 @@ namespace
 class ReverseWindingImpl
 {
 public:
-  explicit ReverseWindingImpl(TriangleGeom::SharedFaceList& triangles)
+  using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
+  explicit ReverseWindingImpl(TriStore& triangles)
   : m_Triangles(triangles)
   {
   }
@@ -45,7 +46,7 @@ public:
   }
 
 private:
-  TriangleGeom::SharedFaceList& m_Triangles;
+  TriStore& m_Triangles;
 };
 } // namespace
 
@@ -104,11 +105,7 @@ IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -119,7 +116,7 @@ Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure,
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, triangleGeom.getNumberOfFaces());
-  dataAlg.execute(ReverseWindingImpl(triangleGeom.getFacesRef()));
+  dataAlg.execute(ReverseWindingImpl(triangleGeom.getFaces()->getDataStoreRef()));
 
   return {};
 }

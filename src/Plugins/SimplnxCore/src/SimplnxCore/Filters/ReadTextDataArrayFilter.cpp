@@ -1,7 +1,6 @@
 #include "ReadTextDataArrayFilter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -13,14 +12,27 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
+
+namespace
+{
+struct CSVReadFileFunctor
+{
+  template <typename T>
+  Result<> operator()(IDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
+  {
+    auto& store = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    return CsvParser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
+  }
+};
+} // namespace
 
 namespace nx::core
 {
@@ -149,58 +161,14 @@ Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, cons
                                               const std::atomic_bool& shouldCancel) const
 {
   auto inputFilePath = args.value<fs::path>(k_InputFile_Key);
-  auto numericType = args.value<NumericType>(k_ScalarType_Key);
   auto skipLines = args.value<uint64>(k_NSkipLines_Key);
   auto choiceIndex = args.value<uint64>(k_DelimiterChoice_Key);
   auto path = args.value<DataPath>(k_DataArrayPath_Key);
 
   char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
 
-  switch(numericType)
-  {
-  case NumericType::int8: {
-    auto dataArray = nx::core::ArrayFromPath<int8>(dataStructure, path);
-    return CsvParser::ReadFile<int8_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::uint8: {
-    auto dataArray = nx::core::ArrayFromPath<uint8>(dataStructure, path);
-    return CsvParser::ReadFile<uint8_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::int16: {
-    auto dataArray = nx::core::ArrayFromPath<int16>(dataStructure, path);
-    return CsvParser::ReadFile<int16_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::uint16: {
-    auto dataArray = nx::core::ArrayFromPath<uint16>(dataStructure, path);
-    return CsvParser::ReadFile<uint16_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::int32: {
-    auto dataArray = nx::core::ArrayFromPath<int32>(dataStructure, path);
-    return CsvParser::ReadFile<int32_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::uint32: {
-    auto dataArray = nx::core::ArrayFromPath<uint32>(dataStructure, path);
-    return CsvParser::ReadFile<uint32_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::int64: {
-    auto dataArray = nx::core::ArrayFromPath<int64>(dataStructure, path);
-    return CsvParser::ReadFile<int64_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::uint64: {
-    auto dataArray = nx::core::ArrayFromPath<uint64>(dataStructure, path);
-    return CsvParser::ReadFile<uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::float32: {
-    auto dataArray = nx::core::ArrayFromPath<float32>(dataStructure, path);
-    return CsvParser::ReadFile<float>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  case NumericType::float64: {
-    auto dataArray = nx::core::ArrayFromPath<float64>(dataStructure, path);
-    return CsvParser::ReadFile<double>(inputFilePath, *dataArray, skipLines, delimiter);
-  }
-  default:
-    return MakeErrorResult(-1001, fmt::format("ReadTextDataArrayFilter: Parameter NumericType which has a value of '{}' does not match any in simplnx.", to_underlying(numericType)));
-  }
+  auto* iDataArray = dataStructure.getDataAs<IDataArray>(path);
+  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArray->getDataType(), iDataArray, inputFilePath, skipLines, delimiter);
 }
 
 namespace
@@ -213,7 +181,6 @@ constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
 constexpr StringLiteral k_SkipHeaderLinesKey = "SkipHeaderLines";
 constexpr StringLiteral k_DelimiterKey = "Delimiter";
 constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
-constexpr StringLiteral k_FirstLineKey = "FirstLine";
 } // namespace SIMPL
 } // namespace
 

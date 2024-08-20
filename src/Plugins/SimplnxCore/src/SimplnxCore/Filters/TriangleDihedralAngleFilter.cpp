@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <algorithm>
@@ -29,7 +28,7 @@ constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -76970;
 class CalculateDihedralAnglesImpl
 {
 public:
-  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64Array& dihedralAngles, const std::atomic_bool& shouldCancel)
+  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& dihedralAngles, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_DihedralAngles(dihedralAngles)
   , m_ShouldCancel(shouldCancel)
@@ -39,11 +38,6 @@ public:
 
   void generate(size_t start, size_t end) const
   {
-
-    const IGeometry::SharedVertexList* mNodes = m_TriangleGeom->getVertices();
-    const IGeometry::SharedTriList* mTriangles = m_TriangleGeom->getFaces();
-
-    IGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
     // std::array<float64, 3> vectorEx = {x, y, z};  // coordinate example
     std::array<float64, 3> vecAB = {0.0f, 0.0f, 0.0f};
     std::array<float64, 3> vecAC = {0.0f, 0.0f, 0.0f};
@@ -99,7 +93,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64Array& m_DihedralAngles;
+  Float64AbstractDataStore& m_DihedralAngles;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -167,8 +161,6 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   if(triangleGeom == nullptr)
   {
@@ -190,7 +182,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -203,7 +195,7 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
-  auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
+  auto& dihedralAngles = dataStructure.getDataAs<Float64Array>(dihedralAnglesArrayPath)->getDataStoreRef();
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));

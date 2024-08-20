@@ -11,7 +11,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>
@@ -101,7 +100,6 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<usize> tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
@@ -168,7 +166,6 @@ constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_SpacingKey = "Spacing";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_LengthUnitKey = "LengthUnit";
-constexpr StringLiteral k_BoxDimensionsKey = "BoxDimensions";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";

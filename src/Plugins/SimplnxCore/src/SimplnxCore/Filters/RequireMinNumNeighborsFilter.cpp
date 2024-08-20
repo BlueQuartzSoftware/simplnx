@@ -28,15 +28,7 @@ Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, co
   auto cellDataAttrMatrix = featureIdsPath.getParent();
 
   auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
-
-  auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
-  Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase)
-  {
-    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
-  }
+  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
 
   usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 udims = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
@@ -58,7 +50,7 @@ Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, co
   int32 current = 0;
   int32 most = 0;
   int64 neighborPoint = 0;
-  usize numFeatures = numNeighborsArray.getNumberOfTuples();
+  usize numFeatures = numNeighbors.getNumberOfTuples();
 
   int64 neighborPointIdx[6] = {0, 0, 0, 0, 0, 0};
   neighborPointIdx[0] = -dims[0] * dims[1];
@@ -250,12 +242,8 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
   auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
 
   auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
-  Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase)
-  {
-    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
-  }
+  Int32AbstractDataStore* featurePhases =
+      applyToSinglePhase ? dataStructure.getDataAs<Int32Array>(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key))->getDataStore() : nullptr;
 
   bool good = false;
   usize totalPoints = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
@@ -265,9 +253,9 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(!applyToSinglePhase)
+    if(applyToSinglePhase && featurePhases != nullptr)
     {
-      if(numNeighbors[i] >= minNumNeighbors)
+      if(numNeighbors[i] >= minNumNeighbors || featurePhases->getValue(i) != phaseNumber)
       {
         good = true;
       }
@@ -278,7 +266,7 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
     }
     else
     {
-      if(numNeighbors[i] >= minNumNeighbors || (*featurePhasesArray)[i] != phaseNumber)
+      if(numNeighbors[i] >= minNumNeighbors)
       {
         good = true;
       }
@@ -420,8 +408,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   // Inform users that the following arrays are going to be modified in place

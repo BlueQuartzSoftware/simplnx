@@ -8,7 +8,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -25,7 +24,7 @@ constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -75969;
 class CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64Array& normals, const std::atomic_bool& shouldCancel)
+  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Normals(normals)
   , m_ShouldCancel(shouldCancel)
@@ -65,7 +64,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64Array& m_Normals;
+  Float64AbstractDataStore& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -131,8 +130,6 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pNormalsArrayName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayName_Key);
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
@@ -152,7 +149,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -166,7 +163,7 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
 
   DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
-  auto& normals = dataStructure.getDataRefAs<Float64Array>(pNormalsArrayPath);
+  auto& normals = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;

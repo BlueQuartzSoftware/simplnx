@@ -7,7 +7,6 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
-#include "simplnx/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
@@ -15,7 +14,6 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -124,9 +122,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* gridGeom = dataStructure.getDataAs<IGridGeometry>(pGridGeomDataPath);
   if(gridGeom == nullptr)
@@ -177,7 +173,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
     resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -9,11 +9,9 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
-#include <algorithm>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <algorithm>
 #include <vector>
 
 namespace nx::core

@@ -15,11 +15,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -109,14 +104,11 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
   auto pEdgeArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
   auto selectedEdgeArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
   auto selectedEdgeAttrMatPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
-
   auto pVertexArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
   auto selectedVertexArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
   auto selectedVertexAttrMatPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry1D>(pInitialGeometryPathValue);
 
@@ -198,7 +190,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

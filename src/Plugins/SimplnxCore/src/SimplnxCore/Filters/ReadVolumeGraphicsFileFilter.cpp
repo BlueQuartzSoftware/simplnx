@@ -445,7 +445,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
       std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, std::vector<usize>{1}, dap);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), {}};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

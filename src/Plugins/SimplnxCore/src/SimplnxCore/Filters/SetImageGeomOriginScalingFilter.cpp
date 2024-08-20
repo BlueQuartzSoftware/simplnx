@@ -6,16 +6,14 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <optional>
 
 namespace nx::core
 {
-
 //------------------------------------------------------------------------------
 std::string SetImageGeomOriginScalingFilter::name() const
 {
@@ -56,11 +54,11 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", true));
   params.insert(
       std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float64>{0.0, 0.0, 0.0},
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0f, 0.0f, 0.0f},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", true));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float64>{1, 1, 1},
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0f, 1.0f, 1.0f},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
@@ -83,8 +81,8 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto origin = filterArgs.value<std::vector<float64>>(k_Origin_Key);
-  auto spacing = filterArgs.value<std::vector<float64>>(k_Spacing_Key);
+  auto origin = filterArgs.value<std::vector<float32>>(k_Origin_Key);
+  auto spacing = filterArgs.value<std::vector<float32>>(k_Spacing_Key);
 
   std::optional<FloatVec3> optOrigin;
   std::optional<FloatVec3> optSpacing;
@@ -150,9 +148,9 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeOriginKey, k_ChangeOrigin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeResolutionKey, k_ChangeSpacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -108,9 +108,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   auto selectedVertexArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
   auto selectedVertexAttrMatPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(pInitialGeometryPathValue);
 
@@ -200,7 +198,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

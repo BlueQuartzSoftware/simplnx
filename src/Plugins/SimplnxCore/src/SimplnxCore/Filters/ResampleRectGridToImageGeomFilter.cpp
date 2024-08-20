@@ -6,7 +6,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
-#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
@@ -16,10 +15,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 using namespace nx::core;
 
@@ -93,7 +89,6 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pImageGeomCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrixName_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -219,9 +214,7 @@ namespace SIMPL
 {
 constexpr StringLiteral k_RectilinearGridPathKey = "RectilinearGridPath";
 constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_RectGridGeometryDescKey = "RectGridGeometryDesc";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
-constexpr StringLiteral k_CreatedGeometryDescriptionKey = "CreatedGeometryDescription";
 constexpr StringLiteral k_ImageGeometryPathKey = "ImageGeometryPath";
 constexpr StringLiteral k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
 } // namespace SIMPL
