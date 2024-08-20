@@ -33,7 +33,7 @@ public:
 
   void operator()() const
   {
-    const auto& inputStore = m_InputArray.getIDataStoreRefAs<AbstractDataStore<Type>>();
+    const auto& inputStore = m_InputArray.template getIDataStoreRefAs<AbstractDataStore<Type>>();
     auto end = inputStore.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }

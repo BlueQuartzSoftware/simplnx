@@ -56,37 +56,37 @@ public:
     using DataArrayType = DataArray<T>;
     using StoreType = AbstractDataStore<T>;
 
-    auto* array0 = m_Length ? m_Arrays[0]->getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
+    auto* array0 = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
     if(m_Length && array0 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
-    auto* array1 = m_Min ? m_Arrays[1]->getIDataStoreAs<StoreType>() : nullptr;
+    auto* array1 = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
     if(m_Min && array1 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
-    auto* array2 = m_Max ? m_Arrays[2]->getIDataStoreAs<StoreType>() : nullptr;
+    auto* array2 = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
     if(m_Max && array2 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
-    auto* array3 = m_Mean ? m_Arrays[3]->getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    auto* array3 = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Mean && array3 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
     }
-    auto* array4 = m_Median ? m_Arrays[4]->getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    auto* array4 = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Median && array4 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
     }
-    auto* array5 = m_StdDeviation ? m_Arrays[5]->getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    auto* array5 = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_StdDeviation && array5 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
     }
-    auto* array6 = m_Summation ? m_Arrays[6]->getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    auto* array6 = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Summation && array6 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");

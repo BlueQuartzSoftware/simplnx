@@ -18,8 +18,8 @@ public:
   ComputeKMeansTemplate(ComputeKMeans* filter, const IDataArray* inputIDataArray, IDataArray* meansIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
                         Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
-  , m_InputArray(inputIDataArray->getIDataStoreRefAs<AbstractDataStoreT>())
-  , m_Means(meansIDataArray->getIDataStoreRefAs<AbstractDataStoreT>())
+  , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStoreT>())
+  , m_Means(meansIDataArray->template getIDataStoreRefAs<AbstractDataStoreT>())
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
   , m_FeatureIds(fIds)

@@ -977,8 +977,8 @@ public:
 
   void convert(usize start, usize end) const
   {
-    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& oldDataStore = m_OldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_NewCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     for(usize i = start; i < end; i++)
     {

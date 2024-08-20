@@ -183,7 +183,7 @@ Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& da
   usize maxValue = featureIds[featureIdsMaxIdx];
   auto& cellFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
 
-  auto* createdArrayStore = createdArray->getIDataStoreAs<IDataStore>();
+  auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
   createdArrayStore->resizeTuples(std::vector<usize>{maxValue + 1});
   cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
 

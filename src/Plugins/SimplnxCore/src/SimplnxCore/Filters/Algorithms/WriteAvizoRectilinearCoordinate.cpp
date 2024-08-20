@@ -84,7 +84,7 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 
   fprintf(outputFile, "@1 # FeatureIds in z, y, x with X moving fastest, then Y, then Z\n");
 
-  const auto& featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)->getIDataStoreRefAs<DataStore<int32>>();
+  const auto& featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)->template getIDataStoreRefAs<DataStore<int32>>();
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   if(m_InputValues->WriteBinaryFile)

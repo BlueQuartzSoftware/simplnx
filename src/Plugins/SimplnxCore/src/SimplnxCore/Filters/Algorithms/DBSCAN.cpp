@@ -306,22 +306,22 @@ struct DBSCANFunctor
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, true, true>(filter, inputIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
       else
       {
-        DBSCANTemplate<T, true, false>(filter, inputIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
     }
     else
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, false, true>(filter, inputIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
       else
       {
-        DBSCANTemplate<T, false, false>(filter, inputIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
     }
   }

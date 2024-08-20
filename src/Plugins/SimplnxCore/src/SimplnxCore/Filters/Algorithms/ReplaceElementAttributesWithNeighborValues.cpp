@@ -96,7 +96,7 @@ struct ExecuteTemplate
   void operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
                   const IFilter::MessageHandler& messageHandler)
   {
-    const auto& inputStore = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const size_t totalPoints = inputStore.getNumberOfTuples();
 

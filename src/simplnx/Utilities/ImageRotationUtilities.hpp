@@ -517,8 +517,8 @@ public:
     destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
     destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
 
-    const auto& oldDataStore = m_SourceArray->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& oldDataStore = m_SourceArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
     for(int64 k = 0; k < m_Params.zpNew; k++)
