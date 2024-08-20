@@ -28,7 +28,7 @@ public:
 
   SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
                      const Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric distMetric)
-  : m_InputData(inputIDataArray.getIDataStoreRefAs<AbstractDataStoreT>())
+  : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
   , m_OutputData(outputDataArray)
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)

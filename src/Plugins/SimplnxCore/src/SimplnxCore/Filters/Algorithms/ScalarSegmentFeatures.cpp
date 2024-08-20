@@ -76,7 +76,7 @@ public:
   : m_Length(length)
   , m_Tolerance(tolerance)
   , m_FeatureIdsArray(featureIds)
-  , m_Data(data->getIDataStoreRefAs<DataStoreType>())
+  , m_Data(data->template getIDataStoreRefAs<DataStoreType>())
   {
   }
   TSpecificCompareFunctor() = default;

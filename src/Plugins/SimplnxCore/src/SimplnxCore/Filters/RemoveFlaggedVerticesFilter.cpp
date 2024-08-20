@@ -32,8 +32,8 @@ struct RemoveFlaggedVerticesFunctor
   template <class T>
   void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
-    const auto& sourceDataStore = sourceIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& destinationDataStore = destIDataArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     destinationDataStore.resizeTuples({numVerticesToKeep});
 
     const usize numInputTuples = sourceDataStore.getNumberOfTuples();

@@ -119,7 +119,7 @@ struct InitializeArrayFunctor
       rangeMax = std::numeric_limits<T>().max();
     }
 
-    auto& dataStore = dataArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     auto&& [distribution, generator] = CreateRandomGenerator(rangeMin, rangeMax, seed);
 

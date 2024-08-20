@@ -142,7 +142,7 @@ struct PrintDataArray
   Result<> operator()(std::ostream& outputStrm, IDataArray* inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
                       int32 componentsPerLine = 0)
   {
-    auto& dataStore = inputDataArray->getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    auto& dataStore = inputDataArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto start = std::chrono::steady_clock::now();
     auto numTuples = dataStore.getNumberOfTuples();
     auto maxLine = static_cast<size_t>(componentsPerLine);
@@ -276,7 +276,7 @@ class TupleWriter : public ITupleWriter
 
 public:
   TupleWriter(const IDataArray& iDataArray, const std::string& delimiter)
-  : m_DataStore(iDataArray.getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
+  : m_DataStore(iDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
   , m_Name(iDataArray.getName())
   , m_Delimiter(delimiter)
   {

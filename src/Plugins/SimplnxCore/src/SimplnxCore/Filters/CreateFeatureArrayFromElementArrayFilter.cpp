@@ -20,8 +20,8 @@ struct CopyCellDataFunctor
   template <typename T>
   Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
   {
-    const auto& selectedCellStore = selectedCellArray->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& createdDataStore = createdArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     // Initialize the output array with a default value
     createdDataStore.fill(0);

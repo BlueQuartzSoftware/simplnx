@@ -292,7 +292,7 @@ struct FillArrayFunctor
   template <typename T>
   void operator()(IDataArray& iDataArray, const InitializeDataInputValues& inputValues)
   {
-    auto& dataStore = iDataArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
     switch(inputValues.initType)

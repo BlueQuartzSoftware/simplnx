@@ -24,9 +24,9 @@ public:
   using StoreType = AbstractDataStore<T>;
 
   CopyFeatureArrayToElementArrayImpl(const IDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
-  : m_SelectedFeature(selectedFeatureArray->getIDataStoreRefAs<StoreType>())
+  : m_SelectedFeature(selectedFeatureArray->template getIDataStoreRefAs<StoreType>())
   , m_FeatureIdsStore(featureIdsStore)
-  , m_CreatedStore(createdArray->getIDataStoreRefAs<StoreType>())
+  , m_CreatedStore(createdArray->template getIDataStoreRefAs<StoreType>())
   , m_ShouldCancel(shouldCancel)
   {
   }

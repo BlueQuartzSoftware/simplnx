@@ -18,7 +18,7 @@ struct IdentifySampleFunctor
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles)
   {
     std::vector<usize> cDims = {1};
-    auto& goodVoxels = goodVoxelsPtr->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
 

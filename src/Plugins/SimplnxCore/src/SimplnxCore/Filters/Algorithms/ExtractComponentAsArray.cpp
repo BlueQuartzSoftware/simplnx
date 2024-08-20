@@ -12,8 +12,8 @@ struct RemoveComponentsFunctor
   template <class ScalarType>
   void operator()(IDataArray* originalArray, IDataArray* resizedArray, usize componentIndexToRemove) // Due to logic structure originalArray cannot be const
   {
-    const auto& originalStoreRef = originalArray->getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    auto& resizedStoreRef = resizedArray->getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    const auto& originalStoreRef = originalArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    auto& resizedStoreRef = resizedArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
     const usize originalTupleCount = originalStoreRef.getNumberOfTuples();
     const usize originalCompCount = originalStoreRef.getNumberOfComponents();
@@ -42,8 +42,8 @@ struct ExtractComponentsFunctor
   template <class ScalarType>
   void operator()(IDataArray* inputArray, IDataArray* extractedCompArray, usize componentIndexToExtract) // Due to logic structure inputArray cannot be const
   {
-    const auto& inputStoreRef = inputArray->getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    auto& extractedStoreRef = extractedCompArray->getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    const auto& inputStoreRef = inputArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    auto& extractedStoreRef = extractedCompArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
     const usize inputTupleCount = inputStoreRef.getNumberOfTuples();
     const usize inputCompCount = inputStoreRef.getNumberOfComponents();

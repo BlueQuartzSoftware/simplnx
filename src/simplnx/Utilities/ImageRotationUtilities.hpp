@@ -401,7 +401,7 @@ public:
 
     m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
-    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     DataStructure tempDataStructure;
     ImageGeom* origImageGeomPtr = ImageGeom::Create(tempDataStructure, "Temp");

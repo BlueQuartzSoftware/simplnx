@@ -83,9 +83,9 @@ struct ExecuteFindDifferenceMapFunctor
   {
     using store_type = AbstractDataStore<DataType>;
 
-    auto& firstArray = firstArrayPtr->getIDataStoreRefAs<store_type>();
-    auto& secondArray = secondArrayPtr->getIDataStoreRefAs<store_type>();
-    auto& differenceMap = differenceMapPtr->getIDataStoreRefAs<store_type>();
+    auto& firstArray = firstArrayPtr->template getIDataStoreRefAs<store_type>();
+    auto& secondArray = secondArrayPtr->template getIDataStoreRefAs<store_type>();
+    auto& differenceMap = differenceMapPtr->template getIDataStoreRefAs<store_type>();
 
     usize numTuples = firstArray.getNumberOfTuples();
     int32 numComps = firstArray.getNumberOfComponents();

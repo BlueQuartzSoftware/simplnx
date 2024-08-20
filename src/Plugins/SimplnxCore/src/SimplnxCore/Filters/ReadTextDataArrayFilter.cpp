@@ -28,7 +28,7 @@ struct CSVReadFileFunctor
   template <typename T>
   Result<> operator()(IDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
   {
-    auto& store = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& store = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     return CsvParser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
   }
 };

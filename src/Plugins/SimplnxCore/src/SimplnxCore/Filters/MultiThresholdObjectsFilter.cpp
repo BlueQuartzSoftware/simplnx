@@ -130,7 +130,7 @@ struct ExecuteThresholdHelper
   template <typename Type, typename MaskType>
   void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray* iDataArray, Type trueValue, Type falseValue)
   {
-    const auto& dataStore = iDataArray->getIDataStoreRefAs<AbstractDataStore<Type>>();
+    const auto& dataStore = iDataArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
     helper.template filterData<Type>(dataStore, trueValue, falseValue);
   }
 };
@@ -218,7 +218,7 @@ struct ThresholdValueFunctor
   {
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
-    ThresholdValue(comparisonValue, dataStructure, outputResultArray->getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
+    ThresholdValue(comparisonValue, dataStructure, outputResultArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
 };
 
@@ -287,7 +287,7 @@ struct ThresholdSetFunctor
 
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
-    ThresholdSet<T>(inputComparisonSet, dataStructure, outputResultArray->getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
+    ThresholdSet<T>(inputComparisonSet, dataStructure, outputResultArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
 };
 

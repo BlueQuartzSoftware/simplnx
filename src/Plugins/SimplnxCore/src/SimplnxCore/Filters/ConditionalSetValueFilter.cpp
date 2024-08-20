@@ -35,7 +35,7 @@ struct ReplaceValueInArrayFunctor
   template <typename ScalarType>
   void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
   {
-    auto& dataStore = workingArray.getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
     auto removeVal = convertFromStringToType<ScalarType>(removeValue);
     auto replaceVal = convertFromStringToType<ScalarType>(replaceValue);

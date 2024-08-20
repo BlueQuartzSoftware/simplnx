@@ -18,8 +18,8 @@ public:
   KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
                    Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
-  , m_InputArray(inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>())
-  , m_Medoids(medoidsIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_Medoids(medoidsIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
   , m_FeatureIds(fIds)

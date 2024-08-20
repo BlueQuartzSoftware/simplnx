@@ -38,8 +38,8 @@ struct CopyDataFunctor
   template <typename T>
   void operator()(IDataArray* inDataPtr, IDataArray* outDataPtr, std::unordered_map<int64, int64>& elementMap) const
   {
-    auto& inputData = inDataPtr->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& outputData = outDataPtr->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& inputData = inDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& outputData = outDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     usize nTuples = outDataPtr->getNumberOfTuples();
     usize nComps = inDataPtr->getNumberOfComponents();
@@ -64,8 +64,8 @@ struct RemoveFlaggedVerticesFunctor
   template <class T>
   void operator()(IDataArray* inputDataPtr, IDataArray* outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
   {
-    auto& inputData = inputDataPtr->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& outputData = outputDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& inputData = inputDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& outputData = outputDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize nComps = inputData.getNumberOfComponents();
     IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
 

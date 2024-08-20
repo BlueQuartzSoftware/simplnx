@@ -22,7 +22,7 @@ struct FindThresholdFunctor
   template <class T>
   void operator()(const IDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore)
   {
-    const auto& inputData = inputObject->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numTuples = inputData.getNumberOfTuples();
     float numerator = 0;
     float denominator = 0;

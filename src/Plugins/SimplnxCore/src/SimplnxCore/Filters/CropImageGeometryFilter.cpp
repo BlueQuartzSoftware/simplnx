@@ -71,8 +71,8 @@ class CropImageGeomDataArray
 {
 public:
   CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
-  : m_OldCellStore(oldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>())
-  , m_NewCellStore(newCellArray.getIDataStoreRefAs<AbstractDataStore<T>>())
+  : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcImageGeom(srcImageGeom)
   , m_Bounds(bounds)
   , m_ShouldCancel(shouldCancel)

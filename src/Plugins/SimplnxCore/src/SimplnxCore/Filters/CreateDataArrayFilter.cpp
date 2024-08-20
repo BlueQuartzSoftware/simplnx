@@ -28,7 +28,7 @@ struct CreateAndInitArrayFunctor
   {
     Result<T> result = ConvertTo<T>::convert(initValue);
 
-    auto* dataStore = iDataArray->getIDataStoreAs<AbstractDataStore<T>>();
+    auto* dataStore = iDataArray->template getIDataStoreAs<AbstractDataStore<T>>();
     dataStore->fill(result.value());
   }
 };

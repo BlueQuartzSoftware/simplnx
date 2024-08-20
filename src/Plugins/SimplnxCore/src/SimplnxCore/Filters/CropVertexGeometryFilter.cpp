@@ -21,8 +21,8 @@ struct CopyDataToCroppedGeometryFunctor
   template <typename T>
   void operator()(const IDataArray* inDataRef, IDataArray* outDataRef, const std::vector<int64>& croppedPoints)
   {
-    const auto& inputData = inDataRef->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& croppedData = outDataRef->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& inputData = inDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& croppedData = outDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     usize nComps = inDataRef->getNumberOfComponents();
 

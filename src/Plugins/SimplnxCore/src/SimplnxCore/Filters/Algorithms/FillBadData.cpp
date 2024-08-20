@@ -41,7 +41,7 @@ struct FillBadDataUpdateTuplesFunctor
   template <typename T>
   void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int32>& neighbors)
   {
-    auto& outputStore = outputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
   }
 };

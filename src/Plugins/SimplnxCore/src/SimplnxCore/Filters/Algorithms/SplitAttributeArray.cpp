@@ -13,7 +13,7 @@ struct SplitArraysFunctor
   template <typename T>
   void operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, const SplitAttributeArrayInputValues* inputValues)
   {
-    const auto& inputStore = inputIDataArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numTuples = inputStore.getNumberOfTuples();
     usize numComponents = inputStore.getNumberOfComponents();
     for(const auto& j : inputValues->ExtractComponents)
