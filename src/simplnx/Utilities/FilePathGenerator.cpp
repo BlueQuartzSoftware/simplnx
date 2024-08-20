@@ -6,9 +6,7 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core
-{
-namespace FilePathGenerator
+namespace nx::core::FilePathGenerator
 {
 // -----------------------------------------------------------------------------
 std::pair<std::vector<std::string>, bool> GenerateAndValidateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
@@ -62,5 +60,4 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
 
   return fileList;
 }
-} // namespace FilePathGenerator
 } // namespace nx::core

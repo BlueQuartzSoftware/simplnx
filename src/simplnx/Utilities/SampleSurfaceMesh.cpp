@@ -17,10 +17,9 @@ namespace
 class SampleSurfaceMeshImpl
 {
 public:
-  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<std::vector<int32>>& faceIds, const std::vector<BoundingBox3Df>& faceBBs,
-                        const std::vector<Point3Df>& points, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel)
-  : m_Filter(filter)
-  , m_Faces(faces)
+  SampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<int32>>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, const std::vector<Point3Df>& points,
+                        Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel)
+  : m_Faces(faces)
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
@@ -74,7 +73,6 @@ public:
   }
 
 private:
-  SampleSurfaceMesh* m_Filter = nullptr;
   const TriangleGeom& m_Faces;
   const std::vector<std::vector<int32>>& m_FaceIds;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
@@ -289,7 +287,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
-    dataAlg.execute(SampleSurfaceMeshImpl(this, triangleGeom, faceLists, faceBBs, points, polyIds, m_ShouldCancel));
+    dataAlg.execute(SampleSurfaceMeshImpl(triangleGeom, faceLists, faceBBs, points, polyIds, m_ShouldCancel));
   }
   else
   {

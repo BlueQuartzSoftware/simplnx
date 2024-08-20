@@ -148,7 +148,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       {
         return {MakeErrorResult<OutputActions>(-5251, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
     }
     else if(pTriangleArrayHandling == detail::k_CopyAllTriangleArraysIdx)
     {
@@ -162,7 +162,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       if(getChildrenResult.has_value())
       {
         selectedTriangleArrays = getChildrenResult.value();
-        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
       }
     }
   }
@@ -178,7 +178,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       {
         return {MakeErrorResult<OutputActions>(-5553, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
     else if(pVertexArrayHandling == detail::k_CopyAllVertexArraysIdx)
     {
@@ -192,7 +192,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       if(getChildrenResult.has_value())
       {
         selectedVertexArrays = getChildrenResult.value();
-        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
       }
     }
   }

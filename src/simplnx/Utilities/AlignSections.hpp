@@ -54,7 +54,7 @@ protected:
    * @param yShifts
    * @return Whether or not the x and y shifts were successfully found
    */
-  Result<> readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const;
+  static Result<> readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) ;
 
   /**
    * @brief This will read in a shifts file defined by the user and populate the shifts parameters with the values as int64 numbers.
@@ -64,7 +64,7 @@ protected:
    * @param yShifts
    * @return Whether or not the x and y shifts were successfully found
    */
-  Result<> readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const;
+  static Result<> readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
 
 private:
   DataStructure& m_DataStructure;

@@ -787,7 +787,7 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
                                               arrayPath.toString(), newShape, surfaceFeaturesParent->getShape()));
   }
 
-  // the array's parent is not in an Attribute Matrix so we can safely reshape to the new tuple shape
+  // the array's parent is not in an Attribute Matrix, so we can safely reshape to the new tuple shape
   dataArrayPtr->template getIDataStoreRefAs<DataStore<T>>().resizeTuples(newShape);
   return {};
 }
@@ -1265,7 +1265,7 @@ public:
     {
       using NeighborListType = NeighborList<T>;
       auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
       if(destArrayPtr->getValues().empty() || destArrayPtr->getList(0) == nullptr)
       {
         destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
@@ -1336,7 +1336,7 @@ public:
     {
       using NeighborListT = NeighborList<T>;
       auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
       if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
       {
         destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
@@ -1409,7 +1409,7 @@ public:
       {
         using NeighborListT = NeighborList<T>;
         auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
-        // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+        // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
         destArray->setList(i, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
         if(oldIndexI >= 0)
         {
@@ -1548,7 +1548,7 @@ public:
           {
             using NeighborListT = NeighborList<T>;
             auto* destArrayPtr = dynamic_cast<NeighborListT*>(m_DestCellArray);
-            // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+            // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
             destArrayPtr->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
             if(rectGridIndex >= 0)
             {
@@ -1750,7 +1750,6 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Args
 
 namespace TransferGeometryElementData
 {
-
 /**
  * @brief
  * @tparam T
@@ -1812,21 +1811,7 @@ private:
 SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
                                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler);
 
-template <typename GeometryType>
-void createDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
-                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions)
-{
-  // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
-  // in the destination geometry's attribute matrix
-  for(const auto& dataPath : selectedArrayPaths)
-  {
-    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
-    DataType dataType = srcArray.getDataType();
-    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-    DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
-  }
-}
-
+SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
+                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
 } // namespace nx::core

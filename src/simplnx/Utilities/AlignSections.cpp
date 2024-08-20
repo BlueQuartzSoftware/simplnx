@@ -167,7 +167,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
+Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
   std::ifstream inFile;
   inFile.open(file);
@@ -199,7 +199,7 @@ Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file,
       return MakeErrorResult(-84750, message);
     }
     std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
+    iss.swap(temp); // reset the stream to beginning, so we can read in the formatted tokens
     iss >> slice >> slice2 >> newXShift >> newYShift >> xShift >> yShift;
     xShifts[iter] = xShifts[iter - 1] + newXShift;
     yShifts[iter] = yShifts[iter - 1] + newYShift;
@@ -209,7 +209,7 @@ Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file,
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
+Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
   int64 slice = 0;
   int64 newXShift = 0, newYShift = 0;
@@ -235,7 +235,7 @@ Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, in
       return MakeErrorResult(-84750, message);
     }
     std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
+    iss.swap(temp); // reset the stream to beginning, so we can read in the formatted tokens
     inFile >> slice >> newXShift >> newYShift;
     xShifts[iter] = xShifts[iter - 1] + newXShift;
     yShifts[iter] = yShifts[iter - 1] + newYShift;
