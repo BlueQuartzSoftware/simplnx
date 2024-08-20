@@ -1673,7 +1673,7 @@ void RunParallelAppend(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... a
     dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
-      RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
+      return RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
     }
   }
 
