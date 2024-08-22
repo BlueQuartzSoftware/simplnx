@@ -227,11 +227,11 @@
         },
         "SIMPLNX_SimplnxReview_SOURCE_DIR": {
           "type": "PATH",
-          "value": "${sourceDir}/SimplnxReview"
+          "value": "${sourceDir}/../SimplnxReview"
         },
         "SIMPLNX_FileStore_SOURCE_DIR": {
           "type": "PATH",
-          "value": "${sourceDir}/FileStore"
+          "value": "${sourceDir}/../FileStore"
         }
       }
     },
@@ -272,11 +272,11 @@
         },
         "SIMPLNX_SimplnxReview_SOURCE_DIR": {
           "type": "PATH",
-          "value": "${sourceDir}/SimplnxReview"
+          "value": "${sourceDir}/../SimplnxReview"
         },
         "SIMPLNX_FileStore_SOURCE_DIR": {
           "type": "PATH",
-          "value": "${sourceDir}/FileStore"
+          "value": "${sourceDir}/../FileStore"
         }
       }
     },
