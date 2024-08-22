@@ -72,7 +72,6 @@ Parameters AppendImageGeometryFilter::parameters() const
                                                              DataPath({"AppendedImageGeom"})));
 
   params.linkParameters(k_SaveAsNewGeometry_Key, k_NewGeometry_Key, true);
-  params.linkParameters(k_SaveAsNewGeometry_Key, k_DestinationGeometry_Key, false);
 
   return params;
 }

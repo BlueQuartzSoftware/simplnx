@@ -1323,7 +1323,7 @@ Result<> AppendData(const std::vector<const K*>& inputArrays, const std::vector<
   case Direction::Y: {
     return ShiftAndAppendDataY(inputArrays, inputTupleShapes, destArray, originalDestDims, newDestDims, mirror);
   }
-  case Direction::Z: {
+  default: { // Z direction
     auto totalTuples = std::accumulate(originalDestDims.begin(), originalDestDims.end(), 1, std::multiplies<>());
     return AppendDataZ(inputArrays, inputTupleShapes, destArray, originalDestDims, newDestDims, totalTuples, mirror);
   }
@@ -1345,7 +1345,7 @@ Result<> CombineData(const std::vector<const K*>& inputArrays, const std::vector
   case Direction::Y: {
     return AppendDataY(inputArrays, inputTupleShapes, destArray, originalDestDims, newDestDims, 0, mirror);
   }
-  case Direction::Z: {
+  default: { // Z direction
     return AppendDataZ(inputArrays, inputTupleShapes, destArray, originalDestDims, newDestDims, 0, mirror);
   }
   }
