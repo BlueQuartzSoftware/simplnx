@@ -499,6 +499,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
