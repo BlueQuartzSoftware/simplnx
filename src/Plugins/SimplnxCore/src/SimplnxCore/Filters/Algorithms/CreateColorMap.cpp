@@ -40,33 +40,33 @@ template <typename T>
 class CreateColorMapImpl
 {
 public:
-  CreateColorMapImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8Array& colorArray,
+  CreateColorMapImpl(const AbstractDataStore<T>& arrayStore, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8AbstractDataStore& colorStore,
                      const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
-  : m_ArrayPtr(arrayPtr)
+  : m_ArrayStore(arrayStore)
   , m_BinPoints(binPoints)
   , m_NumControlColors(numControlColors)
   , m_ControlPoints(controlPoints)
-  , m_ColorArray(colorArray)
-  , m_ArrayMin(arrayPtr[0])
-  , m_ArrayMax(arrayPtr[0])
+  , m_ColorStore(colorStore)
+  , m_ArrayMin(arrayStore[0])
+  , m_ArrayMax(arrayStore[0])
   , m_GoodVoxels(goodVoxels)
   , m_InvalidColor(invalidColor)
   {
-    for(int i = 1; i < arrayPtr.getNumberOfTuples(); i++)
+    for(usize i = 1; i < arrayStore.getNumberOfTuples(); i++)
     {
-      if(arrayPtr[i] < m_ArrayMin)
+      if(arrayStore[i] < m_ArrayMin)
       {
-        m_ArrayMin = arrayPtr[i];
+        m_ArrayMin = arrayStore[i];
       }
-      if(arrayPtr[i] > m_ArrayMax)
+      if(arrayStore[i] > m_ArrayMax)
       {
-        m_ArrayMax = arrayPtr[i];
+        m_ArrayMax = arrayStore[i];
       }
     }
   }
 
   template <typename K>
-  void convert(size_t start, size_t end) const
+  void convert(usize start, usize end) const
   {
     using MaskArrayType = DataArray<K>;
     const MaskArrayType* maskArray = nullptr;
@@ -74,7 +74,6 @@ public:
     {
       maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
     }
-    auto& colorArrayDS = m_ColorArray.getDataStoreRef();
 
     for(size_t i = start; i < end; i++)
     {
@@ -83,15 +82,15 @@ public:
       {
         if(!(*maskArray)[i])
         {
-          colorArrayDS.setComponent(i, 0, m_InvalidColor[0]);
-          colorArrayDS.setComponent(i, 1, m_InvalidColor[1]);
-          colorArrayDS.setComponent(i, 2, m_InvalidColor[2]);
+          m_ColorStore.setComponent(i, 0, m_InvalidColor[0]);
+          m_ColorStore.setComponent(i, 1, m_InvalidColor[1]);
+          m_ColorStore.setComponent(i, 2, m_InvalidColor[2]);
           continue;
         }
       }
 
       // Normalize value
-      const float32 nValue = (static_cast<float32>(m_ArrayPtr[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
+      const float32 nValue = (static_cast<float32>(m_ArrayStore[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
 
       int rightBinIndex = findRightBinIndex(nValue, m_BinPoints);
 
@@ -128,9 +127,9 @@ public:
       const unsigned char blueVal =
           (m_ControlPoints[leftBinIndex * k_ControlPointCompSize + 3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * k_ControlPointCompSize + 3] * currFraction) * 255;
 
-      colorArrayDS.setComponent(i, 0, redVal);
-      colorArrayDS.setComponent(i, 1, greenVal);
-      colorArrayDS.setComponent(i, 2, blueVal);
+      m_ColorStore.setComponent(i, 0, redVal);
+      m_ColorStore.setComponent(i, 1, greenVal);
+      m_ColorStore.setComponent(i, 2, blueVal);
     }
   }
 
@@ -154,13 +153,13 @@ public:
   }
 
 private:
-  const DataArray<T>& m_ArrayPtr;
+  const AbstractDataStore<T>& m_ArrayStore;
   const std::vector<float32>& m_BinPoints;
   T m_ArrayMin;
   T m_ArrayMax;
   int m_NumControlColors;
   const std::vector<float32>& m_ControlPoints;
-  UInt8Array& m_ColorArray;
+  UInt8AbstractDataStore& m_ColorStore;
   const nx::core::IDataArray* m_GoodVoxels = nullptr;
   const std::vector<uint8>& m_InvalidColor;
 };
@@ -189,7 +188,7 @@ struct GenerateColorArrayFunctor
       binPoint = (binPoint - binMin) / (binMax - binMin);
     }
 
-    auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(inputValues->RgbArrayPath);
+    auto& colorArray = dataStructure.getDataAs<UInt8Array>(inputValues->RgbArrayPath)->getDataStoreRef();
 
     nx::core::IDataArray* goodVoxelsArray = nullptr;
     if(inputValues->UseMask)
@@ -197,10 +196,10 @@ struct GenerateColorArrayFunctor
       goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
     }
 
-    const DataArray<ScalarType>& arrayRef = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath);
+    const AbstractDataStore<ScalarType>& arrayRef = dataStructure.getDataAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath)->getDataStoreRef();
     if(arrayRef.getNumberOfTuples() <= 0)
     {
-      return MakeErrorResult(-34381, fmt::format("Array {} is empty", arrayRef.getName()));
+      return MakeErrorResult(-34381, fmt::format("Array {} is empty", inputValues->SelectedDataArrayPath.getTargetName()));
     }
 
     ParallelDataAlgorithm dataAlg;

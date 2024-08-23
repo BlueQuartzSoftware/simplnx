@@ -1,7 +1,6 @@
 #include "DeleteDataFilter.hpp"
 
 #include "simplnx/DataStructure/BaseGroup.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 
@@ -11,7 +10,7 @@
 
 /**The commented out code in this filter and the header is set up to offer deeper control
  * of the dataStructure. The current state of the dataStructure abstracts the underlying data graph
- * into a heirarchical structure, thus the advanced handling and data management is not necessary.
+ * into a hierarchical structure, thus the advanced handling and data management is not necessary.
  * Should the code be uncommented one should review the test cases and round out the development.
  * The DeleteDataAction also implements code that has been commented out so it will need review as
  * well.
@@ -85,7 +84,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     //   // original
     //   // Remove Singular Node
     //   // Rules:
-    //   // - If multiparented, throw warning of effects and recommend DataPath removal instead
+    //   // - If multi-parented, throw warning of effects and recommend DataPath removal instead
     //   // - Edges that point to node will all be deleted
     //   // - Node will be deleted
     //  - IN CURRENT STATE BEHAVES MORE LIKE REMOVE START NODE AND ALL CHILDREN
@@ -93,7 +92,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     if(dataObject->getParentIds().size() > 1)
     {
       return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-61501, fmt::format("The object is multiparented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
+          MakeWarningVoidResult(-61501, fmt::format("The object is multi-parented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
     }
 
     auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
@@ -108,7 +107,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     //   // - Neither of the nodes (parent or child) should be deleted
     //   // - The edge between the nodes should be removed from both the respective parent and child list
 
-    //  // check parent that its not a top level path [ie no parent] (can't be removed)
+    //  // check parent that it's not a top level path [ie no parent] (can't be removed)
     //  if(dataObjectPath.getLength() < 2)
     //  {
     //    return {MakeErrorResult<OutputActions>(
@@ -124,15 +123,15 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     // case DeletionType::DeleteUnsharedChildren: {
     //   // Remove Start Node and Children Recursively (Independent Removal Only)
     //   // Rules:
-    //   // - If multiparented, any node and all children of that node will are kept
+    //   // - If multi-parented, any node and all children of that node will are kept
     //   // - Edges that point to deleted nodes wil be removed
-    //   // - If start object is multiparented recommend edge removal instead
+    //   // - If start object is multi-parented recommend edge removal instead
 
     //  // check parent count (Base Case)
     //  if(dataObject->getParentIds().size() > 1)
     //  {
     //    return {
-    //        ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61503, fmt::format("The object cannot be processed because it is multiparented. Consider using the Delete DataPath instead.")),
+    //        ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61503, fmt::format("The object cannot be processed because it is multi-parented. Consider using the Delete DataPath instead.")),
     //        {})};
     //  }
     //  else
@@ -166,7 +165,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
     //   // - Warn of absolute deletion of data and effects
 
     //  // This needs to be implemented down the line
-    //  // ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61505, fmt::format("This action will remove the underlying data which could affect other structures if it is multiparented")), {});
+    //  // ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61505, fmt::format("This action will remove the underlying data which could affect other structures if it is multi-parented")), {});
 
     //  const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
     //  if(baseGroup == nullptr) // Object is the lowest level in its path

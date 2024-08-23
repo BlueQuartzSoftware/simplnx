@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Range.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -12,11 +11,11 @@ using namespace nx::core;
 
 namespace
 {
-
+template <bool BoundsCheckV>
 class LuminosityImpl
 {
 public:
-  LuminosityImpl(const UInt8Array& data, UInt8Array& outputData, const FloatVec3& colorWeights, size_t numComp)
+  LuminosityImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, const FloatVec3& colorWeights, size_t numComp)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_ColorWeights(colorWeights)
@@ -36,9 +35,18 @@ public:
   {
     for(size_t i = start; i < end; i++)
     {
-      auto temp = static_cast<int32>(
-          roundf((m_ImageData.at(m_NumComp * i) * m_ColorWeights.getX()) + (m_ImageData.at(m_NumComp * i + 1) * m_ColorWeights.getY()) + (m_ImageData.at(m_NumComp * i + 2) * m_ColorWeights.getZ())));
-      m_FlatImageData.setValue(i, static_cast<uint8>(temp));
+      if constexpr(BoundsCheckV)
+      {
+        auto temp = static_cast<int32>(roundf((m_ImageData.at(m_NumComp * i) * m_ColorWeights.getX()) + (m_ImageData.at(m_NumComp * i + 1) * m_ColorWeights.getY()) +
+                                              (m_ImageData.at(m_NumComp * i + 2) * m_ColorWeights.getZ())));
+        m_FlatImageData.setValue(i, static_cast<uint8>(temp));
+      }
+      else
+      {
+        auto temp = static_cast<int32>(
+            roundf((m_ImageData[m_NumComp * i] * m_ColorWeights.getX()) + (m_ImageData[m_NumComp * i + 1] * m_ColorWeights.getY()) + (m_ImageData[m_NumComp * i + 2] * m_ColorWeights.getZ())));
+        m_FlatImageData.setValue(i, static_cast<uint8>(temp));
+      }
     }
   }
 
@@ -48,8 +56,8 @@ public:
   }
 
 private:
-  const UInt8Array& m_ImageData;
-  UInt8Array& m_FlatImageData;
+  const UInt8AbstractDataStore& m_ImageData;
+  UInt8AbstractDataStore& m_FlatImageData;
   const FloatVec3& m_ColorWeights;
   size_t m_NumComp;
 };
@@ -57,7 +65,7 @@ private:
 class LightnessImpl
 {
 public:
-  LightnessImpl(const UInt8Array& data, UInt8Array& outputData, size_t numComp)
+  LightnessImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, size_t numComp)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_NumComp(numComp)
@@ -84,16 +92,16 @@ public:
   }
 
 private:
-  const UInt8Array& m_ImageData;
-  UInt8Array& m_FlatImageData;
+  const UInt8AbstractDataStore& m_ImageData;
+  UInt8AbstractDataStore& m_FlatImageData;
   size_t m_NumComp;
 };
 
+template <bool BoundsCheckV>
 class SingleChannelImpl
 {
-
 public:
-  SingleChannelImpl(const UInt8Array& data, UInt8Array& outputData, size_t numComp, int32_t channel)
+  SingleChannelImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, size_t numComp, int32_t channel)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_NumComp(numComp)
@@ -110,7 +118,14 @@ public:
   {
     for(size_t i = start; i < end; i++)
     {
-      m_FlatImageData.setValue(i, static_cast<uint8_t>((m_ImageData.at(m_NumComp * i + static_cast<size_t>(m_Channel)))));
+      if constexpr(BoundsCheckV)
+      {
+        m_FlatImageData.setValue(i, m_ImageData.at(m_NumComp * i + static_cast<size_t>(m_Channel)));
+      }
+      else
+      {
+        m_FlatImageData.setValue(i, m_ImageData[m_NumComp * i + static_cast<size_t>(m_Channel)]);
+      }
     }
   }
 
@@ -120,8 +135,8 @@ public:
   }
 
 private:
-  const UInt8Array& m_ImageData;
-  UInt8Array& m_FlatImageData;
+  const UInt8AbstractDataStore& m_ImageData;
+  UInt8AbstractDataStore& m_FlatImageData;
   size_t m_NumComp;
   int32_t m_Channel;
 };
@@ -136,11 +151,11 @@ public:
   ParallelWrapper& operator=(ParallelWrapper&&) = delete;      // Move Assignment Not Implemented
 
   template <typename T>
-  static void Run(T impl, size_t totalPoints, typename IParallelAlgorithm::AlgorithmArrays algArrays)
+  static void Run(T impl, size_t totalPoints, const typename IParallelAlgorithm::AlgorithmStores& algStores)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);
-    dataAlg.requireArraysInMemory(algArrays);
+    dataAlg.requireStoresInMemory(algStores);
     dataAlg.execute(impl);
   }
 
@@ -180,32 +195,56 @@ Result<> ConvertColorToGrayScale::operator()()
     {
       break;
     }
-    const auto& inputColorData = m_DataStructure.getDataRefAs<UInt8Array>(arrayPath);
-    auto& outputGrayData = m_DataStructure.getDataRefAs<UInt8Array>(*outputPathIter);
+    const auto& inputColorData = m_DataStructure.getDataAs<UInt8Array>(arrayPath)->getDataStoreRef();
+    auto& outputGrayData = m_DataStructure.getDataAs<UInt8Array>(*outputPathIter)->getDataStoreRef();
 
     auto convType = static_cast<ConversionType>(m_InputValues->ConversionAlgorithm);
 
     size_t comp = inputColorData.getNumberOfComponents();
     size_t totalPoints = inputColorData.getNumberOfTuples();
 
-    typename IParallelAlgorithm::AlgorithmArrays algArrays;
-    algArrays.push_back(&inputColorData);
-    algArrays.push_back(&outputGrayData);
+    typename IParallelAlgorithm::AlgorithmStores algStores;
+    algStores.push_back(&inputColorData);
+    algStores.push_back(&outputGrayData);
 
     switch(convType)
     {
     case ConversionType::Luminosity:
-      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, m_InputValues->ColorWeights, comp), totalPoints, algArrays);
+      if(comp < 3) // Pre-check bounds to try to avoid `.at()`; algorithm hardcoded a component access size of 3
+      {
+        // Do bounds check
+        ParallelWrapper::Run<LuminosityImpl<true>>(LuminosityImpl<true>(inputColorData, outputGrayData, m_InputValues->ColorWeights, comp), totalPoints, algStores);
+      }
+      else
+      {
+        ParallelWrapper::Run<LuminosityImpl<false>>(LuminosityImpl<false>(inputColorData, outputGrayData, m_InputValues->ColorWeights, comp), totalPoints, algStores);
+      }
       break;
     case ConversionType::Average:
-      ParallelWrapper::Run<LuminosityImpl>(LuminosityImpl(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints, algArrays);
+      if(comp < 3) // Pre-check bounds to try to avoid `.at()`; algorithm hardcoded a component access size of 3
+      {
+        // Do bounds check
+        ParallelWrapper::Run<LuminosityImpl<true>>(LuminosityImpl<true>(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints, algStores);
+      }
+      else
+      {
+        ParallelWrapper::Run<LuminosityImpl<false>>(LuminosityImpl<false>(inputColorData, outputGrayData, {0.3333f, 0.3333f, 0.3333f}, comp), totalPoints, algStores);
+      }
       break;
     case ConversionType::Lightness: {
-      ParallelWrapper::Run<LightnessImpl>(LightnessImpl(inputColorData, outputGrayData, comp), totalPoints, algArrays);
+      ParallelWrapper::Run<LightnessImpl>(LightnessImpl(inputColorData, outputGrayData, comp), totalPoints, algStores);
       break;
     }
     case ConversionType::SingleChannel:
-      ParallelWrapper::Run<SingleChannelImpl>(SingleChannelImpl(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints, algArrays);
+      if(comp * (totalPoints - 1) + m_InputValues->ColorChannel < inputColorData.getSize()) // Pre-check bounds to try to avoid `.at()`
+      {
+        // Do bounds check
+        ParallelWrapper::Run<SingleChannelImpl<false>>(SingleChannelImpl<false>(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints, algStores);
+      }
+      else
+      {
+        ParallelWrapper::Run<SingleChannelImpl<true>>(SingleChannelImpl<true>(inputColorData, outputGrayData, comp, m_InputValues->ColorChannel), totalPoints, algStores);
+      }
       break;
     }
   }

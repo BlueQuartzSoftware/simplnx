@@ -53,10 +53,10 @@ std::vector<DataPath> AlignSectionsList::getSelectedDataPaths() const
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
   SizeVec3 udims = imageGeom.getDimensions();
-  int64 zDim = static_cast<int64>(udims[2]);
+  auto zDim = static_cast<int64>(udims[2]);
 
   Result<> results = {};
   if(m_InputValues->DREAM3DAlignmentFile)

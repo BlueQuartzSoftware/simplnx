@@ -75,12 +75,10 @@ IFilter::UniquePointer ComputeVolumeFractionsFilter::clone() const
 IFilter::PreflightResult ComputeVolumeFractionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
-  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
 
   const DataPath volFractionsArrayPath = pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue);
-  const auto& cellPhasesArray = dataStructure.getDataRefAs<IDataArray>(pCellPhasesArrayPathValue);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -105,22 +103,22 @@ Result<> ComputeVolumeFractionsFilter::executeImpl(DataStructure& dataStructure,
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
 
-  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key));
-  auto& volFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue));
+  const auto& cellPhases = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key))->getDataStoreRef();
+  auto& volFractions = dataStructure.getDataAs<Float32Array>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue))->getDataStoreRef();
 
-  usize totalPoints = cellPhasesArrayRef.getNumberOfTuples();
-  usize totalEnsembles = volFractionsArrayRef.getNumberOfTuples();
+  usize totalPoints = cellPhases.getNumberOfTuples();
+  usize totalEnsembles = volFractions.getNumberOfTuples();
 
   std::vector<usize> ensembleElements(totalEnsembles, 0);
   // Calculate the total number of elements in each Ensemble
   for(usize index = 0; index < totalPoints; index++)
   {
-    ensembleElements[cellPhasesArrayRef[index]]++;
+    ensembleElements[cellPhases[index]]++;
   }
   // Calculate the Volume Fraction
   for(usize index = 0; index < totalEnsembles; index++)
   {
-    volFractionsArrayRef[index] = static_cast<float32>(ensembleElements[index]) / static_cast<float32>(totalPoints);
+    volFractions[index] = static_cast<float32>(ensembleElements[index]) / static_cast<float32>(totalPoints);
   }
 
   return {};

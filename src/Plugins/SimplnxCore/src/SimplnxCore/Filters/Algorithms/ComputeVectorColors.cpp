@@ -48,8 +48,8 @@ Result<> ComputeVectorColors::operator()()
     return MakeErrorResult(-54700, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
   }
 
-  auto& vectors = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VectorsArrayPath);
-  auto& cellVectorColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellVectorColorsArrayPath);
+  auto& vectors = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VectorsArrayPath)->getDataStoreRef();
+  auto& cellVectorColors = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->CellVectorColorsArrayPath)->getDataStoreRef();
 
   usize totalPoints = vectors.getNumberOfTuples();
 

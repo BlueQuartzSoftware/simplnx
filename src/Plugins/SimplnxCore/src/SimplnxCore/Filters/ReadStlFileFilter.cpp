@@ -11,12 +11,9 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Parameters/StringParameter.hpp"
-
-#include <filesystem>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <filesystem>
 #include <tuple>
 
 namespace fs = std::filesystem;
@@ -82,11 +79,6 @@ Parameters ReadStlFileFilter::parameters() const
                                                           "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Labels", "The name of the triangle normals data array", "Face Normals"));
 
-  //  params.insert(std::make_unique<StringParameter>(k_SharedVertexMatrix_Key, "Shared Vertex Matrix Name", "Name of the created Shared Vertex Attribute Matrix",
-  //                                                  CreateTriangleGeometryAction::k_DefaultVerticesName));
-  //  params.insert(
-  //      std::make_unique<StringParameter>(k_SharedFaceMatrix_Key, "Shared Face Matrix Name", "Name of the created Shared Face Attribute Matrix", CreateTriangleGeometryAction::k_DefaultFacesName));
-
   return params;
 }
 
@@ -106,34 +98,30 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   auto faceMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
   auto faceNormalsName = filterArgs.value<std::string>(k_FaceNormalsName_Key);
 
-  PreflightResult preflightResult;
-
   nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   // Validate that the STL File is binary and readable.
   StlConstants::StlFileType stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
   if(stlFileType == StlConstants::StlFileType::ASCI)
   {
-    return {MakeErrorResult<OutputActions>(
+    return MakePreflightErrorResult(
         StlConstants::k_UnsupportedFileType,
-        fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()))};
+        fmt::format("The Input STL File is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::FileOpenError)
   {
-    return {MakeErrorResult<OutputActions>(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file.", pStlFilePathValue.string()))};
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file.", pStlFilePathValue.string()));
   }
   if(stlFileType == StlConstants::StlFileType::HeaderParseError)
   {
-    return {MakeErrorResult<OutputActions>(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file.", pStlFilePathValue.string()))};
+    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file.", pStlFilePathValue.string()));
   }
 
   // Now get the number of Triangles according to the STL Header
   int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
-    return {MakeErrorResult<OutputActions>(numTriangles, fmt::format("Error extracting the number of triangles from the STL file.", pStlFilePathValue.string()))};
+    return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file.", pStlFilePathValue.string()));
   }
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
@@ -161,7 +149,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   // the appropriate methods. (None to store for this filter... yet)
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

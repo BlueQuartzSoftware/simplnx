@@ -5,29 +5,20 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
 namespace
 {
-constexpr int64 k_MISSING_GEOM_ERR = -650;
-
 struct IdentifySampleFunctor
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& goodVoxelsArrayPath, bool fillHoles)
+  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles)
   {
-    using ArrayType = DataArray<T>;
-
-    const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-
     std::vector<usize> cDims = {1};
-    auto* goodVoxelsPtr = dataStructure.getDataAs<ArrayType>(goodVoxelsArrayPath);
-    auto& goodVoxels = goodVoxelsPtr->getDataStoreRef();
+    auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
 
@@ -143,8 +134,8 @@ struct IdentifySampleFunctor
     sample.clear();
     checked.assign(totalPoints, false);
 
-    // In this loop we are going to 'close' all of the 'holes' inside of the region already identified as the 'sample' if the user chose to do so.
-    // This is done by flipping all 'bad' voxel features that do not touch the outside of the sample (i.e. they are fully contained inside of the 'sample'.
+    // In this loop we are going to 'close' all the 'holes' inside the region already identified as the 'sample' if the user chose to do so.
+    // This is done by flipping all 'bad' voxel features that do not touch the outside of the sample (i.e. they are fully contained inside the 'sample').
     threshold = 0.0F;
     if(fillHoles)
     {
@@ -306,10 +297,10 @@ Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const A
   const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
 
-  const auto& inputData = dataStructure.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
-  const DataType arrayType = inputData.getDataType();
+  auto* inputData = dataStructure.getDataAs<IDataArray>(goodVoxelsArrayPath);
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
 
-  ExecuteDataFunction(IdentifySampleFunctor{}, arrayType, dataStructure, imageGeomPath, goodVoxelsArrayPath, fillHoles);
+  ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles);
 
   return {};
 }

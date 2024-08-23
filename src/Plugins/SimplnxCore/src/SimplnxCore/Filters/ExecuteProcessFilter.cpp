@@ -7,10 +7,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -75,12 +73,6 @@ IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pArgumentsValue = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
-  auto pBlockingValue = filterArgs.value<bool>(k_Blocking_Key);
-  auto pTimeoutValue = filterArgs.value<int32>(k_Timeout_Key);
-
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<std::string> arguments = ExecuteProcess::splitArgumentsString(pArgumentsValue);
   if(arguments.empty())
@@ -88,7 +80,7 @@ IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure
     return MakePreflightErrorResult(-4001, "No command line arguments have been specified.");
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

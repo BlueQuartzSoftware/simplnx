@@ -17,13 +17,14 @@ namespace nx::core::GeometryUtilities
 class SIMPLNX_EXPORT FindUniqueIdsImpl
 {
 public:
-  FindUniqueIdsImpl(nx::core::IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds);
+  using VertexStore = nx::core::AbstractDataStore<nx::core::IGeometry::SharedVertexList::value_type>;
+  FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds);
 
   void convert(size_t start, size_t end) const;
   void operator()(const Range& range) const;
 
 private:
-  const IGeometry::SharedVertexList& m_Vertex;
+  const VertexStore& m_VertexStore;
   const std::vector<std::vector<size_t>>& m_NodesInBin;
   nx::core::Int64DataStore& m_UniqueIds;
 };
@@ -85,10 +86,9 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   usize numYBins = 100;
   usize numZBins = 100;
 
-  using SharedFaceList = IGeometry::MeshIndexArrayType;
-  using SharedVertList = IGeometry::SharedVertexList;
+  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-  SharedVertList& vertices = *(geom.getVertices());
+  SharedVertList& vertices = geom.getVertices()->getDataStoreRef();
 
   INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
   if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
@@ -108,7 +108,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   {
     return MakeErrorResult(-56800, "EliminateDuplicateNodes Error: Geometry Type was not 1D, 2D or 3D? Did you pass in a vertex geometry?");
   }
-  INodeGeometry1D::MeshIndexArrayType& cellsRef = *(cells);
+  AbstractDataStore<INodeGeometry1D::MeshIndexArrayType::value_type>& cellsRef = cells->getDataStoreRef();
 
   IGeometry::MeshIndexType nNodesAll = geom.getNumberOfVertices();
   size_t nNodes = 0;
@@ -138,7 +138,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     {
       yBin = static_cast<usize>((vertices[i * 3 + 1] - minPoint.getY()) / stepY);
     }
-    if(zBin != 0)
+    if(stepZ != 0)
     {
       zBin = static_cast<usize>((vertices[i * 3 + 2] - minPoint.getZ()) / stepZ);
     }
@@ -192,7 +192,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     scaleFactorValue = scaleFactor.value();
   }
 
-  // Move nodes to unique Id and then resize nodes array and apply optional scaling
+  // Move nodes to uniqueIds and then resize nodes array and apply optional scaling
   for(size_t i = 0; i < nNodes; i++)
   {
     vertices[uniqueIds[i] * 3] = vertices[i * 3] * scaleFactorValue;

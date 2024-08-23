@@ -38,8 +38,6 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include <cstring>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -57,12 +55,11 @@ PointSampleTriangleGeometry::~PointSampleTriangleGeometry() noexcept = default;
 
 Result<> PointSampleTriangleGeometry::operator()()
 {
-
   DataPath triangleGeometryDataPath = m_Inputs->pTriangleGeometry;
-  TriangleGeom& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
-  int64_t numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
+  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
+  auto numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
 
-  VertexGeom& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
+  auto& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
   vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
   auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
   vertex.getVertexAttributeMatrix()->resizeTuples(tupleShape);
@@ -70,22 +67,12 @@ Result<> PointSampleTriangleGeometry::operator()()
   std::mt19937_64 generator(m_Inputs->Seed);
   std::uniform_real_distribution<> distribution(0.0f, 1.0f);
 
-  // Create the Triangle Ids vector and fill it from zero to size-1 incrementally
-  std::vector<int64_t> triangleIds(numTris);
-  std::iota(std::begin(triangleIds), std::end(triangleIds), 0);
-
   // Initialize the Triangle Weights with the Triangle Area Values
-  Float64Array& faceAreas = m_DataStructure.getDataRefAs<Float64Array>(m_Inputs->pTriangleAreasArrayPath);
-  std::vector<double> triangleWeights(numTris);
-  for(size_t i = 0; i < triangleWeights.size(); i++)
-  {
-    triangleWeights[i] = faceAreas[i];
-  }
+  const auto& faceAreasStore = m_DataStructure.getDataAs<Float64Array>(m_Inputs->pTriangleAreasArrayPath)->getDataStoreRef();
 
-  // VS2013 does not implement the iterator contructor for std::discrete_distribution<>, which
+  // VS2013 does not implement the iterator constructor for std::discrete_distribution<>, which
   // really is a massively idiotic oversight; hack the equivalent using the unary_op constructor
-  std::discrete_distribution<size_t> triangle_distribution(triangleWeights.size(), -0.5, -0.5 + static_cast<double>(triangleWeights.size()),
-                                                           [&triangleWeights](double index) { return triangleWeights[static_cast<size_t>(index)]; });
+  std::discrete_distribution<size_t> triangle_distribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
 
   int64_t progIncrement = m_Inputs->pNumberOfSamples / 100;
   int64_t prog = 1;
@@ -100,10 +87,9 @@ Result<> PointSampleTriangleGeometry::operator()()
   std::unique_ptr<MaskCompare> maskArray = nullptr;
   if(m_Inputs->pUseMask)
   {
-    std::unique_ptr<MaskCompare> maskCompare;
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
+      maskArray = InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
@@ -114,7 +100,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   }
 
   // Get a reference to the Vertex List
-  IGeometry::SharedVertexList* vertices = vertex.getVertices();
+  AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertices = vertex.getVertices()->getDataStoreRef();
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
@@ -158,16 +144,16 @@ Result<> PointSampleTriangleGeometry::operator()()
 
     triangle.getFaceCoordinates(randomTri, faceVerts);
 
-    float r1 = static_cast<float>(distribution(generator));
-    float r2 = static_cast<float>(distribution(generator));
+    auto r1 = static_cast<float>(distribution(generator));
+    auto r2 = static_cast<float>(distribution(generator));
 
     float prefactorA = 1.0f - sqrtf(r1);
     float prefactorB = sqrtf(r1) * (1 - r2);
     float prefactorC = sqrtf(r1) * r2;
 
-    (*vertices)[curVertex * 3 + 0] = (prefactorA * faceVerts[0][0]) + (prefactorB * faceVerts[1][0]) + (prefactorC * faceVerts[2][0]);
-    (*vertices)[curVertex * 3 + 1] = (prefactorA * faceVerts[0][1]) + (prefactorB * faceVerts[1][1]) + (prefactorC * faceVerts[2][1]);
-    (*vertices)[curVertex * 3 + 2] = (prefactorA * faceVerts[0][2]) + (prefactorB * faceVerts[1][2]) + (prefactorC * faceVerts[2][2]);
+    vertices[curVertex * 3 + 0] = (prefactorA * faceVerts[0][0]) + (prefactorB * faceVerts[1][0]) + (prefactorC * faceVerts[2][0]);
+    vertices[curVertex * 3 + 1] = (prefactorA * faceVerts[0][1]) + (prefactorB * faceVerts[1][1]) + (prefactorC * faceVerts[2][1]);
+    vertices[curVertex * 3 + 2] = (prefactorA * faceVerts[0][2]) + (prefactorB * faceVerts[1][2]) + (prefactorC * faceVerts[2][2]);
 
     // Transfer the face data to the vertex data
     for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)

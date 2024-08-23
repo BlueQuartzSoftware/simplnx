@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -79,16 +78,7 @@ IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
 IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                               const std::atomic_bool& shouldCancel) const
 {
-  auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pUnitsValue = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
-
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

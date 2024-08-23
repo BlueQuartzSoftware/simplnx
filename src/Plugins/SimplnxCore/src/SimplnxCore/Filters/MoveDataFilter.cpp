@@ -4,10 +4,8 @@
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {

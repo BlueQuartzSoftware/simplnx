@@ -1,5 +1,7 @@
 #include "ScalarSegmentFeatures.hpp"
 
+#include <memory>
+
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -14,9 +16,6 @@ using namespace nx::core;
 
 namespace
 {
-
-constexpr StringLiteral k_CompareFunctKey = "Compare Function";
-
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;
 constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
@@ -30,12 +29,13 @@ public:
   using DataArrayType = BoolArray;
   CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctorBool)
 
-  TSpecificCompareFunctorBool(IDataArray* data, int64 length, bool tolerance, AbstractDataStore<int32>* featureIds)
+  TSpecificCompareFunctorBool(IDataArray* data, int64 length, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_FeatureIdsArray(featureIds)
   , m_Data(dynamic_cast<DataArrayType*>(data))
   {
   }
+  TSpecificCompareFunctorBool() = default;
   ~TSpecificCompareFunctorBool() override = default;
 
   bool operator()(int64 referencePoint, int64 neighborPoint, int32 gnum) override
@@ -53,9 +53,6 @@ public:
     }
     return false;
   }
-
-protected:
-  TSpecificCompareFunctorBool() = default;
 
 private:
   int64 m_Length = 0;                                    // Length of the Data Array
@@ -79,9 +76,10 @@ public:
   : m_Length(length)
   , m_Tolerance(tolerance)
   , m_FeatureIdsArray(featureIds)
-  , m_Data(dynamic_cast<DataArrayType*>(data)->getDataStoreRef())
+  , m_Data(data->template getIDataStoreRefAs<DataStoreType>())
   {
   }
+  TSpecificCompareFunctor() = default;
   ~TSpecificCompareFunctor() override = default;
 
   bool operator()(int64 referencePoint, int64 neighborPoint, int32 gnum) override
@@ -110,9 +108,6 @@ public:
     }
     return false;
   }
-
-protected:
-  TSpecificCompareFunctor() = default;
 
 private:
   int64 m_Length = 0;                                    // Length of the Data Array
@@ -153,7 +148,7 @@ Result<> ScalarSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
-  IDataArray* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
+  auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
   size_t inDataPoints = inputDataArray->getNumberOfTuples();
   nx::core::DataType dataType = inputDataArray->getDataType();
 
@@ -170,7 +165,7 @@ Result<> ScalarSegmentFeatures::operator()()
     break;
   }
   case nx::core::DataType::boolean: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints, static_cast<bool>(m_InputValues->ScalarTolerance), featureIds);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints, featureIds);
     break;
   }
   case nx::core::DataType::int16: {
@@ -210,7 +205,7 @@ Result<> ScalarSegmentFeatures::operator()()
   }
   if(inputDataArray->getNumberOfComponents() != 1)
   {
-    m_CompareFunctor = std::shared_ptr<SegmentFeatures::CompareFunctor>(new SegmentFeatures::CompareFunctor()); // The default CompareFunctor which ALWAYS returns false for the comparison
+    m_CompareFunctor = std::make_shared<SegmentFeatures::CompareFunctor>(); // The default CompareFunctor which ALWAYS returns false for the comparison
   }
 
   // Run the segmentation algorithm
@@ -227,9 +222,9 @@ Result<> ScalarSegmentFeatures::operator()()
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 
   // make sure all values are initialized and "re-reserve" index 0
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto& activeStore = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
+  activeStore.fill(1);
+  activeStore[0] = 0;
 
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
@@ -250,23 +245,23 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 
   int64 seed = -1;
   // start with the next voxel after the last seed
-  auto randpoint = static_cast<usize>(nextSeed);
-  while(seed == -1 && randpoint < totalPoints)
+  auto randPoint = static_cast<usize>(nextSeed);
+  while(seed == -1 && randPoint < totalPoints)
   {
-    if(featureIds->getValue(randpoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
+    if(featureIds->getValue(randPoint) == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if(!m_InputValues->UseMask || m_GoodVoxels->isTrue(randpoint))
+      if(!m_InputValues->UseMask || m_GoodVoxels->isTrue(randPoint))
       {
-        seed = randpoint;
+        seed = randPoint;
       }
       else
       {
-        randpoint += 1;
+        randPoint += 1;
       }
     }
     else
     {
-      randpoint += 1;
+      randPoint += 1;
     }
   }
   if(seed >= 0)
@@ -279,7 +274,7 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 // -----------------------------------------------------------------------------
 bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
-  auto featureIds = m_FeatureIdsArray->getDataStore();
+  auto* featureIds = m_FeatureIdsArray->getDataStore();
   if(featureIds->getValue(neighborpoint) == 0 && (!m_InputValues->UseMask || m_GoodVoxels->isTrue(neighborpoint)))
   {
     CompareFunctor* func = m_CompareFunctor.get();

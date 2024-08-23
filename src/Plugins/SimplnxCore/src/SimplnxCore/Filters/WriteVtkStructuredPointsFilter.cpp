@@ -9,7 +9,6 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -77,13 +76,8 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(pSelectedDataArrayPathsValue.empty())
   {
@@ -106,7 +100,7 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
                     pImageGeometryPathValue.toString()));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

@@ -4,8 +4,6 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
-#include "simplnx/Filter/Actions/EmptyAction.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -107,15 +105,12 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  auto pReadPointDataValue = filterArgs.value<bool>(k_ReadPointData_Key);
-  auto pReadCellDataValue = filterArgs.value<bool>(k_ReadCellData_Key);
   auto pVertexGeometryPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   nx::core::StopWatch sw;
   sw.start();
@@ -137,7 +132,7 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   std::cout << "\n";
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

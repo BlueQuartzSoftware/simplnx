@@ -10,7 +10,6 @@
 
 namespace nx::core
 {
-
 struct SIMPLNXCORE_EXPORT ComputeMomentInvariants2DInputValues
 {
   DataPath ImageGeometryPath;
@@ -47,16 +46,10 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  static DoubleMatrixType ComputeMomentInvariants(const DoubleMatrixType& input, const usize* inputDims, usize maxOrder);
-  static int Factorial(int n);
-  static DoubleMatrixType Binomial(usize maxOrder);
-  static DoubleMatrixType GetBigX(usize maxOrder, usize dim);
-
 private:
   DataStructure& m_DataStructure;
   const ComputeMomentInvariants2DInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace nx::core

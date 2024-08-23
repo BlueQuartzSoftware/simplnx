@@ -4,11 +4,9 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
-
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -29,7 +27,7 @@ std::string CreatePythonSkeletonFilter::className() const
   return FilterTraits<CreatePythonSkeletonFilter>::className;
 }
 
-//-----------------------------------------------------------------------p-------
+//------------------------------------------------------------------------------
 Uuid CreatePythonSkeletonFilter::uuid() const
 {
   return FilterTraits<CreatePythonSkeletonFilter>::uuid;

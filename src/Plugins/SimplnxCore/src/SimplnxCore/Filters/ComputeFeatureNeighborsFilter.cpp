@@ -186,41 +186,39 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);
   DataPath surfaceFeaturesPath = featureAttrMatrixPath.createChildPath(surfaceFeaturesName);
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
+  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
+
   auto& neighborList = dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath);
   auto& sharedSurfaceAreaList = dataStructure.getDataRefAs<Float32NeighborList>(sharedSurfaceAreaPath);
 
-  auto* boundaryCellsArray = dataStructure.getDataAs<Int8Array>(boundaryCellsPath);
-  auto* surfaceFeaturesArray = dataStructure.getDataAs<BoolArray>(surfaceFeaturesPath);
+  auto* boundaryCells = storeBoundaryCells ? dataStructure.getDataAs<Int8Array>(boundaryCellsPath)->getDataStore() : nullptr;
+  auto* surfaceFeatures = storeSurfaceFeatures ? dataStructure.getDataAs<BoolArray>(surfaceFeaturesPath)->getDataStore() : nullptr;
 
-  auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& numNeighbors = numNeighborsArray.getDataStoreRef();
-
-  usize totalPoints = featureIdsArray.getNumberOfTuples();
-  usize totalFeatures = numNeighborsArray.getNumberOfTuples();
+  usize totalPoints = featureIds.getNumberOfTuples();
+  usize totalFeatures = numNeighbors.getNumberOfTuples();
 
   /* Ensure that we will be able to work with the user selected featureId Array */
-  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsArray.begin(), featureIdsArray.end());
+  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIds.begin(), featureIds.end());
   if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
-    out << "Data Array " << featureIdsArray.getName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
-        << " number of features from array " << numNeighborsArray.getName() << " which has " << totalFeatures << ". Did you select the "
+    out << "Data Array " << featureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
+        << " number of features from array " << numNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
         << " incorrect array for the 'FeatureIds' array?";
     return MakeErrorResult(-24500, out.str());
   }
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  SizeVec3 udims = imageGeom.getDimensions();
+  SizeVec3 uDims = imageGeom.getDimensions();
   const auto imageGeomNumX = imageGeom.getNumXCells();
   const auto imageGeomNumY = imageGeom.getNumYCells();
   const auto imageGeomNumZ = imageGeom.getNumZCells();
 
   std::array<int64, 3> dims = {
-      static_cast<int64>(udims[0]),
-      static_cast<int64>(udims[1]),
-      static_cast<int64>(udims[2]),
+      static_cast<int64>(uDims[0]),
+      static_cast<int64>(uDims[1]),
+      static_cast<int64>(uDims[2]),
   };
 
   std::array<int64, 6> neighPoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
@@ -262,10 +260,9 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
     numNeighbors[i] = 0;
     neighborlist[i].resize(nListSize);
     neighborsurfacearealist[i].assign(nListSize, -1.0f);
-    if(storeSurfaceFeatures)
+    if(storeSurfaceFeatures && surfaceFeatures != nullptr)
     {
-      auto& surfaceFeatures = surfaceFeaturesArray->getDataStoreRef();
-      surfaceFeatures[i] = 0;
+      surfaceFeatures->setValue(i, false);
     }
   }
 
@@ -296,19 +293,17 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
       column = static_cast<int64>(j % imageGeomNumX);
       row = static_cast<int64>((j / imageGeomNumX) % imageGeomNumY);
       plane = static_cast<int64>(j / (imageGeomNumX * imageGeomNumY));
-      if(storeSurfaceFeatures)
+      if(storeSurfaceFeatures && surfaceFeatures != nullptr)
       {
-        auto& surfaceFeatures = surfaceFeaturesArray->getDataStoreRef();
-
         if((column == 0 || column == static_cast<int64>((imageGeomNumX - 1)) || row == 0 || row == static_cast<int64>((imageGeomNumY)-1) || plane == 0 ||
             plane == static_cast<int64>((imageGeomNumZ - 1))) &&
            imageGeomNumZ != 1)
         {
-          surfaceFeatures[feature] = 1;
+          surfaceFeatures->setValue(feature, true);
         }
         if((column == 0 || column == static_cast<int64>((imageGeomNumX - 1)) || row == 0 || row == static_cast<int64>((imageGeomNumY - 1))) && imageGeomNumZ == 1)
         {
-          surfaceFeatures[feature] = 1;
+          surfaceFeatures->setValue(feature, true);
         }
       }
       for(size_t k = 0; k < 6; k++)
@@ -349,10 +344,9 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
         }
       }
     }
-    if(storeBoundaryCells)
+    if(storeBoundaryCells && boundaryCells != nullptr)
     {
-      auto& boundaryCells = boundaryCellsArray->getDataStoreRef();
-      boundaryCells[j] = static_cast<int32>(onsurf);
+      boundaryCells->setValue(j, static_cast<int32>(onsurf));
     }
   }
 
@@ -386,7 +380,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
       neighToCount[neighborlist[i][j]]++;
     }
 
-    std::map<int32, int32>::iterator neighborIter = neighToCount.find(0);
+    auto neighborIter = neighToCount.find(0);
     neighToCount.erase(neighborIter);
     neighborIter = neighToCount.find(-1);
     if(neighborIter != neighToCount.end())

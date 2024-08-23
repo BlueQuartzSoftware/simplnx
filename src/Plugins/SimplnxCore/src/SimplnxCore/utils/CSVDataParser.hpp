@@ -45,17 +45,17 @@ public:
   AbstractDataParser& operator=(const AbstractDataParser&) = delete; // Copy Assignment Not Implemented
   AbstractDataParser& operator=(AbstractDataParser&&) = delete;      // Move Assignment
 
-  std::string columnName() const
+  [[nodiscard]] std::string columnName() const
   {
     return m_ColumnName;
   }
 
-  usize columnIndex() const
+  [[nodiscard]] usize columnIndex() const
   {
     return m_ColumnIndex;
   }
 
-  const IDataArray& dataArray() const
+  [[nodiscard]] const IDataArray& dataArray() const
   {
     return m_DataArray;
   }

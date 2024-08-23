@@ -58,7 +58,7 @@ IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
 IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  DataPath dataObjectPath = args.value<DataPath>(k_DataObjectPath);
+  auto dataObjectPath = args.value<DataPath>(k_DataObjectPath);
   auto tableData = args.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   const auto& rowData = tableData.at(0);
@@ -87,7 +87,6 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_AttributeMatrixTypeKey = "AttributeMatrixType";
 constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
 constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
 } // namespace SIMPL

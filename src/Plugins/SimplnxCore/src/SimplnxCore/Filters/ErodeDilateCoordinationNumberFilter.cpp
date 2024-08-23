@@ -8,10 +8,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -81,7 +79,6 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
                                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pCoordinationNumberValue = filterArgs.value<int32>(k_CoordinationNumber_Key);
-  auto pLoopValue = filterArgs.value<bool>(k_Loop_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
@@ -90,10 +87,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
     MakeErrorResult(-16800, fmt::format("Coordination Number must be between 0 and 6. Current Value: {}", pCoordinationNumberValue));
   }
 
-  PreflightResult preflightResult;
-
   nx::core::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

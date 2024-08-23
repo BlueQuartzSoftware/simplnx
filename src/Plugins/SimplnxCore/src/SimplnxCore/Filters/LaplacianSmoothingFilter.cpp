@@ -7,10 +7,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -92,28 +90,7 @@ IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
-  auto pIterationStepsValue = filterArgs.value<int32>(k_IterationSteps_Key);
-  auto pLambdaValue = filterArgs.value<float32>(k_Lambda_Key);
-  auto pUseTaubinSmoothingValue = filterArgs.value<bool>(k_UseTaubinSmoothing_Key);
-  auto pMuFactorValue = filterArgs.value<float32>(k_MuFactor_Key);
-  auto pTripleLineLambdaValue = filterArgs.value<float32>(k_TripleLineLambda_Key);
-  auto pQuadPointLambdaValue = filterArgs.value<float32>(k_QuadPointLambda_Key);
-  auto pSurfacePointLambdaValue = filterArgs.value<float32>(k_SurfacePointLambda_Key);
-  auto pSurfaceTripleLineLambdaValue = filterArgs.value<float32>(k_SurfaceTripleLineLambda_Key);
-  auto pSurfaceQuadPointLambdaValue = filterArgs.value<float32>(k_SurfaceQuadPointLambda_Key);
-  auto pSurfaceMeshNodeTypeArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

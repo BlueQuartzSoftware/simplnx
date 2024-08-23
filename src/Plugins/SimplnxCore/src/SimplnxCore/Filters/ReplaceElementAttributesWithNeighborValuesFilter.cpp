@@ -8,11 +8,9 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -82,20 +80,17 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pComparisonDataPath.getParent(), {});
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-
   ReplaceElementAttributesWithNeighborValuesInputValues inputValues;
 
   inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);

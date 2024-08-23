@@ -99,8 +99,9 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
 Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {
-  auto featureIdsArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
-  auto featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)));
+  auto& featureIdsArray = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key))->getDataStoreRef();
+  auto& featurePhasesArray =
+      dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)))->getDataStoreRef();
 
   std::unique_ptr<MaskCompare> goodVoxelsMask;
   try

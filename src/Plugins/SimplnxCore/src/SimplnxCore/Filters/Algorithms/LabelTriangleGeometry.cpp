@@ -43,7 +43,7 @@ Result<> LabelTriangleGeometry::operator()()
 
     const TriangleGeom::ElementDynamicList* triangleNeighborsPtr = triangle.getElementNeighbors();
 
-    auto& regionIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->RegionIdsPath);
+    auto& regionIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdsPath)->getDataStoreRef();
 
     usize chunkSize = 1000;
     std::vector<int32> triList(chunkSize, -1);
@@ -51,9 +51,9 @@ Result<> LabelTriangleGeometry::operator()()
     int32 regionCount = 1;
     for(usize i = 0; i < numTris; i++)
     {
-      if(regionIds[i] == 0)
+      if(regionIdsStore[i] == 0)
       {
-        regionIds[i] = regionCount;
+        regionIdsStore[i] = regionCount;
         triangleCounts[regionCount]++;
 
         usize size = 0;
@@ -68,9 +68,9 @@ Result<> LabelTriangleGeometry::operator()()
           for(int j = 0; j < tCount; j++)
           {
             TriangleGeom::MeshIndexType neighTri = dataPtr[j];
-            if(regionIds[neighTri] == 0)
+            if(regionIdsStore[neighTri] == 0)
             {
-              regionIds[neighTri] = regionCount;
+              regionIdsStore[neighTri] = regionCount;
               triangleCounts[regionCount]++;
               triList[size] = static_cast<int32>(neighTri);
               size++;
@@ -101,10 +101,10 @@ Result<> LabelTriangleGeometry::operator()()
   triangle.deleteElementsContainingVert();
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
-  auto& numTriangles = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->NumTrianglesPath);
-  for(usize index = 0; index < numTriangles.getSize(); index++)
+  auto& numTrianglesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->NumTrianglesPath)->getDataStoreRef();
+  for(usize index = 0; index < numTrianglesStore.getSize(); index++)
   {
-    numTriangles[index] = static_cast<uint64>(triangleCounts[index]);
+    numTrianglesStore[index] = static_cast<uint64>(triangleCounts[index]);
   }
 
   return {};

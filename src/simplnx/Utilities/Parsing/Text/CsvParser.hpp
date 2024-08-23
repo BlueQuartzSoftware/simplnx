@@ -18,15 +18,11 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core
-{
-namespace CsvParser
+namespace nx::core::CsvParser
 {
 
 constexpr int32_t k_RBR_NO_ERROR = 0;
 constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
-constexpr int32_t k_RBR_FILE_TOO_SMALL = -1010;
-constexpr int32_t k_RBR_FILE_TOO_BIG = -1020;
 constexpr int32_t k_RBR_READ_EOF = -1030;
 constexpr int32_t k_RBR_READ_FAIL = -1035;
 constexpr int32_t k_RBR_READ_ERROR = 1040;
@@ -37,10 +33,10 @@ constexpr size_t k_BufferSize = 1024;
 
 class DelimiterType : public std::ctype<char>
 {
-  std::ctype<char>::mask my_table[std::ctype<char>::table_size];
+  std::ctype<char>::mask my_table[std::ctype<char>::table_size] = {};
 
 public:
-  DelimiterType(char delimiter, size_t refs = 0)
+  explicit DelimiterType(char delimiter, size_t refs = 0)
   : std::ctype<char>(&my_table[0], false, refs)
   {
     std::copy_n(std::ctype<char>::classic_table(), table_size, my_table);
@@ -90,9 +86,9 @@ SIMPLNX_EXPORT int32_t ReadLine(std::istream& in, char* buffer, size_t length);
  * @return Result<> with any errors or warnings that were encountered.
  */
 template <typename T, typename K>
-Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
+Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
-  int32_t err = k_RBR_NO_ERROR;
+  int32 err;
   if(!fs::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
@@ -129,7 +125,7 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHea
   if(inputIsBool)
   {
     double value = 0.0;
-    int64_t* si64Ptr = reinterpret_cast<int64_t*>(&value);
+    auto* si64Ptr = reinterpret_cast<int64_t*>(&value);
     for(size_t i = 0; i < totalSize; ++i)
     {
       in >> value;
@@ -184,9 +180,9 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHea
  * @return Result<> with any errors or warnings that were encountered.
  */
 template <typename T>
-Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHeaderLines, char delimiter)
+Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter)
 {
-  int32_t err = k_RBR_NO_ERROR;
+  int32 err;
   if(!fs::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
@@ -243,8 +239,4 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHea
 
   return {};
 }
-
-SIMPLNX_EXPORT std::vector<float> ParseVertices(const std::string& inputFile, const std::string& delimiter, bool headerLine);
-
-} // namespace CsvParser
-} // namespace nx::core
+} // namespace nx::core::CsvParser

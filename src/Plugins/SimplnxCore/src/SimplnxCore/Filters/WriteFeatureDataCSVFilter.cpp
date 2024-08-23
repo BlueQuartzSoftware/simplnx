@@ -10,11 +10,9 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
-
-#include <filesystem>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -82,13 +80,7 @@ IFilter::UniquePointer WriteFeatureDataCSVFilter::clone() const
 IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
-  PreflightResult preflightResult;
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -103,14 +95,11 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
   auto pOutputFilePath = atomicFile.tempFilePath();
-  auto pWriteNeighborListDataValue = filterArgs.value<bool>(k_WriteNeighborListData_Key);
   auto pWriteNumFeaturesLineValue = filterArgs.value<bool>(k_WriteNumFeaturesLine_Key);
   auto pDelimiterChoiceIntValue = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoiceInt_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
   const std::string delimiter = OStreamUtilities::DelimiterToString(pDelimiterChoiceIntValue);
-
-  auto& cellFeatureAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
 
   // Ensure the complete path to the output file exists or can be created
   auto parentPath = pOutputFilePath.parent_path();
@@ -165,6 +154,7 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   {
     return commitResult;
   }
+
   return {};
 }
 

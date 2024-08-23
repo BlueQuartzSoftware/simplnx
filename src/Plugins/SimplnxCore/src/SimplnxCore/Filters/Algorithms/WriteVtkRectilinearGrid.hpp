@@ -56,7 +56,7 @@ public:
    * @param binary Whether or not to write the vtk file data in binary
    */
   template <typename T>
-  Result<> writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T max, T step);
+  Result<> writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T step);
 
 private:
   DataStructure& m_DataStructure;

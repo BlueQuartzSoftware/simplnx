@@ -10,9 +10,9 @@ namespace
 struct ExecuteFlyingEdgesFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom& image, const IDataArray& iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32Array& normals, AttributeMatrix& normAM)
+  void operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
   {
-    FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray, static_cast<T>(isoVal), triangleGeom, normals);
+    FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), static_cast<T>(isoVal), triangleGeom, normals);
     flyingEdges.pass1();
     flyingEdges.pass2();
     flyingEdges.pass3();
@@ -49,16 +49,16 @@ Result<> FlyingEdges3D::operator()()
 {
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
-  const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->contouringArrayPath);
+  const auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
-  auto normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->normalsArrayPath);
+  auto& normalsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->normalsArrayPath)->getDataStoreRef();
 
   // auto created so must have a parent
   DataPath normAMPath = m_InputValues->normalsArrayPath.getParent();
 
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 
-  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom, normals, normAM);
+  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray->getDataType(), image, iDataArray, isoVal, triangleGeom, normalsStore, normAM);
 
   return {};
 }

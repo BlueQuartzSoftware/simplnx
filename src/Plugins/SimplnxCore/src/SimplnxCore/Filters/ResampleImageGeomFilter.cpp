@@ -21,9 +21,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -154,7 +152,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     {
       // Percentage has a non-positive value
       const std::string errMsg = fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", pScalingFactorValue[0], pScalingFactorValue[1], pScalingFactorValue[2]);
-      return {MakeErrorResult<OutputActions>(-11500, errMsg)};
+      return MakePreflightErrorResult(-11500, errMsg);
     }
 
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
@@ -176,7 +174,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   {
     // Spacing has a negative value
     const std::string errMsg = fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]);
-    return {MakeErrorResult<OutputActions>(-11502, errMsg)};
+    return MakePreflightErrorResult(-11502, errMsg);
   }
 
   const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
@@ -235,7 +233,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
     if(selectedCellData == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-5851, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return MakePreflightErrorResult(-5851, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()));
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
@@ -270,7 +268,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(nullptr == srcCellFeatureData)
     {
-      return {MakeErrorResult<OutputActions>(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString()))};
+      return MakePreflightErrorResult(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString()));
     }
     std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());

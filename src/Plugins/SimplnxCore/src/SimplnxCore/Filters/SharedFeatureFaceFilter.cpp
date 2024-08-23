@@ -84,13 +84,11 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
 {
   auto triangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-
   auto featureFaceIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceIdsArrayName_Key);
   auto grainBoundaryAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_GrainBoundaryAttributeMatrixName_Key);
   auto featureNumTrianglesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureNumTrianglesArrayName_Key);
   auto featureFaceLabelsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceLabelsArrayName_Key);
 
-  PreflightResult preflightResult;
   const std::vector<size_t> tDims = {1};
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -132,11 +130,8 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  // No preflight updated values are generated in this filter
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

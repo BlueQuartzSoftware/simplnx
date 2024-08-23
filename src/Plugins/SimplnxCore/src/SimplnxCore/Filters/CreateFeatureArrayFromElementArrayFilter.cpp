@@ -8,10 +8,8 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -20,25 +18,20 @@ namespace
 struct CopyCellDataFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
-                      const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
   {
-    const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
-    const auto& selectedCellArrayStore = selectedCellArray.getDataStoreRef();
-    const Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-    const Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
-    auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayNameValue);
-    auto& createdDataStore = createdArray.getDataStoreRef();
+    const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     // Initialize the output array with a default value
-    createdArray.fill(0);
+    createdDataStore.fill(0);
 
-    usize totalCellArrayComponents = selectedCellArray.getNumberOfComponents();
+    usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
 
     std::map<int32, usize> featureMap;
     Result<> result;
 
-    usize totalCellArrayTuples = selectedCellArray.getNumberOfTuples();
+    usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
     for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
       if(shouldCancel)
@@ -59,8 +52,8 @@ struct CopyCellDataFunctor
       usize firstInstanceCellTupleIdx = featureMap[featureIdx];
       for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
       {
-        T firstInstanceCellVal = selectedCellArrayStore[firstInstanceCellTupleIdx + cellCompIdx];
-        T currentCellVal = selectedCellArrayStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
+        T currentCellVal = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
         if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
         {
           // The values are inconsistent with the first values for this feature identifier, so throw a warning
@@ -68,7 +61,7 @@ struct CopyCellDataFunctor
               Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
         }
 
-        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArrayStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
       }
     }
 
@@ -181,21 +174,20 @@ Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& da
   auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
 
   const DataPath createdArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue);
-  const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
-  const Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  const Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
-  auto& createdArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
+  const auto* selectedCellArray = dataStructure.getDataAs<IDataArray>(pSelectedCellArrayPathValue);
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
+  auto* createdArray = dataStructure.getDataAs<IDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   usize maxValue = featureIds[featureIdsMaxIdx];
   auto& cellFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
 
-  auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
-  createdArrayStore.resizeTuples(std::vector<usize>{maxValue + 1});
+  auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
+  createdArrayStore->resizeTuples(std::vector<usize>{maxValue + 1});
   cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIds, createdArray, shouldCancel);
 }
 
 namespace

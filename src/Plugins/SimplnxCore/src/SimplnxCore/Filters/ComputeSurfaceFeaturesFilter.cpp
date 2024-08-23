@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -19,7 +18,7 @@ using namespace nx::core;
 
 namespace
 {
-bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
+bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
 {
   const usize yStride = point.getY() * xPoints;
 
@@ -55,7 +54,7 @@ bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yP
   return false;
 }
 
-bool IsPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
+bool IsPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -108,8 +107,8 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesArrayPathValue);
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   const usize xPoints = featureGeometry.getNumXCells();
   const usize yPoints = featureGeometry.getNumYCells();
@@ -145,8 +144,8 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesArrayPathValue);
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   usize xPoints = 0;
   usize yPoints = 0;
@@ -297,9 +296,8 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   const auto pSurfaceFeaturesArrayPathValue = pCellFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key));
 
   // Resize the surface features array to the proper size
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(pSurfaceFeaturesArrayPathValue);
-  auto& surfaceFeaturesStore = surfaceFeatures.getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   const usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   const usize maxFeature = featureIds[featureIdsMaxIdx];
@@ -310,7 +308,7 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   {
     return resizeResults;
   }
-  surfaceFeaturesStore.fill(0);
+  surfaceFeatures.fill(0);
 
   // Find surface features
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);

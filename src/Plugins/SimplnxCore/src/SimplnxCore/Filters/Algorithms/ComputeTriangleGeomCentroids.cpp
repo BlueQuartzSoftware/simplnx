@@ -30,19 +30,19 @@ const std::atomic_bool& ComputeTriangleGeomCentroids::getCancel()
 Result<> ComputeTriangleGeomCentroids::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = IGeometry::SharedVertexList;
-  using SharedFaceListType = IGeometry::SharedFaceList;
+  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedFaceListType = AbstractDataStore<IGeometry::SharedFaceList::value_type>;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  const SharedVertexListType& vertexCoords = triangleGeom.getVerticesRef();
-  const SharedFaceListType& triangles = triangleGeom.getFacesRef();
+  const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
+  const SharedFaceListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
 
   MeshIndexType numFeatures = featAttrMat.getNumTuples();
-  auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
-  const Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath);
+  const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
 
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {

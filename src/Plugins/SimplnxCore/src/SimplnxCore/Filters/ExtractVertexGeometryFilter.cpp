@@ -11,7 +11,6 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -19,10 +18,6 @@
 using namespace nx::core;
 namespace
 {
-
-using FeatureIdsArrayType = Int32Array;
-using GoodVoxelsArrayType = BoolArray;
-
 constexpr int32 k_MissingGeomError = -72440;
 constexpr int32 k_IncorrectInputArray = -72441;
 constexpr int32 k_MissingInputArray = -72442;
@@ -118,7 +113,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const IGridGeometry& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
+  const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
   SizeVec3 dims = geometry.getDimensions();
   usize geomElementCount = dims[0] * dims[1] * dims[2];
 
@@ -131,7 +126,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   // Validate the GoodVoxels/Mask Array combination
   if(pUseGoodVoxelsValue)
   {
-    const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(nullptr == goodVoxelsArray)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", pMaskArrayPathValue.toString())}})};
@@ -156,7 +151,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   // as the output Vertex Geometry
   if(!dataPaths.empty())
   {
-    const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
+    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
       return {MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
@@ -169,7 +164,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   const DataPath vertexAttrMatrixPath = pVertexGeometryPathValue.createChildPath(pVertexAttrMatrixNameValue);
   for(const DataPath& dataPath : pIncludedDataArrayPathsValue)
   {
-    const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
 
     if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Copy))
     {

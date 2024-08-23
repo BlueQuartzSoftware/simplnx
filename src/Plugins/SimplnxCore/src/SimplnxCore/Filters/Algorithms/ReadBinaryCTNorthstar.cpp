@@ -32,7 +32,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
   auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
   geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
 
-  auto& density = dataStructure.getDataRefAs<Float32Array>(inputValues->DensityArrayPath);
+  auto& density = dataStructure.getDataAs<Float32Array>(inputValues->DensityArrayPath)->getDataStoreRef();
   density.fill(0xABCDEF);
 
   usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;

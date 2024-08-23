@@ -4,7 +4,6 @@
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

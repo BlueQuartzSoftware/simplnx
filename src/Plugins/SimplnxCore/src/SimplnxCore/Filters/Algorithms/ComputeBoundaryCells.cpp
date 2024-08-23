@@ -32,8 +32,8 @@ Result<> ComputeBoundaryCells::operator()()
   const auto yPoints = static_cast<int64>(imageDimensions[1]);
   const auto zPoints = static_cast<int64>(imageDimensions[2]);
 
-  auto featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto boundaryCells = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->BoundaryCellsArrayName);
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsArrayName)->getDataStoreRef();
 
   const int64 neighPoints[6] = {(-1 * (xPoints * yPoints)), (-1 * (xPoints)), -1, 1, xPoints, (xPoints * yPoints)};
 
@@ -57,7 +57,7 @@ Result<> ComputeBoundaryCells::operator()()
       for(int64 k = 0; k < xPoints; k++)
       {
         onSurf = 0;
-        feature = featureIds[zStride + yStride + k];
+        feature = featureIdsStore[zStride + yStride + k];
         if(feature >= 0)
         {
           if(m_InputValues->IncludeVolumeBoundary)
@@ -108,13 +108,13 @@ Result<> ComputeBoundaryCells::operator()()
             {
               continue;
             }
-            if(featureIds[neighbor] != feature && featureIds[neighbor] > ignoreFeatureZeroVal)
+            if(featureIdsStore[neighbor] != feature && featureIdsStore[neighbor] > ignoreFeatureZeroVal)
             {
               onSurf++;
             }
           }
         }
-        boundaryCells[zStride + yStride + k] = onSurf;
+        boundaryCellsStore[zStride + yStride + k] = onSurf;
       }
     }
   }

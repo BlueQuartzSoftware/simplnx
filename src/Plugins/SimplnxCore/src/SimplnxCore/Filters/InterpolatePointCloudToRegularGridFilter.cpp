@@ -30,8 +30,7 @@ struct MapPointCloudDataByKernelFunctor
   template <typename T>
   void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
   {
-    auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
-    auto& inputData = inputDataArray->getDataStoreRef();
+    auto& inputData = source->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
 
     usize index = 0;
@@ -90,7 +89,7 @@ void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std
   }
 }
 
-void determineKernelDistances(std::vector<float32>& kernelValDistances, int64 kernelNumVoxels[3], FloatVec3 res)
+void determineKernelDistances(std::vector<float32>& kernelValDistances, const int64 kernelNumVoxels[3], FloatVec3 res)
 {
   usize counter = 0;
 
@@ -108,10 +107,10 @@ void determineKernelDistances(std::vector<float32>& kernelValDistances, int64 ke
   }
 }
 
-void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<float32>& kernelValDistances, std::vector<float32>& kernel, int64 kernelNumVoxels[3], usize dims[3], usize curX, usize curY,
-                        usize curZ)
+void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<float32>& kernelValDistances, std::vector<float32>& kernel, const int64 kernelNumVoxels[3], const usize dims[3], usize curX,
+                        usize curY, usize curZ)
 {
-  usize index = 0;
+  usize index;
   int64 startKernel[3] = {0, 0, 0};
   int64 endKernel[3] = {0, 0, 0};
   usize counter = 0;
@@ -375,7 +374,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
   auto& voxelIndices = dataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
 
-  // Make sure the NeighborList's outer most vector is resized to the number of tuples and initialized to non null values (empty vectors)
+  // Make sure the NeighborList's outermost vector is resized to the number of tuples and initialized to non-null values (empty vectors)
   for(const auto& interpolatedDataPath : interpolatedDataPaths)
   {
     InitializeNeighborList(dataStructure, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
@@ -405,14 +404,12 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   }
 
   int64 tmpKernelSize[3] = {1, 1, 1};
-  int64 totalKernel = 0;
-
   for(usize i = 0; i < 3; i++)
   {
     tmpKernelSize[i] *= (kernelNumVoxels[i] * 2) + 1;
   }
 
-  totalKernel = tmpKernelSize[0] * tmpKernelSize[1] * tmpKernelSize[2];
+  int64 totalKernel = tmpKernelSize[0] * tmpKernelSize[1] * tmpKernelSize[2];
 
   kernel.resize(totalKernel);
   std::fill(kernel.begin(), kernel.end(), 0.0f);

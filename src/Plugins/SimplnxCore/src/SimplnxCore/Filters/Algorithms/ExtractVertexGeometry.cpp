@@ -13,22 +13,20 @@ namespace
 struct CopyDataFunctor
 {
   template <typename T>
-  void copyTuple(const DataArray<T>& srcArray, DataArray<T>& destArray, usize srcTupleIdx, usize destTupleIndex)
+  void copyTuple(const AbstractDataStore<T>& srcStore, AbstractDataStore<T>& destStore, usize srcTupleIdx, usize destTupleIndex)
   {
-    usize numComps = srcArray.getNumberOfComponents();
+    usize numComps = srcStore.getNumberOfComponents();
     for(usize cIdx = 0; cIdx < numComps; cIdx++)
     {
-      destArray[destTupleIndex * numComps + cIdx] = srcArray[srcTupleIdx * numComps + cIdx];
+      destStore[destTupleIndex * numComps + cIdx] = srcStore[srcTupleIdx * numComps + cIdx];
     }
   }
 
   template <typename T>
-  void operator()(const IDataArray& srcIArray, IDataArray& destIArray, const std::vector<bool>& maskArray)
+  void operator()(const IDataArray* srcIArray, IDataArray* destIArray, const std::vector<bool>& maskArray)
   {
-    using DataArrayType = DataArray<T>;
-
-    const DataArrayType& srcArray = dynamic_cast<const DataArrayType&>(srcIArray);
-    DataArrayType& destArray = dynamic_cast<DataArrayType&>(destIArray);
+    const auto& srcArray = srcIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& destArray = destIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     bool useMask = !maskArray.empty();
     usize destTupleIdx = 0;
@@ -71,8 +69,8 @@ const std::atomic_bool& ExtractVertexGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::operator()()
 {
-  const IGridGeometry& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
-  VertexGeom& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
+  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
+  auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
 
   SizeVec3 dims = inputGeometry.getDimensions();
   const usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1), std::multiplies<>());
@@ -157,10 +155,10 @@ Result<> ExtractVertexGeometry::operator()()
     vertexAttrMatrix.resizeTuples({vertexCount});
     for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
     {
-      const IDataArray& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
-      DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray.getName());
-      IDataArray& destDataArray = m_DataStructure.getDataRefAs<IDataArray>(destDataArrayPath);
-      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray.getDataType(), srcIDataArray, destDataArray, maskedPoints);
+      const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
+      DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
+      auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
     }
   }
 
@@ -176,9 +174,9 @@ Result<> ExtractVertexGeometry::operator()()
     {
       DataPath srcDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(dataArrayPath.getTargetName());
       DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(dataArrayPath.getTargetName());
-      const IDataArray& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(srcDataArrayPath);
-      IDataArray& destDataArray = m_DataStructure.getDataRefAs<IDataArray>(destDataArrayPath);
-      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray.getDataType(), srcIDataArray, destDataArray, maskedPoints);
+      const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(srcDataArrayPath);
+      auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
     }
     AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();
     vertexAttrMatrix.resizeTuples({vertexCount});

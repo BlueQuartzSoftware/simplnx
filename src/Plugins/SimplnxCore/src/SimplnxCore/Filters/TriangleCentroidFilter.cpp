@@ -6,10 +6,8 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 namespace
@@ -75,11 +73,8 @@ IFilter::UniquePointer TriangleCentroidFilter::clone() const
 IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel) const
 {
-
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayName_Key);
-
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -100,14 +95,13 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                              const std::atomic_bool& shouldCancel) const
 {
-
   TriangleCentroidInputValues inputValues;
 
   inputValues.TriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);

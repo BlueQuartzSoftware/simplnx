@@ -128,7 +128,7 @@ struct PrintNeighborList
 
 /**
  * @brief implicit writing of **DataArray**'s elements to outputStrm
- * @tparam ScalarType The primitive type attacthed to **DataArray**
+ * @tparam ScalarType The primitive type attached to **DataArray**
  * @param outputStrm the ostream to write to
  * @param inputDataArray The **DataArray** that will have its values translated into strings
  * @param mesgHandler The message handler to dump progress updates to
@@ -142,22 +142,22 @@ struct PrintDataArray
   Result<> operator()(std::ostream& outputStrm, IDataArray* inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
                       int32 componentsPerLine = 0)
   {
-    auto& dataArray = *dynamic_cast<DataArray<ScalarType>*>(inputDataArray);
+    auto& dataStore = inputDataArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto start = std::chrono::steady_clock::now();
-    auto numTuples = dataArray.getNumberOfTuples();
+    auto numTuples = dataStore.getNumberOfTuples();
     auto maxLine = static_cast<size_t>(componentsPerLine);
     if(componentsPerLine == 0)
     {
-      maxLine = static_cast<size_t>(dataArray.getNumberOfComponents());
+      maxLine = static_cast<size_t>(dataStore.getNumberOfComponents());
     }
 
-    usize numComps = dataArray.getNumberOfComponents();
+    usize numComps = dataStore.getNumberOfComponents();
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
       auto now = std::chrono::steady_clock::now();
       if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
       {
-        auto string = fmt::format("Processing {}: {}% completed", dataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
+        auto string = fmt::format("Processing {}: {}% completed", inputDataArray->getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
         mesgHandler(IFilter::Message::Type::Info, string);
         start = now;
         if(shouldCancel)
@@ -169,15 +169,15 @@ struct PrintDataArray
       {
         if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
         {
-          outputStrm << static_cast<int32>(dataArray[tuple * numComps + index]);
+          outputStrm << static_cast<int32>(dataStore[tuple * numComps + index]);
         }
         else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
         {
-          outputStrm << fmt::format("{}", dataArray[tuple * numComps + index]);
+          outputStrm << fmt::format("{}", dataStore[tuple * numComps + index]);
         }
         else
         {
-          outputStrm << dataArray[tuple * numComps + index];
+          outputStrm << dataStore[tuple * numComps + index];
         }
         if(index != maxLine - 1)
         {
@@ -276,10 +276,11 @@ class TupleWriter : public ITupleWriter
 
 public:
   TupleWriter(const IDataArray& iDataArray, const std::string& delimiter)
-  : m_DataArray(dynamic_cast<const DataArray<ScalarType>&>(iDataArray))
+  : m_DataStore(iDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
+  , m_Name(iDataArray.getName())
   , m_Delimiter(delimiter)
   {
-    m_NumComps = m_DataArray.getNumberOfComponents();
+    m_NumComps = m_DataStore.getNumberOfComponents();
   }
   ~TupleWriter() override = default;
 
@@ -289,19 +290,19 @@ public:
     {
       if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
       {
-        outputStrm << static_cast<int32>(m_DataArray[tupleIndex * m_NumComps + comp]);
+        outputStrm << static_cast<int32>(m_DataStore[tupleIndex * m_NumComps + comp]);
       }
       else if constexpr(std::is_same_v<ScalarType, float32>)
       {
-        outputStrm << std::setprecision(8) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
+        outputStrm << std::setprecision(8) << std::noshowpoint << m_DataStore[tupleIndex * m_NumComps + comp];
       }
       else if constexpr(std::is_same_v<ScalarType, float64>)
       {
-        outputStrm << std::setprecision(16) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
+        outputStrm << std::setprecision(16) << std::noshowpoint << m_DataStore[tupleIndex * m_NumComps + comp];
       }
       else
       {
-        outputStrm << m_DataArray[tupleIndex * m_NumComps + comp];
+        outputStrm << m_DataStore[tupleIndex * m_NumComps + comp];
       }
       if(comp < m_NumComps - 1)
       {
@@ -315,13 +316,13 @@ public:
     // If there is only 1 component then write the name of the array and return
     if(m_NumComps == 1)
     {
-      outputStrm << m_DataArray.getName();
+      outputStrm << m_Name;
       return;
     }
 
     for(size_t index = 0; index < m_NumComps; index++)
     {
-      outputStrm << m_DataArray.getName() << "_" << index;
+      outputStrm << m_Name << "_" << index;
 
       if(index < m_NumComps - 1)
       {
@@ -331,7 +332,8 @@ public:
   }
 
 private:
-  const DataArrayType& m_DataArray;
+  const std::string m_Name;
+  const AbstractDataStore<ScalarType>& m_DataStore;
   const std::string& m_Delimiter = ",";
   usize m_NumComps = 1;
 };
@@ -347,9 +349,7 @@ struct AddTupleWriter
 };
 } // namespace
 
-namespace nx::core
-{
-namespace OStreamUtilities
+namespace nx::core::OStreamUtilities
 {
 /**
  * @brief turns the enum in this API to respective character as a string
@@ -613,5 +613,4 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     }
   }
 };
-} // namespace OStreamUtilities
-} // namespace nx::core
+} // namespace nx::core::OStreamUtilities

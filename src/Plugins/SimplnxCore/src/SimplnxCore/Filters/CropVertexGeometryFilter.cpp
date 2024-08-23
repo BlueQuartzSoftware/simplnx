@@ -9,10 +9,8 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
@@ -21,14 +19,12 @@ namespace
 struct CopyDataToCroppedGeometryFunctor
 {
   template <typename T>
-  void operator()(const IDataArray& inDataRef, IDataArray& outDataRef, const std::vector<int64>& croppedPoints)
+  void operator()(const IDataArray* inDataRef, IDataArray* outDataRef, const std::vector<int64>& croppedPoints)
   {
-    const DataArray<T>& inputDataArray = dynamic_cast<const DataArray<T>&>(inDataRef);
-    const auto& inputData = inputDataArray.getDataStoreRef();
-    DataArray<T>& croppedDataArray = dynamic_cast<DataArray<T>&>(outDataRef);
-    auto& croppedData = croppedDataArray.getDataStoreRef();
+    const auto& inputData = inDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& croppedData = outDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    usize nComps = inDataRef.getNumberOfComponents();
+    usize nComps = inDataRef->getNumberOfComponents();
 
     for(std::vector<int64>::size_type i = 0; i < croppedPoints.size(); i++)
     {
@@ -214,7 +210,7 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
   auto zMax = posMax[2];
 
   auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  int64 numVerts = static_cast<int64>(vertices.getNumberOfVertices());
+  auto numVerts = static_cast<int64>(vertices.getNumberOfVertices());
   auto* verticesPtr = vertices.getVertices();
   auto& allVerts = verticesPtr->getDataStoreRef();
   std::vector<int64> croppedPoints;
@@ -257,10 +253,10 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
   {
     DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
 
-    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
-    auto& destArray = dataStructure.getDataRefAs<IDataArray>(destArrayPath);
+    const auto* srcArray = dataStructure.getDataAs<IDataArray>(targetArrayPath);
+    auto* destArray = dataStructure.getDataAs<IDataArray>(destArrayPath);
 
-    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray.getDataType(), srcArray, destArray, croppedPoints);
+    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray->getDataType(), srcArray, destArray, croppedPoints);
   }
 
   return {};

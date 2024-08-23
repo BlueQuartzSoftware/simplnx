@@ -19,18 +19,12 @@ constexpr StringLiteral k_ArrayType = "array";
 constexpr StringLiteral k_CollectionType = "collection";
 } // namespace
 
-IArrayThreshold::IArrayThreshold()
+IArrayThreshold::IArrayThreshold() = default;
+IArrayThreshold::IArrayThreshold(const IArrayThreshold& other) = default;
 
-{
-}
-IArrayThreshold::IArrayThreshold(const IArrayThreshold& other)
+IArrayThreshold::IArrayThreshold(IArrayThreshold&& other) noexcept
 : m_IsInverted(other.m_IsInverted)
 , m_UnionType(other.m_UnionType)
-{
-}
-IArrayThreshold::IArrayThreshold(IArrayThreshold&& other) noexcept
-: m_IsInverted(std::move(other.m_IsInverted))
-, m_UnionType(std::move(other.m_UnionType))
 {
 }
 IArrayThreshold::~IArrayThreshold() = default;
@@ -68,18 +62,13 @@ ArrayThreshold::ArrayThreshold()
 
 {
 }
-ArrayThreshold::ArrayThreshold(const ArrayThreshold& other)
-: IArrayThreshold(other)
-, m_ArrayPath(other.m_ArrayPath)
-, m_Value(other.m_Value)
-, m_Comparison(other.m_Comparison)
-{
-}
+ArrayThreshold::ArrayThreshold(const ArrayThreshold& other) = default;
+
 ArrayThreshold::ArrayThreshold(ArrayThreshold&& other) noexcept
 : IArrayThreshold(std::move(other))
 , m_ArrayPath(std::move(other.m_ArrayPath))
-, m_Value(std::move(other.m_Value))
-, m_Comparison(std::move(other.m_Comparison))
+, m_Value(other.m_Value)
+, m_Comparison(other.m_Comparison)
 {
 }
 ArrayThreshold::~ArrayThreshold() = default;
@@ -101,8 +90,8 @@ ArrayThreshold& ArrayThreshold::operator=(ArrayThreshold&& other) noexcept
   setUnionOperator(other.getUnionOperator());
 
   m_ArrayPath = std::move(other.m_ArrayPath);
-  m_Value = std::move(other.m_Value);
-  m_Comparison = std::move(other.m_Comparison);
+  m_Value = other.m_Value;
+  m_Comparison = other.m_Comparison;
 
   return *this;
 }
@@ -137,37 +126,6 @@ void ArrayThreshold::setComparisonType(ComparisonType comparison)
 std::set<DataPath> ArrayThreshold::getRequiredPaths() const
 {
   return {getArrayPath()};
-}
-
-template <typename T>
-bool checkArrayThreshold(const DataArray<T>* dataArray, ArrayThreshold::ComparisonValue value, ArrayThreshold::ComparisonType comparison, usize tupleId)
-{
-  const auto dataStore = dataArray->getDataStore();
-  const auto numComponents = dataStore->getNumberOfComponents();
-
-  auto tuplePos = tupleId * numComponents;
-  T tupleValue = 0;
-  for(usize i = tuplePos; i < tuplePos + numComponents; i++)
-  {
-    // Avoid overflow
-    tupleValue += dataStore->getValue(i) / static_cast<double>(numComponents);
-  }
-
-  bool threshold = false;
-  switch(comparison)
-  {
-  case ArrayThreshold::ComparisonType::GreaterThan:
-    threshold = (tupleValue > value);
-    break;
-  case ArrayThreshold::ComparisonType::LessThan:
-    threshold = (tupleValue < value);
-    break;
-  default:
-    threshold = false;
-    break;
-  }
-
-  return threshold;
 }
 
 nlohmann::json ArrayThreshold::toJson() const
@@ -213,11 +171,9 @@ ArrayThresholdSet::ArrayThresholdSet()
 : IArrayThreshold()
 {
 }
-ArrayThresholdSet::ArrayThresholdSet(const ArrayThresholdSet& other)
-: IArrayThreshold(other)
-, m_Thresholds(other.m_Thresholds)
-{
-}
+
+ArrayThresholdSet::ArrayThresholdSet(const ArrayThresholdSet& other) = default;
+
 ArrayThresholdSet::ArrayThresholdSet(ArrayThresholdSet&& other) noexcept
 : IArrayThreshold(std::move(other))
 , m_Thresholds(std::move(other.m_Thresholds))

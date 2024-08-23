@@ -10,7 +10,6 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -116,9 +115,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   auto pFeaturePhasesPathValue = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   auto pPartNumberPathValue = filterArgs.value<DataPath>(k_PartNumberPath_Key);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
   if(triangleGeom == nullptr)
@@ -155,8 +152,9 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }
   }
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+
+  // Return both the resultOutputActions via std::move()
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -173,6 +171,7 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   inputValues.PartNumberPath = filterArgs.value<DataPath>(k_PartNumberPath_Key);
+
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 

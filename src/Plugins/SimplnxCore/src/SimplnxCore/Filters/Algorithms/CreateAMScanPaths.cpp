@@ -13,7 +13,7 @@ namespace
 {
 std::array<float32, 9> ax2om(const std::array<float32, 4>& a)
 {
-  std::array<float32, 9> res;
+  std::array<float32, 9> res = {};
   float32 q = 0.0L;
   float32 c = 0.0L;
   float32 s = 0.0L;
@@ -71,6 +71,59 @@ ImageRotationUtilities::Matrix3fR toGMatrix(std::array<float32, 9> om)
   g(2, 2) = om[8];
   return g;
 }
+
+// -----------------------------------------------------------------------------
+char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX)
+{
+  // assumes p1q1 is the hatch vector and p2q2 is the CAD edge
+  // also assumes the p1q1 is in x direction only so can just check y coords for potential intersection
+  float32 x1 = p1[0];
+  float32 x2 = q1[0];
+  float32 x3 = p2[0];
+  float32 x4 = q2[0];
+  float32 y1 = p1[1];
+  //  float32 y2 = q1[1];
+  float32 y3 = p2[1];
+  float32 y4 = q2[1];
+
+  if(y3 > y1 && y4 > y1)
+  {
+    return 'n';
+  }
+  if(y3 < y1 && y4 < y1)
+  {
+    return 'n';
+  }
+  if(y3 == y1 && y4 == y1)
+  {
+    return 'n';
+  }
+  if(y3 == y1)
+  {
+    coordX = x3;
+    if(x3 >= x1 && x3 <= x2)
+    {
+      return 'c';
+    }
+    return 'n';
+  }
+  if(y4 == y1)
+  {
+    coordX = x4;
+    if(x4 >= x1 && x4 <= x2)
+    {
+      return 'd';
+    }
+    return 'n';
+  }
+  float32 frac = (y1 - y3) / (y4 - y3);
+  coordX = x3 + (frac * (x4 - x3));
+  if(coordX >= x1 && coordX <= x2)
+  {
+    return 'i';
+  }
+  return 'n';
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -98,8 +151,8 @@ Result<> CreateAMScanPaths::operator()()
   auto& CADLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
   INodeGeometry1D::SharedEdgeList& CADLayerEdges = CADLayers.getEdgesRef();
   INodeGeometry0D::SharedVertexList& CADLayerVerts = CADLayers.getVerticesRef();
-  auto& cadSliceIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath);
-  auto& cadRegionIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath);
+  auto& cadSliceIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath)->getDataStoreRef();
+  auto& cadRegionIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath)->getDataStoreRef();
   usize numCADLayerEdges = CADLayers.getNumberOfEdges();
   usize numCADLayerVerts = CADLayers.getNumberOfVertices();
   int32 numCADLayers = 0;
@@ -519,19 +572,19 @@ Result<> CreateAMScanPaths::operator()()
   usize numHatchVerts = 2 * hatchCount;
   fitHatches.resizeVertexList(numHatchVerts);
   fitHatches.resizeEdgeList(hatchCount);
-  INodeGeometry0D::SharedVertexList& hatchVerts = fitHatches.getVerticesRef();
-  INodeGeometry1D::SharedEdgeList& hatches = fitHatches.getEdgesRef();
+  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& hatchVerts = fitHatches.getVertices()->getDataStoreRef();
+  AbstractDataStore<INodeGeometry1D::SharedEdgeList::value_type>& hatches = fitHatches.getEdges()->getDataStoreRef();
   std::vector<usize> tDims(1, numHatchVerts);
   fitHatches.getVertexAttributeMatrix()->resizeTuples(tDims);
   tDims[0] = hatchCount;
   fitHatches.getEdgeAttributeMatrix()->resizeTuples(tDims);
 
-  auto& times =
-      m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(m_InputValues->TimeArrayName));
+  auto& times = m_DataStructure.getDataAs<Float64Array>(m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(m_InputValues->TimeArrayName))
+                    ->getDataStoreRef();
   const DataPath hatchAttributeMatrixPath = m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->HatchAttributeMatrixName);
-  auto& powers = m_DataStructure.getDataRefAs<Float32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->PowersArrayName));
-  auto& hatchSliceIds = m_DataStructure.getDataRefAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()));
-  auto& hatchRegionIds = m_DataStructure.getDataRefAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->RegionIdsArrayName));
+  auto& powers = m_DataStructure.getDataAs<Float32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->PowersArrayName))->getDataStoreRef();
+  auto& hatchSliceIds = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()))->getDataStoreRef();
+  auto& hatchRegionIds = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->RegionIdsArrayName))->getDataStoreRef();
 
   if(getCancel())
   {
@@ -607,57 +660,4 @@ Result<> CreateAMScanPaths::operator()()
   m_MessageHandler("Complete");
 
   return {};
-}
-
-// -----------------------------------------------------------------------------
-char CreateAMScanPaths::determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX)
-{
-  // assumes p1q1 is the hatch vector and p2q2 is the CAD edge
-  // also assumes the p1q1 is in x direction only so can just check y coords for potential intersection
-  float32 x1 = p1[0];
-  float32 x2 = q1[0];
-  float32 x3 = p2[0];
-  float32 x4 = q2[0];
-  float32 y1 = p1[1];
-  //  float32 y2 = q1[1];
-  float32 y3 = p2[1];
-  float32 y4 = q2[1];
-
-  if(y3 > y1 && y4 > y1)
-  {
-    return 'n';
-  }
-  if(y3 < y1 && y4 < y1)
-  {
-    return 'n';
-  }
-  if(y3 == y1 && y4 == y1)
-  {
-    return 'n';
-  }
-  if(y3 == y1)
-  {
-    coordX = x3;
-    if(x3 >= x1 && x3 <= x2)
-    {
-      return 'c';
-    }
-    return 'n';
-  }
-  if(y4 == y1)
-  {
-    coordX = x4;
-    if(x4 >= x1 && x4 <= x2)
-    {
-      return 'd';
-    }
-    return 'n';
-  }
-  float32 frac = (y1 - y3) / (y4 - y3);
-  coordX = x3 + (frac * (x4 - x3));
-  if(coordX >= x1 && coordX <= x2)
-  {
-    return 'i';
-  }
-  return 'n';
 }

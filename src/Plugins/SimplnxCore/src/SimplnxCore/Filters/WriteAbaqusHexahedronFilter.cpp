@@ -8,10 +8,8 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -81,16 +79,7 @@ IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  auto pHourglassStiffnessValue = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  auto pJobNameValue = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  auto pFilePrefixValue = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pHexahedralGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   // Check Output Path
   if(!fs::exists(pOutputPathValue))
@@ -105,8 +94,7 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
     }
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

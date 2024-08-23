@@ -1,6 +1,5 @@
 #include "AppendImageGeometryFilter.hpp"
 
-#include "ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/Filters/Algorithms/AppendImageGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -15,11 +14,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -94,7 +90,6 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   auto pCheckResolutionValue = filterArgs.value<bool>(k_CheckResolution_Key);
   auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 

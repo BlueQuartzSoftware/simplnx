@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -17,10 +16,8 @@ namespace nx::core
 {
 namespace
 {
-constexpr int64 k_TupleCountInvalidError = -250;
 constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
-constexpr int32 k_FetchChildArrayError = -5559;
 
 Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
@@ -30,19 +27,10 @@ Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, co
   auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key);
   auto cellDataAttrMatrix = featureIdsPath.getParent();
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
-  auto& featureIds = featureIdsArray.getDataStoreRef();
+  auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
+  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
 
-  auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
-  Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase)
-  {
-    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
-  }
-
-  usize totalPoints = featureIdsArray.getNumberOfTuples();
+  usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 udims = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
 
   // This was checked up in the execute function (which is called before this function)
@@ -62,7 +50,7 @@ Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, co
   int32 current = 0;
   int32 most = 0;
   int64 neighborPoint = 0;
-  usize numFeatures = numNeighborsArray.getNumberOfTuples();
+  usize numFeatures = numNeighbors.getNumberOfTuples();
 
   int64 neighborPointIdx[6] = {0, 0, 0, 0, 0, 0};
   neighborPointIdx[0] = -dims[0] * dims[1];
@@ -250,31 +238,24 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 
   auto phaseNumber = args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key);
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
-
-  auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& numNeighbors = numNeighborsArray.getDataStoreRef();
+  auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
+  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
 
   auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
-  Int32Array* featurePhasesArray = nullptr;
-  if(applyToSinglePhase)
-  {
-    auto featurePhasesPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key);
-    featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
-  }
+  Int32AbstractDataStore* featurePhases =
+      applyToSinglePhase ? dataStructure.getDataAs<Int32Array>(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key))->getDataStore() : nullptr;
 
   bool good = false;
   usize totalPoints = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
-  usize totalFeatures = numNeighborsArray.getNumberOfTuples();
+  usize totalFeatures = numNeighbors.getNumberOfTuples();
 
   std::vector<bool> activeObjects(totalFeatures, true);
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(!applyToSinglePhase)
+    if(applyToSinglePhase && featurePhases != nullptr)
     {
-      if(numNeighbors[i] >= minNumNeighbors)
+      if(numNeighbors[i] >= minNumNeighbors || featurePhases->getValue(i) != phaseNumber)
       {
         good = true;
       }
@@ -285,7 +266,7 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
     }
     else
     {
-      if(numNeighbors[i] >= minNumNeighbors || (*featurePhasesArray)[i] != phaseNumber)
+      if(numNeighbors[i] >= minNumNeighbors)
       {
         good = true;
       }
@@ -407,7 +388,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   std::vector<DataPath> dataArrayPaths;
 
   std::vector<usize> cDims = {1};
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
   auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
   dataArrayPaths.push_back(numNeighborsPath);
@@ -427,8 +408,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   // Inform users that the following arrays are going to be modified in place
@@ -462,10 +442,9 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
   // we don't have access to the data yet
   if(applyToSinglePhase)
   {
-    auto& featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
-    auto& featurePhases = featurePhasesArray.getDataStoreRef();
+    auto& featurePhases = dataStructure.getDataAs<Int32Array>(featurePhasesPath)->getDataStoreRef();
 
-    usize numFeatures = featurePhasesArray.getNumberOfTuples();
+    usize numFeatures = featurePhases.getNumberOfTuples();
     bool unavailablePhase = true;
     for(usize i = 0; i < numFeatures; i++)
     {
@@ -506,13 +485,13 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
     return assignBadPointsResult;
   }
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsStore = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
 
   auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
-  auto& numNeighborsArray = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
+  auto* numNeighborsArray = dataStructure.getDataAs<Int32Array>(numNeighborsPath);
 
   DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
-  size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
+  size_t currentFeatureCount = numNeighborsArray->getNumberOfTuples();
 
   auto activeObjects = activeObjectsResult.value();
   int32 count = 0;
@@ -523,7 +502,7 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
 
-  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount, messageHandler, shouldCancel);
+  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsStore, currentFeatureCount, messageHandler, shouldCancel);
 
   return {};
 }

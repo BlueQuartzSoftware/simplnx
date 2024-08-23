@@ -8,7 +8,8 @@
 #include <cmath>
 
 using namespace nx::core;
-
+namespace
+{
 class ComputeNeighborhoodsImpl
 {
 public:
@@ -97,6 +98,7 @@ private:
   const std::vector<float32>& m_CriticalDistance;
   const std::atomic_bool& m_ShouldCancel;
 };
+} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeNeighborhoods::ComputeNeighborhoods(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeNeighborhoodsInputValues* inputValues)
@@ -146,12 +148,11 @@ void ComputeNeighborhoods::updateProgress(float64 counter, const std::chrono::st
 Result<> ComputeNeighborhoods::operator()()
 {
   // m_ProgressCounter initialized to zero on filter creation
-
   std::vector<float32> criticalDistance;
 
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
-  const auto& equivalentDiameters = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath);
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
+  const auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
@@ -192,7 +193,7 @@ Result<> ComputeNeighborhoods::operator()()
   parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, m_ShouldCancel));
 
   // Output Variables
-  auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32_t>>(m_InputValues->NeighborhoodListArrayName);
+  auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);
   // Set the vector for each list into the NeighborList Object
   for(usize i = 1; i < totalFeatures; i++)
   {

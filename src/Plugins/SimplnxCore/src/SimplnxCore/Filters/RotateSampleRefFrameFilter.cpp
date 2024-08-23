@@ -1,9 +1,6 @@
 #include "RotateSampleRefFrameFilter.hpp"
 
-#include "simplnx/Common/Constants.hpp"
-#include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Common/Range.hpp"
-#include "simplnx/Common/Range3D.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
@@ -21,12 +18,9 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
-#include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -34,12 +28,8 @@
 
 #include <fmt/core.h>
 
-#include <nonstd/span.hpp>
-
 #include <algorithm>
 #include <array>
-#include <cmath>
-#include <limits>
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -545,7 +535,6 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
-  auto& destCellDataAM = destImageGeom.getCellDataRef();
 
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {

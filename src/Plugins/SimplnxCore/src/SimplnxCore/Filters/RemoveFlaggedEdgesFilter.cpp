@@ -15,11 +15,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -109,14 +104,11 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
   auto pEdgeArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
   auto selectedEdgeArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
   auto selectedEdgeAttrMatPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
-
   auto pVertexArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
   auto selectedVertexArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
   auto selectedVertexAttrMatPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry1D>(pInitialGeometryPathValue);
 
@@ -148,7 +140,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       {
         return {MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
     else if(pEdgeArrayHandling == detail::k_CopyAllEdgeArraysIdx)
     {
@@ -162,7 +154,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedEdgeArrays = getChildrenResult.value();
-        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
       }
     }
   }
@@ -178,7 +170,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       {
         return {MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
     else if(pVertexArrayHandling == detail::k_CopyAllVertexArraysIdx)
     {
@@ -192,13 +184,13 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedVertexArrays = getChildrenResult.value();
-        TransferGeometryElementData::createDataArrayActions<INodeGeometry1D>(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
       }
     }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

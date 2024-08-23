@@ -96,18 +96,7 @@ IFilter::UniquePointer WriteBinaryDataFilter::clone() const
 IFilter::PreflightResult WriteBinaryDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel) const
 {
-  auto pEndianessValue = filterArgs.value<ChoicesParameter::ValueType>(k_Endianess_Key);
-  auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  auto pFileExtensionValue = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
-  auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-
-  PreflightResult preflightResult;
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -129,7 +118,7 @@ Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const 
     }
   }
 
-  fs::path dirPath(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
+  auto dirPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
   Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(dirPath);

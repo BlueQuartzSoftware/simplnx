@@ -3,15 +3,12 @@
 #include "SimplnxCore/Filters/Algorithms/ErodeDilateMask.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -80,21 +77,7 @@ IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel) const
 {
-  auto pOperationValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
-  auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
-  auto pXDirOnValue = filterArgs.value<bool>(k_XDirOn_Key);
-  auto pYDirOnValue = filterArgs.value<bool>(k_YDirOn_Key);
-  auto pZDirOnValue = filterArgs.value<bool>(k_ZDirOn_Key);
-  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-  PreflightResult preflightResult;
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

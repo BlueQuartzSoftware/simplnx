@@ -5,7 +5,6 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <chrono>
 #include <random>
 
 using namespace nx::core;
@@ -17,7 +16,7 @@ struct InitializeTupleToZeroFunctor
   template <typename T>
   void operator()(DataStructure& dataStructure, const DataPath& arrayPath, usize index)
   {
-    dataStructure.getDataRefAs<DataArray<T>>(arrayPath).initializeTuple(index, 0);
+    dataStructure.getDataAsUnsafe<DataArray<T>>(arrayPath)->initializeTuple(index, 0);
   }
 };
 } // namespace
@@ -43,19 +42,17 @@ const std::atomic_bool& AddBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> AddBadData::operator()()
 {
-  std::random_device randomDevice;        // Will be used to obtain a seed for the random number engine
-  std::mt19937 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(m_InputValues->SeedValue);
+  std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
   std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
-  auto& imgGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& GBEuclideanDistances = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
+  const auto& imgGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& GBEuclideanDistances = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath).getDataStoreRef();
 
   auto childArrayPaths = GetAllChildArrayDataPaths(m_DataStructure, imgGeom.getCellDataPath());
   auto voxelArrayPaths = childArrayPaths.has_value() ? childArrayPaths.value() : std::vector<DataPath>{};
 
   float32 random = 0.0f;
-  size_t totalPoints = GBEuclideanDistances.getSize();
+  const size_t totalPoints = GBEuclideanDistances.getSize();
   for(size_t i = 0; i < totalPoints; ++i)
   {
     if(m_InputValues->BoundaryNoise && GBEuclideanDistances[i] < 1)
@@ -65,7 +62,7 @@ Result<> AddBadData::operator()()
       {
         for(const auto& voxelArrayPath : voxelArrayPaths)
         {
-          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAs<IDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
+          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
         }
       }
     }

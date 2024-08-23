@@ -306,22 +306,22 @@ struct DBSCANFunctor
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, true, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
       else
       {
-        DBSCANTemplate<T, true, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
     }
     else
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, false, true>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
       else
       {
-        DBSCANTemplate<T, false, false>(filter, dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
       }
     }
   }

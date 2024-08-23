@@ -6,7 +6,8 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
-
+namespace
+{
 struct DataArrayCopyTupleFunctor
 {
   template <typename T>
@@ -17,6 +18,7 @@ struct DataArrayCopyTupleFunctor
     outputArray.copyTuple(sourceIndex, targetIndex);
   }
 };
+} // namespace
 
 // -----------------------------------------------------------------------------
 ErodeDilateCoordinationNumber::ErodeDilateCoordinationNumber(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -191,10 +193,10 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     }
     for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
     {
-      const int64 zStride = static_cast<int64>(dims[0] * dims[1] * zIndex);
+      const auto zStride = static_cast<int64>(dims[0] * dims[1] * zIndex);
       for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
       {
-        const int64 yStride = static_cast<int64>(dims[0] * yIndex);
+        const auto yStride = static_cast<int64>(dims[0] * yIndex);
         for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
         {
           const int64 voxelIndex = zStride + yStride + xIndex;

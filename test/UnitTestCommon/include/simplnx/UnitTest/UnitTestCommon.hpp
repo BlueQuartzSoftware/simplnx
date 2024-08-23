@@ -452,8 +452,8 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
 template <typename T>
 void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
 {
-  const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
+  const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
+  const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
   usize end = oldDataStore.getSize();
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
   T oldVal;
