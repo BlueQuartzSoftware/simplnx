@@ -115,13 +115,10 @@ Result<> AppendImageGeometry::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      auto originalDestGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
-      std::reverse(originalDestGeomDimsVec.begin(), originalDestGeomDimsVec.end());
       auto newGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath);
       auto newDestGeomDimsVec = newGeometry.getDimensions().toContainer<std::vector<usize>>();
       std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
-      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->Direction,
-                                        m_InputValues->MirrorGeometry);
+      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, newDestGeomDimsVec, m_InputValues->Direction, m_InputValues->MirrorGeometry);
     }
     else
     {
