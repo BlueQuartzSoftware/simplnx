@@ -54,6 +54,8 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 class SIMPLNXCORE_EXPORT PartitionGeometry
 {
 public:
+  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+
   PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues);
   ~PartitionGeometry() noexcept;
 
@@ -89,7 +91,7 @@ private:
    * the function will return an invalid Result with an error message.
    *
    * @param inputGeometry The cell-based input geometry that is being partitioned.
-   * @param partitionIds The partition ids array that stores the results.
+   * @param partitionIdsStore The partition ids array that stores the results.
    * @param psImageGeom The partitioning scheme image geometry that is used
    * to partition the cell-based input geometry.
    * @param outOfBoundsValue Value that out-of-bounds cells will be
@@ -97,7 +99,7 @@ private:
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue);
+  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
 
   /**
    * @brief Partitions a vertex list (typically from a node-based geometry) according to
@@ -108,8 +110,8 @@ private:
    * is provided, the vertex will be labeled with the out of bounds value.  Otherwise,
    * the function will return an invalid Result with an error message.
    *
-   * @param vertexList The list of vertices from the node-based geometry
-   * @param partitionIds The partition ids array that stores the results.
+   * @param vertexListStore The list of vertices from the node-based geometry
+   * @param partitionIdsStore The partition ids array that stores the results.
    * @param psImageGeom The partitioning scheme image geometry that is used
    * to partition the vertex list.
    * @param outOfBoundsValue Value that out-of-bounds vertices will be
@@ -118,7 +120,7 @@ private:
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionNodeBasedGeometry(const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
+  Result<> partitionNodeBasedGeometry(const VertexStore& vertexListStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
                                       const std::optional<const BoolArray>& maskArrayOpt);
 };
 

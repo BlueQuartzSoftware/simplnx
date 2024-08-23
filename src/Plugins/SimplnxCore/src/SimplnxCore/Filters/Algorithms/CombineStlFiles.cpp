@@ -21,12 +21,12 @@ class CombineStlImpl
 public:
   CombineStlImpl(UInt64Array& destTriArray, Float32Array& destVerticesArray, Float64Array& destFaceNormalsArray, const UInt64Array& inputTriArray, const Float32Array& inputVerticesArray,
                  const Float64Array& inputFaceNormalsArray, usize triTupleOffset, usize vertexTupleOffset, usize faceNormalsTupleOffset)
-  : m_DestTriangles(destTriArray)
-  , m_DestVertices(destVerticesArray)
-  , m_DestFaceNormals(destFaceNormalsArray)
-  , m_InputTriangles(inputTriArray)
-  , m_InputVertices(inputVerticesArray)
-  , m_InputFaceNormals(inputFaceNormalsArray)
+  : m_DestTriangles(destTriArray.getDataStoreRef())
+  , m_DestVertices(destVerticesArray.getDataStoreRef())
+  , m_DestFaceNormals(destFaceNormalsArray.getDataStoreRef())
+  , m_InputTriangles(inputTriArray.getDataStoreRef())
+  , m_InputVertices(inputVerticesArray.getDataStoreRef())
+  , m_InputFaceNormals(inputFaceNormalsArray.getDataStoreRef())
   , m_TriTupleOffset(triTupleOffset)
   , m_VerticesTupleOffset(vertexTupleOffset)
   , m_FaceNormalsTupleOffset(faceNormalsTupleOffset)
@@ -47,12 +47,12 @@ public:
   }
 
 private:
-  UInt64Array& m_DestTriangles;
-  Float32Array& m_DestVertices;
-  Float64Array& m_DestFaceNormals;
-  const UInt64Array& m_InputTriangles;
-  const Float32Array& m_InputVertices;
-  const Float64Array& m_InputFaceNormals;
+  AbstractDataStore<uint64>& m_DestTriangles;
+  AbstractDataStore<float32>& m_DestVertices;
+  AbstractDataStore<float64>& m_DestFaceNormals;
+  const AbstractDataStore<uint64>& m_InputTriangles;
+  const AbstractDataStore<float32>& m_InputVertices;
+  const AbstractDataStore<float64>& m_InputFaceNormals;
   usize m_TriTupleOffset;
   usize m_VerticesTupleOffset;
   usize m_FaceNormalsTupleOffset;
@@ -184,30 +184,36 @@ Result<> CombineStlFiles::operator()()
     INodeGeometry2D::SharedFaceList& currentSharedFaceList = currentGeometry->getFacesRef();
     usize currentGeomNumTriangles = currentGeometry->getNumberOfFaces();
     usize currentGeomNumVertices = currentGeometry->getNumberOfVertices();
-    for(usize triIndex = 0; triIndex < currentGeomNumTriangles; triIndex++)
     {
-      currentSharedFaceList[3 * triIndex + 0] += triCounter;
-      currentSharedFaceList[3 * triIndex + 1] += triCounter;
-      currentSharedFaceList[3 * triIndex + 2] += triCounter;
+      auto& currentSFLStore = currentSharedFaceList.getDataStoreRef();
+      for(usize triIndex = 0; triIndex < currentGeomNumTriangles; triIndex++)
+      {
+        currentSFLStore[3 * triIndex + 0] += triCounter;
+        currentSFLStore[3 * triIndex + 1] += triCounter;
+        currentSFLStore[3 * triIndex + 2] += triCounter;
+      }
+      triCounter += currentGeomNumVertices;
     }
-    triCounter += currentGeomNumVertices;
-    INodeGeometry0D::SharedVertexList& curVertices = currentGeometry->getVerticesRef();
-    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(currentGeometry->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
     if(m_InputValues->LabelFaces)
     {
-      auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceFileIndexArrayPath);
-      std::fill(faceLabels.begin() + faceLabelOffset, faceLabels.begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
+      // Type checked in preflight; Unsafe acceptable; pointer for speed
+      auto* faceLabelsStore = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->FaceFileIndexArrayPath)->getDataStore();
+      std::fill(faceLabelsStore->begin() + faceLabelOffset, faceLabelsStore->begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
     }
 
     faceLabelOffset += currentGeomNumTriangles;
 
     if(m_InputValues->LabelVertices)
     {
-      auto& vertexLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFileIndexArrayPath);
-      std::fill(vertexLabels.begin() + vertexLabelOffset, vertexLabels.begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
+      // Type checked in preflight; Unsafe acceptable; pointer for speed
+      auto* vertexLabels = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->VertexFileIndexArrayPath)->getDataStore();
+      std::fill(vertexLabels->begin() + vertexLabelOffset, vertexLabels->begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
     }
     vertexLabelOffset += currentGeomNumVertices;
+
+    INodeGeometry0D::SharedVertexList& curVertices = currentGeometry->getVerticesRef();
+    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(currentGeometry->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
     taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, currentSharedFaceList, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});
 

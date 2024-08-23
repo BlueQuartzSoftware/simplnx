@@ -103,12 +103,12 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
   auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
 
-  const auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
-  auto& numFeaturesArrayRef = dataStructure.getDataRefAs<Int32Array>(pNumFeaturesArrayPathValue);
+  const auto& featurePhasesStore = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
+  auto& numFeaturesStore = dataStructure.getDataAs<Int32Array>(pNumFeaturesArrayPathValue)->getDataStoreRef();
 
-  for(usize index = 1; index < featurePhasesArrayRef.getNumberOfTuples(); index++)
+  for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)
   {
-    numFeaturesArrayRef[featurePhasesArrayRef[index]]++;
+    numFeaturesStore[featurePhasesStore[index]]++;
   }
   return {};
 }

@@ -20,7 +20,6 @@ namespace nx::core
 class SIMPLNX_EXPORT IArrayThreshold
 {
 public:
-  using MaskValue = bool;
   enum class UnionOperator : uint8
   {
     And,
@@ -32,15 +31,15 @@ public:
   IArrayThreshold(IArrayThreshold&& other) noexcept;
   virtual ~IArrayThreshold();
 
-  bool isInverted() const;
+  [[nodiscard]] bool isInverted() const;
   void setInverted(bool inverted);
 
-  UnionOperator getUnionOperator() const;
+  [[nodiscard]] UnionOperator getUnionOperator() const;
   void setUnionOperator(UnionOperator unionType);
 
-  virtual std::set<DataPath> getRequiredPaths() const = 0;
+  [[nodiscard]] virtual std::set<DataPath> getRequiredPaths() const = 0;
 
-  virtual nlohmann::json toJson() const;
+  [[nodiscard]] virtual nlohmann::json toJson() const;
 
 private:
   bool m_IsInverted{false};
@@ -70,18 +69,18 @@ public:
   ArrayThreshold& operator=(const ArrayThreshold& other);
   ArrayThreshold& operator=(ArrayThreshold&& other) noexcept;
 
-  DataPath getArrayPath() const;
+  [[nodiscard]] DataPath getArrayPath() const;
   void setArrayPath(const DataPath& path);
 
-  ComparisonValue getComparisonValue() const;
+  [[nodiscard]] ComparisonValue getComparisonValue() const;
   void setComparisonValue(ComparisonValue value);
 
-  ComparisonType getComparisonType() const;
+  [[nodiscard]] ComparisonType getComparisonType() const;
   void setComparisonType(ComparisonType comparison);
 
-  std::set<DataPath> getRequiredPaths() const override;
+  [[nodiscard]] std::set<DataPath> getRequiredPaths() const override;
 
-  nlohmann::json toJson() const override;
+  [[nodiscard]] nlohmann::json toJson() const override;
   static std::shared_ptr<ArrayThreshold> FromJson(const nlohmann::json& json);
 
 private:
@@ -106,12 +105,12 @@ public:
   ArrayThresholdSet& operator=(const ArrayThresholdSet& other);
   ArrayThresholdSet& operator=(ArrayThresholdSet&& other) noexcept;
 
-  CollectionType getArrayThresholds() const;
+  [[nodiscard]] CollectionType getArrayThresholds() const;
   void setArrayThresholds(const CollectionType& thresholds);
 
-  std::set<DataPath> getRequiredPaths() const override;
+  [[nodiscard]] std::set<DataPath> getRequiredPaths() const override;
 
-  nlohmann::json toJson() const override;
+  [[nodiscard]] nlohmann::json toJson() const override;
   static std::shared_ptr<ArrayThresholdSet> FromJson(const nlohmann::json& json);
 
 private:

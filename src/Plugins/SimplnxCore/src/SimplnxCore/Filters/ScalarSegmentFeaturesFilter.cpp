@@ -9,10 +9,8 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -24,14 +22,10 @@ using namespace nx::core;
 
 namespace
 {
-using FeatureIdsArrayType = Int32Array;
-using GoodVoxelsArrayType = BoolArray;
-
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;
 constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 constexpr int32 k_MissingGeomError = -440;
-
 } // namespace
 
 namespace nx::core
@@ -102,7 +96,6 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
-  int scalarTolerance = args.value<int>(k_ScalarToleranceKey);
   auto featureIdsName = args.value<std::string>(k_FeatureIdsName_Key);
   auto cellFeaturesName = args.value<std::string>(k_CellFeatureName_Key);
   auto activeArrayName = args.value<std::string>(k_ActiveArrayName_Key);
@@ -172,13 +165,12 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat);
 
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {resultOutputActions, preflightUpdatedValues};
+  return {std::move(resultOutputActions)};
 }
 
 // -----------------------------------------------------------------------------

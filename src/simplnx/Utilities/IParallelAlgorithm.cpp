@@ -2,10 +2,34 @@
 
 #include "simplnx/Core/Application.hpp"
 
-namespace nx::core
+namespace
 {
 // -----------------------------------------------------------------------------
-bool IParallelAlgorithm::CheckArraysInMemory(const AlgorithmArrays& arrays)
+bool CheckStoresInMemory(const nx::core::IParallelAlgorithm::AlgorithmStores& stores)
+{
+  if(stores.empty())
+  {
+    return true;
+  }
+
+  for(const auto* storePtr : stores)
+  {
+    if(storePtr == nullptr)
+    {
+      continue;
+    }
+
+    if(!storePtr->getDataFormat().empty())
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays)
 {
   if(arrays.empty())
   {
@@ -27,7 +51,10 @@ bool IParallelAlgorithm::CheckArraysInMemory(const AlgorithmArrays& arrays)
 
   return true;
 }
+} // namespace
 
+namespace nx::core
+{
 // -----------------------------------------------------------------------------
 IParallelAlgorithm::IParallelAlgorithm()
 {
@@ -57,5 +84,11 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
 void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
 {
   setParallelizationEnabled(CheckArraysInMemory(arrays));
+}
+
+// -----------------------------------------------------------------------------
+void IParallelAlgorithm::requireStoresInMemory(const AlgorithmStores& stores)
+{
+  setParallelizationEnabled(::CheckStoresInMemory(stores));
 }
 } // namespace nx::core

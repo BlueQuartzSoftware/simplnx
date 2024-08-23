@@ -12,10 +12,8 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -102,9 +100,7 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pSilhouetteArrayPathValue = filterArgs.value<DataPath>(k_SilhouetteArrayPath_Key);
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
   auto clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
@@ -131,7 +127,7 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

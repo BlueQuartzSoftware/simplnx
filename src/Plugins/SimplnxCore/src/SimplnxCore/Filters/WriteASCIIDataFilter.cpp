@@ -10,11 +10,9 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
-
-#include <filesystem>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -107,13 +105,6 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
 
-  // Declare the preflightResult variable
-  PreflightResult preflightResult;
-
-  nx::core::Result<OutputActions> resultOutputActions;
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   /////////////////////////////////////////////////////////////////////////////
   // VALIDATE THAT ALL DATA ARRAYS HAVE THE SAME NUMBER OF TUPLES.
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::SingleFile)
@@ -130,8 +121,7 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
     }
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------

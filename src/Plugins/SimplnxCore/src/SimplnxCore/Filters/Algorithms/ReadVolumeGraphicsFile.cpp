@@ -35,7 +35,7 @@ const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
 Result<> ReadVolumeGraphicsFile::operator()()
 {
   const DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
-  auto& density = m_DataStructure.getDataRefAs<Float32Array>(densityArrayPath);
+  auto& density = m_DataStructure.getDataAs<Float32Array>(densityArrayPath)->getDataStoreRef();
 
   auto filesize = static_cast<usize>(fs::file_size(m_InputValues->VGDataFile));
   const usize allocatedBytes = density.getSize() * sizeof(float32);

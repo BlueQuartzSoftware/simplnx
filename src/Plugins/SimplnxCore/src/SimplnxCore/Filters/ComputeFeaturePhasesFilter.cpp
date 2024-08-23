@@ -113,12 +113,13 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
   auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key));
 
-  const Int32Array& cellPhases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  Int32Array& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto& cellPhases = dataStructure.getDataAs<Int32Array>(pCellPhasesArrayPathValue)->getDataStoreRef();
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = featureIdsArray.getDataStoreRef();
+  auto& featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
 
   // Validate the featurePhases array is the proper size
-  auto validateResults = ValidateNumFeaturesInArray(dataStructure, pFeaturePhasesArrayPathValue, featureIds);
+  auto validateResults = ValidateNumFeaturesInArray(dataStructure, pFeaturePhasesArrayPathValue, featureIdsArray);
   if(validateResults.invalid())
   {
     return validateResults;

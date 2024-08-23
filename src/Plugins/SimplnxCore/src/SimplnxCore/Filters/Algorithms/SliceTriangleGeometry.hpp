@@ -51,8 +51,9 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  char rayIntersectsPlane(float32 d, const std::array<float32, 3>& q, const std::array<float32, 3>& r, std::array<float32, 3>& p);
-  usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, INodeGeometry2D::SharedFaceList& tris, INodeGeometry0D::SharedVertexList& triVerts);
+  using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
+  using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+  usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, TriStore& tris, VertsStore& triVerts);
 
 private:
   DataStructure& m_DataStructure;

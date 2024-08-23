@@ -156,7 +156,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   }
 
   usize numTuples = totalElements / pNumberOfComponentsValue;
-  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<size_t>());
+  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<>());
   if(numTuples != tupleCountFromTable)
   {
     const std::string warningMessage = fmt::format("Total Tuples based on file '{}' does not match total tuples entered. '{}'. Reading a subsection of the file.", numTuples, tupleCountFromTable);

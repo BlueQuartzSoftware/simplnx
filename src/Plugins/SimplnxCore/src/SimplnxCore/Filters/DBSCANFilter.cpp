@@ -115,8 +115,6 @@ IFilter::UniquePointer DBSCANFilter::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto pEpsilonValue = filterArgs.value<float32>(k_Epsilon_Key);
-  auto pMinPointsValue = filterArgs.value<int32>(k_MinPoints_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);

@@ -7,13 +7,7 @@
 
 #include "SimplnxCore/utils/VtkUtilities.hpp"
 
-#include <H5Tpublic.h>
-
 using namespace nx::core;
-
-namespace
-{
-} // namespace
 
 // -----------------------------------------------------------------------------
 WriteVtkRectilinearGrid::WriteVtkRectilinearGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -42,7 +36,6 @@ Result<> WriteVtkRectilinearGrid::operator()()
   FloatVec3 res = imageGeom.getSpacing();
   FloatVec3 origin = imageGeom.getOrigin();
 
-  int err = 0;
   FILE* outputFile = nullptr;
   outputFile = fopen(m_InputValues->OutputFile.string().c_str(), "wb");
   if(nullptr == outputFile)
@@ -54,17 +47,17 @@ Result<> WriteVtkRectilinearGrid::operator()()
   writeVtkHeader(outputFile);
 
   // Write the Coordinate Points
-  Result<> writeCoordsResults = writeCoords<float32>(outputFile, "X_COORDINATES", "float", dims[0] + 1, origin[0] - res[0] * 0.5f, (float)(dims[0] + 1 * res[0]), res[0]);
+  Result<> writeCoordsResults = writeCoords<float32>(outputFile, "X_COORDINATES", "float", dims[0] + 1, origin[0] - res[0] * 0.5f, res[0]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2075, fmt::format("Error writing X Coordinates in vtk file {}'\n ", m_InputValues->OutputFile.string())));
   }
-  writeCoordsResults = writeCoords<float32>(outputFile, "Y_COORDINATES", "float", dims[1] + 1, origin[1] - res[1] * 0.5f, (float)(dims[1] + 1 * res[1]), res[1]);
+  writeCoordsResults = writeCoords<float32>(outputFile, "Y_COORDINATES", "float", dims[1] + 1, origin[1] - res[1] * 0.5f, res[1]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2076, fmt::format("Error writing Y Coordinates in vtk file %s'\n ", m_InputValues->OutputFile.string())));
   }
-  writeCoordsResults = writeCoords<float32>(outputFile, "Z_COORDINATES", "float", dims[2] + 1, origin[2] - res[2] * 0.5f, (float)(dims[2] + 1 * res[2]), res[2]);
+  writeCoordsResults = writeCoords<float32>(outputFile, "Z_COORDINATES", "float", dims[2] + 1, origin[2] - res[2] * 0.5f, res[2]);
   if(writeCoordsResults.invalid())
   {
     return MergeResults(writeCoordsResults, MakeErrorResult(-2077, fmt::format("Error writing Z Coordinates in vtk file %s'\n ", m_InputValues->OutputFile.string())));
@@ -110,7 +103,7 @@ void WriteVtkRectilinearGrid::writeVtkHeader(FILE* outputFile) const
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> WriteVtkRectilinearGrid::writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T max, T step)
+Result<> WriteVtkRectilinearGrid::writeCoords(FILE* outputFile, const std::string& axis, const std::string& type, int64 nPoints, T min, T step)
 {
   fprintf(outputFile, "%s %lld %s\n", axis.c_str(), static_cast<long long unsigned int>(nPoints), type.c_str());
   if(m_InputValues->WriteBinaryFile)

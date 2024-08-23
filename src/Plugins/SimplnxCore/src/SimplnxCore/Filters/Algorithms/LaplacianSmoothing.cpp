@@ -28,14 +28,9 @@ Result<> LaplacianSmoothing::operator()()
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::edgeBasedSmoothing()
 {
-  int32_t err = 0;
-  //  DataContainer::Pointer sm = getDataContainerArray()->getDataContainer(getSurfaceDataContainerName());
-  //  IGeometry2D::Pointer surfaceMesh = sm->getGeometryAs<IGeometry2D>();
+  auto& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
 
-  TriangleGeom& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
-
-  Float32Array& vertsArray = *(surfaceMesh.getVertices());
-  Float32AbstractDataStore& verts = vertsArray.getDataStoreRef();
+  Float32AbstractDataStore& verts = surfaceMesh.getVertices()->getDataStoreRef();
 
   IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
 
@@ -43,17 +38,15 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   std::vector<float> lambdas = generateLambdaArray();
 
   //  Generate the Unique Edges
-  err = surfaceMesh.findEdges(false);
-  if(err < 0)
+  if(surfaceMesh.findEdges(false) < 0)
   {
     return MakeErrorResult(-560, "Error retrieving the shared edge list");
   }
 
-  IGeometry::SharedEdgeList& uedgesArray = *(surfaceMesh.getEdges());
-  UInt64AbstractDataStore& uedges = uedgesArray.getDataStoreRef();
-  IGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
+  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edges = surfaceMesh.getEdges()->getDataStoreRef();
+  IGeometry::MeshIndexType numEdges = edges.getNumberOfTuples();
 
-  std::vector<int32_t> numConnections(nvert, 0);
+  std::vector<int32> numConnections(nvert, 0);
 
   std::vector<double> deltaArray(nvert * 3);
   double dlta = 0.0;
@@ -66,10 +59,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
-    for(IGeometry::MeshIndexType i = 0; i < nedges; i++)
+    for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
     {
-      IGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
-      IGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
+      IGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
+      IGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
 
       for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
@@ -112,10 +105,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
-      for(IGeometry::MeshIndexType i = 0; i < nedges; i++)
+      for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
       {
-        IGeometry::MeshIndexType in1 = uedges[2 * i];     // row of the first vertex
-        IGeometry::MeshIndexType in2 = uedges[2 * i + 1]; // row the second vertex
+        IGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
+        IGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
 
         for(int32_t j = 0; j < 3; j++)
         {
@@ -154,10 +147,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 // -----------------------------------------------------------------------------
 std::vector<float> LaplacianSmoothing::generateLambdaArray()
 {
-  Int8Array& surfaceMeshNodeType = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath);
-  Int8AbstractDataStore& surfaceMeshNode = surfaceMeshNodeType.getDataStoreRef();
+  auto& surfaceMeshNode = m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)->getDataStoreRef();
 
-  size_t numNodes = surfaceMeshNodeType.getNumberOfTuples();
+  size_t numNodes = surfaceMeshNode.getNumberOfTuples();
 
   std::vector<float> lambdas(numNodes, 0.0f);
 

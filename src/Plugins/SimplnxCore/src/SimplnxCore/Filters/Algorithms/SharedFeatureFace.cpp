@@ -1,7 +1,6 @@
 #include "SharedFeatureFace.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -24,7 +23,7 @@ uint64 ConvertToUInt64(uint32 highWord, uint32 lowWord)
 class SharedFeatureFaceImpl
 {
 public:
-  SharedFeatureFaceImpl(const std::vector<std::pair<int32, int32>>& faceLabelVector, Int32Array& surfaceMeshFeatureFaceLabels, Int32Array& surfaceMeshFeatureFaceNumTriangles,
+  SharedFeatureFaceImpl(const std::vector<std::pair<int32, int32>>& faceLabelVector, Int32AbstractDataStore& surfaceMeshFeatureFaceLabels, Int32AbstractDataStore& surfaceMeshFeatureFaceNumTriangles,
                         std::map<uint64, int32>& faceSizeMap, const std::atomic_bool& shouldCancel)
   : m_FaceLabelVector(faceLabelVector)
   , m_SurfaceMeshFeatureFaceLabels(surfaceMeshFeatureFaceLabels)
@@ -56,8 +55,8 @@ public:
 
 private:
   const std::vector<std::pair<int32, int32>>& m_FaceLabelVector;
-  Int32Array& m_SurfaceMeshFeatureFaceLabels;
-  Int32Array& m_SurfaceMeshFeatureFaceNumTriangles;
+  Int32AbstractDataStore& m_SurfaceMeshFeatureFaceLabels;
+  Int32AbstractDataStore& m_SurfaceMeshFeatureFaceNumTriangles;
   std::map<uint64, int32>& m_FaceSizeMap;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -67,8 +66,7 @@ using Int64Distribution = std::uniform_int_distribution<int64>;
 // -----------------------------------------------------------------------------
 SeedGenerator initializeStaticVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
 {
-  SeedGenerator generator;
-  generator.seed(SeedGenerator::default_seed);
+  SeedGenerator generator(SeedGenerator::default_seed);
   distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
 
   return generator;
@@ -83,8 +81,8 @@ void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, In
   auto generator = initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
 
   DataStructure tmpStructure;
-  auto rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
-  auto rndStore = rndNumbers->getDataStore();
+  auto* rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
+  auto* rndStore = rndNumbers->getDataStore();
 
   for(int64 i = 0; i < totalFeatures; ++i)
   {
@@ -107,7 +105,7 @@ void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, In
     rndStore->setValue(r, temp);
   }
 
-  // Now adjust all the Grain Id values for each Voxel
+  // Now adjust all the GrainId values for each Voxel
   auto featureIdsStore = featureIds.getDataStore();
   uint64 totalPoints = featureIds.getNumberOfTuples();
   for(int64 i = 0; i < totalPoints; ++i)
@@ -152,7 +150,7 @@ Result<> SharedFeatureFace::operator()()
   int32 index = 1;
 
   std::vector<std::pair<int32, int32>> faceLabelVector;
-  faceLabelVector.emplace_back(std::pair<int32, int32>(0, 0));
+  faceLabelVector.emplace_back(0, 0);
 
   // Loop through all the Triangles and figure out how many triangles we have in each one.
   for(usize t = 0; t < totalPoints; ++t)
@@ -177,7 +175,7 @@ Result<> SharedFeatureFace::operator()()
       faceSizeMap[faceId64] = 1;
       faceIdMap[faceId64] = index;
       surfaceMeshFeatureFaceIds[t] = index;
-      faceLabelVector.emplace_back(std::pair<int32, int32>(high, low));
+      faceLabelVector.emplace_back(high, low);
       ++index;
     }
     else
@@ -196,10 +194,10 @@ Result<> SharedFeatureFace::operator()()
   std::vector<usize> tDims = {static_cast<usize>(index)};
   faceFeatureAttrMat.resizeTuples(tDims);
 
-  auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath);
-  auto& surfaceMeshFeatureFaceNumTriangles = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath);
-  surfaceMeshFeatureFaceLabels.getDataStore()->resizeTuples(tDims);
-  surfaceMeshFeatureFaceNumTriangles.getDataStore()->resizeTuples(tDims);
+  auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath)->getDataStoreRef();
+  auto& surfaceMeshFeatureFaceNumTriangles = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath)->getDataStoreRef();
+  surfaceMeshFeatureFaceLabels.resizeTuples(tDims);
+  surfaceMeshFeatureFaceNumTriangles.resizeTuples(tDims);
 
   // For smaller data sets having data parallelization ON actually runs slower due to
   // all the overhead of the threads. We are just going to turn this off for
@@ -213,7 +211,7 @@ Result<> SharedFeatureFace::operator()()
   if(m_InputValues->ShouldRandomizeFeatureIds)
   {
     const int64 rangeMin = 0;
-    const int64 rangeMax = static_cast<int64>(surfaceMeshFeatureFaceNumTriangles.getNumberOfTuples() - 1);
+    const auto rangeMax = static_cast<int64>(surfaceMeshFeatureFaceNumTriangles.getNumberOfTuples() - 1);
     Int64Distribution distribution;
     initializeStaticVoxelSeedGenerator(distribution, rangeMin, rangeMax);
     ::RandomizeFaceIds(surfaceMeshFeatureFaceIds, index, distribution);

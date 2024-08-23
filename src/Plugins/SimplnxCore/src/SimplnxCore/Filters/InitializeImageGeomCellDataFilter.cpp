@@ -50,10 +50,8 @@ InitializeImageGeomCellDataFilter::InitType ConvertIndexToInitType(uint64 index)
 struct CheckInitializationFunctor
 {
   template <class T>
-  std::optional<Error> operator()(const IDataArray& dataArray, InitializeImageGeomCellDataFilter::InitType initType, float64 initValue, const std::pair<float64, float64>& initRange)
+  std::optional<Error> operator()(const std::string& arrayName, InitializeImageGeomCellDataFilter::InitType initType, float64 initValue, const std::pair<float64, float64>& initRange)
   {
-    std::string arrayName = dataArray.getName();
-
     if(initType == InitializeImageGeomCellDataFilter::InitType::Manual)
     {
       if(initValue < static_cast<double>(std::numeric_limits<T>().lowest()) || initValue > static_cast<double>(std::numeric_limits<T>().max()))
@@ -121,7 +119,7 @@ struct InitializeArrayFunctor
       rangeMax = std::numeric_limits<T>().max();
     }
 
-    auto& dataStore = dataArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     auto&& [distribution, generator] = CreateRandomGenerator(rangeMin, rangeMax, seed);
 
@@ -298,7 +296,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
       continue;
     }
 
-    std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray, initType, initValue, initRange); // NO BOOL
+    std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray.getName(), initType, initValue, initRange); // NO BOOL
     if(maybeError.has_value())
     {
       errors.push_back(std::move(*maybeError));
@@ -352,7 +350,7 @@ Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStruc
   InitType initType = ConvertIndexToInitType(initTypeIndex);
   RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
 
-  const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   std::array<usize, 3> dims = imageGeom.getDimensions().toArray();
 
@@ -383,7 +381,6 @@ constexpr StringLiteral k_ZMaxKey = "ZMax";
 constexpr StringLiteral k_InitTypeKey = "InitType";
 constexpr StringLiteral k_InitValueKey = "InitValue";
 constexpr StringLiteral k_InitRangeKey = "InitRange";
-constexpr StringLiteral k_InvertDataKey = "InvertData";
 } // namespace SIMPL
 } // namespace
 

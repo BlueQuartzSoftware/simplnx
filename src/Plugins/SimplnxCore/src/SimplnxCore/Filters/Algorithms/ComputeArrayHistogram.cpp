@@ -7,7 +7,6 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <tuple>
 
@@ -15,11 +14,11 @@ using namespace nx::core;
 
 namespace
 {
-template <typename DataArrayType>
+template <typename Type>
 class GenerateHistogramFromData
 {
 public:
-  GenerateHistogramFromData(ComputeArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
+  GenerateHistogramFromData(ComputeArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, AbstractDataStore<float64>& histogram, std::atomic<usize>& overflow,
                             std::tuple<bool, float64, float64>& range, size_t progressIncrement)
   : m_Filter(filter)
   , m_NumBins(numBins)
@@ -34,8 +33,8 @@ public:
 
   void operator()() const
   {
-    const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray);
-    auto end = inputArray.getSize();
+    const auto& inputStore = m_InputArray.template getIDataStoreRefAs<AbstractDataStore<Type>>();
+    auto end = inputStore.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
     float64 min = 0.0;
@@ -47,7 +46,7 @@ public:
     }
     else
     {
-      auto minMax = std::minmax_element(inputArray.begin(), inputArray.end());
+      auto minMax = std::minmax_element(inputStore.begin(), inputStore.end());
       min = (static_cast<float64>(*minMax.first) - 1);  // ensure upper limit encapsulates max value
       max = (static_cast<float64>(*minMax.second) + 1); // ensure lower limit encapsulates min value
     }
@@ -72,7 +71,7 @@ public:
         {
           return;
         }
-        const auto bin = std::floor((inputArray[i] - min) / increment);
+        const auto bin = std::floor((inputStore[i] - min) / increment);
         if((bin >= 0) && (bin < m_NumBins))
         {
           m_Histogram[bin * 2 + 1]++;
@@ -96,7 +95,7 @@ private:
   const int32 m_NumBins = 1;
   std::tuple<bool, float64, float64>& m_Range;
   const IDataArray& m_InputArray;
-  Float64Array& m_Histogram;
+  AbstractDataStore<float64>& m_Histogram;
   std::atomic<usize>& m_Overflow;
   size_t m_ProgressIncrement = 100;
 };
@@ -167,7 +166,7 @@ Result<> ComputeArrayHistogram::operator()()
       return {};
     }
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
-    auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
+    auto& histogram = m_DataStructure.getDataAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i))->getDataStoreRef();
     ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, *this, numBins, inputData, histogram, overflow, range, progressIncrement);
 
     if(overflow > 0)

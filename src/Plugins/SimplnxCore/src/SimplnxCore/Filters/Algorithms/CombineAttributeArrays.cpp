@@ -16,13 +16,15 @@ struct CombineAttributeArraysImpl
 {
 
   template <typename DataType>
-  Result<> operator()(const CombineAttributeArraysInputValues* inputValues, std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr)
+  Result<> operator()(bool normalize, std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr)
   {
     using OutputArrayType = DataArray<DataType>;
     using InputArrayType = DataArray<DataType>;
+    using InputDataStoreType = AbstractDataStore<DataType>;
+    using OutputDataStoreType = AbstractDataStore<DataType>;
 
-    auto& outputArray = dynamic_cast<OutputArrayType&>(*outputArrayPtr);
-    int32_t numArrays = inputArraysVec.size();
+    OutputDataStoreType& outputDataStore = dynamic_cast<OutputArrayType*>(outputArrayPtr)->getDataStoreRef();
+    usize numArrays = inputArraysVec.size();
     if(numArrays == 0)
     {
       return MakeWarningVoidResult(1, "No arrays were selected to combine.");
@@ -30,41 +32,41 @@ struct CombineAttributeArraysImpl
 
     std::vector<InputArrayType*> inputArrays;
 
-    for(size_t i = 0; i < numArrays; i++)
+    for(usize i = 0; i < numArrays; i++)
     {
       inputArrays.push_back(dynamic_cast<InputArrayType*>(inputArraysVec[i]));
     }
 
-    size_t numTuples = inputArrays[0]->getNumberOfTuples();
-    size_t stackedDims = outputArray.getNumberOfComponents();
-    size_t arrayOffset = 0;
-    size_t numComps = 0;
+    usize numTuples = inputArrays[0]->getNumberOfTuples();
+    usize stackedDims = outputDataStore.getNumberOfComponents();
+    usize arrayOffset = 0;
+    usize numComps = 0;
 
-    if(inputValues->NormalizeData)
+    if(normalize)
     {
       std::vector<DataType> maxValues(stackedDims, std::numeric_limits<DataType>::lowest());
       std::vector<DataType> minValues(stackedDims, std::numeric_limits<DataType>::max());
 
-      for(size_t i = 0; i < numArrays; i++)
+      for(usize i = 0; i < numArrays; i++)
       {
-        InputArrayType& inputArray = *inputArrays[i]; // Get a reference var to the current input array
+        const InputDataStoreType& inputDataStore = inputArrays[i]->getDataStoreRef(); // Get a reference var to the current input array
 
-        numComps = inputArray.getNumberOfComponents();
+        numComps = inputDataStore.getNumberOfComponents();
         if(i > 0)
         {
           arrayOffset += inputArrays[i - 1]->getNumberOfComponents();
         }
-        for(size_t j = 0; j < numTuples; j++)
+        for(usize j = 0; j < numTuples; j++)
         {
-          for(size_t k = 0; k < numComps; k++)
+          for(usize k = 0; k < numComps; k++)
           {
-            if(inputArray[numComps * j + k] > maxValues[arrayOffset + k])
+            if(inputDataStore[numComps * j + k] > maxValues[arrayOffset + k])
             {
-              maxValues[arrayOffset + k] = inputArray[numComps * j + k];
+              maxValues[arrayOffset + k] = inputDataStore[numComps * j + k];
             }
-            if(inputArray[numComps * j + k] < minValues[arrayOffset + k])
+            if(inputDataStore[numComps * j + k] < minValues[arrayOffset + k])
             {
-              minValues[arrayOffset + k] = inputArray[numComps * j + k];
+              minValues[arrayOffset + k] = inputDataStore[numComps * j + k];
             }
           }
         }
@@ -72,26 +74,26 @@ struct CombineAttributeArraysImpl
 
       arrayOffset = 0;
 
-      for(size_t i = 0; i < numTuples; i++)
+      for(usize i = 0; i < numTuples; i++)
       {
-        for(size_t j = 0; j < numArrays; j++)
+        for(usize j = 0; j < numArrays; j++)
         {
-          InputArrayType& inputArray = *inputArrays[j]; // Get a reference var to the current input array
+          const InputDataStoreType& inputDataStore = inputArrays[j]->getDataStoreRef(); // Get a reference var to the current input array
 
-          numComps = inputArray.getNumberOfComponents();
+          numComps = inputDataStore.getNumberOfComponents();
           if(j > 0)
           {
             arrayOffset += inputArrays[j - 1]->getNumberOfComponents();
           }
-          for(size_t k = 0; k < numComps; k++)
+          for(usize k = 0; k < numComps; k++)
           {
             if(maxValues[arrayOffset + k] == minValues[arrayOffset + k])
             {
-              outputArray[stackedDims * i + (arrayOffset) + k] = static_cast<DataType>(0);
+              outputDataStore[stackedDims * i + (arrayOffset) + k] = static_cast<DataType>(0);
             }
             else
             {
-              outputArray[stackedDims * i + (arrayOffset) + k] = (inputArray[numComps * i + k] - minValues[arrayOffset + k]) / (maxValues[arrayOffset + k] - minValues[arrayOffset + k]);
+              outputDataStore[stackedDims * i + (arrayOffset) + k] = (inputDataStore[numComps * i + k] - minValues[arrayOffset + k]) / (maxValues[arrayOffset + k] - minValues[arrayOffset + k]);
             }
           }
         }
@@ -100,18 +102,18 @@ struct CombineAttributeArraysImpl
     }
     else
     {
-      size_t outputNumComps = outputArray.getNumberOfComponents();
-      size_t compsWritten = 0;
+      usize outputNumComps = outputDataStore.getNumberOfComponents();
+      usize compsWritten = 0;
       for(const auto* inputArrayPtr : inputArrays)
       {
-        const InputArrayType& inputArray = *inputArrayPtr; // Get a reference var to the current input array
-        size_t numInputComps = inputArray.getNumberOfComponents();
+        const InputDataStoreType& inputDataStore = inputArrayPtr->getDataStoreRef(); // Get a reference var to the current input array
+        usize numInputComps = inputDataStore.getNumberOfComponents();
 
-        for(size_t tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+        for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
         {
-          for(size_t compIndex = 0; compIndex < numInputComps; compIndex++)
+          for(usize compIndex = 0; compIndex < numInputComps; compIndex++)
           {
-            outputArray[tupleIndex * outputNumComps + compsWritten + compIndex] = inputArray[tupleIndex * numInputComps + compIndex];
+            outputDataStore[tupleIndex * outputNumComps + compsWritten + compIndex] = inputDataStore[tupleIndex * numInputComps + compIndex];
           }
         }
         compsWritten += numInputComps;
@@ -157,5 +159,5 @@ Result<> CombineAttributeArrays::operator()()
 
   auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->StackedDataArrayPath);
 
-  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath));
+  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->NormalizeData, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath));
 }

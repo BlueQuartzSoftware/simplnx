@@ -30,13 +30,13 @@ const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
 Result<> ComputeSurfaceAreaToVolume::operator()()
 {
   // Input Cell Data
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   // Input Feature Data
-  const auto& numCells = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->NumCellsArrayPath);
+  const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
 
   // Output Feature Data
-  auto& surfaceAreaVolumeRatio = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName);
+  auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName)->getDataStoreRef();
 
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
@@ -45,12 +45,12 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Feature Id; the filter would not crash otherwise, but the user should
   // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
   // we don't have access to the data yet
-  auto numFeatures = static_cast<int32_t>(numCells.getNumberOfTuples());
+  auto numFeatures = static_cast<int32>(numCells.getNumberOfTuples());
   bool mismatchedFeatures = false;
-  int32_t largestFeature = 0;
-  size_t numTuples = featureIds.getNumberOfTuples();
+  int32 largestFeature = 0;
+  usize numTuples = featureIds.getNumberOfTuples();
   std::string errorMessage;
-  for(size_t i = 0; i < numTuples; i++)
+  for(usize i = 0; i < numTuples; i++)
   {
     if(featureIds[i] > largestFeature)
     {
@@ -72,17 +72,17 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
-  int64_t xPoints = static_cast<int64_t>(dims[0]);
-  int64_t yPoints = static_cast<int64_t>(dims[1]);
-  int64_t zPoints = static_cast<int64_t>(dims[2]);
+  auto xPoints = static_cast<int64_t>(dims[0]);
+  auto yPoints = static_cast<int64_t>(dims[1]);
+  auto zPoints = static_cast<int64_t>(dims[2]);
 
-  float voxelVol = spacing[0] * spacing[1] * spacing[2];
+  float32 voxelVol = spacing[0] * spacing[1] * spacing[2];
 
   std::vector<float> featureSurfaceArea(static_cast<size_t>(numFeatures), 0.0f);
 
   // This stores an offset to get to a particular index in the array based on
   // a normal orthogonal cube
-  int64_t neighborOffset[6] = {0, 0, 0, 0, 0, 0};
+  int64 neighborOffset[6] = {0, 0, 0, 0, 0, 0};
   neighborOffset[0] = -xPoints * yPoints; // -Z
   neighborOffset[1] = -xPoints;           // -Y
   neighborOffset[2] = -1;                 // -X
@@ -91,13 +91,13 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   neighborOffset[5] = xPoints * yPoints;  // +Z
 
   // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
-  for(int64_t zIdx = 0; zIdx < zPoints; zIdx++)
+  for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
-    int64_t zStride = zIdx * xPoints * yPoints;
-    for(int64_t yIdx = 0; yIdx < yPoints; yIdx++)
+    int64 zStride = zIdx * xPoints * yPoints;
+    for(int64 yIdx = 0; yIdx < yPoints; yIdx++)
     {
-      int64_t yStride = yIdx * xPoints;
-      for(int64_t xIdx = 0; xIdx < xPoints; xIdx++)
+      int64 yStride = yIdx * xPoints;
+      for(int64 xIdx = 0; xIdx < xPoints; xIdx++)
       {
         float onSurface = 0.0f; // Start totalling the surface area
         int32 currentFeatureId = featureIds[zStride + yStride + xIdx];
@@ -108,7 +108,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
         }
 
         // Loop over all 6 face neighbors
-        for(int32_t neighborOffsetIndex = 0; neighborOffsetIndex < 6; neighborOffsetIndex++)
+        for(int32 neighborOffsetIndex = 0; neighborOffsetIndex < 6; neighborOffsetIndex++)
         {
           if(neighborOffsetIndex == 0 && zIdx == 0) // if we are on the bottom Z Layer, skip
           {
@@ -135,7 +135,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
             continue;
           }
           //
-          int64_t neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
+          int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
           if(featureIds[neighborIndex] != currentFeatureId)
           {
@@ -159,8 +159,8 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
     }
   }
 
-  const float thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
-  for(size_t i = 1; i < static_cast<size_t>(numFeatures); i++)
+  const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
+  for(usize i = 1; i < numFeatures; i++)
   {
     float featureVolume = voxelVol * numCells[i];
     surfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
@@ -168,8 +168,8 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
 
   if(m_InputValues->CalculateSphericity) // Calc the sphericity if requested
   {
-    auto& sphericity = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SphericityArrayName);
-    for(size_t i = 1; i < static_cast<size_t>(numFeatures); i++)
+    auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
+    for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {
       float featureVolume = voxelVol * numCells[i];
       sphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 0.66666f)) / featureSurfaceArea[i];

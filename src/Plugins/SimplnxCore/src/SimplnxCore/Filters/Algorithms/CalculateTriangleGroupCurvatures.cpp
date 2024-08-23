@@ -45,6 +45,74 @@
 
 namespace nx::core
 {
+namespace
+{
+/**
+ * @brief extractPatchData Extracts out the needed data values from the global arrays
+ * @param triId The seed triangle Id
+ * @param triPatch The group of triangles being used
+ * @param data The data to extract from
+ * @return Shared pointer to the extracted data
+ */
+std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
+{
+  IDataStore::ShapeType cDims = {3ULL};
+
+  for(auto iter = triPatch.begin(); iter != triPatch.end();)
+  {
+    int64_t t = *iter;
+
+    if(std::isnan(data[t * 3]) || std::isnan(data[t * 3 + 1]) || std::isnan(data[t * 3 + 2]))
+    {
+      iter = triPatch.erase(iter);
+      if(*iter == triId)
+      {
+        triId = *(triPatch.begin());
+      }
+    }
+    else
+    {
+      ++iter;
+    }
+  }
+
+  if(triPatch.empty())
+  {
+    return nullptr;
+  }
+
+  size_t totalTuples = triPatch.size();
+  if(triPatch.count(triId) == 0)
+  {
+    totalTuples++;
+  }
+
+  IDataStore::ShapeType tupleShape = {totalTuples};
+  std::optional<float64> initValue = {};
+  std::shared_ptr<Float64DataStore> extractedData = std::make_shared<Float64DataStore>(tupleShape, cDims, initValue);
+  // This little chunk makes sure the current seed triangles centroid and normal data appear
+  // first in the returned arrays which makes the next steps a tad easier.
+  int32_t i = 0;
+  extractedData->setComponent(i, 0, data[triId * 3]);
+  extractedData->setComponent(i, 1, data[triId * 3 + 1]);
+  extractedData->setComponent(i, 2, data[triId * 3 + 2]);
+  ++i;
+  triPatch.erase(triId);
+
+  for(int64_t t : triPatch)
+  {
+    extractedData->setComponent(i, 0, data[t * 3]);
+    extractedData->setComponent(i, 1, data[t * 3 + 1]);
+    extractedData->setComponent(i, 2, data[t * 3 + 2]);
+    ++i;
+  }
+  triPatch.insert(triId);
+
+  extractedData->resizeTuples({triPatch.size()}); // Resize the TriPatch DataArray
+  return extractedData;
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting,
                                                                    Float64Array* principleCurvature1, Float64Array* principleCurvature2, Float64Array* principleDirection1,
@@ -53,7 +121,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
                                                                    Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 : m_Filter(filter)
 , m_NRing(nring)
-, m_TriangleIds(triangleIds)
+, m_TriangleIds(std::move(triangleIds))
 , m_UseNormalsForCurveFitting(useNormalsForCurveFitting)
 , m_PrincipleCurvature1(principleCurvature1)
 , m_PrincipleCurvature2(principleCurvature2)
@@ -78,7 +146,6 @@ CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 void subtractVector3d(Float64AbstractDataStore& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
-  // auto& ptr = data.getDataStoreRef();
   for(size_t i = 0; i < count; ++i)
   {
     const usize offset = i * 3;
@@ -91,7 +158,7 @@ void subtractVector3d(Float64AbstractDataStore& data, double* v)
 // -----------------------------------------------------------------------------
 void CalculateTriangleGroupCurvatures::operator()() const
 {
-  if(m_TriangleIds.size() == 0)
+  if(m_TriangleIds.empty())
   {
     return;
   }
@@ -145,7 +212,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       throw std::runtime_error("NRingNeighbor returned an error.");
     }
 
-    UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
+    FindNRingNeighbors::UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
     if(triPatch.size() <= 1)
     {
       throw std::runtime_error("NRingNeighbor failed to find more than one triangles.");
@@ -162,7 +229,6 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // If something got removed, redo this part again.
     if(triPatch.size() != beforeSize)
     {
-      beforeSize = triPatch.size();
       patchNormals = extractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     }
 
@@ -184,7 +250,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     // Translate the patch to the 0,0,0 origin
     double sub[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
-    subtractVector3d(*patchCentroids.get(), sub);
+    subtractVector3d(*patchCentroids, sub);
 
     double np[3] = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
 
@@ -221,7 +287,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       MatrixMath::Multiply3x3with3x1(rot, &patchNormals->data()[m * 3], out);
       ::memcpy(&patchNormals->data()[m * 3], out, 3 * sizeof(double));
 
-      // We rotate the normals now but we dont use them yet. If we start using part 3 of Goldfeathers paper then we
+      // We rotate the normals now, but we don't use them yet. If we start using part 3 of Goldfeathers paper then we
       // will need the normals.
     }
 
@@ -272,7 +338,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
         typedef Eigen::Matrix<double, USE_NORMALS, 1> Vector7d;
         Vector7d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C, D, E, F & G constants we can solve the Eigen value/vector problem
-        // to get the principal curvatures and pricipal directions.
+        // to get the principal curvatures and principal directions.
         M << sln1(0), sln1(1), sln1(1), sln1(2);
       }
 
@@ -329,65 +395,5 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
   // Send some feedback
   m_Filter->sendThreadSafeProgressMessage(1);
-}
-
-// -----------------------------------------------------------------------------
-std::shared_ptr<Float64DataStore> CalculateTriangleGroupCurvatures::extractPatchData(int64_t triId, UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data) const
-{
-  IDataStore::ShapeType cDims = {3ULL};
-
-  for(auto iter = triPatch.begin(); iter != triPatch.end();)
-  {
-    int64_t t = *iter;
-
-    if(std::isnan(data[t * 3]) || std::isnan(data[t * 3 + 1]) || std::isnan(data[t * 3 + 2]))
-    {
-      iter = triPatch.erase(iter);
-      if(*iter == triId)
-      {
-        triId = *(triPatch.begin());
-      }
-    }
-    else
-    {
-      ++iter;
-    }
-  }
-
-  if(triPatch.empty())
-  {
-    return nullptr;
-  }
-
-  size_t totalTuples = triPatch.size();
-  if(triPatch.count(triId) == 0)
-  {
-    totalTuples++;
-  }
-
-  IDataStore::ShapeType tupleShape = {totalTuples};
-  std::optional<float64> initValue = {};
-  std::shared_ptr<Float64DataStore> extractedData = std::make_shared<Float64DataStore>(tupleShape, cDims, initValue);
-  // This little chunk makes sure the current seed triangles centroid and normal data appear
-  // first in the returned arrays which makes the next steps a tad easier.
-  int32_t i = 0;
-  extractedData->setComponent(i, 0, data[triId * 3]);
-  extractedData->setComponent(i, 1, data[triId * 3 + 1]);
-  extractedData->setComponent(i, 2, data[triId * 3 + 2]);
-  ++i;
-  triPatch.erase(triId);
-
-  for(UniqueFaceIds_t::iterator iter = triPatch.begin(); iter != triPatch.end(); ++iter)
-  {
-    int64_t t = *iter;
-    extractedData->setComponent(i, 0, data[t * 3]);
-    extractedData->setComponent(i, 1, data[t * 3 + 1]);
-    extractedData->setComponent(i, 2, data[t * 3 + 2]);
-    ++i;
-  }
-  triPatch.insert(triId);
-
-  extractedData->resizeTuples({triPatch.size()}); // Resize the TriPatch DataArray
-  return extractedData;
 }
 } // namespace nx::core

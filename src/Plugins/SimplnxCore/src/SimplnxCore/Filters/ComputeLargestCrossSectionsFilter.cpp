@@ -80,7 +80,6 @@ IFilter::UniquePointer ComputeLargestCrossSectionsFilter::clone() const
 IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel) const
 {
-  auto pPlaneValue = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pCellFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);

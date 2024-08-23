@@ -54,44 +54,45 @@ public:
     }
 
     using DataArrayType = DataArray<T>;
+    using StoreType = AbstractDataStore<T>;
 
-    auto* array0 = dynamic_cast<DataArray<uint64_t>*>(m_Arrays[0]);
+    auto* array0 = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
     if(m_Length && array0 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
-    auto* array1 = dynamic_cast<DataArrayType*>(m_Arrays[1]);
+    auto* array1 = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
     if(m_Min && array1 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
-    auto* array2 = dynamic_cast<DataArrayType*>(m_Arrays[2]);
+    auto* array2 = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
     if(m_Max && array2 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
-    auto* array3 = dynamic_cast<Float32Array*>(m_Arrays[3]);
+    auto* array3 = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Mean && array3 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
     }
-    auto* array4 = dynamic_cast<Float32Array*>(m_Arrays[4]);
+    auto* array4 = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Median && array4 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
     }
-    auto* array5 = dynamic_cast<Float32Array*>(m_Arrays[5]);
+    auto* array5 = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_StdDeviation && array5 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
     }
-    auto* array6 = dynamic_cast<Float32Array*>(m_Arrays[6]);
+    auto* array6 = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
     if(m_Summation && array6 == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
 
-    NeighborListType& sourceList = dynamic_cast<NeighborListType&>(m_Source);
+    auto& sourceList = dynamic_cast<NeighborListType&>(m_Source);
 
     for(usize i = start; i < end; i++)
     {
@@ -99,38 +100,38 @@ public:
 
       if(m_Length)
       {
-        int64_t val = static_cast<int64_t>(tmpList.size());
-        array0->initializeTuple(i, val);
+        auto val = static_cast<int64_t>(tmpList.size());
+        array0->setValue(i, val);
       }
       if(m_Min)
       {
         T val = StatisticsCalculations::findMin(tmpList);
-        array1->initializeTuple(i, val);
+        array1->setValue(i, val);
       }
       if(m_Max)
       {
         T val = StatisticsCalculations::findMax(tmpList);
-        array2->initializeTuple(i, val);
+        array2->setValue(i, val);
       }
       if(m_Mean)
       {
         float val = StatisticsCalculations::findMean(tmpList);
-        array3->initializeTuple(i, val);
+        array3->setValue(i, val);
       }
       if(m_Median)
       {
         float val = StatisticsCalculations::findMedian(tmpList);
-        array4->initializeTuple(i, val);
+        array4->setValue(i, val);
       }
       if(m_StdDeviation)
       {
         float val = StatisticsCalculations::findStdDeviation(tmpList);
-        array5->initializeTuple(i, val);
+        array5->setValue(i, val);
       }
       if(m_Summation)
       {
         float val = StatisticsCalculations::findSummation(tmpList);
-        array6->initializeTuple(i, val);
+        array6->setValue(i, val);
       }
     }
   }
@@ -153,20 +154,19 @@ private:
 
   std::vector<IDataArray*>& m_Arrays;
 };
-} // namespace
 
 //------------------------------------------------------------------------------
-OutputActions ComputeNeighborListStatisticsFilter::createCompatibleArrays(const DataStructure& dataStructure, const Arguments& args) const
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args)
 {
-  auto findLength = args.value<bool>(k_FindLength_Key);
-  auto findMin = args.value<bool>(k_FindMinimum_Key);
-  auto findMax = args.value<bool>(k_FindMaximum_Key);
-  auto findMean = args.value<bool>(k_FindMean_Key);
-  auto findMedian = args.value<bool>(k_FindMedian_Key);
-  auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
-  auto findSummation = args.value<bool>(k_FindSummation_Key);
+  auto findLength = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindLength_Key);
+  auto findMin = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMinimum_Key);
+  auto findMax = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMaximum_Key);
+  auto findMean = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMean_Key);
+  auto findMedian = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMedian_Key);
+  auto findStdDeviation = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindStandardDeviation_Key);
+  auto findSummation = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
+  auto inputArrayPath = args.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key);
   auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
@@ -175,49 +175,50 @@ OutputActions ComputeNeighborListStatisticsFilter::createCompatibleArrays(const 
   OutputActions actions;
   if(findLength)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_LengthName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MinimumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MaximumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MeanName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MedianName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_StandardDeviationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_SummationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
 
   return std::move(actions);
 }
+} // namespace
 
 //------------------------------------------------------------------------------
 std::string ComputeNeighborListStatisticsFilter::name() const
@@ -317,7 +318,7 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   dataArrayPaths.push_back(inputArrayPath);
 
-  return {std::move(createCompatibleArrays(dataStructure, args))};
+  return {std::move(CreateCompatibleArrays(dataStructure, args))};
 }
 
 //------------------------------------------------------------------------------

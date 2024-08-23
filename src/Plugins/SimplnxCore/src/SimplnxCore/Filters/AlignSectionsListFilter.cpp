@@ -76,14 +76,13 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  auto pDREAM3DAlignmentFileValue = filterArgs.value<bool>(k_DREAM3DAlignmentFile_Key);
   auto pSelectedImageGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeometryPathValue);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeometryPathValue);
   if(imageGeom.getCellData() == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-8940, fmt::format("Cannot find cell data Attribute Matrix in the selected Image geometry '{}'", pSelectedImageGeometryPathValue.toString()))};

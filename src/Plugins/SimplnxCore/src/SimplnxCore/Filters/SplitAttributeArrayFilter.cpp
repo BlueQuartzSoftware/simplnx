@@ -10,9 +10,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -108,7 +106,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
     auto pExtractComponents = filterArgs.value<DynamicTableParameter::ValueType>(k_ComponentsToExtract_Key)[0];
     for(const auto& comp : pExtractComponents)
     {
-      usize compIndex = static_cast<usize>(comp);
+      auto compIndex = static_cast<usize>(comp);
       if(comp >= numComponents || comp < 0)
       {
         return {nonstd::make_unexpected(std::vector<Error>{Error{

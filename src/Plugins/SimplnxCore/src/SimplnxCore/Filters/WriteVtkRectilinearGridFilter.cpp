@@ -9,7 +9,6 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -77,13 +76,8 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(pSelectedDataArrayPathsValue.empty())
   {
@@ -93,7 +87,7 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   usize numTuples = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathsValue[0]).getNumberOfTuples();
@@ -106,7 +100,7 @@ IFilter::PreflightResult WriteVtkRectilinearGridFilter::preflightImpl(const Data
                     pImageGeometryPathValue.toString()));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {};
 }
 
 //------------------------------------------------------------------------------
@@ -136,6 +130,7 @@ Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure
       return commitResult;
     }
   }
+
   return result;
 }
 

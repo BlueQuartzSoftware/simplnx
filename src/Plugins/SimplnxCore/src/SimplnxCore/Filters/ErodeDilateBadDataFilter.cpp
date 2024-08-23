@@ -13,7 +13,6 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
@@ -89,10 +88,6 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pOperationValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
-  auto pNumIterationsValue = filterArgs.value<int32>(k_NumIterations_Key);
-  auto pXDirOnValue = filterArgs.value<bool>(k_XDirOn_Key);
-  auto pYDirOnValue = filterArgs.value<bool>(k_YDirOn_Key);
-  auto pZDirOnValue = filterArgs.value<bool>(k_ZDirOn_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 

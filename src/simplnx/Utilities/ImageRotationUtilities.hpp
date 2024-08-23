@@ -69,7 +69,7 @@ SIMPLNX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRo
  * @param precomputed
  * @return
  */
-SIMPLNX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed);
+SIMPLNX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed);
 
 /**
  * @brief
@@ -401,7 +401,7 @@ public:
 
     m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
-    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     DataStructure tempDataStructure;
     ImageGeom* origImageGeomPtr = ImageGeom::Create(tempDataStructure, "Temp");
@@ -517,8 +517,8 @@ public:
     destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
     destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
 
-    const auto& oldDataStore = m_SourceArray->getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& oldDataStore = m_SourceArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
     for(int64 k = 0; k < m_Params.zpNew; k++)

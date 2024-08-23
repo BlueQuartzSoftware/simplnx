@@ -9,23 +9,20 @@ using namespace nx::core;
 
 namespace
 {
-
 class ComputeFeatureCentroidsImpl1
 {
 public:
-  ComputeFeatureCentroidsImpl1(ComputeFeatureCentroids* filter, double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom,
-                               const Int32Array& featureIds)
-  : m_Filter(filter)
-  , m_Sum(sum)
+  ComputeFeatureCentroidsImpl1(double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds)
+  : m_Sum(sum)
   , m_Center(center)
   , m_Count(count)
   , m_Dims(dims)
   , m_ImageGeom(imageGeom)
-  , m_FeatureIds(featureIds.getDataStoreRef())
+  , m_FeatureIds(featureIds)
   {
   }
   ~ComputeFeatureCentroidsImpl1() = default;
-  void compute(int64_t minFeatureId, int64_t maxFeatureId) const
+  void compute(usize minFeatureId, usize maxFeatureId) const
   {
     for(size_t i = 0; i < m_Dims[2]; i++)
     {
@@ -35,7 +32,7 @@ public:
         size_t yStride = j * m_Dims[0];
         for(size_t k = 0; k < m_Dims[0]; k++)
         {
-          int32_t featureId = m_FeatureIds[zStride + yStride + k]; // Get the current FeatureId
+          int32 featureId = m_FeatureIds[zStride + yStride + k]; // Get the current FeatureId
           if(featureId < minFeatureId || featureId >= maxFeatureId)
           {
             continue;
@@ -76,11 +73,9 @@ public:
   }
 
 private:
-  ComputeFeatureCentroids* m_Filter = nullptr;
   double* m_Sum = nullptr;
   double* m_Center = nullptr;
   size_t* m_Count = nullptr;
-  size_t m_TotalFeatures = 0;
   std::array<size_t, 3> m_Dims = {0, 0, 0};
   const nx::core::ImageGeom& m_ImageGeom;
   const Int32AbstractDataStore& m_FeatureIds;
@@ -111,16 +106,15 @@ const std::atomic_bool& ComputeFeatureCentroids::getCancel()
 Result<> ComputeFeatureCentroids::operator()()
 {
   // Input Cell Data
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   // Output Feature Data
-  auto& centroidsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  auto& centroids = centroidsArray.getDataStoreRef();
+  auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  size_t totalFeatures = centroidsArray.getNumberOfTuples();
+  size_t totalFeatures = centroids.getNumberOfTuples();
 
   size_t xPoints = imageGeom.getNumXCells();
   size_t yPoints = imageGeom.getNumYCells();
@@ -138,7 +132,7 @@ Result<> ComputeFeatureCentroids::operator()()
   // by the total number of cores/threads and do a ParallelTask Algorithm instead
   // we might see some speedup.
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.execute(ComputeFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
+  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
   for(size_t featureId = 0; featureId < totalFeatures; featureId++)

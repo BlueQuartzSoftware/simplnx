@@ -32,13 +32,12 @@ struct RemoveFlaggedVerticesFunctor
   template <class T>
   void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
-    using DataArrayType = DataArray<T>;
-    const auto& sourceDataArray = dynamic_cast<const DataArrayType&>(sourceIDataArray);
-    auto& destinationDataArray = dynamic_cast<DataArrayType&>(destIDataArray);
-    destinationDataArray.getDataStore()->resizeTuples({numVerticesToKeep});
+    const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    destinationDataStore.resizeTuples({numVerticesToKeep});
 
-    const usize numInputTuples = sourceDataArray.getNumberOfTuples();
-    const usize nComps = sourceDataArray.getNumberOfComponents();
+    const usize numInputTuples = sourceDataStore.getNumberOfTuples();
+    const usize nComps = sourceDataStore.getNumberOfComponents();
     usize destTupleIndex = 0;
     for(usize inputIndex = 0; inputIndex < numInputTuples; inputIndex++)
     {
@@ -48,7 +47,7 @@ struct RemoveFlaggedVerticesFunctor
         {
           const usize sourceIndex = (nComps * inputIndex) + compIdx;
           const usize destinationIndex = (nComps * destTupleIndex) + compIdx;
-          destinationDataArray[destinationIndex] = sourceDataArray[sourceIndex];
+          destinationDataStore[destinationIndex] = sourceDataStore[sourceIndex];
         }
         destTupleIndex++;
       }
@@ -114,7 +113,6 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -204,7 +202,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

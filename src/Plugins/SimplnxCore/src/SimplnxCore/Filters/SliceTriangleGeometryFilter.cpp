@@ -18,7 +18,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr ChoicesParameter::ValueType k_FullRange = 0;
 constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 } // namespace
 
@@ -61,15 +60,13 @@ Parameters SliceTriangleGeometryFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  // params.insert(std::make_unique<VectorFloat32Parameter>(k_SliceDirection_Key, "Slice Direction (ijk)", "Direction on which to slice the Triangle Geometry", std::vector<float32>{0.0F, 0.0F, 1.0F},
-  //                                                        std::vector<std::string>{"i", "j", "k"}));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SliceRange_Key, "Slice Range", "Type of slice range to use, either Full Range or User Defined Range", 0,
                                                                     ChoicesParameter::Choices{"Full Range", "User Defined Range"}));
   params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value", 0.0f));
   params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value", 0.0));
   params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
 
-  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insertSeparator(Parameters::Separator{"Input Geometry"});
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The input triangle geometry to be sliced", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
@@ -105,7 +102,6 @@ IFilter::UniquePointer SliceTriangleGeometryFilter::clone() const
 IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  // auto pSliceDirectionValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SliceDirection_Key);
   auto pSliceRangeValue = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
   auto pZStartValue = filterArgs.value<float32>(k_Zstart_Key);
   auto pZEndValue = filterArgs.value<float32>(k_Zend_Key);
@@ -117,9 +113,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   auto pSliceIdArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceIdArrayName_Key);
   auto pSliceAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceAttributeMatrixName_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(pSliceRangeValue == k_UserDefinedRange)
   {
@@ -158,7 +152,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -167,7 +161,6 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
 {
   SliceTriangleGeometryInputValues inputValues;
 
-  // inputValues.SliceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SliceDirection_Key);
   inputValues.SliceRange = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
   inputValues.Zstart = filterArgs.value<float32>(k_Zstart_Key);
   inputValues.Zend = filterArgs.value<float32>(k_Zend_Key);

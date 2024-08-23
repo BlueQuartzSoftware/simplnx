@@ -17,7 +17,6 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureClusteringInputValues
   int32 PhaseNumber;
   bool RemoveBiasedFeatures;
   uint64 SeedValue;
-  DataPath EquivalentDiametersArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CentroidsArrayPath;
   DataPath BiasedFeaturesArrayPath;

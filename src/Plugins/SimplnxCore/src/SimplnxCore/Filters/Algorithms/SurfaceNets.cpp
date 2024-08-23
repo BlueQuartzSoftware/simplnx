@@ -16,37 +16,6 @@ using namespace nx::core;
 
 namespace
 {
-//
-// Private data class for storing quad data during OBJ data generation
-//
-class MMQuad
-{
-public:
-  MMQuad()
-  : m_VertexIndices{-1, -1, -1, -1}
-  , m_Labels{0, 0}
-  {
-  }
-  MMQuad(std::array<int32, 4> vi, std::array<int32, 2> labels)
-  : m_VertexIndices{vi[0], vi[1], vi[2], vi[3]}
-  , m_Labels{labels[0], labels[1]}
-  {
-  }
-
-  void getVertexIndices(std::array<int32, 4>& vertexIndices)
-  {
-    std::copy(m_VertexIndices.begin(), m_VertexIndices.end(), vertexIndices.begin());
-  }
-  void getLabels(std::array<int32, 2>& labels)
-  {
-    std::copy(m_Labels.begin(), m_Labels.end(), labels.begin());
-  }
-
-private:
-  std::array<int32, 4> m_VertexIndices;
-  std::array<int32, 2> m_Labels;
-};
-
 struct VertexData
 {
   int VertexId;
@@ -102,43 +71,6 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   triangleVtxIDs[4] = vData[2].VertexId;
   triangleVtxIDs[5] = vData[3].VertexId;
 }
-
-void exportObjFiles(MMSurfaceNet* m_surfaceNet)
-{
-  if(m_surfaceNet == nullptr)
-  {
-    return;
-  }
-  std::shared_ptr<MMGeometryOBJ> const geometry = std::make_shared<MMGeometryOBJ>(m_surfaceNet);
-
-  // Export an OBJ file for each material to the specified path
-  std::vector<int> const materials = geometry->labels();
-  for(const auto& itMatIdx : materials)
-  {
-    if(itMatIdx > 20 && itMatIdx < 65530)
-    {
-      continue;
-    }
-    const std::string filename = fmt::format("surface_mash_test_{}.obj", itMatIdx);
-    std::cout << "Export file Obj file: " << filename << "\n";
-    std::ofstream stream(filename, std::ios_base::binary);
-    if(stream.is_open())
-    {
-      const MMGeometryOBJ::OBJData data = geometry->objData(itMatIdx);
-      stream << "# vertices for feature id " << itMatIdx << "\n";
-      for(const auto& vertex : data.vertexPositions)
-      {
-        stream << "v " << (vertex)[0] << ' ' << (vertex)[1] << ' ' << (vertex)[2] << "\n";
-      }
-      stream << "# triangles for feature id " << itMatIdx << "\n";
-      for(const auto& face : data.triangles)
-      {
-        stream << "f " << (face)[0] << ' ' << (face)[1] << ' ' << (face)[2] << "\n";
-      }
-    }
-  }
-}
-
 } // namespace
 // -----------------------------------------------------------------------------
 SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues)
@@ -165,7 +97,7 @@ Result<> SurfaceNets::operator()()
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
 
   // Get the Created Triangle Geometry
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
   auto gridDimensions = imageGeom.getDimensions();
   auto voxelSize = imageGeom.getSpacing();
@@ -173,7 +105,7 @@ Result<> SurfaceNets::operator()()
 
   IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
 
-  Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   using LabelType = int32;
   std::vector<LabelType> labels(featureIds.getNumberOfTuples());
@@ -205,7 +137,7 @@ Result<> SurfaceNets::operator()()
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
 
   // Remove and then insert a properly sized int8 for the NodeTypes
-  Int8Array& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath);
+  auto& nodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
   nodeTypes.resizeTuples({static_cast<usize>(nodeCount)});
 
   Point3Df position = {0.0f, 0.0f, 0.0f};
@@ -287,7 +219,7 @@ Result<> SurfaceNets::operator()()
   triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleCount});
 
   // Resize the face labels Int32Array
-  Int32Array& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath);
+  auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
   faceLabels.resizeTuples({triangleCount});
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays

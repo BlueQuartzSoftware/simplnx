@@ -103,9 +103,6 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
-  auto pDoBoundariesValue = filterArgs.value<bool>(k_DoBoundaries_Key);
-  auto pDoTripleLinesValue = filterArgs.value<bool>(k_DoTripleLines_Key);
-  auto pDoQuadPointsValue = filterArgs.value<bool>(k_DoQuadPoints_Key);
   auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
 
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -122,7 +119,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Get the Cell Data Array so we get the tuple shape correct
+  // Get the Cell Data Array, so we get the tuple shape correct
   const auto* cellDataArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(nullptr == cellDataArray)
   {

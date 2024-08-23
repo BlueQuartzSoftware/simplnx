@@ -89,9 +89,6 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
-  auto pUserDefinedRangeValue = filterArgs.value<bool>(k_UserDefinedRange_Key); // verify and calculate range values here if false
-  auto pMinRangeValue = filterArgs.value<float64>(k_MinRange_Key);
-  auto pMaxRangeValue = filterArgs.value<float64>(k_MaxRange_Key);
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
   auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
   auto pSelectedArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);

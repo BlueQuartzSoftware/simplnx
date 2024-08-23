@@ -2,7 +2,6 @@
 
 #include "Algorithms/CreateColorMap.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -19,9 +18,6 @@
 using namespace nx::core;
 namespace
 {
-
-using GoodVoxelsArrayType = BoolArray;
-
 constexpr int32 k_MissingGeomError = -72440;
 constexpr int32 k_IncorrectInputArray = -72441;
 constexpr int32 k_MissingInputArray = -72442;
@@ -167,7 +163,6 @@ namespace
 namespace SIMPL
 {
 constexpr StringLiteral k_SelectedPresetNameKey = "SelectedPresetName";
-constexpr StringLiteral k_SelectedPresetControlPointsKey = "SelectedPresetControlPoints";
 constexpr StringLiteral k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
 constexpr StringLiteral k_RgbArrayNameKey = "RgbArrayName";
 } // namespace SIMPL

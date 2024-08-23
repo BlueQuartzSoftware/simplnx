@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <vector>
@@ -12,8 +13,7 @@ class SIMPLNX_EXPORT IParallelAlgorithm
 {
 public:
   using AlgorithmArrays = std::vector<const IDataArray*>;
-
-  static bool CheckArraysInMemory(const AlgorithmArrays& arrays);
+  using AlgorithmStores = std::vector<const IDataStore*>;
 
   IParallelAlgorithm(const IParallelAlgorithm&) = default;
   IParallelAlgorithm(IParallelAlgorithm&&) noexcept = default;
@@ -24,7 +24,7 @@ public:
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
    * @return
    */
-  bool getParallelizationEnabled() const;
+  [[nodiscard]] bool getParallelizationEnabled() const;
 
   /**
    * @brief Sets whether parallelization is enabled.
@@ -33,6 +33,8 @@ public:
   void setParallelizationEnabled(bool doParallel);
 
   void requireArraysInMemory(const AlgorithmArrays& arrays);
+
+  void requireStoresInMemory(const AlgorithmStores& arrays);
 
 protected:
   IParallelAlgorithm();

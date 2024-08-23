@@ -9,13 +9,11 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
 
 #include <limits>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include <unordered_map>
 
 using namespace nx::core;
@@ -38,15 +36,13 @@ void hashCombine(usize& seed, const T& obj)
 struct CopyDataFunctor
 {
   template <typename T>
-  void operator()(IDataArray& inDataPtr, IDataArray& outDataPtr, std::unordered_map<int64, int64>& elementMap) const
+  void operator()(IDataArray* inDataPtr, IDataArray* outDataPtr, std::unordered_map<int64, int64>& elementMap) const
   {
-    auto& inputDataPtr = dynamic_cast<DataArray<T>&>(inDataPtr);
-    AbstractDataStore<T>& inputData = inputDataPtr.getDataStoreRef();
-    auto croppedDataPtr = dynamic_cast<DataArray<T>&>(outDataPtr);
-    AbstractDataStore<T>& outputData = croppedDataPtr.getDataStoreRef();
+    auto& inputData = inDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& outputData = outDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    usize nTuples = outDataPtr.getNumberOfTuples();
-    usize nComps = inDataPtr.getNumberOfComponents();
+    usize nTuples = outDataPtr->getNumberOfTuples();
+    usize nComps = inDataPtr->getNumberOfComponents();
     usize tmpIndex = 0;
     usize ptrIndex = 0;
 
@@ -66,10 +62,10 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(IDataArray& inputDataPtr, IDataArray& outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
+  void operator()(IDataArray* inputDataPtr, IDataArray* outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
   {
-    auto& inputData = dynamic_cast<DataArray<T>&>(inputDataPtr);
-    auto& outputData = dynamic_cast<DataArray<T>&>(outputDataArray);
+    auto& inputData = inputDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& outputData = outputDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize nComps = inputData.getNumberOfComponents();
     IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
 
@@ -297,7 +293,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   MeshIndexType currentNewTriIndex = 0;
   MeshIndexType currentNewVertIndex = 0;
 
-  // Loop over all of the triangles mapping the triangle and the vertices to the new array locations
+  // Loop over all the triangles mapping the triangle and the vertices to the new array locations
   for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
   {
     MeshIndexType v0Index = triangles[3 * triIndex + 0];
@@ -385,20 +381,20 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   for(const auto& targetArrayPath : copyVertexPaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(vertexDataName).createChildPath(targetArrayPath.getTargetName());
-    auto& src = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
-    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
+    auto* src = dataStructure.getDataAs<IDataArray>(targetArrayPath);
+    auto* dest = dataStructure.getDataAs<IDataArray>(destinationPath);
 
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, vertNewIndex);
+    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, vertNewIndex);
   }
 
   for(const auto& targetArrayPath : copyTrianglePaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(faceDataName).createChildPath(targetArrayPath.getTargetName());
-    auto& src = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
-    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
-    dest.getIDataStore()->resizeTuples({currentNewTriIndex});
+    auto* src = dataStructure.getDataAs<IDataArray>(targetArrayPath);
+    auto* dest = dataStructure.getDataAs<IDataArray>(destinationPath);
+    dest->resizeTuples({currentNewTriIndex});
 
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, triNewIndex);
+    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, triNewIndex);
   }
 
   return {};
@@ -410,7 +406,6 @@ namespace SIMPL
 {
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
-constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
 } // namespace SIMPL
 } // namespace
 

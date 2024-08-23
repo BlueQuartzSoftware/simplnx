@@ -6,11 +6,9 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
-#include <sstream>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <sstream>
 #include <string>
 
 using namespace std::string_literals;
@@ -129,17 +127,6 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
 Result<> CreateImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
-  auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
-  auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
   return {};
 }
 } // namespace nx::core
@@ -152,7 +139,6 @@ constexpr StringLiteral k_SelectedDataContainerKey = "SelectedDataContainer";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_BoxDimensionsKey = "BoxDimensions";
 } // namespace SIMPL
 } // namespace
 

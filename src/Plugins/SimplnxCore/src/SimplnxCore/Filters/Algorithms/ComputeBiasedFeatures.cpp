@@ -46,14 +46,14 @@ Result<> ComputeBiasedFeatures::operator()()
 Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  Int32Array* phasesPtr = nullptr;
+  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  AbstractDataStore<int32>* phasesStorePtr = nullptr;
   if(m_InputValues->CalcByPhase)
   {
-    phasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath);
+    phasesStorePtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath)->getDataStore();
   }
-  auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
-  biasedFeatures.fill(false);
+  auto& biasedFeaturesStore = m_DataStructure.getDataAsUnsafe<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
+  biasedFeaturesStore.fill(false);
 
   std::unique_ptr<MaskCompare> surfaceFeatures = nullptr;
   try
@@ -67,7 +67,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     return MakeErrorResult(-54900, message);
   }
 
-  const usize size = centroids.getNumberOfTuples();
+  const usize size = centroidsStore.getNumberOfTuples();
   std::vector<float32> boundBox = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
   std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -75,13 +75,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   int32 numPhases = 1;
   if(m_InputValues->CalcByPhase)
   {
-    for(usize i = 1; i < size; i++)
-    {
-      if((*phasesPtr)[i] > numPhases)
-      {
-        numPhases = (*phasesPtr)[i];
-      }
-    }
+    numPhases = *std::max_element(phasesStorePtr->begin(), phasesStorePtr->end());
   }
   for(int32 iter = 1; iter <= numPhases; iter++)
   {
@@ -103,18 +97,18 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 
     for(usize i = 1; i < size; i++)
     {
-      if(surfaceFeatures->isTrue(i) && (!m_InputValues->CalcByPhase || (*phasesPtr)[i] == iter))
+      if(surfaceFeatures->isTrue(i) && (!m_InputValues->CalcByPhase || (*phasesStorePtr)[i] == iter))
       {
         int32 sideToMove = 0;
         int32 move = 1;
         float32 minDist = std::numeric_limits<float32>::max();
 
-        coords[0] = centroids[3 * i];
-        coords[1] = centroids[3 * i];
-        coords[2] = centroids[3 * i + 1];
-        coords[3] = centroids[3 * i + 1];
-        coords[4] = centroids[3 * i + 2];
-        coords[5] = centroids[3 * i + 2];
+        coords[0] = centroidsStore[3 * i];
+        coords[1] = centroidsStore[3 * i];
+        coords[2] = centroidsStore[3 * i + 1];
+        coords[3] = centroidsStore[3 * i + 1];
+        coords[4] = centroidsStore[3 * i + 2];
+        coords[5] = centroidsStore[3 * i + 2];
         for(int32 j = 1; j < 7; j++)
         {
           float32 dist = std::numeric_limits<float32>::max();
@@ -154,31 +148,31 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     }
     for(usize j = 1; j < size; j++)
     {
-      if(!m_InputValues->CalcByPhase || (*phasesPtr)[j] == iter)
+      if(!m_InputValues->CalcByPhase || (*phasesStorePtr)[j] == iter)
       {
-        if(centroids[3 * j] <= boundBox[0])
+        if(centroidsStore[3 * j] <= boundBox[0])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
-        if(centroids[3 * j] >= boundBox[1])
+        if(centroidsStore[3 * j] >= boundBox[1])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
-        if(centroids[3 * j + 1] <= boundBox[2])
+        if(centroidsStore[3 * j + 1] <= boundBox[2])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
-        if(centroids[3 * j + 1] >= boundBox[3])
+        if(centroidsStore[3 * j + 1] >= boundBox[3])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
-        if(centroids[3 * j + 2] <= boundBox[4])
+        if(centroidsStore[3 * j + 2] <= boundBox[4])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
-        if(centroids[3 * j + 2] >= boundBox[5])
+        if(centroidsStore[3 * j + 2] >= boundBox[5])
         {
-          biasedFeatures[j] = true;
+          biasedFeaturesStore[j] = true;
         }
       }
     }
@@ -198,9 +192,9 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();
   const FloatVec3 imageOrigin = imageGeometry.getOrigin();
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
-  biasedFeatures.fill(false);
+  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  auto& biasedFeaturesStore = m_DataStructure.getDataAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
+  biasedFeaturesStore.fill(false);
 
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   try
@@ -214,7 +208,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
     return MakeErrorResult(-54900, message);
   }
 
-  const usize size = centroids.getNumberOfTuples();
+  const usize size = centroidsStore.getNumberOfTuples();
 
   std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -267,10 +261,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
       int32 sideToMove = 0;
       int32 move = 1;
       float32 minDist = std::numeric_limits<float32>::max();
-      coords[0] = centroids[3 * i + centroidShift0];
-      coords[1] = centroids[3 * i + centroidShift0];
-      coords[2] = centroids[3 * i + centroidShift1];
-      coords[3] = centroids[3 * i + centroidShift1];
+      coords[0] = centroidsStore[3 * i + centroidShift0];
+      coords[1] = centroidsStore[3 * i + centroidShift0];
+      coords[2] = centroidsStore[3 * i + centroidShift1];
+      coords[3] = centroidsStore[3 * i + centroidShift1];
       for(int32 j = 1; j < 5; j++)
       {
         float32 dist = std::numeric_limits<float32>::max();
@@ -315,21 +309,21 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   }
   for(usize j = 1; j < size; j++)
   {
-    if(centroids[3 * j] <= boundBox[0])
+    if(centroidsStore[3 * j] <= boundBox[0])
     {
-      biasedFeatures[j] = true;
+      biasedFeaturesStore[j] = true;
     }
-    if(centroids[3 * j] >= boundBox[1])
+    if(centroidsStore[3 * j] >= boundBox[1])
     {
-      biasedFeatures[j] = true;
+      biasedFeaturesStore[j] = true;
     }
-    if(centroids[3 * j + 1] <= boundBox[2])
+    if(centroidsStore[3 * j + 1] <= boundBox[2])
     {
-      biasedFeatures[j] = true;
+      biasedFeaturesStore[j] = true;
     }
-    if(centroids[3 * j + 1] >= boundBox[3])
+    if(centroidsStore[3 * j + 1] >= boundBox[3])
     {
-      biasedFeatures[j] = true;
+      biasedFeaturesStore[j] = true;
     }
 
     if(getCancel())

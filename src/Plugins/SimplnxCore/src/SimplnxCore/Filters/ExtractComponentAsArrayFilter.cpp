@@ -10,10 +10,8 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -90,7 +88,6 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pNewArrayPathValue = pSelectedArrayPathValue.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -151,7 +148,7 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
   inputValues.CompNumber = filterArgs.value<int32>(k_CompNumber_Key);
   // This is the original array if remove components is true OR  move components is false
   inputValues.TempArrayPath = DataPath::FromString(filterArgs.value<DataPath>(k_SelectedArrayPath_Key).toString() + "Temp", '/').value();
-  // This is the array on the original array path whether its removed or not
+  // This is the array on the original array path whether it's removed or not
   inputValues.BaseArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   // If move components to new array is true this is a valid path
   inputValues.NewArrayPath = inputValues.BaseArrayPath.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));

@@ -184,7 +184,7 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
@@ -221,7 +221,7 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   triangleGeom->setFaceList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -232,7 +232,7 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   triangleGeom->setVertices(*vertexArray);
 }
 
@@ -255,7 +255,7 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setFaceList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -266,7 +266,7 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
 
@@ -289,7 +289,7 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setEdgeList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -300,7 +300,7 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
 
@@ -323,7 +323,7 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setPolyhedraList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -334,7 +334,7 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
 
@@ -357,7 +357,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
+  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setPolyhedraList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
@@ -368,7 +368,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
   auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
-  CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
+  CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
 

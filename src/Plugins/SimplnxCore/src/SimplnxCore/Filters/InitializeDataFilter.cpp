@@ -66,9 +66,9 @@ using AdditionT = IncrementalOptions<true, false>;
 using SubtractionT = IncrementalOptions<false, true>;
 
 template <typename T>
-void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringValues)
+void ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& stringValues)
 {
-  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+  usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
   if(numComp > 1)
   {
@@ -79,13 +79,13 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
       values.emplace_back(ConvertTo<T>::convert(str).value());
     }
 
-    usize numTup = dataArray.getNumberOfTuples();
+    usize numTup = dataStore.getNumberOfTuples();
 
     for(usize tup = 0; tup < numTup; tup++)
     {
       for(usize comp = 0; comp < numComp; comp++)
       {
-        dataArray[tup * numComp + comp] = values[comp];
+        dataStore[tup * numComp + comp] = values[comp];
       }
     }
   }
@@ -93,14 +93,14 @@ void ValueFill(DataArray<T>& dataArray, const std::vector<std::string>& stringVa
   {
     Result<T> result = ConvertTo<T>::convert(stringValues[0]);
     T value = result.value();
-    dataArray.fill(value);
+    dataStore.fill(value);
   }
 }
 
 template <typename T, class IncrementalOptions = AdditionT>
-void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
+void IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues)
 {
-  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+  usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
   std::vector<T> values(numComp);
   std::vector<T> steps(numComp);
@@ -116,13 +116,13 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
     }
   }
 
-  usize numTup = dataArray.getNumberOfTuples();
+  usize numTup = dataStore.getNumberOfTuples();
 
   if constexpr(std::is_same_v<T, bool>)
   {
     for(usize comp = 0; comp < numComp; comp++)
     {
-      dataArray[comp] = values[comp];
+      dataStore[comp] = values[comp];
 
       if constexpr(IncrementalOptions::UsingAddition)
       {
@@ -138,7 +138,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
     {
       for(usize comp = 0; comp < numComp; comp++)
       {
-        dataArray[tup * numComp + comp] = values[comp];
+        dataStore[tup * numComp + comp] = values[comp];
       }
     }
   }
@@ -149,7 +149,7 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
     {
       for(usize comp = 0; comp < numComp; comp++)
       {
-        dataArray[tup * numComp + comp] = values[comp];
+        dataStore[tup * numComp + comp] = values[comp];
 
         if constexpr(IncrementalOptions::UsingAddition)
         {
@@ -165,9 +165,9 @@ void IncrementalFill(DataArray<T>& dataArray, const std::vector<std::string>& st
 }
 
 template <typename T, bool Ranged, class DistributionT>
-void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const uint64 seed, const bool standardizeSeed)
+void RandomFill(std::vector<DistributionT>& dist, AbstractDataStore<T>& dataStore, const uint64 seed, const bool standardizeSeed)
 {
-  usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+  usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
   std::vector<std::mt19937_64> generators(numComp, std::mt19937_64{});
 
@@ -176,7 +176,7 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
     generators[comp].seed((standardizeSeed ? seed : seed + comp)); // If standardizing seed all generators use the same else, use modified seeds
   }
 
-  usize numTup = dataArray.getNumberOfTuples();
+  usize numTup = dataStore.getNumberOfTuples();
 
   for(usize tup = 0; tup < numTup; tup++)
   {
@@ -186,23 +186,23 @@ void RandomFill(std::vector<DistributionT>& dist, DataArray<T>& dataArray, const
       {
         if constexpr(Ranged)
         {
-          dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
+          dataStore[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
         }
         if constexpr(!Ranged)
         {
           if constexpr(std::is_signed_v<T>)
           {
-            dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * (std::numeric_limits<T>::max() - 1) * (((rand() & 1) == 0) ? 1 : -1));
+            dataStore[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * (std::numeric_limits<T>::max() - 1) * (((rand() & 1) == 0) ? 1 : -1));
           }
           if constexpr(!std::is_signed_v<T>)
           {
-            dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * std::numeric_limits<T>::max());
+            dataStore[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]) * std::numeric_limits<T>::max());
           }
         }
       }
       if constexpr(!std::is_floating_point_v<T>)
       {
-        dataArray[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
+        dataStore[tup * numComp + comp] = static_cast<T>(dist[comp](generators[comp]));
       }
     }
   }
@@ -292,16 +292,16 @@ struct FillArrayFunctor
   template <typename T>
   void operator()(IDataArray& iDataArray, const InitializeDataInputValues& inputValues)
   {
-    auto& dataArray = dynamic_cast<DataArray<T>&>(iDataArray);
-    usize numComp = dataArray.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
+    auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
 
     switch(inputValues.initType)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataArray, standardizeMultiComponent(numComp, inputValues.stringValues));
+      return ::ValueFill<T>(dataStore, standardizeMultiComponent(numComp, inputValues.stringValues));
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataArray, standardizeMultiComponent(numComp, inputValues.startValues), standardizeMultiComponent(numComp, inputValues.stepValues));
+      return ::FillIncForwarder<T>(inputValues.stepType, dataStore, standardizeMultiComponent(numComp, inputValues.startValues), standardizeMultiComponent(numComp, inputValues.stepValues));
     }
     case InitializeType::Random: {
       std::vector<T> range;
@@ -321,7 +321,7 @@ struct FillArrayFunctor
           range.push_back(true);
         }
       }
-      return ::FillRandomForwarder<T, false>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
+      return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed);
     }
     case InitializeType::RangedRandom: {
       auto randBegin = standardizeMultiComponent(numComp, inputValues.randBegin);
@@ -335,7 +335,7 @@ struct FillArrayFunctor
         result = ConvertTo<T>::convert(randEnd[comp]);
         range.push_back(result.value());
       }
-      return ::FillRandomForwarder<T, true>(range, numComp, dataArray, inputValues.seed, inputValues.standardizeSeed);
+      return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed);
     }
     }
   }

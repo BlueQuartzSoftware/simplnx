@@ -19,7 +19,6 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <cstdio>
 #include <fstream>
 
 using namespace nx::core;
@@ -69,9 +68,8 @@ enum class IssueCodes
 
 StringVector RemoveIllegalCharacters(StringVector& headers)
 {
-  for(int i = 0; i < headers.size(); i++)
+  for(auto& headerName : headers)
   {
-    auto& headerName = headers[i];
     // Replace all illegal characters with '_' character. The header names become array names which is the issue.
     // This should have been taken care of in the GUI, but if someone is trying this from Python they will not have done that
     // or if they are just reading it in through nxrunner.
@@ -91,7 +89,7 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_EXISTING_DG), "'Existing Attribute Matrix' - Data path is empty.")};
   }
 
-  const BaseGroup& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(groupPath);
+  const auto& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(groupPath);
   const auto arrays = selectedGroup.findAllChildrenOfType<IDataArray>();
   for(const std::shared_ptr<IDataArray>& array : arrays)
   {
@@ -148,57 +146,57 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const std::
     switch(dataType)
     {
     case nx::core::DataType::int8: {
-      Int8Array& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::uint8: {
-      UInt8Array& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::int16: {
-      Int16Array& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::uint16: {
-      UInt16Array& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::int32: {
-      Int32Array& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::uint32: {
-      UInt32Array& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::int64: {
-      Int64Array& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::uint64: {
-      UInt64Array& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::float32: {
-      Float32Array& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::float64: {
-      Float64Array& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
       break;
     }
     case nx::core::DataType::boolean: {
-      BoolArray& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
+      auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
       dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
       break;
     }
@@ -410,10 +408,10 @@ IFilter::UniquePointer ReadCSVFileFilter::clone() const
 IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-  ReadCSVData readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
-  bool useExistingAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  DataPath selectedAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
-  DataPath createdDataAM = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
+  auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
+  auto useExistingAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
+  auto selectedAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
+  auto createdDataAM = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
   ReadCSVData::HeaderMode headerMode = readCSVData.headerMode;
@@ -560,7 +558,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     if(StringUtilities::contains(headerName, '&') || StringUtilities::contains(headerName, ':') || StringUtilities::contains(headerName, '/') || StringUtilities::contains(headerName, '\\'))
     {
       return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::ILLEGAL_NAMES),
-                                             fmt::format("The header name \"{}\" contains a character that will cause problems. Do Not use '&',':', '/' or '\\' in the header names.", headerName))};
+                                             fmt::format(R"(The header name "{}" contains a character that will cause problems. Do Not use '&',':', '/' or '\' in the header names.)", headerName))};
     }
 
     for(int j = 0; j < headers.size(); j++)
@@ -577,7 +575,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
   // Check that we have a valid tuple count
   usize totalImportedLines = totalLines - readCSVData.startImportRow + 1;
-  usize tupleTotal = std::accumulate(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), static_cast<usize>(1), std::multiplies<usize>());
+  usize tupleTotal = std::accumulate(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
   if(tupleTotal == 0)
   {
     std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
@@ -619,7 +617,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](usize d) { return d; });
   if(useExistingAM)
   {
-    const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
+    const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
     tupleDims = am.getShape();
 
     auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
@@ -652,10 +650,10 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
-  ReadCSVData readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
-  bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
-  DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
+  auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
+  auto useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
+  auto selectedDataGroup = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
+  auto createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
   StringVector headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, readCSVData.delimiters, readCSVData.consecutiveDelimiters);

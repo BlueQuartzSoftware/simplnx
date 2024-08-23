@@ -16,7 +16,7 @@ namespace nx::core
 {
 namespace
 {
-bool validNeighbor(const SizeVec3& dims, int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
+bool validNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
   int64 modX = x + neighborhood[3 * index + 0];
   int64 modY = y + neighborhood[3 * index + 1];
@@ -84,7 +84,6 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
                                                                         const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
-  auto numberOfEmptyNeighbors = args.value<uint64>(k_MinEmptyNeighbors_Key);
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
   auto hullVertexGeomPath = args.value<DataPath>(k_HullVertexGeomPath_Key);
 
@@ -94,15 +93,9 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-11001, ss}})};
   }
 
-  if(numberOfEmptyNeighbors < 0)
-  {
-    std::string ss = fmt::format("Minimum number of empty neighbors must be positive");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-11001, ss}})};
-  }
-
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
 
-  int64 numVertices = vertexGeom->getNumberOfVertices();
+  usize numVertices = vertexGeom->getNumberOfVertices();
   auto action = std::make_unique<CreateVertexGeometryAction>(hullVertexGeomPath, numVertices, INodeGeometry0D::k_VertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
 
   OutputActions actions;
@@ -129,8 +122,8 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
   auto* samplingGrid = ImageGeom::Create(temp, "Image Geometry");
   samplingGrid->setSpacing(gridResolution[0], gridResolution[1], gridResolution[2]);
 
-  int64 numVerts = source->getNumberOfVertices();
-  auto* vertex = source->getVertices();
+  usize numVerts = source->getNumberOfVertices();
+  auto& vertex = source->getVertices()->getDataStoreRef();
 
   std::vector<float32> meshMaxExtents;
   std::vector<float32> meshMinExtents;
@@ -143,29 +136,29 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
 
   for(int64 i = 0; i < numVerts; i++)
   {
-    if((*vertex)[3 * i] > meshMaxExtents[0])
+    if(vertex[3 * i] > meshMaxExtents[0])
     {
-      meshMaxExtents[0] = (*vertex)[3 * i];
+      meshMaxExtents[0] = vertex[3 * i];
     }
-    if((*vertex)[3 * i + 1] > meshMaxExtents[1])
+    if(vertex[3 * i + 1] > meshMaxExtents[1])
     {
-      meshMaxExtents[1] = (*vertex)[3 * i + 1];
+      meshMaxExtents[1] = vertex[3 * i + 1];
     }
-    if((*vertex)[3 * i + 2] > meshMaxExtents[2])
+    if(vertex[3 * i + 2] > meshMaxExtents[2])
     {
-      meshMaxExtents[2] = (*vertex)[3 * i + 2];
+      meshMaxExtents[2] = vertex[3 * i + 2];
     }
-    if((*vertex)[3 * i] < meshMinExtents[0])
+    if(vertex[3 * i] < meshMinExtents[0])
     {
-      meshMinExtents[0] = (*vertex)[3 * i];
+      meshMinExtents[0] = vertex[3 * i];
     }
-    if((*vertex)[3 * i + 1] < meshMinExtents[1])
+    if(vertex[3 * i + 1] < meshMinExtents[1])
     {
-      meshMinExtents[1] = (*vertex)[3 * i + 1];
+      meshMinExtents[1] = vertex[3 * i + 1];
     }
-    if((*vertex)[3 * i + 2] < meshMinExtents[2])
+    if(vertex[3 * i + 2] < meshMinExtents[2])
     {
-      meshMinExtents[2] = (*vertex)[3 * i + 2];
+      meshMinExtents[2] = vertex[3 * i + 2];
     }
   }
 
@@ -186,9 +179,9 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
   bboxMax[1] = static_cast<int64>(std::floor(meshMaxExtents[1] * inverseResolution[1]));
   bboxMax[2] = static_cast<int64>(std::floor(meshMaxExtents[2] * inverseResolution[2]));
 
-  usize dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
-  usize dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
-  usize dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
+  auto dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
+  auto dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
+  auto dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
   SizeVec3 dims(std::vector<usize>{dims1, dims2, dims3});
   samplingGrid->setDimensions(dims);
 
@@ -201,9 +194,9 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
 
   for(int64 v = 0; v < numVerts; v++)
   {
-    int64 i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0]) - static_cast<float>(bboxMin[0]));
-    int64 j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1]) - static_cast<float>(bboxMin[1]));
-    int64 k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2]) - static_cast<float>(bboxMin[2]));
+    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0]) - static_cast<float>(bboxMin[0]));
+    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1]) - static_cast<float>(bboxMin[1]));
+    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2]) - static_cast<float>(bboxMin[2]));
     int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
     vertsInVoxels[index].push_back(v);
 

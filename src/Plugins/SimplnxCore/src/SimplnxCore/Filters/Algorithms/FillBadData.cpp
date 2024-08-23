@@ -5,74 +5,45 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
 
 namespace
 {
+template <typename T>
+void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)
+{
+  usize start = 0;
+  usize stop = outputDataStore.getNumberOfTuples();
+  const usize numComponents = outputDataStore.getNumberOfComponents();
+  for(usize tupleIndex = start; tupleIndex < stop; tupleIndex++)
+  {
+    const int32 featureName = featureIds[tupleIndex];
+    const int32 neighbor = neighbors[tupleIndex];
+    if(neighbor == tupleIndex)
+    {
+      continue;
+    }
+
+    if(featureName < 0 && neighbor != -1 && featureIds[static_cast<size_t>(neighbor)] > 0)
+    {
+      for(usize i = 0; i < numComponents; i++)
+      {
+        auto value = outputDataStore[neighbor * numComponents + i];
+        outputDataStore[tupleIndex * numComponents + i] = value;
+      }
+    }
+  }
+}
 
 struct FillBadDataUpdateTuplesFunctor
 {
   template <typename T>
-  void operator()(const Int32Array& featureIds, IDataArray& outputIDataArray, const std::vector<int32>& neighbors)
+  void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int32>& neighbors)
   {
-    using DataArrayType = DataArray<T>;
-
-    DataArrayType outputArray = dynamic_cast<DataArrayType&>(outputIDataArray);
-    size_t start = 0;
-    size_t stop = outputArray.getNumberOfTuples();
-    for(size_t tupleIndex = start; tupleIndex < stop; tupleIndex++)
-    {
-      const int32 featureName = featureIds[tupleIndex];
-      const int32 neighbor = neighbors[tupleIndex];
-      if(featureName < 0 && neighbor != -1 && featureIds[static_cast<size_t>(neighbor)] > 0)
-      {
-        outputArray.copyTuple(neighbor, tupleIndex);
-      }
-    }
+    auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
   }
-};
-
-template <typename T>
-class FillBadDataUpdateTuples
-{
-public:
-  FillBadDataUpdateTuples(const Int32Array& featureIds, DataArray<T>& outputArray, const std::vector<int32>& neighbors)
-  : m_FeatureIds(featureIds)
-  , m_OutputArray(outputArray)
-  , m_Neighbors(neighbors)
-  {
-  }
-  ~FillBadDataUpdateTuples() = default;
-
-  FillBadDataUpdateTuples(const FillBadDataUpdateTuples&) = default;           // Copy Constructor Not Implemented
-  FillBadDataUpdateTuples(FillBadDataUpdateTuples&&) = delete;                 // Move Constructor Not Implemented
-  FillBadDataUpdateTuples& operator=(const FillBadDataUpdateTuples&) = delete; // Copy Assignment Not Implemented
-  FillBadDataUpdateTuples& operator=(FillBadDataUpdateTuples&&) = delete;      // Move Assignment Not Implemented
-
-  void convert(size_t start, size_t stop) const
-  {
-    for(size_t tupleIndex = start; tupleIndex < stop; tupleIndex++)
-    {
-      const int32 featureName = m_FeatureIds[tupleIndex];
-      const int32 neighbor = m_Neighbors[tupleIndex];
-      if(featureName < 0 && neighbor != -1 && m_FeatureIds[static_cast<size_t>(neighbor)] > 0)
-      {
-        m_OutputArray.copyTuple(neighbor, tupleIndex);
-      }
-    }
-  }
-
-  void operator()() const
-  {
-    convert(0, m_OutputArray.getNumberOfTuples());
-  }
-
-private:
-  const Int32Array& m_FeatureIds;
-  DataArray<T>& m_OutputArray;
-  const std::vector<int32>& m_Neighbors;
 };
 } // namespace
 
@@ -97,12 +68,12 @@ const std::atomic_bool& FillBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FillBadData::operator()()
 {
-  auto& m_FeatureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->featureIdsArrayPath);
-  const size_t totalPoints = m_FeatureIds.getNumberOfTuples();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
+  const size_t totalPoints = featureIdsStore.getNumberOfTuples();
 
-  std::vector<int32> m_Neighbors(totalPoints, -1);
+  std::vector<int32> neighbors(totalPoints, -1);
 
-  std::vector<bool> m_AlreadyChecked(totalPoints, false);
+  std::vector<bool> alreadyChecked(totalPoints, false);
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
 
@@ -139,7 +110,7 @@ Result<> FillBadData::operator()()
 
   for(size_t i = 0; i < totalPoints; i++)
   {
-    int32 featureName = m_FeatureIds[i];
+    int32 featureName = featureIdsStore[i];
     if(featureName > numFeatures)
     {
       numFeatures = featureName;
@@ -162,16 +133,16 @@ Result<> FillBadData::operator()()
 
   for(size_t iter = 0; iter < totalPoints; iter++)
   {
-    m_AlreadyChecked[iter] = false;
-    if(m_FeatureIds[iter] != 0)
+    alreadyChecked[iter] = false;
+    if(featureIdsStore[iter] != 0)
     {
-      m_AlreadyChecked[iter] = true;
+      alreadyChecked[iter] = true;
     }
   }
 
   for(size_t i = 0; i < totalPoints; i++)
   {
-    if(!m_AlreadyChecked[i] && m_FeatureIds[i] == 0)
+    if(!alreadyChecked[i] && featureIdsStore[i] == 0)
     {
       currentVisitedList.push_back(static_cast<int64_t>(i));
       count = 0;
@@ -208,10 +179,10 @@ Result<> FillBadData::operator()()
           {
             continue;
           }
-          if(m_FeatureIds[neighbor] == 0 && !m_AlreadyChecked[neighbor])
+          if(featureIdsStore[neighbor] == 0 && !alreadyChecked[neighbor])
           {
             currentVisitedList.push_back(neighbor);
-            m_AlreadyChecked[neighbor] = true;
+            alreadyChecked[neighbor] = true;
           }
         }
         count++;
@@ -220,7 +191,7 @@ Result<> FillBadData::operator()()
       {
         for(const auto& currentIndex : currentVisitedList)
         {
-          m_FeatureIds[currentIndex] = 0;
+          featureIdsStore[currentIndex] = 0;
           if(m_InputValues->storeAsNewPhase)
           {
             (*cellPhasesPtr)[currentIndex] = static_cast<int32>(maxPhase) + 1;
@@ -231,7 +202,7 @@ Result<> FillBadData::operator()()
       {
         for(const auto& currentIndex : currentVisitedList)
         {
-          m_FeatureIds[currentIndex] = -1;
+          featureIdsStore[currentIndex] = -1;
         }
       }
       currentVisitedList.clear();
@@ -245,15 +216,15 @@ Result<> FillBadData::operator()()
     count = 0;
     for(size_t i = 0; i < totalPoints; i++)
     {
-      int32 featureName = m_FeatureIds[i];
+      int32 featureName = featureIdsStore[i];
       if(featureName < 0)
       {
         count++;
         // int32 current = 0;
         int32 most = 0;
-        float32 xIndex = static_cast<float>(i % dims[0]);
-        float32 yIndex = static_cast<float>((i / dims[0]) % dims[1]);
-        float32 zIndex = static_cast<float>(i / (dims[0] * dims[1]));
+        auto xIndex = static_cast<float32>(i % dims[0]);
+        auto yIndex = static_cast<float32>((i / dims[0]) % dims[1]);
+        auto zIndex = static_cast<float32>(i / (dims[0] * dims[1]));
         for(int32_t j = 0; j < 6; j++)
         {
           auto neighborPoint = static_cast<int64_t>(i + neighborPoints[j]);
@@ -282,7 +253,7 @@ Result<> FillBadData::operator()()
             continue;
           }
 
-          int32 feature = m_FeatureIds[neighborPoint];
+          int32 feature = featureIdsStore[neighborPoint];
           if(feature > 0)
           {
             featureNumber[feature]++;
@@ -290,7 +261,7 @@ Result<> FillBadData::operator()()
             if(current > most)
             {
               most = current;
-              m_Neighbors[i] = static_cast<int32>(neighborPoint);
+              neighbors[i] = static_cast<int32>(neighborPoint);
             }
           }
         }
@@ -322,7 +293,7 @@ Result<> FillBadData::operator()()
             continue;
           }
 
-          int32 feature = m_FeatureIds[neighborPoint];
+          int32 feature = featureIdsStore[neighborPoint];
           if(feature > 0)
           {
             featureNumber[feature] = 0;
@@ -344,14 +315,13 @@ Result<> FillBadData::operator()()
       {
         continue;
       }
-      auto& oldCellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-      const DataType dataType = oldCellArray.getDataType();
+      auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
 
-      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, dataType, m_FeatureIds, oldCellArray, m_Neighbors);
+      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
     }
 
     // We need to update the FeatureIds array _LAST_ since the above operations depend on that values in that array
-    FillBadDataUpdateTuples<int32>(m_FeatureIds, dynamic_cast<Int32Array&>(m_FeatureIds), m_Neighbors)();
+    FillBadDataUpdateTuples<int32>(featureIdsStore, featureIdsStore, neighbors);
   }
   return {};
 }

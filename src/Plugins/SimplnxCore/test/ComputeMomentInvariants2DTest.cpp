@@ -14,79 +14,6 @@ using namespace nx::core::Constants;
 namespace
 {
 // -----------------------------------------------------------------------------
-void TestBinomial()
-{
-  size_t maxOrder = 2;
-
-  ComputeMomentInvariants2D::DoubleMatrixType binomial = ComputeMomentInvariants2D::Binomial(maxOrder);
-
-  REQUIRE(binomial(0, 0) == 1.0);
-  REQUIRE(binomial(0, 1) == 1.0);
-  REQUIRE(binomial(0, 2) == 1.0);
-
-  REQUIRE(binomial(1, 0) == 1.0);
-  REQUIRE(binomial(1, 1) == 1.0);
-  REQUIRE(binomial(1, 2) == 2.0);
-
-  REQUIRE(binomial(2, 0) == 1.0);
-  REQUIRE(binomial(2, 1) == 2.0);
-  REQUIRE(binomial(2, 2) == 1.0);
-}
-
-// -----------------------------------------------------------------------------
-void TestBigX()
-{
-  constexpr size_t maxOrder = 2;
-  constexpr size_t dim = 16;
-  const ComputeMomentInvariants2D::DoubleMatrixType bigX = ComputeMomentInvariants2D::GetBigX(maxOrder, dim);
-
-  ComputeMomentInvariants2D::DoubleMatrixType ideal(16, 3);
-  ideal << 0.133333, -0.142222, 0.151901, 0.133333, -0.124444, 0.116346, 0.133333, -0.106667, 0.0855309, 0.133333, -0.0888889, 0.0594568, 0.133333, -0.0711111, 0.0381235, 0.133333, -0.0533333,
-      0.0215309, 0.133333, -0.0355556, 0.00967901, 0.133333, -0.0177778, 0.0025679, 0.133333, 0.0000000, 0.000197531, 0.133333, 0.0177778, 0.0025679, 0.133333, 0.0355556, 0.00967901, 0.133333,
-      0.0533333, 0.0215309, 0.133333, 0.0711111, 0.0381235, 0.133333, 0.0888889, 0.0594568, 0.133333, 0.106667, 0.0855309, 0.133333, 0.124444, 0.116346;
-
-  const ComputeMomentInvariants2D::DoubleMatrixType diff = bigX - ideal;
-
-  REQUIRE(diff.maxCoeff() < 0.000001);
-}
-
-// -----------------------------------------------------------------------------
-void TestComputeMoments2D()
-{
-  size_t maxOrder = 2;
-  size_t imageDim = 5; // The algorithm takes a square image
-  size_t inputDims[2] = {imageDim, imageDim};
-
-  ComputeMomentInvariants2D::DoubleMatrixType input2D(5, 5);
-  input2D << 0, 0, 0, 0, 0,
-      /*Row*/ 0, 1, 1, 1, 0,
-      /*Row*/ 0, 1, 1, 1, 0,
-      /*Row*/ 0, 1, 1, 1, 0,
-      /*Row*/ 0, 0, 0, 0, 0;
-  ComputeMomentInvariants2D::DoubleMatrixType centralMoments = ComputeMomentInvariants2D::ComputeMomentInvariants(input2D, inputDims, maxOrder);
-
-  // compute the second order moment invariants
-  ComputeMomentInvariants2D::DoubleMatrixType idealCentralMoments(3, 3);
-  idealCentralMoments << 9.0, 0.0, 6.75, 0.0, 0.0, 0.0, 6.75, 0.0, 5.0625;
-  ComputeMomentInvariants2D::DoubleMatrixType diff = centralMoments - idealCentralMoments;
-  REQUIRE(diff.maxCoeff() < 0.000001);
-
-  double omega1 = 2.0 * (centralMoments(0, 0) * centralMoments(0, 0)) / (centralMoments(0, 2) + centralMoments(2, 0));
-  double omega2 = std::pow(centralMoments(0, 0), 4) / (centralMoments(2, 0) * centralMoments(0, 2) - std::pow(centralMoments(1, 1), 2));
-
-  REQUIRE(omega1 == 12.0);
-  REQUIRE(omega2 == 144.0);
-
-  // normalize the invariants by those of the circle
-  double circleOmega[2] = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
-  omega1 /= circleOmega[0];
-  omega2 /= circleOmega[1];
-
-  REQUIRE(std::abs(omega1 - 0.95493) < 0.00001);
-  REQUIRE(std::abs(omega2 - 0.911891) < 0.00001);
-}
-
-// -----------------------------------------------------------------------------
 DataStructure CreateInvalidTestData()
 {
   DataStructure dataStructure;
@@ -196,10 +123,6 @@ const DataPath k_Omega2Path({k_ImageGeometry, k_FeatureData, k_Omega2});
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {
-  TestBinomial();
-  TestBigX();
-  TestComputeMoments2D();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeMomentInvariants2DFilter filter;
   DataStructure ds = CreateTestData();

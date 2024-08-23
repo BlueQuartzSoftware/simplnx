@@ -8,7 +8,6 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <cstdio>
@@ -21,7 +20,7 @@ namespace
 class StlFileSentinel
 {
 public:
-  StlFileSentinel(FILE* file)
+  explicit StlFileSentinel(FILE* file)
   : m_File(file)
   {
   }
@@ -42,8 +41,8 @@ bool IsMagicsFile(const std::string& stlHeaderStr)
 {
   // Look for the tell-tale signs that the file was written from Magics Materialise
   // If the file was written by Magics as a "Color STL" file then the 2byte int
-  // values between each triangle will be NON Zero which will screw up the reading.
-  // These NON Zero value do NOT indicate a length but is some sort of color
+  // values between each triangle will be NON-Zero which will screw up the reading.
+  // These NON-Zero value do NOT indicate a length but is some sort of color
   // value encoded into the file. Instead of being normal like everyone else and
   // using the STL spec they went off and did their own thing.
 
@@ -59,7 +58,7 @@ bool IsMagicsFile(const std::string& stlHeaderStr)
 bool IsVxElementsFile(const std::string& stlHeader)
 {
   // Look for the tell-tale signs that the file was written from VxElements Creaform
-  // Creaform STL files do not honor the last 2 bytes of the 50 byte Triangle struct
+  // STL files do not honor the last 2 bytes of the 50 byte Triangle struct
   // as specified in the STL Binary File specification. If we detect this, then we
   // ignore the 2 bytes are anything meaningful.
   return nx::core::StringUtilities::contains(stlHeader, "VXelements");
@@ -105,8 +104,8 @@ Result<> ReadStlFile::operator()()
 
   // Look for the tell-tale signs that the file was written from Magics Materialise
   // If the file was written by Magics as a "Color STL" file then the 2byte int
-  // values between each triangle will be NON Zero which will screw up the reading.
-  // This NON Zero value does NOT indicate a length but is some sort of color
+  // values between each triangle will be NON-Zero which will screw up the reading.
+  // This NON-Zero value does NOT indicate a length but is some sort of color
   // value encoded into the file. Instead of being normal like everyone else and
   // using the STL spec they went off and did their own thing.
   std::string stlHeaderStr(stlHeader.data(), nx::core::StlConstants::k_STL_HEADER_LENGTH);
@@ -119,18 +118,18 @@ Result<> ReadStlFile::operator()()
     return MakeErrorResult(nx::core::StlConstants::k_TriangleCountParseError, "Error reading number of triangles from file. This is bad.");
   }
 
-  TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
 
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
 
-  using SharedTriList = IGeometry::MeshIndexArrayType;
-  using SharedVertList = IGeometry::SharedVertexList;
+  using SharedTriList = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
+  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-  SharedTriList& triangles = *(triangleGeom.getFaces());
-  SharedVertList& nodes = *(triangleGeom.getVertices());
+  SharedTriList& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  SharedVertList& nodes = triangleGeom.getVertices()->getDataStoreRef();
 
-  Float64Array& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_FaceNormalsDataPath);
+  auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_FaceNormalsDataPath)->getDataStoreRef();
 
   // Read the triangles
   constexpr size_t k_StlElementCount = 12;
@@ -184,7 +183,7 @@ Result<> ReadStlFile::operator()()
       std::string msg = fmt::format("Error reading Triangle '{}'. Object Count was {} and should have been {}", t, objsRead, k_StlElementCount);
       return MakeErrorResult(nx::core::StlConstants::k_TriangleParseError, msg);
     }
-    // Read the Uint16 value that is supposed to represent the number of bytes following that are file/vendor specific meta data
+    // Read the Uint16 value that is supposed to represent the number of bytes following that are file/vendor specific metadata
     // Lots of writers/vendors do NOT set this properly which can cause problems.
     objsRead = std::fread(&attr, sizeof(uint16_t), 1, f); // Read the Triangle Attribute Data length
     if(objsRead != 1)
@@ -196,13 +195,13 @@ Result<> ReadStlFile::operator()()
     // we detected known Vendors that do not write proper STL Files.
     if(attr > 0 && !ignoreMetaSizeValue)
     {
-      std::ignore = std::fseek(f, static_cast<size_t>(attr), SEEK_CUR); // Skip past the Triangle Attribute data since we don't know how to read it anyways
+      std::ignore = std::fseek(f, static_cast<size_t>(attr), SEEK_CUR); // Skip past the Triangle Attribute data since we don't know how to read it anyway
     }
 
     // Write the data into the actual geometry
-    faceNormals[3 * t + 0] = static_cast<double>(fileVert[0]);
-    faceNormals[3 * t + 1] = static_cast<double>(fileVert[1]);
-    faceNormals[3 * t + 2] = static_cast<double>(fileVert[2]);
+    faceNormalsStore[3 * t + 0] = static_cast<double>(fileVert[0]);
+    faceNormalsStore[3 * t + 1] = static_cast<double>(fileVert[1]);
+    faceNormalsStore[3 * t + 2] = static_cast<double>(fileVert[2]);
     nodes[3 * (3 * t + 0) + 0] = fileVert[3];
     nodes[3 * (3 * t + 0) + 1] = fileVert[4];
     nodes[3 * (3 * t + 0) + 2] = fileVert[5];

@@ -7,6 +7,35 @@
 
 using namespace nx::core;
 
+namespace
+{
+// -----------------------------------------------------------------------------
+char RayIntersectsPlane(const float32 d, const std::array<float32, 3>& q, const std::array<float32, 3>& r, std::array<float32, 3>& p)
+{
+  const float64 rqDelZ = r[2] - q[2];
+  const float64 dqDelZ = d - q[2];
+  const float64 t = dqDelZ / rqDelZ;
+  for(int i = 0; i < 3; i++)
+  {
+    p[i] = q[i] + (t * (r[i] - q[i]));
+  }
+  if(t > 0.0 && t < 1.0)
+  {
+    return '1';
+  }
+  if(t == 0.0)
+  {
+    return 'q';
+  }
+  if(t == 1.0)
+  {
+    return 'r';
+  }
+
+  return '0';
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 SliceTriangleGeometry::SliceTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              SliceTriangleGeometryInputValues* inputValues)
@@ -39,8 +68,8 @@ Result<> SliceTriangleGeometry::operator()()
     return MakeErrorResult(-62101, "Error retrieving the shared edge list");
   }
 
-  INodeGeometry2D::SharedFaceList& tris = triangle.getFacesRef();
-  INodeGeometry0D::SharedVertexList& triVerts = triangle.getVerticesRef();
+  TriStore& tris = triangle.getFaces()->getDataStoreRef();
+  VertsStore& triVerts = triangle.getVertices()->getDataStoreRef();
   usize numTris = triangle.getNumberOfFaces();
   usize numTriVerts = triangle.getNumberOfVertices();
 
@@ -65,23 +94,23 @@ Result<> SliceTriangleGeometry::operator()()
   std::vector<int32> regionIds;
 
   // Get an object reference to the pointer
-  const auto* triRegionId = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath);
+  const auto& triRegionId = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath)->getDataStoreRef();
 
   int32 edgeCounter = 0;
   for(usize i = 0; i < numTris; i++)
   {
     int32 regionId = 0;
-    // get region Id of this triangle (if they are available)
+    // get regionId of this triangle (if they are available)
     if(m_InputValues->HaveRegionIds)
     {
-      regionId = (*triRegionId)[i];
+      regionId = triRegionId[i];
     }
     // determine which slices would hit the triangle
     auto minTriDim = std::numeric_limits<float32>::max();
     float32 maxTriDim = -minTriDim;
     for(usize j = 0; j < 3; j++)
     {
-      int64 vert = tris[3 * i + j];
+      TriStore::value_type vert = tris[3 * i + j];
       if(minTriDim > triVerts[3 * vert + 2])
       {
         minTriDim = triVerts[3 * vert + 2];
@@ -140,11 +169,11 @@ Result<> SliceTriangleGeometry::operator()()
       r[2] = triVerts[3 * tris[3 * i + 1] + 2];
       if(q[2] > r[2])
       {
-        val = rayIntersectsPlane(d, r, q, p);
+        val = RayIntersectsPlane(d, r, q, p);
       }
       else
       {
-        val = rayIntersectsPlane(d, q, r, p);
+        val = RayIntersectsPlane(d, q, r, p);
       }
       if(val == '1')
       {
@@ -165,11 +194,11 @@ Result<> SliceTriangleGeometry::operator()()
       r[2] = triVerts[3 * tris[3 * i + 2] + 2];
       if(q[2] > r[2])
       {
-        val = rayIntersectsPlane(d, r, q, p);
+        val = RayIntersectsPlane(d, r, q, p);
       }
       else
       {
-        val = rayIntersectsPlane(d, q, r, p);
+        val = RayIntersectsPlane(d, q, r, p);
       }
       if(val == '1')
       {
@@ -190,11 +219,11 @@ Result<> SliceTriangleGeometry::operator()()
       q[2] = triVerts[3 * tris[3 * i + 1] + 2];
       if(q[2] > r[2])
       {
-        val = rayIntersectsPlane(d, r, q, p);
+        val = RayIntersectsPlane(d, r, q, p);
       }
       else
       {
-        val = rayIntersectsPlane(d, q, r, p);
+        val = RayIntersectsPlane(d, q, r, p);
       }
       if(val == '1')
       {
@@ -314,33 +343,7 @@ Result<> SliceTriangleGeometry::operator()()
 }
 
 // -----------------------------------------------------------------------------
-char SliceTriangleGeometry::rayIntersectsPlane(const float d, const std::array<float32, 3>& q, const std::array<float32, 3>& r, std::array<float32, 3>& p)
-{
-  const float64 rqDelZ = r[2] - q[2];
-  const float64 dqDelZ = d - q[2];
-  const float64 t = dqDelZ / rqDelZ;
-  for(int i = 0; i < 3; i++)
-  {
-    p[i] = q[i] + (t * (r[i] - q[i]));
-  }
-  if(t > 0.0 && t < 1.0)
-  {
-    return '1';
-  }
-  if(t == 0.0)
-  {
-    return 'q';
-  }
-  if(t == 1.0)
-  {
-    return 'r';
-  }
-
-  return '0';
-}
-
-// -----------------------------------------------------------------------------
-usize SliceTriangleGeometry::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, INodeGeometry2D::SharedFaceList& tris, INodeGeometry0D::SharedVertexList& triVerts)
+usize SliceTriangleGeometry::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, TriStore& tris, VertsStore& triVerts)
 {
   for(usize i = 0; i < numTris; i++)
   {

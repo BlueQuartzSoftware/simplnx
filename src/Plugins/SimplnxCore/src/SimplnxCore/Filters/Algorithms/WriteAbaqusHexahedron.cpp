@@ -187,7 +187,7 @@ int32 writeElems(WriteAbaqusHexahedron* filter, const std::string& fileName, con
   return err;
 }
 
-int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, size_t totalPoints, const Int32Array& featureIds, const std::atomic_bool& shouldCancel)
+int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
 {
   int32 err = 0;
   FILE* f = fopen(fileName.c_str(), "wb");
@@ -217,7 +217,7 @@ int32 writeElset(WriteAbaqusHexahedron* filter, const std::string& fileName, siz
     usize elementPerLine = 0;
     fprintf(f, "\n*Elset, elset=Grain%d_set\n", voxelId);
 
-    for(usize i = 0; i < featureIds.size(); i++)
+    for(usize i = 0; i < featureIds.getSize(); i++)
     {
       if(featureIds[i] == voxelId)
       {
@@ -290,7 +290,7 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
   return err;
 }
 
-int32 writeSects(const std::string& file, const Int32Array& featureIds, int32 hourglassStiffness)
+int32 writeSects(const std::string& file, const Int32AbstractDataStore& featureIds, int32 hourglassStiffness)
 {
   int32 err = 0;
   FILE* f = fopen(file.c_str(), "wb");
@@ -361,7 +361,7 @@ void WriteAbaqusHexahedron::sendMessage(const std::string& message)
 Result<> WriteAbaqusHexahedron::operator()()
 {
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   Vec3<usize> cDims = imageGeom.getDimensions();
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   Vec3<float32> origin = imageGeom.getOrigin();

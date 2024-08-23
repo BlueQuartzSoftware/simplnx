@@ -32,8 +32,11 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 
 class SIMPLNXCORE_EXPORT QuickSurfaceMesh
 {
-
 public:
+  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
+  using MeshIndexType = IGeometry::MeshIndexType;
+
   QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~QuickSurfaceMesh() noexcept;
 
@@ -42,49 +45,7 @@ public:
   QuickSurfaceMesh& operator=(const QuickSurfaceMesh&) = delete;
   QuickSurfaceMesh& operator=(QuickSurfaceMesh&&) noexcept = delete;
 
-  using MeshIndexType = IGeometry::MeshIndexType;
-
   Result<> operator()();
-
-  /**
-   *
-   * @param grid
-   * @param x
-   * @param y
-   * @param z
-   * @param verts
-   * @param nodeIndex
-   */
-  void getGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z, IGeometry::SharedVertexList& verts, IGeometry::MeshIndexType nodeIndex);
-
-  /**
-   *
-   * @param featureIds
-   * @param v1
-   * @param v2
-   * @param v3
-   * @param v4
-   * @param v5
-   * @param v6
-   */
-  void flipProblemVoxelCase1(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const;
-
-  /**
-   * @brief flipProblemVoxelCase2
-   * @param v1
-   * @param v2
-   * @param v3
-   * @param v4
-   */
-  void flipProblemVoxelCase2(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const;
-
-  /**
-   * @brief flipProblemVoxelCase3
-   * @param v1
-   * @param v2
-   * @param v3
-   */
-  void flipProblemVoxelCase3(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const;
 
   /**
    * @brief
@@ -108,11 +69,6 @@ public:
   void createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount);
 
   /**
-   * @brief
-   */
-  void copyCellDataToTriangleFaceArray();
-
-  /**
    * @brief generateTripleLines
    */
   void generateTripleLines();
@@ -124,5 +80,4 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
   bool m_GenerateTripleLines = false;
 };
-
 } // namespace nx::core

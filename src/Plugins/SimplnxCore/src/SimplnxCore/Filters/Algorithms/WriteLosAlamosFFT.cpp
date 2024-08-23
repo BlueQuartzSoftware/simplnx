@@ -56,9 +56,9 @@ Result<> WriteLosAlamosFFT::operator()()
 
   SizeVec3 dims = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath)->getDimensions();
 
-  auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& cellEulerAngles = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath)->getDataStoreRef();
+  auto& cellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   float phi1 = 0.0f, phi = 0.0f, phi2 = 0.0f;
 
@@ -69,9 +69,9 @@ Result<> WriteLosAlamosFFT::operator()()
       for(usize x = 0; x < dims[0]; ++x)
       {
         usize index = (z * dims[0] * dims[1]) + (dims[0] * y) + x;
-        phi1 = cellEulerAngles[index * 3] * 180.0 * Constants::k_1OverPiD;
-        phi = cellEulerAngles[index * 3 + 1] * 180.0 * Constants::k_1OverPiD;
-        phi2 = cellEulerAngles[index * 3 + 2] * 180.0 * Constants::k_1OverPiD;
+        phi1 = cellEulerAngles[index * 3] * 180.0f * Constants::k_1OverPiF;
+        phi = cellEulerAngles[index * 3 + 1] * 180.0f * Constants::k_1OverPiF;
+        phi2 = cellEulerAngles[index * 3 + 2] * 180.0f * Constants::k_1OverPiF;
         file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<::ull>(x + 1), static_cast<::ull>(y + 1), static_cast<::ull>(z + 1), featureIds[index],
                             cellPhases[index]);
       }

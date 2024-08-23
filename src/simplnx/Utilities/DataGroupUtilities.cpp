@@ -5,11 +5,9 @@
 
 namespace nx::core
 {
-bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount,
-                           const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
+                           size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  bool acceptableMatrix = true;
-
   // Get the DataGroup that holds all the feature Data
   const auto* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
 
@@ -36,7 +34,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
     }
   }
   size_t totalTuples = currentFeatureCount;
-  if(activeObjects.size() == totalTuples && acceptableMatrix)
+  if(activeObjects.size() == totalTuples)
   {
     size_t goodCount = 1;
     std::vector<size_t> newNames(totalTuples, 0);
@@ -83,13 +81,12 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 
       // Loop over all the points and correct all the feature names
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
-      auto& featureIds = cellFeatureIds.getDataStoreRef();
       bool featureIdsChanged = false;
       for(size_t i = 0; i < totalPoints; i++)
       {
-        if(featureIds[i] >= 0 && featureIds[i] < newNames.size())
+        if(cellFeatureIds[i] >= 0 && cellFeatureIds[i] < newNames.size())
         {
-          featureIds[i] = static_cast<int32_t>(newNames[featureIds[i]]);
+          cellFeatureIds[i] = static_cast<int32_t>(newNames[cellFeatureIds[i]]);
           featureIdsChanged = true;
         }
         if(shouldCancel)

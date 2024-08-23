@@ -7,7 +7,6 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -75,7 +74,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoExportPathError, "Export file path not provided."}})};
+    return MakePreflightErrorResult(k_NoExportPathError, "Export file path not provided.");
   }
   return {};
 }
@@ -101,7 +100,7 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
     auto pipelinePtr = pipelineNode->getPrecedingPipeline();
     if(pipelinePtr == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFindPipelineError, "Failed to retrieve pipeline."}})};
+      return MakeErrorResult(k_FailedFindPipelineError, "Failed to retrieve pipeline.");
     }
 
     pipeline = *pipelinePtr;
@@ -136,7 +135,6 @@ namespace SIMPL
 {
 constexpr StringLiteral k_OutputFileKey = "OutputFile";
 constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
-constexpr StringLiteral k_WriteTimeSeriesKey = "WriteTimeSeries";
 } // namespace SIMPL
 } // namespace
 

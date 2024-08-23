@@ -245,7 +245,9 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   Result<> results = {};
   const usize numFeatures = featureArrayPtr->getNumberOfTuples();
 
-  for(const int32& featureId : featureIds)
+  auto& featureIdsStore = featureIds.getDataStoreRef();
+
+  for(const int32& featureId : featureIdsStore)
   {
     if(featureId < 0)
     {
@@ -352,6 +354,20 @@ void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCe
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 }
-} // namespace TransferGeometryElementData
 
+void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
+                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions)
+{
+  // Now loop over each array in selectedEdgeArrays and create the corresponding arrays
+  // in the destination geometry's attribute matrix
+  for(const auto& dataPath : selectedArrayPaths)
+  {
+    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    DataType dataType = srcArray.getDataType();
+    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+    DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
+  }
+}
+} // namespace TransferGeometryElementData
 } // namespace nx::core

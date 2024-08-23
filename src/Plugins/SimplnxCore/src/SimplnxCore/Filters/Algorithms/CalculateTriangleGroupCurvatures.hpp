@@ -65,16 +65,6 @@ public:
 
   using UniqueFaceIds_t = std::set<int64_t>;
 
-protected:
-  /**
-   * @brief extractPatchData Extracts out the needed data values from the global arrays
-   * @param triId The seed triangle Id
-   * @param triPatch The group of triangles being used
-   * @param data The data to extract from
-   * @return Shared pointer to the extracted data
-   */
-  std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data) const;
-
 private:
   FeatureFaceCurvature* m_Filter = nullptr;
   int64_t m_NRing;

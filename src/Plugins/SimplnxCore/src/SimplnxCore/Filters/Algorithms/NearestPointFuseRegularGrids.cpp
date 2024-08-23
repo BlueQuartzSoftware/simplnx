@@ -158,7 +158,6 @@ Result<> NearestPointFuseRegularGrids::operator()()
 {
   auto& refImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ReferenceGeometryPath);
   auto& sampleImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SamplingGeometryPath);
-  auto& refAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->ReferenceCellAttributeMatrixPath);
   auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SamplingCellAttributeMatrixPath);
   Vec3<float32> sampleRes = sampleImageGeom.getSpacing();
 
