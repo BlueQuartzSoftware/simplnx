@@ -1092,6 +1092,11 @@ Result<> ShiftDataX(K& dataArray, const std::vector<usize>& originalDestDims, co
     {
       usize srcOffset = (z * yDim * srcXDim) + (y * srcXDim);
       usize destOffset = ((z * yDim * destXDim) + (y * destXDim));
+      if(srcOffset == destOffset)
+      {
+        continue;
+      }
+
       auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, srcXDim);
       if(result.invalid())
       {
@@ -1121,7 +1126,12 @@ Result<> ShiftDataY(K& dataArray, const std::vector<usize>& originalDestDims, co
     {
       usize srcOffset = (z * srcYDim * xDim) + (y * xDim);
       usize destOffset = ((z * destYDim * xDim) + (y * xDim));
-      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, srcYDim);
+      if(srcOffset == destOffset)
+      {
+        continue;
+      }
+
+      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, xDim);
       if(result.invalid())
       {
         return result;

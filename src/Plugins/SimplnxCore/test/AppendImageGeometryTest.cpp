@@ -29,6 +29,9 @@ const DataPath k_CroppedBottomYPath({"CroppedBottomY"});
 const DataPath k_CroppedMiddleYPath({"CroppedMiddleY"});
 const DataPath k_CroppedTopYPath({"CroppedTopY"});
 const DataPath k_AppendedGeometryPath({"AppendedGeometry"});
+inline constexpr StringLiteral k_MirroredXExemplarDCName("MirroredXDataContainer");
+inline constexpr StringLiteral k_MirroredYExemplarDCName("MirroredYDataContainer");
+inline constexpr StringLiteral k_MirroredZExemplarDCName("MirroredZDataContainer");
 const DataPath k_InvalidTestGeometryPath1({"Image2dDataContainer"});
 const DataPath k_InvalidTestGeometryPath2({"Resampled_2D_ImageGeom"});
 const DataPath k_InvalidTestGeometryPath3({"Resampled_3D_ImageGeom"});
@@ -147,16 +150,18 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   StringArray::CreateWithValues(dataStructure, "StringArray", stringValueTop, croppedTopAM.getId());
 }
 
-void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt)
+void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt,
+                      bool mirror)
 {
   AppendImageGeometryFilter filter;
   Arguments args;
 
   args.insertOrAssign(AppendImageGeometryFilter::k_InputGeometries_Key, std::make_any<std::vector<DataPath>>(inputPaths));
   args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(destinationPath));
-  args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(appendDimension));
+  args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(appendDimension));
   args.insertOrAssign(AppendImageGeometryFilter::k_CheckResolution_Key, std::make_any<bool>(true));
   args.insertOrAssign(AppendImageGeometryFilter::k_SaveAsNewGeometry_Key, std::make_any<bool>(newGeometryPathOpt.has_value()));
+  args.insertOrAssign(AppendImageGeometryFilter::k_MirrorGeometry_Key, std::make_any<bool>(mirror));
 
   if(newGeometryPathOpt.has_value())
   {
@@ -188,18 +193,24 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  auto [dimensionStr, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, appendDimension] =
+  auto [dimensionStr, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, exemplarGeometryPath, appendDimension, mirror] =
       GENERATE(std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
-                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, 0),
+                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_DataContainer, 0, false),
                std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
-                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, 1),
+                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_DataContainer, 1, false),
                std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
-                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, 2));
+                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_DataContainer, 2, false),
+               std::make_tuple("X Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
+                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_MirroredXExemplarDCName, 0, true),
+               std::make_tuple("Y Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
+                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_MirroredYExemplarDCName, 1, true),
+               std::make_tuple("Z Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
+                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_MirroredZExemplarDCName, 2, true));
 
   SECTION(fmt::format("{}", dimensionStr))
   {
@@ -218,20 +229,20 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     DataPath appendedCellDataPath;
     SECTION("Append Geometry")
     {
-      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {});
+      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {}, mirror);
       appendedCellDataPath = bottomPath.createChildPath(k_CellData);
     }
 
     SECTION("New Geometry")
     {
-      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath);
+      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath, mirror);
       appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
     }
 
     const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
     REQUIRE(numAppendedArrays == 8);
 
-    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
+    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, exemplarGeometryPath);
   }
 }
 
@@ -257,15 +268,15 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
     args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
     SECTION("X Dimension")
     {
-      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(0));
     }
     SECTION("Y Dimension")
     {
-      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(1));
     }
     SECTION("Z Dimension")
     {
-      args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(2));
+      args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(2));
     }
   }
   SECTION("Mismatching Spacing")
@@ -292,15 +303,15 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
       args.insertOrAssign(AppendImageGeometryFilter::k_DestinationGeometry_Key, std::make_any<DataPath>(k_CroppedTopZPath));
       SECTION("X Dimension")
       {
-        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(0));
+        args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(0));
       }
       SECTION("Y Dimension")
       {
-        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(1));
+        args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(1));
       }
       SECTION("Z Dimension")
       {
-        args.insertOrAssign(AppendImageGeometryFilter::k_AppendDimension_Key, std::make_any<uint64>(2));
+        args.insertOrAssign(AppendImageGeometryFilter::k_Direction_Key, std::make_any<uint64>(2));
       }
     }
   }

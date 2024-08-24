@@ -22,7 +22,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Valid filter execution", "[Simp
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
                                                               "6_6_align_sections_misorientation");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
 
   const std::string kDataInputArchive2 = "align_sections.tar.gz";
   const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
@@ -65,7 +65,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Valid filter execution", "[Simp
 
 TEST_CASE("SimplnxCore::AlignSectionsListFilter: Invalid filter execution", "[SimplnxCore][AlignSectionsListFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 

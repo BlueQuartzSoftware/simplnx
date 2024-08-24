@@ -29,7 +29,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -56,7 +56,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -84,7 +84,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
