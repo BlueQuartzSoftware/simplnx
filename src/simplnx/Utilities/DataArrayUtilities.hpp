@@ -1081,23 +1081,23 @@ enum class Direction
 template <class K>
 Result<> ShiftDataX(K& dataArray, const std::vector<usize>& originalDestDims, const std::vector<usize>& newDestDims)
 {
-  auto zDim = static_cast<int64>(newDestDims[0]);
-  auto yDim = static_cast<int64>(newDestDims[1]);
-  auto destXDim = newDestDims[2];
-  auto srcXDim = originalDestDims[2];
+  auto shiftZDim = static_cast<int64>(newDestDims[0]);
+  auto shiftYDim = static_cast<int64>(newDestDims[1]);
+  auto shiftDestXDim = newDestDims[2];
+  auto shiftSrcXDim = originalDestDims[2];
 
-  for(int64 z = zDim - 1; z >= 0; --z)
+  for(int64 z = shiftZDim - 1; z >= 0; --z)
   {
-    for(int64 y = yDim - 1; y >= 0; --y)
+    for(int64 y = shiftYDim - 1; y >= 0; --y)
     {
-      usize srcOffset = (z * yDim * srcXDim) + (y * srcXDim);
-      usize destOffset = ((z * yDim * destXDim) + (y * destXDim));
+      usize srcOffset = (z * shiftYDim * shiftSrcXDim) + (y * shiftSrcXDim);
+      usize destOffset = ((z * shiftYDim * shiftDestXDim) + (y * shiftDestXDim));
       if(srcOffset == destOffset)
       {
         continue;
       }
 
-      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, srcXDim);
+      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, shiftSrcXDim);
       if(result.invalid())
       {
         return result;
@@ -1115,23 +1115,23 @@ Result<> ShiftDataX(K& dataArray, const std::vector<usize>& originalDestDims, co
 template <class K>
 Result<> ShiftDataY(K& dataArray, const std::vector<usize>& originalDestDims, const std::vector<usize>& newDestDims)
 {
-  auto zDim = static_cast<int64>(newDestDims[0]);
-  auto destYDim = newDestDims[1];
-  auto srcYDim = static_cast<int64>(originalDestDims[1]);
-  auto xDim = newDestDims[2];
+  auto shiftZDim = static_cast<int64>(newDestDims[0]);
+  auto shiftDestYDim = newDestDims[1];
+  auto shiftSrcYDim = static_cast<int64>(originalDestDims[1]);
+  auto shiftXDim = newDestDims[2];
 
-  for(int64 z = zDim - 1; z >= 0; --z)
+  for(int64 z = shiftZDim - 1; z >= 0; --z)
   {
-    for(int64 y = srcYDim - 1; y >= 0; --y)
+    for(int64 y = shiftSrcYDim - 1; y >= 0; --y)
     {
-      usize srcOffset = (z * srcYDim * xDim) + (y * xDim);
-      usize destOffset = ((z * destYDim * xDim) + (y * xDim));
+      usize srcOffset = (z * shiftSrcYDim * shiftXDim) + (y * shiftXDim);
+      usize destOffset = ((z * shiftDestYDim * shiftXDim) + (y * shiftXDim));
       if(srcOffset == destOffset)
       {
         continue;
       }
 
-      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, xDim);
+      auto result = CopyData(dataArray, dataArray, destOffset, srcOffset, shiftXDim);
       if(result.invalid())
       {
         return result;
@@ -1149,23 +1149,23 @@ template <class K>
 Result<> AppendDataX(const std::vector<const K*>& inputArrays, const std::vector<std::vector<usize>>& inputTupleShapes, K& destArray, const std::vector<usize>& newDestDims, usize offset,
                      bool mirror = false)
 {
-  auto zDim = static_cast<int64>(newDestDims[0]);
-  auto yDim = static_cast<int64>(newDestDims[1]);
-  auto destXDim = newDestDims[2];
+  auto appendZDim = static_cast<int64>(newDestDims[0]);
+  auto appendYDim = static_cast<int64>(newDestDims[1]);
+  auto appendDestXDim = newDestDims[2];
 
   // Copy the input arrays into the destination array
-  for(int z = 0; z < zDim; ++z)
+  for(int z = 0; z < appendZDim; ++z)
   {
-    for(int y = 0; y < yDim; ++y)
+    for(int y = 0; y < appendYDim; ++y)
     {
       usize xOffset = offset;
       for(usize i = 0; i < inputArrays.size(); ++i)
       {
         const K& inputArray = *inputArrays[i];
-        auto srcXDim = inputTupleShapes[i][2];
-        usize srcOffset = (z * yDim * srcXDim) + (y * srcXDim);
-        usize destOffset = ((z * yDim * destXDim) + (y * destXDim) + xOffset);
-        auto result = CopyData(inputArray, destArray, destOffset, srcOffset, srcXDim);
+        auto appendSrcXDim = inputTupleShapes[i][2];
+        usize srcOffset = (z * appendYDim * appendSrcXDim) + (y * appendSrcXDim);
+        usize destOffset = ((z * appendYDim * appendDestXDim) + (y * appendDestXDim) + xOffset);
+        auto result = CopyData(inputArray, destArray, destOffset, srcOffset, appendSrcXDim);
         if(result.invalid())
         {
           return result;
@@ -1177,11 +1177,11 @@ Result<> AppendDataX(const std::vector<const K*>& inputArrays, const std::vector
       if(mirror)
       {
         auto numComps = destArray.getNumberOfComponents();
-        for(usize x = 0; x < destXDim / 2; ++x)
+        for(usize x = 0; x < appendDestXDim / 2; ++x)
         {
-          usize tupleIdx = (z * yDim * destXDim) + (y * destXDim) + x;
+          usize tupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + x;
           usize endTupleIdx = tupleIdx + 1;
-          usize mirrorTupleIdx = (z * yDim * destXDim) + (y * destXDim) + (destXDim - 1 - x);
+          usize mirrorTupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + (appendDestXDim - 1 - x);
           std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
         }
       }
@@ -1198,23 +1198,23 @@ template <class K>
 Result<> AppendDataY(const std::vector<const K*>& inputArrays, const std::vector<std::vector<usize>>& inputTupleShapes, K& destArray, const std::vector<usize>& newDestDims, usize offset,
                      bool mirror = false)
 {
-  auto zDim = static_cast<int64>(newDestDims[0]);
-  auto destYDim = newDestDims[1];
-  auto xDim = static_cast<int64>(newDestDims[2]);
+  auto appendZDim = static_cast<int64>(newDestDims[0]);
+  auto appendDestYDim = newDestDims[1];
+  auto appendXDim = static_cast<int64>(newDestDims[2]);
 
   // Copy the input arrays into the destination array
   usize yOffset = offset;
   for(usize i = 0; i < inputArrays.size(); ++i)
   {
-    auto srcYDim = inputTupleShapes[i][1];
-    for(int z = 0; z < zDim; ++z)
+    auto appendSrcYDim = inputTupleShapes[i][1];
+    for(int z = 0; z < appendZDim; ++z)
     {
-      for(int y = 0; y < srcYDim; ++y)
+      for(int y = 0; y < appendSrcYDim; ++y)
       {
         const K* inputArray = inputArrays[i];
-        usize srcOffset = ((z * srcYDim * xDim) + (y * xDim));
-        usize destOffset = ((z * destYDim * xDim) + ((y + yOffset) * xDim));
-        auto result = CopyData(*inputArray, destArray, destOffset, srcOffset, xDim);
+        usize srcOffset = ((z * appendSrcYDim * appendXDim) + (y * appendXDim));
+        usize destOffset = ((z * appendDestYDim * appendXDim) + ((y + yOffset) * appendXDim));
+        auto result = CopyData(*inputArray, destArray, destOffset, srcOffset, appendXDim);
         if(result.invalid())
         {
           return result;
@@ -1228,15 +1228,15 @@ Result<> AppendDataY(const std::vector<const K*>& inputArrays, const std::vector
   if(mirror)
   {
     auto numComps = destArray.getNumberOfComponents();
-    for(int z = 0; z < zDim; ++z)
+    for(int z = 0; z < appendZDim; ++z)
     {
-      for(int x = 0; x < xDim; ++x)
+      for(int x = 0; x < appendXDim; ++x)
       {
-        for(int y = 0; y < destYDim / 2; ++y)
+        for(int y = 0; y < appendDestYDim / 2; ++y)
         {
-          usize tupleIdx = (z * destYDim * xDim) + (y * xDim) + x;
+          usize tupleIdx = (z * appendDestYDim * appendXDim) + (y * appendXDim) + x;
           usize endTupleIdx = tupleIdx + 1;
-          usize mirrorTupleIdx = (z * destYDim * xDim) + ((destYDim - 1 - y) * xDim) + x;
+          usize mirrorTupleIdx = (z * appendDestYDim * appendXDim) + ((appendDestYDim - 1 - y) * appendXDim) + x;
           std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
         }
       }
@@ -1254,7 +1254,7 @@ Result<> AppendDataZ(const std::vector<const K*>& inputArrays, const std::vector
   for(usize i = 0; i < inputArrays.size(); ++i)
   {
     const K* inputArray = inputArrays[i];
-    auto totalInputTuples = std::accumulate(inputTupleShapes[i].begin(), inputTupleShapes[i].end(), 1, std::multiplies<>());
+    auto totalInputTuples = std::accumulate(inputTupleShapes[i].begin(), inputTupleShapes[i].end(), static_cast<usize>(1), std::multiplies<>());
     auto result = CopyData(*inputArray, destArray, destOffset, 0, totalInputTuples);
     if(result.invalid())
     {
@@ -1266,16 +1266,14 @@ Result<> AppendDataZ(const std::vector<const K*>& inputArrays, const std::vector
   // Mirror the array along the Z axis if the mirror flag is true
   if(mirror)
   {
-    auto destZDim = newDestDims[0];
-    auto yDim = static_cast<int64>(newDestDims[1]);
-    auto xDim = static_cast<int64>(newDestDims[2]);
-    auto sliceTupleCount = xDim * yDim;
+    auto appendDestZDim = newDestDims[0];
+    auto sliceTupleCount = newDestDims[1] * newDestDims[2];
     auto numComps = destArray.getNumberOfComponents();
-    for(int i = 0; i < destZDim / 2; ++i)
+    for(int i = 0; i < appendDestZDim / 2; ++i)
     {
       usize tupleIdx = i * sliceTupleCount;
       usize endTupleIdx = tupleIdx + sliceTupleCount;
-      usize mirrorTupleIdx = (destZDim - 1 - i) * sliceTupleCount;
+      usize mirrorTupleIdx = (appendDestZDim - 1 - i) * sliceTupleCount;
       std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
     }
   }
@@ -1334,7 +1332,7 @@ Result<> AppendData(const std::vector<const K*>& inputArrays, const std::vector<
     return ShiftAndAppendDataY(inputArrays, inputTupleShapes, destArray, originalDestDims, newDestDims, mirror);
   }
   default: { // Z direction
-    auto totalTuples = std::accumulate(originalDestDims.begin(), originalDestDims.end(), 1, std::multiplies<>());
+    auto totalTuples = std::accumulate(originalDestDims.begin(), originalDestDims.end(), static_cast<usize>(1), std::multiplies<>());
     return AppendDataZ(inputArrays, inputTupleShapes, destArray, newDestDims, totalTuples, mirror);
   }
   }
