@@ -56,6 +56,10 @@
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "PATH",
           "value": "${sourceDir}/cmake/triplets"
+        },
+        "SIMPLNX_DOWNLOAD_TEST_FILES_FIRST": {
+          "type": "BOOL",
+          "value": "ON"
         }
       }
     },
