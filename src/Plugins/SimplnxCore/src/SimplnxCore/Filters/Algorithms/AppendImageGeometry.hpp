@@ -17,6 +17,7 @@ struct SIMPLNXCORE_EXPORT AppendImageGeometryInputValues
   DataPath DestinationGeometryPath;
   DataPath NewGeometryPath;
   bool CheckResolution;
+  bool MirrorGeometry;
   bool SaveAsNewGeometry;
   CopyFromArray::Direction Direction;
 };
