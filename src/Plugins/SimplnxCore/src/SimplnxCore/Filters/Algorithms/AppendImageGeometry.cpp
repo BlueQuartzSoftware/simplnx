@@ -115,14 +115,20 @@ Result<> AppendImageGeometry::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, m_InputValues->Direction);
+      auto newGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath);
+      auto newDestGeomDimsVec = newGeometry.getDimensions().toContainer<std::vector<usize>>();
+      std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
+      CopyFromArray::RunParallelCombine(*newDataArray, taskRunner, inputDataArrays, inputTupleShapes, newDestGeomDimsVec, m_InputValues->Direction, m_InputValues->MirrorGeometry);
     }
     else
     {
       m_MessageHandler(fmt::format("Appending data into array {}", newCellDataPath.createChildPath(name).toString()));
-      auto destGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
-      std::reverse(destGeomDimsVec.begin(), destGeomDimsVec.end());
-      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, inputTupleShapes, destGeomDimsVec, m_InputValues->Direction);
+      auto originalDestGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
+      std::reverse(originalDestGeomDimsVec.begin(), originalDestGeomDimsVec.end());
+      auto newDestGeomDimsVec = destGeometry.getDimensions().toContainer<std::vector<usize>>();
+      std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
+      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->Direction,
+                                       m_InputValues->MirrorGeometry);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
