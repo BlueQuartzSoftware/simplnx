@@ -4,22 +4,16 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 
-#if defined(__clang__) && defined(__clang_major__) && defined(__APPLE__)
-#if __clang_major__ > 14
-#include <bit>
-namespace bs = std;
-#else
-#include "Bit.hpp"
-namespace bs = nx::core;
-#endif
-#else
-#include <bit>
-namespace bs = std;
-#endif
-
 #include <optional>
 #include <stdexcept>
 #include <vector>
+
+#include <version>
+#if __cpp_lib_bit_cast
+#include <bit>
+#else
+#include "simplnx/Common/Bit.hpp"
+#endif
 
 namespace nx::core
 {
@@ -31,6 +25,12 @@ namespace nx::core
 template <typename T>
 constexpr T GetMudflap() noexcept
 {
+#if __cpp_lib_bit_cast
+  namespace bs = std;
+#else
+  namespace bs = nx::core;
+#endif
+
   if constexpr(sizeof(T) == 1)
   {
     return bs::bit_cast<T>(static_cast<uint8>(0xAB));
