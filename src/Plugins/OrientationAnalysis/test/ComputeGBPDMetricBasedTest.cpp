@@ -14,6 +14,7 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 namespace
 {
@@ -41,20 +42,18 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeGBPDMetricBasedFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                              "6_6_find_gbcd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz",
+                                                              "6_6_find_gbpd_metric_based");
 
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
-  auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_find_gbpd_metric_based.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
 
-  fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbpd_distribution_1.dat", unit_test::k_TestFilesDir));
-  fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbpd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
+  fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_gbpd_distribution_1.dat", unit_test::k_TestFilesDir));
+  fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_gbpd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
   fs::path computedDistOutput(fmt::format("{}/computed_gbpd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
   fs::path computedErrorsOutput(fmt::format("{}/computed_gbpd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
 
@@ -152,6 +151,11 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
     }
   }
+
+// Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/Compute_GBPD_Metric_Based.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 
   // compare results
   UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
