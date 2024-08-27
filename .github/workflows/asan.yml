@@ -50,10 +50,10 @@ jobs:
           cmake --preset ci-asan ${{github.workspace}}
       - name: Build
         run: |
-          export LD_LIBRARY_PATH=$($CXX -print-file-name=libclang_rt.asan-x86_64.so)
+          export LD_LIBRARY_PATH=$(dirname $($CXX -print-file-name=libclang_rt.asan-x86_64.so))
           cmake --build --preset ci-asan
       - name: Test
         run: |
           export LD_PRELOAD=$($CXX -print-file-name=libclang_rt.asan-x86_64.so)
-          export LSAN_OPTIONS=suppressions=${{github.workspace}}/utilites/leak_suppressions.txt
+          export LSAN_OPTIONS=suppressions=${{github.workspace}}/utilities/leak_suppressions.txt
           ctest --preset ci-asan
