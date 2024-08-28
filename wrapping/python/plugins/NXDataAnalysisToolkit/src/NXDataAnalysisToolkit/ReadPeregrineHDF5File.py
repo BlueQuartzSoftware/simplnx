@@ -86,6 +86,8 @@ class ReadPeregrineHDF5File:
   SLICES_SUBVOLUME_MINMAX_Z_KEY = 'slices_subvolume_minmax_z'
   READ_SEGMENTATION_RESULTS_KEY = 'read_segmentation_results'
   READ_CAMERA_DATA_KEY = 'read_camera_data'
+  READ_CAMERA_DATA_2_KEY = 'read_camera_data_2'
+  READ_CAMERA_DATA_3_KEY = 'read_camera_data_3'
   READ_PART_IDS_KEY = 'read_part_ids'
   READ_SAMPLE_IDS_KEY = 'read_sample_ids'
   READ_ANOMALY_DETECTION_KEY = 'read_anomaly_detection'
@@ -95,7 +97,11 @@ class ReadPeregrineHDF5File:
   SLICE_DATA_KEY = 'slice_data'
   SLICE_DATA_CELL_ATTR_MAT_KEY = 'slice_data_cell_attr_mat'
   CAMERA_DATA_HDF5_PARENT_PATH_KEY = 'camera_data_hdf5_parent_path'
+  CAMERA_DATA_2_HDF5_PARENT_PATH_KEY = 'camera_data_2_hdf5_parent_path'
+  CAMERA_DATA_3_HDF5_PARENT_PATH_KEY = 'camera_data_3_hdf5_parent_path'
   CAMERA_DATA_DATASETS_KEY = 'camera_data_datasets'
+  CAMERA_DATA_2_DATASETS_KEY = 'camera_data_2_datasets'
+  CAMERA_DATA_3_DATASETS_KEY = 'camera_data_3_datasets'
   PART_IDS_ARRAY_NAME_KEY = 'part_ids_array_name'
   SAMPLE_IDS_ARRAY_NAME_KEY = 'sample_ids_array_name'
   REGISTERED_DATA_KEY = 'registered_data'
@@ -131,9 +137,15 @@ class ReadPeregrineHDF5File:
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, 'Read Segmentation Results', 'Specifies whether or not to read the segmentation results from the input file.', False))
     params.insert(nx.StringParameter(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY, 'Segmentation Results (comma-delimited)', 'The segmentation results numbers that will be read, separated by commas', '0,1,2,3,4,5,6,7,8,9,10,11'))
-    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, 'Read Camera Data', 'Specifies whether or not to read the camera data from the input file.', False))
-    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY, 'Camera Data HDF5 Parent Path', 'The path to the HDF5 parent group that contains the camera data datasets.', 'slices/camera_data'))
-    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY, 'Camera Data Datasets (comma-delimited)', 'The camera data datasets that will be read, separated by commas', '0,1,2'))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, 'Read Camera #1 Data', 'Specifies whether or not to read camera #1 data from the input file.', False))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY, 'Camera #1 Data HDF5 Parent Path', 'The path to the HDF5 parent group that contains the camera #1 data datasets.', 'slices/camera_data'))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY, 'Camera #1 Data Datasets (comma-delimited)', 'The camera #1 data datasets that will be read, separated by commas', '0,1,2'))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY, 'Read Camera #2 Data', 'Specifies whether or not to read camera #2 data from the input file.', False))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_2_HDF5_PARENT_PATH_KEY, 'Camera #2 Data HDF5 Parent Path', 'The path to the HDF5 parent group that contains the camera #2 data datasets.', ''))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_2_DATASETS_KEY, 'Camera #2 Data Datasets (comma-delimited)', 'The camera #2 data datasets that will be read, separated by commas', '0,1,2'))
+    params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY, 'Read Camera #3 Data', 'Specifies whether or not to read camera #3 data from the input file.', False))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_3_HDF5_PARENT_PATH_KEY, 'Camera #3 Data HDF5 Parent Path', 'The path to the HDF5 parent group that contains the camera #3 data datasets.', ''))
+    params.insert(nx.StringParameter(ReadPeregrineHDF5File.CAMERA_DATA_3_DATASETS_KEY, 'Camera #3 Data Datasets (comma-delimited)', 'The camera #3 data datasets that will be read, separated by commas', '0,1,2'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_PART_IDS_KEY, 'Read Part Ids', 'Specifies whether or not to read the part ids from the input file.', False))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, 'Part Ids Array Name', 'The name of the part ids array.', 'Part Ids'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY, 'Read Sample Ids', 'Specifies whether or not to read the sample ids from the input file.', False))
@@ -176,6 +188,10 @@ class ReadPeregrineHDF5File:
     params.link_parameters(ReadPeregrineHDF5File.ENABLE_REGISTERED_DATA_SUBVOLUME_KEY, ReadPeregrineHDF5File.REGISTERED_DATA_SUBVOLUME_MINMAX_Z_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY, ReadPeregrineHDF5File.CAMERA_DATA_2_HDF5_PARENT_PATH_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY, ReadPeregrineHDF5File.CAMERA_DATA_2_DATASETS_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY, ReadPeregrineHDF5File.CAMERA_DATA_3_HDF5_PARENT_PATH_KEY, True)
+    params.link_parameters(ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY, ReadPeregrineHDF5File.CAMERA_DATA_3_DATASETS_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_PART_IDS_KEY, ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY, ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY, True)
     params.link_parameters(ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY, ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, True)
@@ -202,13 +218,15 @@ class ReadPeregrineHDF5File:
     layer_thickness: bool = args[ReadPeregrineHDF5File.LAYER_THICKNESS_KEY]
     read_segmentation_results: bool = args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
     read_camera_data: bool = args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
+    read_camera_data_2: bool = args[ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY]
+    read_camera_data_3: bool = args[ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY]
     read_part_ids: bool = args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
     read_sample_ids: bool = args[ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY]
     read_anomaly_detection: bool = args[ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY]
     read_x_ray_ct: bool = args[ReadPeregrineHDF5File.READ_X_RAY_CT_KEY]
     read_scan_datasets: bool = args[ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY]
 
-    if not read_segmentation_results and not read_camera_data and not read_part_ids and not read_sample_ids and not read_anomaly_detection and not read_x_ray_ct and not read_scan_datasets:
+    if not read_segmentation_results and not read_camera_data and not read_camera_data_2 and not read_camera_data_3 and not read_part_ids and not read_sample_ids and not read_anomaly_detection and not read_x_ray_ct and not read_scan_datasets:
       return nx.IFilter.PreflightResult(errors=[nx.Error(-2010, f"No datasets selected to be read!  Please select at least one dataset to read.")])
 
     actions = nx.OutputActions()
@@ -269,11 +287,47 @@ class ReadPeregrineHDF5File:
       return nx.Result(errors=result.errors)
 
     return nx.Result()
+  
+  def _validate_camera_data(self, h5_file_reader: h5py.File, camera_data_datasets_str: str, camera_data_hdf5_parent_path: str, dims: List[int]) -> Result[List[int]]:
+    camera_data_datasets_str = camera_data_datasets_str.strip()
+    camera_data_datasets = camera_data_datasets_str.split(',')
+    if len(camera_data_datasets) == 0:
+      return Result(errors=[nx.Error(-3001, 'The camera data datasets are empty.  Please input the camera data dataset names that this filter should read from the input file, separated by commas.')])
+
+    for camera_data_dataset in camera_data_datasets:
+      camera_data_dataset_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+      if dims is None:
+        dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix())
+        if dims_result.invalid():
+          return dims_result
+        dims = dims_result.value
+      else:
+        dims_result = self._validate_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix(), dims)
+        if dims_result.invalid():
+          return Result(errors=dims_result.errors)
+    
+    return Result(value=dims)
+  
+  def _preflight_camera_data(self, h5_file_reader: h5py.File, slice_data_image_geom_path: nx.DataPath, slice_data_cell_attr_mat_name: str, camera_data_datasets_str: str, camera_data_hdf5_parent_path: str, camera_data_prefix: str, actions: nx.OutputActions, read_slices_subvolume: bool, subvolume_dims: list, dims: List[int]) -> Result:
+    camera_data_datasets_str = camera_data_datasets_str.strip()
+    camera_data_datasets = camera_data_datasets_str.split(',')
+    for camera_data_dataset in camera_data_datasets:
+      camera_data_dataset_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"{camera_data_prefix}{camera_data_dataset}")
+      camera_data_dataset_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+      dset_type_result: Result = self._read_dataset_type(h5_file_reader, camera_data_dataset_h5_path.as_posix())
+      if dset_type_result.invalid():
+        return dset_type_result
+      dset_type = dset_type_result.value
+      actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], camera_data_dataset_path))
+    
+    return Result()
 
   def _preflight_slice_datasets(self, h5_file_reader: h5py.File, origin: List[float], spacing: List[float], filter_args: dict, actions: nx.OutputActions, preflight_updated_values: List[nx.IFilter.PreflightValue]) -> Result:
     read_segmentation_results: bool = filter_args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
     segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY]
     read_camera_data: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
+    read_camera_data_2: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY]
+    read_camera_data_3: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY]
     read_part_ids: bool = filter_args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
     read_sample_ids: bool = filter_args[ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY]
     read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY]
@@ -283,7 +337,11 @@ class ReadPeregrineHDF5File:
     slice_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.SLICE_DATA_KEY]
     slice_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY]
     camera_data_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY]
+    camera_data_2_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_2_HDF5_PARENT_PATH_KEY]
+    camera_data_3_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_3_HDF5_PARENT_PATH_KEY]
     camera_data_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY]
+    camera_data_2_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_2_DATASETS_KEY]
+    camera_data_3_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_3_DATASETS_KEY]
     part_ids_array_name: str = filter_args[ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY]
     sample_ids_array_name: str = filter_args[ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY]
 
@@ -304,22 +362,22 @@ class ReadPeregrineHDF5File:
 
     # Optionally read the camera data
     if read_camera_data:
-      camera_data_datasets_str = camera_data_datasets_str.strip()
-      camera_data_datasets = camera_data_datasets_str.split(',')
-      if len(camera_data_datasets) == 0:
-        return Result(errors=[nx.Error(-3001, 'The camera data datasets are empty.  Please input the camera data dataset names that this filter should read from the input file, separated by commas.')])
-
-      for camera_data_dataset in camera_data_datasets:
-        camera_data_dataset_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
-        if dims is None:
-          dims_result: Result[List[int]] = self._read_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix())
-          if dims_result.invalid():
-            return dims_result
-          dims = dims_result.value
-        else:
-          dims_result = self._validate_dataset_dimensions(h5_file_reader, camera_data_dataset_path.as_posix(), dims)
-          if dims_result.invalid():
-            return Result(errors=dims_result.errors)
+      result = self._validate_camera_data(h5_file_reader, camera_data_datasets_str, camera_data_hdf5_parent_path, dims)
+      if result.invalid():
+        return result
+      dims = result.value
+          
+    if read_camera_data_2:
+      result = self._validate_camera_data(h5_file_reader, camera_data_2_datasets_str, camera_data_2_hdf5_parent_path, dims)
+      if result.invalid():
+        return result
+      dims = result.value
+    
+    if read_camera_data_3:
+      result = self._validate_camera_data(h5_file_reader, camera_data_3_datasets_str, camera_data_3_hdf5_parent_path, dims)
+      if result.invalid():
+        return result
+      dims = result.value
 
     # Optionally read the part ids dataset
     if read_part_ids:
@@ -346,6 +404,7 @@ class ReadPeregrineHDF5File:
           return Result(errors=validate_result.errors)
 
     # Optionally get and validate subvolume dimensions
+    subvolume_dims = []
     if dims is None:
       preflight_value = nx.IFilter.PreflightValue()
       preflight_value.name = "Original Slices Dimensions (in pixels)"
@@ -386,14 +445,19 @@ class ReadPeregrineHDF5File:
 
     # Optionally create the camera data arrays
     if read_camera_data:
-      for camera_data_dataset in camera_data_datasets:
-        camera_data_dataset_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
-        camera_data_dataset_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
-        dset_type_result: Result = self._read_dataset_type(h5_file_reader, camera_data_dataset_h5_path.as_posix())
-        if dset_type_result.invalid():
-          return dset_type_result
-        dset_type = dset_type_result.value
-        actions.append_action(nx.CreateArrayAction(nx.convert_np_dtype_to_datatype(dset_type), subvolume_dims if read_slices_subvolume else dims, [1], camera_data_dataset_path))
+      result = self._preflight_camera_data(h5_file_reader, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_datasets_str, camera_data_hdf5_parent_path, "Camera #1 - ", actions, read_slices_subvolume, subvolume_dims, dims)
+      if result.invalid():
+        return result
+    
+    if read_camera_data_2:
+      result = self._preflight_camera_data(h5_file_reader, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_2_datasets_str, camera_data_2_hdf5_parent_path, "Camera #2 - ", actions, read_slices_subvolume, subvolume_dims, dims)
+      if result.invalid():
+        return result
+      
+    if read_camera_data_3:
+      result = self._preflight_camera_data(h5_file_reader, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_3_datasets_str, camera_data_3_hdf5_parent_path, "Camera #3 - ", actions, read_slices_subvolume, subvolume_dims, dims)
+      if result.invalid():
+        return result
 
     # Optionally create the part ids data array
     if read_part_ids:
@@ -684,10 +748,34 @@ class ReadPeregrineHDF5File:
     spacing = [float(x_real_dim / x_camera_dim), float(y_real_dim / y_camera_dim), float(z_spacing)]
     return Result(value=spacing)
   
+  def _read_camera_data(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, slice_data_image_geom_path: nx.DataPath, slice_data_cell_attr_mat_name: str, camera_data_hdf5_parent_path: str, camera_data_datasets_str: str, camera_data_prefix: str, read_slices_subvolume: bool, slices_subvolume_minmax_x: list, slices_subvolume_minmax_y: list, slices_subvolume_minmax_z: list, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
+    camera_data_datasets_str = camera_data_datasets_str.strip()
+    camera_data_datasets = camera_data_datasets_str.split(',')
+    for camera_data_dataset in camera_data_datasets:
+      if should_cancel:
+        return Result()
+  
+      camera_data_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"{camera_data_prefix}{camera_data_dataset}")
+      camera_data_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
+      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Reading Camera Dataset "{camera_data_h5_path.as_posix()}"...'))
+      camera_data_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, camera_data_h5_path.as_posix())
+      if camera_data_h5_result.invalid():
+        return Result(errors=camera_data_h5_result.errors)
+      camera_data_h5 = camera_data_h5_result.value
+      camera_data_nx: np.array = data_structure[camera_data_nx_path].npview()
+      camera_data_nx = np.squeeze(camera_data_nx)
+
+      if read_slices_subvolume:
+        camera_data_nx[:] = camera_data_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
+      else:
+        camera_data_nx[:] = camera_data_h5
+
   def _read_slice_datasets(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, filter_args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
     read_segmentation_results: bool = filter_args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
     segmentation_results_str: str = filter_args[ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY]
     read_camera_data: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY]
+    read_camera_data_2: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_2_KEY]
+    read_camera_data_3: bool = filter_args[ReadPeregrineHDF5File.READ_CAMERA_DATA_3_KEY]
     read_part_ids: bool = filter_args[ReadPeregrineHDF5File.READ_PART_IDS_KEY]
     read_sample_ids: bool = filter_args[ReadPeregrineHDF5File.READ_SAMPLE_IDS_KEY]
     read_slices_subvolume: bool = filter_args[ReadPeregrineHDF5File.ENABLE_SLICES_SUBVOLUME_KEY]
@@ -697,7 +785,11 @@ class ReadPeregrineHDF5File:
     slice_data_image_geom_path: nx.DataPath = filter_args[ReadPeregrineHDF5File.SLICE_DATA_KEY]
     slice_data_cell_attr_mat_name: str = filter_args[ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY]
     camera_data_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_HDF5_PARENT_PATH_KEY]
+    camera_data_2_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_2_HDF5_PARENT_PATH_KEY]
+    camera_data_3_hdf5_parent_path: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_3_HDF5_PARENT_PATH_KEY]
     camera_data_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_DATASETS_KEY]
+    camera_data_2_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_2_DATASETS_KEY]
+    camera_data_3_datasets_str: str = filter_args[ReadPeregrineHDF5File.CAMERA_DATA_3_DATASETS_KEY]
     part_ids_array_name: str = filter_args[ReadPeregrineHDF5File.PART_IDS_ARRAY_NAME_KEY]
     sample_ids_array_name: str = filter_args[ReadPeregrineHDF5File.SAMPLE_IDS_ARRAY_NAME_KEY]
 
@@ -726,30 +818,14 @@ class ReadPeregrineHDF5File:
 
     # Read the camera data
     if read_camera_data:
-      if should_cancel:
-        return Result()
-
-      camera_data_datasets_str = camera_data_datasets_str.strip()
-      camera_data_datasets = camera_data_datasets_str.split(',')
-      for camera_data_dataset in camera_data_datasets:
-        if should_cancel:
-          return Result()
+      self._read_camera_data(h5_file_reader, data_structure, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_hdf5_parent_path, camera_data_datasets_str, "Camera #1 - ", read_slices_subvolume, slices_subvolume_minmax_x, slices_subvolume_minmax_y, slices_subvolume_minmax_z, message_handler, should_cancel)
     
-        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Reading Camera Dataset "{camera_data_dataset}"...'))
-        camera_data_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(f"Camera Data {camera_data_dataset}")
-        camera_data_h5_path: Path = Path(camera_data_hdf5_parent_path) / camera_data_dataset
-        camera_data_h5_result: Result[h5py.Dataset] = self._open_hdf5_data_object(h5_file_reader, camera_data_h5_path.as_posix())
-        if camera_data_h5_result.invalid():
-          return Result(errors=camera_data_h5_result.errors)
-        camera_data_h5 = camera_data_h5_result.value
-        camera_data_nx: np.array = data_structure[camera_data_nx_path].npview()
-        camera_data_nx = np.squeeze(camera_data_nx)
-
-        if read_slices_subvolume:
-          camera_data_nx[:] = camera_data_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
-        else:
-          camera_data_nx[:] = camera_data_h5
+    if read_camera_data_2:
+      self._read_camera_data(h5_file_reader, data_structure, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_2_hdf5_parent_path, camera_data_2_datasets_str, "Camera #2 - ", read_slices_subvolume, slices_subvolume_minmax_x, slices_subvolume_minmax_y, slices_subvolume_minmax_z, message_handler, should_cancel)
     
+    if read_camera_data_3:
+      self._read_camera_data(h5_file_reader, data_structure, slice_data_image_geom_path, slice_data_cell_attr_mat_name, camera_data_3_hdf5_parent_path, camera_data_3_datasets_str, "Camera #3 - ", read_slices_subvolume, slices_subvolume_minmax_x, slices_subvolume_minmax_y, slices_subvolume_minmax_z, message_handler, should_cancel)
+
     if read_part_ids:
       message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading Part Ids...'))
       part_ids_nx_path: nx.DataPath = slice_data_image_geom_path.create_child_path(slice_data_cell_attr_mat_name).create_child_path(part_ids_array_name)
