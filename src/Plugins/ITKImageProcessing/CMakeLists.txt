@@ -323,7 +323,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
       INSTALL_RPATH \$ORIGIN/../lib
   )
   target_link_options(${PLUGIN_NAME} PUBLIC "-Wl,--disable-new-dtags")
-  target_compile_options(${PLUGIN_NAME} PUBLIC "-no-pie")
 endif()
 
 # -----------------------------------------------------------------------
