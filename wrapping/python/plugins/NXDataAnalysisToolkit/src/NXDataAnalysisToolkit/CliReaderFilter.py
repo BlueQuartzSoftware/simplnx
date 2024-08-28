@@ -311,24 +311,32 @@ class CliReaderFilter:
     
     #parse file lines
     with open(str(full_path), 'r') as file:
-      line = file.readline().strip()
-      while line:
-          if line:
-            line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
-            if line.startswith("$$HEADERSTART"):
-              if message_handler is not None:
-                message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading header data...'))
-              units, hatch_labels = self._parse_header(file)
-            if line.startswith("$$GEOMETRYSTART"):
-              if message_handler is not None:
-                message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading geometry data...'))
-              if units is None:
-                return make_error_result(-8030, "Units have not been read and are needed when reading the geometry data.  Please make sure that a header with the $$HEADERSTART tag and containing the $$UNITS tag is read before this geometry.")
-              result = self._parse_geometry(file, units, out_of_bounds_behavior, bounding_box, message_handler)
-              if result.invalid():
-                return Result(errors=result.errors)
-              layer_features, layer_heights = result.value
-          line = file.readline().strip()
+      while True:
+        line = file.readline()
+        if not line:
+            break  # End of file
+        
+        line = line.strip()  # Remove surrounding whitespace
+        if not line:
+            continue  # Skip blank lines
+        
+        line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
+        if not line:
+            continue  # Skip lines that become blank after removing comments
+        
+        if line.startswith("$$HEADERSTART"):
+          if message_handler is not None:
+            message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading header data...'))
+          units, hatch_labels = self._parse_header(file)
+        if line.startswith("$$GEOMETRYSTART"):
+          if message_handler is not None:
+            message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading geometry data...'))
+          if units is None:
+            return make_error_result(-8030, "Units have not been read and are needed when reading the geometry data.  Please make sure that a header with the $$HEADERSTART tag and containing the $$UNITS tag is read before this geometry.")
+          result = self._parse_geometry(file, units, out_of_bounds_behavior, bounding_box, message_handler)
+          if result.invalid():
+            return Result(errors=result.errors)
+          layer_features, layer_heights = result.value
     
     return Result(value=(layer_features, layer_heights, hatch_labels))
   
