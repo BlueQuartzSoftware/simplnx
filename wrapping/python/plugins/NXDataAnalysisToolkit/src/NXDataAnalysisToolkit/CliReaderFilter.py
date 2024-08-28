@@ -203,7 +203,7 @@ class CliReaderFilter:
     data_arrays = {}
     if len(hatch_labels) > 0:
       data_arrays[self.LABEL_ARRAY_NAME] = []
-    num_of_hatches = 0
+    num_of_edges = 0
     for layer_idx in range(len(layer_features)):
       layer = layer_features[layer_idx]
       if not layer:
@@ -213,20 +213,40 @@ class CliReaderFilter:
           last_message_time = current_time
           continue
 
-      for hatch in layer:
-        if hatch.n == 0:
+      for feature in layer:
+        if feature.n == 0:
           continue
-        num_of_hatches += hatch.n
-        for start_x, start_y in zip(hatch.start_xvals, hatch.start_yvals):
-          start_vertices.append([start_x, start_y, hatch.z_height])
-        for end_x, end_y in zip(hatch.end_xvals, hatch.end_yvals):
-          end_vertices.append([end_x, end_y, hatch.z_height])
-        for array_name, value in hatch.data.items():
+
+        if isinstance(feature, Hatches):
+          num_of_edges += feature.n
+          if len(feature.start_xvals) != len(feature.start_yvals):
+            return nx.Result([nx.Error(-2011, f"The start x value and start y value lists for hatch (id {feature.hatch_id}) are not the same size!")])
+          if len(feature.end_xvals) != len(feature.end_yvals):
+            return nx.Result([nx.Error(-2012, f"The end x value and end y value lists for hatch (id {feature.hatch_id}) are not the same size!")])
+          for start_x, start_y in zip(feature.start_xvals, feature.start_yvals):
+            start_vertices.append([start_x, start_y, feature.z_height])
+          for end_x, end_y in zip(feature.end_xvals, feature.end_yvals):
+            end_vertices.append([end_x, end_y, feature.z_height])
+          if len(hatch_labels) > 0:
+            data_arrays[self.LABEL_ARRAY_NAME].extend([feature.hatch_id] * feature.n)
+        elif isinstance(feature, Polyline):
+          num_of_edges += feature.n - 1
+          if len(feature.xvals) != len(feature.yvals):
+            return nx.Result([nx.Error(-2013, f"The x value list and y value list for polyline (id {feature.poly_id}) are not the same size!")])
+
+          start_vertices += np.vstack((feature.xvals[:-1], feature.yvals[:-1], np.full_like(feature.xvals[:-1], feature.z_height))).T.tolist()
+          end_vertices += np.vstack((feature.xvals[1:], feature.yvals[1:], np.full_like(feature.xvals[1:], feature.z_height))).T.tolist()
+          if len(hatch_labels) > 0:
+            data_arrays[self.LABEL_ARRAY_NAME].extend([feature.poly_id] * feature.n)
+        else:
+          return Result(errors=[nx.Error(-2030, f"Detected geometry feature has class name '{feature.__class__.__name__}'.  This filter can only read hatches and polylines from CLI geometries.")])
+        
+        for array_name, value in feature.data.items():
+          feature_edge_count = feature.n if isinstance(feature, Hatches) else feature.n - 1
           if not array_name in data_arrays:
-            data_arrays[array_name] = [value] * hatch.n
+            data_arrays[array_name] = [value] * feature_edge_count
           else:
-            data_arrays[array_name].extend([value] * hatch.n)
-        data_arrays[self.LABEL_ARRAY_NAME].extend([hatch.hatch_id] * hatch.n)
+            data_arrays[array_name].extend([value] * feature_edge_count)
       
       current_time = time.time()
       if message_handler is not None and (current_time - last_message_time) >= 1:
@@ -251,9 +271,9 @@ class CliReaderFilter:
     # Tell the Edge Geometry to resize the shared edge list so that we can
     # copy in the edge list and also copy in all the edge arrays
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Saving Edges...'))
-    edge_geom.resize_edges(num_of_hatches)
+    edge_geom.resize_edges(num_of_edges)
 
-    if (num_of_hatches > 0 and len(vertex_list) > 0):
+    if (num_of_edges > 0 and len(vertex_list) > 0):
       edges_array = edge_geom.edges
       edges_view = edges_array.store.npview()
       edges_view[:] = [[i, i+1] for i in range(0, len(vertex_list), 2)]
@@ -270,15 +290,16 @@ class CliReaderFilter:
 
       if len(values) > 0:
         array_view = array.store.npview()
+        values_arr = values_arr.astype(float).astype(array_view.dtype)
         array_view[:] = values_arr
-    
 
     # Save the feature level data
-    feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
-    label_feature_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-    label_feature_array: nx.StringArray = data_structure[label_feature_array_path]
-    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
-    label_feature_array.initialize_with_list(list(hatch_labels.values()))
+    if len(hatch_labels) > 0:
+      feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
+      label_feature_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
+      label_feature_array: nx.StringArray = data_structure[label_feature_array_path]
+      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
+      label_feature_array.initialize_with_list(list(hatch_labels.values()))
 
     # Filter is complete, return the results.
     return nx.Result()
