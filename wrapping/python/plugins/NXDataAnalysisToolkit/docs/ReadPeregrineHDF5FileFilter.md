@@ -16,9 +16,15 @@ The `ReadPeregrineHDF5File` filter is designed to read an HDF5 file that is in a
 - **`Slice Data Cell Attribute Matrix Name`**: Name of the Slice Data cell attribute matrix to be created.
 - **`Read Segmentation Results`** (boolean): Toggles the reading of segmentation results stored in the HDF5 file.
 - **`Segmentation Results`** (string): Comma-delimited string that specifies which segmentation results datasets should be read.
-- **`Read Camera Data`** (boolean): Toggles the reading of camera data stored in the HDF5 file.
-- **`Camera Data HDF5 Parent Path`**: The path to the parent group of the camera datasets in the HDF5 file.
-- **`Camera Data Datasets`**: Comma-delimited string that specifies which camera data datasets should be read.
+- **`Read Camera #1 Data`** (boolean): Toggles the reading of camera #1 data stored in the HDF5 file.
+- **`Camera #1 Data HDF5 Parent Path`**: The path to the parent group of the camera #1 datasets in the HDF5 file.
+- **`Camera #1 Data Datasets`**: Comma-delimited string that specifies which camera #1 data datasets should be read.
+- **`Read Camera #2 Data`** (boolean): Toggles the reading of camera #2 data stored in the HDF5 file.
+- **`Camera #2 Data HDF5 Parent Path`**: The path to the parent group of the camera #2 datasets in the HDF5 file.
+- **`Camera #2 Data Datasets`**: Comma-delimited string that specifies which camera #2 data datasets should be read.
+- **`Read Camera #3 Data`** (boolean): Toggles the reading of camera #3 data stored in the HDF5 file.
+- **`Camera #3 Data HDF5 Parent Path`**: The path to the parent group of the camera #3 datasets in the HDF5 file.
+- **`Camera #3 Data Datasets`**: Comma-delimited string that specifies which camera #3 data datasets should be read.
 - **`Read Part Ids`** (boolean): Determines whether part ids data should be read.
 - **`Part Ids Array Name`**: Name of the part ids array to be created.
 - **`Read Sample Ids`** (boolean): Determines whether sample ids data should be read.
