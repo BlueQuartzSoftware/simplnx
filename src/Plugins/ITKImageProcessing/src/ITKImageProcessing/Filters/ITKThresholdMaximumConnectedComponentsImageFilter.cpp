@@ -21,7 +21,7 @@ using FilterOutputType = uint8;
 struct ITKThresholdMaximumConnectedComponentsImageFilterFunctor
 {
   uint32 minimumObjectSizeInPixels = 0u;
-  float64 upperBoundary = 65536.0f;
+  float64 upperBoundary = 65536.0;
   uint8 insideValue = 1u;
   uint8 outsideValue = 0u;
 
