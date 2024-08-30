@@ -12,7 +12,6 @@ do. The sections are as follows:
     <li>SECTION 7 : Useful Tips and Tricks</li>
 </ul>
 
-
 ## SECTION 1 : Porting From ***SIMPL*** to ***Filters Folder***
 
 This will be the most common type of Filter porting. The steps for this are as
