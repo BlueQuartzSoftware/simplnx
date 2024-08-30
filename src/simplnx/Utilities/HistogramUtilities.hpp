@@ -48,7 +48,7 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputSt
 
   if(overflow > 0)
   {
-    return MakeWarningVoidResult(-23762, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow, __FILE__, __LINE__));
+    return MakeWarningVoidResult(-23762, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
   }
 
   return {};

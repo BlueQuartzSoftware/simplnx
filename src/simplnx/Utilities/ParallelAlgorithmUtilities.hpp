@@ -2,6 +2,8 @@
 
 #include "simplnx/Common/Types.hpp"
 
+#include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace nx::core
