@@ -31,7 +31,12 @@ struct ITKThresholdMaximumConnectedComponentsImageFilterFunctor
     using FilterType = itk::ThresholdMaximumConnectedComponentsImageFilter<InputImageT, OutputImageT>;
     auto filter = FilterType::New();
     filter->SetMinimumObjectSizeInPixels(minimumObjectSizeInPixels);
-    filter->SetUpperBoundary(static_cast<typename InputImageT::PixelType>(std::min<double>(upperBoundary, itk::NumericTraits<typename InputImageT::PixelType>::max())));
+
+    using PixelType = typename InputImageT::PixelType;
+    using MinType = std::conditional_t<std::is_same_v<PixelType, int64> || std::is_same_v<PixelType, uint64>, PixelType, float64>;
+    auto upBound = static_cast<PixelType>(std::min<MinType>(upperBoundary, itk::NumericTraits<PixelType>::max()));
+    filter->SetUpperBoundary(upBound);
+
     filter->SetInsideValue(insideValue);
     filter->SetOutsideValue(outsideValue);
     return filter;

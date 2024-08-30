@@ -414,7 +414,7 @@ Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<Pix
       constexpr auto destMaxV = static_cast<float64>(std::numeric_limits<NewStoreT>::max());
       constexpr auto originMaxV = std::numeric_limits<T>::max();
       std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data(), [](auto value) {
-        float64 ratio = static_cast<float64>(value) / originMaxV;
+        float64 ratio = static_cast<float64>(value) / static_cast<float64>(originMaxV);
         return static_cast<NewStoreT>(ratio * destMaxV);
       });
     }
