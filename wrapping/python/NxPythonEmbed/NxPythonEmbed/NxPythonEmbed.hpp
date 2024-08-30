@@ -123,6 +123,11 @@ public:
     py::list(sys.attr("meta_path")).append(m_Finder);
   }
 
+  void clear()
+  {
+    m_Finder.attr("clear")();
+  }
+
   static ManualImportFinderHolder GetFromMetaPath()
   {
     auto sys = py::module_::import("sys");
