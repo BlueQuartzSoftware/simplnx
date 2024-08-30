@@ -186,6 +186,7 @@ set(AlgorithmList
   ComputeTriangleGeomSizes
   FlyingEdges3D
   CreateColorMap
+  InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
