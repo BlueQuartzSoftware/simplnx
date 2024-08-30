@@ -7,10 +7,11 @@
 
 namespace nx::core::HistogramUtilities
 {
+namespace serial
+{
 template <typename Type, std::floating_point FloatType>
-SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputStore, const std::pair<Type, Type>& rangeMinMax, const std::function<void(usize)>& progressReportingFunction,
-                                          const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<FloatType>& histogramStore, std::atomic<usize>& overflow,
-                                          size_t progressIncrement)
+SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
+                                          AbstractDataStore<FloatType>& histogramStore, std::atomic<usize>& overflow)
 {
   auto end = inputStore.getSize();
 
@@ -22,17 +23,11 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputSt
   }
   else
   {
-    usize progressCounter = 0;
     for(usize i = 0; i < end; i++)
     {
       if(shouldCancel)
       {
         return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
-      }
-      if(progressCounter > progressIncrement)
-      {
-        progressReportingFunction(progressCounter);
-        progressCounter = 0;
       }
       const auto bin = std::floor((inputStore[i] - rangeMinMax.first) / increment);
       if((bin >= 0) && (bin < numBins))
@@ -43,13 +38,12 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputSt
       {
         overflow++;
       }
-      progressCounter++;
     }
   }
 
-  for(int64 i = 0; i < numBins; i++)
+  for(int32 i = 0; i < numBins; i++)
   {
-    histogramStore[(i * 2)] = static_cast<float64>(rangeMinMax.first + (increment * (static_cast<float64>(i) + 1.0))); // load bin maximum into respective position {(x, ), (x , ), ...}
+    histogramStore[i * 2] = static_cast<FloatType>(rangeMinMax.first + (increment * (i + static_cast<FloatType>(1.0)))); // load bin maximum into respective position {(x, ), (x , ), ...}
   }
 
   if(overflow > 0)
@@ -63,17 +57,17 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const AbstractDataStore<Type>& inputSt
 struct SIMPLNX_EXPORT GenerateHistogramFunctor
 {
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, ArgsT... args)
+  Result<> operator()(const IDataArray* inputArray, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
     auto minMax = std::minmax_element(inputStore.begin(), inputStore.end());
 
-    GenerateHistogram(inputStore, std::make_pair(static_cast<Type>(*minMax.first) - 1, static_cast<Type>(*minMax.second) + 1), std::forward<ArgsT>(args)...);
+    return GenerateHistogram(inputStore, std::make_pair(*minMax.first - static_cast<Type>(1.0), *minMax.second + static_cast<Type>(1.0)), std::forward<ArgsT>(args)...);
   }
 
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, const std::pair<Type, Type>& rangeMinMax, ArgsT... args)
+  Result<> operator()(const IDataArray* inputArray, std::pair<float64, float64>&& rangeMinMax, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
@@ -84,7 +78,63 @@ struct SIMPLNX_EXPORT GenerateHistogramFunctor
                                                  rangeMinMax.second, __FILE__, __LINE__));
     }
 
-    GenerateHistogram(inputStore, rangeMinMax, std::forward<ArgsT>(args)...);
+    return GenerateHistogram(inputStore, std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second)), std::forward<ArgsT>(args)...);
   }
 };
+} // namespace serial
+
+namespace concurrent
+{
+template <typename Type, std::floating_point FloatType>
+class SIMPLNX_EXPORT GenerateHistogramImpl
+{
+public:
+  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
+                        AbstractDataStore<FloatType>& histogramStore, std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
+  , m_NumBins(numBins)
+  , m_HistogramStore(histogramStore)
+  , m_Overflow(overflow)
+  {
+    m_Range = std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second));
+  }
+
+  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<FloatType>& histogramStore,
+                        std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
+  , m_NumBins(numBins)
+  , m_HistogramStore(histogramStore)
+  , m_Overflow(overflow)
+  {
+    auto minMax = std::minmax_element(m_InputStore.begin(), m_InputStore.end());
+    m_Range = std::make_pair(*minMax.first - static_cast<Type>(1.0), *minMax.second + static_cast<Type>(1.0));
+  }
+
+  ~GenerateHistogramImpl() = default;
+
+  void operator()() const
+  {
+    serial::GenerateHistogram(m_InputStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
+  }
+
+private:
+  const std::atomic_bool& m_ShouldCancel;
+  const int32 m_NumBins = 1;
+  std::pair<Type, Type> m_Range = {static_cast<Type>(0.0), static_cast<Type>(0.0)};
+  const AbstractDataStore<Type>& m_InputStore;
+  AbstractDataStore<FloatType>& m_HistogramStore;
+  std::atomic<usize>& m_Overflow;
+};
+
+struct InstantiateHistogramImplFunctor
+{
+  template <typename T, class... ArgsT>
+  auto operator()(const IDataArray* iDataArray, ArgsT&&... args)
+  {
+    return GenerateHistogramImpl(iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), std::forward<ArgsT>(args)...);
+  }
+};
+} // namespace concurrent
 } // namespace nx::core::HistogramUtilities
