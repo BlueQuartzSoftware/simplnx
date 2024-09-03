@@ -7,13 +7,12 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
-#include "simplnx/Utilities/ColorTableUtilities.hpp"
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/CreateColorMapParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
+#define SIMPL_PARAM_CONVERT_CREATE_COLOR_MAP
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 namespace

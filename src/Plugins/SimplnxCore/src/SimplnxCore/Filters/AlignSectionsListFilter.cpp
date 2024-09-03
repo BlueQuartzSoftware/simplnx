@@ -9,7 +9,11 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
+// #define SIMPL_PARAM_CONVERT_CREATE_COLOR_MAP
+// #define SIMPL_PARAM_CONVERT_ARRAY_THRESHOLD
+// #define SIMPL_PARAM_CONVERT_DYNAMIC_TABLE
+// #define SIMPL_PARAM_CONVERT_READ_CSV
+// #define SIMPL_PARAM_CONVERT_READ_HDF5_DATASET
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>

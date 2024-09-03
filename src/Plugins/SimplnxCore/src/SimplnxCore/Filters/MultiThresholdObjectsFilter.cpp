@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ArrayThreshold.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#define SIMPL_PARAM_CONVERT_ARRAY_THRESHOLD
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <algorithm>
