@@ -59,11 +59,11 @@ std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string&
   return nullptr;
 }
 
-void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const
+std::string DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string dataFormat) const
 {
   if(!dataFormat.empty())
   {
-    return;
+    return dataFormat;
   }
   const Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
   const uint64 largeDataSize = preferences->valueAs<uint64>(Preferences::k_LargeDataSize_Key);
@@ -72,6 +72,7 @@ void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFo
   {
     dataFormat = largeDataFormat;
   }
+  return dataFormat;
 }
 
 std::vector<std::string> DataIOCollection::getFormatNames() const

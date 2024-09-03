@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "simplnx/Common/StringLiteral.hpp"
+// #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 #include <type_traits>

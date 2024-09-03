@@ -2,9 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {

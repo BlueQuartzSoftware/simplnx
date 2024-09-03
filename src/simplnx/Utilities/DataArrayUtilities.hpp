@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -12,6 +11,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
@@ -346,6 +346,18 @@ uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataSto
 }
 
 /**
+ *
+ * @return
+ */
+std::string GetDataFormatFromPreferences();
+
+/**
+ *
+ * @return
+ */
+std::shared_ptr<DataIOCollection> GetDataCollectionInstance();
+
+/**
  * @brief Creates a DataStore with the given properties
  * @tparam T Primitive Type (int, float, ...)
  * @param tupleShape The Tuple Dimensions
@@ -364,13 +376,9 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
   case IDataAction::Mode::Execute: {
     uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
-    auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
-    if(preferencesPtr->forceOocData())
-    {
-      dataFormat = preferencesPtr->largeDataFormat();
-    }
-    auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
-    ioCollection->checkStoreDataFormat(dataSize, dataFormat);
+    dataFormat = GetDataFormatFromPreferences();
+    auto ioCollection = GetDataCollectionInstance();
+    dataFormat = ioCollection->checkStoreDataFormat(dataSize, dataFormat);
     return ioCollection->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
   }
   default: {
@@ -476,7 +484,7 @@ std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T
     return nullptr;
   }
 
-  auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
+  auto ioCollection = GetDataCollectionInstance();
   std::shared_ptr<AbstractDataStore<T>> newStore = ioCollection->createDataStoreWithType<T>(dataFormat, dataStore.getTupleShape(), dataStore.getComponentShape());
   if(newStore == nullptr)
   {

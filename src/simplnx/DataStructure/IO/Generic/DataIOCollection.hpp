@@ -1,10 +1,9 @@
 #pragma once
 
-#include "simplnx/DataStructure/AbstractDataStore.hpp"
-#include "simplnx/simplnx_export.hpp"
-
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <map>
 #include <memory>
@@ -63,7 +62,7 @@ public:
   /**
    * @brief Checks the
    */
-  void checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const;
+  std::string checkStoreDataFormat(uint64 dataSize, std::string dataFormat) const;
 
   iterator begin();
   iterator end();

@@ -6,24 +6,18 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#ifdef SIMPL_PARAM_CONVERT_ARRAY_THRESHOLD
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
-#endif
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#ifdef SIMPL_PARAM_CONVERT_CREATE_COLOR_MAP
 #include "simplnx/Parameters/CreateColorMapParameter.hpp"
-#endif
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/DataTypeParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
-#ifdef SIMPL_PARAM_CONVERT_DYNAMIC_TABLE
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
-#endif
 #include "simplnx/Parameters/EnsembleInfoParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
@@ -32,16 +26,10 @@
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
-#ifdef SIMPL_PARAM_CONVERT_READ_CSV
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
-#endif
-#ifdef SIMPL_PARAM_CONVERT_READ_HDF5_DATASET
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
-#endif
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
-// #include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
 
 #include <nlohmann/json.hpp>
 
@@ -1267,7 +1255,6 @@ struct ChoiceFilterParameterConverter
   }
 };
 
-#ifdef SIMPL_PARAM_CONVERT_DYNAMIC_TABLE
 struct DynamicTableFilterParameterConverter
 {
   using ParameterType = DynamicTableParameter;
@@ -1321,9 +1308,7 @@ struct DynamicTableFilterParameterConverter
     return {std::move(table)};
   }
 };
-#endif
 
-#ifdef SIMPL_PARAM_CONVERT_DYNAMIC_TABLE
 struct ArrayToDynamicTableFilterParameterConverter
 {
   using ParameterType = DynamicTableParameter;
@@ -1358,7 +1343,6 @@ struct ArrayToDynamicTableFilterParameterConverter
     return {std::move(table)};
   }
 };
-#endif
 
 struct AttributeMatrixCreationFilterParameterConverter
 {
@@ -1689,7 +1673,7 @@ struct EnsembleInfoFilterParameterConverter
     return {std::move(value)};
   }
 };
-#ifdef SIMPL_PARAM_CONVERT_CREATE_COLOR_MAP
+
 struct CreateColorMapFilterParameterConverter
 {
   using ParameterType = CreateColorMapParameter;
@@ -1720,9 +1704,7 @@ struct CreateColorMapFilterParameterConverter
     return {std::move(value)};
   }
 };
-#endif
 
-#ifdef SIMPL_PARAM_CONVERT_READ_CSV
 struct ReadASCIIWizardDataFilterParameterConverter
 {
   using ParameterType = ReadCSVFileParameter;
@@ -1801,9 +1783,7 @@ struct ReadASCIIWizardDataFilterParameterConverter
     return {std::move(value)};
   }
 };
-#endif
 
-#ifdef SIMPL_PARAM_CONVERT_READ_HDF5_DATASET
 struct ImportHDF5DatasetFilterParameterConverter
 {
   using ParameterType = ReadHDF5DatasetParameter;
@@ -1857,7 +1837,6 @@ struct ImportHDF5DatasetFilterParameterConverter
     return {std::move(value)};
   }
 };
-#endif
 
 struct DataArraysToRemoveConverter
 {
@@ -2122,7 +2101,6 @@ struct DataContainerReaderFilterParameterConverter
   }
 };
 
-#ifdef SIMPL_PARAM_CONVERT_ARRAY_THRESHOLD
 struct ComparisonSelectionFilterParameterConverter
 {
   using ParameterType = ArrayThresholdsParameter;
@@ -2337,6 +2315,4 @@ struct ComparisonSelectionAdvancedFilterParameterConverter
     return {std::move(value)};
   }
 };
-#endif
-
 } // namespace nx::core::SIMPLConversion

@@ -2,6 +2,8 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <set>
@@ -32,6 +34,24 @@ struct InitializeNeighborListFunctor
 
 namespace nx::core
 {
+
+std::string GetDataFormatFromPreferences()
+{
+  std::string dataFormat;
+
+  auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+  if(preferencesPtr->forceOocData())
+  {
+    dataFormat = preferencesPtr->largeDataFormat();
+  }
+  return dataFormat;
+}
+
+std::shared_ptr<DataIOCollection> GetDataCollectionInstance()
+{
+  return Application::GetOrCreateInstance()->getIOCollection();
+}
+
 //-----------------------------------------------------------------------------
 Result<> CheckValueConverts(const std::string& value, NumericType numericType)
 {
