@@ -271,7 +271,7 @@ public:
                 histogram[m_NumBins - 1]++;
               }
             } // end of numTuples loop
-          }   // end of increment else
+          } // end of increment else
 
           if(m_ModalBinRanges)
           {

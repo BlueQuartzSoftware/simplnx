@@ -15,7 +15,6 @@
 
 #include <fmt/core.h>
 
-
 #include <random>
 #include <sstream>
 #include <thread>

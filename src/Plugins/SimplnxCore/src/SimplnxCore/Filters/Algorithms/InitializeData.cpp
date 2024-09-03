@@ -2,11 +2,11 @@
 
 #include "InitializeData.hpp"
 
+#include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/AbstractDataStore.hpp"
 
 #include <chrono>
 #include <limits>

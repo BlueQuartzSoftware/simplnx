@@ -584,8 +584,7 @@ PYBIND11_MODULE(simplnx, mod)
   parameters.def("insert_linkable_parameter", &PyInsertLinkableParameter<ChoicesParameter>);
   parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, BoolParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
   parameters.def("link_parameters", [](Parameters& self, std::string groupKey, std::string childKey, ChoicesParameter::ValueType value) { self.linkParameters(groupKey, childKey, value); });
-  parameters.def(
-      "__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
+  parameters.def("__getitem__", [](Parameters& self, std::string_view key) { return self.at(key).get(); }, py::return_value_policy::reference_internal);
 
   py::class_<IArrayThreshold, std::shared_ptr<IArrayThreshold>> iArrayThreshold(mod, "IArrayThreshold");
 
@@ -1422,12 +1421,10 @@ PYBIND11_MODULE(simplnx, mod)
       "path"_a);
   pipeline.def_property("name", &Pipeline::getName, &Pipeline::setName);
   pipeline.def("execute", &ExecutePipeline);
-  pipeline.def(
-      "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
+  pipeline.def("__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
   pipeline.def("size", &Pipeline::size);
-  pipeline.def(
-      "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+  pipeline.def("__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
   pipeline.def(
       "insert",
       [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter, const py::dict& args) {
@@ -1441,10 +1438,8 @@ PYBIND11_MODULE(simplnx, mod)
   pipeline.def("remove", &Pipeline::removeAt, "index"_a);
 
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
-  pipelineFilter.def(
-      "set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
-  pipelineFilter.def(
-      "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
+  pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
+  pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
   pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {

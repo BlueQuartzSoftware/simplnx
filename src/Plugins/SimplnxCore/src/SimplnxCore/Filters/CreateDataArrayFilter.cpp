@@ -163,16 +163,16 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-//  if(initValue.empty())
-//  {
-//    return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
-//  }
-//  // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
-//  Result<> result = CheckValueConverts(initValue, numericType);
-//  if(result.invalid())
-//  {
-//    return {ConvertResultTo<OutputActions>(std::move(result), {})};
-//  }
+  //  if(initValue.empty())
+  //  {
+  //    return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
+  //  }
+  //  // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
+  //  Result<> result = CheckValueConverts(initValue, numericType);
+  //  if(result.invalid())
+  //  {
+  //    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  //  }
 
   std::vector<usize> compDims = std::vector<usize>{numComponents};
   std::vector<usize> tupleDims = {};
@@ -220,10 +220,10 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
   auto seedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
 
-//  nx::core::Result<OutputActions> resultOutputActions;
+  //  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-//  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_ArrayPath_Key));
+  //  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_ArrayPath_Key));
 
   if(arrayDataType == DataType::boolean)
   {
@@ -406,10 +406,9 @@ Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const 
                                             const std::atomic_bool& shouldCancel) const
 {
   auto path = filterArgs.value<DataPath>(k_DataPath_Key);
-  auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
+  // auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
 
-  ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(filterArgs.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), initValue);
-
+  ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(filterArgs.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), "0");
 
   auto initType = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
 
@@ -462,7 +461,7 @@ Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
   // Initialize Type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitializationValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitValue_Key));
   // Initialization Range parameter is not applicable in NX
   // Starting Index value parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));

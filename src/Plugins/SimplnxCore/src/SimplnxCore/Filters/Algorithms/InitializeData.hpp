@@ -3,9 +3,8 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 namespace nx::core
 {
@@ -39,7 +38,6 @@ struct SIMPLNXCORE_EXPORT InitializeDataInputValues
   std::vector<std::string> randEnd;
   bool standardizeSeed;
 };
-
 
 struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
 {
@@ -92,13 +90,12 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
   }
 };
 
-
 class InitializeData
 {
 public:
   InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues);
   ~InitializeData() noexcept;
-  
+
   InitializeData(const InitializeData&) = delete;
   InitializeData(InitializeData&&) noexcept = delete;
   InitializeData& operator=(const InitializeData&) = delete;
@@ -113,7 +110,6 @@ private:
   const InitializeDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  
 };
 
-}
+} // namespace nx::core

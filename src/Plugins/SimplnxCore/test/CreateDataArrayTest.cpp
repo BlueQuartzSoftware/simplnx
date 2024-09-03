@@ -46,7 +46,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("-1"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("-1"));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -57,7 +57,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1024"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1024"));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(0));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -81,7 +81,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -93,7 +93,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>(""));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>(""));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -105,33 +105,33 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("1000"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1000"));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint8));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("-1"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("-1"));
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int16));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("70000"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("70000"));
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("-1"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("-1"));
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("4294967297"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("4294967297"));
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
-    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("-4294967297"));
+    args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("-4294967297"));
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
