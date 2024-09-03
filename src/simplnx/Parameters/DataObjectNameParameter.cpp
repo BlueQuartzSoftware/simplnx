@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -78,4 +79,63 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
   }
   return {};
 }
+
+namespace SIMPLConversion
+{
+Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreationFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("LinkedPathCreationFilterParameter json '{}' is not a string", json.dump()));
+  }
+
+  auto value = json.get<std::string>();
+
+  return {std::move(value)};
+}
+
+Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> DataArrayCreationToDataObjectNameFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataArrayNameResult = ReadDataArrayName(json, "DataArrayCreationFilterParameter");
+  if(dataArrayNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+  }
+
+  return {std::move(dataArrayNameResult.value())};
+}
+
+Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerNameFilterParameterConverter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  return {std::move(dataContainerNameResult.value())};
+}
+
+Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto nameResult = ReadAttributeMatrixName(json, "AttributeMatrixNameFilterParameterConverter");
+  if(nameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(nameResult));
+  }
+
+  return {std::move(nameResult.value())};
+}
+
+Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto nameResult = ReadDataArrayName(json, "DataArrayNameFilterParameterConverter");
+  if(nameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(nameResult));
+  }
+
+  return {std::move(nameResult.value())};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
@@ -189,4 +190,43 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
   }
   return {{objects}};
 }
+
+namespace SIMPLConversion
+{
+Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_array())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("MultiDataArraySelectionParameter json '{}' is not an array", json.dump()));
+  }
+
+  std::vector<DataPath> dataPaths;
+
+  for(auto& iter : json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(iter, "DataArrayCreationFilterParameter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+
+    auto dataArrayNameResult = ReadDataArrayName(iter, "DataArrayCreationFilterParameter");
+    if(dataArrayNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+    }
+
+    DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+    dataPaths.push_back(std::move(dataPath));
+  }
+
+  return {std::move(dataPaths)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

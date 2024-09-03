@@ -96,6 +96,25 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT SingleToMultiDataPathSelectionFilterParameterConverter
+{
+  using ParameterType = MultiPathSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT DataArraysToRemoveConverter
+{
+  using ParameterType = MultiPathSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiPathSelectionParameter, "b5632f4f-fc13-4234-beb2-8fd8820eb6b6");

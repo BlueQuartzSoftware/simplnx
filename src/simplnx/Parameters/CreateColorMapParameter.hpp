@@ -81,6 +81,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT CreateColorMapFilterParameterConverter
+{
+  using ParameterType = CreateColorMapParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CreateColorMapParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0");

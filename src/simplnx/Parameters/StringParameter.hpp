@@ -75,6 +75,43 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+template <typename T>
+struct NumberToStringFilterParameterConverter
+{
+  using ParameterType = StringParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct NumberToStringFilterParameterConverter<int8>;
+extern template struct NumberToStringFilterParameterConverter<uint8>;
+
+extern template struct NumberToStringFilterParameterConverter<int16>;
+extern template struct NumberToStringFilterParameterConverter<uint16>;
+
+extern template struct NumberToStringFilterParameterConverter<int32>;
+extern template struct NumberToStringFilterParameterConverter<uint32>;
+
+extern template struct NumberToStringFilterParameterConverter<int64>;
+extern template struct NumberToStringFilterParameterConverter<uint64>;
+
+extern template struct NumberToStringFilterParameterConverter<float32>;
+extern template struct NumberToStringFilterParameterConverter<float64>;
+
+using DoubleToStringFilterParameterConverter = NumberToStringFilterParameterConverter<float64>;
+
+struct SIMPLNX_EXPORT StringFilterParameterConverter
+{
+  using ParameterType = StringParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::StringParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003");

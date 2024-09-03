@@ -99,6 +99,17 @@ public:
 private:
   ValueType m_DefaultValue;
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataContainerReaderFilterParameterConverter
+{
+  using ParameterType = Dream3dImportParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5");

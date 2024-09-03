@@ -143,4 +143,53 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   return {};
 }
 
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_CrystalStructureKey = "CrystalStructure";
+constexpr StringLiteral k_PhaseNameKey = "PhaseName";
+constexpr StringLiteral k_PhaseTypeKey = "PhaseType";
+} // namespace
+
+Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_array())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an array", json.dump()));
+  }
+
+  ValueType value;
+
+  for(const auto& iter : json)
+  {
+    if(!iter.is_object())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an object", iter.dump()));
+    }
+
+    if(!iter[k_CrystalStructureKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an integer '{}'", iter.dump(), iter[k_CrystalStructureKey].dump()));
+    }
+    if(!iter[k_PhaseNameKey].is_string())
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not a string '{}'", iter.dump(), iter[k_PhaseNameKey].dump()));
+    }
+    if(!iter[k_PhaseTypeKey].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-5, fmt::format("EnsembleInfoFilterParameterConverter json '{}' is not an integer '{}'", iter.dump(), iter[k_PhaseTypeKey].dump()));
+    }
+
+    ParameterType::RowType row;
+    row[0] = ParameterType::k_CrystalStructures[iter[k_CrystalStructureKey].get<int32>()];
+    row[1] = ParameterType::k_PhaseTypes[iter[k_PhaseTypeKey].get<int32>()];
+    row[2] = iter[k_PhaseNameKey].get<std::string>();
+
+    value.push_back(std::move(row));
+  }
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

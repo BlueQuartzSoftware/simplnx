@@ -82,6 +82,49 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT LinkedPathCreationFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT DataArrayCreationToDataObjectNameFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT DataContainerNameFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT AttributeMatrixNameFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
+{
+  using ParameterType = DataObjectNameParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataObjectNameParameter, "fbc89375-3ca4-4eb2-8257-aad9bf8e1c94");

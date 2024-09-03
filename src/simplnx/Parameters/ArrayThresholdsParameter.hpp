@@ -110,6 +110,25 @@ private:
   ValueType m_DefaultValue = {};
   AllowedComponentShapes m_RequiredComponentShapes = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT ComparisonSelectionFilterParameterConverter
+{
+  using ParameterType = ArrayThresholdsParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT ComparisonSelectionAdvancedFilterParameterConverter
+{
+  using ParameterType = ArrayThresholdsParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArrayThresholdsParameter, "e93251bc-cdad-44c2-9332-58fe26aedfbe");

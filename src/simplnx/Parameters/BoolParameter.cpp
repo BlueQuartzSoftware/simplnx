@@ -67,4 +67,42 @@ bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& 
   return value == storedValue;
 }
 
+namespace SIMPLConversion
+{
+Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_number_integer() || !json.is_number_unsigned())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("BooleanFilterParameter json '{}' is not a boolean", json.dump()));
+  }
+
+  auto value = static_cast<bool>(json.get<uint8>());
+
+  return {std::move(value)};
+}
+
+Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_number_integer() || !json.is_number_unsigned())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("BooleanFilterParameter json '{}' is not a boolean", json.dump()));
+  }
+
+  auto value = !static_cast<bool>(json.get<uint8>());
+
+  return {std::move(value)};
+}
+
+Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_number_integer())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("LinkedBooleanFilterParameter json '{}' is not an integer", json.dump()));
+  }
+
+  auto value = static_cast<bool>(json.get<int32>());
+
+  return {value};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

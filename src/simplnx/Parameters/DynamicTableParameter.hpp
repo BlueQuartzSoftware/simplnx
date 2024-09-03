@@ -91,6 +91,25 @@ private:
   ValueType m_DefaultValue = {};
   DynamicTableInfo m_TableInfo;
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DynamicTableFilterParameterConverter
+{
+  using ParameterType = DynamicTableParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT ArrayToDynamicTableFilterParameterConverter
+{
+  using ParameterType = DynamicTableParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DynamicTableParameter, "eea76f1a-fab9-4704-8da5-4c21057cf44e");

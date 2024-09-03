@@ -101,6 +101,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT ReadASCIIWizardDataFilterParameterConverter
+{
+  using ParameterType = ReadCSVFileParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");

@@ -85,6 +85,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT EnsembleInfoFilterParameterConverter
+{
+  using ParameterType = EnsembleInfoParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::EnsembleInfoParameter, "10d3924f-b4c9-4e06-9225-ce11ec8dff89");

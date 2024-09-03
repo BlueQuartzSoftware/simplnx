@@ -175,4 +175,150 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 
   return {};
 }
+
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_EndIndex = "EndIndex";
+constexpr StringLiteral k_FileExtension = "FileExtension";
+constexpr StringLiteral k_FilePrefix = "FilePrefix";
+constexpr StringLiteral k_FileSuffix = "FileSuffix";
+constexpr StringLiteral k_IncrementIndex = "IncrementIndex";
+constexpr StringLiteral k_InputPath = "InputPath";
+constexpr StringLiteral k_Ordering = "Ordering";
+constexpr StringLiteral k_PaddingDigits = "PaddingDigits";
+constexpr StringLiteral k_StartIndex = "StartIndex";
+} // namespace
+
+Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.contains(k_EndIndex))
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_EndIndex));
+  }
+
+  if(!json[k_EndIndex].is_number_integer())
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_EndIndex));
+  }
+
+  ValueType value;
+  value.endIndex = json[k_EndIndex].get<int32>();
+
+  {
+    if(!json.contains(k_FileExtension))
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FileExtension));
+    }
+
+    if(!json[k_FileExtension].is_string())
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileExtension));
+    }
+
+    value.fileExtension = json[k_FileExtension].get<std::string>();
+  }
+
+  {
+    if(!json.contains(k_FilePrefix))
+    {
+      return MakeErrorResult<ValueType>(-5, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FilePrefix));
+    }
+
+    if(!json[k_FilePrefix].is_string())
+    {
+      return MakeErrorResult<ValueType>(-6, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FilePrefix));
+    }
+
+    value.filePrefix = json[k_FilePrefix].get<std::string>();
+  }
+
+  {
+    if(!json.contains(k_FileSuffix))
+    {
+      return MakeErrorResult<ValueType>(-7, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_FileSuffix));
+    }
+
+    if(!json[k_FileSuffix].is_string())
+    {
+      return MakeErrorResult<ValueType>(-8, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileSuffix));
+    }
+
+    value.fileSuffix = json[k_FileSuffix].get<std::string>();
+  }
+
+  {
+    if(!json.contains(k_IncrementIndex))
+    {
+      return MakeErrorResult<ValueType>(-9, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_IncrementIndex));
+    }
+
+    if(!json[k_IncrementIndex].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-10, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_IncrementIndex));
+    }
+
+    value.incrementIndex = json[k_IncrementIndex].get<int32>();
+  }
+
+  {
+    if(!json.contains(k_InputPath))
+    {
+      return MakeErrorResult<ValueType>(-11, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_InputPath));
+    }
+
+    if(!json[k_InputPath].is_string())
+    {
+      return MakeErrorResult<ValueType>(-12, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_InputPath));
+    }
+
+    value.inputPath = json[k_InputPath].get<std::string>();
+  }
+
+  {
+    if(!json.contains(k_Ordering))
+    {
+      return MakeErrorResult<ValueType>(-13, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_Ordering));
+    }
+
+    if(!json[k_Ordering].is_number_unsigned())
+    {
+      return MakeErrorResult<ValueType>(-14, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_Ordering));
+    }
+
+    value.ordering = static_cast<ParameterType::Ordering>(json[k_Ordering].get<uint8>());
+  }
+
+  {
+    if(!json.contains(k_PaddingDigits))
+    {
+      return MakeErrorResult<ValueType>(-15, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_PaddingDigits));
+    }
+
+    if(!json[k_PaddingDigits].is_number_unsigned())
+    {
+      return MakeErrorResult<ValueType>(-16, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_PaddingDigits));
+    }
+
+    value.paddingDigits = json[k_PaddingDigits].get<uint32>();
+  }
+
+  {
+    if(!json.contains(k_StartIndex))
+    {
+      return MakeErrorResult<ValueType>(-17, fmt::format("FileListInfoFilterParameterConverter json '{}' does not contain '{}'", json.dump(), k_StartIndex));
+    }
+
+    if(!json[k_StartIndex].is_number_integer())
+    {
+      return MakeErrorResult<ValueType>(-18, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_StartIndex));
+    }
+
+    value.startIndex = json[k_StartIndex].get<int32>();
+  }
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

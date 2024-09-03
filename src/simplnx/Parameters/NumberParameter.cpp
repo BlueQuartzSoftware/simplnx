@@ -89,4 +89,80 @@ template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<uint64>;
 
 template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<float32>;
 template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<float64>;
+
+namespace SIMPLConversion
+{
+template <typename T>
+Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterConverter<T>::convert(const nlohmann::json& json)
+{
+  if(!json.is_number_integer())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter json '{}' is not an integer", json.dump()));
+  }
+
+  if constexpr(std::is_unsigned_v<T>)
+  {
+    if(!json.is_number_unsigned())
+    {
+      return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter json '{}' is not unsigned", json.dump()));
+    }
+  }
+
+  auto value = json.get<T>();
+
+  return {value};
+}
+
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<int8>;
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<uint8>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<int16>;
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<uint16>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<int32>;
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<uint32>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<int64>;
+template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<uint64>;
+
+template <typename T>
+Result<typename StringToIntFilterParameterConverter<T>::ValueType> StringToIntFilterParameterConverter<T>::convert(const nlohmann::json& json)
+{
+  if(!json.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("StringToIntFilterParameterConverter json '{}' is not a string", json.dump()));
+  }
+
+  auto value = static_cast<T>(std::stoi(json.get<std::string>()));
+  return {value};
+}
+
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<int8>;
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<uint8>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<int16>;
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<uint16>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<int32>;
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<uint32>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<int64>;
+template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<uint64>;
+
+template <class T>
+Result<typename FloatFilterParameterConverter<T>::ValueType> FloatFilterParameterConverter<T>::convert(const nlohmann::json& json)
+{
+  if(!json.is_number())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("FloatFilterParameter json '{}' is not a number", json.dump()));
+  }
+
+  auto value = json.get<T>();
+
+  return {value};
+}
+
+template struct SIMPLNX_TEMPLATE_EXPORT FloatFilterParameterConverter<float32>;
+template struct SIMPLNX_TEMPLATE_EXPORT FloatFilterParameterConverter<float64>;
+} // namespace SIMPLConversion
 } // namespace nx::core

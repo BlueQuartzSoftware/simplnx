@@ -61,4 +61,47 @@ Result<> StringParameter::validate(const std::any& value) const
   [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
   return {};
 }
+
+namespace SIMPLConversion
+{
+template <typename T>
+Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToStringFilterParameterConverter<T>::convert(const nlohmann::json& json)
+{
+  if(!json.is_number())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("NumberToStringFilterParameterConverter json '{}' is not a number", json.dump()));
+  }
+
+  auto value = json.get<T>();
+
+  return {std::to_string(value)};
+}
+
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<int8>;
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<uint8>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<int16>;
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<uint16>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<int32>;
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<uint32>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<int64>;
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<uint64>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float32>;
+template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float64>;
+
+Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("StringFilterParameter json '{}' is not a string", json.dump()));
+  }
+
+  auto value = json.get<std::string>();
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

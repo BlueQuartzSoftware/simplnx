@@ -121,6 +121,17 @@ private:
   AllowedDataTypes m_AllowedDataTypes = {};
   AllowedComponentShapes m_RequiredComponentShapes = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT MultiDataArraySelectionFilterParameterConverter
+{
+  using ParameterType = MultiArraySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8");

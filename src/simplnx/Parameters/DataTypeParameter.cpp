@@ -114,4 +114,48 @@ Result<> DataTypeParameter::validate(const std::any& value) const
   [[maybe_unused]] auto castValue = std::any_cast<ValueType>(value);
   return {};
 }
+
+namespace SIMPLConversion
+{
+/*
+enum class Type : int32_t
+{
+  Int8 = 0,
+  UInt8,
+  Int16,
+  UInt16,
+  Int32,
+  UInt32,
+  Int64,
+  UInt64,
+  Float,
+  Double,
+  Bool,
+  SizeT
+};
+*/
+
+Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_number_integer())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("ScalarTypeParameter json '{}' is not an integer", json.dump()));
+  }
+
+  auto value = json.get<int32>();
+
+  if(value < 0 || value > 11)
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("Invalid ScalarTypeParameter value '{}'", value));
+  }
+
+  // Convert size_t to uint64
+  if(value == 11)
+  {
+    return {DataType::uint64};
+  }
+
+  return {static_cast<DataType>(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core
