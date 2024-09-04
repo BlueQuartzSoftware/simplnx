@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"

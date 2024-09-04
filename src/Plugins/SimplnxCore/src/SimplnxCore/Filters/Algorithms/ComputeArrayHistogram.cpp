@@ -54,8 +54,8 @@ Result<> ComputeArrayHistogram::operator()()
     }
 
     const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
     auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
+    auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
     Result<> result = {};
     if(m_InputValues->UserDefinedRange)
     {

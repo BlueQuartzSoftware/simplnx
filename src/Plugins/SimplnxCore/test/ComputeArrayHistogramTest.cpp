@@ -59,7 +59,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
   args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(dataPaths));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(dataGPath));
-  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoName_Key, std::make_any<std::string>("Histogram"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>("Histogram"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStruct, args);
