@@ -7,7 +7,6 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include <chrono>
 #include <tuple>
 
 using namespace nx::core;
@@ -29,22 +28,6 @@ ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
 void ComputeArrayHistogram::updateProgress(const std::string& progressMessage)
 {
   m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
-}
-// -----------------------------------------------------------------------------
-void ComputeArrayHistogram::updateThreadSafeProgress(size_t counter)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
-  {
-    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
-    std::string progressMessage = "Calculating... ";
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -71,16 +54,17 @@ Result<> ComputeArrayHistogram::operator()()
     }
 
     const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    auto& histogram = m_DataStructure.getDataAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i))->getDataStoreRef();
+    auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
+    auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
     Result<> result = {};
     if(m_InputValues->UserDefinedRange)
     {
-      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData,
-                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, histogram, overflow);
+      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges,
+                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, counts, overflow);
     }
     else
     {
-      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, m_ShouldCancel, numBins, histogram, overflow);
+      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, m_ShouldCancel, numBins, counts, overflow);
     }
 
     if(result.invalid())

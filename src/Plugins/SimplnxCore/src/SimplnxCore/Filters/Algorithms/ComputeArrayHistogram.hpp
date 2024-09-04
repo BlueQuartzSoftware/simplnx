@@ -20,7 +20,8 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
   float64 MinRange = 0.0;
   float64 MaxRange = 0.0;
   MultiArraySelectionParameter::ValueType SelectedArrayPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedHistogramDataPaths = {};
+  MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths = {};
+  MultiArraySelectionParameter::ValueType CreatedBinRangeDataPaths = {};
 };
 
 /**
@@ -42,7 +43,6 @@ public:
   Result<> operator()();
 
   void updateProgress(const std::string& progMessage);
-  void updateThreadSafeProgress(size_t counter);
   const std::atomic_bool& getCancel();
 
 private:

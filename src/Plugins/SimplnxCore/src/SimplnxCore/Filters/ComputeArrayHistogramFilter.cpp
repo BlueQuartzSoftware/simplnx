@@ -158,7 +158,7 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
     createdDataPaths.push_back(childPath);
   }
 
-  inputValues.CreatedHistogramDataPaths = createdDataPaths;
+  inputValues.CreatedHistogramCountsDataPaths = createdDataPaths;
 
   return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

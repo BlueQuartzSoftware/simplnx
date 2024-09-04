@@ -73,9 +73,25 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
 }
 } // namespace detail
 
+/**
+ * @function GenerateHistogram
+ * @brief This function creates a uniform histogram (logarithmic possible, but not currently implemented) it fills two arrays one with the ranges for each bin and one for bin counts
+ * See FillBinRanges function for details on the high level structuring of the bin ranges array
+ * @tparam Type this the end type of the function in that it is the scalar type of the input and by extension range data
+ * @tparam SizeType this is the scalar type of the bin counts container
+ * @tparam Container this is the type of object the ranges are loaded into:
+ * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
+ * @param inputStore this is the container holding the data that will be binned
+ * @param binRangesStore this is the object that the ranges will be loaded into.
+ * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
+ * @param shouldCancel this is an atomic value that will determine whether execution ends early
+ * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+ * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
+ * @param overflow this is an atomic counter for the number of values that fall outside the bin range
+ */
 template <typename Type, std::integral SizeType, template <typename> class Container>
-SIMPLNX_EXPORT Result<> GenerateHistogram(const Container<Type>& inputStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
-                                          Container<Type>& binRangesStore, Container<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
+SIMPLNX_EXPORT Result<> GenerateHistogram(const Container<Type>& inputStore, Container<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
+                                          const int32 numBins, Container<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
 {
   usize end = 0;
   if constexpr(std::is_same_v<std::vector<Type>, Container<Type>>)
@@ -136,20 +152,26 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const Container<Type>& inputStore, con
   return {};
 }
 
+/**
+ * @class GenerateHistogramFunctor
+ * @brief This is a compatibility functor that leverages existing typecasting functions to execute GenerateHistogram() cleanly. In it there are two
+ * definitions for the `()` operator that allows for implicit calculation of range, predicated whether a range is passed in or not
+ */
 struct SIMPLNX_EXPORT GenerateHistogramFunctor
 {
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, ArgsT&&... args) const
+  Result<> operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
     auto minMax = std::minmax_element(inputStore.begin(), inputStore.end());
 
-    return GenerateHistogram(inputStore, std::make_pair(*minMax.first, *minMax.second + static_cast<Type>(1.0)), std::forward<ArgsT>(args)...);
+    return GenerateHistogram(inputStore, binRangesArray->template getIDataStoreRefAs<AbstractDataStore<Type>>(), std::make_pair(*minMax.first, *minMax.second + static_cast<Type>(1.0)),
+                             std::forward<ArgsT>(args)...);
   }
 
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, std::pair<float64, float64>&& rangeMinMax, ArgsT&&... args) const
+  Result<> operator()(const IDataArray* inputArray, IDataArray* binRangesArray, std::pair<float64, float64>&& rangeMinMax, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
@@ -160,19 +182,37 @@ struct SIMPLNX_EXPORT GenerateHistogramFunctor
                                                  rangeMinMax.second, __FILE__, __LINE__));
     }
 
-    return GenerateHistogram(inputStore, std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second)), std::forward<ArgsT>(args)...);
+    return GenerateHistogram(inputStore, binRangesArray->template getIDataStoreRefAs<AbstractDataStore<Type>>(),
+                             std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second)), std::forward<ArgsT>(args)...);
   }
 };
 } // namespace serial
 
 namespace concurrent
 {
+/**
+ * @class GenerateHistogramImpl
+ * @brief This class is a pseudo-wrapper for the serial::GenerateHistogram, the reason for this class' existence is to hold/define ownership of objects in each thread
+ * @tparam Type this the end type of the function in that the container and data values are of this type
+ * @tparam SizeType this is the scalar type of the bin counts container
+ */
 template <typename Type, std::integral SizeType>
 class SIMPLNX_EXPORT GenerateHistogramImpl
 {
 public:
-  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<Type>& binRangesStore, AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
+  /**
+   * @function constructor
+   * @brief This constructor requires a defined range and creates the object
+   * @param inputStore this is the AbstractDataStore holding the data that will be binned
+   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
+   * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
+   * @param shouldCancel this is an atomic value that will determine whether execution ends early
+   * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+   * @param histogramStore this is the AbstractDataStore that will hold the counts for each bin (variable type sizing)
+   * @param overflow this is an atomic counter for the number of values that fall outside the bin range
+   */
+  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
+                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -183,7 +223,17 @@ public:
     m_Range = std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second));
   }
 
-  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<Type>& binRangesStore,
+  /**
+   * @function constructor
+   * @brief This constructor constructs the object then calculates and stores the range implicitly
+   * @param inputStore this is the AbstractDataStore holding the data that will be binned
+   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
+   * @param shouldCancel this is an atomic value that will determine whether execution ends early
+   * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+   * @param histogramStore this is the AbstractDataStore that will hold the counts for each bin (variable type sizing)
+   * @param overflow this is an atomic counter for the number of values that fall outside the bin range
+   */
+  GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
                         AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -198,9 +248,13 @@ public:
 
   ~GenerateHistogramImpl() = default;
 
+  /**
+   * @function operator()
+   * @brief This function serves as the execute method
+   */
   void operator()() const
   {
-    serial::GenerateHistogram(m_InputStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
+    serial::GenerateHistogram(m_InputStore, m_BinRangesStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
   }
 
 private:
@@ -213,12 +267,17 @@ private:
   std::atomic<usize>& m_Overflow;
 };
 
+/**
+ * @class InstantiateHistogramImplFunctor
+ * @brief This is a compatibility functor that leverages existing typecasting functions to create the appropriately typed GenerateHistogramImpl() cleanly.
+ * Designed for compatibility with the existing parallel execution classes.
+ */
 struct InstantiateHistogramImplFunctor
 {
   template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* iDataArray, ArgsT&&... args)
+  auto operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
   {
-    return GenerateHistogramImpl(iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), std::forward<ArgsT>(args)...);
+    return GenerateHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), std::forward<ArgsT>(args)...);
   }
 };
 } // namespace concurrent
