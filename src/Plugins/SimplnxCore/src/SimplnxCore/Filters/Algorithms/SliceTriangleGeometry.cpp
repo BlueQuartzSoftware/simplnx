@@ -93,9 +93,12 @@ Result<> SliceTriangleGeometry::operator()()
   std::vector<int32> sliceIds;
   std::vector<int32> regionIds;
 
+  AbstractDataStore<int32>* triRegionIdPtr = nullptr;
   // Get an object reference to the pointer
-  const auto& triRegionId = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath)->getDataStoreRef();
-
+  if(m_InputValues->HaveRegionIds)
+  {
+    triRegionIdPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath)->getDataStore();
+  }
   int32 edgeCounter = 0;
   for(usize i = 0; i < numTris; i++)
   {
@@ -103,7 +106,7 @@ Result<> SliceTriangleGeometry::operator()()
     // get regionId of this triangle (if they are available)
     if(m_InputValues->HaveRegionIds)
     {
-      regionId = triRegionId[i];
+      regionId = triRegionIdPtr->operator[](i);
     }
     // determine which slices would hit the triangle
     auto minTriDim = std::numeric_limits<float32>::max();
