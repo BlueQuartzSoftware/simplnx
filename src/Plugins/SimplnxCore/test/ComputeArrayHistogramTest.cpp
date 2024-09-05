@@ -14,12 +14,22 @@ using namespace nx::core;
 namespace
 {
 constexpr float64 k_max_difference = 0.0001;
+constexpr StringLiteral k_BinRangesSuffix = " Ranges";
+constexpr StringLiteral k_BinCountsSuffix = " Counts";
+constexpr StringLiteral k_Array0Name = "array0";
+constexpr StringLiteral k_Array1Name = "array1";
+constexpr StringLiteral k_Array2Name = "array2";
 
-void compareHistograms(const DataArray<float64>& calulated, const std::array<float64, 8>& actual)
+template <typename T, usize N>
+void compareHistograms(const AbstractDataStore<T>& calculated, const std::array<T, N>& actual)
 {
-  for(int32 i = 0; i < actual.size(); i++)
+  if(calculated.getSize() != actual.size())
   {
-    float64 diff = std::fabs(calulated[i] - actual[i]);
+    throw std::runtime_error("Improper sizing of DataStore");
+  }
+  for(int32 i = 0; i < N; i++)
+  {
+    T diff = std::fabs(calculated[i] - actual[i]);
     REQUIRE(diff < ::k_max_difference);
   }
 }
@@ -44,10 +54,10 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
   Arguments args;
 
   // load vector with data paths for test
-  ::fillArray(*DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStruct, "array0", {static_cast<usize>(4)}, {static_cast<usize>(3)}),
+  ::fillArray(*DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStruct, k_Array0Name, {static_cast<usize>(4)}, {static_cast<usize>(3)}),
               {0.0, 5.5, 8.5, 9.2, 16.7, 907.3, 5.0, 6.9, 83.7387483, -56.8, 3.7, -4.9});
-  ::fillArray(*DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStruct, "array1", {static_cast<usize>(4)}, {static_cast<usize>(3)}), {56, 82, 46, 93, 73, 57, 24, 32, -90, -35, 74, -19});
-  ::fillArray(*DataArray<uint32>::CreateWithStore<DataStore<uint32>>(dataStruct, "array2", {static_cast<usize>(4)}, {static_cast<usize>(3)}), {83, 93, 75, 67, 8977, 56, 48, 92, 57, 34, 34, 34});
+  ::fillArray(*DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStruct, k_Array1Name, {static_cast<usize>(4)}, {static_cast<usize>(3)}), {56, 82, 46, 93, 73, 57, 24, 32, -90, -35, 74, -19});
+  ::fillArray(*DataArray<uint32>::CreateWithStore<DataStore<uint32>>(dataStruct, k_Array2Name, {static_cast<usize>(4)}, {static_cast<usize>(3)}), {83, 93, 75, 67, 8977, 56, 48, 92, 57, 34, 34, 34});
 
   std::vector<DataPath> dataPaths = dataStruct.getAllDataPaths();
   auto parentPath = dataPaths[0].getParent();
@@ -59,7 +69,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
   args.insertOrAssign(ComputeArrayHistogramFilter::k_CreateNewDataGroup_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(dataPaths));
   args.insertOrAssign(ComputeArrayHistogramFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(dataGPath));
-  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>("Histogram"));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinRangeName_Key, std::make_any<std::string>(std::string{::k_BinRangesSuffix}));
+  args.insertOrAssign(ComputeArrayHistogramFilter::k_HistoBinCountName_Key, std::make_any<std::string>(std::string{::k_BinCountsSuffix}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStruct, args);
@@ -69,32 +80,28 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
   auto executeResult = filter.execute(dataStruct, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // load vector with child paths from filter
-  std::vector<DataPath> createdDataPaths;
-  for(auto& selectedArrayPath : dataPaths) // regenerate based on preflight
   {
-    const auto& dataArray = dataStruct.getDataAs<IDataArray>(selectedArrayPath);
-    auto childPath = dataGPath.createChildPath((dataArray->getName() + "Histogram"));
-    createdDataPaths.push_back(childPath);
-  }
+    std::array<float64, 5> binRangesSet = {-56.8, 184.475, 425.75, 667.025, 908.3};
+    std::array<uint64, 4> binCountsSet = {11, 0, 0, 1};
+    const std::string name = k_Array0Name;
 
-  std::array<float64, 8> array0HistogramSet = {183.725, 11, 425.25, 0, 666.775, 0, 908.3, 1};
-  std::array<float64, 8> array1HistogramSet = {-44.75, 1, 1.5, 2, 47.75, 3, 94, 6};
-  std::array<float64, 8> array2HistogramSet = {2269.25, 11, 4505.5, 0, 6741.75, 0, 8978, 1};
-  for(const auto& child : createdDataPaths)
+    compareHistograms(dataStruct.getDataAs<Float64Array>(dataGPath.createChildPath((name + std::string{k_BinRangesSuffix})))->getDataStoreRef(), binRangesSet);
+    compareHistograms(dataStruct.getDataAs<UInt64Array>(dataGPath.createChildPath((name + std::string{k_BinCountsSuffix})))->getDataStoreRef(), binCountsSet);
+  }
   {
-    auto& dataArray = dataStruct.getDataRefAs<DataArray<float64>>(child);
-    if(dataArray.getName().find("array0") != std::string::npos)
-    {
-      compareHistograms(dataArray, array0HistogramSet);
-    }
-    else if(dataArray.getName().find("array1") != std::string::npos)
-    {
-      compareHistograms(dataArray, array1HistogramSet);
-    }
-    else if(dataArray.getName().find("array2") != std::string::npos)
-    {
-      compareHistograms(dataArray, array2HistogramSet);
-    }
+    std::array<int32, 5> binRangesSet = {-90, -44, 2, 48, 94};
+    std::array<uint64, 4> binCountsSet = {1, 2, 3, 6};
+    const std::string name = k_Array1Name;
+
+    compareHistograms(dataStruct.getDataAs<Int32Array>(dataGPath.createChildPath((name + std::string{k_BinRangesSuffix})))->getDataStoreRef(), binRangesSet);
+    compareHistograms(dataStruct.getDataAs<UInt64Array>(dataGPath.createChildPath((name + std::string{k_BinCountsSuffix})))->getDataStoreRef(), binCountsSet);
+  }
+  {
+    std::array<uint32, 5> binRangesSet = {34, 2270, 4506, 6742, 8978};
+    std::array<uint64, 4> binCountsSet = {11, 0, 0, 1};
+    const std::string name = k_Array2Name;
+
+    compareHistograms(dataStruct.getDataAs<UInt32Array>(dataGPath.createChildPath((name + std::string{k_BinRangesSuffix})))->getDataStoreRef(), binRangesSet);
+    compareHistograms(dataStruct.getDataAs<UInt64Array>(dataGPath.createChildPath((name + std::string{k_BinCountsSuffix})))->getDataStoreRef(), binCountsSet);
   }
 }

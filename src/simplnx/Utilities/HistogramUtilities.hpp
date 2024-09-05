@@ -46,7 +46,7 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
   // iterate through loading the middle values of the sequence considering `lower bound inclusive, upper bound exclusive`
   for(int32 i = 0; i < numBins; i++)
   {
-    outputContainer[i] = static_cast<Type>(rangeMinMax.first + (increment * i));
+    outputContainer[i] = rangeMinMax.first + static_cast<Type>(increment * i);
   }
 
   outputContainer[numBins] = rangeMinMax.second;
