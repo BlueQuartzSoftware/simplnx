@@ -6,7 +6,7 @@ Core (Generation)
 
 ## Description
 
-This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to a user define value or with random values within a specified range.
+This **Filter** creates a **Data Array** of any primitive type with any set of component dimensions.  The array is initialized to a user define value or with random values within a specified range.
 
 When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
@@ -52,8 +52,7 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 | Double | 64 bit | -1.7e+308 to -2.2e-308, 0.0, 2.2e-308 to 1.7e+308 (15 digits)|
 | Boolean | 8 bit |0 = false and any other value will be forced to 1 = true|
 
-The number of components should be at least 1. Examples of *Number of Components* would be 3 for an RGB Image, 1 for a gray scale image, 1 for a scalar array, 4 for a quaternions array, etc. All values of the array will be initialized to the user set value. The initialization value text box
-must have a user entry or the default value *0* will be used.
+The component dimensions should multiply together into a total number of components equal to at least 1. Examples of *Component Dimensions* would be [3] for an RGB Image, [1] for a gray scale image, [1] for a scalar array, [4] for a quaternions array, [10x5] for an array with 10x5 grids at each tuple, etc.  All values of the array will be initialized using the chosen initialization option.
 
 % Auto generated parameter table will be inserted here
 

@@ -21,7 +21,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Instantiate)", "[SimplnxCore][Crea
   Arguments args;
 
   args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
-  args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
+  args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
   args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
   args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
 
@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section1")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("-1"));
@@ -54,7 +54,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section2")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(k_NComp));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1024"));
@@ -65,7 +65,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section3")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(0));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{0.0}}));
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayFilter::k_InitValue_Key, std::make_any<std::string>("1"));
@@ -76,7 +76,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section4")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
 
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
@@ -89,7 +89,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section5")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
@@ -101,7 +101,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
   SECTION("Section6")
   {
     args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
-    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArrayFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
     DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
     args.insert(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));

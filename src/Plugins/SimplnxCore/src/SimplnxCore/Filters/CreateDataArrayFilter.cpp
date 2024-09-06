@@ -73,8 +73,14 @@ Parameters CreateDataArrayFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Output Numeric Type", "Numeric Type of data to create", NumericType::int32));
-  // params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
+
+  params.insertSeparator(Parameters::Separator{"Component Handling"});
+  {
+    DynamicTableInfo tableInfo;
+    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
+    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions.", tableInfo));
+  }
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
@@ -108,12 +114,14 @@ Parameters CreateDataArrayFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
       "This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
-  DynamicTableInfo tableInfo;
-  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
-  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
 
-  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)",
-                                                        "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
+  {
+    DynamicTableInfo tableInfo;
+    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
+    params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
+                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
+  }
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
@@ -155,26 +163,24 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 {
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
-  auto numComponents = filterArgs.value<uint64>(k_NumComps_Key);
+  auto compDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
   auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
-  // auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  //  if(initValue.empty())
-  //  {
-  //    return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
-  //  }
-  //  // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
-  //  Result<> result = CheckValueConverts(initValue, numericType);
-  //  if(result.invalid())
-  //  {
-  //    return {ConvertResultTo<OutputActions>(std::move(result), {})};
-  //  }
+  std::vector<usize> compDims(compDimsData[0].size());
+  std::transform(compDimsData[0].begin(), compDimsData[0].end(), compDims.begin(), [](double val) { return static_cast<usize>(val); });
+  usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
+  if(numComponents <= 0)
+  {
+    std::string compDimsStr = std::accumulate(compDims.begin() + 1, compDims.end(), std::to_string(compDims[0]), [](const std::string& a, int b) { return a + " x " + std::to_string(b); });
+    return MakePreflightErrorResult(
+        -78601,
+        fmt::format("The chosen component dimensions ({}) results in 0 total components.  Please choose component dimensions that result in a positive number of total components.", compDimsStr));
+  }
 
-  std::vector<usize> compDims = std::vector<usize>{numComponents};
   std::vector<usize> tupleDims = {};
 
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
@@ -222,8 +228,6 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   //  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
-
-  //  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_ArrayPath_Key));
 
   if(arrayDataType == DataType::boolean)
   {
@@ -406,7 +410,6 @@ Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const 
                                             const std::atomic_bool& shouldCancel) const
 {
   auto path = filterArgs.value<DataPath>(k_DataPath_Key);
-  // auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
 
   ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(filterArgs.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), "0");
 
@@ -459,7 +462,6 @@ Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
   // Initialize Type parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitValue_Key));
   // Initialization Range parameter is not applicable in NX
