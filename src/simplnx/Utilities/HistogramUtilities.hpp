@@ -79,32 +79,39 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
  * See FillBinRanges function for details on the high level structuring of the bin ranges array
  * @tparam Type this the end type of the function in that it is the scalar type of the input and by extension range data
  * @tparam SizeType this is the scalar type of the bin counts container
- * @tparam Container this is the type of object the ranges are loaded into:
+ * @tparam InputContainer this is the type of object the values are read from:
+ * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
+ * * @tparam OutputContainer this is the type of object the values are stored/written to:
  * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
  * @param inputStore this is the container holding the data that will be binned
  * @param binRangesStore this is the object that the ranges will be loaded into.
  * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
- * @param shouldCancel this is an atomic value that will determine whether execution ends early
+ * @param shouldCancel this is an atomic value that will determine whether execution ends early; `true` cancels algorithm
  * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, std::integral SizeType, template <typename> class Container>
-SIMPLNX_EXPORT Result<> GenerateHistogram(const Container<Type>& inputStore, Container<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
-                                          const int32 numBins, Container<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
+template <typename Type, std::integral SizeType, template <typename> class InputContainer, template <typename> class OutputContainer>
+SIMPLNX_EXPORT Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
+                                          const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
 {
   usize end = 0;
-  if constexpr(std::is_same_v<std::vector<Type>, Container<Type>>)
+  if constexpr(std::is_same_v<std::vector<Type>, InputContainer<Type>>)
   {
     end = inputStore.size();
-
+  }
+  if constexpr(std::is_same_v<std::vector<Type>, OutputContainer<Type>>)
+  {
     // just resize outputs to ensure no wasted space and won't be out of bounds
     binRangesStore.resize(numBins + 1);
     histogramCountsStore.resize(numBins);
   }
-  if constexpr(std::is_same_v<AbstractDataStore<Type>, Container<Type>>)
+  if constexpr(std::is_same_v<AbstractDataStore<Type>, InputContainer<Type>>)
   {
     end = inputStore.getSize();
+  }
+  if constexpr(std::is_same_v<AbstractDataStore<Type>, OutputContainer<Type>>)
+  {
     if(binRangesStore.getSize() < numBins + 1)
     {
       return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1,
