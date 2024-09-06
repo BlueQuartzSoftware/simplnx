@@ -448,7 +448,8 @@
     {
       "args": {
         "create_new_data_group": true,
-        "histogram_suffix": " Histogram",
+        "histogram_bin_count_suffix": " Histogram Counts",
+        "histogram_bin_range_suffix": " Histogram Bin Ranges",
         "max_range": 1.0,
         "min_range": 0.0,
         "new_data_group_path": "fw-ar-IF1-aptr12-corr/Histograms",
@@ -472,12 +473,12 @@
         "file_extension": ".csv",
         "header_option_index": 1,
         "input_data_array_paths": [
-          "fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram"
+          "fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram Counts",
+          "fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram Bin Ranges"
         ],
         "max_val_per_line": 0,
-        "output_dir": "",
-        "output_path": "Data/Output/fw-ar-IF1-aptr12-corr/EqDiamHistogram.csv",
-        "output_style_index": 1
+        "output_dir": "Data/Output/fw-ar-IF1-aptr12-corr",
+        "output_style_index": 0
       },
       "comments": "",
       "filter": {
