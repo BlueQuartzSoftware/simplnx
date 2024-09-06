@@ -384,8 +384,7 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
 }
 
 template <typename T>
-concept NotBoolT = !
-std::is_same_v<T, bool>;
+concept NotBoolT = !std::is_same_v<T, bool>;
 
 template <NotBoolT NewStoreT, class PixelT, uint32 Dimension>
 Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<PixelT, Dimension>& image)
