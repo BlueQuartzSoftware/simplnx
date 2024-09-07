@@ -79,7 +79,7 @@ Parameters CreateDataArrayFilter::parameters() const
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
-    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions.", tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", tableInfo));
   }
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
@@ -90,20 +90,22 @@ Parameters CreateDataArrayFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
-  params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
-  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0),
+  params.insert(std::make_unique<StringParameter>(
+      k_StartingFillValue_Key, "Starting Value [Seperated with ;]",
+      "The value to start incrementing from. Ex: 6;8;12 would increment a 3-component array starting at 6 for the first component, 8 for the 2nd, and 12 for the 3rd.", "0;1;2"));
+  params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to perform", static_cast<ChoicesParameter::ValueType>(0),
                                                    ChoicesParameter::Choices{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
 
-  params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
+  params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true, the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeDataFilter SeedValue"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of the array holding the seed value", "InitializeDataFilter SeedValue"));
   params.insert(std::make_unique<BoolParameter>(k_StandardizeSeed_Key, "Use the Same Seed for Each Component",
                                                 "When true the same seed will be used for each component's generator in a multi-component array", false));
 
   params.insert(
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
-  params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive]  The upper bound initialization range for random values", "1;1;1"));
+  params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive] The upper bound initialization range for random values", "1;1;1"));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));

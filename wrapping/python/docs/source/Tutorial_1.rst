@@ -195,8 +195,8 @@ from the :ref:`DataArray`, enough to get the name, tuple shape and component sha
 .. code:: python
 
     result = nx.CreateDataArrayFilter().execute(data_structure=data_structure, 
-                                            component_count=1, 
-                                            initialization_value_str="0", 
+                                            component_dimensions=[[1]],
+                                            init_value="0", 
                                             numeric_type_index=nx.NumericType.float32, 
                                             output_array_path=nx.DataPath("Top Level Group/2D Array"), 
                                             tuple_dimensions=[[5,4]])

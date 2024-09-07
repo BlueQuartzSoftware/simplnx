@@ -58,10 +58,12 @@ data_structure = nx.DataStructure()
 array_path = nx.DataPath(['Euler Angles'])
 result = nx.CreateDataArrayFilter.execute(data_structure=data_structure,
                                     numeric_type_index=nx.NumericType.float32,
-                                    component_count=3,
+                                    component_dimensions=[[3]],
                                     tuple_dimensions=[[99]],
                                     output_array_path=array_path,
-                                    initialization_value_str='0')
+                                    init_type_index=0,
+                                    init_value='0')
+
 nxtest.check_filter_result(nx.CreateDataArrayFilter, result)
 
 

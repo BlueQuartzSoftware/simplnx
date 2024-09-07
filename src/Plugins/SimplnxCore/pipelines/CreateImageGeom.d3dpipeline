@@ -48,17 +48,31 @@
     },
     {
       "args": {
-        "component_count": 1,
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
         "data_format": "",
-        "initialization_value_str": "0",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "0",
         "numeric_type_index": 4,
         "output_array_path": "Image Geometry/Cell Data/Int32Array",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
         "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             0.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
@@ -91,17 +105,31 @@
     },
     {
       "args": {
-        "component_count": 1,
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
         "data_format": "",
-        "initialization_value_str": "0",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "0",
         "numeric_type_index": 6,
         "output_array_path": "Image Geometry/Cell Data/Int64Array",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
         "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             0.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {

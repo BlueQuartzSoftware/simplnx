@@ -160,10 +160,10 @@ Pipeline CreateExportPipeline()
     Arguments args;
     args.insert("set_tuple_dimensions", std::make_any<bool>(true));
     args.insert("numeric_type_index", std::make_any<NumericType>(NumericType::int8));
-    args.insert("component_count", std::make_any<uint64>(3));
+    args.insert("component_dimensions", DynamicTableInfo::TableDataType{{3.0}});
 
     args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});
-    args.insert("initialization_value_str", std::make_any<std::string>("7"));
+    args.insert("init_value", std::make_any<std::string>("7"));
     args.insert("output_array_path", DataPath({DataNames::k_ArrayName}));
     args.insert("data_format", std::string(""));
     pipeline.push_back(k_CreateDataArrayHandle, args);

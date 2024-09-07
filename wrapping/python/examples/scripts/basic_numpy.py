@@ -58,10 +58,10 @@ data_structure = nx.DataStructure()
 array_path = nx.DataPath(['data'])
 assert nx.CreateDataArrayFilter.execute(data_structure, 
                                   numeric_type_index=nx.NumericType.float32, 
-                                  component_count=1, 
+                                  component_dimensions=[[1]],
                                   tuple_dimensions=[[3, 2]], 
                                   output_array_path=array_path, 
-                                  initialization_value_str='0')
+                                  init_value='0')
 
 npdata = data_structure[array_path].npview()
 # Manipulate the underlying array

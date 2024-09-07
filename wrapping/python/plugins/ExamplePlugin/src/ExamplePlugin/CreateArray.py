@@ -12,7 +12,7 @@ def _convert_str_to_num(init_value: str, numeric_type_index: nx.NumericType) -> 
 
 class CreateArrayFilter:
   NUMERIC_TYPE_KEY = "numeric_type_index"
-  INITILIZATION_VALUE_KEY = "initialization_value_str"
+  INITILIZATION_VALUE_KEY = "init_value"
   NUM_COMPS_KEY = "component_count"
   DATA_PATH_KEY = "output_array_path"
   TUPLE_DIMS_KEY = "tuple_dimensions"

@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
-  "name": "Import CSV File",
+  "name": "Import_CSV_File.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -72,7 +73,7 @@
             480000
           ]
         },
-        "selected_attribute_matrix_path": "[Image Geometry]/Cell Data/",
+        "selected_attribute_matrix_path": "[Image Geometry]/Cell Data",
         "use_existing_group": true
       },
       "comments": "",
@@ -85,9 +86,9 @@
     {
       "args": {
         "input_data_array_paths": [
-          "[Image Geometry]/Cell Data//phi1",
-          "[Image Geometry]/Cell Data//Phi",
-          "[Image Geometry]/Cell Data//phi2"
+          "[Image Geometry]/Cell Data/phi1",
+          "[Image Geometry]/Cell Data/Phi",
+          "[Image Geometry]/Cell Data/phi2"
         ],
         "move_values": true,
         "normalize_data": false,
@@ -123,17 +124,31 @@
     },
     {
       "args": {
-        "component_count": 1,
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
         "data_format": "",
-        "initialization_value_str": "1",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "1",
         "numeric_type_index": 4,
-        "output_array_path": "[Image Geometry]/Cell Data//Phases",
+        "output_array_path": "[Image Geometry]/Cell Data/Phases",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
         "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             0.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
@@ -144,9 +159,9 @@
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "[Image Geometry]/Cell Data//Eulers",
+        "cell_euler_angles_array_path": "[Image Geometry]/Cell Data/Eulers",
         "cell_ipf_colors_array_name": "IPFColors",
-        "cell_phases_array_path": "[Image Geometry]/Cell Data//Phases",
+        "cell_phases_array_path": "[Image Geometry]/Cell Data/Phases",
         "crystal_structures_array_path": "[Image Geometry]/EnsembleAttributeMatrix/CrystalStructures",
         "mask_array_path": "",
         "reference_dir": [
@@ -166,7 +181,7 @@
     {
       "args": {
         "file_name": "Data/Output/Import_CSV_Example/Import_ASCII_IPF.png",
-        "image_array_path": "[Image Geometry]/Cell Data//IPFColors",
+        "image_array_path": "[Image Geometry]/Cell Data/IPFColors",
         "index_offset": 0,
         "input_image_geometry_path": "[Image Geometry]",
         "plane_index": 0
@@ -179,5 +194,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

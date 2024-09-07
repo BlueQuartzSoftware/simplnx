@@ -5,49 +5,69 @@
   "pipeline": [
     {
       "args": {
+        "face_attribute_matrix_name": "Face Data",
+        "face_normals_name": "Face Normals",
         "output_triangle_geometry_path": "[Triangle Geometry]",
         "scale_factor": 1.0,
         "scale_output": false,
-        "stl_file_path": "Data/STL_Models/Cylinder.stl"
+        "stl_file_path": "Data/STL_Models/Cylinder.stl",
+        "vertex_attribute_matrix_name": "Vertex Data"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadStlFileFilter",
+        "name": "nx::core::ReadStlFileFilter",
         "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "triangle_areas_array_name": "Areas",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": "[Triangle Geometry]",
+        "triangle_areas_array_name": "Areas"
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeTriangleAreasFilter",
+        "name": "nx::core::ComputeTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_count": 1,
-        "initialization_value_str": "0",
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
+        "data_format": "",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "0",
         "numeric_type_index": 8,
         "output_array_path": "[Triangle Geometry]/Vertex Data/Node Type",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
+        "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             1.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": true
     }
   ],
+  "version": 1,
   "workflowParams": []
 }

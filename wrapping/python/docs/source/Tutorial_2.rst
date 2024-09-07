@@ -200,7 +200,7 @@ We can modify the parameters of a given filter by writing and using a short meth
         param_dict[key] = value
         pipeline[index].set_args(param_dict)
     
-    modify_pipeline_filter(pipeline, 1, "numeric_type", nx.NumericType.int8)
+    modify_pipeline_filter(pipeline, 1, "numeric_type_index", nx.NumericType.int8)
 
 Here, we use the modify_pipeline_filter method to change the 2nd filter's NumericType parameter value to int8.
 

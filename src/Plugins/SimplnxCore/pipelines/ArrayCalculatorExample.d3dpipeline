@@ -1,60 +1,109 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "ArrayCalculatorExample.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "component_count": 1,
-        "initialization_value_str": "2",
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
+        "data_format": "",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "2",
         "numeric_type_index": 4,
         "output_array_path": "TestArray",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
+        "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             10.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_count": 1,
-        "initialization_value_str": "1.23878",
+        "component_dimensions": [
+          [
+            1.0
+          ]
+        ],
+        "data_format": "",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "1.23878",
         "numeric_type_index": 8,
         "output_array_path": "Confidence Index",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
+        "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             10.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_count": 3,
-        "initialization_value_str": "1.23878",
+        "component_dimensions": [
+          [
+            3.0
+          ]
+        ],
+        "data_format": "",
+        "init_end_range": "1;1;1",
+        "init_start_range": "0;0;0",
+        "init_type_index": 0,
+        "init_value": "1.23878",
         "numeric_type_index": 8,
         "output_array_path": "EulerAngles",
+        "seed_array_name": "InitializeDataFilter SeedValue",
+        "seed_value": 5489,
+        "set_tuple_dimensions": true,
+        "standardize_seed": false,
+        "starting_fill_value": "0;1;2",
+        "step_operation_index": 0,
+        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             10.0
           ]
-        ]
+        ],
+        "use_seed": false
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -71,7 +120,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -88,7 +137,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -105,7 +154,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -122,7 +171,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -139,7 +188,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -156,7 +205,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ArrayCalculatorFilter",
+        "name": "nx::core::ArrayCalculatorFilter",
         "uuid": "eea49b17-0db2-5bbc-80ef-f44249cc8d55"
       },
       "isDisabled": false
@@ -168,10 +217,12 @@
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
-  ]
+  ],
+  "version": 1,
+  "workflowParams": []
 }
