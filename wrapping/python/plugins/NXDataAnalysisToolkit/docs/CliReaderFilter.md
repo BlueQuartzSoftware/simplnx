@@ -10,17 +10,24 @@ IO (Input)
 
 This filter extracts geometric and attribute data from CLI files and organizes the data into the *simplnx* data structure by creating an edge geometry out of the imported data. It provides options to selectively mask the dataset based on X, Y, and Z dimensions to focus on specific parts of the model.
 
-*Note*: If any edges in the dataset straddle the specified mask bounds, this filter will return an error.
+*Note*: If any edges in the dataset intersect the specified dimension range bound, one of the following behaviors will occur due to the specified Out-Of-Bounds Behavior option:
+
+1. Interpolate Outside Vertex - Moves the outside vertex of a boundary-intersecting edge from its current position to the boundary edge.
+2. Ignore Edge - Ignores any edge that intersects a bound.
+3. Filter Error - Filter will throw an error when it encounters an edge that intersects a bound.
 
 ### Parameters
 
 - `Input CLI File`: Filesystem path to the input CLI file.
-- `Mask X Dimension`: Enable this option to apply X bounds, masking out any dataset portions that fall outside the specified X dimension bounds.
+- `Use X Dimension Range`: Enable this option to apply X bounds, masking out any dataset portions that fall outside the specified X dimension bounds.
 - `X Min/Max`: Minimum and maximum coordinates for the X bounds.
-- `Mask Y Dimension`: Enable this option to apply Y bounds, masking out any dataset portions that fall outside the specified Y dimension bounds.
+- `Use Y Dimension Range`: Enable this option to apply Y bounds, masking out any dataset portions that fall outside the specified Y dimension bounds.
 - `Y Min/Max`: Minimum and maximum coordinates for the Y bounds.
-- `Mask Z Dimension`: Enable this option to apply Z bounds, masking out any dataset portions that fall outside the specified Z dimension bounds.
+- `Use Z Dimension Range`: Enable this option to apply Z bounds, masking out any dataset portions that fall outside the specified Z dimension bounds.
 - `Z Min/Max`: Minimum and maximum coordinates for the Z bounds.
+- `Out-Of-Bounds Behavior`: The behavior to implement if an edge intersects a bound (one vertex is inside, one vertex is outside).
+- `Read Extra Metadata`: Determines whether or not to read the extra metadata that may be included (per layer) in the file.
+- `Create Edge Type Array`: Determines whether or not to create an unsigned 8-bit integer array that labels hatches edges with 0 and polyline edges with 1.
 - `Output Edge Geometry`: Path where the edge geometry data will be stored in the data structure.
 - `Output Vertex Attribute Matrix Name`: Name for the output vertex attribute matrix.
 - `Output Edge Attribute Matrix Name`: Name for the output edge attribute matrix.
