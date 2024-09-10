@@ -11,23 +11,14 @@ from typing import List, Tuple
 from pathlib import Path
 from .common.Result import Result, make_error_result
 
-class Polyline(object):
-    def __init__(self, layer_id, z_height, data: dict, poly_id, dir, n, xvals, yvals) -> Result:
+class GeometricFeature(object):
+  def __init__(self, feature_id, layer_id, z_height, data: dict, poly_id, n, start_xvals, start_yvals, end_xvals, end_yvals, dir = None) -> Result:
+        self.feature_id = feature_id
         self.layer_id = layer_id
         self.z_height = z_height
         self.poly_id = poly_id
         self.dir = dir
         self.n = n
-        self.xvals = xvals
-        self.yvals = yvals
-        self.data = data
-        
-class Hatches(object):
-    def __init__(self, layer_id, z_height, data: dict, hatch_id, n, start_xvals, start_yvals, end_xvals, end_yvals):
-        self.layer_id = layer_id
-        self.hatch_id = hatch_id
-        self.n = n
-        self.z_height = z_height
         self.start_xvals = start_xvals
         self.start_yvals = start_yvals
         self.end_xvals   = end_xvals
@@ -44,6 +35,8 @@ class CliReaderFilter:
   MIN_MAX_Y_COORDS_KEY = 'min_max_y_coords'
   MIN_MAX_Z_COORDS_KEY = 'min_max_z_coords'
   OUT_OF_BOUNDS_BEHAVIOR_KEY = 'out_of_bounds_behavior'
+  READ_EXTRA_METADATA = 'read_extra_metadata'
+  CREATE_EDGE_TYPE_ARRAY = 'create_geometric_labels_array'
   OUTPUT_EDGE_GEOM_PATH_KEY = 'output_edge_geom_path'
   OUTPUT_VERTEX_ATTRMAT_NAME_KEY = 'output_vertex_attrmat_name'
   OUTPUT_EDGE_ATTRMAT_NAME_KEY = 'output_edge_attrmat_name'
@@ -54,6 +47,7 @@ class CliReaderFilter:
   # Constants
   LAYER_ARRAY_NAME = 'Layer'
   LABEL_ARRAY_NAME = 'Label'
+  EDGE_TYPE_ARRAY_NAME = 'Edge Types'
 
   class OutOfBoundsBehavior(Enum):
     InterpolateOutsideVertex = 0
@@ -97,6 +91,8 @@ class CliReaderFilter:
     params.insert_linkable_parameter(nx.BoolParameter(CliReaderFilter.USE_Z_DIMENSION_RANGE_KEY, 'Use Z Dimension Range', 'Determines whether or not to use Z bounds to import a range of data in the Z dimension.', False))
     params.insert(nx.VectorFloat64Parameter(CliReaderFilter.MIN_MAX_Z_COORDS_KEY, 'Z Min/Max', 'The minimum and maximum Z coordinate for the Z bounds.', [0.0, 100.0], ['Z Min', 'Z Max']))
     params.insert(nx.ChoicesParameter(CliReaderFilter.OUT_OF_BOUNDS_BEHAVIOR_KEY, 'Out-Of-Bounds Behavior', 'The behavior to implement if an edge intersects a bound (one vertex is inside, one vertex is outside).\n\n"Interpolate Outside Vertex" will move the outside vertex of a boundary-intersecting edge from its current position to the boundary edge.\n"Ignore Edge" will ignore any edge that intersects a bound.\n"Filter Error" will make this filter throw an error when it encounters an edge that intersects a bound.', 0, CliReaderFilter.OUT_OF_BOUNDS_BEHAVIOR_CHOICES))
+    params.insert(nx.BoolParameter(CliReaderFilter.READ_EXTRA_METADATA, 'Read Extra Metadata', 'Determines whether or not to read the extra metadata that may be included (per layer) in the file.', True))
+    params.insert(nx.BoolParameter(CliReaderFilter.CREATE_EDGE_TYPE_ARRAY, 'Create Edge Type Array', 'Determines whether or not to create an unsigned 8-bit integer array that labels hatches edges with 0 and polyline edges with 1.', True))
     params.insert(nx.Parameters.Separator("Created Data Objects"))
     params.insert(nx.DataGroupCreationParameter(CliReaderFilter.OUTPUT_EDGE_GEOM_PATH_KEY, 'Output Edge Geometry', 'The path to the newly created edge geometry.', nx.DataPath("[Edge Geometry]")))
     params.insert(nx.DataObjectNameParameter(CliReaderFilter.OUTPUT_VERTEX_ATTRMAT_NAME_KEY, 'Output Vertex Attribute Matrix Name', 'The name of the newly created vertex attribute matrix.', 'Vertex Data'))
@@ -128,6 +124,8 @@ class CliReaderFilter:
     min_max_x_coords: list = args[CliReaderFilter.MIN_MAX_X_COORDS_KEY]
     min_max_y_coords: list = args[CliReaderFilter.MIN_MAX_Y_COORDS_KEY]
     min_max_z_coords: list = args[CliReaderFilter.MIN_MAX_Z_COORDS_KEY]
+    read_extra_metadata: bool = args[CliReaderFilter.READ_EXTRA_METADATA]
+    create_edge_types_array: bool = args[CliReaderFilter.CREATE_EDGE_TYPE_ARRAY]
     
     if use_x_dimension_range and min_max_x_coords[0] > min_max_x_coords[1]:
       return nx.IFilter.PreflightResult(nx.OutputActions(), [nx.Error(-9100, f"Invalid X Dimension Range: The minimum X coordinate ({min_max_x_coords[0]}) is larger than the maximum X coordinate ({min_max_x_coords[1]}).")])
@@ -146,64 +144,47 @@ class CliReaderFilter:
     array_names, num_of_labels = self._parse_geometry_array_names(Path(cli_file_path))
     # Because extra geometric data is not included in the specification, we are setting 'Layer' array to int32 and all other arrays to float32
     edge_attr_mat_path = output_edge_geom_path.create_child_path(output_edge_attrmat_name)
-    for array_name in array_names:
-      dtype = nx.DataType.float32
-      if array_name == self.LAYER_ARRAY_NAME:
-        dtype = nx.DataType.int32
-      array_path = edge_attr_mat_path.create_child_path(array_name)
-      output_actions.append_action(nx.CreateArrayAction(dtype, [1], [1], array_path))
+
+    preflight_updated_values = []
+    if read_extra_metadata:
+      preflight_value = nx.IFilter.PreflightValue()
+      preflight_value.name = "Extra Metadata Arrays"
+      array_names_str = '\n'.join(array_names)
+      preflight_value.value = array_names_str
+      preflight_updated_values.append(preflight_value)
+
+      for array_name in array_names:
+        dtype = nx.DataType.float32
+        if array_name == self.LAYER_ARRAY_NAME:
+          dtype = nx.DataType.int32
+        array_path = edge_attr_mat_path.create_child_path(array_name)
+        output_actions.append_action(nx.CreateArrayAction(dtype, [1], [1], array_path))
     
-    if num_of_labels > 0:
-      array_path = edge_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-      output_actions.append_action(nx.CreateArrayAction(nx.DataType.int32, [1], [1], array_path))
+      if num_of_labels > 0:
+        array_path = edge_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
+        output_actions.append_action(nx.CreateArrayAction(nx.DataType.int32, [1], [1], array_path))
 
-      feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
-      output_actions.append_action(nx.CreateAttributeMatrixAction(feature_attr_mat_path, [num_of_labels]))
+        feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
+        output_actions.append_action(nx.CreateAttributeMatrixAction(feature_attr_mat_path, [num_of_labels]))
 
-      label_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-      output_actions.append_action(nx.CreateStringArrayAction([num_of_labels], label_array_path))
+        label_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
+        output_actions.append_action(nx.CreateStringArrayAction([num_of_labels], label_array_path))
+    
+    if create_edge_types_array:
+      array_path = edge_attr_mat_path.create_child_path(self.EDGE_TYPE_ARRAY_NAME)
+      output_actions.append_action(nx.CreateArrayAction(nx.DataType.uint8, [1], [1], array_path))
 
-    return nx.IFilter.PreflightResult(output_actions)
+    return nx.IFilter.PreflightResult(output_actions, preflight_values=preflight_updated_values)
 
-  def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
-    cli_file_path: str = args[CliReaderFilter.CLI_FILE_PATH_KEY]
-    output_edge_geom_path: nx.DataPath = args[CliReaderFilter.OUTPUT_EDGE_GEOM_PATH_KEY]
-    output_edge_attrmat_name: str = args[CliReaderFilter.OUTPUT_EDGE_ATTRMAT_NAME_KEY]
-    output_feature_attrmat_name: str = args[CliReaderFilter.OUTPUT_FEATURE_ATTRMAT_NAME_KEY]
-    use_x_dimension_range: bool = args[CliReaderFilter.USE_X_DIMENSION_RANGE_KEY]
-    use_y_dimension_range: bool = args[CliReaderFilter.USE_Y_DIMENSION_RANGE_KEY]
-    use_z_dimension_range: bool = args[CliReaderFilter.USE_Z_DIMENSION_RANGE_KEY]
-    out_of_bounds_behavior = CliReaderFilter.OutOfBoundsBehavior(args[CliReaderFilter.OUT_OF_BOUNDS_BEHAVIOR_KEY])
-    min_max_x_coords: list = args[CliReaderFilter.MIN_MAX_X_COORDS_KEY]
-    min_max_y_coords: list = args[CliReaderFilter.MIN_MAX_Y_COORDS_KEY]
-    min_max_z_coords: list = args[CliReaderFilter.MIN_MAX_Z_COORDS_KEY]
-
-    bounding_box_coords = None
-    if use_x_dimension_range or use_y_dimension_range or use_z_dimension_range:
-      bounding_box_coords = [-sys.float_info.max, sys.float_info.max] * 3
-    if use_x_dimension_range:
-      bounding_box_coords[0:2] = min_max_x_coords
-    if use_y_dimension_range:
-      bounding_box_coords[2:4] = min_max_y_coords
-    if use_z_dimension_range:
-      bounding_box_coords[4:6] = min_max_z_coords
-
-    try:
-      result = self._parse_file(Path(cli_file_path), out_of_bounds_behavior=out_of_bounds_behavior, bounding_box=bounding_box_coords, message_handler=message_handler)
-      if result.invalid():
-        return nx.Result(errors=result.errors)
-      layer_features, layer_heights, hatch_labels = result.value
-    except Exception as e:
-      return nx.Result([nx.Error(-2010, f"An error occurred while parsing the CLI file '{cli_file_path}': {e}")])
-
+  def _process_layers(self, layer_features, hatch_labels, message_handler: nx.IFilter.MessageHandler) -> Result:
     last_message_time = 0
-
     start_vertices = []
     end_vertices = []
     data_arrays = {}
     if len(hatch_labels) > 0:
       data_arrays[self.LABEL_ARRAY_NAME] = []
-    num_of_hatches = 0
+    data_arrays[self.EDGE_TYPE_ARRAY_NAME] = []
+    num_of_edges = 0
     for layer_idx in range(len(layer_features)):
       layer = layer_features[layer_idx]
       if not layer:
@@ -213,20 +194,29 @@ class CliReaderFilter:
           last_message_time = current_time
           continue
 
-      for hatch in layer:
-        if hatch.n == 0:
+      for feature in layer:
+        if feature.n == 0:
           continue
-        num_of_hatches += hatch.n
-        for start_x, start_y in zip(hatch.start_xvals, hatch.start_yvals):
-          start_vertices.append([start_x, start_y, hatch.z_height])
-        for end_x, end_y in zip(hatch.end_xvals, hatch.end_yvals):
-          end_vertices.append([end_x, end_y, hatch.z_height])
-        for array_name, value in hatch.data.items():
+
+        num_of_edges += feature.n
+        if len(feature.start_xvals) != len(feature.start_yvals):
+          return Result([nx.Error(-2011, f"The start x value and start y value lists for hatch (id {feature.hatch_id}) are not the same size!")])
+        if len(feature.end_xvals) != len(feature.end_yvals):
+          return Result([nx.Error(-2012, f"The end x value and end y value lists for hatch (id {feature.hatch_id}) are not the same size!")])
+        for start_x, start_y in zip(feature.start_xvals, feature.start_yvals):
+          start_vertices.append([start_x, start_y, feature.z_height])
+        for end_x, end_y in zip(feature.end_xvals, feature.end_yvals):
+          end_vertices.append([end_x, end_y, feature.z_height])
+        if len(hatch_labels) > 0:
+          data_arrays[self.LABEL_ARRAY_NAME].extend([''] * feature.n)
+
+        for array_name, value in feature.data.items():
           if not array_name in data_arrays:
-            data_arrays[array_name] = [value] * hatch.n
+            data_arrays[array_name] = [value] * feature.n
           else:
-            data_arrays[array_name].extend([value] * hatch.n)
-        data_arrays[self.LABEL_ARRAY_NAME].extend([hatch.hatch_id] * hatch.n)
+            data_arrays[array_name].extend([value] * feature.n)
+        
+        data_arrays[self.EDGE_TYPE_ARRAY_NAME].extend([feature.feature_id] * feature.n)
       
       current_time = time.time()
       if message_handler is not None and (current_time - last_message_time) >= 1:
@@ -234,9 +224,14 @@ class CliReaderFilter:
         last_message_time = current_time
 
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Imported layer {len(layer_features)}/{len(layer_features)}'))
-
+    return Result(value=(start_vertices, end_vertices, data_arrays, num_of_edges))
+  
+  def _update_edge_geometry(self, data_structure: nx.DataStructure, output_edge_geom_path: nx.DataPath, output_edge_attrmat_name: str,
+                            output_feature_attrmat_name:str, start_vertices: list, end_vertices: list, data_arrays: list, num_of_edges: int,
+                            hatch_labels: list, read_extra_metadata: bool, create_edge_types_array: bool, message_handler: nx.IFilter.MessageHandler):
+    # Update the edge geometry using the start and end vertices, data arrays, and number of edges
     edge_geom: nx.EdgeGeom = data_structure[output_edge_geom_path]
-    
+
     # Tell the Edge Geometry to resize the shared vertex list so that we can 
     # copy in the vertices.
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Saving Vertex List...'))
@@ -251,34 +246,108 @@ class CliReaderFilter:
     # Tell the Edge Geometry to resize the shared edge list so that we can
     # copy in the edge list and also copy in all the edge arrays
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Saving Edges...'))
-    edge_geom.resize_edges(num_of_hatches)
+    edge_geom.resize_edges(num_of_edges)
 
-    if (num_of_hatches > 0 and len(vertex_list) > 0):
+    if (num_of_edges > 0 and len(vertex_list) > 0):
       edges_array = edge_geom.edges
       edges_view = edges_array.store.npview()
       edges_view[:] = [[i, i+1] for i in range(0, len(vertex_list), 2)]
 
     # Get the nx.DataPath to the Edge Attribute Matrix
     edge_attr_mat_path = output_edge_geom_path.create_child_path(output_edge_attrmat_name)
-    # Copy the all the edge data into the edge attribute matrix
-    for array_name, values in data_arrays.items():
-      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Cell Array '{array_name}'..."))
-      array_path = edge_attr_mat_path.create_child_path(array_name)
+
+    if read_extra_metadata:
+      # Copy the all the edge data into the edge attribute matrix
+      for array_name, values in data_arrays.items():
+        if array_name == self.LABEL_ARRAY_NAME:
+          continue
+
+        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Cell Array '{array_name}'..."))
+        array_path = edge_attr_mat_path.create_child_path(array_name)
+        array: nx.IDataArray = data_structure[array_path]
+        values_arr = np.array(values)
+        values_arr = values_arr.reshape([len(values)] + array.cdims)
+
+        if len(values) > 0:
+          array_view = array.store.npview()
+          values_arr = values_arr.astype(float).astype(array_view.dtype)
+          array_view[:] = values_arr
+
+      # Save the feature level data
+      if len(hatch_labels) > 0:
+        feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
+        label_feature_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
+        label_feature_array: nx.StringArray = data_structure[label_feature_array_path]
+        message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
+        label_feature_array.initialize_with_list(list(hatch_labels.values()))
+    
+    if create_edge_types_array:
+      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Edge Type Array..."))
+      array_path = edge_attr_mat_path.create_child_path(self.EDGE_TYPE_ARRAY_NAME)
       array: nx.IDataArray = data_structure[array_path]
+      values = data_arrays[self.EDGE_TYPE_ARRAY_NAME]
       values_arr = np.array(values)
       values_arr = values_arr.reshape([len(values)] + array.cdims)
-
       if len(values) > 0:
         array_view = array.store.npview()
+        values_arr = values_arr.astype(float).astype(array_view.dtype)
         array_view[:] = values_arr
-    
 
-    # Save the feature level data
-    feature_attr_mat_path = output_edge_geom_path.create_child_path(output_feature_attrmat_name)
-    label_feature_array_path = feature_attr_mat_path.create_child_path(self.LABEL_ARRAY_NAME)
-    label_feature_array: nx.StringArray = data_structure[label_feature_array_path]
-    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Saving Feature Array '{self.LABEL_ARRAY_NAME}'..."))
-    label_feature_array.initialize_with_list(list(hatch_labels.values()))
+  def execute_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.ExecuteResult:
+    cli_file_path: str = args[CliReaderFilter.CLI_FILE_PATH_KEY]
+    output_edge_geom_path: nx.DataPath = args[CliReaderFilter.OUTPUT_EDGE_GEOM_PATH_KEY]
+    output_edge_attrmat_name: str = args[CliReaderFilter.OUTPUT_EDGE_ATTRMAT_NAME_KEY]
+    output_feature_attrmat_name: str = args[CliReaderFilter.OUTPUT_FEATURE_ATTRMAT_NAME_KEY]
+    use_x_dimension_range: bool = args[CliReaderFilter.USE_X_DIMENSION_RANGE_KEY]
+    use_y_dimension_range: bool = args[CliReaderFilter.USE_Y_DIMENSION_RANGE_KEY]
+    use_z_dimension_range: bool = args[CliReaderFilter.USE_Z_DIMENSION_RANGE_KEY]
+    out_of_bounds_behavior = CliReaderFilter.OutOfBoundsBehavior(args[CliReaderFilter.OUT_OF_BOUNDS_BEHAVIOR_KEY])
+    min_max_x_coords: list = args[CliReaderFilter.MIN_MAX_X_COORDS_KEY]
+    min_max_y_coords: list = args[CliReaderFilter.MIN_MAX_Y_COORDS_KEY]
+    min_max_z_coords: list = args[CliReaderFilter.MIN_MAX_Z_COORDS_KEY]
+    read_extra_metadata: bool = args[CliReaderFilter.READ_EXTRA_METADATA]
+    create_edge_types_array: bool = args[CliReaderFilter.CREATE_EDGE_TYPE_ARRAY]
+
+    bounding_box_coords = None
+    if use_x_dimension_range or use_y_dimension_range or use_z_dimension_range:
+      bounding_box_coords = [-sys.float_info.max, sys.float_info.max] * 3
+    if use_x_dimension_range:
+      bounding_box_coords[0:2] = min_max_x_coords
+    if use_y_dimension_range:
+      bounding_box_coords[2:4] = min_max_y_coords
+    if use_z_dimension_range:
+      bounding_box_coords[4:6] = min_max_z_coords
+
+    try:
+      result = self._parse_file(Path(cli_file_path),
+                                out_of_bounds_behavior=out_of_bounds_behavior,
+                                bounding_box=bounding_box_coords,
+                                message_handler=message_handler)
+      if result.invalid():
+        return nx.Result(errors=result.errors)
+      layer_features, layer_heights, hatch_labels = result.value
+    except Exception as e:
+      return nx.Result([nx.Error(-2010, f"An error occurred while parsing the CLI file '{cli_file_path}': {e}")])
+
+    # Process the layer data to determine the start and end vertices, data arrays, and number of edges
+    result = self._process_layers(layer_features, hatch_labels, message_handler)
+    if result.invalid():
+      return nx.Result(errors=result.errors)
+    start_vertices, end_vertices, data_arrays, num_of_edges = result.value
+
+    # Update the edge geometry
+    self._update_edge_geometry(data_structure=data_structure,
+                               start_vertices=start_vertices,
+                               end_vertices=end_vertices,
+                               data_arrays=data_arrays,
+                               num_of_edges=num_of_edges,
+                               output_edge_geom_path=output_edge_geom_path,
+                               output_edge_attrmat_name=output_edge_attrmat_name,
+                               output_feature_attrmat_name=output_feature_attrmat_name,
+                               hatch_labels=hatch_labels,
+                               read_extra_metadata=read_extra_metadata,
+                               create_edge_types_array=create_edge_types_array,
+                               message_handler=message_handler)
 
     # Filter is complete, return the results.
     return nx.Result()
@@ -290,24 +359,32 @@ class CliReaderFilter:
     
     #parse file lines
     with open(str(full_path), 'r') as file:
-      line = file.readline().strip()
-      while line:
-          if line:
-            line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
-            if line.startswith("$$HEADERSTART"):
-              if message_handler is not None:
-                message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading header data...'))
-              units, hatch_labels = self._parse_header(file)
-            if line.startswith("$$GEOMETRYSTART"):
-              if message_handler is not None:
-                message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading geometry data...'))
-              if units is None:
-                return make_error_result(-8030, "Units have not been read and are needed when reading the geometry data.  Please make sure that a header with the $$HEADERSTART tag and containing the $$UNITS tag is read before this geometry.")
-              result = self._parse_geometry(file, units, out_of_bounds_behavior, bounding_box, message_handler)
-              if result.invalid():
-                return Result(errors=result.errors)
-              layer_features, layer_heights = result.value
-          line = file.readline().strip()
+      while True:
+        line = file.readline()
+        if not line:
+            break  # End of file
+        
+        line = line.strip()  # Remove surrounding whitespace
+        if not line:
+            continue  # Skip blank lines
+        
+        line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
+        if not line:
+            continue  # Skip lines that become blank after removing comments
+        
+        if line.startswith("$$HEADERSTART"):
+          if message_handler is not None:
+            message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading header data...'))
+          units, hatch_labels = self._parse_header(file)
+        if line.startswith("$$GEOMETRYSTART"):
+          if message_handler is not None:
+            message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading geometry data...'))
+          if units is None:
+            return make_error_result(-8030, "Units have not been read and are needed when reading the geometry data.  Please make sure that a header with the $$HEADERSTART tag and containing the $$UNITS tag is read before this geometry.")
+          result = self._parse_geometry(file, units, out_of_bounds_behavior, bounding_box, message_handler)
+          if result.invalid():
+            return Result(errors=result.errors)
+          layer_features, layer_heights = result.value
     
     return Result(value=(layer_features, layer_heights, hatch_labels))
   
@@ -357,28 +434,55 @@ class CliReaderFilter:
 
     return array_names, num_of_labels
 
+  def process_geometric_feature(self, feature_type, id, dir, n, coords, z_height, data, units, bounding_box, out_of_bounds_behavior, layer_counter, features):
+    if bounding_box is not None:
+        coords_result = self._filter_coordinates(coords, z_height, units, bounding_box, out_of_bounds_behavior)
+        if coords_result.invalid():
+            return Result(errors=coords_result.errors)
+        coords = coords_result.value
+        n = coords.size // 4
+    start_xvals = coords[0::4] * units
+    start_yvals = coords[1::4] * units
+    end_xvals = coords[2::4] * units
+    end_yvals = coords[3::4] * units
+    new_feature = GeometricFeature(feature_type, layer_counter, z_height * units, data, id, n, start_xvals, start_yvals, end_xvals, end_yvals, dir)
+    features.append(new_feature)
+
+  def process_geometric_feature_line(self, read_line_func, feature_type, val, data, units, bounding_box, out_of_bounds_behavior, layer_counter, layer_heights, features) -> dict:
+    id, dir, n, coords = read_line_func(val)
+    z_height = layer_heights[-1]
+    self.process_geometric_feature(feature_type, id, dir, n, coords, z_height, copy.copy(data), units, bounding_box, out_of_bounds_behavior, layer_counter, features)
+
+  def process_extra_metadata_line(self, key: str, val: str, data: dict) -> dict:
+    key = key.replace('$', '')
+    key = key.capitalize()
+    data[key] = val
+    return data
+
   def _parse_geometry(self, file, units, out_of_bounds_behavior: OutOfBoundsBehavior, bounding_box: list = None, message_handler: nx.IFilter.MessageHandler = None) -> Result:
     layer_counter = -1 #initialize to -1, increment by one when finding the first layer
     layer_heights = []
     layer_features = []
     features = []
     data = {}
+    
     last_message_time = 0
     
     #parse file lines
     line: str = file.readline()
     line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
-    polyline_z_height = None
-    hatches_z_height = None
     while not line.startswith("$$GEOMETRYEND"):
       if not line:
         # Do nothing, read the next line
-        pass
-      elif line.startswith("$$LAYER"):
+        line = file.readline()
+        line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
+        continue
+
+      key, val = line.split("/")
+      if line.startswith("$$LAYER"):
         if layer_counter>=0:
           layer_features.append(features) #save the old stuff before starting the new stuff
         layer_counter += 1
-        key, val = line.split("/")
         layer_heights.append(float(val))
         key = key.replace('$', '')
         key = key.capitalize()
@@ -390,43 +494,13 @@ class CliReaderFilter:
           message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f"Number of layers found: {layer_counter + 1}"))
           last_message_time = current_time
       
-      #sometimes these don't start with double dollar signs.
       elif line.startswith("$$POLYLINE") or line.startswith("$POLYLINE"):
-        key, val = line.split("/")
-        poly_id, dir, n, coords = self._read_poly_line(val)
-        polyline_z_height = layer_heights[-1]
-        if bounding_box is not None:
-          coords_result = self._filter_coordinates(coords, polyline_z_height, units, bounding_box, out_of_bounds_behavior)
-          if coords_result.invalid():
-            return Result(errors=coords_result.errors)
-          coords = coords_result.value
-          n = coords.size // 4
-        xvals = coords[0::2] * units
-        yvals = coords[1::2] * units
-        new_poly = Polyline(layer_counter, polyline_z_height * units, copy.copy(data), poly_id, dir, n, xvals, yvals)
-        features.append(new_poly)
-  
+        self.process_geometric_feature_line(self._read_poly_line, 1, val, data, units, bounding_box, out_of_bounds_behavior, layer_counter, layer_heights, features)
       elif line.startswith("$$HATCHES") or line.startswith("$HATCHES"):
-        key, val = line.split("/")
-        hatch_id, n, coords = self._read_hatch_line(val)
-        hatches_z_height = layer_heights[-1]
-        if bounding_box is not None:
-          coords_result = self._filter_coordinates(coords, hatches_z_height, units, bounding_box, out_of_bounds_behavior)
-          if coords_result.invalid():
-            return Result(errors=coords_result.errors)
-          coords: np.ndarray = coords_result.value
-          n = coords.size // 4
-        start_xvals = coords[0::4] * units
-        start_yvals = coords[1::4] * units
-        end_xvals   = coords[2::4] * units
-        end_yvals   = coords[3::4] * units
-        new_hatch = Hatches(layer_counter, hatches_z_height * units, copy.copy(data), hatch_id, n, start_xvals, start_yvals, end_xvals, end_yvals)
-        features.append(new_hatch)
+        self.process_geometric_feature_line(self._read_hatch_line, 0, val, data, units, bounding_box, out_of_bounds_behavior, layer_counter, layer_heights, features)
       else:
-        key, val = line.split("/")
-        key = key.replace('$', '')
-        key = key.capitalize()
-        data[key] = val
+        data = self.process_extra_metadata_line(key, val, data)
+
       line = file.readline()
       line = re.sub(r"//.*?//", "", line).strip()  # Remove comments
     
@@ -443,11 +517,20 @@ class CliReaderFilter:
 
   def _read_poly_line(self, line: str) -> Tuple[int, int, int, np.ndarray]:
     vals = line.split(",")
-    return int(vals[0]), int(vals[1]), int(vals[2]), np.array(list(map(float, vals[3:])))
+
+    # Set up coord_array so that it contains start & end coordinate pairs, not just a list of coordinates.
+    # This will make the rest of the code work for polylines like it does for hatches.
+    coord_array = np.array(list(map(float, vals[3:])))
+    reshaped_arr = coord_array.reshape(int(len(coord_array) / 2), 2)
+    repeated_arr = np.repeat(reshaped_arr[1:-1], 2, axis=0)
+    coord_array = np.concatenate(([reshaped_arr[0]], repeated_arr, [reshaped_arr[-1]]))
+    coord_array = coord_array.ravel()
+
+    return int(vals[0]), int(vals[1]), int(len(coord_array) / 4), coord_array
 
   def _read_hatch_line(self, line: str) -> Tuple[int, int, np.ndarray]:
     vals = line.split(",")
-    return int(vals[0]), int(vals[1]), np.array(list(map(float, vals[2:])))
+    return int(vals[0]), None, int(vals[1]), np.array(list(map(float, vals[2:])))
 
   def _filter_coordinates(self, coords: np.ndarray, z_height: float, units: int, bounding_box: list, out_of_bounds_behavior: OutOfBoundsBehavior) -> Result[np.array]:
     x_min, x_max, y_min, y_max, z_min, z_max = bounding_box
