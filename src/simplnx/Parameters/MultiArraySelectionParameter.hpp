@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Utilities/DataTypeUtilities.hpp"
 
 namespace nx::core
 {
@@ -14,7 +15,7 @@ class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = std::vector<DataPath>;
   using AllowedTypes = std::set<IArray::ArrayType>;
-  using AllowedDataTypes = std::set<DataType>;
+  using AllowedDataTypes = nx::core::DataTypeSetType;
   using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   MultiArraySelectionParameter() = delete;

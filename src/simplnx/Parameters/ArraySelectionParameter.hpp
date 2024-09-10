@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Utilities/DataTypeUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <set>
@@ -18,7 +19,7 @@ class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = std::set<DataType>;
+  using AllowedTypes = nx::core::DataTypeSetType;
   using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   enum class DataLocation : uint8
