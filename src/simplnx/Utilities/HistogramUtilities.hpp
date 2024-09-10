@@ -9,16 +9,6 @@ namespace nx::core::HistogramUtilities
 {
 namespace serial
 {
-namespace detail
-{
-template <class T>
-concept HasBracketOperator = requires(T object, usize i)
-{
-  {
-    object[i]
-    } -> std::same_as<typename T::value_type&>;
-};
-
 /**
  * @function FillBinRange
  * @brief This function fills a container that is STL compatible and has a bracket operator defined with the bin ranges in the following pattern:
@@ -30,7 +20,7 @@ concept HasBracketOperator = requires(T object, usize i)
  * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
  * @param increment this is the uniform size of the bins
  */
-template <typename Type, HasBracketOperator Container>
+template <typename Type, class Container>
 SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const Type increment)
 {
   // WARNING: No bounds checking for type compatibility, it is expected to be done higher up where the type is not abstracted
@@ -61,7 +51,7 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
  * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
  * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
  */
-template <typename Type, HasBracketOperator Container>
+template <typename Type, class Container>
 SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins)
 {
   // DEV NOTE: this function also serves to act as a jumping off point for implementing logarithmic histograms down the line
@@ -71,7 +61,12 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
 
   FillBinRanges(outputContainer, rangeMinMax, numBins, increment);
 }
-} // namespace detail
+
+template <typename Type>
+SIMPLNX_EXPORT Type CalculateBin(Type value, Type min, Type increment)
+{
+  return std::floor((value - min) / increment);
+}
 
 /**
  * @function GenerateHistogram
@@ -127,7 +122,7 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const InputContainer<Type>& inputStore
   const Type increment = (rangeMinMax.second - rangeMinMax.first) / static_cast<Type>(numBins);
 
   // Fill Bins
-  detail::FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
+  FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
 
   if(shouldCancel)
   {
@@ -140,7 +135,7 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const InputContainer<Type>& inputStore
     {
       return MakeErrorResult(-23763, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
     }
-    const auto bin = std::floor((inputStore[i] - rangeMinMax.first) / increment);
+    const auto bin = CalculateBin(inputStore[i], rangeMinMax.first, increment);
     if((bin >= 0) && (bin < numBins))
     {
       histogramCountsStore[bin]++;

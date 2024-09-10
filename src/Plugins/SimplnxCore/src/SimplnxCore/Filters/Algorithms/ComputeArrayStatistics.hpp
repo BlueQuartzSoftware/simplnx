@@ -38,7 +38,8 @@ struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
   DataPath FeatureIdsArrayPath;
   DataPath MaskArrayPath;
   DataPath DestinationAttributeMatrix;
-  DataPath HistogramArrayName;
+  DataPath BinCountsArrayName;
+  DataPath BinRangesArrayName;
   DataPath MostPopulatedBinArrayName;
   DataPath ModalBinArrayName;
   DataPath FeatureHasDataArrayName;
