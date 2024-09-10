@@ -297,13 +297,12 @@ and then print the name, tuple_dimensions and component_dims of the created DatA
 
    data_structure = nx.DataStructure()
    result = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
-                                       component_dimensions=[[3]],
-                                       data_format="", 
-                                       init_type_index=0,
-                                       init_value="0", 
-                                       numeric_type_index=nx.NumericType.float32,
-                                       output_array_path=nx.DataPath(["2D Array"]), 
-                                       tuple_dimensions=[[4, 5]])
+                                        component_count=3, 
+                                        data_format="", 
+                                        initialization_value="0", 
+                                        numeric_type=nx.NumericType.float32, 
+                                        output_data_array=nx.DataPath(["2D Array"]), 
+                                        tuple_dimensions=[[4, 5]])
                                         
    data_array = data_structure[output_array_path]
    print(f'name: {data_array.name}')
@@ -475,9 +474,9 @@ Pipeline
 
       create_data_array_args:dict = {
             "data_format": "",
-            "component_dimensions":[1],
+            "component_count":1, 
             "initialization_value":"0", 
-            "numeric_type_index":nx.NumericType.int8,
+            "numeric_type":nx.NumericType.int8, 
             "output_data_array":nx.DataPath("Geometry/Cell Data/data"),
             "advanced_options": False,
             "tuple_dimensions": [[10,20,30]]

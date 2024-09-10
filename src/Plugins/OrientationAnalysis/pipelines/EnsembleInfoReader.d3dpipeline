@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "EnsembleInfoReader.d3dpipeline",
+  "name": "ReadEnsembleInfo.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -11,12 +11,12 @@
           100,
           2
         ],
+        "output_image_geometry_path": "[Image Geometry]",
         "origin": [
           0.0,
           0.0,
           0.0
         ],
-        "output_image_geometry_path": "[Image Geometry]",
         "spacing": [
           1.0,
           1.0,
@@ -25,7 +25,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::CreateImageGeometryFilter",
+        "name": "simplnx::CreateImageGeometryFilter",
         "uuid": "c4320659-1a84-461d-939e-c7c10229a504"
       },
       "isDisabled": false
@@ -48,7 +48,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ReadRawBinaryFilter",
+        "name": "simplnx::ReadRawBinaryFilter",
         "uuid": "dd159366-5f12-42db-af6d-a33592ae8a89"
       },
       "isDisabled": false
@@ -62,44 +62,28 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ConvertOrientationsFilter",
+        "name": "simplnx::ConvertOrientations",
         "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_dimensions": [
-          [
-            1.0
-          ]
-        ],
-        "data_format": "",
-        "init_end_range": "1;1;1",
-        "init_start_range": "0;0;0",
-        "init_type_index": 0,
-        "init_value": "1",
+        "component_count": 1,
+        "initialization_value_str": "1",
         "numeric_type_index": 4,
         "output_array_path": "[Image Geometry]/Cell Data/Phases",
-        "seed_array_name": "InitializeDataFilter SeedValue",
-        "seed_value": 5489,
-        "set_tuple_dimensions": true,
-        "standardize_seed": false,
-        "starting_fill_value": "0;1;2",
-        "step_operation_index": 0,
-        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             2.0,
             100.0,
             100.0
           ]
-        ],
-        "use_seed": false
+        ]
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::CreateDataArrayFilter",
+        "name": "simplnx::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
@@ -114,7 +98,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ReadEnsembleInfoFilter",
+        "name": "simplnx::ReadEnsembleInfoFilter",
         "uuid": "ecf1ec45-bc27-4ddb-b2c0-3d465b8c182a"
       },
       "isDisabled": false
@@ -135,7 +119,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ComputeIPFColorsFilter",
+        "name": "simplnx::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
@@ -147,12 +131,11 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::WriteDREAM3DFilter",
+        "name": "simplnx::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "version": 1,
   "workflowParams": []
 }

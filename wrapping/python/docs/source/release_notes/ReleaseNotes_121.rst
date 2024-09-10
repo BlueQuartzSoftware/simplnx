@@ -50,10 +50,10 @@ API Additions 1.2.1
     array_type = nx.NumericType.float32
     create_array_filter = nx.CreateDataArrayFilter()
     result  = create_array_filter.execute(data_structure=data_structure, 
-                                          component_dimensions=[[1]],
+                                          component_count=1, 
                                           data_format="", 
                                           initialization_value="10", 
-                                          numeric_type_index=array_type,
+                                          numeric_type=array_type, 
                                           output_data_array=output_array_path, 
                                           tuple_dimensions=tuple_dims)
     npdata = data_structure[output_array_path].npview()

@@ -77,10 +77,10 @@ An example of executing a file in immediate mode using a filter from the simplnx
     import simplnx as nx
 
     result  = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
-                                        component_dimensions=[[1]],
+                                        component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type_index=nx.NumericType.float32,
+                                        numeric_type=nx.NumericType.float32, 
                                         output_data_array=nx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
     npdata = data_structure[nx.DataPath(["3D Array"])].npview()
@@ -130,10 +130,10 @@ of the method is as follows.
 
     # Instantiate and execute immediately teh CreateDataArrayFilter Filter
     result  = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
-                                        component_dimensions=[[1]],
+                                        component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type_index=nx.NumericType.float32,
+                                        numeric_type=nx.NumericType.float32, 
                                         output_data_array=nx.DataPath(["3D Array"]), 
                                         tuple_dimensions= [[3, 2, 5]])
     # The returned result holds any warnings or errors that occurred during execution
@@ -254,8 +254,8 @@ connectivity from a sample file.
     # Create the vertex array and fill it from data on disk
     array_path = nx.DataPath(['Vertices'])
     result = nx.CreateDataArrayFilter.execute(data_structure,
-                                        numeric_type_index=nx.NumericType.float32,
-                                        component_dimensions=[[3]],
+                                        numeric_type=nx.NumericType.float32,
+                                        component_count=3,
                                         tuple_dimensions=[[144]],
                                         output_data_array=array_path,
                                         initialization_value='0')
@@ -266,8 +266,8 @@ connectivity from a sample file.
     # Create the triangle connectivity array and fill it from data on disk
     array_path = nx.DataPath(['Triangles'])
     result = nx.CreateDataArrayFilter.execute(data_structure,
-                                        numeric_type_index=nx.NumericType.uint64,
-                                        component_dimensions=[[3]],
+                                        numeric_type=nx.NumericType.uint64,
+                                        component_count=3,
                                         tuple_dimensions=[[242]],
                                         output_data_array=array_path,
                                         initialization_value='0')
@@ -336,10 +336,10 @@ The next code section was take from `basic_arrays.py <https://github.com/BlueQua
     tuple_dims = [[10]]
     create_array_filter = nx.CreateDataArrayFilter()
     result  = create_array_filter.execute(data_structure=data_structure, 
-                                        component_dimensions=[[1]],
+                                        component_count=1, 
                                         data_format="", 
                                         initialization_value="10", 
-                                        numeric_type_index=array_type,
+                                        numeric_type=array_type, 
                                         output_data_array=output_array_path, 
                                         tuple_dimensions=tuple_dims)
 
@@ -355,8 +355,8 @@ The next code section was take from `basic_arrays.py <https://github.com/BlueQua
     # Create a DataArray to copy the Euler Angles into 
     array_path = nx.DataPath(['Euler Angles'])
     result = nx.CreateDataArrayFilter.execute(data_structure=data_structure,
-                                    numeric_type_index=nx.NumericType.float32,
-                                    component_dimensions=[[3]],
+                                    numeric_type=nx.NumericType.float32,
+                                    component_count=3,
                                     tuple_dimensions=[[99]],
                                     output_data_array=array_path,
                                     initialization_value='0')

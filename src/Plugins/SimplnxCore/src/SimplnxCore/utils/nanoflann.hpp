@@ -2205,7 +2205,7 @@ public:
   /** @} */
 
 }; // end of KDTreeEigenMatrixAdaptor
-/** @} */
+   /** @} */
 
 /** @} */ // end of grouping
 } // namespace nanoflann

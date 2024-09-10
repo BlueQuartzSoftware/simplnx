@@ -1,12 +1,10 @@
 {
   "isDisabled": false,
-  "name": "(04) Porosity Analysis.d3dpipeline",
-  "pinnedParams": [],
+  "name": "(04) Porosity Analysis",
   "pipeline": [
     {
       "args": {
         "cell_attribute_matrix_name": "Optical Data",
-        "change_image_data_type": false,
         "color_weights": [
           0.21250000596046448,
           0.715399980545044,
@@ -14,7 +12,6 @@
         ],
         "convert_to_gray_scale": false,
         "image_data_array_name": "ImageData",
-        "image_data_type_index": 0,
         "image_transform_index": 0,
         "input_file_list_object": {
           "end_index": 174,
@@ -33,8 +30,6 @@
           0.0
         ],
         "output_image_geometry_path": "RoboMet.3D Image Stack",
-        "scale_images": false,
-        "scaling": 1.0,
         "spacing": [
           1.0,
           1.0,
@@ -132,31 +127,17 @@
     },
     {
       "args": {
-        "component_dimensions": [
-          [
-            1.0
-          ]
-        ],
+        "component_count": 1,
         "data_format": "",
-        "init_end_range": "1;1;1",
-        "init_start_range": "0;0;0",
-        "init_type_index": 0,
-        "init_value": "1",
+        "initialization_value_str": "1",
         "numeric_type_index": 4,
         "output_array_path": "RoboMet.3D Image Stack/Optical Data/Phases",
-        "seed_array_name": "InitializeDataFilter SeedValue",
-        "seed_value": 5489,
         "set_tuple_dimensions": false,
-        "standardize_seed": false,
-        "starting_fill_value": "0;1;2",
-        "step_operation_index": 0,
-        "step_value": "1;1;1",
         "tuple_dimensions": [
           [
             0.0
           ]
-        ],
-        "use_seed": false
+        ]
       },
       "comments": "",
       "filter": {
@@ -231,6 +212,7 @@
         "cell_ensemble_attribute_matrix_path": "RoboMet.3D Image Stack/Ensemble Data",
         "centroids_array_path": "RoboMet.3D Image Stack/Pore Data/Centroids",
         "clustering_list_array_name": "ClusteringList",
+        "equivalent_diameters_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters",
         "feature_phases_array_path": "RoboMet.3D Image Stack/Pore Data/Phases",
         "input_image_geometry_path": "RoboMet.3D Image Stack",
         "max_min_array_name": "RDFMaxMinDistances",
@@ -262,6 +244,5 @@
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }

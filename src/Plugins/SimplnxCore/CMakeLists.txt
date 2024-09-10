@@ -51,6 +51,7 @@ set(FilterList
   CopyFeatureArrayToElementArrayFilter
   CreateAttributeMatrixFilter
   CreateDataArrayFilter
+  CreateDataArrayAdvancedFilter
   CreateDataGroupFilter
   CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter

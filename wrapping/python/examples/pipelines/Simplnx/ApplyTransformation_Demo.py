@@ -66,9 +66,9 @@ nx_filter = nx.CreateDataArrayFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    component_dimensions=[[1]],
+    component_count=1,
     data_format="",
-    init_value="2",
+    initialization_value_str="2",
     numeric_type_index=nx.NumericType.int32,
     output_array_path=nx.DataPath("Group 1/Group 2/[Geometry]/Cell Data/Data"),
     tuple_dimensions=[[2.0, 10.0, 10.0]]

@@ -8,26 +8,36 @@
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT CreateDataArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateDataArrayAdvancedFilter : public IFilter
 {
 public:
-  CreateDataArrayFilter() = default;
-  ~CreateDataArrayFilter() noexcept override = default;
+  CreateDataArrayAdvancedFilter() = default;
+  ~CreateDataArrayAdvancedFilter() noexcept override = default;
 
-  CreateDataArrayFilter(const CreateDataArrayFilter&) = delete;
-  CreateDataArrayFilter(CreateDataArrayFilter&&) noexcept = delete;
+  CreateDataArrayAdvancedFilter(const CreateDataArrayAdvancedFilter&) = delete;
+  CreateDataArrayAdvancedFilter(CreateDataArrayAdvancedFilter&&) noexcept = delete;
 
-  CreateDataArrayFilter& operator=(const CreateDataArrayFilter&) = delete;
-  CreateDataArrayFilter& operator=(CreateDataArrayFilter&&) noexcept = delete;
+  CreateDataArrayAdvancedFilter& operator=(const CreateDataArrayAdvancedFilter&) = delete;
+  CreateDataArrayAdvancedFilter& operator=(CreateDataArrayAdvancedFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
   static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
+  static inline constexpr StringLiteral k_CompDims_Key = "component_dimensions";
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
   static inline constexpr StringLiteral k_DataPath_Key = "output_array_path";
-  static inline constexpr StringLiteral k_InitializationValue_Key = "initialization_value_str";
   static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
+  static inline constexpr StringLiteral k_InitType_Key = "init_type_index";
+  static inline constexpr StringLiteral k_InitValue_Key = "init_value";
+  static inline constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
+  static inline constexpr StringLiteral k_StepOperation_Key = "step_operation_index";
+  static inline constexpr StringLiteral k_StepValue_Key = "step_value";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static inline constexpr StringLiteral k_InitStartRange_Key = "init_start_range";
+  static inline constexpr StringLiteral k_InitEndRange_Key = "init_end_range";
+  static inline constexpr StringLiteral k_StandardizeSeed_Key = "standardize_seed";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -101,4 +111,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateDataArrayFilter, "67041f9b-bdc6-4122-acc6-c9fe9280e90d");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CreateDataArrayAdvancedFilter, "f23464df-abcc-40cf-bf99-f71463df633c");

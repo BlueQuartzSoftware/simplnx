@@ -128,9 +128,9 @@ array_type = nx.NumericType.float32
 tuple_dims = [[10]]
 create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
-                                          component_dimensions=[[1]],
+                                          component_count=1, 
                                           data_format="", 
-                                          init_value="10", 
+                                          initialization_value_str="10", 
                                           numeric_type_index=array_type, 
                                           output_array_path=output_array_path, 
                                           tuple_dimensions=tuple_dims)
@@ -151,9 +151,9 @@ output_array_path = nx.DataPath(["2D Array"])
 tuple_dims = [[2,5]]
 create_array_nx_filter = nx.CreateDataArrayFilter()
 result  = create_array_nx_filter.execute(data_structure=data_structure, 
-                                      component_dimensions=[[1]],
+                                      component_count=1, 
                                       data_format="", 
-                                      init_value="10", 
+                                      initialization_value_str="10", 
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)
@@ -180,9 +180,9 @@ output_array_path = nx.DataPath(["3D Array"])
 tuple_dims = [[3, 2, 5]]
 create_array_nx_filter = nx.CreateDataArrayFilter()
 result = create_array_nx_filter.execute(data_structure=data_structure, 
-                                      component_dimensions=[[1]],
+                                      component_count=1, 
                                       data_format="", 
-                                      init_value="10", 
+                                      initialization_value_str="10", 
                                         numeric_type_index=array_type, 
                                         output_array_path=output_array_path, 
                                         tuple_dimensions=tuple_dims)

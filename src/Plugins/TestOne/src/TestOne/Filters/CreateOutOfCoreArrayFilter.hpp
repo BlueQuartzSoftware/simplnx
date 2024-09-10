@@ -21,7 +21,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_dimensions";
+  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
   static inline constexpr StringLiteral k_DataPath_Key = "output_array_path";
   static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value_str";
