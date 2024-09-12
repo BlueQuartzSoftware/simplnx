@@ -118,8 +118,13 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   if(findHistogramValue)
   {
     {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key);
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key);
       auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinRangeName_Key);
+      auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{numBins + 1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
     {
@@ -203,7 +208,8 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insert(
       std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Histogram"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinCountName_Key, "Histogram Bin Counts Array Name", "The name of the histogram bin counts array", "Histogram Bin Counts"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinRangeName_Key, "Histogram Bin Ranges Array Name", "The name of the histogram bin ranges array", "Histogram Bin Ranges"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));
   params.insert(std::make_unique<BoolParameter>(k_FindModalBinRanges_Key, "Find Modal Histogram Bin Ranges",
                                                 "Whether to compute the histogram bin ranges that contain the mode values.  This option requires that \" Find Mode \" is turned on.", false));
@@ -258,7 +264,8 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
                                                           "NumUniqueValues"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_FindHistogram_Key, k_HistogramArrayName_Key, true);
+  params.linkParameters(k_FindHistogram_Key, k_HistoBinCountName_Key, true);
+  params.linkParameters(k_FindHistogram_Key, k_HistoBinRangeName_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_UseFullRange_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_NumBins_Key, true);
   params.linkParameters(k_FindHistogram_Key, k_MinRange_Key, true);
@@ -312,7 +319,6 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
 
-  PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -442,7 +448,8 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
   inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
-  inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
+  inputValues.BinCountsArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistoBinCountName_Key));
+  inputValues.BinRangesArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistoBinRangeName_Key));
   inputValues.MostPopulatedBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MostPopulatedBinArrayName_Key));
   inputValues.ModalBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_ModalBinArrayName_Key));
   inputValues.LengthArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_LengthArrayName_Key));
@@ -520,7 +527,7 @@ Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HistogramArrayNameKey, k_HistogramArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HistogramArrayNameKey, k_HistoBinCountName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_LengthArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_MinimumArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaximumArrayNameKey, k_MaximumArrayName_Key));

@@ -234,6 +234,7 @@ public:
         {
           float32 histMin = m_HistMin;
           float32 histMax = m_HistMax;
+
           if(m_HistFullRange)
           {
             histMin = static_cast<float32>(min[localFeatureIndex]);

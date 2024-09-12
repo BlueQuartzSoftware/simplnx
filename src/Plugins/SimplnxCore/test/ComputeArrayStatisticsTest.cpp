@@ -94,7 +94,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>());
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
@@ -299,7 +299,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "FeatureIds"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(histogram));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key, std::make_any<std::string>(histogram));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
