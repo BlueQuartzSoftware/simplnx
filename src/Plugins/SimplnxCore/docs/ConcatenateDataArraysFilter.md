@@ -10,6 +10,8 @@ This **Filter** concatenates multiple input arrays by taking a list of input arr
 
 This filter is designed to handle arrays of matching array types and component dimensions. If the arrays have different array types or component dimensions, the filter will raise an error.
 
+**NOTE:** If you are wanting to instead combine data arrays into a multi-component array, please see the [Combine Attribute Arrays](CombineAttributeArraysFilter.md) filter.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
