@@ -104,12 +104,12 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
   if(inputArrayPaths.empty())
   {
-    return MakePreflightErrorResult(to_underlying(ErrorCodes::EmptyInputArrays), "No input arrays have been selected.  Please select at least 2 input arrays.");
+    return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::EmptyInputArrays), "No input arrays have been selected.  Please select at least 2 input arrays.");
   }
 
   if(inputArrayPaths.size() == 1)
   {
-    return MakePreflightErrorResult(to_underlying(ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
+    return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
   }
 
   std::vector<usize> tDims = {};
@@ -120,7 +120,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
     auto floatValue = rowData[col];
     if(floatValue <= 0)
     {
-      return MakePreflightErrorResult(to_underlying(ErrorCodes::NonPositiveTupleDimValue),
+      return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::NonPositiveTupleDimValue),
                                       fmt::format("Tuple dimension value '{}' (column {}) must be a positive integer.", static_cast<usize>(floatValue), col));
     }
 
@@ -142,7 +142,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
       if(inputDataArray.getTypeName() != inputDataArray2.getTypeName())
       {
-        return MakePreflightErrorResult(to_underlying(ErrorCodes::TypeNameMismatch),
+        return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::TypeNameMismatch),
                                         fmt::format("Input array '{}' has array type '{}', but input array '{}' has array type '{}'.  The array types must match.", inputArrayPaths[i].toString(),
                                                     inputDataArray.getTypeName(), inputArrayPaths[j].toString(), inputDataArray2.getTypeName()));
       }
@@ -151,7 +151,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
       {
         std::string firstArrayComponentsStr = createVectorString(inputDataArray.getComponentShape());
         std::string secondArrayComponentsStr = createVectorString(inputDataArray2.getComponentShape());
-        return MakePreflightErrorResult(to_underlying(ErrorCodes::ComponentShapeMismatch),
+        return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch),
                                         fmt::format("Input array '{}' has component shape '{}', but input array '{}' has component shape '{}'.  The component shapes must match.",
                                                     inputArrayPaths[i].toString(), firstArrayComponentsStr, inputArrayPaths[j].toString(), secondArrayComponentsStr));
       }
@@ -169,7 +169,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
   {
     std::string tDimsStr = createVectorString(tDims);
     return MakePreflightErrorResult(
-        to_underlying(ErrorCodes::TotalTuplesMismatch),
+        to_underlying(ConcatenateDataArrays::ErrorCodes::TotalTuplesMismatch),
         fmt::format("The chosen input arrays have a combined total tuple count of {}, but the chosen tuple dimensions ([{}]) have a combined total tuple count of {}.  These tuple counts must match.",
                     tupleCount, tDimsStr, totalTuples));
   }
@@ -181,7 +181,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
   {
     std::string tDimsStr = createVectorString(tDims, ", ");
     resultOutputActions.warnings().push_back(
-        Warning{to_underlying(WarningCodes::MultipleTupleDimsNotSupported),
+        Warning{to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported),
                 fmt::format("The input arrays have array type {}, but the chosen tuple dimensions have more than one dimension.  Since "
                             "array type {} does not support having multiple tuple dimensions, the output array will have tuple dimensions [{}] instead of tuple dimensions [{}].",
                             arrayTypeName, arrayTypeName, tupleCount, tDimsStr)});
@@ -207,12 +207,12 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
     break;
   }
   case IArray::ArrayType::Any: {
-    return MakePreflightErrorResult(to_underlying(ErrorCodes::InputArraysEqualAny),
+    return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::InputArraysEqualAny),
                                     "Every array in the input arrays list has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.");
   }
   default:
     return MakePreflightErrorResult(
-        to_underlying(ErrorCodes::InputArraysUnsupported),
+        to_underlying(ConcatenateDataArrays::ErrorCodes::InputArraysUnsupported),
         fmt::format("Every array in the input arrays list has array type '{}'.  This is an array type that is currently not supported by this filter, so please contact the developers.",
                     arrayTypeName));
   }

@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/ConcatenateDataArrays.hpp"
 #include "SimplnxCore/Filters/ConcatenateDataArraysFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -372,7 +373,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::EmptyInputArrays));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::EmptyInputArrays));
   }
   SECTION("One Input Array")
   {
@@ -386,7 +387,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::OneInputArray));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::OneInputArray));
   }
   SECTION("Mismatching Type Names 1")
   {
@@ -400,7 +401,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::TypeNameMismatch));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::TypeNameMismatch));
   }
 
   SECTION("Mismatching Type Names 2")
@@ -415,7 +416,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::TypeNameMismatch));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::TypeNameMismatch));
   }
   SECTION("Mismatching Component Dimensions")
   {
@@ -429,7 +430,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::ComponentShapeMismatch));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch));
   }
   SECTION("Mismatching Tuple Counts")
   {
@@ -443,7 +444,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArraysFilter::ErrorCodes::TotalTuplesMismatch));
+    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::TotalTuplesMismatch));
   }
   SECTION("NeighborList Multiple Tuple Dims")
   {
@@ -465,7 +466,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().size() == 1);
-    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArraysFilter::WarningCodes::MultipleTupleDimsNotSupported));
+    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int8>>(k_OutputArrayPath));
     auto outputNeighborList = dataStructure.getDataRefAs<NeighborList<int8>>(k_OutputArrayPath);
@@ -483,7 +484,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     REQUIRE(result.result.warnings().size() == 1);
-    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArraysFilter::WarningCodes::MultipleTupleDimsNotSupported));
+    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_OutputArrayPath));
     auto outputDataArray = dataStructure.getDataRefAs<StringArray>(k_OutputArrayPath);

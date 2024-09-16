@@ -99,6 +99,25 @@ public:
   ConcatenateDataArrays& operator=(const ConcatenateDataArrays&) = delete;
   ConcatenateDataArrays& operator=(ConcatenateDataArrays&&) noexcept = delete;
 
+  // Error Codes
+  enum class ErrorCodes : int32
+  {
+    EmptyInputArrays = -2300,
+    OneInputArray = -2301,
+    NonPositiveTupleDimValue = -2302,
+    TypeNameMismatch = -2303,
+    ComponentShapeMismatch = -2304,
+    TotalTuplesMismatch = -2305,
+    InputArraysEqualAny = -2306,
+    InputArraysUnsupported = -2307
+  };
+
+  // Warning Codes
+  enum class WarningCodes : int32
+  {
+    MultipleTupleDimsNotSupported = -100
+  };
+
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

@@ -24,32 +24,6 @@ public:
   static inline constexpr StringLiteral k_OutputArray_Key = "output_array";
   static inline constexpr StringLiteral k_OutputTupleDims_Key = "output_tuple_dims";
 
-  // Error Codes
-  enum class ErrorCodes : int32
-  {
-    EmptyInputArrays = -2300,
-    OneInputArray = -2301,
-    NonPositiveTupleDimValue = -2302,
-    TypeNameMismatch = -2303,
-    ComponentShapeMismatch = -2304,
-    TotalTuplesMismatch = -2305,
-    InputArraysEqualAny = -2306,
-    InputArraysUnsupported = -2307
-  };
-
-  // Warning Codes
-  enum class WarningCodes : int32
-  {
-    MultipleTupleDimsNotSupported = -100
-  };
-
-  /**
-   * @brief Reads SIMPL json and converts it simplnx Arguments.
-   * @param json
-   * @return Result<Arguments>
-   */
-  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
-
   /**
    * @brief Returns the filter's name.
    * @return std::string
