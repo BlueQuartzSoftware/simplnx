@@ -21,7 +21,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputArrays_Key = "input_arrays";
-  static inline constexpr StringLiteral k_OutputArray_Key = "output_array";
+  static inline constexpr StringLiteral k_OutputArray_Key = "output_array_path";
   static inline constexpr StringLiteral k_OutputTupleDims_Key = "output_tuple_dims";
 
   /**
