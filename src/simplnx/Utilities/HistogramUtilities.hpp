@@ -5,11 +5,9 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 
-namespace nx::core
+namespace nx::core::HistogramUtilities
 {
-namespace SIMPLNX_EXPORT HistogramUtilities
-{
-namespace SIMPLNX_EXPORT serial
+namespace serial
 {
 /**
  * @function FillBinRange
@@ -192,7 +190,7 @@ struct GenerateHistogramFunctor
 };
 } // namespace serial
 
-namespace SIMPLNX_EXPORT concurrent
+namespace concurrent
 {
 /**
  * @class GenerateHistogramImpl
@@ -285,5 +283,4 @@ struct InstantiateHistogramImplFunctor
   }
 };
 } // namespace concurrent
-} // namespace HistogramUtilities
-} // namespace nx::core
+} // namespace nx::core::HistogramUtilities
