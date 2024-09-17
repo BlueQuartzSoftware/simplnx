@@ -248,17 +248,17 @@ std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histm
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class Container, typename T, typename... Ts>
-std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const nx::core::AbstractDataStore<T>& binRanges, const T& mode)
+std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const std::vector<T>& binRanges, const T& mode)
 {
   if(source.empty())
   {
     return {static_cast<T>(0.0), static_cast<T>(0.0)};
   }
 
-  size_t numBins = binRanges.getSize() - 1;
+  size_t numBins = binRanges.size() - 1;
 
   T min = binRanges[0];
-  T max = binRanges[binRanges.getNumberOfTuples()];
+  T max = binRanges[numBins];
 
   const T increment = (max - min) / static_cast<T>(numBins);
   if constexpr(std::is_floating_point_v<T>)

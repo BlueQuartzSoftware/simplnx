@@ -5,9 +5,11 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 
-namespace nx::core::HistogramUtilities
+namespace nx::core
 {
-namespace serial
+namespace SIMPLNX_EXPORT HistogramUtilities
+{
+namespace SIMPLNX_EXPORT serial
 {
 /**
  * @function FillBinRange
@@ -21,12 +23,12 @@ namespace serial
  * @param increment this is the uniform size of the bins
  */
 template <typename Type, class Container>
-SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const Type increment)
+void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const Type increment)
 {
   // WARNING: No bounds checking for type compatibility, it is expected to be done higher up where the type is not abstracted
   // EXPECTED CONTAINER SIZE: numBins + 1
 
-  if(numBins == 1) // if one bin, just set the first element to total number of points
+  if(numBins == 1) // if one bin, just set the range to the inputs
   {
     outputContainer[0] = rangeMinMax.first;
     outputContainer[1] = rangeMinMax.second;
@@ -52,7 +54,7 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
  * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
  */
 template <typename Type, class Container>
-SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins)
+void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins)
 {
   // DEV NOTE: this function also serves to act as a jumping off point for implementing logarithmic histograms down the line
 
@@ -63,7 +65,7 @@ SIMPLNX_EXPORT void FillBinRanges(Container& outputContainer, const std::pair<Ty
 }
 
 template <typename Type>
-SIMPLNX_EXPORT Type CalculateBin(Type value, Type min, Type increment)
+Type CalculateBin(Type value, Type min, Type increment)
 {
   return std::floor((value - min) / increment);
 }
@@ -87,8 +89,8 @@ SIMPLNX_EXPORT Type CalculateBin(Type value, Type min, Type increment)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
 template <typename Type, std::integral SizeType, template <typename> class InputContainer, template <typename> class OutputContainer>
-SIMPLNX_EXPORT Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
-                                          const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
+Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
+                           const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
 {
   usize end = 0;
   if constexpr(std::is_same_v<std::vector<Type>, InputContainer<Type>>)
@@ -159,7 +161,7 @@ SIMPLNX_EXPORT Result<> GenerateHistogram(const InputContainer<Type>& inputStore
  * @brief This is a compatibility functor that leverages existing typecasting functions to execute GenerateHistogram() cleanly. In it there are two
  * definitions for the `()` operator that allows for implicit calculation of range, predicated whether a range is passed in or not
  */
-struct SIMPLNX_EXPORT GenerateHistogramFunctor
+struct GenerateHistogramFunctor
 {
   template <typename Type, class... ArgsT>
   Result<> operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args) const
@@ -190,7 +192,7 @@ struct SIMPLNX_EXPORT GenerateHistogramFunctor
 };
 } // namespace serial
 
-namespace concurrent
+namespace SIMPLNX_EXPORT concurrent
 {
 /**
  * @class GenerateHistogramImpl
@@ -199,7 +201,7 @@ namespace concurrent
  * @tparam SizeType this is the scalar type of the bin counts container
  */
 template <typename Type, std::integral SizeType>
-class SIMPLNX_EXPORT GenerateHistogramImpl
+class GenerateHistogramImpl
 {
 public:
   /**
@@ -283,4 +285,5 @@ struct InstantiateHistogramImplFunctor
   }
 };
 } // namespace concurrent
-} // namespace nx::core::HistogramUtilities
+} // namespace HistogramUtilities
+} // namespace nx::core
