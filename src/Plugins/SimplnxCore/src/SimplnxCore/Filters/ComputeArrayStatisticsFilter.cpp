@@ -135,7 +135,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     if(findModalBinRanges)
     {
       auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key);
-      auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
   }

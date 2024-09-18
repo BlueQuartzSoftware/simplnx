@@ -45,7 +45,7 @@ public:
                                     int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source,
                                     BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray,
                                     Float32Array* stdDevArray, Float32Array* summationArray, UInt64Array* histBinCountsArray, DataArray<T>* histBinRangesArray, UInt64Array* mostPopulatedBinArray,
-                                    NeighborList<float32>* modalBinRangesArray, ComputeArrayStatistics* filter)
+                                    NeighborList<T>* modalBinRangesArray, ComputeArrayStatistics* filter)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -240,18 +240,18 @@ public:
         std::vector<uint64> histogram(m_NumBins, 0);
         if(length[localFeatureIndex] > 0)
         {
-          float32 histMin = m_HistMin;
-          float32 histMax = m_HistMax;
+          T histMin = static_cast<T>(m_HistMin);
+          T histMax = static_cast<T>(m_HistMax);
 
           if(m_HistFullRange)
           {
-            histMin = static_cast<float32>(min[localFeatureIndex]);
-            histMax = static_cast<float32>(max[localFeatureIndex]);
+            histMin = min[localFeatureIndex];
+            histMax = max[localFeatureIndex];
           }
 
-          HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(static_cast<T>(histMin), static_cast<T>(histMax)), m_NumBins);
+          HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
 
-          const float32 increment = (histMax - histMin) / (m_NumBins);
+          const T increment = (histMax - histMin) / (m_NumBins);
           if(std::fabs(increment) < 1E-10)
           {
             histogram[0] = length[localFeatureIndex];
@@ -272,7 +272,7 @@ public:
               {
                 continue;
               }
-              const auto value = static_cast<float32>(m_Source[i]);
+              const T value = m_Source[i];
               const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
               if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
               {
@@ -287,29 +287,46 @@ public:
 
           if(m_ModalBinRanges)
           {
-            if(std::fabs(increment) < 1E-10)
+            bool skip = false;
+            if constexpr(std::is_floating_point_v<T>)
             {
-              m_ModalBinRangesArray->addEntry(j, histMin);
-              m_ModalBinRangesArray->addEntry(j, histMax);
+              if(m_HistFullRange && std::fabs(increment) < 1E-10)
+              {
+                m_ModalBinRangesArray->addEntry(j, histMin);
+                m_ModalBinRangesArray->addEntry(j, histMax);
+
+                skip = true;
+              }
             }
             else
+            {
+              if(m_HistFullRange && increment == 0)
+              {
+                m_ModalBinRangesArray->addEntry(j, histMin);
+                m_ModalBinRangesArray->addEntry(j, histMax);
+
+                skip = true;
+              }
+            }
+
+            if(!skip)
             {
               auto modeList = m_ModeArray->getList(j);
               for(int i = 0; i < modeList->size(); i++)
               {
-                const float32 mode = modeList->at(i);
-                const auto modalBin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(mode, histMin, increment));
-                float32 minBinValue = 0.0f;
-                float32 maxBinValue = 0.0f;
+                const T mode = modeList->at(i);
+                const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
+                T minBinValue;
+                T maxBinValue;
                 if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
                 {
-                  minBinValue = static_cast<float32>(histMin + (modalBin * increment));
-                  maxBinValue = static_cast<float32>(histMin + ((modalBin + 1) * increment));
+                  minBinValue = static_cast<T>(histMin + (modalBin * increment));
+                  maxBinValue = static_cast<T>(histMin + ((modalBin + 1) * increment));
                 }
                 else if(mode == histMax)
                 {
-                  minBinValue = static_cast<float32>(histMin + ((modalBin - 1) * increment));
-                  maxBinValue = static_cast<float32>(histMin + (modalBin * increment));
+                  minBinValue = static_cast<T>(histMin + ((modalBin - 1) * increment));
+                  maxBinValue = static_cast<T>(histMin + (modalBin * increment));
                 }
                 m_ModalBinRangesArray->addEntry(j, minBinValue);
                 m_ModalBinRangesArray->addEntry(j, maxBinValue);
@@ -419,7 +436,7 @@ private:
   UInt64Array* m_HistBinCountsArray = nullptr;
   DataArray<T>* m_HistBinRangesArray = nullptr;
   UInt64Array* m_MostPopulatedBinArray = nullptr;
-  NeighborList<float32>* m_ModalBinRangesArray = nullptr;
+  NeighborList<T>* m_ModalBinRangesArray = nullptr;
   ComputeArrayStatistics* m_Filter = nullptr;
 };
 
@@ -701,7 +718,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
     auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
     auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
-    auto* modalBinsArrayPtr = dynamic_cast<NeighborList<float32>*>(arrays[11]);
+    auto* modalBinsArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[11]);
     auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[13]);
 

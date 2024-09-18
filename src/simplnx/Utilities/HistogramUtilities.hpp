@@ -155,6 +155,89 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
 }
 
 /**
+ * @function GenerateHistogram
+ * @brief [Runs over specific component] This function creates a uniform histogram (logarithmic possible, but not currently implemented) it fills two arrays,
+ * one with the ranges for each bin and one for bin counts
+ * See FillBinRanges function for details on the high level structuring of the bin ranges array
+ * @tparam Type this the end type of the function in that it is the scalar type of the input and by extension range data
+ * @tparam SizeType this is the scalar type of the bin counts container
+ * * @tparam OutputContainer this is the type of object the values are stored/written to:
+ * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
+ * @param inputStore this is the container holding the data that will be binned
+ * @param binRangesStore this is the object that the ranges will be loaded into.
+ * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
+ * @param shouldCancel this is an atomic value that will determine whether execution ends early; `true` cancels algorithm
+ * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+ * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
+ * @param overflow this is an atomic counter for the number of values that fall outside the bin range
+ */
+template <typename Type, std::integral SizeType, template <typename> class OutputContainer>
+Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
+                                      const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow, usize componentIndex)
+{
+  usize numComp = inputStore.getNumberOfComponents();
+  if(componentIndex > numComp)
+  {
+    return MakeErrorResult(-23765, fmt::format("HistogramUtilities::{}: supplied component index is larger than component size of input array. Needed: x < {} | Currently: {}. {}:{}", __func__,
+                                               numComp, componentIndex, __FILE__, __LINE__));
+  }
+
+  if constexpr(std::is_same_v<std::vector<Type>, OutputContainer<Type>>)
+  {
+    // just resize outputs to ensure no wasted space and won't be out of bounds
+    binRangesStore.resize(numBins + 1);
+    histogramCountsStore.resize(numBins);
+  }
+  if constexpr(std::is_same_v<AbstractDataStore<Type>, OutputContainer<Type>>)
+  {
+    if(binRangesStore.getSize() < numBins + 1)
+    {
+      return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1,
+                                                 binRangesStore.getSize(), __FILE__, __LINE__));
+    }
+    if(histogramCountsStore.getSize() < numBins)
+    {
+      return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
+                                                 histogramCountsStore.getSize(), __FILE__, __LINE__));
+    }
+  }
+
+  const Type increment = (rangeMinMax.second - rangeMinMax.first) / static_cast<Type>(numBins);
+
+  // Fill Bins
+  FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
+
+  if(shouldCancel)
+  {
+    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
+  }
+
+  for(usize i = 0; i < inputStore.getNumberOfTuples(); i++)
+  {
+    if(shouldCancel)
+    {
+      return MakeErrorResult(-23763, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
+    }
+    const auto bin = CalculateBin(inputStore[i * numComp + componentIndex], rangeMinMax.first, increment);
+    if((bin >= 0) && (bin < numBins))
+    {
+      histogramCountsStore[bin]++;
+    }
+    else
+    {
+      overflow++;
+    }
+  }
+
+  if(overflow > 0)
+  {
+    return MakeWarningVoidResult(-23762, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
+  }
+
+  return {};
+}
+
+/**
  * @class GenerateHistogramFunctor
  * @brief This is a compatibility functor that leverages existing typecasting functions to execute GenerateHistogram() cleanly. In it there are two
  * definitions for the `()` operator that allows for implicit calculation of range, predicated whether a range is passed in or not
