@@ -8,7 +8,6 @@
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <random>
 
@@ -21,6 +20,7 @@ MergeTwins::MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandl
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
+  m_OrientationOps = LaueOps::GetAllOrientationOps();
 }
 
 // -----------------------------------------------------------------------------
@@ -76,7 +76,6 @@ bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature
   auto axisToleranceRad = m_InputValues->AxisTolerance * numbers::pi_v<float32> / 180.0f;
 
   bool twin = false;
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
 
   if(featureParentIds[neighborFeature] == -1 && phases[referenceFeature] > 0 && phases[neighborFeature] > 0)
   {
