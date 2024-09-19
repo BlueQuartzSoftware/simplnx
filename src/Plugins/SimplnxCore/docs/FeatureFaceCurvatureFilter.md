@@ -15,8 +15,19 @@ The values of the principal directions can have their signs flipped. They are ca
 
 *Note*: Computing the Weingarten matrix values is an experimental feature, and there is no guarantee at this time that the values are correct.
 
-![Curvature Coloring of a Feature](Images/FeatureFaceCurvatureFilter.png)
+![Curvature Coloring](Images/FeatureFaceCurvatureFilter_3.png)
 @image latex FeatureFaceCurvatureFilter.png "Curvature Coloring of a Feature" width = 6in
+
+## Ring Neighbor Schematic
+
+![Ring Neighbor Schematic](Images/FeatureFaceCurvatureFilter_1.png)
+
+## Parameter Notes:
+
+- The "Feature Face Ids" input data can be computed from the "Compute Triangle Face Ids" filter
+- The "Face Normals" input data can be computed from the "Compute Triangle Normals" filter
+- The "Face Centroids" input data can be computed from the "Compute Triangle Centroids" filter
+
 
 % Auto generated parameter table will be inserted here
 
@@ -25,6 +36,9 @@ The values of the principal directions can have their signs flipped. They are ca
 [1] J. Goldfeather, V. Interrante, "A Novel Cubic-Order Algorithm for Approximating Principal Direction Vectors", ACM Transactions on Graphics 2004, 23(1), pp. 45 - 63.
 
 ## Example Pipelines
+
+- Pipelines -> SimplnxCore -> Compute_Feature_Face_Curvature
+- Pipelines -> SimplnxCore -> Compute_Feature_Face_Curvature_2
 
 ## License & Copyright
 

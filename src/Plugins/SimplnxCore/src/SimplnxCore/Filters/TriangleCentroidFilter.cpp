@@ -40,7 +40,7 @@ Uuid TriangleCentroidFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string TriangleCentroidFilter::humanName() const
 {
-  return "Calculate Triangle Centroids";
+  return "Compute Triangle Centroids";
 }
 
 //------------------------------------------------------------------------------

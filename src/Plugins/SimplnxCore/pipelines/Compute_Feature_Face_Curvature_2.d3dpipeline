@@ -1,0 +1,322 @@
+{
+  "isDisabled": false,
+  "name": "Compute_Feature_Face_Curvature_2.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "created_data_group_path": "Imported Vertex Data",
+        "read_csv_data_object": {
+          "Consecutive Delimiters": false,
+          "Custom Headers": null,
+          "Data Types": [
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8,
+            8
+          ],
+          "Delimiters": [
+            ","
+          ],
+          "Header Line": 1,
+          "Header Mode": 0,
+          "Input File Path": "Data/6_5_Goldfeather/Goldfeather_Nodes.csv",
+          "Skipped Array Mask": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "Start Import Row": 2,
+          "Tuple Dimensions": [
+            2452
+          ]
+        },
+        "selected_attribute_matrix_path": "",
+        "use_existing_group": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadCSVFileFilter",
+        "uuid": "373be1f8-31cf-49f6-aa5d-e356f4f3f261"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_data_group_path": "Imported Face Data",
+        "read_csv_data_object": {
+          "Consecutive Delimiters": false,
+          "Custom Headers": null,
+          "Data Types": [
+            7,
+            7,
+            7,
+            8,
+            8,
+            8
+          ],
+          "Delimiters": [
+            ","
+          ],
+          "Header Line": 1,
+          "Header Mode": 0,
+          "Input File Path": "Data/6_5_Goldfeather/Goldfeather_Faces.csv",
+          "Skipped Array Mask": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "Start Import Row": 2,
+          "Tuple Dimensions": [
+            4900
+          ]
+        },
+        "selected_attribute_matrix_path": "",
+        "use_existing_group": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadCSVFileFilter",
+        "uuid": "373be1f8-31cf-49f6-aa5d-e356f4f3f261"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Vertex Data/X",
+          "Imported Vertex Data/Y",
+          "Imported Vertex Data/Z"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Shared Vertex List"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Face Data/Node_0",
+          "Imported Face Data/Node_1",
+          "Imported Face Data/Node_2"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "SharedTriangleList"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Face Data/Normal_0",
+          "Imported Face Data/Normal_1",
+          "Imported Face Data/Normal_2"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Normals"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Vertex Data/Normal_X",
+          "Imported Vertex Data/Normal_Y",
+          "Imported Vertex Data/Normal_Z"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Vertex Normals"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Vertex Data/PrincipalCurvature_0",
+          "Imported Vertex Data/PrincipalCurvature_1"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Principal Curvature"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Vertex Data/PrincipalDirection1_0",
+          "Imported Vertex Data/PrincipalDirection1_1",
+          "Imported Vertex Data/PrincipalDirection1_2"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Principal Direction 1"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_data_array_paths": [
+          "Imported Vertex Data/PrincipalDirection2_0",
+          "Imported Vertex Data/PrincipalDirection2_1",
+          "Imported Vertex Data/PrincipalDirection2_2"
+        ],
+        "move_values": true,
+        "normalize_data": false,
+        "output_data_array_name": "Principal Direction 2"
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_handling_index": 1,
+        "cell_attribute_matrix_name": "Cell Data",
+        "dimensions": [
+          20,
+          60,
+          200
+        ],
+        "edge_attribute_matrix_name": "Edge Data",
+        "edge_list_path": "",
+        "face_attribute_matrix_name": "Face Data",
+        "geometry_type_index": 4,
+        "hexahedral_list_path": "",
+        "length_unit_index": 7,
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "output_geometry_path": "Geometry",
+        "quadrilateral_list_path": "",
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "tetrahedral_list_path": "",
+        "triangle_list_path": "Imported Face Data/SharedTriangleList",
+        "vertex_attribute_matrix_name": "Vertex Data",
+        "vertex_list_path": "Imported Vertex Data/Shared Vertex List",
+        "warnings_as_errors": false,
+        "x_bounds_path": "",
+        "y_bounds_path": "",
+        "z_bounds_path": ""
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateGeometryFilter",
+        "uuid": "24768170-5b90-4a9d-82ac-9aeecd9f892e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "destination_parent_path": "Geometry/Face Data",
+        "source_data_paths": [
+          "Imported Face Data/Normals"
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MoveDataFilter",
+        "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "destination_parent_path": "Geometry/Vertex Data",
+        "source_data_paths": [
+          "Imported Vertex Data/Principal Curvature",
+          "Imported Vertex Data/Principal Direction 1",
+          "Imported Vertex Data/Principal Direction 2",
+          "Imported Vertex Data/Vertex Normals"
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MoveDataFilter",
+        "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/6_5_Goldfeather/6_5_Goldfeather.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

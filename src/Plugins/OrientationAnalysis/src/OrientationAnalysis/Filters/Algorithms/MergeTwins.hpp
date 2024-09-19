@@ -2,10 +2,10 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
 
 namespace nx::core
 {
