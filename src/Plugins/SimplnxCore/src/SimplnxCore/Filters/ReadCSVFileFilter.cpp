@@ -466,15 +466,12 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   }
   else if(headerMode == ReadCSVData::HeaderMode::LINE)
   {
-    if(readCSVData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
+    // We have to read the headers every time because it's possible that the header line is the same but the data in the file still was changed underneath the covers
+    IFilter::PreflightResult result = readHeaders(readCSVData.inputFilePath, readCSVData.headersLine, s_HeaderCache[s_InstanceId]);
+    if(result.outputActions.invalid())
     {
-      IFilter::PreflightResult result = readHeaders(readCSVData.inputFilePath, readCSVData.headersLine, s_HeaderCache[s_InstanceId]);
-      if(result.outputActions.invalid())
-      {
-        return result;
-      }
+      return result;
     }
-
     headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, readCSVData.delimiters, readCSVData.consecutiveDelimiters);
   }
 
