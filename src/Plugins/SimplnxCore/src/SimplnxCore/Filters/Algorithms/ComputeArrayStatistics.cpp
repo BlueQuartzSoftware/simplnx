@@ -246,7 +246,7 @@ public:
           if(m_HistFullRange)
           {
             histMin = min[localFeatureIndex];
-            histMax = max[localFeatureIndex];
+            histMax = max[localFeatureIndex] + static_cast<T>(1.0);
           }
 
           HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
@@ -273,7 +273,7 @@ public:
                 continue;
               }
               const T value = m_Source[i];
-              const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
+              const auto bin = static_cast<int32>(static_cast<uint8>(HistogramUtilities::serial::CalculateBin(value, histMin, increment))); // find bin for this input array value
               if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
               {
                 ++histogram[bin]; // increment histogram element corresponding to this input array value
@@ -651,6 +651,11 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
     auto& mostPopBinStore = array10Ptr->getDataStoreRef();
 
     auto range = StatisticsCalculations::findHistogramRange(data, static_cast<T>(inputValues->MinRange), static_cast<T>(inputValues->MaxRange), inputValues->UseFullRange);
+
+    if(inputValues->UseFullRange)
+    {
+      range.second++; // Upper bound must be exclusive
+    }
 
     std::atomic_bool neverCancel{false};
     std::atomic<usize> overflow{0};

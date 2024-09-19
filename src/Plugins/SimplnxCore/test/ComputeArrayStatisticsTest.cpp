@@ -146,7 +146,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(histArray != nullptr);
     auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
     REQUIRE(mostPopulatedBinArray != nullptr);
-    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<float32>>(statsDataPath.createChildPath(modalBinRanges));
+    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(modalBinRanges));
     REQUIRE(modalBinRangesArray != nullptr);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
@@ -169,8 +169,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(modeVals.size() == 1);
     REQUIRE(modeVals[0] == 1);
     REQUIRE(modalBinRangesVals.size() == 2);
-    REQUIRE(std::fabs(modalBinRangesVals[0] - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRangesVals[1] - 9.8f) < UnitTest::EPSILON);
+    REQUIRE(modalBinRangesVals[0] == 1);
+    REQUIRE(modalBinRangesVals[1] == 10);
     REQUIRE(std::fabs(meanVal - 14.3333f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(medianVal - 10.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal - 13.02f) < UnitTest::EPSILON);
@@ -362,7 +362,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
     REQUIRE(mostPopulatedBinArray != nullptr);
     REQUIRE(mostPopulatedBinArray->getNumberOfTuples() == 3);
-    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<float32>>(statsDataPath.createChildPath(modalBinRanges));
+    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(modalBinRanges));
     REQUIRE(modalBinRangesArray != nullptr);
     REQUIRE(modalBinRangesArray->getNumberOfTuples() == 3);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
@@ -491,15 +491,15 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     REQUIRE((*mostPopulatedBinArray)[3] == 2);
     REQUIRE((*mostPopulatedBinArray)[4] == 0);
     REQUIRE((*mostPopulatedBinArray)[5] == 2);
-    REQUIRE(std::fabs(modalBinRange0[0] - 1.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange0[1] - 15.4f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange0[2] - 58.6f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange0[3] - 73.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange1[0] - 17.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange1[1] - 20.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange2[0] - 10.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange2[1] - 12.4f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange2[2] - 19.6f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(modalBinRange2[3] - 22.0f) < UnitTest::EPSILON);
+    REQUIRE(modalBinRange0[0] == 1);
+    REQUIRE(modalBinRange0[1] == 15);
+    REQUIRE(modalBinRange0[2] == 58);
+    REQUIRE(modalBinRange0[3] == 73);
+    REQUIRE(modalBinRange1[0] == 17);
+    REQUIRE(modalBinRange1[1] == 20);
+    REQUIRE(modalBinRange2[0] == 10);
+    REQUIRE(modalBinRange2[1] == 12);
+    REQUIRE(modalBinRange2[2] == 19);
+    REQUIRE(modalBinRange2[3] == 22);
   }
 }
