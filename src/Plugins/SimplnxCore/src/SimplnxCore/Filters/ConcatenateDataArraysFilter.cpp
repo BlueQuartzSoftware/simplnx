@@ -14,26 +14,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-std::string createVectorString(const std::vector<size_t>& vec, const std::string& separator = "x")
-{
-  std::ostringstream oss;
-
-  // Use a range-based for loop and append the separator manually
-  for(size_t i = 0; i < vec.size(); ++i)
-  {
-    if(i != 0)
-    {
-      oss << separator;
-    }
-    oss << vec[i];
-  }
-
-  return oss.str();
-}
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -149,11 +129,10 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
       if(inputDataArray.getComponentShape() != inputDataArray2.getComponentShape())
       {
-        std::string firstArrayComponentsStr = createVectorString(inputDataArray.getComponentShape());
-        std::string secondArrayComponentsStr = createVectorString(inputDataArray2.getComponentShape());
         return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch),
                                         fmt::format("Input array '{}' has component shape '{}', but input array '{}' has component shape '{}'.  The component shapes must match.",
-                                                    inputArrayPaths[i].toString(), firstArrayComponentsStr, inputArrayPaths[j].toString(), secondArrayComponentsStr));
+                                                    inputArrayPaths[i].toString(), fmt::join(inputDataArray.getComponentShape(), ","), inputArrayPaths[j].toString(),
+                                                    fmt::join(inputDataArray2.getComponentShape(), ",")));
       }
 
       cDims = inputDataArray.getComponentShape();
@@ -167,11 +146,10 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
   if(tupleCount != totalTuples)
   {
-    std::string tDimsStr = createVectorString(tDims);
     return MakePreflightErrorResult(
         to_underlying(ConcatenateDataArrays::ErrorCodes::TotalTuplesMismatch),
         fmt::format("The chosen input arrays have a combined total tuple count of {}, but the chosen tuple dimensions ([{}]) have a combined total tuple count of {}.  These tuple counts must match.",
-                    tupleCount, tDimsStr, totalTuples));
+                    tupleCount, fmt::join(tDims, ","), totalTuples));
   }
 
   // Create the output array
@@ -179,12 +157,11 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
   if((arrayType == IArray::ArrayType::NeighborListArray || arrayType == IArray::ArrayType::StringArray) && tDims.size() > 1)
   {
-    std::string tDimsStr = createVectorString(tDims, ", ");
     resultOutputActions.warnings().push_back(
         Warning{to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported),
                 fmt::format("The input arrays have array type {}, but the chosen tuple dimensions have more than one dimension.  Since "
                             "array type {} does not support having multiple tuple dimensions, the output array will have tuple dimensions [{}] instead of tuple dimensions [{}].",
-                            arrayTypeName, arrayTypeName, tupleCount, tDimsStr)});
+                            arrayTypeName, arrayTypeName, tupleCount, fmt::join(tDims, ","))});
   }
 
   switch(arrayType)
