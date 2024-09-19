@@ -71,15 +71,33 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath({"Data"})));
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Output Numeric Type", "Numeric Type of data to create", NumericType::int32));
+  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
+                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
-  params.insertSeparator(Parameters::Separator{"Component Handling"});
+  params.insertSeparator(Parameters::Separator{"Tuple Dimensions"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an existing Attribute Matrix]",
+      "This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
+
   {
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
+    params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
+                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
+  }
+
+  params.insertSeparator(Parameters::Separator{"Component Dimensions"});
+  {
+    DynamicTableInfo::TableDataType defaultValues = {{1ULL}};
+    DynamicTableInfo tableInfo;
+    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
-    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", defaultValues,
+                                                          tableInfo));
   }
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
@@ -106,24 +124,6 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
   params.insert(
       std::make_unique<StringParameter>(k_InitStartRange_Key, "Initialization Start Range [Seperated with ;]", "[Inclusive] The lower bound initialization range for random values", "0;0;0"));
   params.insert(std::make_unique<StringParameter>(k_InitEndRange_Key, "Initialization End Range [Seperated with ;]", "[Inclusive] The upper bound initialization range for random values", "1;1;1"));
-
-  params.insertSeparator(Parameters::Separator{"Output Data Array"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
-  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
-                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
-
-  params.insertSeparator(Parameters::Separator{"Tuple Handling"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(
-      k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
-      "This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
-
-  {
-    DynamicTableInfo tableInfo;
-    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
-    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
-    params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
-                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
-  }
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
