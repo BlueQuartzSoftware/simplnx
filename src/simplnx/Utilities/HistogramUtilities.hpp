@@ -9,6 +9,12 @@ namespace nx::core::HistogramUtilities
 {
 namespace serial
 {
+template <typename Type>
+float32 CalculateIncrement(Type min, Type max, int32 numBins)
+{
+  return static_cast<float32>(max - min) / static_cast<float32>(numBins);
+}
+
 /**
  * @function FillBinRange
  * @brief This function fills a container that is STL compatible and has a bracket operator defined with the bin ranges in the following pattern:
@@ -21,7 +27,7 @@ namespace serial
  * @param increment this is the uniform size of the bins
  */
 template <typename Type, class Container>
-void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const Type increment)
+void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rangeMinMax, const int32 numBins, const float32 increment)
 {
   // WARNING: No bounds checking for type compatibility, it is expected to be done higher up where the type is not abstracted
   // EXPECTED CONTAINER SIZE: numBins + 1
@@ -57,15 +63,15 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
   // DEV NOTE: this function also serves to act as a jumping off point for implementing logarithmic histograms down the line
 
   // Uniform Bin Sizes
-  const Type increment = (rangeMinMax.second - rangeMinMax.first) / static_cast<Type>(numBins);
+  const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
 
   FillBinRanges(outputContainer, rangeMinMax, numBins, increment);
 }
 
 template <typename Type>
-Type CalculateBin(Type value, Type min, Type increment)
+Type CalculateBin(Type value, Type min, float32 increment)
 {
-  return std::floor((value - min) / increment);
+  return static_cast<Type>(std::floor(static_cast<float32>(value - min) / increment));
 }
 
 /**
@@ -119,7 +125,7 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
     }
   }
 
-  const Type increment = (rangeMinMax.second - rangeMinMax.first) / static_cast<Type>(numBins);
+  const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
 
   // Fill Bins
   FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
@@ -202,7 +208,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
     }
   }
 
-  const Type increment = (rangeMinMax.second - rangeMinMax.first) / static_cast<Type>(numBins);
+  const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
 
   // Fill Bins
   FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);

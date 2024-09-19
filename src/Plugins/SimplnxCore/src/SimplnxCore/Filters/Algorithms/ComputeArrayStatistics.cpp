@@ -251,7 +251,7 @@ public:
 
           HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
 
-          const T increment = (histMax - histMin) / (m_NumBins);
+          const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
           if(std::fabs(increment) < 1E-10)
           {
             histogram[0] = length[localFeatureIndex];
@@ -273,63 +273,38 @@ public:
                 continue;
               }
               const T value = m_Source[i];
-              const auto bin = static_cast<int32>(static_cast<uint8>(HistogramUtilities::serial::CalculateBin(value, histMin, increment))); // find bin for this input array value
+              const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
               if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
               {
-                ++histogram[bin]; // increment histogram element corresponding to this input array value
-              }
-              else if(value == histMax)
-              {
-                histogram[m_NumBins - 1]++;
+                histogram[bin]++; // increment histogram element corresponding to this input array value
               }
             } // end of numTuples loop
           }   // end of increment else
 
           if(m_ModalBinRanges)
           {
-            bool skip = false;
-            if constexpr(std::is_floating_point_v<T>)
+            if(std::fabs(increment) < 1E-10)
             {
-              if(m_HistFullRange && std::fabs(increment) < 1E-10)
-              {
-                m_ModalBinRangesArray->addEntry(j, histMin);
-                m_ModalBinRangesArray->addEntry(j, histMax);
-
-                skip = true;
-              }
+              m_ModalBinRangesArray->addEntry(j, histMin);
+              m_ModalBinRangesArray->addEntry(j, histMax);
             }
             else
-            {
-              if(m_HistFullRange && increment == 0)
-              {
-                m_ModalBinRangesArray->addEntry(j, histMin);
-                m_ModalBinRangesArray->addEntry(j, histMax);
-
-                skip = true;
-              }
-            }
-
-            if(!skip)
             {
               auto modeList = m_ModeArray->getList(j);
               for(int i = 0; i < modeList->size(); i++)
               {
                 const T mode = modeList->at(i);
                 const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
-                T minBinValue;
-                T maxBinValue;
                 if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
                 {
-                  minBinValue = static_cast<T>(histMin + (modalBin * increment));
-                  maxBinValue = static_cast<T>(histMin + ((modalBin + 1) * increment));
+                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + (modalBin * increment)));
+                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + ((modalBin + 1) * increment)));
                 }
                 else if(mode == histMax)
                 {
-                  minBinValue = static_cast<T>(histMin + ((modalBin - 1) * increment));
-                  maxBinValue = static_cast<T>(histMin + (modalBin * increment));
+                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + ((modalBin - 1) * increment)));
+                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + (modalBin * increment)));
                 }
-                m_ModalBinRangesArray->addEntry(j, minBinValue);
-                m_ModalBinRangesArray->addEntry(j, maxBinValue);
               }
             }
           }
