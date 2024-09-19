@@ -346,7 +346,7 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
       break;
     }
   }
-  
+
   return {};
 }
 
