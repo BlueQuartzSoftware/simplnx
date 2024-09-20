@@ -65,17 +65,17 @@ Parameters InitializeDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
-                                                                    static_cast<ChoicesParameter::ValueType>(0),
-                                                                    ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
+      ChoicesParameter::Choices{"Fill Value", "Incremental/Decremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
   params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0),
-                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
-  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
+                                                   ChoicesParameter::Choices{"Incrementing", "Decrementing"}));
+  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));

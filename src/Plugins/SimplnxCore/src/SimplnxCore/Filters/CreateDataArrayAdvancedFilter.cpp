@@ -86,24 +86,25 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
+    const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
     params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
-                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
+                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", defaultTable, tableInfo));
   }
 
   params.insertSeparator(Parameters::Separator{"Component Dimensions"});
   {
-    DynamicTableInfo::TableDataType defaultValues = {{1ULL}};
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
-    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", defaultValues,
+    const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
+    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", defaultTable,
                                                           tableInfo));
   }
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
-                                                                    static_cast<ChoicesParameter::ValueType>(0),
-                                                                    ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
+      ChoicesParameter::Choices{"Fill Value", "Incremental/Decremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
@@ -112,8 +113,8 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
       k_StartingFillValue_Key, "Starting Value [Seperated with ;]",
       "The value to start incrementing from. Ex: 6;8;12 would increment a 3-component array starting at 6 for the first component, 8 for the 2nd, and 12 for the 3rd.", "0;1;2"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to perform", static_cast<ChoicesParameter::ValueType>(0),
-                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
-  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Increment/Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
+                                                   ChoicesParameter::Choices{"Incrementing", "Decrementing"}));
+  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true, the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
@@ -255,18 +256,41 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     updatedValStrm
         << "If you do NOT want to use unique values for each component, you can just supply one value to the input box and we will apply that value to every component for the tuple.\nExample: 1\n\n";
 
-    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} seperated by '{}'.\n", numComponents,
+    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} separated by '{}'.\n", numComponents,
                                   DataTypeToString(arrayDataType), k_DelimiterChar);
+
+    // Define a threshold for displaying all components
+    const usize threshold = 10;
+
     updatedValStrm << "Example: ";
 
-    for(usize comp = 0; comp < numComponents; comp++)
+    if(numComponents <= threshold)
     {
-      updatedValStrm << "1";
-
-      if(comp != numComponents - 1)
+      // Show all component values
+      for(usize comp = 0; comp < numComponents; comp++)
       {
-        updatedValStrm << k_DelimiterChar;
+        updatedValStrm << "1";
+
+        if(comp != numComponents - 1)
+        {
+          updatedValStrm << k_DelimiterChar;
+        }
       }
+    }
+    else
+    {
+      // Show a limited number of component values followed by a summary
+      const usize displayCount = 10;
+      for(usize comp = 0; comp < displayCount; comp++)
+      {
+        updatedValStrm << "1";
+
+        if(comp != displayCount - 1)
+        {
+          updatedValStrm << k_DelimiterChar;
+        }
+      }
+      updatedValStrm << fmt::format(" ... {} more '1's", numComponents - displayCount);
     }
 
     preflightUpdatedValues.push_back({"Multi-Component Note", updatedValStrm.str()});
