@@ -96,33 +96,15 @@ template <typename Type, std::integral SizeType, template <typename, class...> c
 Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
                            const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
 {
-  usize end = 0;
-  if constexpr(std::is_same_v<std::vector<Type>, InputContainer<Type>>)
+  if(binRangesStore.size() < numBins + 1)
   {
-    end = inputStore.size();
+    return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
+                                               __FILE__, __LINE__));
   }
-  if constexpr(std::is_same_v<std::vector<Type>, OutputContainer<Type>>)
+  if(histogramCountsStore.size() < numBins)
   {
-    // just resize outputs to ensure no wasted space and won't be out of bounds
-    binRangesStore.resize(numBins + 1);
-    histogramCountsStore.resize(numBins);
-  }
-  if constexpr(std::is_same_v<AbstractDataStore<Type>, InputContainer<Type>>)
-  {
-    end = inputStore.getSize();
-  }
-  if constexpr(std::is_same_v<AbstractDataStore<Type>, OutputContainer<Type>>)
-  {
-    if(binRangesStore.getSize() < numBins + 1)
-    {
-      return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1,
-                                                 binRangesStore.getSize(), __FILE__, __LINE__));
-    }
-    if(histogramCountsStore.getSize() < numBins)
-    {
-      return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
-                                                 histogramCountsStore.getSize(), __FILE__, __LINE__));
-    }
+    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
+                                               histogramCountsStore.size(), __FILE__, __LINE__));
   }
 
   const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
@@ -130,12 +112,7 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
   // Fill Bins
   FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
 
-  if(shouldCancel)
-  {
-    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
-  }
-
-  for(usize i = 0; i < end; i++)
+  for(usize i = 0; i < inputStore.size(); i++)
   {
     if(shouldCancel)
     {
@@ -154,7 +131,7 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
 
   if(overflow > 0)
   {
-    return MakeWarningVoidResult(-23762, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
+    return MakeWarningVoidResult(-23764, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
   }
 
   return {};
@@ -188,35 +165,21 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
                                                numComp, componentIndex, __FILE__, __LINE__));
   }
 
-  if constexpr(std::is_same_v<std::vector<Type>, OutputContainer<Type>>)
+  if(binRangesStore.size() < numBins + 1)
   {
-    // just resize outputs to ensure no wasted space and won't be out of bounds
-    binRangesStore.resize(numBins + 1);
-    histogramCountsStore.resize(numBins);
+    return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
+                                               __FILE__, __LINE__));
   }
-  if constexpr(std::is_same_v<AbstractDataStore<Type>, OutputContainer<Type>>)
+  if(histogramCountsStore.size() < numBins)
   {
-    if(binRangesStore.getSize() < numBins + 1)
-    {
-      return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1,
-                                                 binRangesStore.getSize(), __FILE__, __LINE__));
-    }
-    if(histogramCountsStore.getSize() < numBins)
-    {
-      return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
-                                                 histogramCountsStore.getSize(), __FILE__, __LINE__));
-    }
+    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
+                                               histogramCountsStore.size(), __FILE__, __LINE__));
   }
 
   const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
 
   // Fill Bins
   FillBinRanges(binRangesStore, rangeMinMax, numBins, increment);
-
-  if(shouldCancel)
-  {
-    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
-  }
 
   for(usize i = 0; i < inputStore.getNumberOfTuples(); i++)
   {
@@ -237,7 +200,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
 
   if(overflow > 0)
   {
-    return MakeWarningVoidResult(-23762, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
+    return MakeWarningVoidResult(-23764, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
   }
 
   return {};

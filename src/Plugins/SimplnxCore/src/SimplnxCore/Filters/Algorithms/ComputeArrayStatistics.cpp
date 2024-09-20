@@ -632,7 +632,15 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
     std::vector<uint64> binCounts(inputValues->NumBins, 0);
     std::vector<T> binRanges(inputValues->NumBins + 1);
 
-    Result<> result = HistogramUtilities::serial::GenerateHistogram(data, binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
+    Result<> result = {};
+    if constexpr(std::is_same_v<DataArray<T>, ContainerType>)
+    {
+      result = HistogramUtilities::serial::GenerateHistogram(data.getDataStoreRef(), binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
+    }
+    else
+    {
+      result = HistogramUtilities::serial::GenerateHistogram(data, binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
+    }
 
     binCountsStore.setTuple(0, binCounts);
     binRangesStore.setTuple(0, binRanges);
