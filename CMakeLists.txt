@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.26)
 
+cmake_policy(SET CMP0074 NEW)
+cmake_policy(SET CMP0077 NEW)
+cmake_policy(SET CMP0080 NEW)
+cmake_policy(SET CMP0152 NEW)
+cmake_policy(SET CMP0148 NEW)
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 
 # ------------------------------------------------------------------------------
@@ -123,9 +129,7 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # The WORKING_DIRECTORY is set to the following CMake code:
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
-cmake_policy(SET CMP0012 NEW)
-cmake_policy(SET CMP0054 NEW)\n
-")
+cmake_policy(SET CMP0012 NEW)\ncmake_policy(SET CMP0054 NEW)\ncmake_policy(SET CMP0152 NEW)\ncmake_policy(SET CMP0148 NEW)")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
