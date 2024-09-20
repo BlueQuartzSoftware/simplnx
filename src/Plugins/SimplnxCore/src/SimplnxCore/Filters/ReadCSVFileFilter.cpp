@@ -329,7 +329,7 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
   std::fstream in(readCsvData.inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
   {
-    return {MakeErrorResult(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", readCsvData.inputFilePath)), {}};
+    return MakeErrorResult(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", readCsvData.inputFilePath));
   }
 
   usize currentLine = 0;
