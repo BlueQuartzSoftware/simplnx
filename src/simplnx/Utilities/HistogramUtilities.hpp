@@ -92,7 +92,7 @@ Type CalculateBin(Type value, Type min, float32 increment)
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, std::integral SizeType, template <typename> class InputContainer, template <typename> class OutputContainer>
+template <typename Type, std::integral SizeType, template <typename, class...> class InputContainer, template <typename, class...> class OutputContainer>
 Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
                            const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
 {
