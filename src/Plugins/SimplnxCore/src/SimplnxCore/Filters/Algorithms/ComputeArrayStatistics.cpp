@@ -297,13 +297,8 @@ public:
                 const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
                 if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
                 {
-                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + (modalBin * increment)));
-                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + ((modalBin + 1) * increment)));
-                }
-                else if(mode == histMax)
-                {
-                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + ((modalBin - 1) * increment)));
-                  m_ModalBinRangesArray->addEntry(j, static_cast<T>(histMin + (modalBin * increment)));
+                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin]);
+                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin + 1]);
                 }
               }
             }

@@ -493,13 +493,13 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     REQUIRE((*mostPopulatedBinArray)[5] == 2);
     REQUIRE(modalBinRange0[0] == 1);
     REQUIRE(modalBinRange0[1] == 15);
-    REQUIRE(modalBinRange0[2] == 58);
-    REQUIRE(modalBinRange0[3] == 73);
+    REQUIRE(modalBinRange0[2] == 59);
+    REQUIRE(modalBinRange0[3] == 74);
     REQUIRE(modalBinRange1[0] == 17);
-    REQUIRE(modalBinRange1[1] == 20);
+    REQUIRE(modalBinRange1[1] == 21);
     REQUIRE(modalBinRange2[0] == 10);
     REQUIRE(modalBinRange2[1] == 12);
-    REQUIRE(modalBinRange2[2] == 19);
-    REQUIRE(modalBinRange2[3] == 22);
+    REQUIRE(modalBinRange2[2] == 20);
+    REQUIRE(modalBinRange2[3] == 23);
   }
 }
