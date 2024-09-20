@@ -82,7 +82,9 @@ Type CalculateBin(Type value, Type min, float32 increment)
  * @tparam SizeType this is the scalar type of the bin counts container
  * @tparam InputContainer this is the type of object the values are read from:
  * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
- * * @tparam OutputContainer this is the type of object the values are stored/written to:
+ * @tparam RangesContainer this is the type of object the ranges are stored/written to:
+ * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector and whose scalar type matches Type !!!
+ * @tparam CountsContainer this is the type of object the counts are stored/written to:
  * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
  * @param inputStore this is the container holding the data that will be binned
  * @param binRangesStore this is the object that the ranges will be loaded into.
@@ -92,10 +94,13 @@ Type CalculateBin(Type value, Type min, float32 increment)
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, std::integral SizeType, template <typename, class...> class InputContainer, template <typename, class...> class OutputContainer>
-Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
-                           const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow)
+template <typename Type, class InputContainer, class RangesContainer, class CountsContainer>
+Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
+                           CountsContainer& histogramCountsStore, std::atomic<usize>& overflow)
 {
+  static_assert(std::is_same_v<typename InputContainer::value_type, typename RangesContainer::value_type>,
+                "HistogramUtilities::GenerateHistogram: inputStore and binRangesStore must be of the same type. HistogramUtilities:99");
+
   if(binRangesStore.size() < numBins + 1)
   {
     return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
@@ -143,8 +148,9 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
  * one with the ranges for each bin and one for bin counts
  * See FillBinRanges function for details on the high level structuring of the bin ranges array
  * @tparam Type this the end type of the function in that it is the scalar type of the input and by extension range data
- * @tparam SizeType this is the scalar type of the bin counts container
- * * @tparam OutputContainer this is the type of object the values are stored/written to:
+ * @tparam RangesContainer this is the type of object the ranges are stored/written to:
+ * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector and whose scalar type matches Type !!!
+ * @tparam CountsContainer this is the type of object the counts are stored/written to:
  * !!! In current implementation it is expected that this class is either AbstractDataStore or std::vector !!!
  * @param inputStore this is the container holding the data that will be binned
  * @param binRangesStore this is the object that the ranges will be loaded into.
@@ -154,10 +160,13 @@ Result<> GenerateHistogram(const InputContainer<Type>& inputStore, OutputContain
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, std::integral SizeType, template <typename, class...> class OutputContainer>
-Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore, OutputContainer<Type>& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
-                                      const int32 numBins, OutputContainer<SizeType>& histogramCountsStore, std::atomic<usize>& overflow, usize componentIndex)
+template <typename Type, class RangesContainer, class CountsContainer>
+Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore, RangesContainer& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel,
+                                      const int32 numBins, CountsContainer& histogramCountsStore, std::atomic<usize>& overflow, usize componentIndex)
 {
+  static_assert(std::is_same_v<Type, typename RangesContainer::value_type>,
+                "HistogramUtilities::GenerateHistogramAtComponent: inputStore and binRangesStore must be of the same type. HistogramUtilities:163");
+
   usize numComp = inputStore.getNumberOfComponents();
   if(componentIndex > numComp)
   {
