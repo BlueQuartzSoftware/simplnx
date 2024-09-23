@@ -58,6 +58,7 @@ message(STATUS "* span-lite (${span-lite_VERSION}) ${span-lite_DIR}")
 message(STATUS "* boost_mp11 (${boost_mp11_VERSION}) ${boost_mp11_DIR}")
 message(STATUS "* nod (${nod_VERSION}) ${nod_DIR}")
 message(STATUS "* reproc++ (${reproc_VERSION}) ${reproc++_DIR}")
+message(STATUS "* EbsdLib (${EbsdLib_VERSION}) ${EbsdLib_DIR}")
 
 message(STATUS "* -------------- Simplnx Configuration Options -------------------------------------")
 message(STATUS "* SIMPLNX_BUILD_TESTS: ${SIMPLNX_BUILD_TESTS}")

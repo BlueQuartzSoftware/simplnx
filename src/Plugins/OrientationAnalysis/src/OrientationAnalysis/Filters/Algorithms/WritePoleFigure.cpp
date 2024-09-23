@@ -72,7 +72,7 @@ public:
       float* xyzPtr = m_XYZCoords->getPointer(0);
       for(size_t i = 0; i < numCoords; i++)
       {
-        if(xyzPtr[i * 3 + 2] < 0.0f)
+        if(xyzPtr[i * 3 + 2] < 0.0f) // If the unit sphere data is in the southern hemisphere
         {
           xyzPtr[i * 3 + 0] *= -1.0f;
           xyzPtr[i * 3 + 1] *= -1.0f;
