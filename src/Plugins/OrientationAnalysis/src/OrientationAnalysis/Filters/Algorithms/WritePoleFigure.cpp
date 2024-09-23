@@ -474,8 +474,6 @@ typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src
 {
   typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
   // We need to flip the image "vertically", which means the bottom row becomes
-  // the top row and convert from BGRA to RGBA ordering (This is a Little Endian code)
-  // If this is ever compiled on a BIG ENDIAN machine the colors will be off.
   for(int y = 0; y < config.imageDim; y++)
   {
     const int destY = config.imageDim - 1 - y;
