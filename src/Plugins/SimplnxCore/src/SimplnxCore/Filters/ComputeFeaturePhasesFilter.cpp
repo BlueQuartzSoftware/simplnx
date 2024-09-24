@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 

@@ -5,6 +5,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"

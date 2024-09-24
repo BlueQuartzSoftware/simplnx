@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"

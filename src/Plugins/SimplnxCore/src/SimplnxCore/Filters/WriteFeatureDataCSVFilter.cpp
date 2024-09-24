@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"

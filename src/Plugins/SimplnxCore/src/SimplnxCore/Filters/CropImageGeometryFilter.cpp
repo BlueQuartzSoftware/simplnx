@@ -11,6 +11,7 @@
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"

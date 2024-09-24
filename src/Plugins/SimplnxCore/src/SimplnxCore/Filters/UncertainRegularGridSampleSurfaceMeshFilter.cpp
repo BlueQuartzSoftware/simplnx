@@ -7,6 +7,7 @@
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"

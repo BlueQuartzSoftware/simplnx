@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"

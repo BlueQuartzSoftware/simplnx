@@ -6,6 +6,7 @@
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"

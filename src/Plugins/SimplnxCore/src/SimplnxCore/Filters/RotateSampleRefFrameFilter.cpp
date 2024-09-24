@@ -11,6 +11,7 @@
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"

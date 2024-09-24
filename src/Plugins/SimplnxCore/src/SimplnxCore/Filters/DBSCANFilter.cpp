@@ -10,6 +10,7 @@
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"

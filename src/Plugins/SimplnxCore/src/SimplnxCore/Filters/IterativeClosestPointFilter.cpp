@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"

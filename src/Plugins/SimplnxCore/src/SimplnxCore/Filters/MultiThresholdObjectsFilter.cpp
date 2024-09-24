@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
+#include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/DataTypeParameter.hpp"

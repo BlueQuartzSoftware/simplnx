@@ -9,6 +9,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"

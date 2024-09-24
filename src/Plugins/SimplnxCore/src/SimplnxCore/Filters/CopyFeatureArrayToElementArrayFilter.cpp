@@ -4,6 +4,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
