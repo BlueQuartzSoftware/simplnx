@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 
 #include <xtensor/xarray.hpp>
+#include <xtensor/xio.hpp>
 
 #include <memory>
 #include <vector>
@@ -181,6 +182,15 @@ protected:
   usize xtensorListSize() const override
   {
     return m_XtensorListSize;
+  }
+
+  /**
+   * @brief Write store to ostream.
+   * @param out
+   */
+  void write(std::ostream& out) const
+  {
+    out << xt::print_options::threshold(200) << *m_Array.get() << std::endl;
   }
 
 private:

@@ -188,6 +188,7 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
+find_package(highfive CONFIG REQUIRED)
 find_package(xtl CONFIG REQUIRED)
 find_package(xtensor CONFIG REQUIRED)
 find_package(xtensor-io CONFIG REQUIRED)
@@ -259,6 +260,7 @@ if(SIMPLNX_ENABLE_MULTICORE)
 endif()
 
 find_package(ghc_filesystem CONFIG REQUIRED)
+find_package(HighFive CONFIG REQUIRED)
 
 target_link_libraries(simplnx
   PUBLIC
@@ -274,6 +276,7 @@ target_link_libraries(simplnx
   xtensor
   xtensor-io
   ghcFilesystem::ghc_filesystem
+  HighFive_HighFive
 )
 
 if(UNIX)
@@ -579,23 +582,10 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
 
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.hpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.hpp
@@ -778,23 +768,10 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.cpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp

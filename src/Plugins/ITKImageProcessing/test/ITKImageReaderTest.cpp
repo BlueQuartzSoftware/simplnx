@@ -59,7 +59,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read PNG", "[ITKImageProces
   const auto* dataArray = dataStructure.getDataAs<DataArray<uint8>>(inputDataPath);
   REQUIRE(dataArray != nullptr);
 
-  const auto& dataStore = dataArray->getIDataStoreRefAs<DataStore<uint8>>();
+  const auto& dataStore = dataArray->getDataStoreRef();
   std::vector<usize> arrayDims = dataStore.getTupleShape();
   const std::vector<usize> expectedArrayDims = {1, 64, 64};
   REQUIRE(arrayDims == expectedArrayDims);

@@ -4,7 +4,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <H5Ipublic.h>
@@ -256,25 +257,41 @@ inline std::string HdfTypeForPrimitiveAsStr()
 }
 
 template <typename T>
-Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt)
 {
-  using StoreType = DataStore<T>;
-  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
-  Result<> result = datasetReader.readIntoSpan<T>(dataStore.createSpan(), start, count);
-  if(result.invalid())
+  try
   {
-    return {
-        MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components):\n\n{}",
-                                            dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                            dataArray.getNumberOfComponents(), result.errors()[0].message))};
+    using StoreType = DataStore<T>;
+    StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
+    auto dataSpan = dataStore.createSpan();
+    Result<> result;
+    if(start.has_value() && count.has_value())
+    {
+      result = datasetReader.readIntoSpan<T>(dataSpan, start.value(), count.value());
+    }
+    else
+    {
+      result = datasetReader.readIntoSpan<T>(dataSpan);
+    }
+    if(result.invalid())
+    {
+      return {MakeErrorResult(-21002,
+                              fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components):\n\n{}",
+                                          dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                          dataArray.getNumberOfComponents(), result.errors()[0].message))};
+    }
+  }
+  catch (const std::exception& e)
+  {
+    return MakeErrorResult(-21003, e.what());
   }
 
   return {};
 }
 
 template <typename T>
-Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                           const std::optional<std::vector<hsize_t>>& count = std::nullopt)
 {
   if(Memory::GetTotalMemory() <= dataArray.getSize() * sizeof(T))
@@ -285,7 +302,16 @@ Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath
   auto& absDataStore = dataArray.getDataStoreRef();
   std::vector<T> data(absDataStore.getSize());
   nonstd::span<T> span{data.data(), data.size()};
-  Result<> result = datasetReader.readIntoSpan<T>(span, start, count);
+  Result<> result;
+  if(start.has_value() && count.has_value())
+  {
+    result = datasetReader.readIntoSpan<T>(span, start.value(), count.value());
+  }
+  else
+  {
+    result = datasetReader.readIntoSpan<T>(span);
+  }
+  
   if(result.invalid())
   {
     return {
@@ -299,7 +325,7 @@ Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath
 }
 
 template <typename T>
-Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetReader& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);

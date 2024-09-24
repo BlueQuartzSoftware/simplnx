@@ -18,7 +18,12 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
     return result;
   }
 
-  auto groupReader = parentGroup.openGroup(objectName);
+  auto groupReaderResult = parentGroup.openGroup(objectName);
+  if(groupReaderResult.invalid())
+  {
+    return ConvertResult(std::move(groupReaderResult));
+  }
+  auto groupReader = std::move(groupReaderResult.value());
 
   geom.setPolyhedronListId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
   geom.setPolyhedraDataId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
@@ -34,7 +39,13 @@ Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  auto groupWriter = parentGroup.createGroupWriter(geom.getName());
+  auto groupWriterResult = parentGroup.createGroup(geom.getName());
+  if(groupWriterResult.invalid())
+  {
+    return ConvertResult(std::move(groupWriterResult));
+  }
+  auto groupWriter = std::move(groupWriterResult.value());
+
   result = WriteDataId(groupWriter, geom.getPolyhedronListId(), IOConstants::k_PolyhedronListTag);
   if(result.invalid())
   {

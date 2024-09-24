@@ -5,8 +5,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "fmt/format.h"
 
@@ -22,24 +21,27 @@ DataStructureWriter::~DataStructureWriter() noexcept = default;
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath)
 {
-  auto fileWriterResult = nx::core::HDF5::FileWriter::CreateFile(filepath);
-  if(fileWriterResult.invalid())
+  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
+  if(fileWriter.isValid() == false)
   {
-    auto error = fileWriterResult.errors()[0];
-    return MakeErrorResult(error.code, error.message);
+    return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", filepath.string()));
   }
-  nx::core::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
   return WriteFile(dataStructure, fileWriter);
 }
 
-Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileWriter& fileWriter)
+Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO)
 {
   HDF5::DataStructureWriter dataStructureWriter;
-  auto groupWriter = fileWriter.createGroupWriter(Constants::k_DataStructureTag);
-  return dataStructureWriter.writeDataStructure(dataStructure, groupWriter);
+  auto groupIOResult = FileIO.createGroup(Constants::k_DataStructureTag);
+  if(groupIOResult.invalid())
+  {
+    return ConvertResult(std::move(groupIOResult));
+  }
+  auto groupIO = std::move(groupIOResult.value());
+  return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 
-Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupWriter& parentGroup)
+Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
   // Check if data has already been written
   if(hasDataBeenWritten(dataObject))
@@ -67,7 +69,7 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
   return {};
 }
 
-Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF5::GroupWriter& parentGroup)
+Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF5::GroupIO& parentGroup)
 {
   for(auto [key, object] : dataMap)
   {
@@ -81,20 +83,18 @@ Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF
   return {};
 }
 
-Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, nx::core::HDF5::GroupWriter& groupWriter)
+Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, nx::core::HDF5::GroupIO& groupIO)
 {
-  auto idAttribute = groupWriter.createAttribute(Constants::k_NextIdTag);
-  auto result = idAttribute.writeValue(dataStructure.getNextId());
-  if(result.invalid())
+  if(!groupIO.isValid())
   {
     std::string ss = "Failed to write DataStructure to HDF5 group";
-    return MakeErrorResult(result.errors()[0].code, ss);
+    return MakeErrorResult(-700, ss);
   }
-
-  return writeDataMap(dataStructure.getDataMap(), groupWriter);
+  groupIO.createAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
+  return writeDataMap(dataStructure.getDataMap(), groupIO);
 }
 
-Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::HDF5::GroupWriter& parentGroup)
+Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
   auto objectPath = getPathForObjectId(dataObject->getId());
   auto result = parentGroup.createLink(objectPath);
@@ -169,10 +169,9 @@ std::string DataStructureWriter::getPathForObjectSibling(DataObject::IdType obje
 void DataStructureWriter::clearIdMap()
 {
   m_IdMap.clear();
-  m_ParentId = 0;
 }
 
-void DataStructureWriter::addWriter(nx::core::HDF5::ObjectWriter& objectWriter, DataObject::IdType objectId)
+void DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, DataObject::IdType objectId)
 {
   m_IdMap[objectId] = objectWriter.getObjectPath();
 }

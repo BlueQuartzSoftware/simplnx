@@ -18,7 +18,12 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
     return result;
   }
 
-  auto groupReader = parentGroup.openGroup(objectName);
+  auto groupReaderResult = parentGroup.openGroup(objectName);
+  if(groupReaderResult.invalid())
+  {
+    return ConvertResult(std::move(groupReaderResult));
+  }
+  auto groupReader = std::move(groupReaderResult.value());
 
   geometry.setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
   geometry.setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
@@ -36,7 +41,13 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  nx::core::HDF5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriterResult = parentGroupWriter.createGroup(geometry.getName());
+  if(groupWriterResult.invalid())
+  {
+    return ConvertResult(std::move(groupWriterResult));
+  }
+  auto groupWriter = std::move(groupWriterResult.value());
+
   result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
   if(result.invalid())
   {

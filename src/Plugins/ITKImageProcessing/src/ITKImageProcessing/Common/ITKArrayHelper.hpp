@@ -377,9 +377,11 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDa
     {
       auto position = Indexing::FindPosition(i, shape);
       itk::IndexValueType pos3[3];
+      std::reverse(position.begin(), position.end());
       std::copy(position.begin(), position.end(), std::begin(pos3));
+      
       pixelIndex.SetIndex(pos3);
-      image->SetPixel(pixelIndex, dataStore[i]);
+      image->SetPixel(pixelIndex, dataStore.getValue(i));
     }
 
     image->UpdateOutputData();
@@ -423,7 +425,7 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
     usize count = dataStore.getSize();
     for (usize i = 0; i < count; i++)
     {
-      dataStore[i] = bufferPtr[i];
+      dataStore.setValue(i, bufferPtr[i]);
     }
   }
 }
@@ -946,11 +948,6 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
   auto& outputDataStore = outputArray.getIDataStoreRef();
 
   using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
-
-  //if(inputArray.getDataFormat() != "")
-  //{
-  //  return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
-  //}
 
   try
   {

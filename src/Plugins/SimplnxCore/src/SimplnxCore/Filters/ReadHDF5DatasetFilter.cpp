@@ -8,7 +8,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -42,6 +42,59 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
   }
 
   return cDims;
+}
+
+template <typename T>
+Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
+{
+  using StoreType = DataStore<T>;
+  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
+  if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
+  {
+    return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
+                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                                dataArray.getNumberOfComponents()))};
+  }
+
+  return {};
+}
+
+template <typename T>
+Result<> fillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
+{
+  uint64 installedMemory = Memory::GetTotalMemory();
+  if(installedMemory <= dataArray.getSize() * sizeof(T))
+  {
+    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data. Installed memory is {} bytes", dataArray.getName(),
+                                               datasetReader.getNumElements(), installedMemory));
+  }
+
+  auto& absDataStore = dataArray.getDataStoreRef();
+  std::vector<T> data(absDataStore.getSize());
+  nonstd::span<T> span{data.data(), data.size()};
+  if(!datasetReader.readIntoSpan<T>(span))
+  {
+    return {MakeErrorResult(-21003, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
+                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                                dataArray.getNumberOfComponents()))};
+  }
+  std::copy(data.begin(), data.end(), absDataStore.begin());
+
+  return {};
+}
+
+template <typename T>
+Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
+{
+  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
+  if(dataArray.getDataFormat().empty())
+  {
+    return fillDataStore(dataArray, dataArrayPath, datasetReader);
+  }
+  else
+  {
+    return fillOocDataStore(dataArray, dataArrayPath, datasetReader);
+  }
 }
 } // namespace
 
@@ -142,12 +195,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
   const AttributeMatrix* parentAM = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
 
   int err = 0;
-  nx::core::HDF5::FileReader h5FileReader(inputFilePath);
-  hid_t fileId = h5FileReader.getId();
-  if(fileId < 0)
-  {
-    return MakePreflightErrorResult(-20006, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
-  }
+  auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
 
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
@@ -157,8 +205,14 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       return MakePreflightErrorResult(-20007, "Cannot import an empty dataset path");
     }
 
-    // Read dataset into DREAM3D-NX structure
-    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    // Read dataset into DREAM.3D structure
+    auto datasetReaderResult = h5FileReader.openDataset(datasetPath);
+    if(datasetReaderResult.invalid())
+    {
+      return {ConvertInvalidResult<OutputActions>(std::move(datasetReaderResult))};
+    }
+    auto datasetReader = std::move(datasetReaderResult.value());
+
     std::vector<hsize_t> dims = datasetReader.getDimensions();
     std::string objectName = datasetReader.getName();
 
@@ -277,6 +331,11 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       return MakePreflightErrorResult(-20013, stream.str());
     }
 
+    // Avoid including "/" as an object name within AttributeMatrix.
+    //if(pSelectedAttributeMatrixValue.has_value() && objectName.find('/') != std::string::npos)
+    //{
+    //  objectName = objectName.substr(objectName.find_last_of('/') + 1);
+    //}
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
 
     if(dataStructure.getId(dataArrayPath).has_value())
@@ -287,13 +346,8 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
     else
     {
-      Result<HDF5::Type> type = datasetReader.getDataType();
-      if(type.invalid())
-      {
-        return MakePreflightErrorResult(-20015, fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath,
-                                                            fmt::underlying(datasetReader.getType())));
-      }
-      DataType dataType = nx::core::HDF5::toCommonType(type.value()).value();
+      HighFive::DataType type = datasetReader.getType();
+      DataType dataType = nx::core::HDF5::toCommonType(type).value();
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
@@ -312,9 +366,8 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
   fs::path inputFilePath(inputFile);
   auto datasetImportInfoList = pImportHDF5FileValue.datasets;
 
-  nx::core::HDF5::FileReader h5FileReader(inputFilePath);
-  hid_t fileId = h5FileReader.getId();
-  if(fileId < 0)
+  auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
+  if(h5FileReader.isValid() == false)
   {
     return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }
@@ -323,52 +376,59 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
-    nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    auto datasetReaderResult = h5FileReader.openDataset(datasetPath);
+    if(datasetReaderResult.invalid())
+    {
+      return ConvertResult(std::move(datasetReaderResult));
+    }
+    auto datasetReader = std::move(datasetReaderResult.value());
+
     std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM3D-NX structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
-    auto type = datasetReader.getType();
+    HighFive::DataType h5Type = datasetReader.getType();
+    auto type = nx::core::HDF5::toCommonType(h5Type).value();
     switch(type)
     {
-    case nx::core::HDF5::Type::float32: {
+    case DataType::float32: {
       fillArrayResults = HDF5::Support::FillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::float64: {
+    case DataType::float64: {
       fillArrayResults = HDF5::Support::FillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::int8: {
+    case DataType::int8: {
       fillArrayResults = HDF5::Support::FillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::int16: {
+    case DataType::int16: {
       fillArrayResults = HDF5::Support::FillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::int32: {
+    case DataType::int32: {
       fillArrayResults = HDF5::Support::FillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::int64: {
+    case DataType::int64: {
       fillArrayResults = HDF5::Support::FillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::uint8: {
+    case DataType::uint8: {
       fillArrayResults = HDF5::Support::FillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::uint16: {
+    case DataType::uint16: {
       fillArrayResults = HDF5::Support::FillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::uint32: {
+    case DataType::uint32: {
       fillArrayResults = HDF5::Support::FillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case nx::core::HDF5::Type::uint64: {
+    case DataType::uint64: {
       fillArrayResults = HDF5::Support::FillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }

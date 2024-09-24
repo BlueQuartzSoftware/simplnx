@@ -3,8 +3,7 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataFactory.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core
 {
@@ -13,13 +12,15 @@ namespace HDF5
 class DataStructureReader;
 class DataStructureWriter;
 
+using ErrorType = int32;
+
 class SIMPLNX_EXPORT IDataIO : public nx::core::IDataFactory
 {
 public:
-  using group_reader_type = nx::core::HDF5::GroupReader;
-  using group_writer_type = nx::core::HDF5::GroupWriter;
-  using object_writer_type = nx::core::HDF5::ObjectWriter;
-  using object_reader_type = nx::core::HDF5::ObjectReader;
+  using group_reader_type = nx::core::HDF5::GroupIO;
+  using group_writer_type = nx::core::HDF5::GroupIO;
+  using object_writer_type = nx::core::HDF5::ObjectIO;
+  using object_reader_type = nx::core::HDF5::ObjectIO;
 
   ~IDataIO() noexcept override;
 
@@ -41,10 +42,10 @@ public:
    * @brief Attempts to write a DataObject to HDF5.
    * @param dataStructureWriter
    * @param dataObject
-   * @param parentGroupWriter
+   * @param parentGroupIO
    * @return Result<>
    */
-  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentGroupWriter) const = 0;
+  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentGroupIO) const = 0;
 
   virtual std::string getTypeName() const = 0;
 

@@ -1,14 +1,23 @@
 #pragma once
 
-#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/ObjectIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/h5.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+
+#include "highfive/H5Attribute.hpp"
+#include "highfive/H5DataSet.hpp"
+#include "highfive/H5DataType.hpp"
+#include "highfive/H5File.hpp"
+#include "highfive/H5Group.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <string>
 #include <vector>
+
+#define H5_BOOL_TYPE uint8
 
 namespace nx::core::HDF5
 {
@@ -19,20 +28,14 @@ class SIMPLNX_EXPORT DatasetIO : public ObjectIO
 public:
   friend class GroupIO;
 
-  using DimsType = std::vector<SizeType>;
+  using DimsType = std::vector<usize>;
 
   /**
    * @brief Constructs an invalid DatasetIO.
    */
   DatasetIO();
 
-  /**
-   * @brief Constructs a DatasetIO wrapping a target HDF5 dataset
-   * belonging to the specified parent with the target name.
-   * @param parentId
-   * @param dataName
-   */
-  DatasetIO(IdType parentId, const std::string& dataName);
+  DatasetIO(GroupIO& parentGroup, const std::string& dataName);
 
   DatasetIO(const DatasetIO& other) = delete;
 
@@ -47,68 +50,23 @@ public:
   ~DatasetIO() noexcept override;
 
   /**
-   * @brief Returns true if the DatasetIO has a valid target. Otherwise,
-   * this method returns false.
-   * @return bool
+   * @brief Returns the IO Classes HighFive ObjectType
+   * @return HighFive::ObjectType
    */
-  bool isValid() const override;
-
-  /**
-   * @brief Returns the target dataset name. Returns an empty string if the
-   * DatasetIO is invalid.
-   * @return std::string
-   */
-  std::string getName() const override;
-
-  bool open();
-
-  /**
-   * @brief Returns the dataspace's HDF5 ID. Returns 0 if the attribute is
-   * invalid.
-   * @return IdType
-   */
-  IdType getDataspaceId() const;
-
-  /**
-   * @brief Returns the property's HDF5 ID. Returns 0 if the attribute is
-   * invalid.
-   * @return IdType
-   */
-  IdType getPListId() const;
+  HighFive::ObjectType getObjectType() const override;
 
   /**
    * @brief Returns an enum representation of the attribute's type.
-   * @return Type
+   * @return HighFive::DataType
    */
-  Type getType() const;
+  HighFive::DataType getType() const;
 
   /**
-   * @brief Returns an H5T_class_t enum representation of the attribute's class
-   * type.
-   * @return Type
+   * @brief Attempts to determine the HDF5 data type for the dataset.
+   * Returns an invalid Result if the process fails.
+   * @return Result<HDF5::Type>
    */
-  IdType getClassType() const;
-
-  /**
-   * @brief Returns a DataType enum representation of the attribute's
-   * type or an error if there is no conversion.
-   * @return DataType
-   */
-  Result<Type> getDataType() const;
-
-  /**
-   * @brief Returns an HDF5 type ID for the target data type. Returns 0 if the
-   * dataset is invalid.
-   * @return IdType
-   */
-  IdType getTypeId() const;
-
-  /**
-   * @brief Returns the size of the datatype. Returns 0 if the dataset is
-   * invalid.
-   * @return size_t
-   */
-  size_t getTypeSize() const;
+  Result<nx::core::HDF5::Type> getDataType() const;
 
   /**
    * @brief Returns the number of elements in the attribute.
@@ -155,7 +113,17 @@ public:
    * @param data
    */
   template <class T>
-  bool readIntoSpan(nonstd::span<T>& data) const;
+  Result<> readIntoSpan(nonstd::span<T>& data) const;
+
+  /**
+   * @brief Reads the dataset into the given span. Requires the span to be the
+   * correct size. Returns false if unable to read.
+   * Contains optional start and end positions for the existing HDF5 dataset.
+   * @tparam T
+   * @param data
+   */
+  template <class T>
+  Result<> readIntoSpan(nonstd::span<T>& data, const std::optional<std::vector<usize>>& start, const std::optional<std::vector<usize>>& count) const;
 
   /**
    * @brief Reads a chunk of the dataset into the given span. Requires the span to be the
@@ -164,21 +132,21 @@ public:
    * @param data
    */
   template <class T>
-  bool readChunkIntoSpan(nonstd::span<T> data, nonstd::span<const hsize_t> offset) const;
+  Result<> readChunkIntoSpan(nonstd::span<T> data, nonstd::span<const usize> offset, nonstd::span<const usize> chunkDims) const;
 
   /**
    * @brief Returns the current chunk dimensions as a vector.
    *
    * Returns an empty vector if no chunks could be found.
-   * @return std::vector<hsize_t>
+   * @return std::vector<usize>
    */
-  std::vector<hsize_t> getChunkDimensions() const;
+  std::vector<usize> getChunkDimensions() const;
 
   /**
    * @brief Returns a vector of the sizes of the dimensions for the dataset
    * Returns empty vector if unable to read.
    */
-  std::vector<hsize_t> getDimensions() const;
+  std::vector<usize> getDimensions() const;
 
   /**
    * @brief Writes a given string to the dataset. Returns the HDF5 error,
@@ -200,7 +168,7 @@ public:
    * @param text
    * @return Result<>
    */
-  Result<> writeVectorOfStrings(std::vector<std::string>& text);
+  Result<> writeVectorOfStrings(const std::vector<std::string>& text);
 
   /**
    * @brief Writes a span of values to the dataset. Returns the HDF5 error,
@@ -228,47 +196,104 @@ public:
    * @return Result<>
    */
   template <typename T>
-  Result<> writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, nonstd::span<const hsize_t> offset);
+  Result<> writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, nonstd::span<const usize> offset);
 
+  /**
+   * @brief Returns the number of attributes in the object. Returns 0 if the
+   * object is not valid.
+   * @return usize
+   */
+  usize getNumAttributes() const override;
+
+  /**
+   * @brief Returns a vector with each attribute name.
+   * @return std::vector<std::string>
+   */
+  std::vector<std::string> getAttributeNames() const override;
+
+  /**
+   * @brief Deletes the attribute with the specified name.
+   * @param name
+   */
+  void deleteAttribute(const std::string& name) override;
+
+  /**
+   * @brief Creates an attribute with the specified name and value.
+   * @param name
+   * @param value
+   */
   template <typename T>
-  void createOrOpenDataset(const DimsType& dimensions, IdType propertiesId = 0)
+  void createAttribute(const std::string& attributeName, const T& value)
   {
-    hid_t dataType = Support::HdfTypeForPrimitive<T>();
-    hid_t dataspaceId = H5Screate_simple(dimensions.size(), dimensions.data(), nullptr);
-    if(dataspaceId >= 0)
+    auto dataset = openH5Dataset();
+    if(dataset.hasAttribute(attributeName))
     {
-      auto result = findAndDeleteAttribute();
-      if(result.invalid())
-      {
-        std::cout << "Error Removing Existing Attribute" << std::endl;
-        return;
-      }
-      else
-      {
-        /* Create the attribute. */
-        createOrOpenDataset(dataType, dataspaceId, propertiesId);
-        if(getId() < 0)
-        {
-          std::cout << "Error Creating or Opening Dataset" << std::endl;
-          return;
-        }
-      }
+      dataset.deleteAttribute(attributeName);
+    }
+    dataset.createAttribute(attributeName, value);
+  }
+
+  /**
+   * @brief Creates a string attribute with the specified name and value.
+   * @param name
+   * @param value
+   */
+  template <>
+  void createAttribute<std::string>(const std::string& attributeName, const std::string& value)
+  {
+    auto dataset = openH5Dataset();
+    if(dataset.hasAttribute(attributeName))
+    {
+      dataset.deleteAttribute(attributeName);
+    }
+    writeStringAttribute(dataset.getId(), attributeName, value);
+  }
+
+  /**
+   * @brief Reads an attribute with the specified name.
+   * @param name
+   * @param value
+   */
+  template <typename T>
+  void readAttribute(const std::string& attributeName, T& value) const
+  {
+    auto dataset = openH5Dataset();
+    if(dataset.hasAttribute(attributeName))
+    {
+      dataset.getAttribute(attributeName).read(value);
     }
   }
 
-  template <typename T>
-  void createOrOpenChunkedDataset(const DimsType& dimensions, const DimsType& chunkDimensions)
+  /**
+   * @brief Reads a string attribute with the specified name.
+   * @param name
+   * @param value
+   */
+  template <>
+  void readAttribute<std::string>(const std::string& attributeName, std::string& value) const
   {
-    auto properties = CreateDatasetChunkProperties(chunkDimensions);
-    createOrOpenDataset<T>(dimensions, properties);
+    auto dataset = openH5Dataset();
+    if(dataset.hasAttribute(attributeName))
+    {
+      auto attrib = dataset.getAttribute(attributeName);
+      value = readStringAttribute(attrib.getId());
+    }
   }
 
-protected:
   /**
-   * @brief Closes the HDF5 ID and resets it to 0.
+   * @brief Checks if the dataset already exists in HDF5 file.
+   * @return Returns true if it exists, otherwise this method returns false.
    */
-  void closeHdf5() override;
+  bool exists() const;
 
+  /**
+   * @param Returns the HDF5 object id.
+   * Should only be called by HDF5 IO wrapper classes.
+   * @return hid_t
+   */
+  hid_t getH5Id() const override;
+
+protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
    * Returns any error that might occur when deleting the attribute.
@@ -277,73 +302,77 @@ protected:
   Result<> findAndDeleteAttribute();
 
   /**
-   * @brief Opens the target HDF5 dataset or creates a new one using the given
-   * datatype and dataspace IDs.
-   * @param typeId
-   * @param dataspaceId
+   * @brief Returns a reference to the parent HighFive::Group.
+   * @return HighFive::Group&
    */
-  void createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType properties = 0);
-
-  void createOrOpenDatasetChunk(IdType typeId, IdType dataspaceId, const DimsType& chunkDims);
+  HighFive::Group& parentGroupRef() const;
 
   /**
-   * @brief Applies chunking to the dataset and sets the chunk dimensions.
-   * @param dims
-   * @return Returns the property ID if successful. Returns H5P_DEFAULT otherwise.
+   * @brief Opens and returns the target HighFive DataSet.
+   * @return HighFive::DataSet
    */
-  static IdType CreateDatasetChunkProperties(const DimsType& dims);
-
-  static IdType CreateTransferChunkProperties(const DimsType& chunkDims);
-
-private:
-  std::string m_DatasetName;
+  HighFive::DataSet openH5Dataset() const;
 };
-extern template bool DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&) const;
-extern template bool DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&) const;
-extern template bool DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&) const;
-extern template bool DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&) const;
-extern template bool DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&) const;
-extern template bool DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&) const;
-extern template bool DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&) const;
-extern template bool DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&) const;
-extern template bool DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&) const;
-extern template bool DatasetIO::readIntoSpan<float>(nonstd::span<float>&) const;
-extern template bool DatasetIO::readIntoSpan<double>(nonstd::span<double>&) const;
 
-extern template bool DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<char>(nonstd::span<char>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<int8_t>(nonstd::span<int8_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<int16_t>(nonstd::span<int16_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<int32_t>(nonstd::span<int32_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<int64_t>(nonstd::span<int64_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<uint8_t>(nonstd::span<uint8_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<uint16_t>(nonstd::span<uint16_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<uint32_t>(nonstd::span<uint32_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<uint64_t>(nonstd::span<uint64_t>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<float>(nonstd::span<float>, nonstd::span<const hsize_t>) const;
-extern template bool DatasetIO::readChunkIntoSpan<double>(nonstd::span<double>, nonstd::span<const hsize_t>) const;
+extern template Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&) const;
+extern template Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&) const;
+extern template Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&) const;
 
-extern template Result<> DatasetIO::writeSpan<int8_t>(const DimsType& dims, nonstd::span<const int8_t>);
-extern template Result<> DatasetIO::writeSpan<int16_t>(const DimsType& dims, nonstd::span<const int16_t>);
-extern template Result<> DatasetIO::writeSpan<int32_t>(const DimsType& dims, nonstd::span<const int32_t>);
-extern template Result<> DatasetIO::writeSpan<int64_t>(const DimsType& dims, nonstd::span<const int64_t>);
-extern template Result<> DatasetIO::writeSpan<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t>);
-extern template Result<> DatasetIO::writeSpan<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t>);
-extern template Result<> DatasetIO::writeSpan<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t>);
-extern template Result<> DatasetIO::writeSpan<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t>);
-extern template Result<> DatasetIO::writeSpan<float>(const DimsType& dims, nonstd::span<const float>);
-extern template Result<> DatasetIO::writeSpan<double>(const DimsType& dims, nonstd::span<const double>);
+extern template Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
+extern template Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&, const std::optional<std::vector<usize>>&, const std::optional<std::vector<usize>>&) const;
 
-extern template Result<> DatasetIO::writeChunk<int8_t>(const DimsType& dims, nonstd::span<const int8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<int16_t>(const DimsType& dims, nonstd::span<const int16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<int32_t>(const DimsType& dims, nonstd::span<const int32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<int64_t>(const DimsType& dims, nonstd::span<const int64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<float>(const DimsType& dims, nonstd::span<const float> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<double>(const DimsType& dims, nonstd::span<const double> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<bool>(const DimsType& dims, nonstd::span<const bool> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template Result<> DatasetIO::writeChunk<char>(const DimsType& dims, nonstd::span<const char> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<char>(nonstd::span<char>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<int8_t>(nonstd::span<int8_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<int16_t>(nonstd::span<int16_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<int32_t>(nonstd::span<int32_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<int64_t>(nonstd::span<int64_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<uint8_t>(nonstd::span<uint8_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<uint16_t>(nonstd::span<uint16_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<uint32_t>(nonstd::span<uint32_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<uint64_t>(nonstd::span<uint64_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<float>(nonstd::span<float>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+extern template Result<> DatasetIO::readChunkIntoSpan<double>(nonstd::span<double>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+
+extern template Result<> DatasetIO::writeSpan<int8_t>(const DimsType&, nonstd::span<const int8_t>);
+extern template Result<> DatasetIO::writeSpan<int16_t>(const DimsType&, nonstd::span<const int16_t>);
+extern template Result<> DatasetIO::writeSpan<int32_t>(const DimsType&, nonstd::span<const int32_t>);
+extern template Result<> DatasetIO::writeSpan<int64_t>(const DimsType&, nonstd::span<const int64_t>);
+extern template Result<> DatasetIO::writeSpan<uint8_t>(const DimsType&, nonstd::span<const uint8_t>);
+extern template Result<> DatasetIO::writeSpan<uint16_t>(const DimsType&, nonstd::span<const uint16_t>);
+extern template Result<> DatasetIO::writeSpan<uint32_t>(const DimsType&, nonstd::span<const uint32_t>);
+extern template Result<> DatasetIO::writeSpan<uint64_t>(const DimsType&, nonstd::span<const uint64_t>);
+extern template Result<> DatasetIO::writeSpan<float>(const DimsType&, nonstd::span<const float>);
+extern template Result<> DatasetIO::writeSpan<double>(const DimsType&, nonstd::span<const double>);
+extern template Result<> DatasetIO::writeSpan<bool>(const DimsType&, nonstd::span<const bool>);
+
+extern template Result<> DatasetIO::writeChunk<int8_t>(const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<int16_t>(const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<int32_t>(const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<int64_t>(const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<uint8_t>(const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<uint16_t>(const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<uint32_t>(const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<uint64_t>(const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<float>(const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<double>(const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<bool>(const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const usize>);
+extern template Result<> DatasetIO::writeChunk<char>(const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const usize>);
 } // namespace nx::core::HDF5

@@ -7,7 +7,7 @@
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -27,7 +27,7 @@ std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T, uint8 Dims = 1>
-void writePointerArrayDataset(nx::core::HDF5::GroupWriter& ptrGroupWriter)
+void writePointerArrayDataset(nx::core::HDF5::GroupIO& ptrGroupWriter)
 {
   std::string dsetName = nx::core::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   std::vector<hsize_t> dims = {};
@@ -60,7 +60,10 @@ void writePointerArrayDataset(nx::core::HDF5::GroupWriter& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  nx::core::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  auto dsetWriterResult = ptrGroupWriter.createDataset(dsetName);
+  SIMPLNX_RESULT_REQUIRE_VALID(dsetWriterResult);
+  auto dsetWriter = std::move(dsetWriterResult.value());
+
   auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
@@ -88,14 +91,13 @@ void writeHDF5File()
     }
   }
 
-  auto writerResults = nx::core::HDF5::FileWriter::CreateFile(m_FilePath);
-  SIMPLNX_RESULT_REQUIRE_VALID(writerResults);
-  nx::core::HDF5::FileWriter fileWriter = std::move(writerResults.value());
+  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(m_FilePath);
   REQUIRE(fileWriter.isValid());
 
   // Create the Pointer group
-  nx::core::HDF5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
-  REQUIRE(ptrGroupWriter.isValid());
+  auto ptrGroupWriterResult = fileWriter.createGroup("Pointer");
+  REQUIRE(ptrGroupWriterResult.valid());
+  auto ptrGroupWriter = std::move(ptrGroupWriterResult.value());
 
   writePointer1DArrayDataset<int8_t>(ptrGroupWriter);
   writePointer1DArrayDataset<uint8_t>(ptrGroupWriter);
@@ -367,7 +369,8 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
 
       std::string dsetPath = info.dataSetPath;
       std::string dsetName = StringUtilities::replace(dsetPath, "/Pointer/", "");
-      auto da = dataStructure.getSharedDataAs<DataArray<T>>(DataPath::FromString(Constants::k_LevelZero.str() + "/" + dsetName).value());
+      auto dataArrayPath = DataPath::FromString(Constants::k_LevelZero.str() + "/" + dsetName).value();
+      auto da = dataStructure.getSharedDataAs<DataArray<T>>(dataArrayPath);
       REQUIRE(da != nullptr);
       auto daNumTuples = da->getNumberOfTuples();
       auto daNumComponents = da->getNumberOfComponents();

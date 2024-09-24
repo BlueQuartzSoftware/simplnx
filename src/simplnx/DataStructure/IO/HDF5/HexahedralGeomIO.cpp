@@ -3,7 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {
@@ -28,7 +28,7 @@ Result<> HexahedralGeomIO::readData(DataStructureReader& structureReader, const 
 }
 Result<> HexahedralGeomIO::writeData(DataStructureWriter& structureReader, const HexahedralGeom& geom, group_writer_type& parentGroup, bool importable) const
 {
-  auto groupWriter = parentGroup.createGroupWriter(geom.getName());
+  auto groupWriter = parentGroup.createGroup(geom.getName());
   return INodeGeom3dIO::WriteNodeGeom3dData(structureReader, geom, parentGroup, importable);
 }
 

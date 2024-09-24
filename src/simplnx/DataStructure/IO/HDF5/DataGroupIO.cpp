@@ -3,7 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {
@@ -29,7 +29,7 @@ Result<> DataGroupIO::readData(DataStructureReader& structureReader, const group
 
 Result<> DataGroupIO::writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable) const
 {
-  auto groupWriter = parentGroup.createGroupWriter(dataGroup.getName());
+  auto groupWriter = parentGroup.createGroup(dataGroup.getName());
   return WriteBaseGroupData(dataStructureWriter, dataGroup, parentGroup, importable);
 }
 

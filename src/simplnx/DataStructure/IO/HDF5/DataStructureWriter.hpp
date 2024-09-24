@@ -3,7 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <filesystem>
 #include <map>
@@ -19,6 +19,7 @@ namespace HDF5
 class IDataFactory;
 class DataIOManager;
 class IDataIO;
+class ObjectIO;
 
 /**
  * @brief The DataStructureWriter class serves to write DataStructures to HDF5 file or groups.
@@ -36,10 +37,10 @@ public:
   ~DataStructureWriter() noexcept;
 
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath);
-  static Result<> WriteFile(const DataStructure& dataStructure, FileWriter& fileWriter);
+  static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter);
 
   /**
-   * @brief Writes the DataObject under the given GroupWriter. If the
+   * @brief Writes the DataObject under the given GroupIO. If the
    * DataObject has already been written, a link is create instead.
    *
    * If the process encounters an error, the error code is returned. Otherwise,
@@ -48,7 +49,7 @@ public:
    * @param parentGroup
    * @return Result<>
    */
-  Result<> writeDataObject(const DataObject* dataObject, GroupWriter& parentGroup);
+  Result<> writeDataObject(const DataObject* dataObject, GroupIO& parentGroup);
 
   /**
    * @brief Writes the provided dataMap to HDF5 group.
@@ -56,13 +57,13 @@ public:
    * @param parentGroup
    * @return Result<>
    */
-  Result<> writeDataMap(const DataMap& dataMap, GroupWriter& parentGroup);
+  Result<> writeDataMap(const DataMap& dataMap, GroupIO& parentGroup);
 
-  Result<> writeDataStructure(const DataStructure& dataMap, GroupWriter& parentGroup);
+  Result<> writeDataStructure(const DataStructure& dataMap, GroupIO& parentGroup);
 
 protected:
   /**
-   * @brief Writes a DataObject link under the given GroupWriter.
+   * @brief Writes a DataObject link under the given GroupIO.
    *
    * If the process encounters an error, the error code is returned. Otherwise,
    * this method returns 0.
@@ -70,7 +71,7 @@ protected:
    * @param parentGroup
    * @return Result<>
    */
-  Result<> writeDataObjectLink(const DataObject* dataObject, GroupWriter& parentGroup);
+  Result<> writeDataObjectLink(const DataObject* dataObject, GroupIO& parentGroup);
 
   /**
    * @brief Returns true if the DataObject has been written to the current
@@ -126,10 +127,9 @@ protected:
    * @param objectWriter
    * @param objectId
    */
-  void addWriter(ObjectWriter& objectWriter, DataObject::IdType objectId);
+  void addWriter(ObjectIO& objectWriter, DataObject::IdType objectId);
 
 private:
-  IdType m_ParentId = 0;
   DataStructure m_DataStructure;
   DataMapType m_IdMap;
   std::shared_ptr<DataIOManager> m_IOManager;

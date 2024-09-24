@@ -1,15 +1,21 @@
 #pragma once
 
-#include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/AttributeIO.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/simplnx_export.hpp"
 
+#include "highfive/H5DataType.hpp"
+
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace nx::core::HDF5
 {
+class FileIO;
 class GroupIO;
+
 class SIMPLNX_EXPORT ObjectIO
 {
 public:
@@ -17,14 +23,6 @@ public:
    * @brief Constructs an invalid ObjectIO.
    */
   ObjectIO();
-
-  /**
-   * @brief Constructs an ObjectIO that wraps a target HDF5 object
-   * belonging to the specified parent using the target name.
-   * @param parentId
-   * @param targetName
-   */
-  ObjectIO(IdType parentId, const std::string& targetName);
 
   ObjectIO(const ObjectIO& other) = delete;
   ObjectIO(ObjectIO&& other) noexcept;
@@ -45,41 +43,23 @@ public:
   virtual bool isValid() const;
 
   /**
-   * @brief Returns the target HDF5 file ID. Returns 0 if the writer is invalid.
-   * @return IdType
-   */
-  IdType getFileId() const;
-
-  /**
-   * @brief Returns the parent object ID. Returns 0 if no parent was set.
-   * @return IdType
-   */
-  IdType getParentId() const;
-
-  /**
-   * @brief Returns the object's address ID. Returns 0 if the object is invalid.
-   * @return IdType
-   */
-  haddr_t getObjectId() const;
-
-  /**
-   * @brief Returns the object's HDF5 ID. Returns 0 if the object is invalid.
-   * @return IdType
-   */
-  IdType getId() const;
-
-  /**
-   * @brief Sets the object's HDF5 ID.
-   * @param identifier
-   */
-  void setId(IdType identifier);
-
-  /**
    * @brief Returns the HDF5 object name. Returns an empty string if the file
    * is invalid.
    * @return std::string
    */
   virtual std::string getName() const;
+
+  /**
+   * Returns the HDF5 object path.
+   * @return std::string
+   */
+  virtual std::string getObjectPath() const;
+
+  /**
+   * @brief Returns the IO Classes HighFive ObjectType
+   * @return HighFive::ObjectType
+   */
+  virtual HighFive::ObjectType getObjectType() const = 0;
 
   /**
    * @brief Returns the name of the parent object. Returns an empty string if
@@ -91,88 +71,107 @@ public:
   /**
    * @brief Returns the number of attributes in the object. Returns 0 if the
    * object is not valid.
-   * @return size_t
+   * @return usize
    */
-  size_t getNumAttributes() const;
+  virtual usize getNumAttributes() const = 0;
 
   /**
    * @brief Returns a vector with each attribute name.
    * @return std::vector<std::string>
    */
-  std::vector<std::string> getAttributeNames() const;
+  virtual std::vector<std::string> getAttributeNames() const = 0;
 
   /**
-   * @brief Returns the HDF5 object path from the file ID. Returns an empty
-   * string if the writer is invalid.
-   * @return std::string
-   */
-  std::string getObjectPath() const;
-
-  /**
-   * @brief Returns an AttributeIO for the target HDF5 attribute. Returns
-   * an invalid AttributeIO if no matching attribute exists.
+   * @brief Deletes the attribute with the specified name.
    * @param name
-   * @return AttributeIO
    */
-  AttributeIO getAttribute(const std::string& name) const;
+  virtual void deleteAttribute(const std::string& name) = 0;
 
   /**
-   * @brief Returns an AttributeIO for the target HDF5 attribute. Returns
-   * an invalid AttributeIO if no matching attribute exists.
-   * @param idx
-   * @return AttributeIO
+   * Deletes all attributes.
    */
-  AttributeIO getAttributeByIdx(size_t idx) const;
-
-  void setSharedParent(std::shared_ptr<GroupIO> sharedParent);
+  void deleteAttributes();
 
   /**
-   * @brief Returns an AttributeIO for the target HDF5 attribute. Returns
-   * an invalid AttributeIO if the writer is invalid.
-   * @param name
-   * @return AttributeIO
+   * @brief Returns the HDF5 filepath
    */
-  AttributeIO createAttribute(const std::string& name);
+  std::filesystem::path getFilePath() const;
+
+  /**
+   * @brief Returns a pointer to the parent FileIO. Returns null if the object is a file.
+   * @return FileIO*
+   */
+  virtual FileIO* parentFile() const;
+
+  /**
+   * @brief Returns a pointer to the parent GroupIO. Returns null if there is no known parent.
+   * @return GroupIO*
+   */
+  GroupIO* parentGroup() const;
+
+  /**
+   * @brief Returns the HighFive::File for the current IO handler.
+   * Returns an empty optional if the file could not be determined.
+   *
+   * This method should only be called by simplnx HDF5 IO wrapper classes.
+   * @return std::optional<HighFive::File>
+   */
+  virtual std::optional<HighFive::File> h5File() const;
+
+  /**
+  * @param Returns the HDF5 object id.
+  * Should only be called by HDF5 IO wrapper classes.
+  * @return hid_t
+  */
+  virtual hid_t getH5Id() const = 0;
 
 protected:
   /**
-   * @brief Constructs an ObjectIO for use in derived classes. This
-   * constructor only accepts the parent ID. Derived classes are required to
-   * open their own target and provide the ID via getId().
-   * @param parentId
+   * @brief Constructs an ObjectIO that wraps a target HDF5 object
+   * belonging to the specified filepath and target data path.
+   * @param filepath
+   * @param objectPath
    */
-  ObjectIO(IdType parentId);
+  ObjectIO(const std::filesystem::path& filepath, const std::string& objectPath);
+  ObjectIO(GroupIO& group, const std::string& objectName);
 
   /**
-   * @brief Constructs an ObjectIO for use in derived classes. This
-   * constructor only accepts the parent ID and the (object) ID. Derived classes
-   * are required to open their own target and provide the ID.
-   * @param parentId
+   * @brief Overwrites the filepath to the target HDF5 file.
+   * @param filepath
+   */
+  void setFilePath(const std::filesystem::path& filepath);
+
+  /**
+   * @brief Sets the HDF5 object's name.
+   * @param name.
+   */
+  void setName(const std::string& name);
+
+  /**
+   * @brief Moves the HDF5 object's values.
+   * @param rhs
+   */
+  void moveObj(ObjectIO&& rhs) noexcept;
+
+  /**
+   * @brief Reads and returns the string attribute with the target ID.
+   * @param id
+   * @return
+   */
+  std::string readStringAttribute(int64 id) const;
+
+  /**
+   * @brief Attempts to write a string attribute. Returns a Result<> with any errors encountered.
    * @param objectId
+   * @param attributeName
+   * @param str
+   * @return Result<>
    */
-  ObjectIO(IdType parentId, IdType objectId);
-
-  /**
-   * @brief Closes the HDF5 ID and resets it to 0.
-   */
-  virtual void closeHdf5();
-
-  /**
-   * @brief Sets a new parent ID.
-   * This method should only be used in the move operations of derived classes.
-   * @param parentId
-   */
-  void setParentId(IdType parentId);
-
-  /**
-   * @Clears the ID and parent ID without closing the HDF5 object.
-   * This method should only be used in the move operations of derived classes.
-   */
-  void clear();
+  Result<> writeStringAttribute(int64 objectId, const std::string& attributeName, const std::string& str);
 
 private:
-  IdType m_ParentId = 0;
-  IdType m_Id = 0; // the object, group, file, or dataset id
-  std::shared_ptr<GroupIO> m_SharedParentPtr = nullptr;
+  std::filesystem::path m_FilePath;
+  std::string m_ObjectName;
+  std::optional<GroupIO*> m_ParentGroup;
 };
 } // namespace nx::core::HDF5

@@ -12,7 +12,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -197,8 +197,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     }
     std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, k_OutputFile);
     // std::cout << "Writing Output file to " << outputFilePath << std::endl;
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(outputFilePath);
-    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
+    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(outputFilePath);
 
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);

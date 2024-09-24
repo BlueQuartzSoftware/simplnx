@@ -199,11 +199,11 @@ private:
       }
 
       // Ensure that we are dealing with in-core memory ONLY
-      const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
-      if(!inputArrayPtr->getDataFormat().empty())
-      {
-        return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
-      }
+      //const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
+      //if(inputArrayPtr->getDataFormat() != "")
+      //{
+      //  return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
+      //}
 
       // Set the Correct Origin, Spacing and Units for the Image Geometry
       auto* image = m_DataStructure.getDataAs<ImageGeom>(imageDataPath.getParent().getParent());

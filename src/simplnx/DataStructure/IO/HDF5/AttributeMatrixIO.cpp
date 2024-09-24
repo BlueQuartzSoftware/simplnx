@@ -4,8 +4,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {
@@ -26,9 +25,15 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
                                      const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
 
-  auto groupReader = parentGroup.openGroup(objectName);
-  auto attribute = groupReader.getAttribute(IOConstants::k_TupleDims);
-  auto tupleShape = attribute.readAsVector<usize>();
+  auto groupReaderResult = parentGroup.openGroup(objectName);
+  if(groupReaderResult.invalid())
+  {
+    return ConvertResult(std::move(groupReaderResult));
+  }
+  auto groupReader = std::move(groupReaderResult.value());
+
+  std::vector<usize> tupleShape;
+  groupReader.readAttribute(IOConstants::k_TupleDims, tupleShape);
 
   if(tupleShape.empty())
   {
@@ -47,10 +52,15 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 
 Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& attributeMatrix, group_writer_type& parentGroup, bool importable) const
 {
-  auto groupWriter = parentGroup.createGroupWriter(attributeMatrix.getName());
+  auto groupWriterResult = parentGroup.createGroup(attributeMatrix.getName());
+  if(groupWriterResult.invalid())
+  {
+    return ConvertResult(std::move(groupWriterResult));
+  }
+  auto groupWriter = std::move(groupWriterResult.value());
+
   auto tupleShape = attributeMatrix.getShape();
-  auto tupleDimsAttribute = groupWriter.createAttribute(IOConstants::k_TupleDims);
-  auto error = tupleDimsAttribute.writeVector(nx::core::HDF5::AttributeWriter::DimsVector{tupleShape.size()}, tupleShape);
+  groupWriter.createAttribute(IOConstants::k_TupleDims, tupleShape);
 
   return WriteBaseGroupData(dataStructureWriter, attributeMatrix, parentGroup, importable);
 }

@@ -3,7 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace
 {
@@ -28,18 +28,25 @@ std::string StringArrayIO::getTypeName() const
 Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto datasetReader = parentGroup.openDataset(objectName);
+  auto datasetReaderResult = parentGroup.openDataset(objectName);
+  if(datasetReaderResult.invalid())
+  {
+    return ConvertResult(std::move(datasetReaderResult));
+  }
+  auto datasetReader = std::move(datasetReaderResult.value());
+
   std::string dataArrayName = datasetReader.getName();
 
   // Check ability to import the data
-  auto importableAttribute = datasetReader.getAttribute(Constants::k_ImportableTag);
-  if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
+  int32 importable = 0;
+  datasetReader.readAttribute(Constants::k_ImportableTag, importable);
+  if(importable == 0)
   {
     return {};
   }
 
-  auto tupleDimsAttribReader = datasetReader.getAttribute(k_TupleDimsAttrName);
-  uint64 numValues = tupleDimsAttribReader.readAsValue<uint64>();
+  uint64 numValues;
+  datasetReader.readAttribute(k_TupleDimsAttrName, numValues);
 
   std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
   const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(strings), parentId);
@@ -54,7 +61,12 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 
 Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& dataArray, group_writer_type& parentGroup, bool importable) const
 {
-  auto datasetWriter = parentGroup.createDatasetWriter(dataArray.getName());
+  auto datasetWriterResult = parentGroup.createDataset(dataArray.getName());
+  if(datasetWriterResult.invalid())
+  {
+    return ConvertResult(std::move(datasetWriterResult));
+  }
+  auto datasetWriter = std::move(datasetWriterResult.value());
 
   // writeVectorOfStrings may resize the collection
   data_type::collection_type strings = dataArray.values();
@@ -66,14 +78,8 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
 
   // Write the number of values as an attribute for quicker preflight times
   {
-    auto tupleDimsAttribWriter = datasetWriter.createAttribute(k_TupleDimsAttrName);
-    result = tupleDimsAttribWriter.writeValue<uint64>(dataArray.size());
-    if(result.invalid())
-    {
-      std::string ss =
-          fmt::format("Error writing DataObject attribute: {} for DataArray with name '{}' which has a parent named '{}'", k_TupleDimsAttrName, dataArray.getName(), parentGroup.getName());
-      return MakeErrorResult(result.errors()[0].code, ss);
-    }
+    uint64 value = dataArray.size();
+    datasetWriter.createAttribute(k_TupleDimsAttrName, value);
   }
 
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);

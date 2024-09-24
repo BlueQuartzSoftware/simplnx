@@ -424,25 +424,25 @@ typename NeighborList<T>::iterator NeighborList<T>::end()
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::begin() const
 {
-  return m_Store->begin();
+  return m_Store->cbegin();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::end() const
 {
-  return m_Store->end();
+  return m_Store->cend();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::cbegin() const
 {
-  return m_Store->begin();
+  return m_Store->cbegin();
 }
 
 template <typename T>
 typename NeighborList<T>::const_iterator NeighborList<T>::cend() const
 {
-  return m_Store->end();
+  return m_Store->cend();
 }
 
 template <>
@@ -503,6 +503,12 @@ template <>
 DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
+}
+
+template <typename T>
+void NeighborList<T>::write(std::ostream& out) const
+{
+  m_Store->write(out);
 }
 
 template class SIMPLNX_TEMPLATE_EXPORT NeighborList<int8>;

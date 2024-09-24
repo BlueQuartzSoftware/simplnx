@@ -15,7 +15,7 @@ namespace EmptyDataStoreIO
  * @return std::unique_ptr<EmptyDataStore<T>>
  */
 template <typename T>
-static std::unique_ptr<EmptyDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetReader& datasetReader)
+static std::unique_ptr<EmptyDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
 {
   auto tupleShape = IDataStoreIO::ReadTupleShape(datasetReader);
   auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);

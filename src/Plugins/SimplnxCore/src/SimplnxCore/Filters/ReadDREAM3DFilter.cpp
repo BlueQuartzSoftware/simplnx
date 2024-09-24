@@ -4,8 +4,9 @@
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -14,7 +15,7 @@
 namespace
 {
 constexpr nx::core::int32 k_NoImportPathError = -1;
-constexpr nx::core::int32 k_FailedOpenFileReaderError = -25;
+constexpr nx::core::int32 k_FailedOpenFileIOError = -25;
 constexpr nx::core::int32 k_UnsupportedPathImportPolicyError = -51;
 
 std::vector<nx::core::DataPath> ExpandSelectedPathsToAncestors(const std::vector<nx::core::DataPath>& selectedPaths)
@@ -129,10 +130,10 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   {
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
-  nx::core::HDF5::FileReader fileReader(importData.FilePath);
+  auto fileReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {MakeErrorResult<OutputActions>(k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path.")};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileIOError, "Failed to open the HDF5 file at the specified path."}})};
   }
 
   Result<OutputActions> result;
@@ -211,21 +212,24 @@ Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Argu
 nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
 {
   auto json = IFilter::toJson(args);
-  // auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
-  // nx::core::HDF5::FileReader d3dReader(importData.FilePath);
-  // if(d3dReader.isValid())
-  //{
-  //   std::string fileVersion = DREAM3D::GetFileVersion(d3dReader);
-  //   // File version checking should be more robust
-  //   if(fileVersion == DREAM3D::k_CurrentFileVersion)
-  //   {
-  //     Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
-  //     if(pipelineResult.valid())
-  //     {
-  //       json[k_ImportedPipeline] = pipelineResult.value().toJson();
-  //     }
-  //   }
-  // }
+  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
+  if(!importData.FilePath.empty())
+  {
+    auto d3dReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
+    if(d3dReader.isValid())
+    {
+      std::string fileVersion = DREAM3D::GetFileVersion(d3dReader);
+      // File version checking should be more robust
+      if(fileVersion == DREAM3D::k_CurrentFileVersion)
+      {
+        Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
+        if(pipelineResult.valid())
+        {
+          json[k_ImportedPipeline] = pipelineResult.value().toJson();
+        }
+      }
+    }
+  }
   return json;
 }
 

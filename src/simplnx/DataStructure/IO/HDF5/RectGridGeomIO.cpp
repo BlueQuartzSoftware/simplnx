@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -35,16 +35,16 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
     return result;
   }
 
-  auto groupReader = parentGroup.openGroup(objectName);
+  auto groupReaderResult = parentGroup.openGroup(objectName);
+  if(groupReaderResult.invalid())
+  {
+    return ConvertResult(std::move(groupReaderResult));
+  }
+  auto groupReader = std::move(groupReaderResult.value());
 
   // Read Dimensions
-  auto volumeAttribute = groupReader.getAttribute("Dimensions");
-  if(!volumeAttribute.isValid())
-  {
-    std::string ss = fmt::format("Failed to access Dimensions attribute");
-    return MakeErrorResult(-1, ss);
-  }
-  std::vector<size_t> volumeDimensions = volumeAttribute.readAsVector<size_t>();
+  std::vector<size_t> volumeDimensions(3);
+  groupReader.readAttribute("Dimensions", volumeDimensions);
   geometry->setDimensions(volumeDimensions);
 
   // Read DataObject IDs
@@ -63,24 +63,22 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return result;
   }
 
-  auto groupWriter = parentGroup.createGroupWriter(geometry.getName());
+  auto groupWriterResult = parentGroup.createGroup(geometry.getName());
+  if(groupWriterResult.invalid())
+  {
+    return ConvertResult(std::move(groupWriterResult));
+  }
+  auto groupWriter = std::move(groupWriterResult.value());
 
   // Write dimensions
   auto dimensions = geometry.getDimensions();
-  nx::core::HDF5::AttributeWriter::DimsVector dims = {3};
   std::vector<size_t> dimsVector(3);
   for(size_t i = 0; i < 3; i++)
   {
     dimsVector[i] = dimensions[i];
   }
 
-  auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_DimensionsTag);
-  auto writeResult = dimensionAttr.writeVector(dims, dimsVector);
-  if(writeResult.invalid())
-  {
-    std::string ss = "Failed to write dimensions attribute";
-    return MakeErrorResult(writeResult.errors()[0].code, ss);
-  }
+  groupWriter.createAttribute(IOConstants::k_DimensionsTag, dimsVector);
 
   // Write DataObject IDs
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);

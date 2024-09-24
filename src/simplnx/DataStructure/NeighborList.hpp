@@ -370,6 +370,12 @@ public:
   NeighborList& operator=(const NeighborList& rhs);
   NeighborList& operator=(NeighborList&& rhs);
 
+  /**
+   * @brief Write to stream
+   * @param out
+   */
+  void write(std::ostream& out) const;
+
 protected:
   /**
    * @brief NeighborList

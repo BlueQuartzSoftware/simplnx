@@ -16,8 +16,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -277,16 +276,15 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
   // Write .dream3d file
   {
     auto fileData = CreateFileData();
-    Result<HDF5::FileWriter> result = HDF5::FileWriter::CreateFile(GetIODataPath());
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    auto fileWriter = HDF5::FileIO::WriteFile(GetIODataPath());
 
-    auto writeResult = DREAM3D::WriteFile(result.value(), fileData);
+    auto writeResult = DREAM3D::WriteFile(fileWriter, fileData);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   // Read .dream3d file
   {
-    HDF5::FileReader fileReader(GetIODataPath());
+    auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
     auto fileResult = DREAM3D::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 

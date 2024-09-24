@@ -112,9 +112,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   auto testInvalidInputFile = fs::path(fmt::format("{}/TestDataStructureNoPipeline.dream3d", unit_test::k_BinaryTestOutputDir));
   {
     DataStructure testDataStructure = UnitTest::CreateDataStructure();
-    auto fileWriterResult = nx::core::HDF5::FileWriter::CreateFile(testInvalidInputFile);
-    REQUIRE(fileWriterResult.valid());
-    nx::core::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
+    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(testInvalidInputFile);
     auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     REQUIRE(writeResult.valid());
   }

@@ -3,7 +3,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/simplnx_export.hpp"
 
@@ -35,17 +35,17 @@ public:
    * @param useEmptyDataStores = false
    * @return Result<DataStructure>
    */
-  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileReader& fileReader, bool useEmptyDataStores = false);
+  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
   /**
-   * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupReader.
+   * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupIO.
    * Returns any HDF5 error code that occur by reference. Otherwise, this value
    * is set to 0.
    * @param groupReader Target HDF5 group reader
    * @param useEmptyDataStores = false
    * @return Result<DataStructure>
    */
-  Result<DataStructure> readGroup(const nx::core::HDF5::GroupReader& groupReader, bool useEmptyDataStores = false);
+  Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores = false);
 
   /**
    * @brief Imports a DataObject with the specified name from the target
@@ -56,7 +56,7 @@ public:
    * @param useEmptyDataStores = false
    * @return Result<>
    */
-  Result<> readObjectFromGroup(const nx::core::HDF5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false);
+  Result<> readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false);
 
   /**
    * @brief Returns a reference to the current DataStructure. Returns an empty

@@ -4,8 +4,7 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core
 {
@@ -18,9 +17,8 @@ namespace HDF5
 class DataStructureReader;
 class DataStructureWriter;
 
-class GroupWriter;
-class GroupReader;
-class ObjectWriter;
+class GroupIO;
+class ObjectIO;
 
 /**
  * @brief Attempts to write the DataObject attributes to HDF5.
@@ -31,7 +29,7 @@ class ObjectWriter;
  * @param importable
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructureWriter, ObjectWriter& objectWriter, const DataObject* dataObject, bool importable);
+Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructureWriter, ObjectIO& objectWriter, const DataObject* dataObject, bool importable);
 
 /**
  * @brief Attempts to read the DataMap from HDF5.
@@ -43,7 +41,7 @@ Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructure
  * @param useEmptyDataStore = false
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupReader& parentGroup, DataObject::IdType parentId, bool useEmptyDataStore = false);
+Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupIO& parentGroup, DataObject::IdType parentId, bool useEmptyDataStore = false);
 
 /**
  * @brief Attempts to read the BaseGroup from HDF5.
@@ -54,7 +52,7 @@ Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, Da
  * @param useEmptyDataStore = false
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT ReadBaseGroup(DataStructureReader& dataStructureReader, const GroupReader& groupReader, BaseGroup* baseGroup, bool useEmptyDataStore = false);
+Result<> SIMPLNX_EXPORT ReadBaseGroup(DataStructureReader& dataStructureReader, const GroupIO& groupReader, BaseGroup* baseGroup, bool useEmptyDataStore = false);
 
 /**
  * @brief Attempts to write the BaseGroup to HDF5.
@@ -65,7 +63,7 @@ Result<> SIMPLNX_EXPORT ReadBaseGroup(DataStructureReader& dataStructureReader, 
  * @param importable = true
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT WriteBaseGroup(DataStructureWriter& dataStructureWriter, GroupWriter& groupWriter, const BaseGroup* dataMap, bool importable = true);
+Result<> SIMPLNX_EXPORT WriteBaseGroup(DataStructureWriter& dataStructureWriter, GroupIO& groupWriter, const BaseGroup* dataMap, bool importable = true);
 
 /**
  * @brief Attempts to write the DataMap to HDF5.
@@ -75,6 +73,6 @@ Result<> SIMPLNX_EXPORT WriteBaseGroup(DataStructureWriter& dataStructureWriter,
  * @param dataMap
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT WriteDataMap(DataStructureWriter& dataStructureWriter, GroupWriter& groupWriter, const DataMap& dataMap);
+Result<> SIMPLNX_EXPORT WriteDataMap(DataStructureWriter& dataStructureWriter, GroupIO& groupWriter, const DataMap& dataMap);
 } // namespace HDF5
 } // namespace nx::core

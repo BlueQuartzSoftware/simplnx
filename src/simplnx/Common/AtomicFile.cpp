@@ -5,6 +5,7 @@
 
 #include <fmt/format.h>
 
+#include <iostream>
 #include <random>
 
 using namespace nx::core;
@@ -112,5 +113,12 @@ Result<> AtomicFile::commit()
 
 void AtomicFile::removeTempFile() const
 {
-  fs::remove_all(m_TempFilePath.parent_path());
+  try
+  {
+    fs::remove_all(m_TempFilePath.parent_path());
+  }
+  catch (std::exception& e)
+  {
+    std::cout << "AtomicFile::removeTempFile error: " << e.what() << std::endl;
+  }
 }

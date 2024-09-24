@@ -6,6 +6,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -982,6 +983,9 @@ public:
   {
     return sizeof(T) * getSize();
   }
+
+  virtual Result<> readHdf5(const HDF5::DatasetIO& dataset) = 0;
+  virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
 
 protected:
   /**

@@ -18,6 +18,8 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
+//#define SIMPLNX_WRITE_TEST_OUTPUT
+
 namespace
 {
 const std::string k_ImagePrefix("fw-ar-IF1-aptr12-corr Discrete Pole Figure");
@@ -27,6 +29,7 @@ void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPat
 {
   // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  auto* computedData = dataStructure.getData(computedPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
 
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #define NOMINMAX
 
@@ -8,6 +9,8 @@
 #include <xtensor/xchunked_array.hpp>
 #include <xtensor/xfunction.hpp>
 #include <xtensor/xstrides.hpp>
+
+#include <xtensor-io/xhighfive.hpp>
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
@@ -397,6 +400,85 @@ public:
     }
 
     return {0, ""};
+  }
+
+  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  {
+    std::string filepath = dataset.getFilePath().string();
+    std::string dataPath = dataset.getObjectPath();
+
+    try
+    {
+      const auto& file = dataset.h5File().value();
+
+      XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
+      shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+
+      auto datasetDims = dataset.getDimensions();
+      bool dimsMatch = shape.size() == datasetDims.size();
+      if(dimsMatch)
+      {
+        for(usize i = 0; i < shape.size() && dimsMatch; i++)
+        {
+          dimsMatch = (shape[i] == datasetDims[i]);
+        }
+      }
+
+      auto data = std::shared_ptr<XArrayType>(new XArrayType(shape));
+      #if 1
+      nonstd::span<T> span(data->data(), data->size());
+      dataset.readIntoSpan(span);
+      #else
+      if(dimsMatch)
+      {
+        *data.get() = xt::load<XArrayType>(file, dataPath);
+      }
+      else
+      {
+        nonstd::span<T> span(data->data(), data->size());
+        dataset.readIntoSpan(span);
+        // xtensor will fail to load into an array of different dimensions, so create a new array and copy the data.
+        //auto mismatchedData = xt::load<XArrayType>(file, dataPath);
+        //std::copy(mismatchedData.begin(), mismatchedData.end(), data->begin());
+      }
+      #endif
+      m_Array = data;
+      return {};
+    } catch(const std::exception& e)
+    {
+      return MakeErrorResult(-97645, fmt::format("Failed to read dataset '{}' to path '{}'. Error: '{}'", dataset.getName(), dataset.getObjectPath(), e.what()));
+    }
+  }
+
+  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  {
+    if(m_Array == nullptr)
+    {
+      return MakeErrorResult(-97642, fmt::format("Cannot write non-existant dataset at path '{}'", dataset.getObjectPath()));
+    }
+
+    std::string datasetPath = dataset.getObjectPath();
+
+    typename HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
+    dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+    nonstd::span<const T> span(m_Array->data(), m_Array->size());
+    return dataset.writeSpan(dims, span);
+    #if 0
+    try
+    {
+      auto file = dataset.h5File().value();
+      auto dumpMode = xt::dump_mode::create;
+      if(dataset.exists())
+      {
+        dumpMode = xt::dump_mode::overwrite;
+      }
+      xt::dump(file, datasetPath, *m_Array.get(), dumpMode);
+      return {};
+    } catch(const std::exception& e)
+    {
+      return MakeErrorResult(-97643, fmt::format("Failed to write dataset '{}' to path '{}'. Error: '{}'", dataset.getName(), datasetPath, e.what()));
+    }
+    #endif
   }
 
 private:

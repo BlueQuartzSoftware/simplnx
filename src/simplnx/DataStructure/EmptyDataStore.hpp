@@ -220,6 +220,15 @@ public:
     return {-10175, fmt::format("EmptyDataStore cannot read or write files")};
   }
 
+  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  {
+    return MakeErrorResult(-42350, "Cannot read data into an EmptyDataStore");
+  }
+  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  {
+    return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
+  }
+
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;

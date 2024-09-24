@@ -2,9 +2,6 @@
 
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp"
-
 #include "fmt/format.h"
 
 namespace nx::core::HDF5
@@ -14,12 +11,28 @@ IDataIO::~IDataIO() noexcept = default;
 
 DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader, const std::string& tag)
 {
-  auto idAttribute = groupReader.getAttribute(tag);
-  if(!idAttribute.isValid())
+  if(!groupReader.isValid())
   {
     return {};
   }
-  DataObject::IdType id = idAttribute.readAsValue<DataObject::IdType>();
+  DataObject::IdType id;
+  auto objectType = groupReader.getObjectType();
+  try
+  {
+    if(objectType == HighFive::ObjectType::Group)
+    {
+      dynamic_cast<const GroupIO&>(groupReader).readAttribute(tag, id);
+    }
+    else if(objectType == HighFive::ObjectType::Dataset)
+    {
+      dynamic_cast<const DatasetIO&>(groupReader).readAttribute(tag, id);
+    }
+  }
+  catch (const std::exception& e)
+  {
+    return {};
+  }
+  
   return id;
 }
 
@@ -30,19 +43,17 @@ Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optio
     return {};
   }
 
-  auto attribute = objectWriter.createAttribute(tag);
-  if(!attribute.isValid())
-  {
-    std::string ss = fmt::format("Failed to create or open attribute '{}'", tag);
-    return MakeErrorResult(-404, ss);
-  }
   DataObject::IdType id = objectId.value();
-  auto result = attribute.writeValue<DataObject::IdType>(id);
-  if(result.invalid())
+  auto objectType = objectWriter.getObjectType();
+  if(objectType == HighFive::ObjectType::Group)
   {
-    std::string ss = fmt::format("Failed to write DataObject ID, '{}' for tag '{}'", id, tag);
-    return MakeErrorResult(405, ss);
+    dynamic_cast<GroupIO&>(objectWriter).createAttribute(tag, id);
   }
+  if(objectType == HighFive::ObjectType::Dataset)
+  {
+    dynamic_cast<DatasetIO&>(objectWriter).createAttribute(tag, id);
+  }
+  
   return {};
 }
 
@@ -51,30 +62,27 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());
 
-  auto typeAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectTypeTag);
-  auto result = typeAttributeWriter.writeString(dataObject.getTypeName());
-  if(result.invalid())
+  std::string dataTypeName = dataObject.getTypeName();
+  auto objectType = objectWriter.getObjectType();
+  if(objectType == HighFive::ObjectType::Group)
   {
-    std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ObjectTypeTag);
-    return MakeErrorResult(result.errors()[0].code, ss);
-  }
+    auto& groupWriter = dynamic_cast<GroupIO&>(objectWriter);
+    groupWriter.createAttribute(Constants::k_ObjectTypeTag, dataTypeName);
+    groupWriter.createAttribute(Constants::k_ObjectIdTag, dataObject.getId());
 
-  auto idAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectIdTag);
-  result = idAttributeWriter.writeValue(dataObject.getId());
-  if(result.invalid())
+    int32 value = (importable ? 1 : 0);
+    groupWriter.createAttribute(Constants::k_ImportableTag, value);
+  }
+  else if(objectType == HighFive::ObjectType::Dataset)
   {
-    std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ObjectIdTag);
-    return MakeErrorResult(result.errors()[0].code, ss);
-  }
+    auto& datasetWriter = dynamic_cast<DatasetIO&>(objectWriter);
+    datasetWriter.createAttribute(Constants::k_ObjectTypeTag, dataTypeName);
+    datasetWriter.createAttribute(Constants::k_ObjectIdTag, dataObject.getId());
 
-  auto importableAttributeWriter = objectWriter.createAttribute(Constants::k_ImportableTag);
-  result = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
-  if(result.invalid())
-  {
-    std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ImportableTag);
-    return MakeErrorResult(result.errors()[0].code, ss);
-  }
-
+    int32 value = (importable ? 1 : 0);
+    datasetWriter.createAttribute(Constants::k_ImportableTag, value);
+  }  
+  
   return {};
 }
 } // namespace nx::core::HDF5

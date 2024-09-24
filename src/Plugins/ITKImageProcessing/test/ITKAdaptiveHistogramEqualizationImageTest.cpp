@@ -11,7 +11,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
@@ -168,8 +168,7 @@ TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo
   }
 
   {
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/itk_adaptive_align_histograms.dream3d", unit_test::k_BinaryTestOutputDir));
-    nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
+    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(std::filesystem::path(fmt::format("{}/itk_adaptive_align_histograms.dream3d", unit_test::k_BinaryTestOutputDir)));
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5)
   }

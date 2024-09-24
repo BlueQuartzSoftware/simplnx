@@ -3,7 +3,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include "fmt/format.h"
 
@@ -18,8 +18,8 @@ namespace Chunks
 constexpr int32 k_DimensionMismatchError = -2654;
 
 template <typename T>
-inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
-                                    const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, const IDataStore::ShapeType& index)
+inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
+                                    const nx::core::HDF5::DatasetIO::DimsType& chunkDims, const IDataStore::ShapeType& index)
 {
   auto rank = chunkDims.size();
 
@@ -53,8 +53,8 @@ inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetWriter& datasetWriter
 }
 
 template <>
-inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<bool>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
-                                          const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, const IDataStore::ShapeType& index)
+inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<bool>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
+                                          const nx::core::HDF5::DatasetIO::DimsType& chunkDims, const IDataStore::ShapeType& index)
 {
   auto rank = chunkDims.size();
 
@@ -83,8 +83,8 @@ inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetWriter& dataset
 }
 
 template <typename T>
-inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims,
-                                       const nx::core::HDF5::DatasetWriter::DimsType& chunkDims, IDataStore::ShapeType index, const nx::core::HDF5::DatasetWriter::DimsType& chunkLayout, uint64 i = 0)
+inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
+                                       const nx::core::HDF5::DatasetIO::DimsType& chunkDims, IDataStore::ShapeType index, const nx::core::HDF5::DatasetIO::DimsType& chunkLayout, uint64 i = 0)
 {
   // uint64 rank = chunkLayout.size();
   const uint64 rank = chunkDims.size();
@@ -117,18 +117,18 @@ inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetWriter& datasetWri
 }
 
 template <typename T>
-inline Result<> WriteDataStoreChunks(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetWriter::DimsType& h5dims)
+inline Result<> WriteDataStoreChunks(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims)
 {
   auto shapeDims = store.getTupleShape();
   const auto componentDims = store.getComponentShape();
   shapeDims.insert(shapeDims.end(), componentDims.begin(), componentDims.end());
 
   const auto storeChunkShape = store.getChunkShape().value();
-  nx::core::HDF5::DatasetWriter::DimsType chunkDims(storeChunkShape.begin(), storeChunkShape.end());
+  nx::core::HDF5::DatasetIO::DimsType chunkDims(storeChunkShape.begin(), storeChunkShape.end());
 
   usize rank = shapeDims.size();
 
-  nx::core::HDF5::DatasetWriter::DimsType chunkLayout(rank);
+  nx::core::HDF5::DatasetIO::DimsType chunkLayout(rank);
   for(usize i = 0; i < rank; i++)
   {
     const bool hasRemainder = (shapeDims[i] % chunkDims[i] != 0);
@@ -153,67 +153,19 @@ inline Result<> WriteDataStoreChunks(nx::core::HDF5::DatasetWriter& datasetWrite
  * @return H5::ErrorType
  */
 template <typename T>
-inline Result<> WriteDataStore(nx::core::HDF5::DatasetWriter& datasetWriter, const AbstractDataStore<T>& dataStore)
+inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
 {
   if(!datasetWriter.isValid())
   {
-    std::string ss = "Failed to write DataArray. DatasetWriter not valid";
+    std::string ss = "Failed to write DataArray. DatasetIO not valid";
     return MakeErrorResult(-1, ss);
   }
 
-  // Consolidate the Tuple and Component Dims into a single array which is used
-  // to write the entire data array to HDF5
-  nx::core::HDF5::DatasetWriter::DimsType h5dims;
-  for(const auto& value : dataStore.getTupleShape())
-  {
-    h5dims.push_back(static_cast<hsize_t>(value));
-  }
-  for(const auto& value : dataStore.getComponentShape())
-  {
-    h5dims.push_back(static_cast<hsize_t>(value));
-  }
-
-  if(dataStore.getChunkShape().has_value() == false)
-  {
-    usize count = dataStore.getSize();
-    auto dataPtr = std::make_unique<T[]>(count);
-    for(usize i = 0; i < count; ++i)
-    {
-      dataPtr[i] = dataStore[i];
-    }
-
-    Result<> result = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr.get(), count});
-    if(result.invalid())
-    {
-      std::string ss = "Failed to write DataStore span to Dataset";
-      return MakeErrorResult(result.errors()[0].code, ss);
-    }
-  }
-  else
-  {
-    Result<> writeResult = Chunks::WriteDataStoreChunks<T>(datasetWriter, dataStore, h5dims);
-    if(writeResult.invalid())
-    {
-      return writeResult;
-    }
-  }
+  dataStore.writeHdf5(datasetWriter);
 
   // Write shape attributes to the dataset
-  auto tupleAttribute = datasetWriter.createAttribute(IOConstants::k_TupleShapeTag);
-  Result<> result = tupleAttribute.writeVector({dataStore.getTupleShape().size()}, dataStore.getTupleShape());
-  if(result.invalid())
-  {
-    std::string ss = "Failed to write DataStore tuple shape property";
-    return MakeErrorResult(result.errors()[0].code, ss);
-  }
-
-  auto componentAttribute = datasetWriter.createAttribute(IOConstants::k_ComponentShapeTag);
-  result = componentAttribute.writeVector({dataStore.getComponentShape().size()}, dataStore.getComponentShape());
-  if(result.invalid())
-  {
-    std::string ss = "Failed to write DataStore component shape property";
-    return MakeErrorResult(result.errors()[0].code, ss);
-  }
+  datasetWriter.createAttribute(IOConstants::k_TupleShapeTag, dataStore.getTupleShape());
+  datasetWriter.createAttribute(IOConstants::k_ComponentShapeTag, dataStore.getComponentShape());
 
   return {};
 }
@@ -224,19 +176,21 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetWriter& datasetWriter, con
  * @return std::unique_ptr<DataStore<T>>
  */
 template <typename T>
-inline std::unique_ptr<DataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetReader& datasetReader)
+inline std::unique_ptr<DataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
 {
   auto tupleShape = IDataStoreIO::ReadTupleShape(datasetReader);
   auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);
 
   // Create DataStore
   auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
-  Result<> result = datasetReader.readIntoSpan(dataStore->createSpan());
+  dataStore->readHdf5(datasetReader);
+  /*auto dataSpan = dataStore->createSpan();
+  Result<> result = datasetReader.readIntoSpan(dataSpan);
   if(result.invalid())
   {
-    throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}:\n\n{}", nx::core::HDF5::Support::GetObjectPath(datasetReader.getParentId()),
-                                         datasetReader.getName(), result.errors()[0].message));
-  }
+    throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {} called {}", datasetReader.getFilePath().string(),
+                                         datasetReader.getName()));
+  }*/
 
   return dataStore;
 }

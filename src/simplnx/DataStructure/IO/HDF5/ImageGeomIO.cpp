@@ -8,8 +8,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -47,34 +46,27 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
 {
   auto* imageGeom = ImageGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
-  auto groupReader = parentGroup.openGroup(objectName);
-  if(!groupReader.isValid())
+  std::vector<usize> volDimsVector(3);
+  std::vector<float32> originVector(3);
+  std::vector<float32> spacingVector(3);
   {
-    return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
+    auto groupReaderResult = parentGroup.openGroup(objectName);
+    if(groupReaderResult.invalid())
+    {
+      return ConvertResult(std::move(groupReaderResult));
+    }
+    auto groupReader = std::move(groupReaderResult.value());
+
+    if(!groupReader.isValid())
+    {
+      return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
+    }
+        
+    groupReader.readAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
+    groupReader.readAttribute(IOConstants::k_H5_ORIGIN, originVector);
+    groupReader.readAttribute(IOConstants::k_H5_SPACING, spacingVector);
   }
-
-  auto dimensionAttr = groupReader.getAttribute(IOConstants::k_H5_DIMENSIONS);
-  if(!dimensionAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingDimensionsError_Code, k_ReadingDimensionsError_Message);
-  }
-
-  auto volDimsVector = dimensionAttr.readAsVector<usize>();
-
-  auto originAttr = groupReader.getAttribute(IOConstants::k_H5_ORIGIN);
-  if(!originAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingOriginError_Code, k_ReadingOriginError_Message);
-  }
-  auto originVector = originAttr.readAsVector<float32>();
-
-  auto spacingAttr = groupReader.getAttribute(IOConstants::k_H5_SPACING);
-  if(!spacingAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingSpacingError_Code, k_ReadingSpacingError_Message);
-  }
-  auto spacingVector = spacingAttr.readAsVector<float32>();
-
+  
   SizeVec3 volDims;
   FloatVec3 spacing;
   FloatVec3 origin;
@@ -100,12 +92,16 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
     return result;
   }
 
-  auto groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriterResult = parentGroupWriter.createGroup(geometry.getName());
+  if(groupWriterResult.invalid())
+  {
+    return ConvertResult(std::move(groupWriterResult));
+  }
+  auto groupWriter = std::move(groupWriterResult.value());
 
   SizeVec3 volDims = geometry.getDimensions();
   FloatVec3 spacing = geometry.getSpacing();
   FloatVec3 origin = geometry.getOrigin();
-  nx::core::HDF5::AttributeWriter::DimsVector dims = {3};
   std::vector<size_t> volDimsVector(3);
   std::vector<float> spacingVector(3);
   std::vector<float> originVector(3);
@@ -116,27 +112,10 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
     originVector[i] = origin[i];
   }
 
-  auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_H5_DIMENSIONS);
-  auto writeResult = dimensionAttr.writeVector(dims, volDimsVector);
-  if(writeResult.invalid())
-  {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume dimensions");
-  }
-
-  auto originAttr = groupWriter.createAttribute(IOConstants::k_H5_ORIGIN);
-  writeResult = originAttr.writeVector(dims, originVector);
-  if(writeResult.invalid())
-  {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume origin");
-  }
-
-  auto spacingAttr = groupWriter.createAttribute(IOConstants::k_H5_SPACING);
-  writeResult = spacingAttr.writeVector(dims, spacingVector);
-  if(writeResult.invalid())
-  {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume spacing");
-  }
-
+  groupWriter.createAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
+  groupWriter.createAttribute(IOConstants::k_H5_ORIGIN, originVector);
+  groupWriter.createAttribute(IOConstants::k_H5_SPACING, spacingVector);
+  
   return {};
 }
 

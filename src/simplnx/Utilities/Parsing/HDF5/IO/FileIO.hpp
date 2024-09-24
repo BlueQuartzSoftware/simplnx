@@ -5,6 +5,8 @@
 
 #include "simplnx/Common/Result.hpp"
 
+#include "highfive/H5File.hpp"
+
 #include <filesystem>
 #include <string>
 
@@ -13,53 +15,18 @@ namespace nx::core::HDF5
 class SIMPLNX_EXPORT FileIO : public GroupIO
 {
 public:
-  /**
-   * @brief This static method will ensure that the complete path to the file
-   * exists and the file is created.
-   * @param filepath The file path to the HDF5 file that should be created
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<FileIO> CreateFile(const std::filesystem::path& filepath);
+  static FileIO ReadFile(const std::filesystem::path& filepath);
+  static FileIO WriteFile(const std::filesystem::path& filepath);
 
-  /**
-   * @brief This static method will ensure that the complete path to the file
-   * exists and the file is created.
-   * @param filepath The file path to the HDF5 file that should be created
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<std::shared_ptr<FileIO>> CreateSharedFile(const std::filesystem::path& filepath);
-
-  /**
-   * @brief This static method will wrap an existing HDF5 fileId value as long
-   * as the value is > 0. If the fileId is invalid the the Result object will be
-   * `invalid()`
-   * @param fileId The HDF5 File ID to wrap
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<FileIO> WrapHdf5FileId(IdType fileId);
-
-  /**
-   * @brief Constructs an invalid FileIO.
-   */
-  FileIO();
+  FileIO() = default;
 
   /**
    * @brief Constructs a FileIO wrapping the HDF5 file at the target
-   * filepath. The constructed object will be invalid if the HDF5 file cannot
-   * be found or openned.
+   * filepath.
    * @param filepath
+   * @param file
    */
-  FileIO(const std::filesystem::path& filepath);
-
-  /**
-   * @brief Constructs a FileIO wrapping the target HDF5 file ID. The
-   * constructed object will be invalid if the provided HDF5 file ID is 0.
-   * @param fileId
-   */
-  FileIO(IdType fileId);
+  FileIO(const std::filesystem::path& filepath, HighFive::File&& file);
 
   FileIO(const FileIO& rhs) = delete;
 
@@ -75,7 +42,7 @@ public:
   /**
    * @brief Releases the HDF5 file ID.
    */
-  ~FileIO() noexcept override;
+  ~FileIO() noexcept;
 
   /**
    * @brief Returns the HDF5 file name. Returns an empty string if the file
@@ -84,10 +51,139 @@ public:
    */
   std::string getName() const override;
 
-protected:
   /**
-   * @brief Closes the HDF5 ID and resets it to 0.
+   * Returns the HDF5 object path.
+   * @return std::string
    */
-  void closeHdf5() override;
+  std::string getObjectPath() const override;
+
+  /**
+   * @brief Returns the IO Classes HighFive ObjectType
+   * @return HighFive::ObjectType
+   */
+  HighFive::ObjectType getObjectType() const override;
+
+  /**
+   * @brief Deletes the attribute with the specified name;
+   * @param name
+   */
+  void deleteAttribute(const std::string& name) override;
+
+  /**
+   * @brief Returns the number of attributes in the object. Returns 0 if the
+   * object is not valid.
+   * @return usize
+   */
+  usize getNumAttributes() const override;
+
+  /**
+   * @brief Returns a vector with each attribute name.
+   * @return std::vector<std::string>
+   */
+  std::vector<std::string> getAttributeNames() const override;
+
+  /**
+   * @brief Returns the number of children objects within the group.
+   *
+   * Returns 0 if the GroupIO is invalid.
+   * @return size_t
+   */
+  usize getNumChildren() const override;
+
+  /**
+   * @brief Returns a vector with the names of each child object.
+   *
+   * This will return an empty vector if the GroupIO is invalid.
+   * @return std::vector<std::string>
+   */
+  std::vector<std::string> getChildNames() const override;
+
+  /**
+   * @brief Returns true if the target child is a group. Returns false
+   * otherwise.
+   *
+   * This will always return false if the GroupIO is invalid.
+   * @param childName
+   * @return bool
+   */
+  bool isGroup(const std::string& childName) const override;
+
+  /**
+   * @brief Returns true if the target child is a dataset. Returns false
+   * otherwise.
+   *
+   * This will always return false if the GroupIO is invalid.
+   * @param childName
+   * @return bool
+   */
+  bool isDataset(const std::string& childName) const override;
+
+  /**
+   * @brief Attempts to open a nested HDF5 group with the specified name.
+   * The created GroupIO is returned. Returns an error result if the group
+   * cannot be created.
+   * @param name
+   * @return GroupIO
+   */
+  Result<GroupIO> openGroup(const std::string& name) const override;
+
+  std::shared_ptr<GroupIO> openGroupPtr(const std::string& name) const override;
+
+  /**
+   * @brief Creates a GroupIO for writing to a child group with the
+   * target name. Returns an error result if the group cannot be
+   * created.
+   * @param childName
+   * @return Result<GroupIO>
+   */
+  Result<GroupIO> createGroup(const std::string& childName) override;
+
+  /**
+   * @brief Creates a GroupIO for writing to a child group with the
+   * target name. Returns an empty pointer if the group cannot be
+   * created.
+   * @param childName
+   * @return std::shared_ptr<GroupIO>
+   */
+  std::shared_ptr<GroupIO> createGroupPtr(const std::string& childName) override;
+
+  /**
+   * @brief Returns the HighFive::File for the current IO handler.
+   * Returns an empty optional if the file could not be determined.
+   *
+   * This method should only be called by simplnx HDF5 IO wrapper classes.
+   * @return std::optional<HighFive::File>
+   */
+  std::optional<HighFive::File> h5File() const override;
+
+  /**
+   * @brief Opens and returns the HDF5 dataset with the given name.
+   *
+   * This method should only be called by simplnx HDF5 IO wrapper classes.
+   * @param name
+   * @return HighFive::DataSet
+   */
+  HighFive::DataSet openH5Dataset(const std::string& name) const override;
+
+  /**
+   * @brief Creates or opens an HDF5 dataset with the given name, dimensions, and datatype.
+   *
+   * This method should only be called by simplnx HDF5 IO wrapper classes.
+   * @param name
+   * @param dims
+   * @param dataType
+   * @return HighFive::DataSet
+   */
+  HighFive::DataSet createOrOpenH5Dataset(const std::string& name, const HighFive::DataSpace& dims, HighFive::DataType dataType) override;
+
+  /**
+   * @param Returns the HDF5 object id.
+   * Should only be called by HDF5 IO wrapper classes.
+   * @return hid_t
+   */
+  hid_t getH5Id() const override;
+
+private:
+  std::optional<HighFive::File> m_File;
 };
 } // namespace nx::core::HDF5

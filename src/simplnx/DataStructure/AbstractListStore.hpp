@@ -6,6 +6,7 @@
 #include <xtensor/xlayout.hpp>
 
 #include <mutex>
+#include <ostream>
 #include <string>
 
 namespace nx::core
@@ -14,14 +15,478 @@ template <class T>
 class AbstractListStore
 {
 public:
+  /////////////////////////////////
+  // Reference Wrapper for lists //
+  /////////////////////////////////
+  class ConstReferenceList
+  {
+  public:
+    using vector_type = std::vector<T>;
+    using const_iterator = typename vector_type::const_iterator;
+
+    ConstReferenceList(const AbstractListStore<T>& store, usize tupleIndex)
+    : m_ListStore(store)
+    , m_List(store.at(tupleIndex))
+    , m_Index(tupleIndex)
+    {
+    }
+    ~ConstReferenceList()
+    {
+    }
+
+    const T& operator[](usize i) const
+    {
+      return m_List[i];
+    }
+    const T& at(usize i) const
+    {
+      return m_List.at(i);
+    }
+
+    usize size() const
+    {
+      return m_List.size();
+    }
+
+    const vector_type& vector() const
+    {
+      return m_List;
+    }
+
+    const_iterator begin() const
+    {
+      return m_List.begin();
+    }
+    const_iterator end() const
+    {
+      return m_List.end();
+    }
+    const_iterator cbegin() const
+    {
+      return m_List.begin();
+    }
+    const_iterator cend() const
+    {
+      return m_List.end();
+    }
+
+  private:
+    vector_type m_List;
+    usize m_Index = 0;
+    const AbstractListStore<T>& m_ListStore;
+  };
+
+  class ReferenceList
+  {
+  public:
+    using vector_type = std::vector<T>;
+    using iterator = typename vector_type::iterator;
+    using const_iterator = typename vector_type::const_iterator;
+
+    ReferenceList(AbstractListStore<T>& store, usize tupleIndex)
+    : m_ListStore(store)
+    , m_List(store.at(tupleIndex))
+    , m_Index(tupleIndex)
+    {
+    }
+    ~ReferenceList()
+    {
+      if(m_Edited)
+      {
+        m_ListStore.setList(m_Index, m_List);
+      }
+    }
+
+    T& operator[](usize i)
+    {
+      m_Edited = true;
+      return m_List[i];
+    }
+    const T& operator[](usize i) const
+    {
+      return m_List[i];
+    }
+    const T& at(usize i) const
+    {
+      return m_List.at(i);
+    }
+
+    ReferenceList& operator=(const ReferenceList& rhs)
+    {
+      m_Edited = true;
+      m_List = rhs.m_List;
+      return *this;
+    }
+    ReferenceList& operator=(const ConstReferenceList& rhs)
+    {
+      m_Edited = true;
+      m_List = rhs.vector();
+      return *this;
+    }
+    ReferenceList& operator=(const std::vector<T>& rhs)
+    {
+      m_Edited = true;
+      m_List = rhs;
+      return *this;
+    }
+
+    usize size() const
+    {
+      return m_List.size();
+    }
+
+    const vector_type& vector() const
+    {
+      return m_List;
+    }
+
+    iterator begin()
+    {
+      m_Edited = true;
+      return m_List.begin();
+    }
+    iterator end()
+    {
+      m_Edited = true;
+      return m_List.end();
+    }
+    const_iterator begin() const
+    {
+      return m_List.begin();
+    }
+    const_iterator end() const
+    {
+      return m_List.end();
+    }
+    const_iterator cbegin() const
+    {
+      return m_List.begin();
+    }
+    const_iterator cend() const
+    {
+      return m_List.end();
+    }
+
+  private:
+    bool m_Edited = false;
+    vector_type m_List;
+    usize m_Index = 0;
+    AbstractListStore<T>& m_ListStore;
+  };
+
+  ///////////////
+  // iterators //
+  ///////////////
+  class iterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = ReferenceList;
+    using difference_type = int64;
+    using pointer = ReferenceList*;
+    using reference = ReferenceList;
+    using const_reference = const ReferenceList;
+
+    iterator()
+    : m_DataStore(nullptr)
+    , m_Index(0)
+    {
+    }
+
+    iterator(AbstractListStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
+    , m_Index(index)
+    {
+    }
+
+    iterator(const iterator& other)
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+    iterator(iterator&& other) noexcept
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    iterator& operator=(const iterator& rhs)
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    iterator& operator=(iterator&& rhs) noexcept
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~iterator() noexcept = default;
+
+    inline bool isValid() const
+    {
+      return m_Index < m_DataStore->size();
+    }
+
+    inline iterator operator+(usize offset) const
+    {
+      return iterator(*m_DataStore, m_Index + offset);
+    }
+
+    inline iterator operator-(usize offset) const
+    {
+      return iterator(*m_DataStore, m_Index - offset);
+    }
+
+    inline iterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    iterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    inline iterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    inline iterator operator++(int)
+    {
+      iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    inline iterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    inline iterator operator--(int)
+    {
+      iterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    inline difference_type operator-(const iterator& rhs) const
+    {
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return ReferenceList(*m_DataStore, m_Index);
+    }
+
+    inline bool operator==(const iterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    inline bool operator!=(const iterator& rhs) const
+    {
+      return !(*this == rhs);
+    }
+
+    inline bool operator<(const iterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    inline bool operator>(const iterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    inline bool operator<=(const iterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    inline bool operator>=(const iterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    AbstractListStore* m_DataStore;
+    usize m_Index = 0;
+  };
+
+  class const_iterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = ConstReferenceList;
+    using difference_type = int64;
+    using pointer = const ConstReferenceList*;
+    using reference = const ConstReferenceList;
+
+    const_iterator()
+    : m_DataStore(nullptr)
+    , m_Index(0)
+    {
+    }
+
+    const_iterator(const AbstractListStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
+    , m_Index(index)
+    {
+    }
+
+    const_iterator(const const_iterator& other)
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    const_iterator(const_iterator&& other) noexcept
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    const_iterator& operator=(const const_iterator& rhs)
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    const_iterator& operator=(const_iterator&& rhs) noexcept
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~const_iterator() noexcept = default;
+
+    bool isValid() const
+    {
+      return m_DataStore != nullptr && m_Index < m_DataStore->size();
+    }
+
+    const_iterator operator+(usize offset) const
+    {
+      return const_iterator(*m_DataStore, m_Index + offset);
+    }
+
+    const_iterator operator-(usize offset) const
+    {
+      return const_iterator(*m_DataStore, m_Index - offset);
+    }
+
+    const_iterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    const_iterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    const_iterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    const_iterator operator++(int)
+    {
+      iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    const_iterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    const_iterator operator--(int)
+    {
+      const_iterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    difference_type operator-(const const_iterator& rhs) const
+    {
+      if(!isValid() && !rhs.isValid())
+      {
+        return 0;
+      }
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return ConstReferenceList(*m_DataStore, m_Index);
+    }
+
+    bool operator==(const const_iterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    bool operator!=(const const_iterator& rhs) const
+    {
+      return m_Index != rhs.m_Index;
+    }
+
+    bool operator<(const const_iterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    bool operator>(const const_iterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    bool operator<=(const const_iterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    bool operator>=(const const_iterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    const AbstractListStore* m_DataStore = nullptr;
+    usize m_Index = 0;
+  };
+
   using value_type = T;
   using vector_type = std::vector<T>;
   using shared_vector_type = typename std::shared_ptr<vector_type>;
   using reference = value_type&;
   using const_reference = const value_type&;
   using xarray_type = typename xt::xarray<value_type>;
-  using iterator = typename xarray_type::iterator;
-  using const_iterator = typename xarray_type::const_iterator;
 
   virtual ~AbstractListStore() = default;
 
@@ -284,27 +749,27 @@ public:
 
   iterator begin()
   {
-    return xarray().begin();
+    return iterator(*this, 0);
   }
   iterator end()
   {
-    return xarray().end();
+    return iterator(*this, size());
   }
   const_iterator begin() const
   {
-    return xarray().begin();
+    return const_iterator(*this, 0);
   }
   const_iterator end() const
   {
-    return xarray().end();
+    return const_iterator(*this, size());
   }
   const_iterator cbegin() const
   {
-    return xarray().begin();
+    return const_iterator(*this, 0);
   }
   const_iterator cend() const
   {
-    return xarray().end();
+    return const_iterator(*this, size());
   }
 
   virtual void setData(const std::vector<shared_vector_type>& lists)
@@ -378,6 +843,12 @@ public:
       xarr.flat(i) = value;
     }
   }
+
+  /**
+   * @brief Write to stream
+   * @param out
+   */
+  virtual void write(std::ostream& out) const = 0;
 
 protected:
   std::vector<usize> m_TupleShape;

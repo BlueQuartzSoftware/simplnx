@@ -24,7 +24,7 @@ Compare the data sets. The values should be exactly the same.
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -93,8 +93,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     {
       // Write out the DataStructure for later viewing/debugging
-      Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/ComputeIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
-      nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
+      auto fileWriter = nx::core::HDF5::FileIO::WriteFile(std::filesystem::path(fmt::format("{}/ComputeIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir)));
       auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
       SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
     }

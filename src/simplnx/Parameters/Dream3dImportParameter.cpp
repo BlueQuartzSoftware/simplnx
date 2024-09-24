@@ -3,7 +3,7 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -183,7 +183,7 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
       return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
     }
 
-    nx::core::HDF5::FileReader fileReader(path);
+    auto fileReader = HDF5::FileIO::ReadFile(path);
     if(!fileReader.isValid())
     {
       return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));

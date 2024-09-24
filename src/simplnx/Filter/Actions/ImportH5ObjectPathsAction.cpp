@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <fmt/core.h>
 
@@ -40,7 +40,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   static constexpr StringLiteral prefix = "ImportH5ObjectPathsAction: ";
   bool preflighting = (mode == Mode::Preflight);
 
-  nx::core::HDF5::FileReader fileReader(m_H5FilePath);
+  auto fileReader = nx::core::HDF5::FileIO::ReadFile(m_H5FilePath);
   Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, preflighting);
   if(dataStructureResult.invalid())
   {
