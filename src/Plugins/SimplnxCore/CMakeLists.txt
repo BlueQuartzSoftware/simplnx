@@ -51,6 +51,7 @@ set(FilterList
   CopyFeatureArrayToElementArrayFilter
   CreateAttributeMatrixFilter
   CreateDataArrayFilter
+  CreateDataArrayAdvancedFilter
   CreateDataGroupFilter
   CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
@@ -186,6 +187,7 @@ set(AlgorithmList
   ComputeTriangleGeomSizes
   FlyingEdges3D
   CreateColorMap
+  InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
