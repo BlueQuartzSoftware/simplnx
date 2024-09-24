@@ -6,6 +6,8 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
+#include "simplnx/simplnx_export.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <string_view>
@@ -84,17 +86,17 @@ Result<> ConvertTopParameters(Arguments& args, const nlohmann::json& json, const
 }
 
 //------------------------------------------------------------------------------
-Result<std::string> ReadDataContainerName(const nlohmann::json& json, std::string_view parameterName);
+SIMPLNX_EXPORT Result<std::string> ReadDataContainerName(const nlohmann::json& json, std::string_view parameterName);
 
 //------------------------------------------------------------------------------
-Result<std::string> ReadAttributeMatrixName(const nlohmann::json& json, std::string_view parameterName);
+SIMPLNX_EXPORT Result<std::string> ReadAttributeMatrixName(const nlohmann::json& json, std::string_view parameterName);
 
 //------------------------------------------------------------------------------
-Result<std::string> ReadDataArrayName(const nlohmann::json& json, std::string_view parameterName);
+SIMPLNX_EXPORT Result<std::string> ReadDataArrayName(const nlohmann::json& json, std::string_view parameterName);
 
 //------------------------------------------------------------------------------
-Result<ChoicesParameter::ValueType> ConvertChoicesParameter(const nlohmann::json& json, std::string_view parameterName);
+SIMPLNX_EXPORT Result<ChoicesParameter::ValueType> ConvertChoicesParameter(const nlohmann::json& json, std::string_view parameterName);
 
 //------------------------------------------------------------------------------
-Result<FileSystemPathParameter::ValueType> ReadInputFilePath(const nlohmann::json& json, std::string_view parameterName);
+SIMPLNX_EXPORT Result<FileSystemPathParameter::ValueType> ReadInputFilePath(const nlohmann::json& json, std::string_view parameterName);
 } // namespace nx::core::SIMPLConversion
