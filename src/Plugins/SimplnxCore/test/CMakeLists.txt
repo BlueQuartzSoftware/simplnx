@@ -52,6 +52,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CoreFilterTest.cpp
   CreateAttributeMatrixTest.cpp
   CreateDataArrayTest.cpp
+  CreateDataArrayAdvancedTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
   CreateGeometryTest.cpp
   CreateImageGeometryTest.cpp
