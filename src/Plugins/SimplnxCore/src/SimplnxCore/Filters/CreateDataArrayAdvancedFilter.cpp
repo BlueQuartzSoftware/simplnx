@@ -241,7 +241,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   //  nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
-  
+
   switch(initializeTypeValue)
   {
   case InitializeType::FillValue: {
