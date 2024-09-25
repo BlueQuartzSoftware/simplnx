@@ -96,6 +96,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT CalculatorFilterParameterConverter
+{
+  using ParameterType = CalculatorParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77");

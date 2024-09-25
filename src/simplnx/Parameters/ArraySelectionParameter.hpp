@@ -144,6 +144,17 @@ private:
   AllowedComponentShapes m_RequiredComponentShapes = {};
   DataLocation m_Location = DataLocation::Any;
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataArraySelectionFilterParameterConverter
+{
+  using ParameterType = ArraySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArraySelectionParameter, "ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b");

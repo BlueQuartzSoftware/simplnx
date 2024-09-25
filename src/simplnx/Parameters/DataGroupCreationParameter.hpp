@@ -96,6 +96,57 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataContainerCreationFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT StringToDataPathFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT StringsToDataPathFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+};
+
+struct SIMPLNX_EXPORT AMPathBuilderFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+};
+
+struct SIMPLNX_EXPORT DAPathBuilderFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+};
+
+struct SIMPLNX_EXPORT AttributeMatrixCreationFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataGroupCreationParameter, "bff2d4ac-04a6-5251-b188-4f83f7865074");

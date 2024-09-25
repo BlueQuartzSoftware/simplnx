@@ -74,6 +74,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT ScalarTypeParameterConverter
+{
+  using ParameterType = DataTypeParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataTypeParameter, "d31358d5-3253-4c69-aff0-eb98618f851b");

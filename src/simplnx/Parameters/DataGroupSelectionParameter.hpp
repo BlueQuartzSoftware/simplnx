@@ -107,5 +107,24 @@ private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataContainerSelectionFilterParameterConverter
+{
+  using ParameterType = DataGroupSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT DataContainerFromMultiSelectionFilterParameterConverter
+{
+  using ParameterType = DataGroupSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074");

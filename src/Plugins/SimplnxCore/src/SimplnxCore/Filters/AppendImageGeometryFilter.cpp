@@ -14,6 +14,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

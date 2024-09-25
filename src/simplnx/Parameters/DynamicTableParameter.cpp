@@ -76,4 +76,87 @@ Result<> DynamicTableParameter::validate(const std::any& value) const
   const auto& table = GetAnyRef<ValueType>(value);
   return m_TableInfo.validate(table);
 }
+
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_TableDataKey = "Table Data";
+} // namespace
+
+Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.contains(k_TableDataKey))
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("DynamicTableFilterParameter json '{}' does not contain '{}'", json.dump(), k_TableDataKey));
+  }
+
+  const auto& tableDataJson = json[k_TableDataKey];
+
+  if(!tableDataJson.is_array())
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("DynamicTableFilterParameter '{}' value '{}' is not an array", k_TableDataKey, json.dump()));
+  }
+
+  DynamicTableInfo::TableDataType table;
+
+  for(usize i = 0; i < tableDataJson.size(); i++)
+  {
+    const auto& jsonValue = tableDataJson.at(i);
+
+    if(!jsonValue.is_array())
+    {
+      return MakeErrorResult<ValueType>(-3, fmt::format("DynamicTableFilterParameter '{}' index {} with value '{}' is not an array", k_TableDataKey, i, jsonValue.dump()));
+    }
+
+    DynamicTableInfo::RowType row;
+
+    for(usize j = 0; j < jsonValue.size(); j++)
+    {
+      const auto& elementValue = jsonValue.at(j);
+
+      if(!elementValue.is_number())
+      {
+        return MakeErrorResult<ValueType>(-4, fmt::format("DynamicTableFilterParameter '{}' index ({}, {}) with value '{}' is not a number", k_TableDataKey, i, j, jsonValue.dump()));
+      }
+
+      auto value = elementValue.get<float64>();
+      row.push_back(value);
+    }
+
+    table.push_back(row);
+  }
+
+  return {std::move(table)};
+}
+
+Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  const auto& tableDataJson = json;
+  if(!tableDataJson.is_array())
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("ArrayToDynamicTableFilterParameterConverter '{}' value is not an array", json.dump()));
+  }
+
+  DynamicTableInfo::TableDataType table;
+  DynamicTableInfo::RowType row;
+
+  for(usize j = 0; j < tableDataJson.size(); j++)
+  {
+    const auto& elementValue = tableDataJson.at(j);
+
+    if(!elementValue.is_number())
+    {
+      return MakeErrorResult<ValueType>(-4, fmt::format("ArrayToDynamicTableFilterParameterConverter index ({}, {}) with value '{}' is not a number", 0, j, tableDataJson.dump()));
+    }
+
+    auto value = elementValue.get<float64>();
+    row.push_back(value);
+  }
+
+  table.push_back(row);
+
+  return {std::move(table)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

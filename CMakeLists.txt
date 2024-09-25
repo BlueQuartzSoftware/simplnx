@@ -720,6 +720,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 

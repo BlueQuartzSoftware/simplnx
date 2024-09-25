@@ -97,6 +97,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT FileListInfoFilterParameterConverter
+{
+  using ParameterType = GeneratedFileListParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b");

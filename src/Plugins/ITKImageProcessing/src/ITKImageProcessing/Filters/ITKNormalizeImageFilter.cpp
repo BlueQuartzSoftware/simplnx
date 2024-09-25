@@ -6,6 +6,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

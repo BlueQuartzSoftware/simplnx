@@ -3,6 +3,7 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -116,4 +117,20 @@ Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructur
   IGeometry* object = dataStructure.getDataAs<IGeometry>(path);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

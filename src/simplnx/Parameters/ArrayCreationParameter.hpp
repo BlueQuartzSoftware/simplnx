@@ -90,6 +90,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataArrayCreationFilterParameterConverter
+{
+  using ParameterType = ArrayCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArrayCreationParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b");

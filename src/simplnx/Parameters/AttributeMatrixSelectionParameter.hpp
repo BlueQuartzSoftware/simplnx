@@ -99,5 +99,24 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataArrayCreationToAMFilterParameterConverter
+{
+  using ParameterType = AttributeMatrixSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
+{
+  using ParameterType = AttributeMatrixSelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119");

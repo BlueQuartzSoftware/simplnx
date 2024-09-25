@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -101,4 +102,45 @@ Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataS
   DataObject* object = dataStructure.getData(path);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArrayCreationFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+
+Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMatrixSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "AttributeMatrixSelectionFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

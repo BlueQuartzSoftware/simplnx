@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"

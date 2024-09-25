@@ -11,6 +11,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <fstream>
+
 namespace fs = std::filesystem;
 
 namespace nx::core
