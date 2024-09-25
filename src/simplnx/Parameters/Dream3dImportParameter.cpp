@@ -167,4 +167,66 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
   }
   return {};
 }
+
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
+constexpr StringLiteral k_DataContainerProxyKey = "Data Containers";
+constexpr StringLiteral k_AttributeMatrixProxyKey = "Attribute Matricies";
+constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
+constexpr StringLiteral k_DataObjectNameKey = "Name";
+} // namespace
+
+Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json[k_InputFileKey].is_string())
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
+  }
+  if(!json[k_InputFileDataContainerArrayProxyKey].is_object())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an object", json[k_InputFileDataContainerArrayProxyKey].dump()));
+  }
+
+  std::string inputFilePath = json[k_InputFileKey].get<std::string>();
+  std::vector<nx::core::DataPath> dataPaths;
+
+  auto dcaProxyJson = json[k_InputFileDataContainerArrayProxyKey];
+  if(!dcaProxyJson[k_DataContainerProxyKey].is_array())
+  {
+    return MakeErrorResult<ValueType>(-3, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an array", dcaProxyJson[k_DataContainerProxyKey].dump()));
+  }
+
+  for(const auto& dcIter : dcaProxyJson[k_DataContainerProxyKey])
+  {
+    std::string dcName = dcIter[k_DataObjectNameKey].get<std::string>();
+    DataPath dcPath({dcName});
+
+    for(const auto& amIter : dcIter[k_AttributeMatrixProxyKey])
+    {
+      std::string amName = amIter[k_DataObjectNameKey].get<std::string>();
+      DataPath amPath = dcPath.createChildPath(amName);
+
+      for(const auto& daIter : amIter[k_DataArrayProxyKey])
+      {
+        std::string daName = daIter[k_DataObjectNameKey].get<std::string>();
+        dataPaths.emplace_back(amPath.createChildPath(daName));
+      }
+
+      dataPaths.push_back(std::move(amPath));
+    }
+
+    dataPaths.push_back(std::move(dcPath));
+  }
+
+  ParameterType::ValueType value;
+  value.FilePath = std::filesystem::path(inputFilePath);
+  value.DataPaths = std::move(dataPaths);
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

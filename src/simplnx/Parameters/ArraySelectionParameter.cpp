@@ -4,6 +4,7 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
@@ -214,4 +215,32 @@ Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, 
   DataObject* object = dataStructure.getData(path);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArraySelectionFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  auto dataArrayNameResult = ReadDataArrayName(json, "DataArraySelectionFilterParameter");
+  if(dataArrayNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

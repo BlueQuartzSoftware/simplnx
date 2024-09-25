@@ -172,6 +172,17 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT ImportHDF5DatasetFilterParameterConverter
+{
+  using ParameterType = ReadHDF5DatasetParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a");

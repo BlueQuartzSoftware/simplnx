@@ -132,6 +132,25 @@ private:
   ExtensionsType m_AvailableExtensions;
   bool m_acceptAllExtensions = false;
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT InputFileFilterParameterConverter
+{
+  using ParameterType = FileSystemPathParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
+{
+  using ParameterType = FileSystemPathParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909");

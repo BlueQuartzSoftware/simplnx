@@ -110,6 +110,17 @@ private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT DataArraySelectionToGeometrySelectionFilterParameterConverter
+{
+  using ParameterType = GeometrySelectionParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");

@@ -3,6 +3,7 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
@@ -230,4 +231,29 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 
   return {};
 }
+
+namespace SIMPLConversion
+{
+Result<InputFileFilterParameterConverter::ValueType> InputFileFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto filePathReult = ReadInputFilePath(json, "InputFileFilterParameter");
+  if(filePathReult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+  }
+
+  return {filePathReult.value()};
+}
+
+Result<OutputFileFilterParameterConverter::ValueType> OutputFileFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto filePathReult = ReadInputFilePath(json, "OutputFileFilterParameter");
+  if(filePathReult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(filePathReult));
+  }
+
+  return {filePathReult.value()};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

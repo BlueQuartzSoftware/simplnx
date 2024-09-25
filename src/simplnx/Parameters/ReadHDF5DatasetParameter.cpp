@@ -30,6 +30,8 @@
 
 #include "ReadHDF5DatasetParameter.hpp"
 
+#include "simplnx/Utilities/SIMPLConversion.hpp"
+
 using namespace nx::core;
 namespace
 {
@@ -143,4 +145,58 @@ Result<> ReadHDF5DatasetParameter::validate(const std::any& value) const
   [[maybe_unused]] auto data = std::any_cast<ValueType>(value);
   return {};
 }
+
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_DatasetPathKey = "dataset_path";
+constexpr StringLiteral k_ComponentDimensionsKey = "component_dimensions";
+constexpr StringLiteral k_TupleDimensionsKey = "tuple_dimensions";
+} // namespace
+
+Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+{
+  if(!json1.is_array())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("ReadHDF5DatasetParameter json '{}' is not an array", json1.dump()));
+  }
+
+  if(!json2.is_string())
+  {
+    return MakeErrorResult<ValueType>(-3, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not a string", json2.dump()));
+  }
+
+  auto dataContainerNameResult = ReadDataContainerName(json3, "ImportHDF5DatasetFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(json3, "ImportHDF5DatasetFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  ValueType value;
+  value.inputFile = json2.get<std::string>();
+  value.parent = DataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+  for(const auto& iter : json1)
+  {
+    if(!iter.is_object())
+    {
+      return MakeErrorResult<ValueType>(-2, fmt::format("ImportHDF5DatasetFilterParameter json '{}' is not an object", iter.dump()));
+    }
+
+    ParameterType::DatasetImportInfo info;
+    info.dataSetPath = iter[k_DatasetPathKey].get<std::string>();
+    info.componentDimensions = iter[k_ComponentDimensionsKey].get<std::string>();
+    value.datasets.push_back(std::move(info));
+  }
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

@@ -99,6 +99,25 @@ private:
   ValueType m_DefaultValue = {};
   Choices m_Choices = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT LinkedChoicesFilterParameterConverter
+{
+  using ParameterType = ChoicesParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
+{
+  using ParameterType = ChoicesParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ChoicesParameter, "ee4d5ce2-9582-48fa-b182-8a766ce0feff");

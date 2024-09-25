@@ -74,6 +74,25 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT NumericTypeParameterConverter
+{
+  using ParameterType = NumericTypeParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT ScalarTypeParameterToNumericTypeConverter
+{
+  using ParameterType = NumericTypeParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::NumericTypeParameter, "a8ff9dbd-45e7-4ed6-8537-12dd53069bce");

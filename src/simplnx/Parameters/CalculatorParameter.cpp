@@ -3,6 +3,7 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
@@ -131,4 +132,65 @@ Result<std::any> CalculatorParameter::resolve(DataStructure& dataStructure, cons
   DataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+namespace
+{
+constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
+constexpr StringLiteral k_UnitsKey = "Units";
+constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+} // namespace
+
+Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.contains(k_InfixEquationKey))
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_InfixEquationKey));
+  }
+  if(!json.contains(k_UnitsKey))
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_UnitsKey));
+  }
+  if(!json.contains(k_SelectedAttributeMatrixKey))
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json '{}' does not contain '{}'", json.dump(), k_SelectedAttributeMatrixKey));
+  }
+
+  if(!json[k_InfixEquationKey].is_string())
+  {
+    return MakeErrorResult<ValueType>(-2, fmt::format("CalculatorParameter json[InfixEquation] '{}' is not a string", json[k_InfixEquationKey].dump()));
+  }
+  if(!json[k_UnitsKey].is_number_integer())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("CalculatorParameter json[ScalarType] '{}' is not an integer", json[k_UnitsKey].dump()));
+  }
+  if(!json[k_SelectedAttributeMatrixKey].is_object())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("CalculatorParameter json[SelectedAttributeMatrix] '{}' is not an object", json[k_SelectedAttributeMatrixKey].dump()));
+  }
+
+  const auto& amJson = json[k_SelectedAttributeMatrixKey];
+  auto dataContainerNameResult = ReadDataContainerName(amJson, "AttributeMatrixCreationFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(amJson, "AttributeMatrixCreationFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+  ValueType value;
+  value.m_Equation = json[k_InfixEquationKey].get<std::string>();
+  value.m_Units = static_cast<ParameterType::AngleUnits>(json[k_UnitsKey].get<int32>());
+  value.m_SelectedGroup = dataPath;
+
+  return {std::move(value)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

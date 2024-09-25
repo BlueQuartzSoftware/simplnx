@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -116,4 +117,42 @@ Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructu
   DataObject* object = dataStructure.getData(path);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerSelectionFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+
+Result<DataContainerFromMultiSelectionFilterParameterConverter::ValueType> DataContainerFromMultiSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_array())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("DataContainerFromMultiSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
+  }
+
+  for(auto& iter : json)
+  {
+    auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+    DataPath value({std::move(dataContainerNameResult.value())});
+
+    return {std::move(value)};
+  }
+
+  return {DataPath()};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

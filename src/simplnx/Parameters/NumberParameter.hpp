@@ -110,6 +110,67 @@ using UInt64Parameter = NumberParameter<uint64>;
 
 using Float32Parameter = NumberParameter<float32>;
 using Float64Parameter = NumberParameter<float64>;
+
+namespace SIMPLConversion
+{
+template <typename T>
+struct IntFilterParameterConverter
+{
+  using ParameterType = NumberParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct IntFilterParameterConverter<int8>;
+extern template struct IntFilterParameterConverter<uint8>;
+
+extern template struct IntFilterParameterConverter<int16>;
+extern template struct IntFilterParameterConverter<uint16>;
+
+extern template struct IntFilterParameterConverter<int32>;
+extern template struct IntFilterParameterConverter<uint32>;
+
+extern template struct IntFilterParameterConverter<int64>;
+extern template struct IntFilterParameterConverter<uint64>;
+
+using UInt64FilterParameterConverter = IntFilterParameterConverter<uint64>;
+
+template <typename T>
+struct StringToIntFilterParameterConverter
+{
+  using ParameterType = NumberParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct StringToIntFilterParameterConverter<int8>;
+extern template struct StringToIntFilterParameterConverter<uint8>;
+
+extern template struct StringToIntFilterParameterConverter<int16>;
+extern template struct StringToIntFilterParameterConverter<uint16>;
+
+extern template struct StringToIntFilterParameterConverter<int32>;
+extern template struct StringToIntFilterParameterConverter<uint32>;
+
+extern template struct StringToIntFilterParameterConverter<int64>;
+extern template struct StringToIntFilterParameterConverter<uint64>;
+
+template <class T = float32>
+struct FloatFilterParameterConverter
+{
+  using ParameterType = NumberParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct FloatFilterParameterConverter<float32>;
+extern template struct FloatFilterParameterConverter<float64>;
+
+using DoubleFilterParameterConverter = FloatFilterParameterConverter<float64>;
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::Int8Parameter, "cae73834-68f8-4235-b010-8bea87d8ff7a");

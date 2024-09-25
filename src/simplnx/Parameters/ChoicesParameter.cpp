@@ -1,5 +1,7 @@
 #include "ChoicesParameter.hpp"
 
+#include "simplnx/Utilities/SIMPLConversion.hpp"
+
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
@@ -105,4 +107,17 @@ bool ChoicesParameter::checkActive(const std::any& parameterValue, const std::an
   auto index = std::any_cast<ValueType>(associatedValue);
   return value == index;
 }
+
+namespace SIMPLConversion
+{
+Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  return ConvertChoicesParameter(json, "LinkedChoicesFilterParameter");
+}
+
+Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  return ConvertChoicesParameter(json, "ChoiceFilterParameter");
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

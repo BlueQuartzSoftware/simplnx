@@ -1,6 +1,7 @@
 #include "DataGroupCreationParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -93,4 +94,158 @@ Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructur
   DataObject* object = dataStructure.getData(path);
   return {{object}};
 }
+
+namespace SIMPLConversion
+{
+Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerCreationFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+
+Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  if(!json.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("StringToDataPathFilterParameterConverter json '{}' is not a string", json.dump()));
+  }
+
+  DataPath dataPath({json.get<std::string>()});
+
+  return {std::move(dataPath)};
+}
+
+Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+{
+  if(!json1.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("StringsToDataPathFilterParameterConverter json '{}' is not a string", json1.dump()));
+  }
+  if(!json2.is_string())
+  {
+    return MakeErrorResult<ValueType>(-1, fmt::format("StringsToDataPathFilterParameterConverter json '{}' is not a string", json2.dump()));
+  }
+
+  DataPath dataPath({json1.get<std::string>(), json2.get<std::string>()});
+
+  return {std::move(dataPath)};
+}
+
+Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+{
+  std::string dcName;
+  std::string amName;
+
+  if(json1.is_string())
+  {
+    dcName = json1.get<std::string>();
+  }
+  else
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json1, "AMPathBuilderFilterParameterConverter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+    dcName = std::move(dataContainerNameResult.value());
+  }
+
+  if(json2.is_string())
+  {
+    amName = json2.get<std::string>();
+  }
+  else
+  {
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json2, "AMPathBuilderFilterParameterConverter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+    amName = std::move(attributeMatrixNameResult.value());
+  }
+
+  DataPath dataPath({dcName, amName});
+
+  return {std::move(dataPath)};
+}
+
+Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+{
+  std::string dcName;
+  std::string amName;
+  std::string daName;
+
+  if(json1.is_string())
+  {
+    dcName = json1.get<std::string>();
+  }
+  else
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json1, "DAPathBuilderFilterParameterConverter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+    dcName = std::move(dataContainerNameResult.value());
+  }
+
+  if(json2.is_string())
+  {
+    amName = json2.get<std::string>();
+  }
+  else
+  {
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json2, "DAPathBuilderFilterParameterConverter");
+    if(attributeMatrixNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+    }
+    amName = std::move(attributeMatrixNameResult.value());
+  }
+
+  if(json3.is_string())
+  {
+    daName = json3.get<std::string>();
+  }
+  else
+  {
+    auto dataArrayNameResult = ReadDataArrayName(json3, "DAPathBuilderFilterParameterConverter");
+    if(dataArrayNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+    }
+    daName = std::move(dataArrayNameResult.value());
+  }
+
+  DataPath dataPath({dcName, amName, daName});
+
+  return {std::move(dataPath)};
+}
+
+Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixCreationFilterParameter");
+  if(dataContainerNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+  }
+
+  auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "AttributeMatrixCreationFilterParameter");
+  if(attributeMatrixNameResult.invalid())
+  {
+    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
+  }
+
+  DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
+
+  return {std::move(dataPath)};
+}
+} // namespace SIMPLConversion
 } // namespace nx::core

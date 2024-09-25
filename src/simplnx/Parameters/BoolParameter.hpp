@@ -81,6 +81,33 @@ public:
 private:
   ValueType m_DefaultValue = {};
 };
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT BooleanFilterParameterConverter
+{
+  using ParameterType = BoolParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT InvertedBooleanFilterParameterConverter
+{
+  using ParameterType = BoolParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+struct SIMPLNX_EXPORT LinkedBooleanFilterParameterConverter
+{
+  using ParameterType = BoolParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::BoolParameter, "b6936d18-7476-4855-9e13-e795d717c50f");

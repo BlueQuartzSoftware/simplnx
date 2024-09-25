@@ -148,6 +148,151 @@ using VectorUInt64Parameter = VectorParameter<uint64>;
 
 using VectorFloat32Parameter = VectorParameter<float32>;
 using VectorFloat64Parameter = VectorParameter<float64>;
+
+namespace SIMPLConversion
+{
+struct SIMPLNX_EXPORT RangeFilterParameterConverter
+{
+  using ParameterType = VectorParameter<float64>;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+template <typename T>
+struct MultiToVec3FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+};
+
+extern template struct MultiToVec3FilterParameterConverter<int8>;
+extern template struct MultiToVec3FilterParameterConverter<uint8>;
+
+extern template struct MultiToVec3FilterParameterConverter<int16>;
+extern template struct MultiToVec3FilterParameterConverter<uint16>;
+
+extern template struct MultiToVec3FilterParameterConverter<int32>;
+extern template struct MultiToVec3FilterParameterConverter<uint32>;
+
+extern template struct MultiToVec3FilterParameterConverter<int64>;
+extern template struct MultiToVec3FilterParameterConverter<uint64>;
+
+extern template struct MultiToVec3FilterParameterConverter<float32>;
+extern template struct MultiToVec3FilterParameterConverter<float64>;
+
+using UInt64ToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<uint64>;
+using FloatToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<float32>;
+using DoubleToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<float64>;
+
+template <typename T>
+struct Vec3FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct Vec3FilterParameterConverter<int8>;
+extern template struct Vec3FilterParameterConverter<uint8>;
+
+extern template struct Vec3FilterParameterConverter<int16>;
+extern template struct Vec3FilterParameterConverter<uint16>;
+
+extern template struct Vec3FilterParameterConverter<int32>;
+extern template struct Vec3FilterParameterConverter<uint32>;
+
+extern template struct Vec3FilterParameterConverter<int64>;
+extern template struct Vec3FilterParameterConverter<uint64>;
+
+extern template struct Vec3FilterParameterConverter<float32>;
+extern template struct Vec3FilterParameterConverter<float64>;
+
+using IntVec3FilterParameterConverter = Vec3FilterParameterConverter<int32>;
+using UInt32Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint32>;
+using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
+using FloatVec3FilterParameterConverter = Vec3FilterParameterConverter<float32>;
+using DoubleVec3FilterParameterConverter = Vec3FilterParameterConverter<float64>;
+
+template <typename T>
+struct Vec4FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct Vec4FilterParameterConverter<int8>;
+extern template struct Vec4FilterParameterConverter<uint8>;
+
+extern template struct Vec4FilterParameterConverter<int16>;
+extern template struct Vec4FilterParameterConverter<uint16>;
+
+extern template struct Vec4FilterParameterConverter<int32>;
+extern template struct Vec4FilterParameterConverter<uint32>;
+
+extern template struct Vec4FilterParameterConverter<int64>;
+extern template struct Vec4FilterParameterConverter<uint64>;
+
+extern template struct Vec4FilterParameterConverter<float32>;
+extern template struct Vec4FilterParameterConverter<float64>;
+
+using FloatVec4FilterParameterConverter = Vec4FilterParameterConverter<float32>;
+
+template <typename T>
+struct AxisAngleFilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct AxisAngleFilterParameterConverter<int8>;
+extern template struct AxisAngleFilterParameterConverter<uint8>;
+
+extern template struct AxisAngleFilterParameterConverter<int16>;
+extern template struct AxisAngleFilterParameterConverter<uint16>;
+
+extern template struct AxisAngleFilterParameterConverter<int32>;
+extern template struct AxisAngleFilterParameterConverter<uint32>;
+
+extern template struct AxisAngleFilterParameterConverter<int64>;
+extern template struct AxisAngleFilterParameterConverter<uint64>;
+
+extern template struct AxisAngleFilterParameterConverter<float32>;
+extern template struct AxisAngleFilterParameterConverter<float64>;
+
+template <typename T>
+struct Vec3p1FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+};
+
+extern template struct Vec3p1FilterParameterConverter<int8>;
+extern template struct Vec3p1FilterParameterConverter<uint8>;
+
+extern template struct Vec3p1FilterParameterConverter<int16>;
+extern template struct Vec3p1FilterParameterConverter<uint16>;
+
+extern template struct Vec3p1FilterParameterConverter<int32>;
+extern template struct Vec3p1FilterParameterConverter<uint32>;
+
+extern template struct Vec3p1FilterParameterConverter<int64>;
+extern template struct Vec3p1FilterParameterConverter<uint64>;
+
+extern template struct Vec3p1FilterParameterConverter<float32>;
+extern template struct Vec3p1FilterParameterConverter<float64>;
+
+using FloatVec3p1FilterParameterConverter = Vec3p1FilterParameterConverter<float32>;
+} // namespace SIMPLConversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorInt8Parameter, "9f5f9683-e492-4a79-8378-79d727b2356a");
