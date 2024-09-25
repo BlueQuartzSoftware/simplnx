@@ -69,9 +69,16 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
 }
 
 template <typename Type>
-Type CalculateBin(Type value, Type min, float32 increment)
+auto CalculateBin(Type value, Type min, float32 increment)
 {
-  return static_cast<Type>(std::floor(static_cast<float32>(value - min) / increment));
+  if constexpr(std::is_same_v<Type, bool>)
+  {
+    return static_cast<uint8>(std::floor(static_cast<float32>(static_cast<uint8>(value) - static_cast<uint8>(min)) / increment));
+  }
+  else
+  {
+    return static_cast<Type>(std::floor(static_cast<float32>(value - min) / increment));
+  }
 }
 
 /**
