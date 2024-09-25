@@ -79,7 +79,7 @@ public:
    */
   usize size() const
   {
-    return getNumberOfTuples() * getNumberOfComponents();
+    return getSize();
   }
 
   /**
