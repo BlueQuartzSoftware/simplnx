@@ -55,7 +55,9 @@ inline std::string CreateComponentValuesString(const std::vector<std::string>& c
 {
   std::vector<int64> componentValues;
   componentValues.reserve(componentValues.size());
-  std::transform(componentValuesStrs.begin(), componentValuesStrs.end(), std::back_inserter(componentValues), [](const std::string& s) -> int64 { return std::stoll(s); });
+  std::transform(componentValuesStrs.begin(), componentValuesStrs.end(), std::back_inserter(componentValues), [](const std::string& s) -> int64 {
+    return (StringUtilities::toLower(s) == "true") ? 1 : (StringUtilities::toLower(s) == "false") ? 0 : std::stoll(s);
+  });
   return CreateComponentValuesString(componentValues, numComps);
 }
 
