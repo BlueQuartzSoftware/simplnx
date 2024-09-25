@@ -107,9 +107,8 @@ public:
     NonPositiveTupleDimValue = -2302,
     TypeNameMismatch = -2303,
     ComponentShapeMismatch = -2304,
-    TotalTuplesMismatch = -2305,
-    InputArraysEqualAny = -2306,
-    InputArraysUnsupported = -2307
+    InputArraysEqualAny = -2305,
+    InputArraysUnsupported = -2306
   };
 
   // Warning Codes

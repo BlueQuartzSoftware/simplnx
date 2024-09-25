@@ -58,12 +58,6 @@ Parameters ConcatenateDataArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the concatenated arrays.", DataPath({"Concatenated Array"})));
-  DynamicTableInfo tableInfo;
-  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
-  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
-
-  params.insert(std::make_unique<DynamicTableParameter>(k_OutputTupleDims_Key, "Output Array Tuple Dimensions (Slowest to Fastest)",
-                                                        "The tuple dimensions for the output data array, from slowest to fastest.", tableInfo));
 
   return params;
 }
@@ -80,7 +74,6 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 {
   auto inputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
   auto outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
-  auto outputTupleDimsTableData = filterArgs.value<DynamicTableParameter::ValueType>(k_OutputTupleDims_Key);
 
   if(inputArrayPaths.empty())
   {
@@ -92,27 +85,11 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
     return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
   }
 
-  std::vector<usize> tDims = {};
-  const auto& rowData = outputTupleDimsTableData.at(0);
-  tDims.reserve(rowData.size());
-  for(usize col = 0; col < rowData.size(); ++col)
-  {
-    auto floatValue = rowData[col];
-    if(floatValue <= 0)
-    {
-      return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::NonPositiveTupleDimValue),
-                                      fmt::format("Tuple dimension value '{}' (column {}) must be a positive integer.", static_cast<usize>(floatValue), col));
-    }
-
-    tDims.push_back(static_cast<usize>(floatValue));
-  }
-  usize totalTuples = std::accumulate(tDims.begin(), tDims.end(), static_cast<usize>(1), std::multiplies<>());
-
   // Check for unequal array types, data types, and component dimensions
   std::vector<usize> cDims;
   IArray::ArrayType arrayType;
   std::string arrayTypeName;
-  usize tupleCount = 0;
+  usize numTuples = 0;
   for(usize i = 0; i < inputArrayPaths.size(); ++i)
   {
     const auto& inputDataArray = dataStructure.getDataRefAs<IArray>(inputArrayPaths[i]);
@@ -141,28 +118,13 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
     }
 
     auto tupleShape = inputDataArray.getTupleShape();
-    tupleCount += std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
+    numTuples += std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
   }
 
-  if(tupleCount != totalTuples)
-  {
-    return MakePreflightErrorResult(
-        to_underlying(ConcatenateDataArrays::ErrorCodes::TotalTuplesMismatch),
-        fmt::format("The chosen input arrays have a combined total tuple count of {}, but the chosen tuple dimensions ([{}]) have a combined total tuple count of {}.  These tuple counts must match.",
-                    tupleCount, fmt::join(tDims, ","), totalTuples));
-  }
+  std::vector<usize> tDims = {numTuples};
 
   // Create the output array
   nx::core::Result<OutputActions> resultOutputActions;
-
-  if((arrayType == IArray::ArrayType::NeighborListArray || arrayType == IArray::ArrayType::StringArray) && tDims.size() > 1)
-  {
-    resultOutputActions.warnings().push_back(
-        Warning{to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported),
-                fmt::format("The input arrays have array type {}, but the chosen tuple dimensions have more than one dimension.  Since "
-                            "array type {} does not support having multiple tuple dimensions, the output array will have tuple dimensions [{}] instead of tuple dimensions [{}].",
-                            arrayTypeName, arrayTypeName, tupleCount, fmt::join(tDims, ","))});
-  }
 
   switch(arrayType)
   {
@@ -179,7 +141,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
   }
   case IArray::ArrayType::NeighborListArray: {
     const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPaths[0]);
-    auto action = std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), totalTuples, outputArrayPath);
+    auto action = std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), numTuples, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
     break;
   }

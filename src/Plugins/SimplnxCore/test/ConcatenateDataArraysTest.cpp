@@ -38,7 +38,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -78,7 +77,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2, 2}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -86,7 +84,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath));
   auto outputArray = dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath);
 
-  REQUIRE(outputArray.getTupleShape() == std::vector<usize>{2, 2});
+  REQUIRE(outputArray.getTupleShape() == std::vector<usize>{4});
   REQUIRE(outputArray.getNumberOfComponents() == 2);
   REQUIRE(outputArray[0] == 0);
   REQUIRE(outputArray[1] == 1);
@@ -118,7 +116,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{3, 2}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -126,7 +123,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath));
   auto outputArray = dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath);
 
-  REQUIRE(outputArray.getTupleShape() == std::vector<usize>{3, 2});
+  REQUIRE(outputArray.getTupleShape() == std::vector<usize>{6});
   REQUIRE(outputArray.getNumberOfComponents() == 1);
   REQUIRE(outputArray[0] == 0);
   REQUIRE(outputArray[1] == 1);
@@ -134,6 +131,47 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
   REQUIRE(outputArray[3] == 1);
   REQUIRE(outputArray[4] == 1);
   REQUIRE(outputArray[5] == 1);
+}
+
+TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid - 8 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]", bool, int8, int16, int32, int64, uint8, uint16, uint32,
+                   uint64, float32, float64)
+{
+  using T = TestType;
+
+  ConcatenateDataArraysFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  auto array1 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray1Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
+  array1->setValue(0, 0);
+  array1->setValue(1, 1);
+  array1->setValue(2, 0);
+  array1->setValue(3, 0);
+  auto array2 = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, k_TestArray2Name, std::vector<usize>{2, 2}, std::vector<usize>{1});
+  array2->setValue(0, 1);
+  array2->setValue(1, 1);
+  array2->setValue(2, 1);
+  array2->setValue(3, 0);
+
+  args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
+  args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
+
+  auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath));
+  auto outputArray = dataStructure.getDataRefAs<DataArray<T>>(k_OutputArrayPath);
+
+  REQUIRE(outputArray.getTupleShape() == std::vector<usize>{8});
+  REQUIRE(outputArray.getNumberOfComponents() == 1);
+  REQUIRE(outputArray[0] == 0);
+  REQUIRE(outputArray[1] == 1);
+  REQUIRE(outputArray[2] == 0);
+  REQUIRE(outputArray[3] == 0);
+  REQUIRE(outputArray[4] == 1);
+  REQUIRE(outputArray[5] == 1);
+  REQUIRE(outputArray[6] == 1);
+  REQUIRE(outputArray[7] == 0);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Valid - 1 List", "[SimplnxCore][ConcatenateDataArraysFilter]", int8, int16, int32, int64, uint8, uint16, uint32, uint64,
@@ -154,7 +192,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -192,7 +229,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -238,7 +274,6 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{6}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -276,7 +311,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -305,7 +339,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -338,7 +371,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-  args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{6}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -368,7 +400,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -382,7 +413,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({k_TestArray1Name})}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -396,7 +426,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -411,7 +440,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -425,69 +453,10 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors().size() == 1);
     REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch));
-  }
-  SECTION("Mismatching Tuple Counts")
-  {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{2, 3}, std::vector<usize>{3});
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray2Name, std::vector<usize>{4, 5}, std::vector<usize>{3});
-
-    args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
-    args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2}}));
-
-    auto result = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
-    REQUIRE(result.result.errors().size() == 1);
-    REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::TotalTuplesMismatch));
-  }
-  SECTION("NeighborList Multiple Tuple Dims")
-  {
-    auto inputNeighborList1 = NeighborList<int8>::Create(dataStructure, k_TestArray1Name, 2);
-    typename NeighborList<int8>::SharedVectorType inputList1(new std::vector<int8>({0, 1, 0}));
-    inputNeighborList1->setList(0, inputList1);
-    typename NeighborList<int8>::SharedVectorType inputList2(new std::vector<int8>({0, 1, 0}));
-    inputNeighborList1->setList(1, inputList2);
-    auto inputNeighborList2 = NeighborList<int8>::Create(dataStructure, k_TestArray2Name, 2);
-    typename NeighborList<int8>::SharedVectorType inputList3(new std::vector<int8>({1, 1, 1}));
-    inputNeighborList2->setList(0, inputList3);
-    typename NeighborList<int8>::SharedVectorType inputList4(new std::vector<int8>({1, 1, 1}));
-    inputNeighborList2->setList(1, inputList4);
-
-    args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
-    args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2, 2}}));
-
-    auto result = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    REQUIRE(result.result.warnings().size() == 1);
-    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported));
-
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int8>>(k_OutputArrayPath));
-    auto outputNeighborList = dataStructure.getDataRefAs<NeighborList<int8>>(k_OutputArrayPath);
-    REQUIRE(outputNeighborList.getTupleShape() == std::vector<usize>{4});
-  }
-  SECTION("StringArray Multiple Tuple Dims")
-  {
-    StringArray::CreateWithValues(dataStructure, k_TestArray1Name, {"Foo", "Bar"});
-    StringArray::CreateWithValues(dataStructure, k_TestArray2Name, {"Baz", "Fizzle"});
-
-    args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
-    args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
-    args.insert(ConcatenateDataArraysFilter::k_OutputTupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{2, 2}}));
-
-    auto result = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    REQUIRE(result.result.warnings().size() == 1);
-    REQUIRE(result.result.warnings()[0].code == to_underlying(ConcatenateDataArrays::WarningCodes::MultipleTupleDimsNotSupported));
-
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_OutputArrayPath));
-    auto outputDataArray = dataStructure.getDataRefAs<StringArray>(k_OutputArrayPath);
-    REQUIRE(outputDataArray.getTupleShape() == std::vector<usize>{4});
   }
 }
