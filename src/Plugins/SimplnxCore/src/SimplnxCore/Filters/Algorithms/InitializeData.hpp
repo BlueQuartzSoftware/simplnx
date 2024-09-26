@@ -24,197 +24,89 @@ enum StepType : uint64
   Subtraction
 };
 
-inline std::string CreateComponentValuesString(const std::vector<int64>& componentValues, usize numComps)
-{
-  const usize compValueVisibilityThresholdCount = 10;
-  const usize startEndEllipseValueCount = compValueVisibilityThresholdCount / 2;
+/**
+ * @brief Creates a formatted string representation of component values.
+ *
+ * This function generates a string by concatenating component values separated by commas.
+ * If the number of components exceeds a visibility threshold (10 by default), it displays
+ * only the first and last few values separated by ellipses. If a single component value is
+ * provided, it replicates that value for the specified number of components.
+ *
+ * @param componentValues A vector of integer component values.
+ * @param numComps The number of components to represent in the output string.
+ * @return A formatted string representing the component values.
+ */
+std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize numComps);
 
-  std::stringstream updatedValStrm;
-  auto cValueTokens = componentValues;
-  if(cValueTokens.size() == 1)
-  {
-    cValueTokens = std::vector<int64>(numComps, cValueTokens[0]);
-  }
+/**
+ * @brief Creates a formatted string representation of component values from string inputs.
+ *
+ * This function converts a vector of string component values to integers and then generates
+ * a formatted string representation using the integer version of CreateCompValsStr.
+ * If a single string component value is provided, it replicates that value for the specified
+ * number of components.
+ *
+ * @param componentValuesStrs A vector of string component values.
+ * @param numComps The number of components to represent in the output string.
+ * @return A formatted string representing the component values.
+ */
+std::string CreateCompValsStr(const std::vector<std::string>& componentValuesStrs, usize numComps);
 
-  if(numComps <= compValueVisibilityThresholdCount)
-  {
-    auto initFillTokensStr = fmt::format("{}", fmt::join(cValueTokens, ","));
-    updatedValStrm << fmt::format("|{}|", initFillTokensStr, numComps);
-  }
-  else
-  {
-    auto initFillTokensBeginStr = fmt::format("{}", fmt::join(cValueTokens.begin(), cValueTokens.begin() + startEndEllipseValueCount, ","));
-    auto initFillTokensEndStr = fmt::format("{}", fmt::join(cValueTokens.end() - startEndEllipseValueCount, cValueTokens.end(), ","));
-    updatedValStrm << fmt::format("|{} ... {}|", initFillTokensBeginStr, initFillTokensEndStr, numComps);
-  }
+/**
+ * @brief Generates preflight values for fill operations based on initial fill values.
+ *
+ * This function constructs a descriptive string detailing how tuples will be filled with
+ * component values. If a single initial fill value is provided, it applies the same value
+ * to all components; otherwise, it uses different values for each component.
+ * The generated description is appended to the provided preflightUpdatedValues vector.
+ *
+ * @param initFillValueStr A semicolon-separated string of initial fill values.
+ * @param numComps The number of components in each tuple.
+ * @param preflightUpdatedValues A reference to a vector where the generated preflight
+ *        values will be stored.
+ */
+void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps, std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
-  return updatedValStrm.str();
-}
+/**
+ * @brief Generates preflight values for incremental fill operations on tuples.
+ *
+ * This function creates a descriptive summary of how tuples will be initialized and incremented
+ * or decremented based on the provided step operation and step values. It includes a preview of
+ * the first few tuples and issues a warning if any step value is zero, indicating that the corresponding
+ * component values will remain unchanged.
+ *
+ * @param initFillValueStr A semicolon-separated string of initial fill values.
+ * @param stepOperation The operation type for stepping (e.g., addition or subtraction).
+ * @param stepValueStr A semicolon-separated string of step values for each component.
+ * @param numTuples The total number of tuples to generate.
+ * @param numComps The number of components in each tuple.
+ * @param preflightUpdatedValues A reference to a vector where the generated preflight
+ *        values will be stored.
+ */
+void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize stepOperation, const std::string& stepValueStr, usize numTuples, usize numComps,
+                                    std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
-inline std::string CreateComponentValuesString(const std::vector<std::string>& componentValuesStrs, usize numComps)
-{
-  std::vector<int64> componentValues;
-  componentValues.reserve(componentValues.size());
-  std::transform(componentValuesStrs.begin(), componentValuesStrs.end(), std::back_inserter(componentValues), [](const std::string& s) -> int64 {
-    return (StringUtilities::toLower(s) == "true") ? 1 : (StringUtilities::toLower(s) == "false") ? 0 : std::stoll(s);
-  });
-  return CreateComponentValuesString(componentValues, numComps);
-}
-
-inline void CreateFillValuesInitPreflightValues(const std::string& initFillValueStr, usize numComps, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
-{
-  if(numComps <= 1)
-  {
-    return;
-  }
-
-  std::stringstream updatedValStrm;
-
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
-  if(initFillTokens.size() == 1)
-  {
-    updatedValStrm << "Each tuple will contain the same values for all components: ";
-  }
-  else
-  {
-    updatedValStrm << "Each tuple will contain different values for all components: ";
-  }
-
-  updatedValStrm << CreateComponentValuesString(initFillTokens, numComps);
-
-  preflightUpdatedValues.push_back({"Tuple Details", updatedValStrm.str()});
-};
-
-inline void CreateIncrementalValuesInitPreflightValues(const std::string& initFillValueStr, usize stepOperation, const std::string& stepValueStr, usize numTuples, usize numComps,
-                                                       std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
-{
-  std::stringstream ss;
-
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
-  auto stepValueTokens = StringUtilities::split(stepValueStr, ";", false);
-
-  if(numComps > 1)
-  {
-    if(initFillTokens.size() == 1)
-    {
-      ss << "The first tuple will contain the same values for all components: ";
-    }
-    else
-    {
-      ss << "The first tuple will contain different values for all components: ";
-    }
-
-    ss << CreateComponentValuesString(initFillTokens, numComps);
-
-    if(stepOperation == StepType::Addition)
-    {
-      ss << fmt::format("\nThe components in each tuple will increment by the following: {}.", CreateComponentValuesString(stepValueTokens, numComps));
-    }
-    else
-    {
-      ss << fmt::format("\nThe components in each tuple will decrement by the following: {}.", CreateComponentValuesString(stepValueTokens, numComps));
-    }
-  }
-  else if(stepOperation == StepType::Addition)
-  {
-    ss << fmt::format("\nThe single component tuples will increment by {}.", stepValueTokens[0]);
-  }
-  else
-  {
-
-    ss << fmt::format("\nThe single component tuples will decrement by {}.", stepValueTokens[0]);
-  }
-
-  std::vector<int64> initFillValues;
-  initFillValues.reserve(initFillTokens.size());
-  std::transform(initFillTokens.begin(), initFillTokens.end(), std::back_inserter(initFillValues), [](const std::string& s) -> int64 { return std::stoll(s); });
-  std::vector<int64> stepValues;
-  stepValues.reserve(stepValueTokens.size());
-  std::transform(stepValueTokens.begin(), stepValueTokens.end(), std::back_inserter(stepValues), [](const std::string& s) -> int64 { return std::stoll(s); });
-
-  ss << "\n\nTuples Preview:\n";
-  const usize maxIterations = 3;
-  usize actualIterations = std::min(numTuples, maxIterations);
-  for(usize i = 0; i < actualIterations; ++i)
-  {
-    ss << fmt::format("{}\n", CreateComponentValuesString(initFillValues, numComps));
-    std::transform(initFillValues.begin(), initFillValues.end(), stepValues.begin(), initFillValues.begin(),
-                   [stepOperation](int64 a, int64 b) { return (stepOperation == StepType::Addition) ? (a + b) : (a - b); });
-  }
-  if(numTuples > maxIterations)
-  {
-    ss << "...";
-  }
-
-  std::vector<usize> zeroIdx;
-  for(usize i = 0; i < stepValueTokens.size(); i++)
-  {
-    if(stepValueTokens[i] == "0")
-    {
-      zeroIdx.push_back(i);
-    }
-  }
-  if(!zeroIdx.empty())
-  {
-
-    ss << "\n\nWarning: Component(s) at index(es) " << fmt::format("[{}]", fmt::join(zeroIdx, ","))
-       << " have a ZERO value for the step value.  The values at these component indexes will be unchanged from the starting value.";
-  }
-
-  preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
-}
-
-inline void CreateRandomValuesInitPreflightValues(bool standardizeSeed, InitializeType initType, const std::string& initStartRange, const std::string& initEndRange, usize numTuples, usize numComps,
-                                                  std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
-{
-  std::stringstream ss;
-
-  if(numComps == 1)
-  {
-    if(initType == InitializeType::Random)
-    {
-      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values.", numTuples);
-    }
-    else if(initType == InitializeType::RangedRandom)
-    {
-      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, std::stoll(initStartRange), std::stoll(initEndRange));
-    }
-
-    if(standardizeSeed)
-    {
-      ss << "\n\nYou chose to standardize the seed for each component, but the array that will be created has a single component so it will not alter the randomization scheme.";
-    }
-  }
-  else
-  {
-    if(initType == InitializeType::Random)
-    {
-      ss << fmt::format("All {} components in each of the {} tuples will be filled with random values.", numComps, numTuples);
-    }
-    else if(initType == InitializeType::RangedRandom)
-    {
-      ss << fmt::format("All {} components in each of the {} tuples will be filled with random values ranging from these starting values:", numComps, numTuples);
-      auto startRangeTokens = StringUtilities::split(initStartRange, ";", false);
-      ss << "\n" << CreateComponentValuesString(startRangeTokens, numComps);
-      ss << "\nto these ending values:";
-      auto endRangeTokens = StringUtilities::split(initEndRange, ";", false);
-      ss << "\n" << CreateComponentValuesString(endRangeTokens, numComps);
-    }
-
-    if(standardizeSeed)
-    {
-      ss << "\n\nThis will generate THE SAME random value for all components in a given tuple, based on one seed.";
-      ss << "\nFor example: |1,1,1| |9,9,9| |4,4,4| ...";
-    }
-    else
-    {
-      ss << "\n\nThis will generate DIFFERENT random values for each component in a given tuple, based on multiple seeds that are all modified versions of the original seed.";
-      ss << "\nFor example: |1,9,5| |7,1,6| |2,12,7| ...";
-    }
-  }
-
-  preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
-}
+/**
+ * @brief Generates preflight values for random fill operations on tuples.
+ *
+ * This function constructs a descriptive summary of how tuples will be filled with random
+ * values, either within a specified range or without. It accounts for the number of components
+ * and tuples, and whether the random seed is standardized across components. For multiple
+ * components, it details whether values are generated independently or based on a single seed.
+ *
+ * @param standardizeSeed Indicates whether to use a standardized seed for all components.
+ * @param initType The type of initialization (e.g., random or ranged random).
+ * @param initStartRange A semicolon-separated string representing the starting range for
+ *        random values (used if initType is ranged random).
+ * @param initEndRange A semicolon-separated string representing the ending range for
+ *        random values (used if initType is ranged random).
+ * @param numTuples The total number of tuples to generate.
+ * @param numComps The number of components in each tuple.
+ * @param preflightUpdatedValues A reference to a vector where the generated preflight
+ *        values will be stored.
+ */
+void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, const std::string& initStartRange, const std::string& initEndRange, usize numTuples, usize numComps,
+                               std::vector<IFilter::PreflightValue>& preflightUpdatedValues);
 
 struct SIMPLNXCORE_EXPORT InitializeDataInputValues
 {
@@ -230,9 +122,48 @@ struct SIMPLNXCORE_EXPORT InitializeDataInputValues
   bool standardizeSeed;
 };
 
+/**
+ * @struct ValidateMultiInputFunctor
+ * @brief A functor for validating multi-component input strings.
+ *
+ * The `ValidateMultiInputFunctor` struct provides a templated functor to validate
+ * delimited input strings containing multiple components. It ensures that the input
+ * string:
+ * - Contains the expected number of components or an alternative acceptable number.
+ * - Does not contain empty values between delimiters.
+ * - Each component can be successfully converted to the specified type `T`.
+ *
+ * If the validation fails, the functor returns an error with a specific error code
+ * and descriptive message. Otherwise, it indicates successful validation.
+ */
 struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
 {
   // The single comp size validation defaults to off as size 0 is checked earlier in the function
+
+  /**
+   * @brief Validates a delimited input string for the correct number of components and value types.
+   *
+   * This templated `operator()` performs the following validations on the input string:
+   * 1. Splits the input string `unfilteredStr` using the predefined delimiter `k_DelimiterChar`.
+   * 2. Checks if the resulting vector `splitVals` is empty. If empty, returns an error with code `-11610`.
+   * 3. Iterates through each split value to ensure:
+   *    - No value is empty. If an empty value is found, returns an error with code `-11611`.
+   *    - Each value can be converted to type `T`. If conversion fails, returns an error with code `-11612`.
+   * 4. Verifies the number of split components:
+   *    - If the number of components matches `expectedComp`, validation is successful.
+   *    - If `singleCompSize` is non-zero and matches the number of components, validation is successful.
+   *    - If there is one extra component and the input string ends with a delimiter, returns an error with code `-11613`.
+   *    - Otherwise, returns an error with code `-11614` indicating the number of components does not match expectations.
+   *
+   * @tparam T The type to which each component of the input string should be convertible.
+   * @param expectedComp The expected number of components in the input string.
+   * @param unfilteredStr The input string containing delimited components to be validated.
+   * @param singleCompSize An optional alternative number of components that is also considered valid. Defaults to `0`.
+   *
+   * @return An `IFilter::PreflightResult` indicating the success or failure of the validation.
+   *         - Returns an empty result if validation is successful.
+   *         - Returns an error result with a specific error code and message if validation fails.
+   */
   template <typename T>
   IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
   {

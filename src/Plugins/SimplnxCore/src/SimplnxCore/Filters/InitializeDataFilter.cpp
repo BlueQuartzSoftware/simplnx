@@ -169,7 +169,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
-    CreateFillValuesInitPreflightValues(initFillValue, numComp, preflightUpdatedValues);
+    CreateFillPreflightVals(initFillValue, numComp, preflightUpdatedValues);
 
     break;
   }
@@ -224,7 +224,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       }
     }
 
-    CreateIncrementalValuesInitPreflightValues(initIncFillValue, stepOperation, stepValue, numTuples, numComp, preflightUpdatedValues);
+    CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComp, preflightUpdatedValues);
 
     break;
   }
@@ -247,7 +247,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
-    CreateRandomValuesInitPreflightValues(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComp, preflightUpdatedValues);
+    CreateRandomPreflightVals(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComp, preflightUpdatedValues);
 
     break;
   }

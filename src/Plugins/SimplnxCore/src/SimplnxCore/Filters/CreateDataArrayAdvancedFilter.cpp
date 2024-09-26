@@ -252,7 +252,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     }
 
     // Create the Fill Values preflight updated values
-    CreateFillValuesInitPreflightValues(initFillValue, numComponents, preflightUpdatedValues);
+    CreateFillPreflightVals(initFillValue, numComponents, preflightUpdatedValues);
 
     break;
   }
@@ -270,7 +270,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     }
 
     // Create the Incremental/Decremental Values preflight updated values
-    CreateIncrementalValuesInitPreflightValues(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
+    CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
 
     break;
   }
@@ -294,7 +294,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     resultOutputActions.value().appendAction(std::move(createAction));
 
     // Create the Random Values preflight updated values
-    CreateRandomValuesInitPreflightValues(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComponents, preflightUpdatedValues);
+    CreateRandomPreflightVals(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComponents, preflightUpdatedValues);
 
     break;
   }
