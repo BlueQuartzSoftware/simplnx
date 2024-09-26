@@ -32,7 +32,8 @@ public:
   static inline constexpr StringLiteral k_SelectedArrayPaths_Key = "selected_array_paths";
   static inline constexpr StringLiteral k_NewDataGroupPath_Key = "new_data_group_path";
   static inline constexpr StringLiteral k_DataGroupPath_Key = "output_data_group_path";
-  static inline constexpr StringLiteral k_HistoName_Key = "histogram_suffix";
+  static inline constexpr StringLiteral k_HistoBinCountName_Key = "histogram_bin_count_suffix";
+  static inline constexpr StringLiteral k_HistoBinRangeName_Key = "histogram_bin_range_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -236,104 +236,57 @@ size_t findNumUniqueValues(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::pair<float, float> findHistogramRange(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange)
+std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histmax, bool histfullrange)
 {
-  float min = 0.0f;
-  float max = 0.0f;
-
   if(histfullrange)
   {
-    min = static_cast<float>(findMin(source));
-    max = static_cast<float>(findMax(source));
-  }
-  else
-  {
-    min = histmin;
-    max = histmax;
+    return FindMinMax(source);
   }
 
-  return {min, max};
+  return {histmin, histmax};
 }
 
 // -----------------------------------------------------------------------------
-template <template <typename, typename...> class C, typename T, typename... Ts>
-std::vector<uint64_t> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+template <template <typename, typename...> class Container, typename T, typename... Ts>
+std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const std::vector<T>& binRanges, const T& mode)
 {
   if(source.empty())
   {
-    return std::vector<uint64_t>(numBins, 0);
+    return {static_cast<T>(0.0), static_cast<T>(0.0)};
   }
 
-  auto range = findHistogramRange(source, histmin, histmax, histfullrange);
-  float min = range.first;
-  float max = range.second;
+  size_t numBins = binRanges.size() - 1;
 
-  const float increment = (max - min) / (numBins);
-  if(std::abs(increment) < 1E-10)
+  T min = binRanges[0];
+  T max = binRanges[numBins];
+
+  const T increment = (max - min) / static_cast<T>(numBins);
+  if constexpr(std::is_floating_point_v<T>)
   {
-    numBins = 1;
-  }
-
-  std::vector<uint64_t> histogram(numBins, 0);
-
-  if(numBins == 1) // if one bin, just set the first element to total number of points
-  {
-    histogram[0] = static_cast<uint64_t>(source.size());
+    if(std::abs(increment) < 1E-10)
+    {
+      return {min, max};
+    }
   }
   else
   {
-    for(const auto s : source)
+    if(increment == static_cast<T>(0))
     {
-      auto value = static_cast<float>(s);
-      const auto bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
-      if((bin >= 0) && (bin < numBins))                                // make certain bin is in range
-      {
-        histogram[bin]++; // increment histogram element corresponding to this input array value
-      }
-      else if(value == max)
-      {
-        histogram[numBins - 1]++;
-      }
+      return {min, max};
     }
   }
 
-  return histogram;
-}
+  const auto bin = static_cast<int64_t>((mode - min) / increment); // find bin for this input array value
 
-// -----------------------------------------------------------------------------
-template <template <typename, typename...> class C, typename T, typename... Ts>
-std::pair<float, float> findModalBinRange(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins, const T& mode)
-{
-  if(source.empty())
-  {
-    return {0.0f, 0.0f};
-  }
-
-  auto range = findHistogramRange(source, histmin, histmax, histfullrange);
-  float min = range.first;
-  float max = range.second;
-
-  const float increment = (max - min) / static_cast<float>(numBins);
-  if(std::abs(increment) < 1E-10)
-  {
-    return {min, max};
-  }
-
-  const auto bin = static_cast<size_t>((mode - min) / increment); // find bin for this input array value
-
-  float minBinValue = 0.0f;
-  float maxBinValue = 0.0f;
   if((bin >= 0) && (bin < numBins)) // make certain bin is in range
   {
-    minBinValue = static_cast<float>(min + (bin * increment));
-    maxBinValue = static_cast<float>(min + ((bin + 1) * increment));
+    return {static_cast<T>(min + (bin * increment)), static_cast<T>(min + ((bin + 1) * increment))};
   }
   else if(mode == max)
   {
-    minBinValue = static_cast<float>(min + ((bin - 1) * increment));
-    maxBinValue = static_cast<float>(min + (bin * increment));
+    return {static_cast<T>(min + ((bin - 1) * increment)), static_cast<T>(min + (bin * increment))};
   }
 
-  return {minBinValue, maxBinValue};
+  return {};
 }
 } // namespace StatisticsCalculations

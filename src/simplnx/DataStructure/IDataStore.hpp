@@ -74,6 +74,15 @@ public:
   }
 
   /**
+   * @brief Returns the number of values stored within the DataStore.
+   * @return usize
+   */
+  usize size() const
+  {
+    return getSize();
+  }
+
+  /**
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
