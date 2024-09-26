@@ -304,7 +304,207 @@ struct FillArrayFunctor
   }
 };
 
+int64 CreateCompValFromStr(const std::string& s)
+{
+  return (StringUtilities::toLower(s) == "true") ? 1 : (StringUtilities::toLower(s) == "false") ? 0 : std::stoll(s);
+}
 } // namespace
+
+namespace nx
+{
+namespace core
+{
+std::string CreateCompValsStr(const std::vector<int64>& componentValues, usize numComps)
+{
+  const usize compValueVisibilityThresholdCount = 10;
+  const usize startEndEllipseValueCount = compValueVisibilityThresholdCount / 2;
+
+  std::stringstream updatedValStrm;
+  auto cValueTokens = componentValues;
+  if(cValueTokens.size() == 1)
+  {
+    cValueTokens = std::vector<int64>(numComps, cValueTokens[0]);
+  }
+
+  if(numComps <= compValueVisibilityThresholdCount)
+  {
+    auto initFillTokensStr = fmt::format("{}", fmt::join(cValueTokens, ","));
+    updatedValStrm << fmt::format("|{}|", initFillTokensStr, numComps);
+  }
+  else
+  {
+    auto initFillTokensBeginStr = fmt::format("{}", fmt::join(cValueTokens.begin(), cValueTokens.begin() + startEndEllipseValueCount, ","));
+    auto initFillTokensEndStr = fmt::format("{}", fmt::join(cValueTokens.end() - startEndEllipseValueCount, cValueTokens.end(), ","));
+    updatedValStrm << fmt::format("|{} ... {}|", initFillTokensBeginStr, initFillTokensEndStr, numComps);
+  }
+
+  return updatedValStrm.str();
+}
+
+std::string CreateCompValsStr(const std::vector<std::string>& componentValuesStrs, usize numComps)
+{
+  std::vector<int64> componentValues;
+  componentValues.reserve(componentValues.size());
+  std::transform(componentValuesStrs.begin(), componentValuesStrs.end(), std::back_inserter(componentValues), CreateCompValFromStr);
+  return CreateCompValsStr(componentValues, numComps);
+}
+
+void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+{
+  if(numComps <= 1)
+  {
+    return;
+  }
+
+  std::stringstream updatedValStrm;
+
+  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
+  if(initFillTokens.size() == 1)
+  {
+    updatedValStrm << "Each tuple will contain the same values for all components: ";
+  }
+  else
+  {
+    updatedValStrm << "Each tuple will contain different values for all components: ";
+  }
+
+  updatedValStrm << CreateCompValsStr(initFillTokens, numComps);
+
+  preflightUpdatedValues.push_back({"Tuple Details", updatedValStrm.str()});
+};
+
+void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize stepOperation, const std::string& stepValueStr, usize numTuples, usize numComps,
+                                    std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+{
+  std::stringstream ss;
+
+  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
+  auto stepValueTokens = StringUtilities::split(stepValueStr, ";", false);
+
+  if(numComps > 1)
+  {
+    if(initFillTokens.size() == 1)
+    {
+      ss << "The first tuple will contain the same values for all components: ";
+    }
+    else
+    {
+      ss << "The first tuple will contain different values for all components: ";
+    }
+
+    ss << CreateCompValsStr(initFillTokens, numComps);
+
+    if(stepOperation == StepType::Addition)
+    {
+      ss << fmt::format("\nThe components in each tuple will increment by the following: {}.", CreateCompValsStr(stepValueTokens, numComps));
+    }
+    else
+    {
+      ss << fmt::format("\nThe components in each tuple will decrement by the following: {}.", CreateCompValsStr(stepValueTokens, numComps));
+    }
+  }
+  else if(stepOperation == StepType::Addition)
+  {
+    ss << fmt::format("\nThe single component tuples will increment by {}.", stepValueTokens[0]);
+  }
+  else
+  {
+
+    ss << fmt::format("\nThe single component tuples will decrement by {}.", stepValueTokens[0]);
+  }
+
+  std::vector<int64> initFillValues;
+  initFillValues.reserve(initFillTokens.size());
+  std::transform(initFillTokens.begin(), initFillTokens.end(), std::back_inserter(initFillValues), [](const std::string& s) -> int64 { return std::stoll(s); });
+  std::vector<int64> stepValues;
+  stepValues.reserve(stepValueTokens.size());
+  std::transform(stepValueTokens.begin(), stepValueTokens.end(), std::back_inserter(stepValues), [](const std::string& s) -> int64 { return std::stoll(s); });
+
+  ss << "\n\nTuples Preview:\n";
+  const usize maxIterations = 3;
+  usize actualIterations = std::min(numTuples, maxIterations);
+  for(usize i = 0; i < actualIterations; ++i)
+  {
+    ss << fmt::format("{}\n", CreateCompValsStr(initFillValues, numComps));
+    std::transform(initFillValues.begin(), initFillValues.end(), stepValues.begin(), initFillValues.begin(),
+                   [stepOperation](int64 a, int64 b) { return (stepOperation == StepType::Addition) ? (a + b) : (a - b); });
+  }
+  if(numTuples > maxIterations)
+  {
+    ss << "...";
+  }
+
+  std::vector<usize> zeroIdx;
+  for(usize i = 0; i < stepValueTokens.size(); i++)
+  {
+    if(stepValueTokens[i] == "0")
+    {
+      zeroIdx.push_back(i);
+    }
+  }
+  if(!zeroIdx.empty())
+  {
+
+    ss << "\n\nWarning: Component(s) at index(es) " << fmt::format("[{}]", fmt::join(zeroIdx, ","))
+       << " have a ZERO value for the step value.  The values at these component indexes will be unchanged from the starting value.";
+  }
+
+  preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
+}
+
+void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, const std::string& initStartRange, const std::string& initEndRange, usize numTuples, usize numComps,
+                               std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
+{
+  std::stringstream ss;
+
+  if(numComps == 1)
+  {
+    if(initType == InitializeType::Random)
+    {
+      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values.", numTuples);
+    }
+    else if(initType == InitializeType::RangedRandom)
+    {
+      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, std::stoll(initStartRange), std::stoll(initEndRange));
+    }
+
+    if(standardizeSeed)
+    {
+      ss << "\n\nYou chose to standardize the seed for each component, but the array that will be created has a single component so it will not alter the randomization scheme.";
+    }
+  }
+  else
+  {
+    if(initType == InitializeType::Random)
+    {
+      ss << fmt::format("All {} components in each of the {} tuples will be filled with random values.", numComps, numTuples);
+    }
+    else if(initType == InitializeType::RangedRandom)
+    {
+      ss << fmt::format("All {} components in each of the {} tuples will be filled with random values ranging from these starting values:", numComps, numTuples);
+      auto startRangeTokens = StringUtilities::split(initStartRange, ";", false);
+      ss << "\n" << CreateCompValsStr(startRangeTokens, numComps);
+      ss << "\nto these ending values:";
+      auto endRangeTokens = StringUtilities::split(initEndRange, ";", false);
+      ss << "\n" << CreateCompValsStr(endRangeTokens, numComps);
+    }
+
+    if(standardizeSeed)
+    {
+      ss << "\n\nThis will generate THE SAME random value for all components in a given tuple, based on one seed.";
+      ss << "\nFor example: |1,1,1| |9,9,9| |4,4,4| ...";
+    }
+    else
+    {
+      ss << "\n\nThis will generate DIFFERENT random values for each component in a given tuple, based on multiple seeds that are all modified versions of the original seed.";
+      ss << "\nFor example: |1,9,5| |7,1,6| |2,12,7| ...";
+    }
+  }
+
+  preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
+}
+} // namespace core
+} // namespace nx
 
 // -----------------------------------------------------------------------------
 InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues)

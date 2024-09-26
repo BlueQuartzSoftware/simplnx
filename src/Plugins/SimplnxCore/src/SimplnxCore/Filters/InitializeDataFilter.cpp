@@ -65,17 +65,17 @@ Parameters InitializeDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
-      k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
-      ChoicesParameter::Choices{"Fill Value", "Incremental/Decremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to",
+                                                                    static_cast<ChoicesParameter::ValueType>(0),
+                                                                    ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // sequence dependent DO NOT REORDER
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
 
   params.insert(std::make_unique<StringParameter>(k_StartingFillValue_Key, "Starting Value [Seperated with ;]", "The value to start incrementing from", "0;1;2"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to preform", static_cast<ChoicesParameter::ValueType>(0),
-                                                   ChoicesParameter::Choices{"Incrementing", "Decrementing"}));
-  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to increment/decrement the fill value by", "1;1;1"));
+                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
+  params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to add/subtract the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the Seed Value will be used to seed the generator", false));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
@@ -128,6 +128,13 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
 {
   auto seedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
+  auto initFillValue = filterArgs.value<std::string>(k_InitValue_Key);
+  auto initIncFillValue = filterArgs.value<std::string>(k_StartingFillValue_Key);
+  auto stepValue = filterArgs.value<std::string>(k_StepValue_Key);
+  auto stepOperation = filterArgs.value<ChoicesParameter::ValueType>(k_StepOperation_Key);
+  auto initStartRange = filterArgs.value<std::string>(k_InitStartRange_Key);
+  auto initEndRange = filterArgs.value<std::string>(k_InitEndRange_Key);
+  auto standardizeSeed = filterArgs.value<bool>(k_StandardizeSeed_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -137,46 +144,21 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
 
   if(iDataArray.getDataType() == DataType::boolean)
   {
-    std::stringstream updatedValStrm;
+    std::stringstream ss;
 
-    updatedValStrm << "We detected that you are doing an operation on a boolean array.\n";
-    updatedValStrm << "The ONLY two ways to specify a 'false' boolean value are as follows:\n";
-    updatedValStrm << "- boolean value string types as follows ignoring apostrophe marks: 'False', 'FALSE', 'false'\n";
-    updatedValStrm << "- all well formed integers and well formed floating point definitions of 0\n\n";
+    ss << "We detected that you are doing an operation on a boolean array.\n";
+    ss << "The ONLY two ways to specify a 'false' boolean value are as follows:\n";
+    ss << "- boolean value string types as follows ignoring apostrophe marks: 'False', 'FALSE', 'false'\n";
+    ss << "- all well formed integers and well formed floating point definitions of 0\n\n";
 
-    updatedValStrm << "ANY OTHER string or number WILL BE 'true', although it is good practice to define true values as follows:\n";
-    updatedValStrm << "- boolean value string types as follows ignoring apostrophe marks: 'True', 'TRUE', 'true'\n";
-    updatedValStrm << "- all well formed integers and well formed floating point definitions of 1";
+    ss << "ANY OTHER string or number WILL BE 'true', although it is good practice to define true values as follows:\n";
+    ss << "- boolean value string types as follows ignoring apostrophe marks: 'True', 'TRUE', 'true'\n";
+    ss << "- all well formed integers and well formed floating point definitions of 1";
 
-    preflightUpdatedValues.push_back({"Boolean Note", updatedValStrm.str()});
+    preflightUpdatedValues.push_back({"Boolean Note", ss.str()});
   }
 
-  if(numComp > 1)
-  {
-    std::stringstream updatedValStrm;
-
-    updatedValStrm << "We detected that you are doing an operation on a multi-component array.\n";
-    updatedValStrm
-        << "If you do NOT want to use unique values for each component, you can just supply one value to the input box and we will apply that value to every component for the tuple.\nExample: 1\n\n";
-
-    updatedValStrm << fmt::format("If you DO want to use unique values for each component, you need to supply {} values of type {} seperated by '{}'.\n", numComp,
-                                  DataTypeToString(iDataArray.getDataType()), k_DelimiterChar);
-    updatedValStrm << "Example: ";
-
-    for(usize comp = 0; comp < numComp; comp++)
-    {
-      updatedValStrm << "1";
-
-      if(comp != numComp - 1)
-      {
-        updatedValStrm << k_DelimiterChar;
-      }
-    }
-
-    preflightUpdatedValues.push_back({"Multi-Component Note", updatedValStrm.str()});
-  }
-
-  std::stringstream operationNuancesStrm;
+  usize numTuples = iDataArray.getNumberOfTuples();
 
   switch(initializeTypeValue)
   {
@@ -187,7 +169,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
       return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
     }
 
-    operationNuancesStrm << "None to note";
+    CreateFillPreflightVals(initFillValue, numComp, preflightUpdatedValues);
 
     break;
   }
@@ -201,32 +183,31 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     if(iDataArray.getDataType() == DataType::boolean)
     {
       // custom bool checks here
-      std::stringstream updatedValStrm;
+      std::stringstream ss;
 
-      updatedValStrm << "We detected that you are doing an incremental operation on a boolean array.\n";
-      updatedValStrm << "For the step values please enter uint8 values, preferably a 0 or 1 only.\n";
+      ss << "A boolean array is being initialized so please enter unsigned 8-bit integer values, preferably a 0 or 1 only.\n";
 
       switch(static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key)))
       {
       case Addition: {
-        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all values to be 'true' after the first tuple, 'true' "
-                          "values will remain unchanged.\n";
-        updatedValStrm << "The two possibilities:\n";
-        updatedValStrm << "- If your start value is 'false' and step value > 0, the array will initialize to | false | true | true | ... |\n";
-        updatedValStrm << "- If your start value is 'true' and step value > 0, the array will initialize to | true | true | true | ... |";
+        ss << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all values to be 'true' after the first tuple, 'true' "
+              "values will remain unchanged.\n";
+        ss << "The two possibilities:\n";
+        ss << "- If your start value is 'false' and step value > 0, the array will initialize to | false | true | true | ... |\n";
+        ss << "- If your start value is 'true' and step value > 0, the array will initialize to | true | true | true | ... |";
         break;
       }
       case Subtraction: {
-        updatedValStrm << "You have currently selected the addition operation.\nAny step value that is greater than 0 will cause all values to be 'false' after the first tuple, 'false' "
-                          "values will remain unchanged.\n";
-        updatedValStrm << "The two possibilities:\n";
-        updatedValStrm << "- If your start value is 'true' and step value > 0, the array will initialize to | true | false | false | ... |\n";
-        updatedValStrm << "- If your start value is 'false' and step value > 0, the array will initialize to | false | false | false | ... |";
+        ss << "You have currently selected the subtraction operation.\nAny step value that is greater than 0 will cause all values to be 'false' after the first tuple, 'false' "
+              "values will remain unchanged.\n";
+        ss << "The two possibilities:\n";
+        ss << "- If your start value is 'true' and step value > 0, the array will initialize to | true | false | false | ... |\n";
+        ss << "- If your start value is 'false' and step value > 0, the array will initialize to | false | false | false | ... |";
         break;
       }
       }
 
-      preflightUpdatedValues.push_back({"Boolean Incremental Nuances", updatedValStrm.str()});
+      preflightUpdatedValues.push_back({"Boolean Incremental Nuances", ss.str()});
 
       result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, DataType::uint8, numComp, filterArgs.value<std::string>(k_StepValue_Key), 1);
       if(result.outputActions.invalid())
@@ -242,23 +223,9 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
         return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
       }
     }
-    auto values = StringUtilities::split(filterArgs.value<std::string>(k_StepValue_Key), ";", false);
-    std::vector<size_t> zeroIdx;
-    for(size_t i = 0; i < values.size(); i++)
-    {
-      if(values[i] == "0")
-      {
-        zeroIdx.push_back(i);
-      }
-    }
-    if(!zeroIdx.empty())
-    {
 
-      operationNuancesStrm << "Warning: Zero Step Value found. Component(s) " << fmt::format("[{}]", fmt::join(zeroIdx, ","))
-                           << " have a ZERO value for the step/increment.\n    The values for those components will be unchanged from the starting value.\n";
-      operationNuancesStrm << fmt::format("    Example: Suppose we have a two component array with a Step Values of '2{}0', Starting Values of '0', and an addition Step Operation\n", k_DelimiterChar);
-      operationNuancesStrm << "    The output array would look like 0,0 | 2,0 | 4,0 | 6,0 | ...";
-    }
+    CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComp, preflightUpdatedValues);
+
     break;
   }
   case InitializeType::RangedRandom: {
@@ -280,33 +247,11 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({seedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
 
-    if(numComp == 1)
-    {
-      if(filterArgs.value<bool>(k_StandardizeSeed_Key))
-      {
-        operationNuancesStrm << fmt::format("You chose to standardize the seed for each component, but the array {} is a single component so it will not alter the randomization scheme.",
-                                            iDataArray.getName());
-      }
-    }
-    else
-    {
-      if(filterArgs.value<bool>(k_StandardizeSeed_Key))
-      {
-        operationNuancesStrm << "This generates THE SAME sequences of random numbers for each component in the array based on one seed.\n";
-        operationNuancesStrm << "The resulting array will look like | 1,1,1 | 9,9,9 | ...\n";
-      }
-      else
-      {
-        operationNuancesStrm << "This generates DIFFERENT sequences of random numbers for each component in the array based on x seeds all modified versions of an original seed.\n";
-        operationNuancesStrm << "The resulting array will look like | 1,9,5 | 7,1,6 | ...\n";
-      }
-    }
+    CreateRandomPreflightVals(standardizeSeed, initializeTypeValue, initStartRange, initEndRange, numTuples, numComp, preflightUpdatedValues);
 
     break;
   }
   }
-
-  preflightUpdatedValues.push_back({"Operation Nuances", operationNuancesStrm.str()});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
