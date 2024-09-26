@@ -343,7 +343,8 @@ nx_filter = nx.ComputeArrayHistogramFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    histogram_suffix=" Histogram",
+    histogram_bin_count_suffix=" Histogram",
+    histogram_bin_range_suffix=" Histogram Ranges",
     create_new_data_group=True,
     new_data_group_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Histograms"),
     number_of_bins=256,
