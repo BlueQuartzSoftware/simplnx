@@ -7,7 +7,7 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
+      "repository": "https://github.com/imikejackson/simplnx-registry",
       "packages": [
         "benchmark",
         "blosc",
@@ -33,7 +33,7 @@
         "zlib",
         "zstd"
       ],
-      "baseline": "c9415182598df306f0d3f2f2b354d9d79cf1bf8b"
+      "baseline": "14f2795e16b362fac6569a4ac1c0d6366ae65006"
     }
   ]
 }
