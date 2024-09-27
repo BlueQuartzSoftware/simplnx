@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.26)
 
-cmake_policy(SET CMP0074 NEW)
-cmake_policy(SET CMP0077 NEW)
-cmake_policy(SET CMP0080 NEW)
+cmake_policy(SET CMP0074 NEW) # ``find_package()`` uses ``<PackageName>_ROOT`` variables.
+cmake_policy(SET CMP0077 NEW) # ``option()`` honors normal variables.
+cmake_policy(SET CMP0080 NEW) # ``BundleUtilities`` cannot be included at configure time.
 
-if(CMAKE_VERSION VERSION_GREATER "3.27.0")
-  cmake_policy(SET CMP0148 NEW)
-endif()
+# The ``FindPythonInterp`` and ``FindPythonLibs`` modules are removed.
+# if(CMAKE_VERSION VERSION_GREATER "3.27.0")
+#   cmake_policy(SET CMP0148 NEW)
+# endif()
+
+# resolves symlinks before collapsing ../ components.
 if(CMAKE_VERSION VERSION_GREATER "3.28.0")
   cmake_policy(SET CMP0152 NEW)
 endif()
