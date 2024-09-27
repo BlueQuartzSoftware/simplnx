@@ -206,6 +206,9 @@ class ReadPeregrineHDF5File:
 
     return params
 
+  def parameters_version(self) -> int:
+    return 1
+
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     """This method preflights the filter and should ensure that all inputs are sanity checked as best as possible. Array
     sizes can be checked if the arrays are actually know at preflight time. Some filters will not be able to report output

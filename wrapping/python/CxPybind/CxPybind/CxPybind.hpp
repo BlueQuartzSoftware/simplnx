@@ -531,6 +531,7 @@ public:
     m_HumanName = m_Object.attr("human_name")().cast<std::string>();
     m_DefaultTags = m_Object.attr("default_tags")().cast<std::vector<std::string>>();
     m_Parameters = m_Object.attr("parameters")().cast<Parameters>();
+    m_ParametersVersion = m_Object.attr("parameters_version")().cast<VersionType>();
   }
 
   ~PyFilter() noexcept
@@ -573,6 +574,11 @@ public:
   Parameters parameters() const override
   {
     return m_Parameters;
+  }
+
+  VersionType parametersVersion() const override
+  {
+    return m_ParametersVersion;
   }
 
   UniquePointer clone() const override
@@ -634,6 +640,7 @@ private:
   std::string m_HumanName;
   std::vector<std::string> m_DefaultTags;
   Parameters m_Parameters;
+  VersionType m_ParametersVersion;
 };
 
 class PythonPlugin : public AbstractPlugin

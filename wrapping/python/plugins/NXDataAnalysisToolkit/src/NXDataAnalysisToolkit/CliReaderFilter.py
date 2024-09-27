@@ -110,6 +110,9 @@ class CliReaderFilter:
 
     return params
 
+  def parameters_version(self) -> int:
+    return 1
+
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     cli_file_path: str = args[CliReaderFilter.CLI_FILE_PATH_KEY]
     output_edge_geom_path: nx.DataPath = args[CliReaderFilter.OUTPUT_EDGE_GEOM_PATH_KEY]
