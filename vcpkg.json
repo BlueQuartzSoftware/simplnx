@@ -95,9 +95,6 @@
       "dependencies": [
         {
           "name": "blosc"
-        },
-        {
-          "name": "gdal"
         }
       ]
     },

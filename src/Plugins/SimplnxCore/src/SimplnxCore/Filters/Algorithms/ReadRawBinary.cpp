@@ -81,7 +81,7 @@ Result<> ReadBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, u
     return MakeErrorResult(k_RbrFileTooSmall, "The file size is smaller than the allocated size");
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArray->getDataStoreRef(), skipHeaderBytes, k_DefaultBlockSize);
+  Result<> result = ImportFromBinaryFile(std::filesystem::path(filename), *dataArray, skipHeaderBytes, k_DefaultBlockSize);
   if(result.invalid())
   {
     return result;

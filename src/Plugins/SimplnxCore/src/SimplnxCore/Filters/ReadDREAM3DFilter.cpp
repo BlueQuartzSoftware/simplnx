@@ -225,7 +225,7 @@ nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
         Result<Pipeline> pipelineResult = DREAM3D::ImportPipelineFromFile(d3dReader);
         if(pipelineResult.valid())
         {
-          json[k_ImportedPipeline] = pipelineResult.value().toJson();
+          json[k_ImportFileData] = pipelineResult.value().toJson();
         }
       }
     }

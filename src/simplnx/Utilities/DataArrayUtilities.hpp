@@ -694,7 +694,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArrayPtr->getDataStoreRef());
+  Result<> result = ImportFromBinaryFile(std::filesystem::path(filename), *dataArrayPtr);
   if(result.invalid())
   {
     return nullptr;

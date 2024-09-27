@@ -35,6 +35,7 @@ const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
 Result<> ReadVolumeGraphicsFile::operator()()
 {
   const DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
+  auto* densityArray = m_DataStructure.getDataAs<Float32Array>(densityArrayPath);
   auto& density = m_DataStructure.getDataAs<Float32Array>(densityArrayPath)->getDataStoreRef();
 
   auto filesize = static_cast<usize>(fs::file_size(m_InputValues->VGDataFile));
@@ -46,5 +47,5 @@ Result<> ReadVolumeGraphicsFile::operator()()
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, "Reading Data from .vol File.....");
-  return ImportFromBinaryFile(m_InputValues->VGDataFile, density);
+  return ImportFromBinaryFile(m_InputValues->VGDataFile, *densityArray);
 }
