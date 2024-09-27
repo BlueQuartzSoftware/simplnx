@@ -30,6 +30,8 @@ _Combined (vector first)_: tuple 1 - { v1 v2 v3 s1 } ; tuple 2 - { v1 v2 v3 s1 }
 
 The user may also select to normalize the resulting combined array. The normalization procedure will enforce a range of [0, 1] for all values in the combined array. This may be useful for combining two arrays that have different order of magnitude data. Note that this option will fundamentally change the underlying data in the combined array from the original incoming arrays.
 
+**NOTE:** If you are wanting to instead concatenate/append data arrays together into a longer array, please see the [Concatenate Data Arrays](ConcatenateDataArraysFilter.md) filter.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

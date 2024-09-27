@@ -44,6 +44,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeVectorColorsTest.cpp
   ComputeVertexToTriangleDistancesTest.cpp
   ComputeVolumeFractionsTest.cpp
+  ConcatenateDataArraysTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp

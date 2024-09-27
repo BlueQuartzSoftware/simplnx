@@ -44,6 +44,7 @@ set(FilterList
   ComputeVectorColorsFilter
   ComputeVertexToTriangleDistancesFilter
   ComputeVolumeFractionsFilter
+  ConcatenateDataArraysFilter
   ConditionalSetValueFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -168,6 +169,7 @@ set(AlgorithmList
   ComputeTriangleGeomCentroids
   ComputeVectorColors
   ComputeVertexToTriangleDistances
+  ConcatenateDataArrays
   ConvertColorToGrayScale
   ConvertData
   CreatePythonSkeleton
