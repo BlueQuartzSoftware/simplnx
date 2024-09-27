@@ -40,8 +40,14 @@ IParameter::AcceptedTypes OEMEbsdScanSelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType OEMEbsdScanSelectionParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
-nlohmann::json OEMEbsdScanSelectionParameter::toJson(const std::any& value) const
+nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -67,7 +73,7 @@ nlohmann::json OEMEbsdScanSelectionParameter::toJson(const std::any& value) cons
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
 

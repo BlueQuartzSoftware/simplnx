@@ -21,14 +21,20 @@ IParameter::AcceptedTypes BoolParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json BoolParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType BoolParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json BoolParameter::toJsonImpl(const std::any& value) const
 {
   auto boolValue = std::any_cast<ValueType>(value);
   nlohmann::json json = boolValue;
   return json;
 }
 
-Result<std::any> BoolParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'BoolParameter' JSON Error: ";
   if(!json.is_boolean())

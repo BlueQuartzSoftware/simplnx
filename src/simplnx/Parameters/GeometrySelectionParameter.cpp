@@ -29,14 +29,20 @@ IParameter::AcceptedTypes GeometrySelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json GeometrySelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType GeometrySelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json GeometrySelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> GeometrySelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
   if(!json.is_string())

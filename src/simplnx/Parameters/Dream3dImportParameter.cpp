@@ -38,8 +38,14 @@ IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType Dream3dImportParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
-nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
+nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
 {
   const auto& importData = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -65,7 +71,7 @@ nlohmann::json Dream3dImportParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> Dream3dImportParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
   if(!json.is_object())

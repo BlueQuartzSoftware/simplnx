@@ -47,8 +47,14 @@ IParameter::AcceptedTypes ReadH5EbsdFileParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType ReadH5EbsdFileParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
-nlohmann::json ReadH5EbsdFileParameter::toJson(const std::any& value) const
+nlohmann::json ReadH5EbsdFileParameter::toJsonImpl(const std::any& value) const
 {
   const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -77,7 +83,7 @@ nlohmann::json ReadH5EbsdFileParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> ReadH5EbsdFileParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
 

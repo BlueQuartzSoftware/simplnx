@@ -42,8 +42,14 @@ IParameter::AcceptedTypes EnsembleInfoParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType EnsembleInfoParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
-nlohmann::json EnsembleInfoParameter::toJson(const std::any& value) const
+nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 {
   const auto& table = GetAnyRef<ValueType>(value);
   nlohmann::json rows;
@@ -60,7 +66,7 @@ nlohmann::json EnsembleInfoParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> EnsembleInfoParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 

@@ -25,14 +25,20 @@ IParameter::AcceptedTypes AttributeMatrixSelectionParameter::acceptedTypes() con
   return {typeid(ValueType)};
 }
 
-nlohmann::json AttributeMatrixSelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType AttributeMatrixSelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> AttributeMatrixSelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 

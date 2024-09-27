@@ -40,20 +40,6 @@ public:
   AcceptedTypes acceptedTypes() const override;
 
   /**
-   * @brief Converts the given value to JSON.
-   * Throws if value is not an accepted type.
-   * @param value
-   */
-  nlohmann::json toJson(const std::any& value) const override;
-
-  /**
-   * @brief Converts the given JSON to a std::any containing the appropriate input type.
-   * Returns any warnings/errors.
-   * @return
-   */
-  Result<std::any> fromJson(const nlohmann::json& json) const override;
-
-  /**
    * @brief Creates a copy of the parameter.
    * @return
    */
@@ -64,6 +50,14 @@ public:
    * @return
    */
   std::any defaultValue() const override;
+
+  /**
+   * @brief Returns version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the json format changes.
+   * @return uint64
+   */
+  VersionType getVersion() const override;
 
   /**
    * @brief
@@ -101,6 +95,21 @@ public:
    * @return
    */
   Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
+
+protected:
+  /**
+   * @brief Converts the given value to JSON.
+   * Throws if value is not an accepted type.
+   * @param value
+   */
+  nlohmann::json toJsonImpl(const std::any& value) const override;
+
+  /**
+   * @brief Converts the given JSON to a std::any containing the appropriate input type.
+   * Returns any warnings/errors.
+   * @return
+   */
+  Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
   ValueType m_DefaultValue = {};

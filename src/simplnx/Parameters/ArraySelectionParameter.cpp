@@ -54,14 +54,20 @@ IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json ArraySelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType ArraySelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json ArraySelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())

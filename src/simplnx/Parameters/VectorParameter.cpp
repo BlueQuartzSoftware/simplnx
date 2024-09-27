@@ -43,8 +43,15 @@ IParameter::AcceptedTypes VectorParameter<T>::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
 template <class T>
-nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
+IParameter::VersionType VectorParameter<T>::getVersion() const
+{
+  return 1;
+}
+
+template <class T>
+nlohmann::json VectorParameter<T>::toJsonImpl(const std::any& value) const
 {
   const auto& vec = GetAnyRef<ValueType>(value);
 
@@ -58,7 +65,7 @@ nlohmann::json VectorParameter<T>::toJson(const std::any& value) const
 }
 
 template <class T>
-Result<std::any> VectorParameter<T>::fromJson(const nlohmann::json& json) const
+Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'VectorParameter' JSON Error: ";
 
