@@ -133,7 +133,7 @@ Uuid ComputeFZQuaternionsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeFZQuaternionsFilter::humanName() const
 {
-  return "Compute Reduction Orientations to Fundamental Zone";
+  return "Compute Fundamental Zone Orientations";
 }
 
 //------------------------------------------------------------------------------
@@ -279,7 +279,7 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
     algArrays.push_back(maskArray);
   }
 
-  // Parallel algorithm to find duplicate nodes
+  // Parallel algorithm
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(quatArray.getNumberOfTuples()));
   dataAlg.requireArraysInMemory(algArrays);

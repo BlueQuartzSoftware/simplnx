@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.26)
 
+cmake_policy(SET CMP0074 NEW) # ``find_package()`` uses ``<PackageName>_ROOT`` variables.
+cmake_policy(SET CMP0077 NEW) # ``option()`` honors normal variables.
+cmake_policy(SET CMP0080 NEW) # ``BundleUtilities`` cannot be included at configure time.
+
+# The ``FindPythonInterp`` and ``FindPythonLibs`` modules are removed.
+# if(CMAKE_VERSION VERSION_GREATER "3.27.0")
+#   cmake_policy(SET CMP0148 NEW)
+# endif()
+
+# resolves symlinks before collapsing ../ components.
+if(CMAKE_VERSION VERSION_GREATER "3.28.0")
+  cmake_policy(SET CMP0152 NEW)
+endif()
+
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 
 # ------------------------------------------------------------------------------
@@ -123,9 +138,7 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # The WORKING_DIRECTORY is set to the following CMake code:
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
-cmake_policy(SET CMP0012 NEW)
-cmake_policy(SET CMP0054 NEW)\n
-")
+cmake_policy(SET CMP0012 NEW)\ncmake_policy(SET CMP0054 NEW)\ncmake_policy(SET CMP0152 NEW)\ncmake_policy(SET CMP0148 NEW)")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 if(CMAKE_GENERATOR MATCHES "Visual Studio")

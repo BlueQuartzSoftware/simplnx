@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -50,6 +51,8 @@ private:
   const MergeTwinsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  std::vector<LaueOps::Pointer> m_OrientationOps;
 };
 
 } // namespace nx::core

@@ -35,13 +35,13 @@ Uuid SharedFeatureFaceFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string SharedFeatureFaceFilter::humanName() const
 {
-  return "Generate Triangle Face Ids";
+  return "Compute Triangle Face Ids";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> SharedFeatureFaceFilter::defaultTags() const
 {
-  return {className(), "Surface Meshing", "Connectivity Arrangement", "SurfaceMesh"};
+  return {className(), "Surface Meshing", "Connectivity Arrangement", "SurfaceMesh", "Feature Face Ids"};
 }
 
 //------------------------------------------------------------------------------

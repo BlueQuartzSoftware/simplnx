@@ -71,7 +71,7 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrixPath_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face IDs", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face Ids", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
@@ -79,13 +79,18 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1Path_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature2Path_Key, "Principal Curvature 2", "Output DataPath to hold the 'Principal Curvature 2' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection1Path_Key, "Principal Direction 1", "Output DataPath to hold the 'Principal Direction 1' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection2Path_Key, "Principal Direction 2", "Output DataPath to hold the 'Principal Direction 2' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_GaussianCurvaturePath_Key, "Gaussian Curvature", "Output DataPath to hold the 'Gaussian Curvature' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_MeanCurvaturePath_Key, "Mean Curvature", "Output DataPath to hold the 'Mean Curvature' values", DataPath()));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_WeingartenMatrixPath_Key, "Weingarten Matrix", "Output DataPath to hold the 'Weingarten Matrix' values", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1Path_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values",
+                                                         DataPath({"Principal Curvature 1"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature2Path_Key, "Principal Curvature 2", "Output DataPath to hold the 'Principal Curvature 2' values",
+                                                         DataPath({"Principal Curvature 2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection1Path_Key, "Principal Direction 1", "Output DataPath to hold the 'Principal Direction 1' values",
+                                                         DataPath({"Principal Direction 1"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalDirection2Path_Key, "Principal Direction 2", "Output DataPath to hold the 'Principal Direction 2' values",
+                                                         DataPath({"Principal Direction 2"})));
+  params.insert(
+      std::make_unique<ArrayCreationParameter>(k_GaussianCurvaturePath_Key, "Gaussian Curvature", "Output DataPath to hold the 'Gaussian Curvature' values", DataPath({"Gaussian Curvature"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_MeanCurvaturePath_Key, "Mean Curvature", "Output DataPath to hold the 'Mean Curvature' values", DataPath({"Mean Curvature"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_WeingartenMatrixPath_Key, "Weingarten Matrix", "Output DataPath to hold the 'Weingarten Matrix' values", DataPath({"Weingarten Matrix"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ComputePrincipalDirection_Key, k_PrincipalCurvature1Path_Key, true);
