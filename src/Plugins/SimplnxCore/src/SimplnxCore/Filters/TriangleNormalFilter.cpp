@@ -93,7 +93,7 @@ Uuid TriangleNormalFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string TriangleNormalFilter::humanName() const
 {
-  return "Calculate Triangle Normals";
+  return "Compute Triangle Normals";
 }
 
 //------------------------------------------------------------------------------
