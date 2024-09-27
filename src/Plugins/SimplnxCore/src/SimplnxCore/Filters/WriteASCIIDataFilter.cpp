@@ -94,6 +94,12 @@ Parameters WriteASCIIDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteASCIIDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteASCIIDataFilter::clone() const
 {
   return std::make_unique<WriteASCIIDataFilter>();

@@ -98,6 +98,12 @@ Parameters ITKWhiteTopHatImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKWhiteTopHatImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKWhiteTopHatImageFilter::clone() const
 {
   return std::make_unique<ITKWhiteTopHatImageFilter>();

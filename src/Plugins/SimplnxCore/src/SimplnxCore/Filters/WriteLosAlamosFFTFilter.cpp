@@ -73,6 +73,12 @@ Parameters WriteLosAlamosFFTFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteLosAlamosFFTFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteLosAlamosFFTFilter::clone() const
 {
   return std::make_unique<WriteLosAlamosFFTFilter>();

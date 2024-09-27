@@ -89,6 +89,12 @@ Parameters ITKCurvatureFlowImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKCurvatureFlowImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKCurvatureFlowImageFilter::clone() const
 {
   return std::make_unique<ITKCurvatureFlowImageFilter>();

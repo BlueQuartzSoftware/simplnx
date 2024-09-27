@@ -107,6 +107,12 @@ Parameters ConditionalSetValueFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType ConditionalSetValueFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer ConditionalSetValueFilter::clone() const
 {
   return std::make_unique<ConditionalSetValueFilter>();

@@ -97,6 +97,12 @@ Parameters ITKIntensityWindowingImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKIntensityWindowingImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKIntensityWindowingImageFilter::clone() const
 {
   return std::make_unique<ITKIntensityWindowingImageFilter>();

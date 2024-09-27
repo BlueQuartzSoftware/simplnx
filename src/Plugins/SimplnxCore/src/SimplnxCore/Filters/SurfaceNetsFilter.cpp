@@ -100,6 +100,12 @@ Parameters SurfaceNetsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SurfaceNetsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SurfaceNetsFilter::clone() const
 {
   return std::make_unique<SurfaceNetsFilter>();

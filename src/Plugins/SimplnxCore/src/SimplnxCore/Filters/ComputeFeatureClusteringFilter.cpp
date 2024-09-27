@@ -95,6 +95,12 @@ Parameters ComputeFeatureClusteringFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureClusteringFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureClusteringFilter::clone() const
 {
   return std::make_unique<ComputeFeatureClusteringFilter>();

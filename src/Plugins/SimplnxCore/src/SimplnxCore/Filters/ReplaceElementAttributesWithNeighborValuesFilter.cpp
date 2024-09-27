@@ -68,6 +68,12 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReplaceElementAttributesWithNeighborValuesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone() const
 {
   return std::make_unique<ReplaceElementAttributesWithNeighborValuesFilter>();

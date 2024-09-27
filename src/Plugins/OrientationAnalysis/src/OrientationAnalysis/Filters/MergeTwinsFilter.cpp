@@ -106,6 +106,12 @@ Parameters MergeTwinsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType MergeTwinsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MergeTwinsFilter::clone() const
 {
   return std::make_unique<MergeTwinsFilter>();

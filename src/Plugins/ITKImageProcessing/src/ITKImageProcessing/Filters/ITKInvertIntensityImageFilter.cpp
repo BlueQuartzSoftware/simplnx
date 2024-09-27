@@ -89,6 +89,12 @@ Parameters ITKInvertIntensityImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKInvertIntensityImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKInvertIntensityImageFilter::clone() const
 {
   return std::make_unique<ITKInvertIntensityImageFilter>();

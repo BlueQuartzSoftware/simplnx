@@ -96,6 +96,12 @@ Parameters ITKRelabelComponentImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKRelabelComponentImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKRelabelComponentImageFilter::clone() const
 {
   return std::make_unique<ITKRelabelComponentImageFilter>();

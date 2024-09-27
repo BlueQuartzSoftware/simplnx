@@ -87,6 +87,12 @@ Parameters ITKMeanProjectionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMeanProjectionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMeanProjectionImageFilter::clone() const
 {
   return std::make_unique<ITKMeanProjectionImageFilter>();

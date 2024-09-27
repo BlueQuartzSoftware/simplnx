@@ -74,6 +74,12 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ResampleRectGridToImageGeomFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ResampleRectGridToImageGeomFilter::clone() const
 {
   return std::make_unique<ResampleRectGridToImageGeomFilter>();

@@ -67,6 +67,12 @@ Parameters AlignSectionsListFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AlignSectionsListFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsListFilter::clone() const
 {
   return std::make_unique<AlignSectionsListFilter>();

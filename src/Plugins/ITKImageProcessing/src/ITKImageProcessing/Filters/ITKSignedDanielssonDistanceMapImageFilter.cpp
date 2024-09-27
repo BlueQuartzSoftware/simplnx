@@ -93,6 +93,12 @@ Parameters ITKSignedDanielssonDistanceMapImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSignedDanielssonDistanceMapImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSignedDanielssonDistanceMapImageFilter::clone() const
 {
   return std::make_unique<ITKSignedDanielssonDistanceMapImageFilter>();

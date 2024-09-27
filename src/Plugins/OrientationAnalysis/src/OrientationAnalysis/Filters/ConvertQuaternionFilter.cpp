@@ -76,6 +76,12 @@ Parameters ConvertQuaternionFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ConvertQuaternionFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertQuaternionFilter::clone() const
 {
   return std::make_unique<ConvertQuaternionFilter>();

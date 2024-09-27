@@ -70,6 +70,12 @@ Parameters ComputeFeatureCentroidsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureCentroidsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureCentroidsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureCentroidsFilter>();

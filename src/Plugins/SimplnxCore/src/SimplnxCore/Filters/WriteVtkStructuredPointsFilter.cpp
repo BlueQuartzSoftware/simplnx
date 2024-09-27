@@ -66,6 +66,12 @@ Parameters WriteVtkStructuredPointsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteVtkStructuredPointsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteVtkStructuredPointsFilter::clone() const
 {
   return std::make_unique<WriteVtkStructuredPointsFilter>();

@@ -63,6 +63,12 @@ Parameters ArrayCalculatorFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ArrayCalculatorFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ArrayCalculatorFilter::clone() const
 {
   return std::make_unique<ArrayCalculatorFilter>();

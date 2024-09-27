@@ -309,6 +309,12 @@ Parameters ITKImageWriterFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKImageWriterFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImageWriterFilter::clone() const
 {
   return std::make_unique<ITKImageWriterFilter>();

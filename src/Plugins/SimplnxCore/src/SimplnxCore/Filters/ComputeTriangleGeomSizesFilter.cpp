@@ -66,6 +66,12 @@ Parameters ComputeTriangleGeomSizesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeTriangleGeomSizesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeTriangleGeomSizesFilter::clone() const
 {
   return std::make_unique<ComputeTriangleGeomSizesFilter>();

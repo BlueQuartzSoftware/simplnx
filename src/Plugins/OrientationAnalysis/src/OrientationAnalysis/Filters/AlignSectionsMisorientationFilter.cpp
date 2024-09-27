@@ -108,6 +108,12 @@ Parameters AlignSectionsMisorientationFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AlignSectionsMisorientationFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsMisorientationFilter::clone() const
 {
   return std::make_unique<AlignSectionsMisorientationFilter>();

@@ -61,6 +61,12 @@ Parameters ExtractPipelineToFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExtractPipelineToFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
 {
   return std::make_unique<ExtractPipelineToFileFilter>();

@@ -81,6 +81,12 @@ Parameters LaplacianSmoothingFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType LaplacianSmoothingFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 {
   return std::make_unique<LaplacianSmoothingFilter>();

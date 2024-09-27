@@ -73,6 +73,12 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteGBCDGMTFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteGBCDGMTFileFilter::clone() const
 {
   return std::make_unique<WriteGBCDGMTFileFilter>();

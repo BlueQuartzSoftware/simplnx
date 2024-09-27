@@ -74,6 +74,12 @@ Parameters CombineAttributeArraysFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CombineAttributeArraysFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CombineAttributeArraysFilter::clone() const
 {
   return std::make_unique<CombineAttributeArraysFilter>();

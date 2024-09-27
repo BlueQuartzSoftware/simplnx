@@ -108,6 +108,12 @@ Parameters DBSCANFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType DBSCANFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DBSCANFilter::clone() const
 {
   return std::make_unique<DBSCANFilter>();

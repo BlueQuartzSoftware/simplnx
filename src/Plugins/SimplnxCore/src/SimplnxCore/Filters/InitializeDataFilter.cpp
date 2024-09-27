@@ -117,6 +117,12 @@ Parameters InitializeDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType InitializeDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InitializeDataFilter::clone() const
 {
   return std::make_unique<InitializeDataFilter>();

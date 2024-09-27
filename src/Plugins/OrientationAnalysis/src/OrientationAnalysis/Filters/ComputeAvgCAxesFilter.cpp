@@ -68,6 +68,12 @@ Parameters ComputeAvgCAxesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeAvgCAxesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeAvgCAxesFilter::clone() const
 {
   return std::make_unique<ComputeAvgCAxesFilter>();

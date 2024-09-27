@@ -148,6 +148,12 @@ Parameters TriangleDihedralAngleFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType TriangleDihedralAngleFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleDihedralAngleFilter::clone() const
 {
   return std::make_unique<TriangleDihedralAngleFilter>();

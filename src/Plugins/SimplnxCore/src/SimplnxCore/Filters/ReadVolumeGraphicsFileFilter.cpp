@@ -403,6 +403,12 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadVolumeGraphicsFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadVolumeGraphicsFileFilter::clone() const
 {
   return std::make_unique<ReadVolumeGraphicsFileFilter>();

@@ -115,6 +115,12 @@ Parameters IterativeClosestPointFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType IterativeClosestPointFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 {
   return std::make_unique<IterativeClosestPointFilter>();

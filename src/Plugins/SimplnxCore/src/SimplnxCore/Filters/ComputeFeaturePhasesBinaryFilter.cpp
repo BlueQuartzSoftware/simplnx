@@ -70,6 +70,12 @@ Parameters ComputeFeaturePhasesBinaryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeaturePhasesBinaryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeaturePhasesBinaryFilter::clone() const
 {
   return std::make_unique<ComputeFeaturePhasesBinaryFilter>();

@@ -70,6 +70,12 @@ Parameters ComputeFeatureFaceMisorientationFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureFaceMisorientationFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureFaceMisorientationFilter::clone() const
 {
   return std::make_unique<ComputeFeatureFaceMisorientationFilter>();

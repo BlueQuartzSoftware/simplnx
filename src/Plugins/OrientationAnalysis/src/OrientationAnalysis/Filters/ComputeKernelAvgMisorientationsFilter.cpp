@@ -79,6 +79,12 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeKernelAvgMisorientationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeKernelAvgMisorientationsFilter>();

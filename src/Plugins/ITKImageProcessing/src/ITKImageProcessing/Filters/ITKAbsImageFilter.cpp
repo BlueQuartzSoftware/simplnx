@@ -83,6 +83,12 @@ Parameters ITKAbsImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKAbsImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKAbsImageFilter::clone() const
 {
   return std::make_unique<ITKAbsImageFilter>();

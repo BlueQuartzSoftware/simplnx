@@ -347,6 +347,12 @@ Parameters RotateSampleRefFrameFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RotateSampleRefFrameFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 {
   return std::make_unique<RotateSampleRefFrameFilter>();

@@ -61,6 +61,12 @@ Parameters RotateEulerRefFrameFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RotateEulerRefFrameFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RotateEulerRefFrameFilter::clone() const
 {
   return std::make_unique<RotateEulerRefFrameFilter>();

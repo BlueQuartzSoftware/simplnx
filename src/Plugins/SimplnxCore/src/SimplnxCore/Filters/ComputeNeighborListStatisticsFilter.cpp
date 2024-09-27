@@ -282,6 +282,12 @@ Parameters ComputeNeighborListStatisticsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeNeighborListStatisticsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeNeighborListStatisticsFilter::clone() const
 {
   return std::make_unique<ComputeNeighborListStatisticsFilter>();

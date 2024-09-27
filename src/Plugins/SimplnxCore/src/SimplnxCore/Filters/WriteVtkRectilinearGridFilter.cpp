@@ -67,6 +67,12 @@ Parameters WriteVtkRectilinearGridFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteVtkRectilinearGridFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteVtkRectilinearGridFilter::clone() const
 {
   return std::make_unique<WriteVtkRectilinearGridFilter>();

@@ -87,6 +87,12 @@ Parameters ComputeAvgOrientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeAvgOrientationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeAvgOrientationsFilter::clone() const
 {
   return std::make_unique<ComputeAvgOrientationsFilter>();

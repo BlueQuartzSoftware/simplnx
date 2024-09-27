@@ -83,6 +83,12 @@ Parameters ITKExpNegativeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKExpNegativeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKExpNegativeImageFilter::clone() const
 {
   return std::make_unique<ITKExpNegativeImageFilter>();

@@ -79,6 +79,12 @@ Parameters ErodeDilateBadDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ErodeDilateBadDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateBadDataFilter::clone() const
 {
   return std::make_unique<ErodeDilateBadDataFilter>();

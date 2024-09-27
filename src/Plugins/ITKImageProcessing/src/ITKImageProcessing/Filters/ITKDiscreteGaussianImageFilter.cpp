@@ -115,6 +115,12 @@ Parameters ITKDiscreteGaussianImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKDiscreteGaussianImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKDiscreteGaussianImageFilter::clone() const
 {
   return std::make_unique<ITKDiscreteGaussianImageFilter>();

@@ -96,6 +96,12 @@ Parameters ComputeSchmidsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeSchmidsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeSchmidsFilter::clone() const
 {
   return std::make_unique<ComputeSchmidsFilter>();

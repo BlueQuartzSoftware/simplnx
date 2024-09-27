@@ -71,6 +71,12 @@ Parameters ComputeQuaternionConjugateFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeQuaternionConjugateFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeQuaternionConjugateFilter::clone() const
 {
   return std::make_unique<ComputeQuaternionConjugateFilter>();

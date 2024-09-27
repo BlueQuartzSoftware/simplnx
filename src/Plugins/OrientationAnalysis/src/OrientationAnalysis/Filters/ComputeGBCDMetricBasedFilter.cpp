@@ -112,6 +112,12 @@ Parameters ComputeGBCDMetricBasedFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeGBCDMetricBasedFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeGBCDMetricBasedFilter::clone() const
 {
   return std::make_unique<ComputeGBCDMetricBasedFilter>();

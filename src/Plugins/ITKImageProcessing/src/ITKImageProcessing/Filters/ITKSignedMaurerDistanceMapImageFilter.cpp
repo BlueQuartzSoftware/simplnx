@@ -101,6 +101,12 @@ Parameters ITKSignedMaurerDistanceMapImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSignedMaurerDistanceMapImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSignedMaurerDistanceMapImageFilter::clone() const
 {
   return std::make_unique<ITKSignedMaurerDistanceMapImageFilter>();

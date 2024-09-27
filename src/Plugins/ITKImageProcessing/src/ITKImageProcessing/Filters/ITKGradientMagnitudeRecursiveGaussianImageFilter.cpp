@@ -91,6 +91,12 @@ Parameters ITKGradientMagnitudeRecursiveGaussianImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGradientMagnitudeRecursiveGaussianImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGradientMagnitudeRecursiveGaussianImageFilter::clone() const
 {
   return std::make_unique<ITKGradientMagnitudeRecursiveGaussianImageFilter>();

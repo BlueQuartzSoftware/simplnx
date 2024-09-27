@@ -75,6 +75,12 @@ Parameters ReadAngDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadAngDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadAngDataFilter::clone() const
 {
   return std::make_unique<ReadAngDataFilter>();

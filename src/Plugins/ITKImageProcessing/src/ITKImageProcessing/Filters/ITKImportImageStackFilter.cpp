@@ -362,6 +362,12 @@ Parameters ITKImportImageStackFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKImportImageStackFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImportImageStackFilter::clone() const
 {
   return std::make_unique<ITKImportImageStackFilter>();

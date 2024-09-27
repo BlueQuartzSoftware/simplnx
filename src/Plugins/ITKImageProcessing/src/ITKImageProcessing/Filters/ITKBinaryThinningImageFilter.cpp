@@ -82,6 +82,12 @@ Parameters ITKBinaryThinningImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryThinningImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryThinningImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryThinningImageFilter>();

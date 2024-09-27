@@ -86,6 +86,12 @@ Parameters ComputeMisorientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeMisorientationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeMisorientationsFilter>();

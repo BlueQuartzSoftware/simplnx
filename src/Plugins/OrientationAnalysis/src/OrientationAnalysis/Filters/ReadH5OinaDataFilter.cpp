@@ -85,6 +85,12 @@ Parameters ReadH5OinaDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadH5OinaDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadH5OinaDataFilter::clone() const
 {
   return std::make_unique<ReadH5OinaDataFilter>();

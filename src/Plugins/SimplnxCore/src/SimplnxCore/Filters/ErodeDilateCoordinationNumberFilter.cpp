@@ -70,6 +70,12 @@ Parameters ErodeDilateCoordinationNumberFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ErodeDilateCoordinationNumberFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateCoordinationNumberFilter::clone() const
 {
   return std::make_unique<ErodeDilateCoordinationNumberFilter>();

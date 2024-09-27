@@ -85,6 +85,12 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType NeighborOrientationCorrelationFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer NeighborOrientationCorrelationFilter::clone() const
 {
   return std::make_unique<NeighborOrientationCorrelationFilter>();

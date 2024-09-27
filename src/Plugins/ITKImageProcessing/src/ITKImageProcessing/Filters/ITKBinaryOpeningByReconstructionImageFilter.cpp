@@ -108,6 +108,12 @@ Parameters ITKBinaryOpeningByReconstructionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryOpeningByReconstructionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryOpeningByReconstructionImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryOpeningByReconstructionImageFilter>();

@@ -63,6 +63,12 @@ Parameters ExecuteProcessFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExecuteProcessFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExecuteProcessFilter::clone() const
 {
   return std::make_unique<ExecuteProcessFilter>();

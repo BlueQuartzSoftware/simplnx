@@ -74,6 +74,12 @@ Parameters ComputeSlipTransmissionMetricsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeSlipTransmissionMetricsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeSlipTransmissionMetricsFilter::clone() const
 {
   return std::make_unique<ComputeSlipTransmissionMetricsFilter>();

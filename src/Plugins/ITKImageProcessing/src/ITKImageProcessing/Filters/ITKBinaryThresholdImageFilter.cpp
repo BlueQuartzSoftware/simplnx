@@ -102,6 +102,12 @@ Parameters ITKBinaryThresholdImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryThresholdImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryThresholdImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryThresholdImageFilter>();

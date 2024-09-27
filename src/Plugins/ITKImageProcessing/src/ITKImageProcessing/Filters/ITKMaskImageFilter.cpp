@@ -165,6 +165,12 @@ Parameters ITKMaskImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMaskImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMaskImageFilter::clone() const
 {
   return std::make_unique<ITKMaskImageFilter>();

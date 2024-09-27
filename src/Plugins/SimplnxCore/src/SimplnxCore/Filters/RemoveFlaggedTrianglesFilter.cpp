@@ -90,6 +90,12 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RemoveFlaggedTrianglesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveFlaggedTrianglesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedTrianglesFilter>();

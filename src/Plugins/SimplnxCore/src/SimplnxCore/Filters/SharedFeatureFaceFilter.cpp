@@ -73,6 +73,12 @@ Parameters SharedFeatureFaceFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SharedFeatureFaceFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SharedFeatureFaceFilter::clone() const
 {
   return std::make_unique<SharedFeatureFaceFilter>();

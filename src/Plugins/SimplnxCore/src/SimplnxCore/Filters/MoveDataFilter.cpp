@@ -53,6 +53,12 @@ Parameters MoveDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType MoveDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MoveDataFilter::clone() const
 {
   return std::make_unique<MoveDataFilter>();

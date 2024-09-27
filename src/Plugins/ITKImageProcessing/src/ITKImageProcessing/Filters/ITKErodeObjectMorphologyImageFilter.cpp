@@ -101,6 +101,12 @@ Parameters ITKErodeObjectMorphologyImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKErodeObjectMorphologyImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKErodeObjectMorphologyImageFilter::clone() const
 {
   return std::make_unique<ITKErodeObjectMorphologyImageFilter>();

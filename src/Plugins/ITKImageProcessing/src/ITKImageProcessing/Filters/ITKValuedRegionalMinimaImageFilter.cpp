@@ -90,6 +90,12 @@ Parameters ITKValuedRegionalMinimaImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKValuedRegionalMinimaImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKValuedRegionalMinimaImageFilter::clone() const
 {
   return std::make_unique<ITKValuedRegionalMinimaImageFilter>();

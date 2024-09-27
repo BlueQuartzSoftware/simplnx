@@ -72,6 +72,12 @@ Parameters EbsdToH5EbsdFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType EbsdToH5EbsdFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EbsdToH5EbsdFilter::clone() const
 {
   return std::make_unique<EbsdToH5EbsdFilter>();

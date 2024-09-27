@@ -374,6 +374,12 @@ Parameters MultiThresholdObjectsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType MultiThresholdObjectsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 {
   return std::make_unique<MultiThresholdObjectsFilter>();

@@ -58,6 +58,12 @@ Parameters ReadDREAM3DFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadDREAM3DFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadDREAM3DFilter::clone() const
 {
   return std::make_unique<ReadDREAM3DFilter>();

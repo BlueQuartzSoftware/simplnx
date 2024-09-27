@@ -88,6 +88,12 @@ Parameters CropVertexGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CropVertexGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CropVertexGeometryFilter::clone() const
 {
   return std::make_unique<CropVertexGeometryFilter>();

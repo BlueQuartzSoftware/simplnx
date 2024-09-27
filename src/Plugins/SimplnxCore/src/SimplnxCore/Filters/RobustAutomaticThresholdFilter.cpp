@@ -92,6 +92,12 @@ Parameters RobustAutomaticThresholdFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType RobustAutomaticThresholdFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
 {
   return std::make_unique<RobustAutomaticThresholdFilter>();

@@ -257,6 +257,12 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType MapPointCloudToRegularGridFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 {
   return std::make_unique<MapPointCloudToRegularGridFilter>();

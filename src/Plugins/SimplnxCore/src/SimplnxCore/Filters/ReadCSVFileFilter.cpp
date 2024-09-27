@@ -441,6 +441,12 @@ Parameters ReadCSVFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadCSVFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadCSVFileFilter::clone() const
 {
   return std::make_unique<ReadCSVFileFilter>();

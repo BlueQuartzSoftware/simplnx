@@ -79,6 +79,12 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType NearestPointFuseRegularGridsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer NearestPointFuseRegularGridsFilter::clone() const
 {
   return std::make_unique<NearestPointFuseRegularGridsFilter>();

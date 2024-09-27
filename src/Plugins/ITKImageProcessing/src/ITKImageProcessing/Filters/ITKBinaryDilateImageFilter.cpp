@@ -105,6 +105,12 @@ Parameters ITKBinaryDilateImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryDilateImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryDilateImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryDilateImageFilter>();

@@ -82,6 +82,12 @@ Parameters ITKSquareImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSquareImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSquareImageFilter::clone() const
 {
   return std::make_unique<ITKSquareImageFilter>();

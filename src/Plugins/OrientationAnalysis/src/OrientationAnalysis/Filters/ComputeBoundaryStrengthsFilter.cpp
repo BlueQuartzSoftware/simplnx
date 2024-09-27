@@ -81,6 +81,12 @@ Parameters ComputeBoundaryStrengthsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeBoundaryStrengthsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeBoundaryStrengthsFilter::clone() const
 {
   return std::make_unique<ComputeBoundaryStrengthsFilter>();

@@ -69,6 +69,12 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeaturePhasesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeaturePhasesFilter::clone() const
 {
   return std::make_unique<ComputeFeaturePhasesFilter>();

@@ -414,6 +414,12 @@ Parameters AlignGeometriesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AlignGeometriesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignGeometriesFilter::clone() const
 {
   return std::make_unique<AlignGeometriesFilter>();

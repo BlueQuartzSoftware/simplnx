@@ -101,6 +101,12 @@ Parameters ITKBinaryMorphologicalClosingImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryMorphologicalClosingImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryMorphologicalClosingImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryMorphologicalClosingImageFilter>();

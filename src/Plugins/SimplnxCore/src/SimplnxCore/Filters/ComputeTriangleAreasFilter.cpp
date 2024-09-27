@@ -116,6 +116,12 @@ Parameters ComputeTriangleAreasFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeTriangleAreasFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
 {
   return std::make_unique<ComputeTriangleAreasFilter>();

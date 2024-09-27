@@ -106,6 +106,12 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType FeatureFaceCurvatureFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
 {
   return std::make_unique<FeatureFaceCurvatureFilter>();

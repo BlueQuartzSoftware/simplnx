@@ -106,6 +106,12 @@ Parameters ITKAdaptiveHistogramEqualizationImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKAdaptiveHistogramEqualizationImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKAdaptiveHistogramEqualizationImageFilter::clone() const
 {
   return std::make_unique<ITKAdaptiveHistogramEqualizationImageFilter>();
