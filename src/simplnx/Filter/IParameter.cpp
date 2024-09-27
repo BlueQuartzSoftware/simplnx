@@ -31,24 +31,33 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
 {
   std::vector<Warning> warnings;
   VersionType version = 1;
-  if(!json.contains(k_VersionKey))
+  if(json.contains(k_VersionKey))
   {
-    warnings.push_back(Warning{-1, fmt::format("Parameter key '{}' does not exist. Assuming version={}", k_VersionKey, version)});
     nlohmann::json versionJson = json[k_VersionKey];
     if(!versionJson.is_number_unsigned())
     {
-      return MakeErrorResult<std::any>(-2, fmt::format("Parameter key '{}' is not an unsigned integer", k_VersionKey));
+      return MakeErrorResult<std::any>(-2, fmt::format("{}: Parameter key '{}' is not an unsigned integer", name(), k_VersionKey));
     }
 
     version = versionJson.get<VersionType>();
   }
-
-  if(!json.contains(k_ValueKey))
+  else
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("Parameter key '{}' does not exist", k_ValueKey));
+    warnings.push_back(Warning{-1, fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}", name(), k_VersionKey, version)});
   }
 
-  Result<std::any> result = fromJsonImpl(json[k_ValueKey], version);
+  nlohmann::json valueJson;
+  if(json.contains(k_ValueKey))
+  {
+    valueJson = json[k_ValueKey];
+  }
+  else
+  {
+    warnings.push_back(Warning{-2, fmt::format("{}: Parameter key '{}' does not exist. Assuming json is the current json object", name(), k_ValueKey, version)});
+    valueJson = json;
+  }
+
+  Result<std::any> result = fromJsonImpl(valueJson, version);
 
   result.warnings().insert(result.warnings().begin(), warnings.cbegin(), warnings.cend());
 
