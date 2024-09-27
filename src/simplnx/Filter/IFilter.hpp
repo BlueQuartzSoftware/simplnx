@@ -29,6 +29,7 @@ class SIMPLNX_EXPORT IFilter
 {
 public:
   using UniquePointer = std::unique_ptr<IFilter>;
+  using VersionType = uint64;
 
   struct Message
   {
@@ -142,6 +143,14 @@ public:
    * @return Parameters
    */
   virtual Parameters parameters() const = 0;
+
+  /**
+   * @brief Returns parameters version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the parameters change.
+   * @return VersionType
+   */
+  virtual VersionType parametersVersion() const = 0;
 
   /**
    * @brief Returns a copy of the filter.
