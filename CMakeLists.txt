@@ -98,8 +98,8 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.3.0
-  DESCRIPTION "SIMPL Redesign"
+  VERSION 1.4.0
+  DESCRIPTION "SIMPLNX is a collection of C++ codes to process data, particularly Materials Science data, including EBSD data."
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
 )
@@ -149,7 +149,6 @@ if(CMAKE_VERSION VERSION_GREATER \"3.28.0\")
   cmake_policy(SET CMP0152 NEW)
 endif()
 ")
-
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
