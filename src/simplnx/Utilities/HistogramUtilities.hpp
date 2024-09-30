@@ -40,12 +40,13 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
   }
 
   // iterate through loading the middle values of the sequence considering `lower bound inclusive, upper bound exclusive`
+  // We are filling a 2 component array. For STL containers this means the size of the container is 2*numbins
+  // We are going to put all the lower bin values into a component and the upper bin values in another component
   for(int32 i = 0; i < numBins; i++)
   {
-    outputContainer[i] = rangeMinMax.first + static_cast<Type>(increment * i);
+    outputContainer[i * 2 + 0] = rangeMinMax.first + static_cast<Type>(increment * i);
+    outputContainer[i * 2 + 1] = rangeMinMax.first + static_cast<Type>(increment * (i + 1.0F));
   }
-
-  outputContainer[numBins] = rangeMinMax.second;
 }
 
 /**
@@ -108,7 +109,7 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
   static_assert(std::is_same_v<typename InputContainer::value_type, typename RangesContainer::value_type>,
                 "HistogramUtilities::GenerateHistogram: inputStore and binRangesStore must be of the same type. HistogramUtilities:99");
 
-  if(binRangesStore.size() < numBins + 1)
+  if(binRangesStore.size() < numBins * 2)
   {
     return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
                                                __FILE__, __LINE__));

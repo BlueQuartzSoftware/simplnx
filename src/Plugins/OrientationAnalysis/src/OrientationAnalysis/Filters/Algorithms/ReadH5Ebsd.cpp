@@ -179,7 +179,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], mRefFrameZDir);
   if(err < 0)
   {
-    return {nx::core::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'", mInputValues->inputFilePath))};
+    return {nx::core::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'. Error from EbsdLib is {}", mInputValues->inputFilePath, err))};
   }
 
   nx::core::DataPath geometryPath = mInputValues->dataContainerPath;
