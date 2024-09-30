@@ -5,26 +5,44 @@
     {
       "args": {
         "input_file_list_object": {
-          "end_index": 117,
-          "file_extension": ".ang",
-          "file_prefix": "Slice_",
-          "file_suffix": "",
-          "increment_index": 1,
-          "input_path": "Data/Small_IN100",
-          "ordering": 0,
-          "padding_digits": 0,
-          "start_index": 1
+          "value": {
+            "end_index": 117,
+            "file_extension": ".ang",
+            "file_prefix": "Slice_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/Small_IN100",
+            "ordering": 0,
+            "padding_digits": 0,
+            "start_index": 1
+          },
+          "version": 1
         },
-        "output_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
-        "reference_frame_index": 0,
-        "stacking_order_index": 1,
-        "z_spacing": 0.25
+        "output_file_path": {
+          "value": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_frame_index": {
+          "value": 0,
+          "version": 1
+        },
+        "stacking_order_index": {
+          "value": 1,
+          "version": 1
+        },
+        "z_spacing": {
+          "value": 0.25,
+          "version": 1
+        }
       },
+      "comments": "",
       "filter": {
-        "name": "simplnx::EbsdToH5EbsdFilter",
+        "name": "nx::core::EbsdToH5EbsdFilter",
         "uuid": "2d05ca72-0a1b-4aec-b9b0-bc470845c448"
       },
       "isDisabled": false
     }
-  ]
+  ],
+  "version": 1
 }

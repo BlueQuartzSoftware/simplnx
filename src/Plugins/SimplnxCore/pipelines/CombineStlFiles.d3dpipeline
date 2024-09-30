@@ -1,35 +1,85 @@
 {
   "isDisabled": false,
   "name": "CombineStlFiles.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "face_attribute_matrix_name": "Face Data",
-        "face_normals_array_name": "FaceNormals",
-        "stl_files_path": "Data/STL_Models",
-        "output_triangle_geometry_path": "TriangleGeometry",
-        "vertex_attribute_matrix_name": "Vertex Data"
+        "active_array_name": {
+          "value": "Active",
+          "version": 1
+        },
+        "cell_feature_attribute_matrix_name": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_label_name": {
+          "value": "Part Number",
+          "version": 1
+        },
+        "face_normals_array_name": {
+          "value": "FaceNormals",
+          "version": 1
+        },
+        "label_faces": {
+          "value": true,
+          "version": 1
+        },
+        "label_vertices": {
+          "value": true,
+          "version": 1
+        },
+        "output_file_list_name": {
+          "value": "STL File List",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "TriangleGeometry",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "stl_files_path": {
+          "value": "Data/STL_Models",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        },
+        "vertex_label_name": {
+          "value": "Part Number",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CombineStlFilesFilter",
+        "name": "nx::core::CombineStlFilesFilter",
         "uuid": "76b56f80-fcbe-4d48-a34d-a73d0fc6e5ae"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/CombinedStlFiles.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/CombinedStlFiles.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

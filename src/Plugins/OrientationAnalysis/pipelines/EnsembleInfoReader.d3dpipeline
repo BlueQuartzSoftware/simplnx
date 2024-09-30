@@ -1,141 +1,260 @@
 {
   "isDisabled": false,
   "name": "ReadEnsembleInfo.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "cell_data_name": "Cell Data",
-        "dimensions": [
-          100,
-          100,
-          2
-        ],
-        "output_image_geometry_path": "[Image Geometry]",
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "spacing": [
-          1.0,
-          1.0,
-          1.0
-        ]
+        "cell_data_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "dimensions": {
+          "value": [
+            100,
+            100,
+            2
+          ],
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "[Image Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateImageGeometryFilter",
+        "name": "nx::core::CreateImageGeometryFilter",
         "uuid": "c4320659-1a84-461d-939e-c7c10229a504"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "created_attribute_array_path": "[Image Geometry]/Cell Data/Quats",
-        "endian_index": 0,
-        "input_file": "Data/OrientationAnalysis/quats.raw",
-        "number_of_components": 4,
-        "scalar_type_index": 8,
-        "skip_header_bytes": 0,
-        "tuple_dimensions": [
-          [
-            2.0,
-            100.0,
-            100.0
-          ]
-        ]
+        "created_attribute_array_path": {
+          "value": "[Image Geometry]/Cell Data/Quats",
+          "version": 1
+        },
+        "endian_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file": {
+          "value": "Data/OrientationAnalysis/quats.raw",
+          "version": 1
+        },
+        "number_of_components": {
+          "value": 4,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scalar_type_index": {
+          "value": 8,
+          "version": 1
+        },
+        "skip_header_bytes": {
+          "value": 0,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              2.0,
+              100.0,
+              100.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadRawBinaryFilter",
+        "name": "nx::core::ReadRawBinaryFilter",
         "uuid": "dd159366-5f12-42db-af6d-a33592ae8a89"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "input_orientation_array_path": "[Image Geometry]/Cell Data/Quats",
-        "input_representation_index": 2,
-        "output_orientation_array_name": "Eulers",
-        "output_representation_index": 0
+        "input_orientation_array_path": {
+          "value": "[Image Geometry]/Cell Data/Quats",
+          "version": 1
+        },
+        "input_representation_index": {
+          "value": 2,
+          "version": 1
+        },
+        "output_orientation_array_name": {
+          "value": "Eulers",
+          "version": 1
+        },
+        "output_representation_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConvertOrientations",
+        "name": "nx::core::ConvertOrientationsFilter",
         "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_count": 1,
-        "initialization_value_str": "1",
-        "numeric_type_index": 4,
-        "output_array_path": "[Image Geometry]/Cell Data/Phases",
-        "tuple_dimensions": [
-          [
-            2.0,
-            100.0,
-            100.0
-          ]
-        ]
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "1",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "[Image Geometry]/Cell Data/Phases",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              2.0,
+              100.0,
+              100.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_ensemble_attribute_matrix_name": "Cell Ensemble",
-        "crystal_structures_array_name": "CrystalStructures",
-        "parent_group_path": "[Image Geometry]",
-        "input_file": "Data/OrientationAnalysis/Ensemble.ini",
-        "phase_types_array_name": "PhaseTypes"
+        "cell_ensemble_attribute_matrix_name": {
+          "value": "Cell Ensemble",
+          "version": 1
+        },
+        "crystal_structures_array_name": {
+          "value": "CrystalStructures",
+          "version": 1
+        },
+        "input_file": {
+          "value": "Data/OrientationAnalysis/Ensemble.ini",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "parent_group_path": {
+          "value": "[Image Geometry]",
+          "version": 1
+        },
+        "phase_types_array_name": {
+          "value": "PhaseTypes",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadEnsembleInfoFilter",
+        "name": "nx::core::ReadEnsembleInfoFilter",
         "uuid": "ecf1ec45-bc27-4ddb-b2c0-3d465b8c182a"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "[Image Geometry]/Cell Data/Eulers",
-        "cell_ipf_colors_array_name": "IPFColors",
-        "cell_phases_array_path": "[Image Geometry]/Cell Data/Phases",
-        "crystal_structures_array_path": "[Image Geometry]/Cell Ensemble/CrystalStructures",
-        "mask_array_path": "",
-        "reference_dir": [
-          0.0,
-          0.0,
-          1.0
-        ],
-        "use_mask": false
+        "cell_euler_angles_array_path": {
+          "value": "[Image Geometry]/Cell Data/Eulers",
+          "version": 1
+        },
+        "cell_ipf_colors_array_name": {
+          "value": "IPFColors",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "[Image Geometry]/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "[Image Geometry]/Cell Ensemble/CrystalStructures",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_dir": {
+          "value": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeIPFColorsFilter",
+        "name": "nx::core::ComputeIPFColorsFilter",
         "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/EnsembleInfoReaderExample.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/EnsembleInfoReaderExample.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

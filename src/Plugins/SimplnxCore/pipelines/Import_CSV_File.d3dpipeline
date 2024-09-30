@@ -4,8 +4,15 @@
   "pipeline": [
     {
       "args": {
-        "export_file_path": "Data/Output/Import_ASCII_IPF.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Import_ASCII_IPF.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -16,23 +23,39 @@
     },
     {
       "args": {
-        "cell_data_name": "Cell Data",
-        "dimensions": [
-          60,
-          40,
-          100
-        ],
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "output_image_geometry_path": "[Image Geometry]",
-        "spacing": [
-          0.25,
-          0.25,
-          1.0
-        ]
+        "cell_data_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "dimensions": {
+          "value": [
+            60,
+            40,
+            100
+          ],
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "[Image Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            0.25,
+            0.25,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -43,37 +66,50 @@
     },
     {
       "args": {
-        "created_data_group_path": "Imported Data",
-        "read_csv_data_object": {
-          "Consecutive Delimiters": false,
-          "Custom Headers": [
-            "phi1",
-            "Phi",
-            "phi2"
-          ],
-          "Data Types": [
-            8,
-            8,
-            8
-          ],
-          "Delimiters": [
-            ","
-          ],
-          "Header Line": 1,
-          "Header Mode": 1,
-          "Input File Path": "Data/ASCIIData/EulersRotated.csv",
-          "Skipped Array Mask": [
-            false,
-            false,
-            false
-          ],
-          "Start Import Row": 1,
-          "Tuple Dimensions": [
-            480000
-          ]
+        "created_data_group_path": {
+          "value": "Imported Data",
+          "version": 1
         },
-        "selected_attribute_matrix_path": "[Image Geometry]/Cell Data/",
-        "use_existing_group": true
+        "parameters_version": 1,
+        "read_csv_data_object": {
+          "value": {
+            "Consecutive Delimiters": false,
+            "Custom Headers": [
+              "phi1",
+              "Phi",
+              "phi2"
+            ],
+            "Data Types": [
+              8,
+              8,
+              8
+            ],
+            "Delimiters": [
+              ","
+            ],
+            "Header Line": 1,
+            "Header Mode": 1,
+            "Input File Path": "Data/ASCIIData/EulersRotated.csv",
+            "Skipped Array Mask": [
+              false,
+              false,
+              false
+            ],
+            "Start Import Row": 1,
+            "Tuple Dimensions": [
+              480000
+            ]
+          },
+          "version": 1
+        },
+        "selected_attribute_matrix_path": {
+          "value": "[Image Geometry]/Cell Data",
+          "version": 1
+        },
+        "use_existing_group": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -84,14 +120,27 @@
     },
     {
       "args": {
-        "input_data_array_paths": [
-          "[Image Geometry]/Cell Data//phi1",
-          "[Image Geometry]/Cell Data//Phi",
-          "[Image Geometry]/Cell Data//phi2"
-        ],
-        "move_values": true,
-        "normalize_data": false,
-        "output_data_array_name": "Eulers"
+        "input_data_array_paths": {
+          "value": [
+            "[Image Geometry]/Cell Data/phi1",
+            "[Image Geometry]/Cell Data/Phi",
+            "[Image Geometry]/Cell Data/phi2"
+          ],
+          "version": 1
+        },
+        "move_values": {
+          "value": true,
+          "version": 1
+        },
+        "normalize_data": {
+          "value": false,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Eulers",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -102,17 +151,33 @@
     },
     {
       "args": {
-        "cell_ensemble_attribute_matrix_path": "[Image Geometry]/EnsembleAttributeMatrix",
-        "crystal_structures_array_name": "CrystalStructures",
-        "ensemble": [
-          [
-            "Cubic-High m-3m",
-            "Primary",
-            "Nickel"
-          ]
-        ],
-        "phase_names_array_name": "PhaseNames",
-        "phase_types_array_name": "PhaseTypes"
+        "cell_ensemble_attribute_matrix_path": {
+          "value": "[Image Geometry]/EnsembleAttributeMatrix",
+          "version": 1
+        },
+        "crystal_structures_array_name": {
+          "value": "CrystalStructures",
+          "version": 1
+        },
+        "ensemble": {
+          "value": [
+            [
+              "Cubic-High m-3m",
+              "Primary",
+              "Nickel"
+            ]
+          ],
+          "version": 1
+        },
+        "parameters_version": 1,
+        "phase_names_array_name": {
+          "value": "PhaseNames",
+          "version": 1
+        },
+        "phase_types_array_name": {
+          "value": "PhaseTypes",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -123,17 +188,39 @@
     },
     {
       "args": {
-        "component_count": 1,
-        "data_format": "",
-        "initialization_value_str": "1",
-        "numeric_type_index": 4,
-        "output_array_path": "[Image Geometry]/Cell Data//Phases",
-        "set_tuple_dimensions": true,
-        "tuple_dimensions": [
-          [
-            0.0
-          ]
-        ]
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "1",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "[Image Geometry]/Cell Data/Phases",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -144,17 +231,39 @@
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "[Image Geometry]/Cell Data//Eulers",
-        "cell_ipf_colors_array_name": "IPFColors",
-        "cell_phases_array_path": "[Image Geometry]/Cell Data//Phases",
-        "crystal_structures_array_path": "[Image Geometry]/EnsembleAttributeMatrix/CrystalStructures",
-        "mask_array_path": "",
-        "reference_dir": [
-          0.0,
-          0.0,
-          1.0
-        ],
-        "use_mask": false
+        "cell_euler_angles_array_path": {
+          "value": "[Image Geometry]/Cell Data/Eulers",
+          "version": 1
+        },
+        "cell_ipf_colors_array_name": {
+          "value": "IPFColors",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "[Image Geometry]/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "[Image Geometry]/EnsembleAttributeMatrix/CrystalStructures",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_dir": {
+          "value": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -165,11 +274,27 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Import_CSV_Example/Import_ASCII_IPF.png",
-        "image_array_path": "[Image Geometry]/Cell Data//IPFColors",
-        "index_offset": 0,
-        "input_image_geometry_path": "[Image Geometry]",
-        "plane_index": 0
+        "file_name": {
+          "value": "Data/Output/Import_CSV_Example/Import_ASCII_IPF.png",
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "[Image Geometry]/Cell Data/IPFColors",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "[Image Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {

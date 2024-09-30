@@ -1,35 +1,47 @@
 {
   "isDisabled": false,
   "name": "CreateEdgeGeom.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "created_data_group_path": "Imported Data",
-        "read_csv_data_object": {
-          "Consecutive Delimiters": false,
-          "Custom Headers": null,
-          "Data Types": [
-            7,
-            7
-          ],
-          "Delimiters": [
-            ","
-          ],
-          "Header Line": 1,
-          "Header Mode": 0,
-          "Input File Path": "Data/Test_Data/EdgeConnectivity.csv",
-          "Skipped Array Mask": [
-            false,
-            false
-          ],
-          "Start Import Row": 2,
-          "Tuple Dimensions": [
-            264
-          ]
+        "created_data_group_path": {
+          "value": "Imported Data",
+          "version": 1
         },
-        "selected_attribute_matrix_path": "",
-        "use_existing_group": false
+        "parameters_version": 1,
+        "read_csv_data_object": {
+          "value": {
+            "Consecutive Delimiters": false,
+            "Custom Headers": null,
+            "Data Types": [
+              7,
+              7
+            ],
+            "Delimiters": [
+              ","
+            ],
+            "Header Line": 1,
+            "Header Mode": 0,
+            "Input File Path": "Data/Test_Data/EdgeConnectivity.csv",
+            "Skipped Array Mask": [
+              false,
+              false
+            ],
+            "Start Import Row": 2,
+            "Tuple Dimensions": [
+              264
+            ]
+          },
+          "version": 1
+        },
+        "selected_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "use_existing_group": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -40,13 +52,26 @@
     },
     {
       "args": {
-        "input_data_array_paths": [
-          "Imported Data/V0",
-          "Imported Data/V1"
-        ],
-        "move_values": true,
-        "normalize_data": false,
-        "output_data_array_name": "Faces"
+        "input_data_array_paths": {
+          "value": [
+            "Imported Data/V0",
+            "Imported Data/V1"
+          ],
+          "version": 1
+        },
+        "move_values": {
+          "value": true,
+          "version": 1
+        },
+        "normalize_data": {
+          "value": false,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Faces",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -57,33 +82,46 @@
     },
     {
       "args": {
-        "created_data_group_path": "Imported Data 2",
-        "read_csv_data_object": {
-          "Consecutive Delimiters": false,
-          "Custom Headers": null,
-          "Data Types": [
-            8,
-            8,
-            8
-          ],
-          "Delimiters": [
-            ","
-          ],
-          "Header Line": 1,
-          "Header Mode": 0,
-          "Input File Path": "Data/Test_Data/VertexCoordinates.csv",
-          "Skipped Array Mask": [
-            false,
-            false,
-            false
-          ],
-          "Start Import Row": 2,
-          "Tuple Dimensions": [
-            144
-          ]
+        "created_data_group_path": {
+          "value": "Imported Data 2",
+          "version": 1
         },
-        "selected_attribute_matrix_path": "Imported Data 2",
-        "use_existing_group": false
+        "parameters_version": 1,
+        "read_csv_data_object": {
+          "value": {
+            "Consecutive Delimiters": false,
+            "Custom Headers": null,
+            "Data Types": [
+              8,
+              8,
+              8
+            ],
+            "Delimiters": [
+              ","
+            ],
+            "Header Line": 1,
+            "Header Mode": 0,
+            "Input File Path": "Data/Test_Data/VertexCoordinates.csv",
+            "Skipped Array Mask": [
+              false,
+              false,
+              false
+            ],
+            "Start Import Row": 2,
+            "Tuple Dimensions": [
+              144
+            ]
+          },
+          "version": 1
+        },
+        "selected_attribute_matrix_path": {
+          "value": "Imported Data 2",
+          "version": 1
+        },
+        "use_existing_group": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -94,14 +132,27 @@
     },
     {
       "args": {
-        "input_data_array_paths": [
-          "Imported Data 2/x",
-          "Imported Data 2/y",
-          "Imported Data 2/z"
-        ],
-        "move_values": true,
-        "normalize_data": false,
-        "output_data_array_name": "Vertices"
+        "input_data_array_paths": {
+          "value": [
+            "Imported Data 2/x",
+            "Imported Data 2/y",
+            "Imported Data 2/z"
+          ],
+          "version": 1
+        },
+        "move_values": {
+          "value": true,
+          "version": 1
+        },
+        "normalize_data": {
+          "value": false,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Vertices",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -112,39 +163,103 @@
     },
     {
       "args": {
-        "array_handling_index": 1,
-        "cell_attribute_matrix_name": "Cell Data",
-        "dimensions": [
-          20,
-          60,
-          200
-        ],
-        "edge_attribute_matrix_name": "Edge Data",
-        "edge_list_path": "Imported Data/Faces",
-        "face_attribute_matrix_name": "Face Data",
-        "geometry_type_index": 3,
-        "hexahedral_list_path": "",
-        "length_unit_index": 7,
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "output_geometry_path": "Geometry",
-        "quadrilateral_list_path": "Imported Data/Faces",
-        "spacing": [
-          1.0,
-          1.0,
-          1.0
-        ],
-        "tetrahedral_list_path": "Imported Data/Faces",
-        "triangle_list_path": "Imported Data/Faces",
-        "vertex_attribute_matrix_name": "Vertex Data",
-        "vertex_list_path": "Imported Data 2/Vertices",
-        "warnings_as_errors": false,
-        "x_bounds_path": "",
-        "y_bounds_path": "",
-        "z_bounds_path": ""
+        "array_handling_index": {
+          "value": 1,
+          "version": 1
+        },
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "dimensions": {
+          "value": [
+            20,
+            60,
+            200
+          ],
+          "version": 1
+        },
+        "edge_attribute_matrix_name": {
+          "value": "Edge Data",
+          "version": 1
+        },
+        "edge_list_path": {
+          "value": "Imported Data/Faces",
+          "version": 1
+        },
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "geometry_type_index": {
+          "value": 3,
+          "version": 1
+        },
+        "hexahedral_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 7,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "Geometry",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quadrilateral_list_path": {
+          "value": "Imported Data/Faces",
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "tetrahedral_list_path": {
+          "value": "Imported Data/Faces",
+          "version": 1
+        },
+        "triangle_list_path": {
+          "value": "Imported Data/Faces",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        },
+        "vertex_list_path": {
+          "value": "Imported Data 2/Vertices",
+          "version": 1
+        },
+        "warnings_as_errors": {
+          "value": false,
+          "version": 1
+        },
+        "x_bounds_path": {
+          "value": "",
+          "version": 1
+        },
+        "y_bounds_path": {
+          "value": "",
+          "version": 1
+        },
+        "z_bounds_path": {
+          "value": "",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -155,17 +270,39 @@
     },
     {
       "args": {
-        "component_count": 1,
-        "data_format": "",
-        "initialization_value_str": "0",
-        "numeric_type_index": 4,
-        "output_array_path": "Geometry/Edge Data/Int32Array",
-        "set_tuple_dimensions": true,
-        "tuple_dimensions": [
-          [
-            0.0
-          ]
-        ]
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "0",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "Geometry/Edge Data/Int32Array",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -176,18 +313,55 @@
     },
     {
       "args": {
-        "array_path": "Geometry/Edge Data/Int32Array",
-        "init_end_range": "10",
-        "init_start_range": "-10",
-        "init_type_index": 3,
-        "init_value": "1;1;1",
-        "seed_array_name": "InitializeDataFilter SeedValue",
-        "seed_value": 5489,
-        "standardize_seed": false,
-        "starting_fill_value": "0;1;2",
-        "step_operation_index": 0,
-        "step_value": "1;1;1",
-        "use_seed": false
+        "array_path": {
+          "value": "Geometry/Edge Data/Int32Array",
+          "version": 1
+        },
+        "init_end_range": {
+          "value": "10",
+          "version": 1
+        },
+        "init_start_range": {
+          "value": "-10",
+          "version": 1
+        },
+        "init_type_index": {
+          "value": 3,
+          "version": 1
+        },
+        "init_value": {
+          "value": "1;1;1",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "seed_array_name": {
+          "value": "InitializeDataFilter SeedValue",
+          "version": 1
+        },
+        "seed_value": {
+          "value": 5489,
+          "version": 1
+        },
+        "standardize_seed": {
+          "value": false,
+          "version": 1
+        },
+        "starting_fill_value": {
+          "value": "0;1;2",
+          "version": 1
+        },
+        "step_operation_index": {
+          "value": 0,
+          "version": 1
+        },
+        "step_value": {
+          "value": "1;1;1",
+          "version": 1
+        },
+        "use_seed": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -198,17 +372,39 @@
     },
     {
       "args": {
-        "component_count": 1,
-        "data_format": "",
-        "initialization_value_str": "0",
-        "numeric_type_index": 6,
-        "output_array_path": "Geometry/Edge Data/Int64Array",
-        "set_tuple_dimensions": true,
-        "tuple_dimensions": [
-          [
-            0.0
-          ]
-        ]
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "0",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 6,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "Geometry/Edge Data/Int64Array",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -219,18 +415,55 @@
     },
     {
       "args": {
-        "array_path": "Geometry/Edge Data/Int64Array",
-        "init_end_range": "10",
-        "init_start_range": "-10",
-        "init_type_index": 3,
-        "init_value": "1;1;1",
-        "seed_array_name": "InitializeDataFilter SeedValue2",
-        "seed_value": 5489,
-        "standardize_seed": false,
-        "starting_fill_value": "0;1;2",
-        "step_operation_index": 0,
-        "step_value": "1;1;1",
-        "use_seed": false
+        "array_path": {
+          "value": "Geometry/Edge Data/Int64Array",
+          "version": 1
+        },
+        "init_end_range": {
+          "value": "10",
+          "version": 1
+        },
+        "init_start_range": {
+          "value": "-10",
+          "version": 1
+        },
+        "init_type_index": {
+          "value": 3,
+          "version": 1
+        },
+        "init_value": {
+          "value": "1;1;1",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "seed_array_name": {
+          "value": "InitializeDataFilter SeedValue2",
+          "version": 1
+        },
+        "seed_value": {
+          "value": 5489,
+          "version": 1
+        },
+        "standardize_seed": {
+          "value": false,
+          "version": 1
+        },
+        "starting_fill_value": {
+          "value": "0;1;2",
+          "version": 1
+        },
+        "step_operation_index": {
+          "value": 0,
+          "version": 1
+        },
+        "step_value": {
+          "value": "1;1;1",
+          "version": 1
+        },
+        "use_seed": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -240,6 +473,5 @@
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }
