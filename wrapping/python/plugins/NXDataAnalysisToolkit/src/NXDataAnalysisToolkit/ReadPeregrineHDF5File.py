@@ -769,6 +769,11 @@ class ReadPeregrineHDF5File:
         camera_data_nx[:] = camera_data_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
       else:
         camera_data_nx[:] = camera_data_h5
+      
+      try:
+        self._flip_slice_across_x_axis(camera_data_nx)
+      except ValueError as e:
+        return Result(errors=[nx.Error(-1031, f"Unable to flip Camera Dataset array '{camera_data_h5_path.as_posix()}' along the X axis: {e}")])
 
   def _read_slice_datasets(self, h5_file_reader: h5py.File, data_structure: nx.DataStructure, filter_args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> Result:
     read_segmentation_results: bool = filter_args[ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY]
@@ -815,6 +820,11 @@ class ReadPeregrineHDF5File:
           segmentation_result_nx[:] = segmentation_result_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1] + 1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1] + 1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1] + 1]
         else:
           segmentation_result_nx[:] = segmentation_result_h5
+        
+        try:
+          self._flip_slice_across_x_axis(segmentation_result_nx)
+        except ValueError as e:
+          return Result(errors=[nx.Error(-1030, f"Unable to flip Segmentation Result array '{segmentation_result_h5_path}' along the X axis: {e}")])
 
     # Read the camera data
     if read_camera_data:
@@ -840,6 +850,11 @@ class ReadPeregrineHDF5File:
         part_ids_nx[:] = part_ids_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
       else:
         part_ids_nx[:] = part_ids_h5
+      
+      try:
+        self._flip_slice_across_x_axis(part_ids_nx)
+      except ValueError as e:
+        return Result(errors=[nx.Error(-1032, f"Unable to flip Part Ids array '{ReadPeregrineHDF5File.PART_IDS_H5_PATH}' along the X axis: {e}")])
     
     if read_sample_ids:
       message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, 'Reading Sample Ids...'))
@@ -855,6 +870,11 @@ class ReadPeregrineHDF5File:
         sample_ids_nx[:] = sample_ids_h5[slices_subvolume_minmax_z[0]:slices_subvolume_minmax_z[1]+1, slices_subvolume_minmax_y[0]:slices_subvolume_minmax_y[1]+1, slices_subvolume_minmax_x[0]:slices_subvolume_minmax_x[1]+1]
       else:
         sample_ids_nx[:] = sample_ids_h5
+      
+      try:
+        self._flip_slice_across_x_axis(sample_ids_nx)
+      except ValueError as e:
+        return Result(errors=[nx.Error(-1033, f"Unable to flip Sample Ids array '{ReadPeregrineHDF5File.SAMPLE_IDS_H5_PATH}' along the X axis: {e}")])
 
     return Result()
   
@@ -888,6 +908,11 @@ class ReadPeregrineHDF5File:
         anomaly_detection_nx[:] = anomaly_detection_h5[registered_data_subvolume_minmax_z[0]:registered_data_subvolume_minmax_z[1]+1, registered_data_subvolume_minmax_y[0]:registered_data_subvolume_minmax_y[1]+1, registered_data_subvolume_minmax_x[0]:registered_data_subvolume_minmax_x[1]+1]
       else:
         anomaly_detection_nx[:] = anomaly_detection_h5
+      
+      try:
+        self._flip_slice_across_x_axis(anomaly_detection_nx)
+      except ValueError as e:
+        return Result(errors=[nx.Error(-1034, f"Unable to flip Anomaly Detection array '{ReadPeregrineHDF5File.REGISTERED_ANOMALY_DETECTION_H5_PATH}' along the X axis: {e}")])
 
     if should_cancel:
         return Result()
@@ -907,6 +932,11 @@ class ReadPeregrineHDF5File:
         xray_ct_nx[:] = xray_ct_h5[registered_data_subvolume_minmax_z[0]:registered_data_subvolume_minmax_z[1]+1, registered_data_subvolume_minmax_y[0]:registered_data_subvolume_minmax_y[1]+1, registered_data_subvolume_minmax_x[0]:registered_data_subvolume_minmax_x[1]+1]
       else:
         xray_ct_nx[:] = xray_ct_h5
+      
+      try:
+        self._flip_slice_across_x_axis(xray_ct_nx)
+      except ValueError as e:
+        return Result(errors=[nx.Error(-1035, f"Unable to flip X-Ray CT array '{ReadPeregrineHDF5File.REGISTERED_XRAY_CT_H5_PATH}' along the X axis: {e}")])
 
     return Result()
   
@@ -1020,9 +1050,12 @@ class ReadPeregrineHDF5File:
           return scan_data_result
         vertices, edges, tot = scan_data_result.value
 
+        # Flip vertices across the X axis
+        flipped_vertices = self._flip_vertices_across_x_axis(vertices)
+
         # Copy the vertices into the edge geometry
-        v_end = vertex_tuple_offset + vertices.shape[0]
-        vertex_list_view[vertex_tuple_offset:v_end, :] = vertices
+        v_end = vertex_tuple_offset + flipped_vertices.shape[0]
+        vertex_list_view[vertex_tuple_offset:v_end, :] = flipped_vertices
 
         # Update edges values to match the actual vertices indices
         edges += vertex_tuple_offset
@@ -1041,3 +1074,27 @@ class ReadPeregrineHDF5File:
       vertex_list.resize_tuples([vertex_tuple_offset])
     
     return Result()
+  
+  def _flip_slice_across_x_axis(self, slice_arr: np.ndarray):
+    # Flip slices across the X axis (this is necessary to have the images read in the real coordinate system, not the image coordinate system)
+      if slice_arr.ndim == 2:
+        slice_arr[:] = np.flip(slice_arr[:], axis=1)
+      elif slice_arr.ndim == 3:
+        for z in range(slice_arr.shape[0]):
+          slice_arr[:, :, z] = np.flip(slice_arr[:, :, z], axis=1)
+      else:
+        raise ValueError("Input array must be either 2D or 3D.")
+  
+  def _flip_vertices_across_x_axis(self, vertices: np.ndarray) -> np.ndarray:
+    # Step 1: Compute the centroid
+    centroid = vertices.mean(axis=0)
+
+    # Step 2: Translate vertices to origin
+    translated = vertices - centroid
+
+    # Step 3: Flip Across X-Axis
+    flipped_translated = translated.copy()
+    flipped_translated[:, 1] = -flipped_translated[:, 1]
+
+    # Step 4: Translate back to original centroid
+    return flipped_translated + centroid
