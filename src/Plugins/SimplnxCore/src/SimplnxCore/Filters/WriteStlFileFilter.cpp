@@ -100,6 +100,12 @@ Parameters WriteStlFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteStlFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteStlFileFilter::clone() const
 {
   return std::make_unique<WriteStlFileFilter>();

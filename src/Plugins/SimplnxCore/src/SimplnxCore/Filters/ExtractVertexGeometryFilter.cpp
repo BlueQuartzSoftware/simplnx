@@ -93,6 +93,12 @@ Parameters ExtractVertexGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExtractVertexGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractVertexGeometryFilter::clone() const
 {
   return std::make_unique<ExtractVertexGeometryFilter>();

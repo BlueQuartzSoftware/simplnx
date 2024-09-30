@@ -70,6 +70,12 @@ Parameters CreateImageGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateImageGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateImageGeometryFilter::clone() const
 {
   return std::make_unique<CreateImageGeometryFilter>();

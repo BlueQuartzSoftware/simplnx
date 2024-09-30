@@ -350,6 +350,12 @@ Parameters ConvertOrientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ConvertOrientationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertOrientationsFilter::clone() const
 {
   return std::make_unique<ConvertOrientationsFilter>();

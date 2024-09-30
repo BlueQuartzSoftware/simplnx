@@ -75,14 +75,20 @@ IParameter::AcceptedTypes NumericTypeParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json NumericTypeParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType NumericTypeParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json NumericTypeParameter::toJsonImpl(const std::any& value) const
 {
   auto enumValue = std::any_cast<ValueType>(value);
   nlohmann::json json = enumValue;
   return json;
 }
 
-Result<std::any> NumericTypeParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> NumericTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NumericTypeParameter' JSON Error: ";
   if(!json.is_number())

@@ -70,6 +70,12 @@ Parameters WriteAvizoRectilinearCoordinateFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteAvizoRectilinearCoordinateFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
 {
   return std::make_unique<WriteAvizoRectilinearCoordinateFilter>();

@@ -77,6 +77,12 @@ Parameters ComputeShapesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeShapesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeShapesFilter::clone() const
 {
   return std::make_unique<ComputeShapesFilter>();

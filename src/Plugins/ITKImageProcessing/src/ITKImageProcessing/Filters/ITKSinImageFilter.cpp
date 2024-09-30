@@ -83,6 +83,12 @@ Parameters ITKSinImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSinImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSinImageFilter::clone() const
 {
   return std::make_unique<ITKSinImageFilter>();

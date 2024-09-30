@@ -88,6 +88,12 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType ScalarSegmentFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
 {
   return std::make_unique<ScalarSegmentFeaturesFilter>();

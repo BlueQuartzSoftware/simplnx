@@ -83,6 +83,12 @@ Parameters ReadH5OimDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadH5OimDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadH5OimDataFilter::clone() const
 {
   return std::make_unique<ReadH5OimDataFilter>();

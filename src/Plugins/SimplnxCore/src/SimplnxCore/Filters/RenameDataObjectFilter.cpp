@@ -68,6 +68,12 @@ Parameters RenameDataObjectFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RenameDataObjectFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RenameDataObjectFilter::clone() const
 {
   return std::make_unique<RenameDataObjectFilter>();

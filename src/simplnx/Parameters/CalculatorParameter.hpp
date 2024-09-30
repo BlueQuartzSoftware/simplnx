@@ -49,18 +49,6 @@ public:
 
   /**
    * @brief
-   * @param value
-   */
-  nlohmann::json toJson(const std::any& value) const override;
-
-  /**
-   * @brief
-   * @return
-   */
-  Result<std::any> fromJson(const nlohmann::json& json) const override;
-
-  /**
-   * @brief
    * @return
    */
   UniquePointer clone() const override;
@@ -70,6 +58,14 @@ public:
    * @return
    */
   std::any defaultValue() const override;
+
+  /**
+   * @brief Returns version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the json format changes.
+   * @return uint64
+   */
+  VersionType getVersion() const override;
 
   /**
    * @brief
@@ -92,6 +88,19 @@ public:
    * @return
    */
   Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
+
+protected:
+  /**
+   * @brief
+   * @param value
+   */
+  nlohmann::json toJsonImpl(const std::any& value) const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
   ValueType m_DefaultValue = {};

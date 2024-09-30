@@ -82,6 +82,12 @@ Parameters ITKSqrtImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSqrtImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSqrtImageFilter::clone() const
 {
   return std::make_unique<ITKSqrtImageFilter>();

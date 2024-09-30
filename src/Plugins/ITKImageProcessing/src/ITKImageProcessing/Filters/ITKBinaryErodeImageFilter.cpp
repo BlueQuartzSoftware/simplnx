@@ -105,6 +105,12 @@ Parameters ITKBinaryErodeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryErodeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryErodeImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryErodeImageFilter>();

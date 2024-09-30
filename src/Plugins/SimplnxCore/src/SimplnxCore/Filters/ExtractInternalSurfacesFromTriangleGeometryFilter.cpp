@@ -152,6 +152,12 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExtractInternalSurfacesFromTriangleGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometryFilter::clone() const
 {
   return std::make_unique<ExtractInternalSurfacesFromTriangleGeometryFilter>();

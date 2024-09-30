@@ -40,13 +40,19 @@ IParameter::AcceptedTypes DynamicTableParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json DynamicTableParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType DynamicTableParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json DynamicTableParameter::toJsonImpl(const std::any& value) const
 {
   const auto& table = GetAnyRef<ValueType>(value);
   return DynamicTableInfo::WriteData(table);
 }
 
-Result<std::any> DynamicTableParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   return {ConvertResultTo<std::any>(DynamicTableInfo::ReadData(json))};
 }

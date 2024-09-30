@@ -87,6 +87,12 @@ Parameters ITKSumProjectionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSumProjectionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSumProjectionImageFilter::clone() const
 {
   return std::make_unique<ITKSumProjectionImageFilter>();

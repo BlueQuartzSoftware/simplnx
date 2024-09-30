@@ -23,14 +23,20 @@ IParameter::AcceptedTypes DataPathSelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json DataPathSelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType DataPathSelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json DataPathSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> DataPathSelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> DataPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix("FilterParameter 'DataPathSelectionParameter' JSON Error: ");
   if(!json.is_string())

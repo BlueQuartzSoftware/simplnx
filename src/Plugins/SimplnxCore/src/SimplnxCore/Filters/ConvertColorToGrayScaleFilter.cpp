@@ -75,6 +75,12 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ConvertColorToGrayScaleFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertColorToGrayScaleFilter::clone() const
 {
   return std::make_unique<ConvertColorToGrayScaleFilter>();

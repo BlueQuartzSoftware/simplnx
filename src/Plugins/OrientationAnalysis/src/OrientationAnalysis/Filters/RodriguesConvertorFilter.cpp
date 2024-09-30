@@ -71,6 +71,12 @@ Parameters RodriguesConvertorFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RodriguesConvertorFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RodriguesConvertorFilter::clone() const
 {
   return std::make_unique<RodriguesConvertorFilter>();

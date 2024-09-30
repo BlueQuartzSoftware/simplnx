@@ -76,6 +76,12 @@ Parameters ReadH5EbsdFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadH5EbsdFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadH5EbsdFilter::clone() const
 {
   return std::make_unique<ReadH5EbsdFilter>();

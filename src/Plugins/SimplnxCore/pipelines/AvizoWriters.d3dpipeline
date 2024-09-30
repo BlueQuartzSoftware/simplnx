@@ -1,84 +1,118 @@
 {
   "isDisabled": false,
   "name": "AvizoWriters.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
         "import_data_object": {
-          "data_paths": [
-            "DataContainer",
-            "DataContainer/Cell Data",
-            "DataContainer/Cell Data/Image Quality",
-            "DataContainer/Cell Data/Confidence Index",
-            "DataContainer/Cell Data/SEM Signal",
-            "DataContainer/Cell Data/Fit",
-            "DataContainer/Cell Data/X Position",
-            "DataContainer/Cell Data/Y Position",
-            "DataContainer/Cell Data/EulerAngles",
-            "DataContainer/Cell Data/Phases",
-            "DataContainer/Cell Ensemble Data",
-            "DataContainer/Cell Ensemble Data/CrystalStructures",
-            "DataContainer/Cell Ensemble Data/LatticeConstants",
-            "DataContainer/Cell Data/Mask",
-            "DataContainer/Cell Data/Quats",
-            "DataContainer/Cell Feature Data",
-            "DataContainer/Cell Feature Data/Active",
-            "DataContainer/Cell Data/FeatureIds",
-            "DataContainer/Cell Feature Data/Phases",
-            "DataContainer/Cell Feature Data/AvgQuats",
-            "DataContainer/Cell Feature Data/AvgEulerAngles",
-            
-            "DataContainer/NewGrain Data",
-            "DataContainer/Cell Data/ParentIds",
-            "DataContainer/Cell Feature Data/ParentIds",
-            "DataContainer/NewGrain Data/Active",
-            "DataContainer/Cell Feature Data/Volumes",
-            "DataContainer/Cell Feature Data/EquivalentDiameters",
-            "DataContainer/Cell Feature Data/NumElements",
-            "DataContainer/Cell Feature Data/NumNeighbors",
-            "DataContainer/Cell Data/IPFColors"
-          ],
-          "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
-        }
+          "value": {
+            "data_paths": [
+              "DataContainer",
+              "DataContainer/Cell Data",
+              "DataContainer/Cell Data/Image Quality",
+              "DataContainer/Cell Data/Confidence Index",
+              "DataContainer/Cell Data/SEM Signal",
+              "DataContainer/Cell Data/Fit",
+              "DataContainer/Cell Data/X Position",
+              "DataContainer/Cell Data/Y Position",
+              "DataContainer/Cell Data/EulerAngles",
+              "DataContainer/Cell Data/Phases",
+              "DataContainer/Cell Ensemble Data",
+              "DataContainer/Cell Ensemble Data/CrystalStructures",
+              "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Data/Mask",
+              "DataContainer/Cell Data/Quats",
+              "DataContainer/Cell Feature Data",
+              "DataContainer/Cell Feature Data/Active",
+              "DataContainer/Cell Data/FeatureIds",
+              "DataContainer/Cell Feature Data/Phases",
+              "DataContainer/Cell Feature Data/AvgQuats",
+              "DataContainer/Cell Feature Data/AvgEulerAngles",
+              "DataContainer/NewGrain Data",
+              "DataContainer/Cell Data/ParentIds",
+              "DataContainer/Cell Feature Data/ParentIds",
+              "DataContainer/NewGrain Data/Active",
+              "DataContainer/Cell Feature Data/Volumes",
+              "DataContainer/Cell Feature Data/EquivalentDiameters",
+              "DataContainer/Cell Feature Data/NumElements",
+              "DataContainer/Cell Feature Data/NumNeighbors",
+              "DataContainer/Cell Data/IPFColors"
+            ],
+            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+          },
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "This pipeline requires the output from the (08) Small IN100 Full Reconstruction pipeline as input",
       "filter": {
-        "name": "simplnx::ReadDREAM3DFilter",
+        "name": "nx::core::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "input_image_geometry_path": "DataContainer",
-        "output_file": "Data/Output/Examples/SmallIN100_AvizoUniform.am",
-        "units": "meters",
-        "write_binary_file": false
+        "feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "output_file": {
+          "value": "Data/Output/Examples/SmallIN100_AvizoUniform.am",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "units": {
+          "value": "meters",
+          "version": 1
+        },
+        "write_binary_file": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteAvizoUniformCoordinateFilter",
+        "name": "nx::core::WriteAvizoUniformCoordinateFilter",
         "uuid": "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "input_image_geometry_path": "DataContainer",
-        "output_file": "Data/Output/Examples/SmallIN100_AvizoRectilinear.am",
-        "units": "meters",
-        "write_binary_file": false
+        "feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "output_file": {
+          "value": "Data/Output/Examples/SmallIN100_AvizoRectilinear.am",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "units": {
+          "value": "meters",
+          "version": 1
+        },
+        "write_binary_file": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteAvizoRectilinearCoordinateFilter",
+        "name": "nx::core::WriteAvizoRectilinearCoordinateFilter",
         "uuid": "58661ea8-0322-44af-a48e-1dc80e999376"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

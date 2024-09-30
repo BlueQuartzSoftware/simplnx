@@ -102,6 +102,12 @@ Parameters ComputeKMeansFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeKMeansFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeKMeansFilter::clone() const
 {
   return std::make_unique<ComputeKMeansFilter>();

@@ -362,6 +362,12 @@ Parameters RequireMinNumNeighborsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RequireMinNumNeighborsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
 {
   return std::make_unique<RequireMinNumNeighborsFilter>();

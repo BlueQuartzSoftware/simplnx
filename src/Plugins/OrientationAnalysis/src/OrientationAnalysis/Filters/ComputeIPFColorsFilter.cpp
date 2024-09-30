@@ -92,6 +92,12 @@ Parameters ComputeIPFColorsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeIPFColorsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeIPFColorsFilter::clone() const
 {
   return std::make_unique<ComputeIPFColorsFilter>();

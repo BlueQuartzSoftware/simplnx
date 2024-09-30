@@ -95,6 +95,12 @@ Parameters ITKCurvatureAnisotropicDiffusionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKCurvatureAnisotropicDiffusionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKCurvatureAnisotropicDiffusionImageFilter::clone() const
 {
   return std::make_unique<ITKCurvatureAnisotropicDiffusionImageFilter>();

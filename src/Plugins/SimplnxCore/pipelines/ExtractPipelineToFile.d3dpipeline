@@ -1,12 +1,18 @@
 {
   "isDisabled": false,
   "name": "ExtractPipelineToFile.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "input_file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
-        "output_file_path": "Data/Output/Reconstruction/SmallIN100_Final_Pipeline.d3dpipeline"
+        "input_file_path": {
+          "value": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+          "version": 1
+        },
+        "output_file_path": {
+          "value": "Data/Output/Reconstruction/SmallIN100_Final_Pipeline.d3dpipeline",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -16,6 +22,5 @@
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }

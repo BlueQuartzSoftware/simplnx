@@ -96,6 +96,12 @@ Parameters ITKMedianImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMedianImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMedianImageFilter::clone() const
 {
   return std::make_unique<ITKMedianImageFilter>();

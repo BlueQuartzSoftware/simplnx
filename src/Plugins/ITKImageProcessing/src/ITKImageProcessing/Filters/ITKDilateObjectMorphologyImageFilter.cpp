@@ -98,6 +98,12 @@ Parameters ITKDilateObjectMorphologyImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKDilateObjectMorphologyImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKDilateObjectMorphologyImageFilter::clone() const
 {
   return std::make_unique<ITKDilateObjectMorphologyImageFilter>();

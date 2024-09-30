@@ -66,6 +66,12 @@ Parameters ConvertDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ConvertDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConvertDataFilter::clone() const
 {
   return std::make_unique<ConvertDataFilter>();

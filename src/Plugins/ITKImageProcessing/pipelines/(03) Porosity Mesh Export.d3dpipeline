@@ -1,39 +1,88 @@
 {
   "isDisabled": false,
   "name": "(03) Porosity Mesh Export.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "Cell Data",
-        "image_data_array_name": "ImageData",
-        "output_image_geometry_path": "ImageDataContainer",
-        "image_transform_index": 0,
-        "input_file_list_object": {
-          "end_index": 174,
-          "file_extension": ".tif",
-          "file_prefix": "slice_",
-          "file_suffix": "",
-          "increment_index": 1,
-          "input_path": "Data/Porosity_Image/",
-          "ordering": 0,
-          "padding_digits": 2,
-          "start_index": 11
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
         },
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "spacing": [
-          1.0,
-          1.0,
-          1.0
-        ]
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "color_weights": {
+          "value": [
+            0.21250000596046448,
+            0.715399980545044,
+            0.07209999859333038
+          ],
+          "version": 1
+        },
+        "convert_to_gray_scale": {
+          "value": false,
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_transform_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file_list_object": {
+          "value": {
+            "end_index": 174,
+            "file_extension": ".tif",
+            "file_prefix": "slice_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/Porosity_Image/",
+            "ordering": 0,
+            "padding_digits": 2,
+            "start_index": 11
+          },
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scale_images": {
+          "value": false,
+          "version": 1
+        },
+        "scaling": {
+          "value": 1.0,
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ITKImportImageStack",
+        "name": "nx::core::ITKImportImageStackFilter",
         "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
       },
       "isDisabled": false
@@ -41,105 +90,244 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "ImageDataContainer/Cell Data/ImageData",
-              "comparison": 2,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 0.0
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "ImageDataContainer/Cell Data/ImageData",
+                "comparison": 2,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.0
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "output_data_array_name": "Mask"
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "active_array_name": "Active",
-        "cell_feature_group_name": "Cell Feature Data",
-        "feature_ids_name": "FeatureIds",
-        "input_image_geometry_path": "ImageDataContainer",
-        "input_array_path": "ImageDataContainer/Cell Data/ImageData",
-        "mask_path": "ImageDataContainer/Cell Data/Mask",
-        "randomize_features": true,
-        "scalar_tolerance": 0,
-        "use_mask": true
+        "active_array_name": {
+          "value": "Active",
+          "version": 1
+        },
+        "cell_feature_group_name": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "feature_ids_name": {
+          "value": "FeatureIds",
+          "version": 1
+        },
+        "input_array_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "mask_path": {
+          "value": "ImageDataContainer/Cell Data/Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "randomize_features": {
+          "value": true,
+          "version": 1
+        },
+        "scalar_tolerance": {
+          "value": 0,
+          "version": 1
+        },
+        "use_mask": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ScalarSegmentFeaturesFilter",
+        "name": "nx::core::ScalarSegmentFeaturesFilter",
         "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "face_data_group_name": "Face Data",
-        "face_feature_attribute_matrix_name": "Face Feature Data",
-        "face_labels_array_name": "FaceLabels",
-        "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "fix_problem_voxels": true,
-        "generate_triple_lines": false,
-        "input_grid_geometry_path": "ImageDataContainer",
-        "node_types_array_name": "NodeTypes",
-        "input_data_array_paths": [],
-        "output_triangle_geometry_path": "TriangleDataContainer",
-        "vertex_data_group_name": "Vertex Data"
+        "face_data_group_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_feature_attribute_matrix_name": {
+          "value": "Face Feature Data",
+          "version": 1
+        },
+        "face_labels_array_name": {
+          "value": "FaceLabels",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "ImageDataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "fix_problem_voxels": {
+          "value": true,
+          "version": 1
+        },
+        "generate_triple_lines": {
+          "value": false,
+          "version": 1
+        },
+        "input_data_array_paths": {
+          "value": [],
+          "version": 1
+        },
+        "input_grid_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "node_types_array_name": {
+          "value": "NodeTypes",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "TriangleDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "vertex_data_group_name": {
+          "value": "Vertex Data",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::QuickSurfaceMeshFilter",
+        "name": "nx::core::QuickSurfaceMeshFilter",
         "uuid": "13dd00bd-ad49-4e04-95eb-3267952fd6e5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "iteration_steps": 15,
-        "lambda_value": 0.20000000298023224,
-        "mu_factor": 0.20000000298023224,
-        "quad_point_lambda": 0.10000000149011612,
-        "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeTypes",
-        "surface_point_lambda": 0.0,
-        "surface_quad_point_lambda": 0.0,
-        "surface_triple_line_lambda": 0.0,
-        "input_triangle_geometry_path": "TriangleDataContainer",
-        "triple_line_lambda": 0.10000000149011612,
-        "use_taubin_smoothing": true
+        "input_triangle_geometry_path": {
+          "value": "TriangleDataContainer",
+          "version": 1
+        },
+        "iteration_steps": {
+          "value": 15,
+          "version": 1
+        },
+        "lambda_value": {
+          "value": 0.20000000298023224,
+          "version": 1
+        },
+        "mu_factor": {
+          "value": 0.20000000298023224,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quad_point_lambda": {
+          "value": 0.10000000149011612,
+          "version": 1
+        },
+        "surface_mesh_node_type_array_path": {
+          "value": "TriangleDataContainer/Vertex Data/NodeTypes",
+          "version": 1
+        },
+        "surface_point_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "surface_quad_point_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "surface_triple_line_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "triple_line_lambda": {
+          "value": 0.10000000149011612,
+          "version": 1
+        },
+        "use_taubin_smoothing": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::LaplacianSmoothingFilter",
+        "name": "nx::core::LaplacianSmoothingFilter",
         "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "components_to_extract": [
-          [
-            0.0
-          ]
-        ],
-        "delete_original_array": true,
-        "multicomponent_array_path": "TriangleDataContainer/Face Data/FaceLabels",
-        "postfix": "-",
-        "select_components_to_extract": false
+        "components_to_extract": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        },
+        "delete_original_array": {
+          "value": true,
+          "version": 1
+        },
+        "multicomponent_array_path": {
+          "value": "TriangleDataContainer/Face Data/FaceLabels",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "postfix": {
+          "value": "-",
+          "version": 1
+        },
+        "select_components_to_extract": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::SplitAttributeArrayFilter",
+        "name": "nx::core::SplitAttributeArrayFilter",
         "uuid": "55da791f-4d1c-4413-8673-742f27d2b22b"
       },
       "isDisabled": false
@@ -147,25 +335,52 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "TriangleDataContainer/Face Data/FaceLabels-0",
-              "comparison": 0,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 0.0
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "TriangleDataContainer/Face Data/FaceLabels-0",
+                "comparison": 0,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.0
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "output_data_array_name": "FaceLabels-0 Mask"
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "FaceLabels-0 Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
@@ -173,88 +388,175 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "TriangleDataContainer/Face Data/FaceLabels-1",
-              "comparison": 0,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 0.0
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "TriangleDataContainer/Face Data/FaceLabels-1",
+                "comparison": 0,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.0
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "output_data_array_name": "FaceLabels-1 Mask"
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "FaceLabels-1 Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::MultiThresholdObjects",
+        "name": "nx::core::MultiThresholdObjectsFilter",
         "uuid": "4246245e-1011-4add-8436-0af6bed19228"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "conditional_array_path": "TriangleDataContainer/Face Data/FaceLabels-0 Mask",
-        "remove_value": "0",
-        "replace_value": "1",
-        "selected_array_path": "TriangleDataContainer/Face Data/FaceLabels-0",
-        "use_conditional": true
+        "conditional_array_path": {
+          "value": "TriangleDataContainer/Face Data/FaceLabels-0 Mask",
+          "version": 1
+        },
+        "invert_mask": {
+          "value": false,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_value": {
+          "value": "0",
+          "version": 1
+        },
+        "replace_value": {
+          "value": "1",
+          "version": 1
+        },
+        "selected_array_path": {
+          "value": "TriangleDataContainer/Face Data/FaceLabels-0",
+          "version": 1
+        },
+        "use_conditional": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValueFilter",
+        "name": "nx::core::ConditionalSetValueFilter",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "conditional_array_path": "TriangleDataContainer/Face Data/FaceLabels-1 Mask",
-        "remove_value": "0",
-        "replace_value": "1",
-        "selected_array_path": "TriangleDataContainer/Face Data/FaceLabels-1",
-        "use_conditional": true
+        "conditional_array_path": {
+          "value": "TriangleDataContainer/Face Data/FaceLabels-1 Mask",
+          "version": 1
+        },
+        "invert_mask": {
+          "value": false,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_value": {
+          "value": "0",
+          "version": 1
+        },
+        "replace_value": {
+          "value": "1",
+          "version": 1
+        },
+        "selected_array_path": {
+          "value": "TriangleDataContainer/Face Data/FaceLabels-1",
+          "version": 1
+        },
+        "use_conditional": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ConditionalSetValueFilter",
+        "name": "nx::core::ConditionalSetValueFilter",
         "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "move_values": true,
-        "normalize_data": false,
-        "input_data_array_paths": [
-          "TriangleDataContainer/Face Data/FaceLabels-0",
-          "TriangleDataContainer/Face Data/FaceLabels-1"
-        ],
-        "output_data_array_name": "Face Labels"
+        "input_data_array_paths": {
+          "value": [
+            "TriangleDataContainer/Face Data/FaceLabels-0",
+            "TriangleDataContainer/Face Data/FaceLabels-1"
+          ],
+          "version": 1
+        },
+        "move_values": {
+          "value": true,
+          "version": 1
+        },
+        "normalize_data": {
+          "value": false,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Face Labels",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CombineAttributeArraysFilter",
+        "name": "nx::core::CombineAttributeArraysFilter",
         "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Porosity_Analysis.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Porosity_Analysis.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

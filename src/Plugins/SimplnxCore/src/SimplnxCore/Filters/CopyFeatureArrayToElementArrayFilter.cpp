@@ -114,6 +114,12 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CopyFeatureArrayToElementArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyFeatureArrayToElementArrayFilter::clone() const
 {
   return std::make_unique<CopyFeatureArrayToElementArrayFilter>();

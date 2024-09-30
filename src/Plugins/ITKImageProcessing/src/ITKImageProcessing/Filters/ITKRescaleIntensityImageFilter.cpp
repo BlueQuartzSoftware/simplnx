@@ -92,6 +92,12 @@ Parameters ITKRescaleIntensityImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKRescaleIntensityImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKRescaleIntensityImageFilter::clone() const
 {
   return std::make_unique<ITKRescaleIntensityImageFilter>();

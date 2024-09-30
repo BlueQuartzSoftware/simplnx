@@ -64,6 +64,12 @@ Parameters ComputeFeatureRectFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureRectFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureRectFilter::clone() const
 {
   return std::make_unique<ComputeFeatureRectFilter>();

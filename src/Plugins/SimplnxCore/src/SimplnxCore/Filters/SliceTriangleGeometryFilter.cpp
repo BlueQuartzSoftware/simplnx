@@ -94,6 +94,12 @@ Parameters SliceTriangleGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SliceTriangleGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SliceTriangleGeometryFilter::clone() const
 {
   return std::make_unique<SliceTriangleGeometryFilter>();

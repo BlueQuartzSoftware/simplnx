@@ -1,86 +1,106 @@
 {
   "isDisabled": false,
   "name": "ComputeBoundaryCells.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
         "import_data_object": {
-          "data_paths": [
-            "DataContainer",
-            "DataContainer/Cell Data",
-            "DataContainer/Cell Data/Image Quality",
-            "DataContainer/Cell Data/Confidence Index",
-            "DataContainer/Cell Data/SEM Signal",
-            "DataContainer/Cell Data/Fit",
-            "DataContainer/Cell Data/X Position",
-            "DataContainer/Cell Data/Y Position",
-            "DataContainer/Cell Data/EulerAngles",
-            "DataContainer/Cell Data/Phases",
-            "DataContainer/Cell Ensemble Data",
-            "DataContainer/Cell Ensemble Data/CrystalStructures",
-            "DataContainer/Cell Ensemble Data/LatticeConstants",
-            "DataContainer/Cell Data/Mask",
-            "DataContainer/Cell Data/Quats",
-            "DataContainer/Cell Feature Data",
-            "DataContainer/Cell Feature Data/Active",
-            "DataContainer/Cell Data/FeatureIds",
-            "DataContainer/Cell Feature Data/Phases",
-            "DataContainer/Cell Feature Data/AvgQuats",
-            "DataContainer/Cell Feature Data/AvgEulerAngles",
-            
-            "DataContainer/NewGrain Data",
-            "DataContainer/Cell Data/ParentIds",
-            "DataContainer/Cell Feature Data/ParentIds",
-            "DataContainer/NewGrain Data/Active",
-            "DataContainer/Cell Feature Data/Volumes",
-            "DataContainer/Cell Feature Data/EquivalentDiameters",
-            "DataContainer/Cell Feature Data/NumElements",
-            "DataContainer/Cell Feature Data/NumNeighbors",
-            "DataContainer/Cell Data/IPFColors"
-          ],
-          "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+          "value": {
+            "data_paths": [
+              "DataContainer",
+              "DataContainer/Cell Data",
+              "DataContainer/Cell Data/Image Quality",
+              "DataContainer/Cell Data/Confidence Index",
+              "DataContainer/Cell Data/SEM Signal",
+              "DataContainer/Cell Data/Fit",
+              "DataContainer/Cell Data/X Position",
+              "DataContainer/Cell Data/Y Position",
+              "DataContainer/Cell Data/EulerAngles",
+              "DataContainer/Cell Data/Phases",
+              "DataContainer/Cell Ensemble Data",
+              "DataContainer/Cell Ensemble Data/CrystalStructures",
+              "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Data/Mask",
+              "DataContainer/Cell Data/Quats",
+              "DataContainer/Cell Feature Data",
+              "DataContainer/Cell Feature Data/Active",
+              "DataContainer/Cell Data/FeatureIds",
+              "DataContainer/Cell Feature Data/Phases",
+              "DataContainer/Cell Feature Data/AvgQuats",
+              "DataContainer/Cell Feature Data/AvgEulerAngles",
+              "DataContainer/NewGrain Data",
+              "DataContainer/Cell Data/ParentIds",
+              "DataContainer/Cell Feature Data/ParentIds",
+              "DataContainer/NewGrain Data/Active",
+              "DataContainer/Cell Feature Data/Volumes",
+              "DataContainer/Cell Feature Data/EquivalentDiameters",
+              "DataContainer/Cell Feature Data/NumElements",
+              "DataContainer/Cell Feature Data/NumNeighbors",
+              "DataContainer/Cell Data/IPFColors"
+            ],
+            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+          },
+          "version": 1
         },
-        "Imported Pipeline": {
-          "isDisabled": false,
-          "name": "Untitled Pipeline",
-          "pipeline": []
-        }
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadDREAM3DFilter",
+        "name": "nx::core::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "boundary_cells_array_name": "BoundaryCells",
-        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "ignore_feature_zero": true,
-        "input_image_geometry_path": "DataContainer",
-        "include_volume_boundary": true
+        "boundary_cells_array_name": {
+          "value": "BoundaryCells",
+          "version": 1
+        },
+        "feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "ignore_feature_zero": {
+          "value": true,
+          "version": 1
+        },
+        "include_volume_boundary": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeBoundaryCellsFilter",
+        "name": "nx::core::ComputeBoundaryCellsFilter",
         "uuid": "a1dd1c29-9152-4648-836c-3b6967e32600"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/SmallIN100_BoundaryCells.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/SmallIN100_BoundaryCells.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

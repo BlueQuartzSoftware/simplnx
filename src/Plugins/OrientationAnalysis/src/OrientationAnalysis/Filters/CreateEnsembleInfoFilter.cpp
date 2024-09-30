@@ -68,6 +68,12 @@ Parameters CreateEnsembleInfoFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateEnsembleInfoFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateEnsembleInfoFilter::clone() const
 {
   return std::make_unique<CreateEnsembleInfoFilter>();

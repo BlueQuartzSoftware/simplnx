@@ -101,6 +101,12 @@ Parameters CreateDataArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateDataArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateDataArrayFilter::clone() const
 {
   return std::make_unique<CreateDataArrayFilter>();

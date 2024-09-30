@@ -96,6 +96,12 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType PointSampleTriangleGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 {
   return std::make_unique<PointSampleTriangleGeometryFilter>();

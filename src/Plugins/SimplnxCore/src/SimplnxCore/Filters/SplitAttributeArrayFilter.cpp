@@ -69,6 +69,12 @@ Parameters SplitAttributeArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SplitAttributeArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SplitAttributeArrayFilter::clone() const
 {
   return std::make_unique<SplitAttributeArrayFilter>();

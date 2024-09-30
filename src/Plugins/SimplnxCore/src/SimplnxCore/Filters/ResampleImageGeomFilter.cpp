@@ -123,6 +123,12 @@ Parameters ResampleImageGeomFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ResampleImageGeomFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ResampleImageGeomFilter::clone() const
 {
   return std::make_unique<ResampleImageGeomFilter>();

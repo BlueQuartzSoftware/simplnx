@@ -93,6 +93,12 @@ Parameters ITKGradientMagnitudeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGradientMagnitudeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGradientMagnitudeImageFilter::clone() const
 {
   return std::make_unique<ITKGradientMagnitudeImageFilter>();

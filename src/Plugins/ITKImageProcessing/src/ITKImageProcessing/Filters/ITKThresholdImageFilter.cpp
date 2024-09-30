@@ -95,6 +95,12 @@ Parameters ITKThresholdImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKThresholdImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKThresholdImageFilter::clone() const
 {
   return std::make_unique<ITKThresholdImageFilter>();

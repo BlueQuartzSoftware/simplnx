@@ -35,7 +35,13 @@ IParameter::AcceptedTypes CalculatorParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json CalculatorParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType CalculatorParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
 {
   const auto& structValue = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -45,7 +51,7 @@ nlohmann::json CalculatorParameter::toJson(const std::any& value) const
   return json;
 }
 
-Result<std::any> CalculatorParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   if(!json.is_object())

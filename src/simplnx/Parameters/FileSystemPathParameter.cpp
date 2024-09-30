@@ -129,6 +129,12 @@ IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType FileSystemPathParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
 bool FileSystemPathParameter::acceptAllExtensions() const
 {
@@ -136,7 +142,7 @@ bool FileSystemPathParameter::acceptAllExtensions() const
 }
 
 //-----------------------------------------------------------------------------
-nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
+nlohmann::json FileSystemPathParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.string();
@@ -144,7 +150,7 @@ nlohmann::json FileSystemPathParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> FileSystemPathParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
 

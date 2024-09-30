@@ -106,6 +106,12 @@ Parameters ITKImportFijiMontageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKImportFijiMontageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImportFijiMontageFilter::clone() const
 {
   return std::make_unique<ITKImportFijiMontageFilter>();

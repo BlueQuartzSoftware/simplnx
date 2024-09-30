@@ -98,6 +98,12 @@ Parameters ITKGrayscaleMorphologicalClosingImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGrayscaleMorphologicalClosingImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGrayscaleMorphologicalClosingImageFilter::clone() const
 {
   return std::make_unique<ITKGrayscaleMorphologicalClosingImageFilter>();

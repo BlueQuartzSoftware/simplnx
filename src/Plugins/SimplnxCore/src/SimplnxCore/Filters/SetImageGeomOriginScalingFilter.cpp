@@ -69,6 +69,12 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SetImageGeomOriginScalingFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
 {
   return std::make_unique<SetImageGeomOriginScalingFilter>();

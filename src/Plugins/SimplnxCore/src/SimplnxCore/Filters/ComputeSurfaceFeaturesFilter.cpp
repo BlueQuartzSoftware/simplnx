@@ -250,6 +250,12 @@ Parameters ComputeSurfaceFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeSurfaceFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeSurfaceFeaturesFilter::clone() const
 {
   return std::make_unique<ComputeSurfaceFeaturesFilter>();

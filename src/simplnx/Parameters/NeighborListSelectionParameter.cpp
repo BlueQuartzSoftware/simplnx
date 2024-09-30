@@ -53,14 +53,20 @@ IParameter::AcceptedTypes NeighborListSelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json NeighborListSelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType NeighborListSelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json NeighborListSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> NeighborListSelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())

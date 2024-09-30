@@ -94,6 +94,12 @@ Parameters ITKMorphologicalGradientImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMorphologicalGradientImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMorphologicalGradientImageFilter::clone() const
 {
   return std::make_unique<ITKMorphologicalGradientImageFilter>();

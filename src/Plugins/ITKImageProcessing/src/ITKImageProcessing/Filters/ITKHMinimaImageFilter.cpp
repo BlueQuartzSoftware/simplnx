@@ -98,6 +98,12 @@ Parameters ITKHMinimaImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKHMinimaImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKHMinimaImageFilter::clone() const
 {
   return std::make_unique<ITKHMinimaImageFilter>();

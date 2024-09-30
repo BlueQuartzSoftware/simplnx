@@ -156,6 +156,12 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateDataArrayAdvancedFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateDataArrayAdvancedFilter::clone() const
 {
   return std::make_unique<CreateDataArrayAdvancedFilter>();

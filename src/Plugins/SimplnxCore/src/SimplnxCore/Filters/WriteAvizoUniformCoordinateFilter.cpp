@@ -70,6 +70,12 @@ Parameters WriteAvizoUniformCoordinateFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteAvizoUniformCoordinateFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteAvizoUniformCoordinateFilter::clone() const
 {
   return std::make_unique<WriteAvizoUniformCoordinateFilter>();

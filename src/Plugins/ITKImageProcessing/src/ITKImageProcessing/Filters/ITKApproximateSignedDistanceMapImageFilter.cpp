@@ -89,6 +89,12 @@ Parameters ITKApproximateSignedDistanceMapImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKApproximateSignedDistanceMapImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKApproximateSignedDistanceMapImageFilter::clone() const
 {
   return std::make_unique<ITKApproximateSignedDistanceMapImageFilter>();

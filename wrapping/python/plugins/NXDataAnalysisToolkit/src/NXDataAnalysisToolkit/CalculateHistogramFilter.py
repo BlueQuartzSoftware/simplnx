@@ -79,6 +79,9 @@ class CalculateHistogramFilter:
 
     return params
 
+  def parameters_version(self) -> int:
+    return 1
+
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     histogram_image_size: list = args[CalculateHistogramFilter.HISTOGRAM_IMAGE_SIZE]
     num_of_bins: int = args[CalculateHistogramFilter.NUMBER_OF_BINS]

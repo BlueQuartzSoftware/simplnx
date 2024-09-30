@@ -248,6 +248,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 nlohmann::json IFilter::toJson(const Arguments& args) const
 {
   nlohmann::json json;
+  json["parameters_version"] = parametersVersion();
   Parameters params = parameters();
   for(const auto& [name, param] : params)
   {

@@ -91,6 +91,12 @@ Parameters ITKGrayscaleGrindPeakImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGrayscaleGrindPeakImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGrayscaleGrindPeakImageFilter::clone() const
 {
   return std::make_unique<ITKGrayscaleGrindPeakImageFilter>();

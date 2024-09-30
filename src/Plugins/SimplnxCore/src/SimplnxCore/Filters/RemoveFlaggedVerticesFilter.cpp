@@ -102,6 +102,12 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType RemoveFlaggedVerticesFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedVerticesFilter>();

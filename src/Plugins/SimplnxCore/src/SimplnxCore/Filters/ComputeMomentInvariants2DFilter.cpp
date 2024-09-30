@@ -76,6 +76,12 @@ Parameters ComputeMomentInvariants2DFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeMomentInvariants2DFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeMomentInvariants2DFilter::clone() const
 {
   return std::make_unique<ComputeMomentInvariants2DFilter>();

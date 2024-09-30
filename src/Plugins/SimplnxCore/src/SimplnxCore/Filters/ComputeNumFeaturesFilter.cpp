@@ -67,6 +67,12 @@ Parameters ComputeNumFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeNumFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeNumFeaturesFilter::clone() const
 {
   return std::make_unique<ComputeNumFeaturesFilter>();

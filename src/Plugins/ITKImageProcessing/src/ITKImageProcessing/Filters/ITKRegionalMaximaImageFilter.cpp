@@ -101,6 +101,12 @@ Parameters ITKRegionalMaximaImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKRegionalMaximaImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKRegionalMaximaImageFilter::clone() const
 {
   return std::make_unique<ITKRegionalMaximaImageFilter>();

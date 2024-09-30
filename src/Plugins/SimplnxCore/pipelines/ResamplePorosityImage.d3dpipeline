@@ -1,152 +1,300 @@
 {
   "isDisabled": false,
   "name": "Untitled.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "Cell Data",
-        "image_data_array_name": "ImageData",
-        "output_image_geometry_path": "Porosity_Image",
-        "image_transform_index": 0,
-        "input_file_list_object": {
-          "end_index": 174,
-          "file_extension": ".tif",
-          "file_prefix": "slice_",
-          "file_suffix": "",
-          "increment_index": 1,
-          "input_path": "Data/Porosity_Image",
-          "ordering": 0,
-          "padding_digits": 2,
-          "start_index": 11
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
         },
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "spacing": [
-          1.0,
-          1.0,
-          1.0
-        ]
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "color_weights": {
+          "value": [
+            0.21250000596046448,
+            0.715399980545044,
+            0.07209999859333038
+          ],
+          "version": 1
+        },
+        "convert_to_gray_scale": {
+          "value": false,
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_transform_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file_list_object": {
+          "value": {
+            "end_index": 174,
+            "file_extension": ".tif",
+            "file_prefix": "slice_",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/Porosity_Image",
+            "ordering": 0,
+            "padding_digits": 2,
+            "start_index": 11
+          },
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "Porosity_Image",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scale_images": {
+          "value": false,
+          "version": 1
+        },
+        "scaling": {
+          "value": 1.0,
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ITKImportImageStack",
+        "name": "nx::core::ITKImportImageStackFilter",
         "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "Cell Feature Data",
-        "exact_dimensions": [
-          100,
-          500,
-          20
-        ],
-        "feature_ids_path": "",
-        "new_data_container_path": "Porosity_Image_Resampled_Spacing",
-        "remove_original_geometry": false,
-        "renumber_features": false,
-        "resampling_mode_index": 0,
-        "scaling": [
-          120.4000015258789,
-          50.7400016784668,
-          68.12000274658203
-        ],
-        "input_image_geometry_path": "Porosity_Image",
-        "spacing": [
-          2.0,
-          2.0,
-          2.0
-        ]
+        "cell_feature_attribute_matrix_path": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "exact_dimensions": {
+          "value": [
+            100,
+            500,
+            20
+          ],
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Porosity_Image",
+          "version": 1
+        },
+        "new_data_container_path": {
+          "value": "Porosity_Image_Resampled_Spacing",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": false,
+          "version": 1
+        },
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
+        "resampling_mode_index": {
+          "value": 0,
+          "version": 1
+        },
+        "scaling": {
+          "value": [
+            120.4000015258789,
+            50.7400016784668,
+            68.12000274658203
+          ],
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            2.0,
+            2.0,
+            2.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ResampleImageGeomFilter",
+        "name": "nx::core::ResampleImageGeomFilter",
         "uuid": "9783ea2c-4cf7-46de-ab21-b40d91a48c5b"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "Cell Feature Data",
-        "exact_dimensions": [
-          100,
-          500,
-          20
-        ],
-        "feature_ids_path": "",
-        "new_data_container_path": "Porosity_Image_Resampled_Scaled",
-        "remove_original_geometry": false,
-        "renumber_features": false,
-        "resampling_mode_index": 1,
-        "scaling": [
-          50.0,
-          50.0,
-          50.0
-        ],
-        "input_image_geometry_path": "Porosity_Image",
-        "spacing": [
-          0.25,
-          0.699999988079071,
-          2.299999952316284
-        ]
+        "cell_feature_attribute_matrix_path": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "exact_dimensions": {
+          "value": [
+            100,
+            500,
+            20
+          ],
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Porosity_Image",
+          "version": 1
+        },
+        "new_data_container_path": {
+          "value": "Porosity_Image_Resampled_Scaled",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": false,
+          "version": 1
+        },
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
+        "resampling_mode_index": {
+          "value": 1,
+          "version": 1
+        },
+        "scaling": {
+          "value": [
+            50.0,
+            50.0,
+            50.0
+          ],
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            0.25,
+            0.699999988079071,
+            2.299999952316284
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ResampleImageGeomFilter",
+        "name": "nx::core::ResampleImageGeomFilter",
         "uuid": "9783ea2c-4cf7-46de-ab21-b40d91a48c5b"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "cell_feature_attribute_matrix_path": "Cell Feature Data",
-        "exact_dimensions": [
-          262,
-          195,
-          82
-        ],
-        "feature_ids_path": "",
-        "new_data_container_path": "Porosity_Image_Resampled_Exact_Dims",
-        "remove_original_geometry": false,
-        "renumber_features": false,
-        "resampling_mode_index": 2,
-        "scaling": [
-          120.4000015258789,
-          50.7400016784668,
-          68.12000274658203
-        ],
-        "input_image_geometry_path": "Porosity_Image",
-        "spacing": [
-          0.25,
-          0.699999988079071,
-          2.299999952316284
-        ]
+        "cell_feature_attribute_matrix_path": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "exact_dimensions": {
+          "value": [
+            262,
+            195,
+            82
+          ],
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "Porosity_Image",
+          "version": 1
+        },
+        "new_data_container_path": {
+          "value": "Porosity_Image_Resampled_Exact_Dims",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": false,
+          "version": 1
+        },
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
+        "resampling_mode_index": {
+          "value": 2,
+          "version": 1
+        },
+        "scaling": {
+          "value": [
+            120.4000015258789,
+            50.7400016784668,
+            68.12000274658203
+          ],
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            0.25,
+            0.699999988079071,
+            2.299999952316284
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ResampleImageGeomFilter",
+        "name": "nx::core::ResampleImageGeomFilter",
         "uuid": "9783ea2c-4cf7-46de-ab21-b40d91a48c5b"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/ResamplePorosityImage.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/ResamplePorosityImage.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }

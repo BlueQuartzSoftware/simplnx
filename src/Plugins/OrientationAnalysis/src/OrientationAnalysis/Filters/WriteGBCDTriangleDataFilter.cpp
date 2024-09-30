@@ -76,6 +76,12 @@ Parameters WriteGBCDTriangleDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteGBCDTriangleDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteGBCDTriangleDataFilter::clone() const
 {
   return std::make_unique<WriteGBCDTriangleDataFilter>();

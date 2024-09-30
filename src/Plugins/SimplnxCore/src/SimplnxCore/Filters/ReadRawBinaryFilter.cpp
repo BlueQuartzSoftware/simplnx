@@ -83,6 +83,12 @@ Parameters ReadRawBinaryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadRawBinaryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadRawBinaryFilter::clone() const
 {
   return std::make_unique<ReadRawBinaryFilter>();

@@ -83,6 +83,12 @@ Parameters ReadStlFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadStlFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadStlFileFilter::clone() const
 {
   return std::make_unique<ReadStlFileFilter>();

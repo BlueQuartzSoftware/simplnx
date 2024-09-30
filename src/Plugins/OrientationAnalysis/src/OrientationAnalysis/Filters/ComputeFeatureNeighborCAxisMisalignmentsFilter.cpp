@@ -80,6 +80,12 @@ Parameters ComputeFeatureNeighborCAxisMisalignmentsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureNeighborCAxisMisalignmentsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureNeighborCAxisMisalignmentsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureNeighborCAxisMisalignmentsFilter>();

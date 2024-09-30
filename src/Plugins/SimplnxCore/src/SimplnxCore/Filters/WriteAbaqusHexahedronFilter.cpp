@@ -71,6 +71,12 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteAbaqusHexahedronFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteAbaqusHexahedronFilter::clone() const
 {
   return std::make_unique<WriteAbaqusHexahedronFilter>();

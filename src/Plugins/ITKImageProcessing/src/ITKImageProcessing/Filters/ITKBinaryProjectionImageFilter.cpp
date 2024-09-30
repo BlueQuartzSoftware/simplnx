@@ -99,6 +99,12 @@ Parameters ITKBinaryProjectionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryProjectionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryProjectionImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryProjectionImageFilter>();

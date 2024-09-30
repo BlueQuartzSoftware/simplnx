@@ -83,6 +83,12 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeNeighborhoodsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeNeighborhoodsFilter::clone() const
 {
   return std::make_unique<ComputeNeighborhoodsFilter>();

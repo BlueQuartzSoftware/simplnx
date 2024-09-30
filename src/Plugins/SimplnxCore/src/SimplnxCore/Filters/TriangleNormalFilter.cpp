@@ -119,6 +119,12 @@ Parameters TriangleNormalFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType TriangleNormalFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleNormalFilter::clone() const
 {
   return std::make_unique<TriangleNormalFilter>();

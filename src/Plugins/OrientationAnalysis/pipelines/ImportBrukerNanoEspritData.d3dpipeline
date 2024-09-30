@@ -1,48 +1,79 @@
 {
   "isDisabled": false,
   "name": "ImportBrukerNanoEspritData.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
-        "degrees_to_radians": true,
-        "output_image_geometry_path": "ImageGeom",
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "read_pattern_data": false,
-        "selected_scan_names": {
-          "input_file_path": "Data/OrientationAnalysis/H5EspritReaderTest.h5",
-          "scan_names": [
-            "Section_435"
-          ],
-          "stacking_order": 0
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
         },
-        "z_spacing": 1.0
+        "cell_ensemble_attribute_matrix_name": {
+          "value": "Cell Ensemble Data",
+          "version": 1
+        },
+        "degrees_to_radians": {
+          "value": true,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "read_pattern_data": {
+          "value": false,
+          "version": 1
+        },
+        "selected_scan_names": {
+          "value": {
+            "input_file_path": "Data/OrientationAnalysis/H5EspritReaderTest.h5",
+            "scan_names": [
+              "Section_435"
+            ],
+            "stacking_order": 0
+          },
+          "version": 1
+        },
+        "z_spacing": {
+          "value": 1.0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadH5EspritDataFilter",
+        "name": "nx::core::ReadH5EspritDataFilter",
         "uuid": "694a0d54-b492-41bc-993b-ce0f5006e927"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/H5EspritData.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/H5EspritData.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

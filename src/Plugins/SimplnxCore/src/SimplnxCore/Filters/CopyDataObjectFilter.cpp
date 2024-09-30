@@ -66,6 +66,12 @@ Parameters CopyDataObjectFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CopyDataObjectFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyDataObjectFilter::clone() const
 {
   return std::make_unique<CopyDataObjectFilter>();

@@ -59,6 +59,12 @@ nx::core::Parameters Test2Filter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType Test2Filter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 nx::core::IFilter::UniquePointer Test2Filter::clone() const
 {
   return std::make_unique<Test2Filter>();

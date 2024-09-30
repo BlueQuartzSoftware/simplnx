@@ -104,6 +104,12 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CAxisSegmentFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CAxisSegmentFeaturesFilter::clone() const
 {
   return std::make_unique<CAxisSegmentFeaturesFilter>();

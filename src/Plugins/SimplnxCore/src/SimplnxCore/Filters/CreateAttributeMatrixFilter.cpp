@@ -50,6 +50,12 @@ Parameters CreateAttributeMatrixFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType CreateAttributeMatrixFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
 {
   return std::make_unique<CreateAttributeMatrixFilter>();

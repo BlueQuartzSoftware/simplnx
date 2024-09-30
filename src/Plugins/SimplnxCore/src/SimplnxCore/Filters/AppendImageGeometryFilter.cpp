@@ -78,6 +78,12 @@ Parameters AppendImageGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AppendImageGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AppendImageGeometryFilter::clone() const
 {
   return std::make_unique<AppendImageGeometryFilter>();

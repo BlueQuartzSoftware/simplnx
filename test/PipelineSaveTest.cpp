@@ -50,6 +50,11 @@ public:
     return Parameters();
   }
 
+  VersionType parametersVersion() const override
+  {
+    return 1;
+  }
+
   UniquePointer clone() const override
   {
     return std::make_unique<TestFilter>();

@@ -101,6 +101,12 @@ Parameters ITKRegionalMinimaImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKRegionalMinimaImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKRegionalMinimaImageFilter::clone() const
 {
   return std::make_unique<ITKRegionalMinimaImageFilter>();

@@ -97,6 +97,12 @@ Parameters ReverseTriangleWindingFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReverseTriangleWindingFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 {
   return std::make_unique<ReverseTriangleWindingFilter>();

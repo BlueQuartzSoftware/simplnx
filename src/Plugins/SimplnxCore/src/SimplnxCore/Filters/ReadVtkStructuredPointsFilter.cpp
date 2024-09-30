@@ -95,6 +95,12 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadVtkStructuredPointsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadVtkStructuredPointsFilter::clone() const
 {
   return std::make_unique<ReadVtkStructuredPointsFilter>();

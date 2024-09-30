@@ -96,6 +96,12 @@ Parameters ITKLabelContourImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKLabelContourImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKLabelContourImageFilter::clone() const
 {
   return std::make_unique<ITKLabelContourImageFilter>();

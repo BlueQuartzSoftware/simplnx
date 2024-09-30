@@ -106,6 +106,12 @@ Parameters ITKOpeningByReconstructionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKOpeningByReconstructionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKOpeningByReconstructionImageFilter::clone() const
 {
   return std::make_unique<ITKOpeningByReconstructionImageFilter>();

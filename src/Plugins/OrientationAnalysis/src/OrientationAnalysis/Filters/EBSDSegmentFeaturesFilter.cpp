@@ -102,6 +102,12 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType EBSDSegmentFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer EBSDSegmentFeaturesFilter::clone() const
 {
   return std::make_unique<EBSDSegmentFeaturesFilter>();

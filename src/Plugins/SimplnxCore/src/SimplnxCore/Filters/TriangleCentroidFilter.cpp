@@ -65,6 +65,12 @@ Parameters TriangleCentroidFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType TriangleCentroidFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer TriangleCentroidFilter::clone() const
 {
   return std::make_unique<TriangleCentroidFilter>();

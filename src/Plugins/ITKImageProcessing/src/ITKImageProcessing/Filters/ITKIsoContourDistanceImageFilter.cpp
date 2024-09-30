@@ -89,6 +89,12 @@ Parameters ITKIsoContourDistanceImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKIsoContourDistanceImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKIsoContourDistanceImageFilter::clone() const
 {
   return std::make_unique<ITKIsoContourDistanceImageFilter>();

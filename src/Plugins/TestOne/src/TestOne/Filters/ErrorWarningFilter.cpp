@@ -79,6 +79,12 @@ nx::core::Parameters ErrorWarningFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ErrorWarningFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErrorWarningFilter::clone() const
 {
   return std::make_unique<ErrorWarningFilter>();

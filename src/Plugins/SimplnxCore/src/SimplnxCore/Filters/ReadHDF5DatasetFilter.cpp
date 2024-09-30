@@ -89,6 +89,12 @@ Parameters ReadHDF5DatasetFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadHDF5DatasetFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadHDF5DatasetFilter::clone() const
 {
   return std::make_unique<ReadHDF5DatasetFilter>();

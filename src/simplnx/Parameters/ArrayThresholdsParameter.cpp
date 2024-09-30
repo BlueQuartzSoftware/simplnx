@@ -27,14 +27,20 @@ IParameter::AcceptedTypes ArrayThresholdsParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json ArrayThresholdsParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType ArrayThresholdsParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const
 {
   const auto& thresholds = GetAnyRef<ValueType>(value);
   nlohmann::json json = thresholds.toJson();
   return json;
 }
 
-Result<std::any> ArrayThresholdsParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);

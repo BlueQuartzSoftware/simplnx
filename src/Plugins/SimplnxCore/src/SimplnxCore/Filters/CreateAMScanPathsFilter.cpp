@@ -80,6 +80,12 @@ Parameters CreateAMScanPathsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateAMScanPathsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateAMScanPathsFilter::clone() const
 {
   return std::make_unique<CreateAMScanPathsFilter>();

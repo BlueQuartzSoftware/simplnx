@@ -266,6 +266,12 @@ Parameters IdentifySampleFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType IdentifySampleFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IdentifySampleFilter::clone() const
 {
   return std::make_unique<IdentifySampleFilter>();

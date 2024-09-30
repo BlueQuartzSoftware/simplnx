@@ -91,6 +91,12 @@ Parameters ITKHMaximaImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKHMaximaImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKHMaximaImageFilter::clone() const
 {
   return std::make_unique<ITKHMaximaImageFilter>();

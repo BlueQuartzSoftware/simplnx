@@ -73,6 +73,12 @@ Parameters ReadEnsembleInfoFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadEnsembleInfoFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadEnsembleInfoFilter::clone() const
 {
   return std::make_unique<ReadEnsembleInfoFilter>();

@@ -97,6 +97,12 @@ Parameters ITKSigmoidImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSigmoidImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSigmoidImageFilter::clone() const
 {
   return std::make_unique<ITKSigmoidImageFilter>();

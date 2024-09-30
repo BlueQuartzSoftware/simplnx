@@ -4,111 +4,169 @@
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
-        "output_image_geometry_path": "ImageGeom",
-        "origin": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "read_pattern_data": false,
-        "selected_scan_names": {
-          "input_file_path": "Data/Hikari_Ni_Sequence.h5",
-          "scan_names": [
-            "Scan 1",
-            "Scan 2",
-            "Scan 3",
-            "Scan 4",
-            "Scan 5",
-            "Scan 6",
-            "Scan 7",
-            "Scan 8",
-            "Scan 9"
-          ],
-          "stacking_order": 0
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
         },
-        "z_spacing": 1.0
+        "cell_ensemble_attribute_matrix_name": {
+          "value": "Cell Ensemble Data",
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "read_pattern_data": {
+          "value": false,
+          "version": 1
+        },
+        "selected_scan_names": {
+          "value": {
+            "input_file_path": "Data/Hikari_Ni_Sequence.h5",
+            "scan_names": [
+              "Scan 1",
+              "Scan 2",
+              "Scan 3",
+              "Scan 4",
+              "Scan 5",
+              "Scan 6",
+              "Scan 7",
+              "Scan 8",
+              "Scan 9"
+            ],
+            "stacking_order": 0
+          },
+          "version": 1
+        },
+        "z_spacing": {
+          "value": 1.0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadH5OimDataFilter",
+        "name": "nx::core::ReadH5OimDataFilter",
         "uuid": "4ad3d47c-b1e1-4429-bc65-5e021be62ba0"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "euler_angles_array_path": "ImageGeom/Cell Data/EulerAngles",
-        "rotation_axis_angle": [
-          0.0,
-          0.0,
-          1.0,
-          90.0
-        ]
+        "euler_angles_array_path": {
+          "value": "ImageGeom/Cell Data/EulerAngles",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "rotation_axis_angle": {
+          "value": [
+            0.0,
+            0.0,
+            1.0,
+            90.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RotateEulerRefFrameFilter",
+        "name": "nx::core::RotateEulerRefFrameFilter",
         "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "output_image_geometry_path": "",
-        "remove_original_geometry": true,
-        "rotate_slice_by_slice": true,
-        "rotation_axis_angle": [
-          0.0,
-          1.0,
-          0.0,
-          180.0
-        ],
-        "rotation_matrix": [
-          [
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
-            1.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
+        "input_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": true,
+          "version": 1
+        },
+        "rotate_slice_by_slice": {
+          "value": true,
+          "version": 1
+        },
+        "rotation_axis_angle": {
+          "value": [
             0.0,
             1.0,
-            0.0
+            0.0,
+            180.0
           ],
-          [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
-        ],
-        "rotation_representation_index": 0,
-        "input_image_geometry_path": "ImageGeom"
+          "version": 1
+        },
+        "rotation_matrix": {
+          "value": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "version": 1
+        },
+        "rotation_representation_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::RotateSampleRefFrameFilter",
+        "name": "nx::core::RotateSampleRefFrameFilter",
         "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/EdaxOIMData.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/EdaxOIMData.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false

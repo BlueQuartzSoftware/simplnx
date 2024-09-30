@@ -53,6 +53,7 @@ class SIMPLNX_EXPORT IParameter
 public:
   using AcceptedTypes = std::vector<std::type_index>;
   using UniquePointer = std::unique_ptr<IParameter>;
+  using VersionType = uint64;
 
   enum class Type : uint8
   {
@@ -111,18 +112,26 @@ public:
   virtual AcceptedTypes acceptedTypes() const = 0;
 
   /**
+   * @brief Returns version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the json format changes.
+   * @return uint64
+   */
+  virtual VersionType getVersion() const = 0;
+
+  /**
    * @brief Converts the given value to JSON.
    * Throws if value is not an accepted type.
    * @param value
    */
-  virtual nlohmann::json toJson(const std::any& value) const = 0;
+  nlohmann::json toJson(const std::any& value) const;
 
   /**
    * @brief Converts the given JSON to a std::any containing the appropriate input type.
    * Returns any warnings/errors.
    * @return
    */
-  virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
+  Result<std::any> fromJson(const nlohmann::json& json) const;
 
   /**
    * @brief Creates a copy of the parameter.
@@ -140,6 +149,20 @@ public:
 
 protected:
   IParameter() = default;
+
+  /**
+   * @brief Converts the given value to JSON.
+   * Throws if value is not an accepted type.
+   * @param value
+   */
+  virtual nlohmann::json toJsonImpl(const std::any& value) const = 0;
+
+  /**
+   * @brief Converts the given JSON to a std::any containing the appropriate input type.
+   * Returns any warnings/errors.
+   * @return
+   */
+  virtual Result<std::any> fromJsonImpl(const nlohmann::json& json, uint64 version) const = 0;
 };
 
 using AnyParameter = AnyCloneable<IParameter>;

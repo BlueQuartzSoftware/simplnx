@@ -1,108 +1,150 @@
 {
   "isDisabled": false,
   "name": "(02) SmallIN100 Smooth Mesh.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
         "import_data_object": {
-          "data_paths": [
-            "DataContainer",
-            "DataContainer/Cell Data",
-            "DataContainer/Cell Data/Image Quality",
-            "DataContainer/Cell Data/Confidence Index",
-            "DataContainer/Cell Data/SEM Signal",
-            "DataContainer/Cell Data/Fit",
-            "DataContainer/Cell Data/EulerAngles",
-            "DataContainer/Cell Data/Phases",
-            "DataContainer/Cell Data/Mask",
-            "DataContainer/Cell Data/Quats",
-            "DataContainer/Cell Data/FeatureIds",
-            "DataContainer/Cell Data/ParentIds",
-            "DataContainer/Cell Data/IPFColors",
-            "DataContainer/Cell Data/GBManhattanDistances",
-            "DataContainer/Cell Data/TJManhattanDistances",
-            "DataContainer/Cell Data/QPManhattanDistances",
-            "DataContainer/Cell Data/FeatureReferenceMisorientations",
-            "DataContainer/Cell Data/KernelAverageMisorientations",
-            "DataContainer/Cell Feature Data",
-            "DataContainer/Cell Ensemble Data",
-            "DataContainer/Cell Ensemble Data/CrystalStructures",
-            "DataContainer/Cell Ensemble Data/LatticeConstants",
-            "DataContainer/NewGrain Data",
-            "DataContainer/NewGrain Data/Active",
-            "DataContainer/Cell Feature Data/AspectRatios",
-            "DataContainer/Cell Feature Data/AvgEulerAngles",
-            "DataContainer/Cell Feature Data/AvgQuats",
-            "DataContainer/Cell Feature Data/AxisEulerAngles",
-            "DataContainer/Cell Feature Data/AxisLengths",
-            "DataContainer/Cell Feature Data/Centroids",
-            "DataContainer/Cell Feature Data/EquivalentDiameters",
-            "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
-            "DataContainer/Cell Feature Data/Neighborhoods",
-            "DataContainer/Cell Feature Data/NumElements",
-            "DataContainer/Cell Feature Data/NumNeighbors",
-            "DataContainer/Cell Feature Data/Omega3s",
-            "DataContainer/Cell Feature Data/Phases",
-            "DataContainer/Cell Feature Data/Poles",
-            "DataContainer/Cell Feature Data/Schmids",
-            "DataContainer/Cell Feature Data/Shape Volumes",
-            "DataContainer/Cell Feature Data/SlipSystems",
-            "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
-            "TriangleDataContainer",
-            "TriangleDataContainer/SharedTriList",
-            "TriangleDataContainer/SharedVertexList",
-            "TriangleDataContainer/Face Data",
-            "TriangleDataContainer/Vertex Data",
-            "TriangleDataContainer/Vertex Data/NodeType",
-            "TriangleDataContainer/Face Data/FaceLabels",
-            "TriangleDataContainer/QM Face Feature Data"
-          ],
-          "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+          "value": {
+            "data_paths": [
+              "DataContainer",
+              "DataContainer/Cell Data",
+              "DataContainer/Cell Data/Image Quality",
+              "DataContainer/Cell Data/Confidence Index",
+              "DataContainer/Cell Data/SEM Signal",
+              "DataContainer/Cell Data/Fit",
+              "DataContainer/Cell Data/EulerAngles",
+              "DataContainer/Cell Data/Phases",
+              "DataContainer/Cell Data/Mask",
+              "DataContainer/Cell Data/Quats",
+              "DataContainer/Cell Data/FeatureIds",
+              "DataContainer/Cell Data/ParentIds",
+              "DataContainer/Cell Data/IPFColors",
+              "DataContainer/Cell Data/GBManhattanDistances",
+              "DataContainer/Cell Data/TJManhattanDistances",
+              "DataContainer/Cell Data/QPManhattanDistances",
+              "DataContainer/Cell Data/FeatureReferenceMisorientations",
+              "DataContainer/Cell Data/KernelAverageMisorientations",
+              "DataContainer/Cell Feature Data",
+              "DataContainer/Cell Ensemble Data",
+              "DataContainer/Cell Ensemble Data/CrystalStructures",
+              "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/NewGrain Data",
+              "DataContainer/NewGrain Data/Active",
+              "DataContainer/Cell Feature Data/AspectRatios",
+              "DataContainer/Cell Feature Data/AvgEulerAngles",
+              "DataContainer/Cell Feature Data/AvgQuats",
+              "DataContainer/Cell Feature Data/AxisEulerAngles",
+              "DataContainer/Cell Feature Data/AxisLengths",
+              "DataContainer/Cell Feature Data/Centroids",
+              "DataContainer/Cell Feature Data/EquivalentDiameters",
+              "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
+              "DataContainer/Cell Feature Data/Neighborhoods",
+              "DataContainer/Cell Feature Data/NumElements",
+              "DataContainer/Cell Feature Data/NumNeighbors",
+              "DataContainer/Cell Feature Data/Omega3s",
+              "DataContainer/Cell Feature Data/Phases",
+              "DataContainer/Cell Feature Data/Poles",
+              "DataContainer/Cell Feature Data/Schmids",
+              "DataContainer/Cell Feature Data/Shape Volumes",
+              "DataContainer/Cell Feature Data/SlipSystems",
+              "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
+              "TriangleDataContainer",
+              "TriangleDataContainer/SharedTriList",
+              "TriangleDataContainer/SharedVertexList",
+              "TriangleDataContainer/Face Data",
+              "TriangleDataContainer/Vertex Data",
+              "TriangleDataContainer/Vertex Data/NodeType",
+              "TriangleDataContainer/Face Data/FaceLabels",
+              "TriangleDataContainer/QM Face Feature Data"
+            ],
+            "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+          },
+          "version": 1
         },
-        "Imported Pipeline": {
-          "isDisabled": false,
-          "name": "Untitled Pipeline",
-          "pipeline": []
-        }
+        "parameters_version": 1
       },
+      "comments": "",
       "filter": {
-        "name": "simplnx::ReadDREAM3DFilter",
+        "name": "nx::core::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "iteration_steps": 100,
-        "lambda_value": 0.25,
-        "mu_factor": 0.20000000298023224,
-        "quad_point_lambda": 0.15000000596046448,
-        "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeType",
-        "surface_point_lambda": 0.0,
-        "surface_quad_point_lambda": 0.0,
-        "surface_triple_line_lambda": 0.0,
-        "input_triangle_geometry_path": "TriangleDataContainer",
-        "triple_line_lambda": 0.20000000298023224,
-        "use_taubin_smoothing": true
+        "input_triangle_geometry_path": {
+          "value": "TriangleDataContainer",
+          "version": 1
+        },
+        "iteration_steps": {
+          "value": 100,
+          "version": 1
+        },
+        "lambda_value": {
+          "value": 0.25,
+          "version": 1
+        },
+        "mu_factor": {
+          "value": 0.20000000298023224,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quad_point_lambda": {
+          "value": 0.15000000596046448,
+          "version": 1
+        },
+        "surface_mesh_node_type_array_path": {
+          "value": "TriangleDataContainer/Vertex Data/NodeType",
+          "version": 1
+        },
+        "surface_point_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "surface_quad_point_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "surface_triple_line_lambda": {
+          "value": 0.0,
+          "version": 1
+        },
+        "triple_line_lambda": {
+          "value": 0.20000000298023224,
+          "version": 1
+        },
+        "use_taubin_smoothing": {
+          "value": true,
+          "version": 1
+        }
       },
+      "comments": "",
       "filter": {
-        "name": "simplnx::LaplacianSmoothingFilter",
+        "name": "nx::core::LaplacianSmoothingFilter",
         "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
+      "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

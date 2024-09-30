@@ -24,14 +24,20 @@ IParameter::AcceptedTypes CreateColorMapParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json CreateColorMapParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType CreateColorMapParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json CreateColorMapParameter::toJsonImpl(const std::any& value) const
 {
   const auto& nameStr = GetAnyRef<ValueType>(value);
   nlohmann::json json = nameStr;
   return json;
 }
 
-Result<std::any> CreateColorMapParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CreateColorMapParameter' JSON Error: ";
   if(!json.empty() && !json.is_string())

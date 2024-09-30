@@ -201,6 +201,12 @@ Parameters CreateGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateGeometryFilter::clone() const
 {
   return std::make_unique<CreateGeometryFilter>();

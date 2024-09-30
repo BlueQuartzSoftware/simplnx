@@ -102,6 +102,12 @@ Parameters ITKMorphologicalWatershedImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMorphologicalWatershedImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMorphologicalWatershedImageFilter::clone() const
 {
   return std::make_unique<ITKMorphologicalWatershedImageFilter>();

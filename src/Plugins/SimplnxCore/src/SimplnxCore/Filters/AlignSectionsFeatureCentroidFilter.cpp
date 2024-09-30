@@ -92,6 +92,12 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AlignSectionsFeatureCentroidFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsFeatureCentroidFilter::clone() const
 {
   return std::make_unique<AlignSectionsFeatureCentroidFilter>();

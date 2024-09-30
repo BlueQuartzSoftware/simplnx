@@ -299,6 +299,12 @@ Parameters RequireMinimumSizeFeaturesFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType RequireMinimumSizeFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
 {
   return std::make_unique<RequireMinimumSizeFeaturesFilter>();

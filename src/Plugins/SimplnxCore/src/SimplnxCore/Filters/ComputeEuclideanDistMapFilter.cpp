@@ -93,6 +93,12 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeEuclideanDistMapFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeEuclideanDistMapFilter::clone() const
 {
   return std::make_unique<ComputeEuclideanDistMapFilter>();

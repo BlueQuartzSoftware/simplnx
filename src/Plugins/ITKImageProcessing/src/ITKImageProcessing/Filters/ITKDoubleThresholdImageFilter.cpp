@@ -120,6 +120,12 @@ Parameters ITKDoubleThresholdImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKDoubleThresholdImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKDoubleThresholdImageFilter::clone() const
 {
   return std::make_unique<ITKDoubleThresholdImageFilter>();

@@ -77,6 +77,12 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeGBCDPoleFigureFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeGBCDPoleFigureFilter::clone() const
 {
   return std::make_unique<ComputeGBCDPoleFigureFilter>();

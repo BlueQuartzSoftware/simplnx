@@ -218,6 +218,12 @@ Parameters InitializeImageGeomCellDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType InitializeImageGeomCellDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
 {
   return std::make_unique<InitializeImageGeomCellDataFilter>();
