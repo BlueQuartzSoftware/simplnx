@@ -63,6 +63,12 @@ Parameters ConcatenateDataArraysFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ConcatenateDataArraysFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ConcatenateDataArraysFilter::clone() const
 {
   return std::make_unique<ConcatenateDataArraysFilter>();

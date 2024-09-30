@@ -148,6 +148,12 @@ Parameters ComputeDifferencesMapFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeDifferencesMapFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeDifferencesMapFilter::clone() const
 {
   return std::make_unique<ComputeDifferencesMapFilter>();

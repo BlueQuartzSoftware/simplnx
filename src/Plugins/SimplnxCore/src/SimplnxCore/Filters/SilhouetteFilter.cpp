@@ -85,6 +85,12 @@ Parameters SilhouetteFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType SilhouetteFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SilhouetteFilter::clone() const
 {
   return std::make_unique<SilhouetteFilter>();

@@ -569,6 +569,7 @@ PYBIND11_MODULE(simplnx, mod)
   parameter.def_property_readonly("human_name", &IParameter::humanName);
   parameter.def_property_readonly("help_text", &IParameter::helpText);
   parameter.def_property_readonly("type", &IParameter::type);
+  parameter.def_property_readonly("version", &IParameter::getVersion);
 
   py::class_<Parameters> parameters(mod, "Parameters");
 
@@ -1374,6 +1375,7 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("name", &IFilter::name);
   filter.def("uuid", &IFilter::uuid);
   filter.def("human_name", &IFilter::humanName);
+  filter.def("parameters_version", &IFilter::parametersVersion);
   filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
     py::gil_scoped_release releaseGIL{};

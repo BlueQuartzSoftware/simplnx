@@ -81,6 +81,12 @@ Parameters ITKBoundedReciprocalImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBoundedReciprocalImageFIlter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBoundedReciprocalImageFilter::clone() const
 {
   return std::make_unique<ITKBoundedReciprocalImageFilter>();

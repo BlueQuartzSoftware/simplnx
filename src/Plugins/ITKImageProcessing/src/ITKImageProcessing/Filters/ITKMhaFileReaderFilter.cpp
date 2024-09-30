@@ -301,6 +301,12 @@ Parameters ITKMhaFileReaderFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMhaFileReaderFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMhaFileReaderFilter::clone() const
 {
   return std::make_unique<ITKMhaFileReaderFilter>();

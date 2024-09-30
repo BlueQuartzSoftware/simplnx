@@ -98,6 +98,12 @@ Parameters ITKHConvexImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKHConvexImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKHConvexImageFilter::clone() const
 {
   return std::make_unique<ITKHConvexImageFilter>();

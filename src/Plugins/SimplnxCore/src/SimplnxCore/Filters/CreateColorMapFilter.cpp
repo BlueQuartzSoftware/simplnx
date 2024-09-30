@@ -89,6 +89,12 @@ Parameters CreateColorMapFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateColorMapFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateColorMapFilter::clone() const
 {
   return std::make_unique<CreateColorMapFilter>();

@@ -77,6 +77,12 @@ Parameters ComputeSurfaceAreaToVolumeFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeSurfaceAreaToVolumeFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeSurfaceAreaToVolumeFilter::clone() const
 {
   return std::make_unique<ComputeSurfaceAreaToVolumeFilter>();

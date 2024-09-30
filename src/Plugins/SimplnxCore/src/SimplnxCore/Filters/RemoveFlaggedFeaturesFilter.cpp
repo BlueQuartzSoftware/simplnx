@@ -100,6 +100,12 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RemoveFlaggedFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveFlaggedFeaturesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedFeaturesFilter>();

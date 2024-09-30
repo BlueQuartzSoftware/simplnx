@@ -25,14 +25,20 @@ IParameter::AcceptedTypes DataObjectNameParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json DataObjectNameParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType DataObjectNameParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json DataObjectNameParameter::toJsonImpl(const std::any& value) const
 {
   const auto& stringValue = GetAnyRef<ValueType>(value);
   nlohmann::json json = stringValue;
   return json;
 }
 
-Result<std::any> DataObjectNameParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
   if(!json.is_string())

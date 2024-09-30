@@ -78,6 +78,12 @@ Parameters ComputeFeatureSizesFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureSizesFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
 {
   return std::make_unique<ComputeFeatureSizesFilter>();

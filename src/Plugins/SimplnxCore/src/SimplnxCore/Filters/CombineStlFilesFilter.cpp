@@ -96,6 +96,12 @@ Parameters CombineStlFilesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CombineStlFilesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CombineStlFilesFilter::clone() const
 {
   return std::make_unique<CombineStlFilesFilter>();

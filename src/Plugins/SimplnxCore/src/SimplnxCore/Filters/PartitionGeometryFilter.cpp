@@ -324,6 +324,12 @@ Parameters PartitionGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType PartitionGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer PartitionGeometryFilter::clone() const
 {
   return std::make_unique<PartitionGeometryFilter>();

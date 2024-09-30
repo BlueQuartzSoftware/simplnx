@@ -98,6 +98,12 @@ Parameters ComputeKMedoidsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeKMedoidsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeKMedoidsFilter::clone() const
 {
   return std::make_unique<ComputeKMedoidsFilter>();

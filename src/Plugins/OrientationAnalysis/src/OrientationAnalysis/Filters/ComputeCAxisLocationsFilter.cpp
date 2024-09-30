@@ -66,6 +66,12 @@ Parameters ComputeCAxisLocationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeCAxisLocationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeCAxisLocationsFilter::clone() const
 {
   return std::make_unique<ComputeCAxisLocationsFilter>();

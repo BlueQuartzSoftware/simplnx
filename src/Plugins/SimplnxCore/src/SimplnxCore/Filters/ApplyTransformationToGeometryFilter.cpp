@@ -129,6 +129,12 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ApplyTransformationToGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApplyTransformationToGeometryFilter::clone() const
 {
   return std::make_unique<ApplyTransformationToGeometryFilter>();

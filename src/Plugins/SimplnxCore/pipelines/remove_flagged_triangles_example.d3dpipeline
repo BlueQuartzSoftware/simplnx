@@ -1,17 +1,38 @@
 {
   "isDisabled": false,
   "name": "remove_flagged_triangles_example.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "face_attribute_matrix_name": "Face Data",
-        "face_normals_name": "Face Normals",
-        "output_triangle_geometry_path": "TriangleGeometry",
-        "scale_factor": 1.0,
-        "scale_output": false,
-        "stl_file_path": "Data/STL_Models/Example_Triangle_Geometry.stl",
-        "vertex_attribute_matrix_name": "Vertex Data"
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_normals_name": {
+          "value": "Face Normals",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "TriangleGeometry",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scale_factor": {
+          "value": 1.0,
+          "version": 1
+        },
+        "scale_output": {
+          "value": false,
+          "version": 1
+        },
+        "stl_file_path": {
+          "value": "Data/STL_Models/Example_Triangle_Geometry.stl",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -22,10 +43,23 @@
     },
     {
       "args": {
-        "created_region_ids_path": "TriangleGeometry/Face Data/Region Ids",
-        "input_triangle_geometry_path": "TriangleGeometry",
-        "num_triangles_name": "NumTriangles",
-        "triangle_attribute_matrix_name": "Cell Feature AM"
+        "created_region_ids_path": {
+          "value": "TriangleGeometry/Face Data/Region Ids",
+          "version": 1
+        },
+        "input_triangle_geometry_path": {
+          "value": "TriangleGeometry",
+          "version": 1
+        },
+        "num_triangles_name": {
+          "value": "NumTriangles",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "triangle_attribute_matrix_name": {
+          "value": "Cell Feature AM",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -37,26 +71,48 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "TriangleGeometry/Face Data/Region Ids",
-              "comparison": 1,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 3.0
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "TriangleGeometry/Face Data/Region Ids",
+                "comparison": 1,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 3.0
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "created_mask_type": 1,
-        "custom_false_value": 0.0,
-        "custom_true_value": 1.0,
-        "output_data_array_name": "Mask",
-        "use_custom_false_value": false,
-        "use_custom_true_value": false
+        "created_mask_type": {
+          "value": 1,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -67,19 +123,47 @@
     },
     {
       "args": {
-        "input_triangle_geometry_path": "TriangleGeometry",
-        "mask_array_path": "TriangleGeometry/Face Data/Mask",
-        "output_triangle_geometry_path": "ExemplarReducedGeometry",
-        "triangle_data_handling_index": 0,
-        "triangle_data_selected_array_paths": [
-          "TriangleGeometry/Face Data/Face Normals",
-          "TriangleGeometry/Face Data/Mask",
-          "TriangleGeometry/Face Data/Region Ids"
-        ],
-        "triangle_data_selected_attribute_matrix_path": "",
-        "vertex_data_handling_index": 0,
-        "vertex_data_selected_array_paths": [],
-        "vertex_data_selected_attribute_matrix_path": ""
+        "input_triangle_geometry_path": {
+          "value": "TriangleGeometry",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "TriangleGeometry/Face Data/Mask",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "ExemplarReducedGeometry",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "triangle_data_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "triangle_data_selected_array_paths": {
+          "value": [
+            "TriangleGeometry/Face Data/Face Normals",
+            "TriangleGeometry/Face Data/Mask",
+            "TriangleGeometry/Face Data/Region Ids"
+          ],
+          "version": 1
+        },
+        "triangle_data_selected_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        },
+        "vertex_data_handling_index": {
+          "value": 0,
+          "version": 1
+        },
+        "vertex_data_selected_array_paths": {
+          "value": [],
+          "version": 1
+        },
+        "vertex_data_selected_attribute_matrix_path": {
+          "value": "",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -90,8 +174,15 @@
     },
     {
       "args": {
-        "export_file_path": "Data/Output/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -101,6 +192,5 @@
       "isDisabled": false
     }
   ],
-  "version": 1,
-  "workflowParams": []
+  "version": 1
 }

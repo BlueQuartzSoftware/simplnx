@@ -97,6 +97,12 @@ Parameters ITKGradientAnisotropicDiffusionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGradientAnisotropicDiffusionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGradientAnisotropicDiffusionImageFilter::clone() const
 {
   return std::make_unique<ITKGradientAnisotropicDiffusionImageFilter>();

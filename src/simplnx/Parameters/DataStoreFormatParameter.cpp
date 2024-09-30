@@ -29,12 +29,18 @@ IParameter::AcceptedTypes DataStoreFormatParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json DataStoreFormatParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType DataStoreFormatParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json DataStoreFormatParameter::toJsonImpl(const std::any& value) const
 {
   return GetAnyRef<ValueType>(value);
 }
 
-Result<std::any> DataStoreFormatParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   if(!json.is_string())
   {

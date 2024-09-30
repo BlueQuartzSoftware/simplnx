@@ -67,6 +67,12 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeVolumeFractionsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeVolumeFractionsFilter::clone() const
 {
   return std::make_unique<ComputeVolumeFractionsFilter>();

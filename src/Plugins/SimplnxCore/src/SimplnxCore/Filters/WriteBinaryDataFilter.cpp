@@ -87,6 +87,12 @@ Parameters WriteBinaryDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteBinaryDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteBinaryDataFilter::clone() const
 {
   return std::make_unique<WriteBinaryDataFilter>();

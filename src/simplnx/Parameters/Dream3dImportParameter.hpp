@@ -59,18 +59,6 @@ public:
   AcceptedTypes acceptedTypes() const override;
 
   /**
-   * @brief Writes the provided value to JSON.
-   * @param value
-   */
-  nlohmann::json toJson(const std::any& value) const override;
-
-  /**
-   * @brief Reads and returns the parameter's values from JSON.
-   * @return Result<std::any>
-   */
-  Result<std::any> fromJson(const nlohmann::json& json) const override;
-
-  /**
    * @brief Creates and returns a copy of the parameter.
    * @return UniquePointer
    */
@@ -81,6 +69,14 @@ public:
    * @return
    */
   std::any defaultValue() const override;
+
+  /**
+   * @brief Returns version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the json format changes.
+   * @return uint64
+   */
+  VersionType getVersion() const override;
 
   /**
    * @brief
@@ -95,6 +91,19 @@ public:
    * @return Result<>
    */
   Result<> validatePath(const ValueType& importData) const;
+
+protected:
+  /**
+   * @brief Writes the provided value to JSON.
+   * @param value
+   */
+  nlohmann::json toJsonImpl(const std::any& value) const override;
+
+  /**
+   * @brief Reads and returns the parameter's values from JSON.
+   * @return Result<std::any>
+   */
+  Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
   ValueType m_DefaultValue;

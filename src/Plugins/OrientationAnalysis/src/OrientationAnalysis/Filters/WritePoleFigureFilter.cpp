@@ -154,6 +154,12 @@ Parameters WritePoleFigureFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WritePoleFigureFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WritePoleFigureFilter::clone() const
 {
   return std::make_unique<WritePoleFigureFilter>();

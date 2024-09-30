@@ -84,6 +84,12 @@ Parameters ITKNormalizeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKNormalizeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKNormalizeImageFilter::clone() const
 {
   return std::make_unique<ITKNormalizeImageFilter>();

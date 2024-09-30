@@ -87,6 +87,12 @@ Parameters ComputeArrayHistogramFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeArrayHistogramFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
 {
   return std::make_unique<ComputeArrayHistogramFilter>();

@@ -75,6 +75,12 @@ Parameters ComputeVertexToTriangleDistancesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeVertexToTriangleDistancesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeVertexToTriangleDistancesFilter::clone() const
 {
   return std::make_unique<ComputeVertexToTriangleDistancesFilter>();

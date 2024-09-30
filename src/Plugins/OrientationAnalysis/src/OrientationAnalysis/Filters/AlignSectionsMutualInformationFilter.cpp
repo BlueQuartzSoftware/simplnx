@@ -94,6 +94,12 @@ Parameters AlignSectionsMutualInformationFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType AlignSectionsMutualInformationFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignSectionsMutualInformationFilter::clone() const
 {
   return std::make_unique<AlignSectionsMutualInformationFilter>();

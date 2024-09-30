@@ -28,14 +28,20 @@ IParameter::AcceptedTypes DataGroupSelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json DataGroupSelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType DataGroupSelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json DataGroupSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> DataGroupSelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
 

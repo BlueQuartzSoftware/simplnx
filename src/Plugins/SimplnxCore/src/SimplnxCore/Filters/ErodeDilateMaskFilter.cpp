@@ -69,6 +69,12 @@ Parameters ErodeDilateMaskFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ErodeDilateMaskFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 {
   return std::make_unique<ErodeDilateMaskFilter>();

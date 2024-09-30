@@ -1,137 +1,221 @@
 {
   "isDisabled": false,
   "name": "ComputeBiasedFeatures.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
         "import_data_object": {
-          "data_paths": [
-            "DataContainer",
-            "DataContainer/Cell Data",
-            "DataContainer/Cell Data/Image Quality",
-            "DataContainer/Cell Data/Confidence Index",
-            "DataContainer/Cell Data/SEM Signal",
-            "DataContainer/Cell Data/Fit",
-            "DataContainer/Cell Data/EulerAngles",
-            "DataContainer/Cell Data/Phases",
-            "DataContainer/Cell Ensemble Data",
-            "DataContainer/Cell Ensemble Data/CrystalStructures",
-            "DataContainer/Cell Ensemble Data/LatticeConstants",
-            "DataContainer/Cell Data/Mask",
-            "DataContainer/Cell Data/Quats",
-            "DataContainer/Cell Feature Data",
-            "DataContainer/Cell Feature Data/Active",
-            "DataContainer/Cell Data/FeatureIds",
-            "DataContainer/Cell Feature Data/Phases",
-            "DataContainer/NewGrain Data",
-            "DataContainer/Cell Data/ParentIds",
-            "DataContainer/Cell Feature Data/ParentIds",
-            "DataContainer/NewGrain Data/Active",
-            "DataContainer/Cell Data/IPFColors",
-            "DataContainer/Cell Data/GBManhattanDistances",
-            "DataContainer/Cell Data/TJManhattanDistances",
-            "DataContainer/Cell Data/QPManhattanDistances",
-            "DataContainer/Cell Feature Data/MisorientationList",
-            "DataContainer/Cell Feature Data/Schmids",
-            "DataContainer/Cell Feature Data/SlipSystems",
-            "DataContainer/Cell Feature Data/Poles",
-            "DataContainer/Cell Data/FeatureReferenceMisorientations",
-            "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
-            "DataContainer/Cell Data/KernelAverageMisorientations"
-          ],
-          "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+          "value": {
+            "data_paths": [
+              "DataContainer",
+              "DataContainer/Cell Data",
+              "DataContainer/Cell Data/Image Quality",
+              "DataContainer/Cell Data/Confidence Index",
+              "DataContainer/Cell Data/SEM Signal",
+              "DataContainer/Cell Data/Fit",
+              "DataContainer/Cell Data/EulerAngles",
+              "DataContainer/Cell Data/Phases",
+              "DataContainer/Cell Ensemble Data",
+              "DataContainer/Cell Ensemble Data/CrystalStructures",
+              "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Data/Mask",
+              "DataContainer/Cell Data/Quats",
+              "DataContainer/Cell Feature Data",
+              "DataContainer/Cell Feature Data/Active",
+              "DataContainer/Cell Data/FeatureIds",
+              "DataContainer/Cell Feature Data/Phases",
+              "DataContainer/NewGrain Data",
+              "DataContainer/Cell Data/ParentIds",
+              "DataContainer/Cell Feature Data/ParentIds",
+              "DataContainer/NewGrain Data/Active",
+              "DataContainer/Cell Data/IPFColors",
+              "DataContainer/Cell Data/GBManhattanDistances",
+              "DataContainer/Cell Data/TJManhattanDistances",
+              "DataContainer/Cell Data/QPManhattanDistances",
+              "DataContainer/Cell Feature Data/MisorientationList",
+              "DataContainer/Cell Feature Data/Schmids",
+              "DataContainer/Cell Feature Data/SlipSystems",
+              "DataContainer/Cell Feature Data/Poles",
+              "DataContainer/Cell Data/FeatureReferenceMisorientations",
+              "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
+              "DataContainer/Cell Data/KernelAverageMisorientations"
+            ],
+            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+          },
+          "version": 1
         },
-        "Imported Pipeline": {
-          "isDisabled": false,
-          "name": "Untitled Pipeline",
-          "pipeline": []
-        }
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadDREAM3DFilter",
+        "name": "nx::core::ReadDREAM3DFilter",
         "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "boundary_cells_name": "BoundaryCells",
-        "cell_feature_array_path": "DataContainer/Cell Feature Data",
-        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
-        "input_image_geometry_path": "DataContainer",
-        "neighbor_list_name": "NeighborList",
-        "number_of_neighbors_name": "NumNeighbors",
-        "shared_surface_area_list_name": "SharedSurfaceAreaList",
-        "store_boundary_cells": false,
-        "store_surface_features": false,
-        "surface_features_name": "SurfaceFeatures"
+        "boundary_cells_name": {
+          "value": "BoundaryCells",
+          "version": 1
+        },
+        "cell_feature_array_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "neighbor_list_name": {
+          "value": "NeighborList",
+          "version": 1
+        },
+        "number_of_neighbors_name": {
+          "value": "NumNeighbors",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "shared_surface_area_list_name": {
+          "value": "SharedSurfaceAreaList",
+          "version": 1
+        },
+        "store_boundary_cells": {
+          "value": false,
+          "version": 1
+        },
+        "store_surface_features": {
+          "value": false,
+          "version": 1
+        },
+        "surface_features_name": {
+          "value": "SurfaceFeatures",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindNeighborsFilter",
+        "name": "nx::core::ComputeFeatureNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "centroids_array_name": "Centroids",
-        "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
-        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
-        "input_image_geometry_path": "DataContainer"
+        "centroids_array_name": {
+          "value": "Centroids",
+          "version": 1
+        },
+        "feature_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeFeatureCentroidsFilter",
+        "name": "nx::core::ComputeFeatureCentroidsFilter",
         "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "input_image_geometry_path": "DataContainer",
-        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
-        "mark_feature_0_neighbors": true,
-        "feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
-        "surface_features_array_name": "SurfaceFeatures"
+        "feature_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "mark_feature_0_neighbors": {
+          "value": true,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "surface_features_array_name": {
+          "value": "SurfaceFeatures",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeSurfaceFeaturesFilter",
+        "name": "nx::core::ComputeSurfaceFeaturesFilter",
         "uuid": "0893e490-5d24-4c21-95e7-e8372baa8948"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "biased_features_array_name": "BiasedFeatures",
-        "calc_by_phase": true,
-        "centroids_array_path": "DataContainer/Cell Feature Data/Centroids",
-        "input_image_geometry_path": "DataContainer",
-        "phases_array_path": "DataContainer/Cell Feature Data/Phases",
-        "surface_features_array_path": "DataContainer/Cell Feature Data/SurfaceFeatures"
+        "biased_features_array_name": {
+          "value": "BiasedFeatures",
+          "version": 1
+        },
+        "calc_by_phase": {
+          "value": true,
+          "version": 1
+        },
+        "centroids_array_path": {
+          "value": "DataContainer/Cell Feature Data/Centroids",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "phases_array_path": {
+          "value": "DataContainer/Cell Feature Data/Phases",
+          "version": 1
+        },
+        "surface_features_array_path": {
+          "value": "DataContainer/Cell Feature Data/SurfaceFeatures",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::FindBoundingBoxFeaturesFilter",
+        "name": "nx::core::ComputeBiasedFeaturesFilter",
         "uuid": "d46f2fd7-dc68-4b57-bca3-693016512b2f"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/ComputeBiasedFeatures.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/ComputeBiasedFeatures.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::WriteDREAM3DFilter",
+        "name": "nx::core::WriteDREAM3DFilter",
         "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

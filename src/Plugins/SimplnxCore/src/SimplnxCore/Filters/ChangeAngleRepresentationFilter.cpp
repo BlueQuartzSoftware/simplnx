@@ -100,6 +100,12 @@ Parameters ChangeAngleRepresentationFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ChangeAngleRepresentationFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
 {
   return std::make_unique<ChangeAngleRepresentationFilter>();

@@ -30,7 +30,13 @@ IParameter::AcceptedTypes MultiArraySelectionParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json MultiArraySelectionParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType MultiArraySelectionParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json MultiArraySelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   nlohmann::json json = nlohmann::json::array();
@@ -41,7 +47,7 @@ nlohmann::json MultiArraySelectionParameter::toJson(const std::any& value) const
   return json;
 }
 
-Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())

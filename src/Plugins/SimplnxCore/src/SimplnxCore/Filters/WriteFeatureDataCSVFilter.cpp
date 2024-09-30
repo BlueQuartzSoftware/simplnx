@@ -72,6 +72,12 @@ Parameters WriteFeatureDataCSVFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteFeatureDataCSVFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteFeatureDataCSVFilter::clone() const
 {
   return std::make_unique<WriteFeatureDataCSVFilter>();

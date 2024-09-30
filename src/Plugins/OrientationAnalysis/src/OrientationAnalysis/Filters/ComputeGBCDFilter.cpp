@@ -88,6 +88,12 @@ Parameters ComputeGBCDFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeGBCDFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeGBCDFilter::clone() const
 {
   return std::make_unique<ComputeGBCDFilter>();

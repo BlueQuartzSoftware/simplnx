@@ -91,6 +91,12 @@ Parameters RemoveFlaggedEdgesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RemoveFlaggedEdgesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RemoveFlaggedEdgesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedEdgesFilter>();

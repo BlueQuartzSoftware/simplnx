@@ -73,6 +73,12 @@ Parameters CreatePythonSkeletonFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreatePythonSkeletonFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreatePythonSkeletonFilter::clone() const
 {
   return std::make_unique<CreatePythonSkeletonFilter>();

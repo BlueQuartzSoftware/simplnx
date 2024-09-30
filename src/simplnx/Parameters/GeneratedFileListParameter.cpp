@@ -48,8 +48,14 @@ IParameter::AcceptedTypes GeneratedFileListParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType GeneratedFileListParameter::getVersion() const
+{
+  return 1;
+}
+
 //-----------------------------------------------------------------------------
-nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
+nlohmann::json GeneratedFileListParameter::toJsonImpl(const std::any& value) const
 {
   const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -66,7 +72,7 @@ nlohmann::json GeneratedFileListParameter::toJson(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> GeneratedFileListParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'GeneratedFileListParameter' Error: ";
 

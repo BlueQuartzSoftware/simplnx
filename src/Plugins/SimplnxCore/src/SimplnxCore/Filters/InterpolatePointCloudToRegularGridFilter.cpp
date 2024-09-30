@@ -217,6 +217,12 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType InterpolatePointCloudToRegularGridFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 {
   return std::make_unique<InterpolatePointCloudToRegularGridFilter>();

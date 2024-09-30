@@ -110,6 +110,14 @@ public:
   Parameters parameters() const override;
 
   /**
+   * @brief Returns parameters version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the parameters change.
+   * @return VersionType
+   */
+  VersionType parametersVersion() const override;
+
+  /**
    * @brief Returns a copy of the filter.
    * @return
    */

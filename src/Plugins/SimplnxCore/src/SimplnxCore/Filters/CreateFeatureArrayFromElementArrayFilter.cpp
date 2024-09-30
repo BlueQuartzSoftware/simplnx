@@ -125,6 +125,12 @@ Parameters CreateFeatureArrayFromElementArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType CreateFeatureArrayFromElementArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateFeatureArrayFromElementArrayFilter::clone() const
 {
   return std::make_unique<CreateFeatureArrayFromElementArrayFilter>();

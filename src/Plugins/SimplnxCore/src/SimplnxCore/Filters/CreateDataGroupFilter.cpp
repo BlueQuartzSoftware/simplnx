@@ -43,6 +43,12 @@ Parameters CreateDataGroupFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType CreateDataGroupFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer CreateDataGroupFilter::clone() const
 {
   return std::make_unique<CreateDataGroupFilter>();

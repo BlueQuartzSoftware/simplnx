@@ -87,6 +87,12 @@ Parameters ReadH5EspritDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadH5EspritDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadH5EspritDataFilter::clone() const
 {
   return std::make_unique<ReadH5EspritDataFilter>();

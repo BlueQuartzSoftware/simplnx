@@ -119,6 +119,12 @@ Parameters ITKThresholdMaximumConnectedComponentsImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKThresholdMaximumConnectedComponentsImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKThresholdMaximumConnectedComponentsImageFilter::clone() const
 {
   return std::make_unique<ITKThresholdMaximumConnectedComponentsImageFilter>();

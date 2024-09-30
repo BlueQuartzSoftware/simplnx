@@ -4,10 +4,23 @@
   "pipeline": [
     {
       "args": {
-        "cell_attribute_matrix_name": "Cell Data",
-        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
-        "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang",
-        "output_image_geometry_path": "DataContainer"
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "cell_ensemble_attribute_matrix_name": {
+          "value": "Cell Ensemble Data",
+          "version": 1
+        },
+        "input_file": {
+          "value": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -18,43 +31,65 @@
     },
     {
       "args": {
-        "input_image_geometry_path": "DataContainer",
-        "output_image_geometry_path": "",
-        "remove_original_geometry": true,
-        "rotate_slice_by_slice": false,
-        "rotation_axis_angle": [
-          0.0,
-          1.0,
-          0.0,
-          180.0
-        ],
-        "rotation_matrix": [
-          [
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
-            1.0,
-            0.0,
-            0.0
-          ],
-          [
-            0.0,
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": true,
+          "version": 1
+        },
+        "rotate_slice_by_slice": {
+          "value": false,
+          "version": 1
+        },
+        "rotation_axis_angle": {
+          "value": [
             0.0,
             1.0,
-            0.0
+            0.0,
+            180.0
           ],
-          [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ]
-        ],
-        "rotation_representation_index": 0
+          "version": 1
+        },
+        "rotation_matrix": {
+          "value": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "version": 1
+        },
+        "rotation_representation_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -65,13 +100,20 @@
     },
     {
       "args": {
-        "euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
-        "rotation_axis_angle": [
-          0.0,
-          0.0,
-          1.0,
-          90.0
-        ]
+        "euler_angles_array_path": {
+          "value": "DataContainer/Cell Data/EulerAngles",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "rotation_axis_angle": {
+          "value": [
+            0.0,
+            0.0,
+            1.0,
+            90.0
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -83,26 +125,48 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "DataContainer/Cell Data/Confidence Index",
-              "comparison": 0,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 0.1
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "DataContainer/Cell Data/Confidence Index",
+                "comparison": 0,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.1
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "created_mask_type": 10,
-        "custom_false_value": 0.0,
-        "custom_true_value": 1.0,
-        "output_data_array_name": "Mask",
-        "use_custom_false_value": false,
-        "use_custom_true_value": false
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -113,17 +177,39 @@
     },
     {
       "args": {
-        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
-        "cell_ipf_colors_array_name": "IPFColors",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "mask_array_path": "DataContainer/Cell Data/Mask",
-        "reference_dir": [
-          0.0,
-          0.0,
-          1.0
-        ],
-        "use_mask": true
+        "cell_euler_angles_array_path": {
+          "value": "DataContainer/Cell Data/EulerAngles",
+          "version": 1
+        },
+        "cell_ipf_colors_array_name": {
+          "value": "IPFColors",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "DataContainer/Cell Data/Mask",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_dir": {
+          "value": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -134,11 +220,27 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0.png",
-        "image_array_path": "DataContainer/Cell Data/IPFColors",
-        "index_offset": 0,
-        "input_image_geometry_path": "DataContainer",
-        "plane_index": 0
+        "file_name": {
+          "value": "Data/Output/Examples/Combo-EBSD-osc_r0c0.png",
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "DataContainer/Cell Data/IPFColors",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -149,10 +251,23 @@
     },
     {
       "args": {
-        "input_orientation_array_path": "DataContainer/Cell Data/EulerAngles",
-        "input_representation_index": 0,
-        "output_orientation_array_name": "Quats",
-        "output_representation_index": 2
+        "input_orientation_array_path": {
+          "value": "DataContainer/Cell Data/EulerAngles",
+          "version": 1
+        },
+        "input_representation_index": {
+          "value": 0,
+          "version": 1
+        },
+        "output_orientation_array_name": {
+          "value": "Quats",
+          "version": 1
+        },
+        "output_representation_index": {
+          "value": 2,
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -163,17 +278,51 @@
     },
     {
       "args": {
-        "active_array_name": "Active",
-        "cell_feature_attribute_matrix_name": "Cell Feature Data",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "feature_ids_array_name": "FeatureIds",
-        "input_image_geometry_path": "DataContainer",
-        "mask_array_path": "DataContainer/Cell Data/Mask",
-        "misorientation_tolerance": 5.0,
-        "quats_array_path": "DataContainer/Cell Data/Quats",
-        "randomize_feature_ids": true,
-        "use_mask": true
+        "active_array_name": {
+          "value": "Active",
+          "version": 1
+        },
+        "cell_feature_attribute_matrix_name": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "feature_ids_array_name": {
+          "value": "FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "DataContainer/Cell Data/Mask",
+          "version": 1
+        },
+        "misorientation_tolerance": {
+          "value": 5.0,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        },
+        "randomize_feature_ids": {
+          "value": true,
+          "version": 1
+        },
+        "use_mask": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -184,12 +333,31 @@
     },
     {
       "args": {
-        "avg_c_axes_array_name": "AvgCAxes",
-        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "quats_array_path": "DataContainer/Cell Data/Quats"
+        "avg_c_axes_array_name": {
+          "value": "AvgCAxes",
+          "version": 1
+        },
+        "cell_feature_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -200,15 +368,43 @@
     },
     {
       "args": {
-        "avg_c_axes_array_path": "DataContainer/Cell Feature Data/AvgCAxes",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "feature_avg_c_axis_misorientations_array_name": "AvgCAxisMisorientation",
-        "feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "feature_reference_c_axis_misorientations_array_name": "FeatureRefCAxisMisorientation",
-        "feature_stdev_c_axis_misorientations_array_name": "StdevCAxisMisorientation",
-        "input_image_geometry_path": "DataContainer",
-        "quats_array_path": "DataContainer/Cell Data/Quats"
+        "avg_c_axes_array_path": {
+          "value": "DataContainer/Cell Feature Data/AvgCAxes",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "feature_avg_c_axis_misorientations_array_name": {
+          "value": "AvgCAxisMisorientation",
+          "version": 1
+        },
+        "feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "feature_reference_c_axis_misorientations_array_name": {
+          "value": "FeatureRefCAxisMisorientation",
+          "version": 1
+        },
+        "feature_stdev_c_axis_misorientations_array_name": {
+          "value": "StdevCAxisMisorientation",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -219,10 +415,23 @@
     },
     {
       "args": {
-        "c_axis_locations_array_name": "CAxisLocations",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "quats_array_path": "DataContainer/Cell Data/Quats"
+        "c_axis_locations_array_name": {
+          "value": "CAxisLocations",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -234,26 +443,48 @@
     {
       "args": {
         "array_thresholds_object": {
-          "inverted": false,
-          "thresholds": [
-            {
-              "array_path": "DataContainer/Cell Data/Confidence Index",
-              "comparison": 1,
-              "inverted": false,
-              "type": "array",
-              "union": 0,
-              "value": 0.1
-            }
-          ],
-          "type": "collection",
-          "union": 0
+          "value": {
+            "inverted": false,
+            "thresholds": [
+              {
+                "array_path": "DataContainer/Cell Data/Confidence Index",
+                "comparison": 1,
+                "inverted": false,
+                "type": "array",
+                "union": 0,
+                "value": 0.1
+              }
+            ],
+            "type": "collection",
+            "union": 0
+          },
+          "version": 1
         },
-        "created_mask_type": 10,
-        "custom_false_value": 0.0,
-        "custom_true_value": 1.0,
-        "output_data_array_name": "Mask Inverse",
-        "use_custom_false_value": false,
-        "use_custom_true_value": false
+        "created_mask_type": {
+          "value": 10,
+          "version": 1
+        },
+        "custom_false_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "custom_true_value": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_data_array_name": {
+          "value": "Mask Inverse",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_custom_false_value": {
+          "value": false,
+          "version": 1
+        },
+        "use_custom_true_value": {
+          "value": false,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -264,16 +495,35 @@
     },
     {
       "args": {
-        "input_data_array_path": "DataContainer/Cell Data/FeatureIds",
-        "invalid_color_value": [
-          0,
-          0,
-          0
-        ],
-        "mask_array_path": "DataContainer/Cell Data/Mask Inverse",
-        "output_rgb_array_name": "Feature Ids (Color)",
-        "selected_preset": "hsv",
-        "use_mask": true
+        "input_data_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "invalid_color_value": {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "DataContainer/Cell Data/Mask Inverse",
+          "version": 1
+        },
+        "output_rgb_array_name": {
+          "value": "Feature Ids (Color)",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "selected_preset": {
+          "value": "hsv",
+          "version": 1
+        },
+        "use_mask": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -284,11 +534,27 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0._feature_ids.png",
-        "image_array_path": "DataContainer/Cell Data/Feature Ids (Color)",
-        "index_offset": 0,
-        "input_image_geometry_path": "DataContainer",
-        "plane_index": 0
+        "file_name": {
+          "value": "Data/Output/Examples/Combo-EBSD-osc_r0c0._feature_ids.png",
+          "version": 1
+        },
+        "image_array_path": {
+          "value": "DataContainer/Cell Data/Feature Ids (Color)",
+          "version": 1
+        },
+        "index_offset": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "plane_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -299,10 +565,23 @@
     },
     {
       "args": {
-        "cell_features_attribute_matrix_path": "DataContainer/Cell Feature Data",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
-        "feature_phases_array_name": "Phases"
+        "cell_features_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "feature_phases_array_name": {
+          "value": "Phases",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -313,13 +592,35 @@
     },
     {
       "args": {
-        "avg_euler_angles_array_name": "AvgEulerAngles",
-        "avg_quats_array_name": "AvgQuats",
-        "cell_feature_attribute_matrix_path": "DataContainer/Cell Feature Data",
-        "cell_feature_ids_array_path": "DataContainer/Cell Data/FeatureIds",
-        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
-        "cell_quats_array_path": "DataContainer/Cell Data/Quats",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures"
+        "avg_euler_angles_array_name": {
+          "value": "AvgEulerAngles",
+          "version": 1
+        },
+        "avg_quats_array_name": {
+          "value": "AvgQuats",
+          "version": 1
+        },
+        "cell_feature_attribute_matrix_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "cell_feature_ids_array_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "DataContainer/Cell Data/Phases",
+          "version": 1
+        },
+        "cell_quats_array_path": {
+          "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -330,33 +631,86 @@
     },
     {
       "args": {
-        "boundary_cells_name": "BoundaryCells",
-        "cell_feature_array_path": "DataContainer/Cell Feature Data",
-        "feature_ids_path": "DataContainer/Cell Data/FeatureIds",
-        "input_image_geometry_path": "DataContainer",
-        "neighbor_list_name": "NeighborList",
-        "number_of_neighbors_name": "NumNeighbors",
-        "shared_surface_area_list_name": "SharedSurfaceAreaList",
-        "store_boundary_cells": false,
-        "store_surface_features": false,
-        "surface_features_name": "SurfaceFeatures"
+        "boundary_cells_name": {
+          "value": "BoundaryCells",
+          "version": 1
+        },
+        "cell_feature_array_path": {
+          "value": "DataContainer/Cell Feature Data",
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "DataContainer/Cell Data/FeatureIds",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "DataContainer",
+          "version": 1
+        },
+        "neighbor_list_name": {
+          "value": "NeighborList",
+          "version": 1
+        },
+        "number_of_neighbors_name": {
+          "value": "NumNeighbors",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "shared_surface_area_list_name": {
+          "value": "SharedSurfaceAreaList",
+          "version": 1
+        },
+        "store_boundary_cells": {
+          "value": false,
+          "version": 1
+        },
+        "store_surface_features": {
+          "value": false,
+          "version": 1
+        },
+        "surface_features_name": {
+          "value": "SurfaceFeatures",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::FindNeighborsFilter",
+        "name": "nx::core::ComputeFeatureNeighborsFilter",
         "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "avg_c_axis_misalignments_array_name": "AvgCAxisMisalignments",
-        "avg_quats_array_path": "DataContainer/Cell Feature Data/AvgQuats",
-        "c_axis_misalignment_list_array_name": "CAxisMisalignmentList",
-        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "feature_phases_array_path": "DataContainer/Cell Feature Data/Phases",
-        "find_avg_misals": true,
-        "neighbor_list_array_path": "DataContainer/Cell Feature Data/NeighborList"
+        "avg_c_axis_misalignments_array_name": {
+          "value": "AvgCAxisMisalignments",
+          "version": 1
+        },
+        "avg_quats_array_path": {
+          "value": "DataContainer/Cell Feature Data/AvgQuats",
+          "version": 1
+        },
+        "c_axis_misalignment_list_array_name": {
+          "value": "CAxisMisalignmentList",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "feature_phases_array_path": {
+          "value": "DataContainer/Cell Feature Data/Phases",
+          "version": 1
+        },
+        "find_avg_misals": {
+          "value": true,
+          "version": 1
+        },
+        "neighbor_list_array_path": {
+          "value": "DataContainer/Cell Feature Data/NeighborList",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
@@ -367,8 +721,15 @@
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/Combo-EBSD-osc_r0c0_CAxis.dream3d",
-        "write_xdmf_file": true
+        "export_file_path": {
+          "value": "Data/Output/Examples/Combo-EBSD-osc_r0c0_CAxis.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {

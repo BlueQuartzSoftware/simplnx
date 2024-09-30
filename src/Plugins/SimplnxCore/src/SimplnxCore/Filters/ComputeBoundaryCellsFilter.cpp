@@ -72,6 +72,12 @@ Parameters ComputeBoundaryCellsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeBoundaryCellsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
 {
   return std::make_unique<ComputeBoundaryCellsFilter>();

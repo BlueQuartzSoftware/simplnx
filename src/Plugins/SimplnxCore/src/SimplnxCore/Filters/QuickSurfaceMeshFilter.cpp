@@ -93,6 +93,12 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 {
   return std::make_unique<QuickSurfaceMeshFilter>();

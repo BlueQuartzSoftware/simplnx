@@ -85,6 +85,12 @@ Parameters BadDataNeighborOrientationCheckFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType BadDataNeighborOrientationCheckFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 {
   return std::make_unique<BadDataNeighborOrientationCheckFilter>();

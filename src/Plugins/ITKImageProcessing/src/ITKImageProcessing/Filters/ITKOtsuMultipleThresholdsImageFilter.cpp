@@ -104,6 +104,12 @@ Parameters ITKOtsuMultipleThresholdsImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKOtsuMultipleThresholdsImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKOtsuMultipleThresholdsImageFilter::clone() const
 {
   return std::make_unique<ITKOtsuMultipleThresholdsImageFilter>();

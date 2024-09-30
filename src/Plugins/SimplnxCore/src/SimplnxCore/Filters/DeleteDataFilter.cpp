@@ -63,6 +63,12 @@ Parameters DeleteDataFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType DeleteDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer DeleteDataFilter::clone() const
 {
   return std::make_unique<DeleteDataFilter>();

@@ -89,6 +89,12 @@ Parameters ITKConnectedComponentImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKConnectedComponentImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKConnectedComponentImageFilter::clone() const
 {
   return std::make_unique<ITKConnectedComponentImageFilter>();

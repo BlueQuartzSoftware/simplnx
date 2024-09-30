@@ -39,14 +39,20 @@ IParameter::AcceptedTypes ChoicesParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json ChoicesParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType ChoicesParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
 {
   auto index = std::any_cast<ValueType>(value);
   nlohmann::json json = index;
   return json;
 }
 
-Result<std::any> ChoicesParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())

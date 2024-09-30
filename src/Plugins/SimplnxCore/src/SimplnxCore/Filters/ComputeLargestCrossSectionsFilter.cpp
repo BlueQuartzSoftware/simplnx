@@ -72,6 +72,12 @@ Parameters ComputeLargestCrossSectionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeLargestCrossSectionsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeLargestCrossSectionsFilter::clone() const
 {
   return std::make_unique<ComputeLargestCrossSectionsFilter>();

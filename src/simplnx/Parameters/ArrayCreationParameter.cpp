@@ -24,14 +24,20 @@ IParameter::AcceptedTypes ArrayCreationParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
-nlohmann::json ArrayCreationParameter::toJson(const std::any& value) const
+//------------------------------------------------------------------------------
+IParameter::VersionType ArrayCreationParameter::getVersion() const
+{
+  return 1;
+}
+
+nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
   nlohmann::json json = path.toString();
   return json;
 }
 
-Result<std::any> ArrayCreationParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 

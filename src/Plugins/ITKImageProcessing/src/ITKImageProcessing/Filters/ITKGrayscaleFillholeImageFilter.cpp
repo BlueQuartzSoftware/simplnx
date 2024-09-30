@@ -91,6 +91,12 @@ Parameters ITKGrayscaleFillholeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGrayscaleFillholeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGrayscaleFillholeImageFilter::clone() const
 {
   return std::make_unique<ITKGrayscaleFillholeImageFilter>();

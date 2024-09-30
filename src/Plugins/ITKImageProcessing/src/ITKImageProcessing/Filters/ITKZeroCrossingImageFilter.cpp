@@ -89,6 +89,12 @@ Parameters ITKZeroCrossingImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKZeroCrossingImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKZeroCrossingImageFilter::clone() const
 {
   return std::make_unique<ITKZeroCrossingImageFilter>();

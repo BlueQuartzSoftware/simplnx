@@ -291,6 +291,12 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
 {
   return std::make_unique<ComputeArrayStatisticsFilter>();

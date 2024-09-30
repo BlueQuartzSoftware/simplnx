@@ -90,6 +90,12 @@ Parameters ComputeFeatureNeighborsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureNeighborsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureNeighborsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureNeighborsFilter>();

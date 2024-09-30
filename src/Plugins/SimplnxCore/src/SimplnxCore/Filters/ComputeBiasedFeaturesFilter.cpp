@@ -74,6 +74,12 @@ Parameters ComputeBiasedFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeBiasedFeaturesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeBiasedFeaturesFilter::clone() const
 {
   return std::make_unique<ComputeBiasedFeaturesFilter>();

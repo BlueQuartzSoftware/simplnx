@@ -75,6 +75,12 @@ Parameters ApproximatePointCloudHullFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ApproximatePointCloudHullFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 {
   return std::make_unique<ApproximatePointCloudHullFilter>();

@@ -83,6 +83,12 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType RegularGridSampleSurfaceMeshFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RegularGridSampleSurfaceMeshFilter::clone() const
 {
   return std::make_unique<RegularGridSampleSurfaceMeshFilter>();

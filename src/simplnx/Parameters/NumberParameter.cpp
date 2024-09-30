@@ -24,8 +24,15 @@ IParameter::AcceptedTypes NumberParameter<T>::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
 template <class T>
-nlohmann::json NumberParameter<T>::toJson(const std::any& value) const
+IParameter::VersionType NumberParameter<T>::getVersion() const
+{
+  return 1;
+}
+
+template <class T>
+nlohmann::json NumberParameter<T>::toJsonImpl(const std::any& value) const
 {
   auto number = std::any_cast<ValueType>(value);
   nlohmann::json json = number;
@@ -33,7 +40,7 @@ nlohmann::json NumberParameter<T>::toJson(const std::any& value) const
 }
 
 template <class T>
-Result<std::any> NumberParameter<T>::fromJson(const nlohmann::json& json) const
+Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'NumberParameter' JSON Error: ";
   if(!json.is_number())

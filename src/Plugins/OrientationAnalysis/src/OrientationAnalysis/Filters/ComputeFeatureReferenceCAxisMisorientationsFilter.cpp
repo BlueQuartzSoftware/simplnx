@@ -81,6 +81,12 @@ Parameters ComputeFeatureReferenceCAxisMisorientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFeatureReferenceCAxisMisorientationsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFeatureReferenceCAxisMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureReferenceCAxisMisorientationsFilter>();

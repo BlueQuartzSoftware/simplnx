@@ -85,6 +85,12 @@ Parameters ReadDeformKeyFileV12Filter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadDeformKeyFileV12Filter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadDeformKeyFileV12Filter::clone() const
 {
   return std::make_unique<ReadDeformKeyFileV12Filter>();

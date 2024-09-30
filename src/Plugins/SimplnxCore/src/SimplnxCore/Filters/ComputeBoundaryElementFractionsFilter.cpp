@@ -71,6 +71,12 @@ Parameters ComputeBoundaryElementFractionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeBoundaryElementFractionsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeBoundaryElementFractionsFilter::clone() const
 {
   return std::make_unique<ComputeBoundaryElementFractionsFilter>();

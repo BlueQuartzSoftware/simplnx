@@ -83,6 +83,12 @@ Parameters WriteINLFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteINLFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteINLFileFilter::clone() const
 {
   return std::make_unique<WriteINLFileFilter>();

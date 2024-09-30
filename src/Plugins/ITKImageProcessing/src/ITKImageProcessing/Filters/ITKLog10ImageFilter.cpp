@@ -83,6 +83,12 @@ Parameters ITKLog10ImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKLog10ImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKLog10ImageFilter::clone() const
 {
   return std::make_unique<ITKLog10ImageFilter>();

@@ -63,6 +63,12 @@ Parameters WriteDREAM3DFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteDREAM3DFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteDREAM3DFilter::clone() const
 {
   return std::make_unique<WriteDREAM3DFilter>();

@@ -84,6 +84,12 @@ Parameters WriteStatsGenOdfAngleFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType WriteStatsGenOdfAngleFileFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer WriteStatsGenOdfAngleFileFilter::clone() const
 {
   return std::make_unique<WriteStatsGenOdfAngleFileFilter>();

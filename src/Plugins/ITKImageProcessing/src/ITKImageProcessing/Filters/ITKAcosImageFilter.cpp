@@ -83,6 +83,12 @@ Parameters ITKAcosImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKAcosImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKAcosImageFilter::clone() const
 {
   return std::make_unique<ITKAcosImageFilter>();

@@ -106,6 +106,12 @@ Parameters ITKClosingByReconstructionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKClosingByReconstructionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKClosingByReconstructionImageFilter::clone() const
 {
   return std::make_unique<ITKClosingByReconstructionImageFilter>();

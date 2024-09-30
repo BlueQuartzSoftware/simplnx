@@ -73,6 +73,12 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExtractComponentAsArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractComponentAsArrayFilter::clone() const
 {
   return std::make_unique<ExtractComponentAsArrayFilter>();

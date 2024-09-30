@@ -99,6 +99,12 @@ Parameters ITKImageReaderFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKImageReaderFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKImageReaderFilter::clone() const
 {
   return std::make_unique<ITKImageReaderFilter>();

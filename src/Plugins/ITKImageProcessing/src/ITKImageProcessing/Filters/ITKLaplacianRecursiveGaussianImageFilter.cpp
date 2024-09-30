@@ -91,6 +91,12 @@ Parameters ITKLaplacianRecursiveGaussianImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKLaplacianRecursiveGaussianImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKLaplacianRecursiveGaussianImageFilter::clone() const
 {
   return std::make_unique<ITKLaplacianRecursiveGaussianImageFilter>();

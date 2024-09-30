@@ -65,6 +65,12 @@ Parameters ComputeTriangleGeomCentroidsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeTriangleGeomCentroidsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeTriangleGeomCentroidsFilter::clone() const
 {
   return std::make_unique<ComputeTriangleGeomCentroidsFilter>();

@@ -175,6 +175,12 @@ Parameters ComputeFZQuaternionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeFZQuaternionsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeFZQuaternionsFilter::clone() const
 {
   return std::make_unique<ComputeFZQuaternionsFilter>();

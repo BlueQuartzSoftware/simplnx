@@ -94,6 +94,12 @@ Parameters ITKGrayscaleErodeImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGrayscaleErodeImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGrayscaleErodeImageFilter::clone() const
 {
   return std::make_unique<ITKGrayscaleErodeImageFilter>();

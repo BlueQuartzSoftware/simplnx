@@ -94,6 +94,12 @@ Parameters ITKGrayscaleDilateImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKGrayscaleDilateImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKGrayscaleDilateImageFilter::clone() const
 {
   return std::make_unique<ITKGrayscaleDilateImageFilter>();

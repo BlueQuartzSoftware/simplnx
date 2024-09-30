@@ -73,6 +73,12 @@ Parameters FlyingEdges3DFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType FlyingEdges3DFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FlyingEdges3DFilter::clone() const
 {
   return std::make_unique<FlyingEdges3DFilter>();

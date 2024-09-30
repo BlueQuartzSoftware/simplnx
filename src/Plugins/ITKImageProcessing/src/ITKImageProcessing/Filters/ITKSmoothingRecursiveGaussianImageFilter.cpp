@@ -96,6 +96,12 @@ Parameters ITKSmoothingRecursiveGaussianImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKSmoothingRecursiveGaussianImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKSmoothingRecursiveGaussianImageFilter::clone() const
 {
   return std::make_unique<ITKSmoothingRecursiveGaussianImageFilter>();

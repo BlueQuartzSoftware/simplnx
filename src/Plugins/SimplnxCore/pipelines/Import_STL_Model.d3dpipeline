@@ -1,53 +1,108 @@
 {
   "isDisabled": false,
   "name": "Import_STL_Model.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "output_triangle_geometry_path": "[Triangle Geometry]",
-        "scale_factor": 1.0,
-        "scale_output": false,
-        "stl_file_path": "Data/STL_Models/Cylinder.stl"
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_normals_name": {
+          "value": "Face Normals",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scale_factor": {
+          "value": 1.0,
+          "version": 1
+        },
+        "scale_output": {
+          "value": false,
+          "version": 1
+        },
+        "stl_file_path": {
+          "value": "Data/STL_Models/Cylinder.stl",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadStlFileFilter",
+        "name": "nx::core::ReadStlFileFilter",
         "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "triangle_areas_array_name": "Areas",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "triangle_areas_array_name": {
+          "value": "Areas",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeTriangleAreasFilter",
+        "name": "nx::core::ComputeTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "component_count": 1,
-        "initialization_value_str": "0",
-        "numeric_type_index": 8,
-        "output_array_path": "[Triangle Geometry]/Vertex Data/Node Type",
-        "tuple_dimensions": [
-          [
-            1.0
-          ]
-        ]
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "0",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 8,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "[Triangle Geometry]/Vertex Data/Node Type",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              1.0
+            ]
+          ],
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::CreateDataArrayFilter",
+        "name": "nx::core::CreateDataArrayFilter",
         "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
       },
       "isDisabled": true
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

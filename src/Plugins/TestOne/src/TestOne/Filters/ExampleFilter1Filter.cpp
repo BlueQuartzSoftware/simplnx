@@ -113,6 +113,12 @@ Parameters ExampleFilter1Filter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ExampleFilter1Filter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExampleFilter1Filter::clone() const
 {
   return std::make_unique<ExampleFilter1Filter>();

@@ -94,6 +94,12 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType UncertainRegularGridSampleSurfaceMeshFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer UncertainRegularGridSampleSurfaceMeshFilter::clone() const
 {
   return std::make_unique<UncertainRegularGridSampleSurfaceMeshFilter>();

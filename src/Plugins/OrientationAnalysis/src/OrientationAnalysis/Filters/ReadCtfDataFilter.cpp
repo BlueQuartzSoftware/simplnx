@@ -82,6 +82,12 @@ Parameters ReadCtfDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadCtfDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadCtfDataFilter::clone() const
 {
   return std::make_unique<ReadCtfDataFilter>();

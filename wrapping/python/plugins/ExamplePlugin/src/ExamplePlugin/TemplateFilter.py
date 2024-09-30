@@ -29,6 +29,9 @@ class TemplateFilter:
 
     return params
 
+  def parameters_version(self) -> int:
+    return 1
+
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     value: float = args[TemplateFilter.TEST_KEY]
     message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Preflight: {value}'))

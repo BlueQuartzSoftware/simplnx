@@ -95,6 +95,12 @@ Parameters ReadTextDataArrayFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
+IFilter::VersionType ReadTextDataArrayFilter::parametersVersion() const
+{
+  return 1;
+}
+
 IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
 {
   return std::make_unique<ReadTextDataArrayFilter>();

@@ -83,6 +83,12 @@ Parameters ITKExpImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKExpImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKExpImageFilter::clone() const
 {
   return std::make_unique<ITKExpImageFilter>();

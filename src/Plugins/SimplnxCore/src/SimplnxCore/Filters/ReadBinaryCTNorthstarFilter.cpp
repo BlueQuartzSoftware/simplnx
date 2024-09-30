@@ -391,6 +391,12 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ReadBinaryCTNorthstarFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ReadBinaryCTNorthstarFilter::clone() const
 {
   return std::make_unique<ReadBinaryCTNorthstarFilter>();

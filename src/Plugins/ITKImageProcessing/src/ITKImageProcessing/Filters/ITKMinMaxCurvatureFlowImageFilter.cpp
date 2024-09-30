@@ -93,6 +93,12 @@ Parameters ITKMinMaxCurvatureFlowImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKMinMaxCurvatureFlowImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKMinMaxCurvatureFlowImageFilter::clone() const
 {
   return std::make_unique<ITKMinMaxCurvatureFlowImageFilter>();

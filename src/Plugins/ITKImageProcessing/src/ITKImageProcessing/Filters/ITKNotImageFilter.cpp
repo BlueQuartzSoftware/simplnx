@@ -82,6 +82,12 @@ Parameters ITKNotImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKNotImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKNotImageFilter::clone() const
 {
   return std::make_unique<ITKNotImageFilter>();

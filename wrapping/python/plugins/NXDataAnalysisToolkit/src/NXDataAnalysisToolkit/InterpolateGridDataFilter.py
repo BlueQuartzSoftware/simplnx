@@ -57,6 +57,9 @@ class InterpolateGridDataFilter:
 
     return params
 
+  def parameters_version(self) -> int:
+    return 1
+
   def preflight_impl(self, data_structure: nx.DataStructure, args: dict, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy) -> nx.IFilter.PreflightResult:
     input_pts_arr_path: nx.DataPath = args[InterpolateGridDataFilter.INPUT_POINTS_ARRAY_PATH]
     input_data_arr_path: nx.DataPath = args[InterpolateGridDataFilter.INPUT_DATA_ARRAY_PATH]

@@ -88,6 +88,12 @@ Parameters DynamicTableExampleFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType DynamicTableExampleFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DynamicTableExampleFilter::clone() const
 {
   return std::make_unique<DynamicTableExampleFilter>();

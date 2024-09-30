@@ -70,6 +70,12 @@ Parameters LabelTriangleGeometryFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType LabelTriangleGeometryFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer LabelTriangleGeometryFilter::clone() const
 {
   return std::make_unique<LabelTriangleGeometryFilter>();

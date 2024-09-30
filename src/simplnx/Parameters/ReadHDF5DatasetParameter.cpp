@@ -61,8 +61,14 @@ IParameter::AcceptedTypes ReadHDF5DatasetParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType ReadHDF5DatasetParameter::getVersion() const
+{
+  return 1;
+}
+
 // -----------------------------------------------------------------------------
-nlohmann::json ReadHDF5DatasetParameter::toJson(const std::any& value) const
+nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 {
   const auto& datasetImportInfo = GetAnyRef<ValueType>(value);
   nlohmann::json json;
@@ -81,7 +87,7 @@ nlohmann::json ReadHDF5DatasetParameter::toJson(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadHDF5DatasetParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())

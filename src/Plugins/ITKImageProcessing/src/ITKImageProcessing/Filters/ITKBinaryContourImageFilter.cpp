@@ -98,6 +98,12 @@ Parameters ITKBinaryContourImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKBinaryContourImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKBinaryContourImageFilter::clone() const
 {
   return std::make_unique<ITKBinaryContourImageFilter>();

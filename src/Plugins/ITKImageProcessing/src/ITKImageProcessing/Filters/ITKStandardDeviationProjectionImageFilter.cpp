@@ -86,6 +86,12 @@ Parameters ITKStandardDeviationProjectionImageFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ITKStandardDeviationProjectionImageFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ITKStandardDeviationProjectionImageFilter::clone() const
 {
   return std::make_unique<ITKStandardDeviationProjectionImageFilter>();

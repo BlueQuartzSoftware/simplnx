@@ -76,6 +76,12 @@ Parameters FillBadDataFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType FillBadDataFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FillBadDataFilter::clone() const
 {
   return std::make_unique<FillBadDataFilter>();

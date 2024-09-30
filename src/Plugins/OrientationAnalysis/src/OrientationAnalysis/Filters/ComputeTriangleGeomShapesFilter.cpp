@@ -74,6 +74,12 @@ Parameters ComputeTriangleGeomShapesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeTriangleGeomShapesFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeTriangleGeomShapesFilter::clone() const
 {
   return std::make_unique<ComputeTriangleGeomShapesFilter>();

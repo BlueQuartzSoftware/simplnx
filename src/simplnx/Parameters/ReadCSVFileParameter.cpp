@@ -53,8 +53,14 @@ IParameter::AcceptedTypes ReadCSVFileParameter::acceptedTypes() const
   return {typeid(ValueType)};
 }
 
+//------------------------------------------------------------------------------
+IParameter::VersionType ReadCSVFileParameter::getVersion() const
+{
+  return 1;
+}
+
 // -----------------------------------------------------------------------------
-nlohmann::json ReadCSVFileParameter::toJson(const std::any& value) const
+nlohmann::json ReadCSVFileParameter::toJsonImpl(const std::any& value) const
 {
   const auto& ReadCSVData = GetAnyRef<ValueType>(value);
   nlohmann::json json = ReadCSVData.writeJson();
@@ -62,7 +68,7 @@ nlohmann::json ReadCSVFileParameter::toJson(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadCSVFileParameter::fromJson(const nlohmann::json& json) const
+Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
   return {ConvertResultTo<std::any>(ReadCSVData::ReadJson(json))};
 }

@@ -1,70 +1,122 @@
 {
   "isDisabled": false,
   "name": "Triangle_Areas_Demo.d3dpipeline",
-  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
-        "output_triangle_geometry_path": "[Triangle Geometry]",
-        "scale_factor": 1.0,
-        "scale_output": false,
-        "stl_file_path": "Data/STL_Models/ASTMD638_specimen.stl"
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "face_normals_name": {
+          "value": "Face Normals",
+          "version": 1
+        },
+        "output_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "scale_factor": {
+          "value": 1.0,
+          "version": 1
+        },
+        "scale_output": {
+          "value": false,
+          "version": 1
+        },
+        "stl_file_path": {
+          "value": "Data/STL_Models/ASTMD638_specimen.stl",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ReadStlFileFilter",
+        "name": "nx::core::ReadStlFileFilter",
         "uuid": "2f64bd45-9d28-4254-9e07-6aa7c6d3d015"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "triangle_areas_array_name": "Face Areas",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "triangle_areas_array_name": {
+          "value": "Face Areas",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::ComputeTriangleAreasFilter",
+        "name": "nx::core::ComputeTriangleAreasFilter",
         "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "output_normals_array_name": "Face Normals (Calculated)",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "output_normals_array_name": {
+          "value": "Face Normals (Calculated)",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::TriangleNormalFilter",
+        "name": "nx::core::TriangleNormalFilter",
         "uuid": "8133d419-1919-4dbf-a5bf-1c97282ba63f"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "surface_mesh_triangle_dihedral_angles_array_name": "Dihedral Angles",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "input_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "surface_mesh_triangle_dihedral_angles_array_name": {
+          "value": "Dihedral Angles",
+          "version": 1
+        }
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::TriangleDihedralAngleFilter",
+        "name": "nx::core::TriangleDihedralAngleFilter",
         "uuid": "dd42c521-4ae5-485d-ad35-d1276547d2f1"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "centroids_array_name": "Centroids",
-        "input_triangle_geometry_path": "[Triangle Geometry]"
+        "centroids_array_name": {
+          "value": "Centroids",
+          "version": 1
+        },
+        "input_triangle_geometry_path": {
+          "value": "[Triangle Geometry]",
+          "version": 1
+        },
+        "parameters_version": 1
       },
       "comments": "",
       "filter": {
-        "name": "simplnx::TriangleCentroidFilter",
+        "name": "nx::core::TriangleCentroidFilter",
         "uuid": "5d7156ae-3e0a-4db0-a792-552f492e8911"
       },
       "isDisabled": false
     }
   ],
-  "workflowParams": []
+  "version": 1
 }

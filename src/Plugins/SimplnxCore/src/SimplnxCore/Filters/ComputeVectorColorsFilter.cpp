@@ -77,6 +77,12 @@ Parameters ComputeVectorColorsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
+IFilter::VersionType ComputeVectorColorsFilter::parametersVersion() const
+{
+  return 1;
+}
+
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ComputeVectorColorsFilter::clone() const
 {
   return std::make_unique<ComputeVectorColorsFilter>();
