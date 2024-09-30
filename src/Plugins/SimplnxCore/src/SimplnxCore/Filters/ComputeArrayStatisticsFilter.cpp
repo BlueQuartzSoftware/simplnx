@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -57,7 +58,8 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   OutputActions actions;
 
-  auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
+  auto amAction = std::make_unique<CreateDataGroupAction>(destinationAttributeMatrixValue);
+
   actions.appendAction(std::move(amAction));
 
   if(computeByIndexValue)
@@ -115,7 +117,31 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
-  if(findHistogramValue)
+  if(findHistogramValue && !computeByIndexValue)
+  {
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{numBins}, std::vector<usize>{1ULL}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinRangeName_Key);
+      auto action = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{numBins}, std::vector<usize>{2ULL}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+    if(findModalBinRanges)
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key);
+      auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+  }
+  if(findHistogramValue && computeByIndexValue)
   {
     {
       auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key);
@@ -124,7 +150,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     }
     {
       auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinRangeName_Key);
-      auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{numBins + 1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{numBins * 2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
       actions.appendAction(std::move(action));
     }
     {
@@ -186,7 +212,7 @@ std::string ComputeArrayStatisticsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeArrayStatisticsFilter::defaultTags() const
 {
-  return {className(), "SimplnxCore", "Statistics"};
+  return {className(), "SimplnxCore", "Statistics", "Histogram", "Mean", "Average", "Min", "Max", "Standard Deviation", "Length"};
 }
 
 //------------------------------------------------------------------------------
@@ -198,16 +224,19 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrixPath_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "Whether to compute the histogram of the input array", false));
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Histogram Min Value", "Min cutoff value for histogram", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Histogram Max Value", "Max cutoff value for histogram", 0.0));
+  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 10));
   params.insert(
       std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
-  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 1));
+
+  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Custom Histogram Min Value", "Min cutoff value for histogram", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Custom Histogram Max Value", "Max cutoff value for histogram", 1.0));
+
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinCountName_Key, "Histogram Bin Counts Array Name", "The name of the histogram bin counts array", "Histogram Bin Counts"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinRangeName_Key, "Histogram Bin Ranges Array Name", "The name of the histogram bin ranges array", "Histogram Bin Ranges"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));

@@ -236,7 +236,7 @@ public:
 
       if(m_Histogram && binCountsStorePtr != nullptr && binRangesStorePtr != nullptr)
       {
-        std::vector<T> ranges(m_NumBins + 1);
+        std::vector<T> ranges(m_NumBins * 2);
         std::vector<uint64> histogram(m_NumBins, 0);
         if(length[localFeatureIndex] > 0)
         {
@@ -630,7 +630,7 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
     std::atomic_bool neverCancel{false};
     std::atomic<usize> overflow{0};
     std::vector<uint64> binCounts(inputValues->NumBins, 0);
-    std::vector<T> binRanges(inputValues->NumBins + 1);
+    std::vector<T> binRanges(inputValues->NumBins * 2);
 
     Result<> result = {};
     if constexpr(std::is_same_v<DataArray<T>, ContainerType>)
@@ -642,8 +642,12 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
       result = HistogramUtilities::serial::GenerateHistogram(data, binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
     }
 
-    binCountsStore.setTuple(0, binCounts);
-    binRangesStore.setTuple(0, binRanges);
+    for(size_t i = 0; i < inputValues->NumBins; i++)
+    {
+      binCountsStore.setComponent(i, 0, binCounts[i]);
+      binRangesStore.setComponent(i, 0, binRanges[i * 2]);
+      binRangesStore.setComponent(i, 1, binRanges[i * 2 + 1]);
+    }
 
     auto maxElementIt = std::max_element(binCounts.begin(), binCounts.end());
     uint64 index = std::distance(binCounts.begin(), maxElementIt);
@@ -699,10 +703,12 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* modeArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[5]);
     auto* stdDevArrayPtr = dynamic_cast<Float32Array*>(arrays[6]);
     auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
+
     auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
+    auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
     auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
     auto* modalBinsArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[11]);
-    auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
+
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[13]);
 
     IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
@@ -1094,8 +1100,8 @@ Result<> ComputeArrayStatistics::operator()()
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
     numFeatures = findNumFeatures(featureIds);
 
-    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    destAttrMatPtr->resizeTuples({numFeatures});
+    //    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    //    destAttrMatPtr->resizeTuples({numFeatures});
 
     for(const auto& array : arrays)
     {
