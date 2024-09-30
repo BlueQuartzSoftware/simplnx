@@ -30,7 +30,27 @@ The user must select a destination **Attribute Matrix** in which the computed st
 
 Special operations occur for certain statistics if the supplied array is of type *bool* (for example, a mask array produced [when thresholding](@ref multithresholdobjects)).  The length, minimum, maximum, median, mode, and summation are computed as normal (although the resulting values may be platform dependent).  The mean and standard deviation for a boolean array will be true if there are more instances of true in the array than false.  If *Standardize Data* is chosen for a boolean array, no actual modifications will be made to the input.  These operations for boolean inputs are chosen as a basic convention, and are not intended be representative of true boolean logic.
 
-**Note**: If *Find Histogram* is on AND *Compute Statistics Per Feature/Ensemble* is on, then any features that have the exact same value throughout the entire feature will have its first histogram bin set to the total count of feature values.  All other bins will be 0.
+
+## Hisogram Notes: 
+
+When creating a histogram the output arrays can take 2 different layouts.
+
+### Histogram and "Compute Statistics by Feature/Ensemble" is NOT selected
+
+The output is in the form of 2 Data Arrays. The first data array will have the counts. The number of tuples of the array is
+the same as the number of bins in the histogram. The second data array will have the bin ranges. The array has 2 components 
+where the first component of each tuple is the minimum of the bin (inclusive) and the second component of the tuple
+is the maximum for that bin (exclusive).
+
+### Histogram and "Compute Statistics by Feature/Ensemble" IS selected
+
+The output is in the form of 2 arrays, but for each output array the number of tuples of the array
+is the same as the number of features/ensembles for which you are calculating the statistics. The number of components
+for the "Counts" array is now the number of bins. The second array is the same tuple shape as the
+counts array but now the number of components is the number of bins * 2 and the data 
+is encoded as [Bin Min, Bin Max], [Bin Min, Bin Max].
+
+**Note**: 
 
 % Auto generated parameter table will be inserted here
 

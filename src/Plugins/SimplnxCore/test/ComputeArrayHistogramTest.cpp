@@ -25,7 +25,7 @@ void compareHistograms(const AbstractDataStore<T>& calculated, const std::array<
 {
   if(calculated.getSize() != actual.size())
   {
-    throw std::runtime_error("Improper sizing of DataStore");
+    throw std::runtime_error(fmt::format("Improper sizing of DataStore. {} vs {}", calculated.getSize(), actual.size()));
   }
   for(int32 i = 0; i < N; i++)
   {
@@ -81,7 +81,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   {
-    std::array<float64, 5> binRangesSet = {-56.8, 184.475, 425.75, 667.025, 908.3};
+    std::array<float64, 8> binRangesSet = {-56.8, 184.475, 184.475, 425.75, 425.75, 667.025, 667.025, 908.3};
     std::array<uint64, 4> binCountsSet = {11, 0, 0, 1};
     const std::string name = k_Array0Name;
 
@@ -89,7 +89,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
     compareHistograms(dataStruct.getDataAs<UInt64Array>(dataGPath.createChildPath((name + std::string{k_BinCountsSuffix})))->getDataStoreRef(), binCountsSet);
   }
   {
-    std::array<int32, 5> binRangesSet = {-90, -44, 2, 48, 94};
+    std::array<int32, 8> binRangesSet = {-90, -44, -44, 2, 2, 48, 48, 94};
     std::array<uint64, 4> binCountsSet = {1, 2, 3, 6};
     const std::string name = k_Array1Name;
 
@@ -97,7 +97,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[Simpln
     compareHistograms(dataStruct.getDataAs<UInt64Array>(dataGPath.createChildPath((name + std::string{k_BinCountsSuffix})))->getDataStoreRef(), binCountsSet);
   }
   {
-    std::array<uint32, 5> binRangesSet = {34, 2270, 4506, 6742, 8978};
+    std::array<uint32, 8> binRangesSet = {34, 2270, 2270, 4506, 4506, 6742, 6742, 8978};
     std::array<uint64, 4> binCountsSet = {11, 0, 0, 1};
     const std::string name = k_Array2Name;
 

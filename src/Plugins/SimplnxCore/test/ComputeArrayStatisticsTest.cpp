@@ -110,19 +110,17 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Check resulting values
   {
-    auto* attrMatrix = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
-    REQUIRE(attrMatrix != nullptr);
-    REQUIRE(attrMatrix->getShape().size() == 1);
-    REQUIRE(attrMatrix->getShape()[0] == 1);
+    auto* dataGroup = dataStructure.getDataAs<DataGroup>(statsDataPath);
+    REQUIRE(dataGroup != nullptr);
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(length));
     REQUIRE(lengthArray != nullptr);
     auto* minArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(min));
@@ -170,7 +168,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(modeVals[0] == 1);
     REQUIRE(modalBinRangesVals.size() == 2);
     REQUIRE(modalBinRangesVals[0] == 1);
-    REQUIRE(modalBinRangesVals[1] == 10);
+    REQUIRE(modalBinRangesVals[1] == 6);
     REQUIRE(std::fabs(meanVal - 14.3333f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(medianVal - 10.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal - 13.02f) < UnitTest::EPSILON);
@@ -315,19 +313,17 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Check resulting values
   {
-    auto* attrMatrix = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
-    REQUIRE(attrMatrix != nullptr);
-    REQUIRE(attrMatrix->getShape().size() == 1);
-    REQUIRE(attrMatrix->getShape()[0] == 3);
+    auto* dataGroup = dataStructure.getDataAs<DataGroup>(statsDataPath);
+    REQUIRE(dataGroup != nullptr);
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(length));
     REQUIRE(lengthArray != nullptr);
     REQUIRE(lengthArray->getNumberOfTuples() == 3);
@@ -493,13 +489,15 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     REQUIRE((*mostPopulatedBinArray)[5] == 2);
     REQUIRE(modalBinRange0[0] == 1);
     REQUIRE(modalBinRange0[1] == 15);
-    REQUIRE(modalBinRange0[2] == 59);
-    REQUIRE(modalBinRange0[3] == 74);
-    REQUIRE(modalBinRange1[0] == 17);
-    REQUIRE(modalBinRange1[1] == 21);
+    REQUIRE(modalBinRange0[2] == 30);
+    REQUIRE(modalBinRange0[3] == 44);
+
+    REQUIRE(modalBinRange1[0] == 11);
+    REQUIRE(modalBinRange1[1] == 14);
+
     REQUIRE(modalBinRange2[0] == 10);
     REQUIRE(modalBinRange2[1] == 12);
-    REQUIRE(modalBinRange2[2] == 20);
-    REQUIRE(modalBinRange2[3] == 23);
+    REQUIRE(modalBinRange2[2] == 15);
+    REQUIRE(modalBinRange2[3] == 17);
   }
 }

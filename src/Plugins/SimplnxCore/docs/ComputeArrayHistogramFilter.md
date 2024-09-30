@@ -8,6 +8,11 @@ Statistics(Ensemble)
 
 This **Filter** accepts **DataArray(s)** as input, creates histogram **DataArray(s)** in specified **DataGroup** from input **DataArray(s)**, then calculates histogram values according to user parameters and stores values in created histogram **DataArray(s)**.
 
+The output is in the form of 2 Data Arrays. The first data array will have the counts. The number of tuples of the array is
+the same as the number of bins in the histogram. The second data array will have the bin ranges. The array has 2 components 
+where the first component of each tuple is the minimum of the bin (inclusive) and the second component of the tuple
+is the maximum for that bin (exclusive).
+
 ## Example Data
 
 Using some data about the "Old Faithful" geyser in the United States from the [R site](http://www.r-tutor.com/elementary-statistics/quantitative-data/frequency-distribution-quantitative-data), here is the top few lines of data:
