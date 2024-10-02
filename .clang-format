@@ -82,7 +82,8 @@ SpaceBeforeParens: Never
 # SpacesInCStyleCastParentheses: false
 # SpacesInParentheses: false
 # SpacesInSquareBrackets: false
-Standard: Cpp11
+SpaceAfterTemplateKeyword: true
+Standard: c++20
 TabWidth: 2
 UseTab: Never
 ...
