@@ -115,6 +115,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   ResampleImageGeomTest.cpp
   ResampleRectGridToImageGeomTest.cpp
+  ReshapeDataArrayTest.cpp
   ReverseTriangleWindingTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
