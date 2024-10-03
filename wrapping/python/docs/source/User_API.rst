@@ -366,13 +366,13 @@ General Parameters
 .. _ChoicesParameter:
 .. py:class:: ChoicesParameter
 
-   This parameter holds a single value from a list of choices in the form of an integer. The filter documentation
+   This parameter holds a zero based 'index' into a list of choices in the form of an integer. The filter documentation
    should have the valid values to chose from. It is represented in the UI through a ComboBox drop down menu.
    It can be initialized with an integer type.
 
 .. code:: python
 
-    a_combo_box_value = 2
+    a_combo_box_index = 2
 
 .. _DataGroupCreationParameter:
 .. py:class:: DataGroupCreationParameter

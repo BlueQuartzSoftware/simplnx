@@ -6,20 +6,40 @@ Orientation Analysis (Conversion)
 
 ## Description
 
-This **Filter** generates a new orientation representation (see Data Layout Table below) for each **Element**, given the *Input Orientation Representation* for the **Element**. The following table lists the various orientation representations that are supported. DREAM3D is capable of converting between any representation with some caveats.
+This **Filter** generates a new orientation representation (see Data Layout Table below) 
+for each **Element**, given the *Input Orientation Representation* for the **Element**.
+The following table lists the various orientation representations that are supported. DREAM3D
+is capable of converting between any representation with some caveats. The Input and
+Output Orientation Type are represented as a zero based index into the combo box widget.
+
+### Orientation Representation Enumeration Index
+
+| Enumeration Index | Orientation Representation |
+|-------------------|---------------------------|
+| 0                 | EulerAngles                |
+| 1                 | Orientation Matrix         |
+| 2                 | Quaternions                |
+| 3                 | Axis Angle                 |
+| 4                 | Rodrigues Vectors          |
+| 5                 | Homochoric                 |
+| 6                 | Cubochoric                 |
+| 7                 | StereoGraphic              |
 
 ### Data Layout
 
-| Orientation Representation | No. of Components | Representation Type | Data Layout |
-|----------------------------|----------|---------------------|-------------|
-| EulerAngles                | 3 | 0 | phi1, Phi, phi2 |
-| Orientation Matrix         | 9 | 1 | Row Major Format |
-| Quaternions                | 4 | 2 | ( \[x, y, z\], w ) |
-| Axis Angle                 | 4 | 3 | ( \[x, y, z\], Angle) |
-| Rodrigues Vectors          | 4 | 4 | *Internally DREAM.3D keeps a 4th component* |
-| Homochoric                 | 3 | 5 | \[x, y, z\] |
-| Cubochoric                 | 3 | 6 | \[x, y, z\] |
-| StereoGraphic              | 3 | 7 | \[x, y, z\] |
+| Orientation Representation | No. of Components  | Data Layout |
+|----------------------------|---------------------|-------------|
+| EulerAngles                | 3 | phi1, Phi, phi2 |
+| Orientation Matrix         | 9 | Row Major Format |
+| Quaternions                | 4 | ( \[x, y, z\], w ) |
+| Axis Angle                 | 4 | ( \[x, y, z\], Angle) |
+| Rodrigues Vectors          | 4 | ( \[x, y, z\], w )* |
+| Homochoric                 | 3 | \[x, y, z\] |
+| Cubochoric                 | 3 | \[x, y, z\] |
+| StereoGraphic              | 3 | \[x, y, z\] |
+
+- * Rodrigues Vector: DREAM3D stores the Rodrigues vector as a normalized vector with the lenth as the last component. In order to convert from the 4 component to the typical 3 component Rodrigues
+Vector the user can multiply each vector part by the scalar part.
 
 ### Data Range
 
@@ -28,6 +48,13 @@ The valid range for Euler angles is (Degrees):
     + phi-1: 0 to 360
     + Phi : 0 to 180
     + phi-2: 0 to 360
+
+Rodrigues Vector: Length must be positive and the vector must be normalized.
+Homochoric Vector: Sum of Squares must = 1.0
+Quaternion: Scalar part must be positive and have unit norm
+Axis Angle: Angle must be in the range of 0-Pi.
+Stereographic Vector: Must be unit norm
+Orientation Matrix: Determinant must be +1.0
 
 ### Data Conversion Notes
 

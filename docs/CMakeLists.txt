@@ -1,4 +1,10 @@
-option(SIMPLNX_BUILD_SPHINX_DOCS "Use Sphinx to builddocumentation" OFF)
+# ------------------------------------------------------------------------------
+# Building the Developer Documentation using Doxygen is probably not supported
+# and has not been updated since 2021. This is being left in here for historical
+# reasons and incase someone wants to add this capability in the future.
+# ------------------------------------------------------------------------------
+
+option(SIMPLNX_BUILD_SPHINX_DOCS "Use Doxygen to build developer documentation (Not Supported)" OFF)
 
 find_package(Doxygen REQUIRED)
 
@@ -23,7 +29,7 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
   DEPENDS ${SIMPLNX_HDRS}
   COMMAND Doxygen::doxygen ${DOXYFILE_OUT}
   MAIN_DEPENDENCY ${DOXYFILE_IN} ${DOXYFILE_OUT}
-  COMMENT "Generating ${PROJECT_NAME} docs with Doxygen"
+  COMMENT "Generating ${PROJECT_NAME} developer docs with Doxygen"
   VERBATIM
 )
 
@@ -38,7 +44,7 @@ endif()
 
 add_custom_target(simplnx_doxygen ${doxygen_default} DEPENDS ${DOXYGEN_INDEX_FILE})
 
-option(SIMPLNX_INSTALL_DOXYGEN_DOCS "Enable install forDoxygen docs" OFF)
+option(SIMPLNX_INSTALL_DOXYGEN_DOCS "Enable install for Doxygen docs" OFF)
 
 include(GNUInstallDirs)
 
@@ -81,7 +87,7 @@ if(SIMPLNX_BUILD_SPHINX_DOCS)
 
   add_custom_target(simplnx_sphinx ${sphinx_default} DEPENDS ${SPHINX_INDEX_FILE})
 
-  option(SIMPLNX_INSTALL_SPHINX_DOCS "Enable install forSphinx docs" OFF)
+  option(SIMPLNX_INSTALL_SPHINX_DOCS "Enable install for Sphinx docs" OFF)
   if(SIMPLNX_INSTALL_SPHINX_DOCS)
     install(DIRECTORY ${SPHINX_BUILD}
       DESTINATION ${CMAKE_INSTALL_DOCDIR}
