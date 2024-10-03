@@ -44,7 +44,7 @@ std::string ReshapeDataArrayFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReshapeDataArrayFilter::defaultTags() const
 {
-  return {className(), "Create", "Data Structure", "Data Array", "Reshape", "transform", "morph", "adjust", "change", "modify"};
+  return {className(), "Create", "Data Structure", "Data Array", "Reshape", "transform", "morph", "adjust", "change", "modify", "resize", "tuple"};
 }
 
 //------------------------------------------------------------------------------
