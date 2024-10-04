@@ -1029,7 +1029,7 @@ if(SIMPLNX_BUILD_PYTHON)
   add_subdirectory(wrapping/python)
 endif()
 
-option(SIMPLNX_BUILD_DOCS "Enables buildingdocumentation" OFF)
+option(SIMPLNX_BUILD_DOCS "Enables building documentation" OFF)
 
 if(SIMPLNX_BUILD_DOCS)
   add_subdirectory(docs)
