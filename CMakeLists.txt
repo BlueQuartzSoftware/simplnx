@@ -68,7 +68,9 @@ enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_ITKImageProcessing FEATURE
 # Is the OrientationAnalysis Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
 option(SIMPLNX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
-enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_OrientationAnalysis FEATURE "ebsd")
+if(NOT SIMPLNX_USE_LOCAL_EBSD_LIB)
+  enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_ENABLE_OrientationAnalysis FEATURE "ebsd")
+endif()
 
 # ------------------------------------------------------------------------------
 # Simplnx being built for an Anaconda Python distribution [DEFAULT=OFF]
