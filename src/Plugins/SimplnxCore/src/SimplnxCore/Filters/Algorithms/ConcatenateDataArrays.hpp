@@ -111,12 +111,6 @@ public:
     InputArraysUnsupported = -2306
   };
 
-  // Warning Codes
-  enum class WarningCodes : int32
-  {
-    MultipleTupleDimsNotSupported = -100
-  };
-
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
