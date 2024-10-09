@@ -87,7 +87,6 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   auto tupleDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<usize> tDims = {};
   const auto& rowData = tupleDimsData.at(0);
@@ -188,7 +187,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(inputArrayPath));
   resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(outputArrayPath, inputArrayPath.getTargetName()));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

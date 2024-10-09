@@ -26,9 +26,11 @@ struct is_allowed_array_type<StringArray> : std::true_type
 {
 };
 
-template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
-                                                                                                  const IFilter::MessageHandler& messageHandler)
+template <class Class>
+concept AllowedType = is_allowed_array_type<Class>::value;
+
+template <AllowedType ArrayType>
+Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
 {
   auto& inputDataArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
   auto& outputDataArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPath);
@@ -116,35 +118,31 @@ private:
   struct ReshapeDataArrayTemplateImpl
   {
     template <typename T>
-    void operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler, Result<>& result)
+    Result<> operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
     {
-      result = ReshapeArrayImpl<DataArray<T>>(dataStructure, inputArrayPath, outputArrayPath, messageHandler);
+      return ReshapeArrayImpl<DataArray<T>>(dataStructure, inputArrayPath, outputArrayPath, messageHandler);
     }
   };
 
   struct ReshapeNeighborListTemplateImpl
   {
     template <typename T>
-    void operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler, Result<>& result)
+    Result<> operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
     {
-      result = ReshapeNeighborListImpl<T>(dataStructure, inputArrayPath, outputArrayPath, messageHandler);
+      return ReshapeNeighborListImpl<T>(dataStructure, inputArrayPath, outputArrayPath, messageHandler);
     }
   };
 
   static Result<> ReshapeArray(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
   {
     const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
-    Result<> result;
-    ExecuteDataFunction(ReshapeDataArrayTemplateImpl{}, outputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler, result);
-    return result;
+    return ExecuteDataFunction(ReshapeDataArrayTemplateImpl{}, outputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler);
   }
 
   static Result<> ReshapeNeighborList(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
   {
     const auto& outputNeighborList = dataStructure.getDataRefAs<INeighborList>(outputArrayPath);
-    Result<> result;
-    ExecuteNeighborFunction(ReshapeNeighborListTemplateImpl{}, outputNeighborList.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler, result);
-    return result;
+    return ExecuteNeighborFunction(ReshapeNeighborListTemplateImpl{}, outputNeighborList.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler);
   }
 };
 
