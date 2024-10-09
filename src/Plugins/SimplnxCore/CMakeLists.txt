@@ -114,6 +114,7 @@ set(FilterList
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
   ResampleRectGridToImageGeomFilter
+  ReshapeDataArrayFilter
   ReverseTriangleWindingFilter
   RobustAutomaticThresholdFilter
   RotateSampleRefFrameFilter
@@ -209,6 +210,7 @@ set(AlgorithmList
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
+  ReshapeDataArray
   ScalarSegmentFeatures
   SharedFeatureFace
   Silhouette
