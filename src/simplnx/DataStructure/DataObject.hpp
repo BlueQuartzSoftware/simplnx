@@ -288,15 +288,15 @@ protected:
 
   /**
    * @brief Notifies the DataObject of DataObject IDs that have been changed by the DataStructure.
-   * @param updatedIds std::pair ordered as {old ID, new ID}
+   * @param updatedIdsMap std::unordered_map containing the mappings between the old IDs and the new IDs
    */
-  void checkUpdatedIds(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+  void checkUpdatedIds(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap);
 
   /**
    * @brief Calls specialized checks for derived classes. Should only be called by checkUpdatedIds.
    * @param updatedIds
    */
-  virtual void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+  virtual void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap);
 
   /**
    * @brief Attempts to add the specified DataObject to the target DataStructure.

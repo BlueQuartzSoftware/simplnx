@@ -258,13 +258,13 @@ void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)
   m_ElementSizesId = sizesId;
 }
 
-void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void INodeGeometry1D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  INodeGeometry0D::checkUpdatedIdsImpl(updatedIds);
+  INodeGeometry0D::checkUpdatedIdsImpl(updatedIdsMap);
 
   std::vector<bool> visited(7, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_EdgeAttributeMatrixId = nx::core::VisitDataStructureId(m_EdgeAttributeMatrixId, updatedId, visited, 0);
     m_EdgeDataArrayId = nx::core::VisitDataStructureId(m_EdgeDataArrayId, updatedId, visited, 1);

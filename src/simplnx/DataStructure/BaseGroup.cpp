@@ -247,9 +247,9 @@ std::vector<std::string> BaseGroup::GetChildrenNames()
   return m_DataMap.getNames();
 }
 
-void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void BaseGroup::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  m_DataMap.updateIds(updatedIds);
+  m_DataMap.updateIds(updatedIdsMap);
 }
 
 std::vector<DataObject::IdType> BaseGroup::GetChildrenIds()

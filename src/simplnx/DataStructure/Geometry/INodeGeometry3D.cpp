@@ -222,12 +222,12 @@ INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTr
   return triangles;
 }
 
-void INodeGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void INodeGeometry3D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  INodeGeometry2D::checkUpdatedIdsImpl(updatedIds);
+  INodeGeometry2D::checkUpdatedIdsImpl(updatedIdsMap);
   std::vector<bool> visited(3, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_PolyhedronListId = nx::core::VisitDataStructureId(m_PolyhedronListId, updatedId, visited, 0);
     m_PolyhedronAttributeMatrixId = nx::core::VisitDataStructureId(m_PolyhedronAttributeMatrixId, updatedId, visited, 1);

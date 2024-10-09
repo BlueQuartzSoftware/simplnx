@@ -1,3 +1,6 @@
+#include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
+#include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
+#include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -361,4 +364,54 @@ TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
   REQUIRE(size == 2);
   REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
   REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group2Name})) != nullptr);
+}
+
+TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
+{
+  DataStructure ds;
+  {
+    CreateImageGeometryFilter filter;
+    Arguments args;
+    args.insert(CreateImageGeometryFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry"})));
+    args.insert(CreateImageGeometryFilter::k_CellDataName_Key, std::make_any<std::string>("Cell Data"));
+    args.insert(CreateImageGeometryFilter::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(std::vector<uint64_t>{480, 640, 1}));
+    args.insert(CreateImageGeometryFilter::k_Origin_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0, 0, 0}));
+    args.insert(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.5, 0.5, 0.12}));
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  {
+    CreateDataArrayFilter filter;
+    Arguments args;
+    args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
+    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 1"})));
+    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  {
+    CreateDataArrayFilter filter;
+    Arguments args;
+    args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
+    args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(1));
+    args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 2"})));
+    args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  {
+    const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
+
+    ReadDREAM3DFilter filter;
+    Arguments args;
+    Dream3dImportParameter::ImportData importData;
+    importData.FilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.valid());
+  }
 }
