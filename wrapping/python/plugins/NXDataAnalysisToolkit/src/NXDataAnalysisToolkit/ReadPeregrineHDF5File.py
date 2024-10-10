@@ -1054,11 +1054,11 @@ class ReadPeregrineHDF5File:
         vertices, edges, tot = scan_data_result.value
 
         # Flip vertices across the X axis
-        flipped_vertices = self._flip_vertices_across_x_axis(vertices)
+        # vertices = self._flip_vertices_across_x_axis(vertices)
 
         # Copy the vertices into the edge geometry
-        v_end = vertex_tuple_offset + flipped_vertices.shape[0]
-        vertex_list_view[vertex_tuple_offset:v_end, :] = flipped_vertices
+        v_end = vertex_tuple_offset + vertices.shape[0]
+        vertex_list_view[vertex_tuple_offset:v_end, :] = vertices
 
         # Update edges values to match the actual vertices indices
         edges += vertex_tuple_offset
@@ -1078,13 +1078,13 @@ class ReadPeregrineHDF5File:
     
     return Result()
   
-  def _flip_slice_across_x_axis(self, slice_arr: np.ndarray):
+  def _flip_slice_across_x_axis(self, image_arr: np.ndarray):
     # Flip slices across the X axis (this is necessary to have the images read in the real coordinate system, not the image coordinate system)
-      if slice_arr.ndim == 2:
-        slice_arr[:] = np.flip(slice_arr[:], axis=1)
-      elif slice_arr.ndim == 3:
-        for z in range(slice_arr.shape[0]):
-          slice_arr[:, :, z] = np.flip(slice_arr[:, :, z], axis=1)
+      if image_arr.ndim == 2:
+        image_arr[:] = np.flip(image_arr[:], axis=0)
+      elif image_arr.ndim == 3:
+        for z in range(image_arr.shape[0]):
+          image_arr[z, :, :] = np.flip(image_arr[z, :, :], axis=0)
       else:
         raise ValueError("Input array must be either 2D or 3D.")
   
