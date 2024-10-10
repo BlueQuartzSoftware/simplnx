@@ -193,13 +193,13 @@ std::string IGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
-void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void IGeometry::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  BaseGroup::checkUpdatedIdsImpl(updatedIds);
+  BaseGroup::checkUpdatedIdsImpl(updatedIdsMap);
 
   std::vector<bool> visited(1, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_ElementSizesId = nx::core::VisitDataStructureId(m_ElementSizesId, updatedId, visited, 0);
   }

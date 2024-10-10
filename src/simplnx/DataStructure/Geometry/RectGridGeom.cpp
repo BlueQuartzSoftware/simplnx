@@ -700,12 +700,12 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
-void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void RectGridGeom::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  IGridGeometry::checkUpdatedIdsImpl(updatedIds);
+  IGridGeometry::checkUpdatedIdsImpl(updatedIdsMap);
   std::vector<bool> visited(3, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_xBoundsId = nx::core::VisitDataStructureId(m_xBoundsId, updatedId, visited, 0);
     m_yBoundsId = nx::core::VisitDataStructureId(m_yBoundsId, updatedId, visited, 1);

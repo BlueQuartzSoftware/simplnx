@@ -240,13 +240,13 @@ void INodeGeometry0D::setVertexAttributeMatrix(const AttributeMatrix& attributeM
   m_VertexAttributeMatrixId = attributeMatrix.getId();
 }
 
-void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void INodeGeometry0D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  IGeometry::checkUpdatedIdsImpl(updatedIds);
+  IGeometry::checkUpdatedIdsImpl(updatedIdsMap);
 
   std::vector<bool> visited(2, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_VertexDataArrayId = nx::core::VisitDataStructureId(m_VertexDataArrayId, updatedId, visited, 0);
     m_VertexAttributeMatrixId = nx::core::VisitDataStructureId(m_VertexAttributeMatrixId, updatedId, visited, 1);

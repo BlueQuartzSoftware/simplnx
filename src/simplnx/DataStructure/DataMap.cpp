@@ -318,7 +318,7 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void DataMap::updateIds(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIds)
 {
   using UpdatedValueType = std::pair<IdType, std::shared_ptr<DataObject>>;
   std::list<UpdatedValueType> movedValues;
