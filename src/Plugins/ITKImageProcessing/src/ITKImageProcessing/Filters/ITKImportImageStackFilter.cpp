@@ -249,7 +249,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       else if(resample == k_ExactDimensionsModeIndex)
       {
         resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(2));
-        resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{exactDims[0], exactDims[1], 1}));
+        resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{exactDims[0], exactDims[1], 1}));
       }
 
       // Run resample image geometry filter and process results and messages
@@ -263,7 +263,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     // Check the ImageGeometry of the imported Image matches the destination
     const auto& importedImageGeom = importedDataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
     SizeVec3 importedDims = importedImageGeom.getDimensions();
-    if(dims[0] != importedDims[0] || dims[1] != importedDims[1])
+    if(resample != k_ExactDimensionsModeIndex && (dims[0] != importedDims[0] || dims[1] != importedDims[1]))
     {
       return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than the first slice.\n  First Slice Dims are:  {} x {}\n  Current Slice Dims are:{} x {}\n", slice,
                                                  importedDims[0], importedDims[1], dims[0], dims[1]));
@@ -350,7 +350,7 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "RGB weights for the grayscale conversion using the luminosity algorithm.",
                                                          std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>({"Red", "Green", "Blue"})));
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ScaleImages_Key, "Resample Images",
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResampleImagesChoice_Key, "Resample Images",
                                                                     "Mode can be [0] Do Not Rescale, [1] Scaling as Percent, [2] Exact X/Y Dimensions For Resampling Along Z Axis",
                                                                     ::k_NoScalingModeIndex, ::k_ResamplingChoices));
   params.insert(std::make_unique<Float32Parameter>(k_Scaling_Key, "Scaling",
@@ -373,8 +373,8 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array", "ImageData"));
 
   params.linkParameters(k_ConvertToGrayScale_Key, k_ColorWeights_Key, true);
-  params.linkParameters(k_ScaleImages_Key, k_Scaling_Key, ::k_ScalingModeIndex);
-  params.linkParameters(k_ScaleImages_Key, k_Scaling_Key, ::k_ScalingModeIndex);
+  params.linkParameters(k_ResampleImagesChoice_Key, k_Scaling_Key, ::k_ScalingModeIndex);
+  params.linkParameters(k_ResampleImagesChoice_Key, k_ExactXYDimensions_Key, ::k_ExactDimensionsModeIndex);
   params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
 
   return params;
@@ -405,7 +405,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
   auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  auto pScaleImagesValue = filterArgs.value<ChoicesParameter::ValueType>(k_ScaleImages_Key);
+  auto pResampleImagesChoiceValue = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
   auto pScalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto pExactXYDimsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
 
@@ -471,7 +471,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto dims = createImageGeomActionPtr->dims();
   dims.back() = files.size();
 
-  switch(pScaleImagesValue)
+  switch(pResampleImagesChoiceValue)
   {
   case k_NoScalingModeIndex:
     break;
@@ -489,9 +489,10 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
     dims[0] = static_cast<decltype(dims)::value_type>(pExactXYDimsValue[0]);
     dims[1] = static_cast<decltype(dims)::value_type>(pExactXYDimsValue[1]);
+    break;
   }
   default:
-    return MakePreflightErrorResult(-23507, fmt::format("Invalid Resampling Choice Type. Expected: [0-2] | Received: {}", pScaleImagesValue));
+    return MakePreflightErrorResult(-23507, fmt::format("Invalid Resampling Choice Type. Expected: [0-2] | Received: {}", pResampleImagesChoiceValue));
   }
 
   // Z Y X
@@ -549,7 +550,7 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
   auto convertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto colorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  auto resampleImageChoice = filterArgs.value<BoolParameter::ValueType>(k_ScaleImages_Key);
+  auto resampleImageChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
   auto scalingFactor = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
   auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
 
