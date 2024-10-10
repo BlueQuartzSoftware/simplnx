@@ -212,11 +212,11 @@ INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize num
   return edges;
 }
 
-void INodeGeometry2D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void INodeGeometry2D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  INodeGeometry1D::checkUpdatedIdsImpl(updatedIds);
+  INodeGeometry1D::checkUpdatedIdsImpl(updatedIdsMap);
   std::vector<bool> visited(3, false);
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_FaceListId = nx::core::VisitDataStructureId(m_FaceListId, updatedId, visited, 0);
     m_FaceAttributeMatrixId = nx::core::VisitDataStructureId(m_FaceAttributeMatrixId, updatedId, visited, 1);

@@ -74,13 +74,13 @@ void IGridGeometry::setCellData(OptionalId id)
   m_CellDataId = id;
 }
 
-void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void IGridGeometry::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  IGeometry::checkUpdatedIdsImpl(updatedIds);
+  IGeometry::checkUpdatedIdsImpl(updatedIdsMap);
 
   std::vector<bool> visited(1, false);
 
-  for(const auto& updatedId : updatedIds)
+  for(const auto& updatedId : updatedIdsMap)
   {
     m_CellDataId = nx::core::VisitDataStructureId(m_CellDataId, updatedId, visited, 0);
     if(visited[0])

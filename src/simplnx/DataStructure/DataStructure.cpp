@@ -831,8 +831,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
 
   // Update DataObject IDs and track changes
   WeakCollectionType newCollection;
-  using UpdatedId = std::pair<DataObject::IdType, DataObject::IdType>;
-  std::vector<UpdatedId> updatedIds;
+  std::unordered_map<DataObject::IdType, DataObject::IdType> updatedIdsMap;
   for(auto& dataObjectIter : m_DataObjects)
   {
     auto dataObjectPtr = dataObjectIter.second.lock();
@@ -845,7 +844,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
     auto newId = generateId();
 
     dataObjectPtr->setId(newId);
-    updatedIds.push_back({oldId, newId});
+    updatedIdsMap[oldId] = newId;
 
     newCollection.insert({newId, dataObjectPtr});
   }
@@ -859,10 +858,10 @@ void DataStructure::resetIds(DataObject::IdType startingId)
     auto dataObjectPtr = dataObjectIter.second.lock();
     if(dataObjectPtr != nullptr)
     {
-      dataObjectPtr->checkUpdatedIds(updatedIds);
+      dataObjectPtr->checkUpdatedIds(updatedIdsMap);
     }
   }
-  m_RootGroup.updateIds(updatedIds);
+  m_RootGroup.updateIds(updatedIdsMap);
 }
 
 void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const

@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace nx::core
@@ -285,10 +286,10 @@ public:
   DataMap& operator=(DataMap&& rhs) noexcept;
 
   /**
-   * @brief Updates the map IDs using a vector of updated IDs and their new values.
-   * @param updatedIds
+   * @brief Updates the map IDs using an unordered map of IDs and their new values.
+   * @param updatedIdsMap
    */
-  void updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds);
+  void updateIds(const std::unordered_map<IdType, IdType>& updatedIdsMap);
 
 private:
   MapType m_Map;

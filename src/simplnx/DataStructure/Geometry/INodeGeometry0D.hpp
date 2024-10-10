@@ -186,9 +186,9 @@ protected:
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
+   * @param updatedIdsMap
    */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
+  void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
 
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the DataStructure object.

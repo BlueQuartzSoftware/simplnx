@@ -101,19 +101,22 @@ void DataObject::setId(IdType newId)
   m_Id = newId;
 }
 
-void DataObject::checkUpdatedIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void DataObject::checkUpdatedIds(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
-  for(const auto& updatedId : updatedIds)
-  {
-    // Update parent list
-    std::replace(m_ParentList.begin(), m_ParentList.end(), updatedId.first, updatedId.second);
-  }
+  // Use std::transform to map IDs
+  ParentCollectionType newParentList;
+  std::transform(m_ParentList.begin(), m_ParentList.end(), std::back_inserter(newParentList), [&updatedIdsMap](uint64 id) -> uint64 {
+    auto it = updatedIdsMap.find(id);
+    return (it != updatedIdsMap.end()) ? it->second : id;
+  });
+
+  m_ParentList = newParentList;
 
   // For derived classes
-  checkUpdatedIdsImpl(updatedIds);
+  checkUpdatedIdsImpl(updatedIdsMap);
 }
 
-void DataObject::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
+void DataObject::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
 {
 }
 
