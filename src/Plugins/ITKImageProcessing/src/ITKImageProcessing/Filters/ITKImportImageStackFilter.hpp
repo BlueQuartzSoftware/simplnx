@@ -35,6 +35,7 @@ public:
   static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
   static inline constexpr StringLiteral k_ScaleImages_Key = "scale_images";
   static inline constexpr StringLiteral k_Scaling_Key = "scaling";
+  static inline constexpr StringLiteral k_ExactXYDimensions_Key = "exact_xy_dimensions";
   static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
   static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
   /**

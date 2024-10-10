@@ -26,6 +26,15 @@ operations can be seen in Figures 1, 2 and 3
 
 % Auto generated parameter table will be inserted here
 
+## Note on Resampling
+
+The optional resampling parameter has two options that affect the output image and size of the resulting geometry.
+
+- Scaling Factor (1) - This is the scaling option that previously existed with the filter. It functions by providing a float value that becomes a XYZ scaling factor vector that is applied to each image before it is inserted into the final geometry. This means that the number of pixels in the resulting output image will be resampled to `{X * ScalingFactor, Y * ScalingFactor, Number of Images In Stack} (XYZ)`.
+- Exact XY Dimensions (2) - This is provided to allow for precision resampling along the Z Axis. The number of pixels in the resulting output image will be resampled to `{User Supplied X, User Supplied Y, Number of Images In Stack} (XYZ)`.
+
+Both options are different ways to parameterize the resampling functionality. The main difference should be that `Scaling Factor (1)` is implicity uniform in its resampling across the X and Y dimensions, but the same is not true for `Exact XY Dimensions (2)`.
+
 ## Example Pipelines
 
 - (08) Image Initial Visualization
