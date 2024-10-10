@@ -97,3 +97,4 @@ add_custom_target(Copy_simplnx_Test_Data ALL
     COMMAND_EXPAND_LISTS
     VERBATIM
   )
+set_target_properties(Copy_simplnx_Test_Data PROPERTIES FOLDER ZZ_COPY_FILES)

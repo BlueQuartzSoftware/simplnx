@@ -40,6 +40,7 @@ target_sources(generate_sphinx_docs
   PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}/plugin_source_dirs.hpp"
 )
+set_target_properties(generate_sphinx_docs PROPERTIES FOLDER simplnx_Python__Documentation)
 
 set(SIMPLNX_SPHINX_DOCS_DIR "${simplnx_BINARY_DIR}/wrapping/python/docs")
 
@@ -53,6 +54,7 @@ add_custom_target(sphinx_copy_sources ALL
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/source" "${SIMPLNX_SPHINX_DOCS_DIR}/source"
   COMMENT "SIMPLNX Python Docs: Copying static doc files to build directory at ${SIMPLNX_SPHINX_DOCS_DIR}"
 )
+set_target_properties(sphinx_copy_sources PROPERTIES FOLDER simplnx_Python__Documentation)
 
 #------------------------------------------------------------------------------
 # Execute the sphinx rst plugin generation tool
@@ -62,6 +64,7 @@ add_custom_target(sphinx_generate_plugin_rst ALL
   COMMAND "$<TARGET_FILE:generate_sphinx_docs>"
   COMMENT "SIMPLNX Python Docs: Generated Plugin .rst docs file"
 )
+set_target_properties(sphinx_generate_plugin_rst PROPERTIES FOLDER simplnx_Python__Documentation)
 
 #------------------------------------------------------------------------------
 # Find the `sphinx-build` executable
@@ -103,3 +106,4 @@ else()
     WORKING_DIRECTORY "${SIMPLNX_SPHINX_DOCS_DIR}"
   )
 endif()
+set_target_properties(sphinx_docs_generation PROPERTIES FOLDER simplnx_Python__Documentation)
