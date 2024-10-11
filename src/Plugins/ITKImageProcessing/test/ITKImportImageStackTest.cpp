@@ -543,7 +543,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[I
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, std::make_any<Float32Parameter::ValueType>(0.5));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, std::make_any<Float32Parameter::ValueType>(50.0f));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -609,7 +609,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims",
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
   args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{100,100}));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{100, 100}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -625,7 +625,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims",
   FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
 
   std::array<usize, 3> dims = {100, 100, 3};
-  std::vector<float32> new_spacing = {0.6f, 0.4f, 0.9f};
+  std::vector<float32> new_spacing = {1.572f, 0.78f, 0.9f};
 
   REQUIRE(imageDims[0] == dims[0]);
   REQUIRE(imageDims[1] == dims[1]);
@@ -643,5 +643,5 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims",
   REQUIRE(imageDataPtr != nullptr);
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-  REQUIRE(md5Hash == "5969f0ae7507bfae14de3cb470d53e60");
+  REQUIRE(md5Hash == "e1e892c7e11eb55a57919053eee66f22");
 }

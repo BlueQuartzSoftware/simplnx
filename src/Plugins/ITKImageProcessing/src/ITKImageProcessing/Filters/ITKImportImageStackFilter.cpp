@@ -36,11 +36,11 @@ const ChoicesParameter::ValueType k_NoImageTransform = 0;
 const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
 const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
-inline constexpr nx::core::StringLiteral k_NoScalingMode = "Do Not Rescale (0)";
+inline constexpr nx::core::StringLiteral k_NoResamplingMode = "Do Not Resample (0)";
 inline constexpr nx::core::StringLiteral k_ScalingMode = "Scaling (1)";
 inline constexpr nx::core::StringLiteral k_ExactDimensions = "Exact X/Y Dimensions (2)";
-const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoScalingMode, k_ScalingMode, k_ExactDimensions};
-const nx::core::ChoicesParameter::ValueType k_NoScalingModeIndex = 0;
+const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingMode, k_ScalingMode, k_ExactDimensions};
+const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
@@ -159,7 +159,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
   auto* filterListPtr = Application::Instance()->getFilterList();
 
-  if(convertToGrayscale && !filterListPtr->containsPlugin(k_SimplnxCorePluginId))
+  if((convertToGrayscale || resample != k_NoResampleModeIndex) && !filterListPtr->containsPlugin(k_SimplnxCorePluginId))
   {
     return MakeErrorResult(-18542, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
   }
@@ -236,21 +236,23 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // ======================= Resample Image Geometry Section ===================
-    if(resample != k_NoScalingModeIndex && scalingFactor != 1.0f)
+    switch(resample)
     {
+    case k_NoResampleModeIndex: {
+      break;
+    }
+    case k_ScalingModeIndex: {
+      if(scalingFactor == 100.0f)
+      {
+        break;
+      }
+
       Arguments resampleImageGeomArgs;
       resampleImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
-      if(resample == k_ScalingModeIndex)
-      {
-        auto scaling = scalingFactor * 100;
-        resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(1));
-        resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{scaling, scaling, scaling}));
-      }
-      else if(resample == k_ExactDimensionsModeIndex)
-      {
-        resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(2));
-        resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{exactDims[0], exactDims[1], 1}));
-      }
+      resampleImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
+
+      resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(1));
+      resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{scalingFactor, scalingFactor, 100.0f}));
 
       // Run resample image geometry filter and process results and messages
       auto result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
@@ -258,19 +260,41 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       {
         return result;
       }
+      break;
+    }
+    case k_ExactDimensionsModeIndex: {
+      Arguments resampleImageGeomArgs;
+      resampleImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
+      resampleImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
+
+      resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(2));
+      resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{exactDims[0], exactDims[1], 1}));
+
+      // Run resample image geometry filter and process results and messages
+      auto result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
+      if(result.invalid())
+      {
+        return result;
+      }
+      break;
+    }
+    default: {
+      break;
+    }
     }
 
     // Check the ImageGeometry of the imported Image matches the destination
     const auto& importedImageGeom = importedDataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
     SizeVec3 importedDims = importedImageGeom.getDimensions();
-    if(resample != k_ExactDimensionsModeIndex && (dims[0] != importedDims[0] || dims[1] != importedDims[1]))
+    if(dims[0] != importedDims[0] || dims[1] != importedDims[1])
     {
-      return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than the first slice.\n  First Slice Dims are:  {} x {}\n  Current Slice Dims are:{} x {}\n", slice,
-                                                 importedDims[0], importedDims[1], dims[0], dims[1]));
+      return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than expected dimensions.\n  Expected Slice Dims are:  {} x {}\n  Received Slice Dims are: {} x {}\n", slice,
+                                                 dims[0], dims[1], importedDims[0], importedDims[1]));
     }
 
     // Compute the Tuple Index we are at:
     const usize tupleIndex = (slice * dims[0] * dims[1]);
+
     // get the current Slice data...
     auto& tempData = importedDataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
     auto& tempDataStore = tempData.getDataStoreRef();
@@ -285,9 +309,10 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // Copy that into the output array...
-    if(outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice).invalid())
+    auto result = outputDataStore.copyFrom(tupleIndex, tempDataStore, 0, tuplesPerSlice);
+    if(result.invalid())
     {
-      return MakeErrorResult(-64511, fmt::format("Error copying source image data into destination array.\n  Slice:{}\n  TupleIndex:{}\n  MaxTupleIndex:{}", slice, tupleIndex, outputData.getSize()));
+      return result;
     }
 
     slice++;
@@ -352,9 +377,12 @@ Parameters ITKImportImageStackFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResampleImagesChoice_Key, "Resample Images",
                                                                     "Mode can be [0] Do Not Rescale, [1] Scaling as Percent, [2] Exact X/Y Dimensions For Resampling Along Z Axis",
-                                                                    ::k_NoScalingModeIndex, ::k_ResamplingChoices));
-  params.insert(std::make_unique<Float32Parameter>(k_Scaling_Key, "Scaling",
-                                                   "The scaling of the 3D volume. For example, 0.1 is one-tenth the original number of pixels.  2.0 is double the number of pixels.", 1.0));
+                                                                    ::k_NoResampleModeIndex, ::k_ResamplingChoices));
+  params.insert(std::make_unique<Float32Parameter>(
+      k_Scaling_Key, "Scaling",
+      "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
+      "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
+      100.0f));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions",
                                                         "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
                                                         std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
@@ -384,6 +412,15 @@ Parameters ITKImportImageStackFilter::parameters() const
 IFilter::VersionType ITKImportImageStackFilter::parametersVersion() const
 {
   return 2;
+
+  // Version 1 -> 2
+  // Change 1:
+  // Replaced - k_ScaleImages_Key = "scale_images" -> k_ResampleImagesChoice_Key = "resample_images_index";
+  // Solution - `k_ResampleImagesChoice_Key Value` = static_cast<ChoicesParameter::ValueType>(`k_ScaleImages_Key Value`);
+  //
+  // Change 2:
+  // Modified Existing - Scaling value to be in feature parity with ResampleImageGeomFilter's Scaling option (k_Scaling_Key = "scaling")
+  // Solution - `New k_Scaling_Key Value` = `Old k_Scaling_Key Value` * 100.0f;
 }
 
 //------------------------------------------------------------------------------
@@ -433,7 +470,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     return {MakeErrorResult<OutputActions>(-1, "GeneratedFileList must not be empty")};
   }
 
-  // Create a subfilter to read each image, although for preflight we are going to read the first image in the
+  // Create a sub-filter to read each image, although for preflight we are going to read the first image in the
   // list and hope the rest are correct.
   Arguments imageReaderArgs;
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
@@ -473,14 +510,20 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
   switch(pResampleImagesChoiceValue)
   {
-  case k_NoScalingModeIndex:
+  case k_NoResampleModeIndex:
     break;
   case k_ScalingModeIndex: {
+    if(pScalingValue < 1.0f)
+    {
+      // seemingly arbitrary numeric limit, only included for compatibility with ResampleImageGeomFilter
+      return MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", pScalingValue));
+    }
+
     // Update the dimensions according to the scaling value
-    std::transform(dims.begin(), dims.end() - 1, dims.begin(), [pScalingValue](usize& elem) { return static_cast<usize>(static_cast<float32>(elem) * pScalingValue); });
+    std::transform(dims.begin(), dims.end() - 1, dims.begin(), [pScalingValue](usize& elem) { return static_cast<usize>(static_cast<float32>(elem) * (pScalingValue / 100.0f)); });
 
     // Update the spacing according to the scaling value
-    std::transform(spacing.begin(), spacing.end() - 1, spacing.begin(), [pScalingValue](auto& elem) { return elem / pScalingValue; });
+    std::transform(spacing.begin(), spacing.end() - 1, spacing.begin(), [pScalingValue](auto& elem) { return elem / (pScalingValue / 100.0f); });
     break;
   }
   case k_ExactDimensionsModeIndex: {
