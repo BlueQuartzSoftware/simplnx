@@ -193,48 +193,6 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       }
     }
 
-    // ======================= Convert to GrayScale Section ===================
-    bool validInputForGrayScaleConversion = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath).getDataType() == DataType::uint8;
-    if(convertToGrayscale && validInputForGrayScaleConversion && nullptr != grayScaleFilter.get())
-    {
-      // This same filter was used to preflight so as long as nothing changes on disk this really should work....
-      Arguments colorToGrayscaleArgs;
-      colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
-      colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(luminosityValues));
-      colorToGrayscaleArgs.insertOrAssign("input_data_array_paths", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
-      colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
-
-      // Run grayscale filter and process results and messages
-      auto result = grayScaleFilter->execute(importedDataStructure, colorToGrayscaleArgs).result;
-      if(result.invalid())
-      {
-        return result;
-      }
-
-      // deletion of non-grayscale array
-      DataObject::IdType id;
-      { // scoped for safety since this reference will be nonexistent in a moment
-        auto& oldArray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath);
-        id = oldArray.getId();
-      }
-      importedDataStructure.removeData(id);
-
-      // rename grayscale array to reflect original
-      {
-        auto& gray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
-        if(!gray.canRename(imageDataPath.getTargetName()))
-        {
-          return MakeErrorResult(-64543, fmt::format("Unable to rename the internal grayscale array to {}", imageDataPath.getTargetName()));
-        }
-        gray.rename(imageDataPath.getTargetName());
-      }
-    }
-    else if(convertToGrayscale && !validInputForGrayScaleConversion)
-    {
-      outputResult.warnings().emplace_back(Warning{
-          -74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.", imageDataPath.getTargetName())});
-    }
-
     // ======================= Resample Image Geometry Section ===================
     switch(resample)
     {
@@ -281,6 +239,48 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     default: {
       break;
     }
+    }
+
+    // ======================= Convert to GrayScale Section ===================
+    bool validInputForGrayScaleConversion = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath).getDataType() == DataType::uint8;
+    if(convertToGrayscale && validInputForGrayScaleConversion && nullptr != grayScaleFilter.get())
+    {
+      // This same filter was used to preflight so as long as nothing changes on disk this really should work....
+      Arguments colorToGrayscaleArgs;
+      colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
+      colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(luminosityValues));
+      colorToGrayscaleArgs.insertOrAssign("input_data_array_paths", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
+      colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
+
+      // Run grayscale filter and process results and messages
+      auto result = grayScaleFilter->execute(importedDataStructure, colorToGrayscaleArgs).result;
+      if(result.invalid())
+      {
+        return result;
+      }
+
+      // deletion of non-grayscale array
+      DataObject::IdType id;
+      { // scoped for safety since this reference will be nonexistent in a moment
+        auto& oldArray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath);
+        id = oldArray.getId();
+      }
+      importedDataStructure.removeData(id);
+
+      // rename grayscale array to reflect original
+      {
+        auto& gray = importedDataStructure.getDataRefAs<IDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
+        if(!gray.canRename(imageDataPath.getTargetName()))
+        {
+          return MakeErrorResult(-64543, fmt::format("Unable to rename the internal grayscale array to {}", imageDataPath.getTargetName()));
+        }
+        gray.rename(imageDataPath.getTargetName());
+      }
+    }
+    else if(convertToGrayscale && !validInputForGrayScaleConversion)
+    {
+      outputResult.warnings().emplace_back(Warning{
+          -74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.", imageDataPath.getTargetName())});
     }
 
     // Check the ImageGeometry of the imported Image matches the destination
