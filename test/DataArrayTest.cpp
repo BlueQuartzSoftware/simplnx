@@ -1,5 +1,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
