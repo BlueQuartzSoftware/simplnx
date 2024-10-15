@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/IteratorUtility.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"

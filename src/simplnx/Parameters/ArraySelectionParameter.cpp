@@ -1,6 +1,7 @@
 #include "ArraySelectionParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"

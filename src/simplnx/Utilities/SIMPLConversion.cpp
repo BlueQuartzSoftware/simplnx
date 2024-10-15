@@ -1,5 +1,7 @@
 #include "SIMPLConversion.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
+
 namespace nx::core::SIMPLConversion
 {
 /*

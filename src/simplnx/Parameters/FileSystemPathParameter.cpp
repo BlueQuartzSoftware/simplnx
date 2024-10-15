@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"

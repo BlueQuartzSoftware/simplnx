@@ -31,6 +31,7 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
