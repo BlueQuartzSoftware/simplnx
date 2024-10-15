@@ -332,6 +332,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
