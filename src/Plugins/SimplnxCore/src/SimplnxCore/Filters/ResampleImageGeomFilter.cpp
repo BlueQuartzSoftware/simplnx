@@ -36,7 +36,6 @@ const ChoicesParameter::Choices k_Choices = {k_SpacingMode, k_ScalingMode, k_Exa
 const ChoicesParameter::ValueType k_SpacingModeIndex = 0;
 const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
-
 } // namespace
 
 namespace nx::core
