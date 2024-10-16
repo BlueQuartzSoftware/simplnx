@@ -229,11 +229,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
   UmeyamaTransform globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-  int64 progIncrement = iters / 100;
-  int64 prog = 1;
-  int64 progressInt = 0;
-  int64 counter = 0;
-
+  auto start = std::chrono::steady_clock::now();
   for(usize i = 0; i < iters; i++)
   {
     if(shouldCancel)
@@ -267,14 +263,12 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
     // Update the global transform
     globalTransform = transform * globalTransform;
 
-    if(counter > prog)
+    auto now = std::chrono::steady_clock::now();
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
-      progressInt = static_cast<int64>((static_cast<float>(counter) / iters) * 100.0f);
-      std::string ss = fmt::format("Performing Registration Iterations || {}% Completed", progressInt);
-      messageHandler(ss);
-      prog = prog + progIncrement;
+      messageHandler(fmt::format("Performing Registration Iterations || {}% Completed", static_cast<int64>((static_cast<float>(i) / iters) * 100.0f)));
+      start = now;
     }
-    counter++;
   }
 
   auto& transformStore = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStoreRef();
