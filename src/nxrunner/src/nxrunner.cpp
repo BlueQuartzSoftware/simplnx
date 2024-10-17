@@ -1,6 +1,7 @@
 #include "CliObserver.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/SIMPLNXVersion.hpp"

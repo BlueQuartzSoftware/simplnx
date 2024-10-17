@@ -4,8 +4,6 @@
 #include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include <string>
 
 namespace nx::core

@@ -1,6 +1,7 @@
 #include "DataObjectNameParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

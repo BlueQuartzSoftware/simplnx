@@ -15,7 +15,7 @@
 
 #include <itkCastImageFilter.h>
 #include <itkImage.h>
-#include <itkImageFileWriter.h>
+#include <itkImageIOBase.h>
 #include <itkImportImageFilter.h>
 #include <itkNumericTraits.h>
 #include <itkVector.h>

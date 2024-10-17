@@ -332,6 +332,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/SimplnxConstants.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
@@ -344,6 +345,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/RgbColor.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/ScopeGuard.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/StringLiteral.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/StringLiteralFormatting.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/TypeTraits.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Types.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/TypesUtility.hpp

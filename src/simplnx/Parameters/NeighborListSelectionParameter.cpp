@@ -1,6 +1,7 @@
 #include "NeighborListSelectionParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 

@@ -1,5 +1,6 @@
 #include "MoveDataAction.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 
 #include <fmt/core.h>

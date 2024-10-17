@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 
 #include <fmt/core.h>

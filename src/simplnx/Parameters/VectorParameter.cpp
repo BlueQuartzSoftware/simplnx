@@ -1,6 +1,7 @@
 #include "VectorParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 
 #include <fmt/core.h>

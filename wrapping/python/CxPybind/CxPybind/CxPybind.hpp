@@ -11,6 +11,8 @@
 #include <boost/mp11/integral.hpp>
 #include <boost/mp11/list.hpp>
 
+#include <fmt/ranges.h>
+
 #include <simplnx/Common/ScopeGuard.hpp>
 #include <simplnx/Core/Application.hpp>
 #include <simplnx/Filter/Arguments.hpp>

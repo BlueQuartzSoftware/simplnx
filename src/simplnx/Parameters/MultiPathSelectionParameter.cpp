@@ -1,6 +1,7 @@
 #include "MultiPathSelectionParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
