@@ -27,7 +27,7 @@ jobs:
             cc: gcc-11
           - cxx: clang++-14
             cc: clang-14
-    runs-on: ${{matrix.os}}
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
