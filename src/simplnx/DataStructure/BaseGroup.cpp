@@ -1,4 +1,5 @@
 #include "BaseGroup.hpp"
+#include <simplnx/Common/Result.hpp>
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -99,21 +100,22 @@ const DataObject& BaseGroup::at(const std::string& name) const
   return m_DataMap.at(name);
 }
 
-bool BaseGroup::canInsert(const DataObject* obj) const
+Result<> BaseGroup::canInsert(const DataObject* obj) const
 {
   if(obj == nullptr)
   {
-    return false;
+    return MakeErrorResult<>(-1663, "BaseGroup::canInsert() Error: DataObject being inserted is null");
   }
   if(contains(obj) || contains(obj->getName()))
   {
-    return false;
+    return MakeErrorResult<>(-1664, fmt::format("BaseGroup::canInsert() Error: DataObject with name='{}' and type='{}' already exists in the DataMap", obj->getName(), obj->getTypeName()));
   }
   if(const auto* objGroup = dynamic_cast<const BaseGroup*>(obj); objGroup != nullptr && objGroup->isParentOf(this))
   {
-    return false;
+    return MakeErrorResult<>(-1665, fmt::format("BaseGroup::canInsert() Error: DataObject with name='{}' and type='{}' is a parent of the current DataObject. A circular reference would occur.",
+                                                obj->getName(), obj->getTypeName()));
   }
-  return true;
+  return {};
 }
 
 void BaseGroup::setDataStructure(DataStructure* dataStructure)
@@ -138,19 +140,21 @@ bool BaseGroup::isParentOf(const DataObject* dataObj) const
   return std::find_if(origDataPaths.begin(), origDataPaths.end(), [dataObj](const DataPath& path) { return dataObj->hasParent(path); }) != origDataPaths.end();
 }
 
-bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
+Result<> BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
 {
   auto ptr = obj.lock();
-  if(!canInsert(ptr.get()))
+  auto result = canInsert(ptr.get());
+  if(result.invalid())
   {
-    return false;
+    return result;
   }
   if(m_DataMap.insert(ptr))
   {
     ptr->addParent(this);
-    return true;
+    return {};
   }
-  return false;
+  return MakeErrorResult<>(-1666,
+                           fmt::format("BaseGroup::insert() Error: DataObject with name='{}' and type='{}' could not be inserted into the DataMap.", obj.lock()->getName(), obj.lock()->getTypeName()));
 }
 
 bool BaseGroup::remove(DataObject* obj)

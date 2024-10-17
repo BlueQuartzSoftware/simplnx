@@ -162,7 +162,7 @@ protected:
    * @param obj
    * @return bool
    */
-  bool canInsert(const DataObject* obj) const override;
+  Result<> canInsert(const DataObject* obj) const override;
 
   /**
    * @brief Returns a reference of the collection for use in derived classes.
