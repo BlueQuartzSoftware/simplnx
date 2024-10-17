@@ -347,7 +347,7 @@ Result<> CreateAMScanPaths::operator()()
               char good = determineIntersectCoord(p1, p2, vert1, vert2, coord);
               if(good == 'i')
               {
-                intersectionCoords.insert(std::pair<float, usize>(coord, 0));
+                intersectionCoords.insert(std::pair<float, usize>(coord, 0ULL));
               }
               else if(good == 'c' || good == 'd')
               {

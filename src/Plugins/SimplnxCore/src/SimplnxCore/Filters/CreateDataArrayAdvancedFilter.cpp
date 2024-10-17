@@ -192,7 +192,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
   if(numComponents <= 0)
   {
-    std::string compDimsStr = std::accumulate(compDims.begin() + 1, compDims.end(), std::to_string(compDims[0]), [](const std::string& a, int b) { return a + " x " + std::to_string(b); });
+    std::string compDimsStr = std::accumulate(compDims.begin() + 1ULL, compDims.end(), std::to_string(compDims[0]), [](const std::string& a, int b) { return a + " x " + std::to_string(b); });
     return MakePreflightErrorResult(
         -78601,
         fmt::format("The chosen component dimensions ({}) results in 0 total components.  Please choose component dimensions that result in a positive number of total components.", compDimsStr));
