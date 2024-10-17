@@ -64,7 +64,7 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SliceRange_Key, "Slice Range", "Type of slice range to use, either Full Range or User Defined Range", 0,
                                                                     ChoicesParameter::Choices{"Full Range", "User Defined Range"}));
   params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value", 0.0));
+  params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value", 0.0f));
   params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
