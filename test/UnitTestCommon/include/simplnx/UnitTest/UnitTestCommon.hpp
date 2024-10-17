@@ -1020,6 +1020,95 @@ inline void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& image
   imageGeom->setOrigin(origin);
 }
 
+inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataStructure, const DataPath& exemplarAttributeMatrix, const DataStructure& computedDataStructure,
+                                                     const DataPath& computedAttributeMatrix)
+{
+  auto& cellDataGroup = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
+  // std::vector<DataPath> selectedCellArrays;
+
+  // Create the vector of all cell DataPaths from the exemplar data structure
+  for(auto& child : cellDataGroup)
+  {
+    DataPath exemplarDataArrayPath = exemplarAttributeMatrix.createChildPath(child.second->getName());
+    DataPath computedDataArrayPath = computedAttributeMatrix.createChildPath(child.second->getName());
+
+    const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
+    const auto* computedArrayPtr = computedDataStructure.getDataAs<IArray>(computedDataArrayPath);
+
+    // Check to see if there is something to compare against in the exemplar file.
+    if(nullptr == exemplarArrayPtr)
+    {
+      continue;
+    }
+    if(nullptr == computedArrayPtr)
+    {
+      continue;
+    }
+
+    DataType type = DataType::int8;
+    const IArray::ArrayType arrayType = computedArrayPtr->getArrayType();
+    if(arrayType == IArray::ArrayType::DataArray)
+    {
+      type = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath).getDataType();
+    }
+    if(arrayType == IArray::ArrayType::NeighborListArray)
+    {
+      type = exemplarDataStructure.getDataRefAs<INeighborList>(exemplarDataArrayPath).getDataType();
+    }
+
+    switch(type)
+    {
+    case DataType::boolean: {
+      nx::core::UnitTest::CompareArrays<bool>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::int8: {
+      nx::core::UnitTest::CompareArrays<int8>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::int16: {
+      nx::core::UnitTest::CompareArrays<int16>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::int32: {
+      nx::core::UnitTest::CompareArrays<int32>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::int64: {
+      nx::core::UnitTest::CompareArrays<int64>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::uint8: {
+      nx::core::UnitTest::CompareArrays<uint8>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::uint16: {
+      nx::core::UnitTest::CompareArrays<uint16>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::uint32: {
+      nx::core::UnitTest::CompareArrays<uint32>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::uint64: {
+      nx::core::UnitTest::CompareArrays<uint64>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::float32: {
+      nx::core::UnitTest::CompareArrays<float32>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    case DataType::float64: {
+      nx::core::UnitTest::CompareArrays<float64>(computedArrayPtr, exemplarArrayPtr);
+      break;
+    }
+    default: {
+      throw std::runtime_error("Invalid DataType");
+    }
+    }
+  }
+}
+
 inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath attributeMatrix, const std::string& exemplarDataContainerName)
 {
   auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
