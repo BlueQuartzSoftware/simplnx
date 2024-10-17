@@ -76,7 +76,7 @@ Parameters DBSCANFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<BoolParameter>(k_UsePrecaching_Key, "Use Precaching", "If true the algorithm will be significantly faster, but it requires more memory", true));
-  params.insert(std::make_unique<Float32Parameter>(k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried", 0.0001));
+  params.insert(std::make_unique<Float32Parameter>(k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried", 0.0001f));
   params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points",
                                                  "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
   params.insert(
