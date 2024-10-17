@@ -7,7 +7,7 @@
 
 namespace nx::core::ClusterUtilities
 {
-enum SIMPLNX_EXPORT DistanceMetric
+enum DistanceMetric
 {
   Euclidean,
   SquaredEuclidean,

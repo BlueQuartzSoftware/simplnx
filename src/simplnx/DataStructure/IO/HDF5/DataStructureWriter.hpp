@@ -25,7 +25,7 @@ class IDataIO;
  */
 class SIMPLNX_EXPORT DataStructureWriter
 {
-  friend class DataObject;
+  friend class nx::core::DataObject;
   friend SIMPLNX_EXPORT Result<> WriteObjectAttributes(DataStructureWriter&, ObjectWriter&, const DataObject*, bool);
   friend class HDF5::IDataIO;
 
