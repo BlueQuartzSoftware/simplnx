@@ -43,6 +43,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
   ReadEnsembleInfoTest.cpp
+  ReadGrainMapper3DTest.cpp
   ReadH5EbsdTest.cpp
   ReadH5EspritDataTest.cpp
   ReadH5OimDataTest.cpp
@@ -140,6 +141,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME GrainMapper3D_Test_Files.tar.gz SHA512 cbd9cde2528d62de6cffecd125795b571f8b1a41c8eebbbbac5908f5382ac3c3c3ea56efc34b6e6ca713055f4fd13485aa6dd5acb9a69e9d4b3b16941ed1f96f)
 
 endif()
 
