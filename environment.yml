@@ -1,0 +1,13 @@
+name: pysimplnx
+channels:
+  - conda-forge
+  - https://conda.anaconda.org/bluequartzsoftware
+dependencies:
+  - python==3.10
+  - numpy
+  - matplotlib
+  - pillow
+  - scipy
+  - imageio
+  - dream3dnx
+  
