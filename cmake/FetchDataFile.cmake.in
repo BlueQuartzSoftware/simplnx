@@ -3,6 +3,7 @@
 # STARTING @ARGS_ARCHIVE_NAME@
 # Download, Decompress, and possibly copy data archive
 # message(STATUS "[DATA DOWNLOAD] @ARGS_ARCHIVE_NAME@")
+# message(STATUS "CMAKE_CONFIG: ${CMAKE_CONFIG}")
 # --------------------------------------------------------------------------------------------------
 string(TIMESTAMP time_stamp_start %s)
 file(DOWNLOAD @DATA_ARCHIVE_WEB_SITE@@ARGS_ARCHIVE_NAME@
@@ -29,7 +30,10 @@ endif()
 
 # --------------------------------------------------------------------------------------------------
 # Oddly, if the status comes back as "No Error", that actually means that something got downloaded
-# If the file was downloaded then we should also decompress it.
+# Assuming the last command was successfull, if the developer wanted the data copied to the
+# build folder.
+# ARGS_COPY_DATA=@ARGS_COPY_DATA@
+# DATA_DEST_DIR=@DATA_DEST_DIR@
 # --------------------------------------------------------------------------------------------------
 if(@ARGS_COPY_DATA@)
   get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
@@ -40,5 +44,7 @@ if(@ARGS_COPY_DATA@)
     OUTPUT_VARIABLE output
     ERROR_VARIABLE error
   )
-  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@" "@DATA_DEST_DIR@/@ARCHIVE_BASE_NAME@")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different 
+                    "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@" 
+                    "@DATA_DEST_DIR@/@ARCHIVE_BASE_NAME@")
 endif()
