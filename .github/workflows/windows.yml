@@ -22,7 +22,7 @@ jobs:
         toolset:
           - v142
           - v143
-    runs-on: ${{matrix.os}}
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v3
