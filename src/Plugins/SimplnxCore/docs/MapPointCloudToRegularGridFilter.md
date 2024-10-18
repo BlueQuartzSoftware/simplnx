@@ -10,7 +10,13 @@ This **Filter** determines, for a user-defined grid, in which voxel each point i
 
 Additionally, the user may opt to use a mask; points for which the mask are false are ignored when computing voxel indices (instead, they are initialized to voxel 0).
 
-One of the features provided to the user is control over Out-of-Bounds handling and values. The former comes with three options `Silent`, `Warning with Count`, and `Error at First Instance`, these give the user control over how the algorithm handles values from the vertex geometry falling outside the image geometry. The default selection is `Silent`, but it is mostly provided as a way to preserve existing functionality. For most use cases it is recommended to use the `Warning with Count` because: if no values fall out of bounds, no warning will be returned. Therefore, it acts as a simple validation that will not clutter warnings if not needed. What follows are a few use cases we had in mind when adding this functionality, organized by handling type:
+One of the features provided to the user is control over the value used when a point is Out-of-Bounds. The three options are:
+
+- `Silent`: (default) Will silently use the user supplied value
+- `Warning with Count`: Will emit a filer warning that contains the number of out-of-bounds values were encountered.
+- `Error at First Instance`: Will emit a filter error at the out-of-bounds value that is encountered.
+
+The default selection is `Silent`, but it is mostly provided as a way to preserve existing functionality. What follows are a few use cases we had in mind when adding this functionality, organized by handling type:
 
 - `Silent` option:
   - User may want to preserve identical functionality between **SIMPL** and **simplnx**
@@ -23,7 +29,7 @@ One of the features provided to the user is control over Out-of-Bounds handling 
   - User may to trace down where a anomaly first occured
   - User may be creating a pipeline in a known problem space with a well defined outcome where any data anomalies must be caught early to prevent downstream problems
 
-Continuing along the Out-of-Bounds discussion, the Out-of-Bounds value allows the user to specify a specific `uint64` value to use for every value from the vertex geometry that falls outside the image geometry. The default value is just the max `unsigned long long int` in an effort to make sure that it doesn't intersect with exisiting indexed values. This is identical to previous functionality. However, consider the situation where a user has a geometry that contains 1000 voxels, in this case the actual index values are 0-999, so a user could select 1000 and it wouldn't overlap any existing voxel index. Doing this may reduce skew of coloring or other statistic-based analysis. Advanced users may intentionally select a value that overlaps an existing voxel index they wish to remove in a later filter or to later downcast the datasize without overflow, but this is considered an edge case that is functional, but not recommended.
+Continuing along the Out-of-Bounds discussion, the Out-of-Bounds value allows the user to specify a specific `uint64` (0 - 18,446,744,073,709,551,616) value to use for every value from the vertex geometry that falls outside the image geometry. The default value is just the max `unsigned long long int` in an effort to make sure that it doesn't intersect with exisiting indexed values. This is identical to previous functionality. However, consider the situation where a user has a geometry that contains 1000 voxels, in this case the actual index values are 0-999, so a user could select 1000 and it wouldn't overlap any existing voxel index. Doing this may reduce skew of coloring or other statistic-based analysis. Advanced users may intentionally select a value that overlaps an existing voxel index they wish to remove in a later filter or to later downcast the datasize without overflow, but this is considered an edge case that is functional, but not recommended.
 
 % Auto generated parameter table will be inserted here
 
