@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -251,7 +252,7 @@ public:
    * @param obj
    * @return bool
    */
-  bool insert(const std::weak_ptr<DataObject>& obj);
+  Result<> insert(const std::weak_ptr<DataObject>& obj);
 
   /**
    * Attempts to remove the specified DataObject from the container. Returns
@@ -373,7 +374,7 @@ protected:
    * @param obj
    * @return bool
    */
-  virtual bool canInsert(const DataObject* obj) const;
+  virtual Result<> canInsert(const DataObject* obj) const;
 
   /**
    * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap

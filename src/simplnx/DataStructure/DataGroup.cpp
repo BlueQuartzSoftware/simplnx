@@ -79,7 +79,7 @@ std::string DataGroup::getTypeName() const
   return k_TypeName;
 }
 
-bool DataGroup::canInsert(const DataObject* obj) const
+Result<> DataGroup::canInsert(const DataObject* obj) const
 {
   return BaseGroup::canInsert(obj);
 }
