@@ -1,6 +1,7 @@
 #include "CreateColorMapParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/util/ColorTable.hpp"
 
 #include <fmt/core.h>

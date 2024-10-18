@@ -1,5 +1,6 @@
 #include "CreateDataGroupAction.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
 

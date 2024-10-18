@@ -1,6 +1,7 @@
 #include "DataGroupSelectionParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/Types.hpp"

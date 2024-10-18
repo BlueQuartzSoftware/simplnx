@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <fmt/core.h>

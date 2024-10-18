@@ -1,6 +1,7 @@
 #include "DynamicTableParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>

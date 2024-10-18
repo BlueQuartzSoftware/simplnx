@@ -1,5 +1,6 @@
 #include "ChoicesParameter.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
