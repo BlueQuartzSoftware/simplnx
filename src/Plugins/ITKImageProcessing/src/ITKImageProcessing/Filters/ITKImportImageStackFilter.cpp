@@ -36,9 +36,9 @@ const ChoicesParameter::ValueType k_NoImageTransform = 0;
 const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
 const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
-inline constexpr nx::core::StringLiteral k_NoResamplingMode = "Do Not Resample (0)";
-inline constexpr nx::core::StringLiteral k_ScalingMode = "Scaling (1)";
-inline constexpr nx::core::StringLiteral k_ExactDimensions = "Exact X/Y Dimensions (2)";
+constexpr nx::core::StringLiteral k_NoResamplingMode = "Do Not Resample (0)";
+constexpr nx::core::StringLiteral k_ScalingMode = "Scaling (1)";
+constexpr nx::core::StringLiteral k_ExactDimensions = "Exact X/Y Dimensions (2)";
 const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingMode, k_ScalingMode, k_ExactDimensions};
 const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;

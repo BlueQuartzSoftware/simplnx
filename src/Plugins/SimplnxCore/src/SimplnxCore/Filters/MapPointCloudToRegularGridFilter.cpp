@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -12,19 +13,37 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <chrono>
 #include <cmath>
 
 namespace nx::core
 {
 namespace
 {
+const std::string k_MaskName = "temp_mask";
+
+constexpr nx::core::StringLiteral k_SilentMode = "Silent";
+constexpr nx::core::StringLiteral k_WarningMode = "Warning with Count";
+constexpr nx::core::StringLiteral k_ErrorMode = "Error at First Instance";
+const nx::core::ChoicesParameter::Choices k_OutOfBoundsHandlingChoices = {k_SilentMode, k_WarningMode, k_ErrorMode};
+const nx::core::ChoicesParameter::ValueType k_SilentModeIndex = 0;
+const nx::core::ChoicesParameter::ValueType k_WarningModeIndex = 1;
+const nx::core::ChoicesParameter::ValueType k_ErrorModeIndex = 2;
+
 constexpr int64 k_BadGridDimensions = -2601;
 constexpr int64 k_InvalidVertexGeometry = -2602;
 constexpr int64 k_IncompatibleMaskVoxelArrays = -2603;
 constexpr int64 k_MaskSelectedArrayInvalid = -2604;
+constexpr int64 k_MaskCompareInvalid = -2605;
+constexpr int64 k_InvalidImageGeometry = -2606;
+constexpr int64 k_ErrorOutOfBounds = -2607;
+constexpr int64 k_WarningOutOfBounds = -2608;
+constexpr int64 k_InvalidHandlingValue = -2609;
 
 Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& args)
 {
@@ -188,6 +207,91 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& args)
 
   return {};
 }
+
+template <bool UseSilent, bool UseWarning, bool UseError>
+struct OutOfBoundsType
+{
+  // Compile time checks for bounding, no runtime overhead
+  static_assert((UseSilent && !UseWarning && !UseError) || (!UseSilent && UseWarning && !UseError) || (!UseSilent && !UseWarning && UseError),
+                "struct `OutOfBoundsType` can only have one true bool in its instantiation");
+
+  static constexpr bool UsingSilent = UseSilent;
+  static constexpr bool UsingWarning = UseWarning;
+  static constexpr bool UsingError = UseError;
+};
+
+using SilentType = OutOfBoundsType<true, false, false>;
+using WarningType = OutOfBoundsType<false, true, false>;
+using ErrorType = OutOfBoundsType<false, false, true>;
+
+template <class OutOfBoundsType = SilentType, bool UseMask = false>
+Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom* image, UInt64AbstractDataStore& voxelIndices,
+                         const std::unique_ptr<MaskCompare>& maskCompare, uint64 outOfBoundsValue)
+{
+  // Validation
+  if(image == nullptr)
+  {
+    return MakeErrorResult(k_InvalidImageGeometry, fmt::format("{}({}): Function {}: Error. Supplied `image` is a nullptr", "::ProcessVertices", __FILE__, __LINE__));
+  }
+
+  // Out of Bounds Counter
+  usize count = 0;
+
+  // Execution
+  usize numVerts = vertices.getNumberOfVertices();
+  auto start = std::chrono::steady_clock::now();
+  for(int64 i = 0; i < numVerts; i++)
+  {
+    if constexpr(UseMask)
+    {
+      if(!maskCompare->isTrue(i))
+      {
+        continue;
+      }
+    }
+
+    auto coords = vertices.getVertexCoordinate(i);
+    const auto indexResult = image->getIndex(coords[0], coords[1], coords[2]);
+    if(indexResult.has_value())
+    {
+      voxelIndices[i] = indexResult.value();
+    }
+    else
+    {
+      if constexpr(OutOfBoundsType::UsingError)
+      {
+        BoundingBox3Df imageBounds = image->getBoundingBoxf();
+        const Point3Df& minPoint = imageBounds.getMinPoint();
+        const Point3Df& maxPoint = imageBounds.getMaxPoint();
+        return MakeErrorResult(
+            k_ErrorOutOfBounds,
+            fmt::format("Out of bounds value encountered.\nVertex Index: {}\nVertex Coordinates [X,Y,Z]: [{},{},{}]\nImage Coordinate Bounds:\nX: {} to {}\nY: {} to {}\nZ: {} to {}", i, coords[0],
+                        coords[1], coords[2], minPoint.getX(), maxPoint.getX(), minPoint.getY(), maxPoint.getY(), minPoint.getZ(), maxPoint.getZ()));
+      }
+
+      // Out of bounds value
+      voxelIndices[i] = outOfBoundsValue;
+      count++;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    {
+      messageHandler(fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", static_cast<int64>((static_cast<float32>(i) / numVerts) * 100.0f)));
+      start = now;
+    }
+  }
+
+  if constexpr(OutOfBoundsType::UsingWarning)
+  {
+    if(count > 0)
+    {
+      return MakeWarningVoidResult(k_WarningOutOfBounds, fmt::format("Mapping Complete. Number of value outside image bounds: {}", count));
+    }
+  }
+
+  return {};
+}
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -232,6 +336,11 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Created Image Geometry", "Path to create the Image Geometry", DataPath()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Existing Image Geometry", "Path to the existing Image Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ChoicesParameter>(k_OutOfBoundsHandlingType_Key, "Out of Bounds Handling",
+                                                   "Specifies how data outside the image bounds is handled, see documentation for specification", k_SilentModeIndex, k_OutOfBoundsHandlingChoices));
+  params.insert(std::make_unique<UInt64Parameter>(k_OutOfBoundsValue_Key, "Out of Bounds Value",
+                                                  "The value to be put in voxel indices slots, occurs when the vertex geometry's coordinate point falls outside the image geometry's bounds",
+                                                  std::numeric_limits<UInt64Parameter::ValueType>::max()));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath{},
@@ -239,8 +348,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean/uint8 mask array. Values that are true will mark that cell/point as usable.",
+                                                          DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndicesName_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));
@@ -253,13 +362,21 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.linkParameters(k_SamplingGridType_Key, k_CellDataName_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
   params.linkParameters(k_SamplingGridType_Key, k_SelectedImageGeometryPath_Key, std::make_any<ChoicesParameter::ValueType>(1));
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType MapPointCloudToRegularGridFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change 1:
+  // Added 2 new parameters, but defaults support original functionality
+  //
+  // Change 2:
+  // Extended the accepted typing for mask array, no change needed
 }
 
 //------------------------------------------------------------------------------
@@ -311,7 +428,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   if(useMask)
   {
     auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
-    const auto numMaskTuples = dataStructure.getDataRefAs<BoolArray>(maskArrayPath).getNumberOfTuples();
+    const auto numMaskTuples = dataStructure.getDataRefAs<IDataArray>(maskArrayPath).getNumberOfTuples();
     const auto numVoxelTuples = vertexData->getNumTuples();
     if(numMaskTuples != numVoxelTuples)
     {
@@ -319,6 +436,16 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
                                       fmt::format("The voxel indices array created in attribute matrix '{}' and the mask array at path '{}' have mismatching number of tuples.",
                                                   vertexDataPath.toString(), maskArrayPath.toString()));
     }
+  }
+  else
+  {
+    DataPath tempPath = DataPath({k_MaskName});
+    {
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath);
+      actions.appendAction(std::move(createAction));
+    }
+
+    actions.appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
   }
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint64, vertexData->getShape(), std::vector<usize>{1}, voxelIndicesPath);
@@ -331,12 +458,8 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {
+  // Get the target image as a pointer
   const auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
-  const auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  const auto useMask = args.value<bool>(k_UseMask_Key);
-  const auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
-  const auto voxelIndicesName = args.value<std::string>(k_VoxelIndicesName_Key);
-
   const ImageGeom* image = nullptr;
   if(samplingGridType == 0)
   {
@@ -354,51 +477,72 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
     image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_SelectedImageGeometryPath_Key));
   }
 
-  const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
-  auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
-  const auto* mask = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
-  if(useMask && mask == nullptr)
+  // Create the Mask
+  const auto useMask = args.value<bool>(k_UseMask_Key);
+  auto maskPath = args.value<DataPath>(k_InputMaskPath_Key);
+  if(!args.value<bool>(k_UseMask_Key))
   {
-    return MakeErrorResult(k_MaskSelectedArrayInvalid, "Use Mask was selected but mask array doesn't exist.");
+    maskPath = DataPath({k_MaskName});
+    dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
+  }
+  std::unique_ptr<MaskCompare> maskCompare;
+  try
+  {
+    maskCompare = InstantiateMaskCompare(dataStructure, maskPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskPath.toString());
+    return MakeErrorResult(k_MaskCompareInvalid, message);
   }
 
-  usize numVerts = vertices.getNumberOfVertices();
-  SizeVec3 dims = image->getDimensions();
-  FloatVec3 res = image->getSpacing();
-  FloatVec3 origin = image->getOrigin();
-  int64 progIncrement = numVerts / 100;
-  int64 prog = 1;
-  int64 progressInt = 0;
-  int64 counter = 0;
+  // Cache all the needed objects for ::ProcessVertices
+  const auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
+  const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(args.value<std::string>(k_VoxelIndicesName_Key));
+  auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
+  auto outOfBoundsValue = args.value<uint64>(k_OutOfBoundsValue_Key);
 
-  for(int64 i = 0; i < numVerts; i++)
+  // Execute the correct ::ProcessVertices, else error out
+  switch(args.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key))
   {
-    if(!useMask || mask->getValue(i))
+  case k_SilentModeIndex: {
+    if(useMask)
     {
-      auto coords = vertices.getVertexCoordinate(i);
-      const auto indexResult = image->getIndex(coords[0], coords[1], coords[2]);
-      if(indexResult.has_value())
-      {
-        voxelIndices[i] = indexResult.value();
-      }
-      else
-      {
-        voxelIndices[i] = std::numeric_limits<usize>::max();
-      }
-
-      if(counter > prog)
-      {
-        progressInt = static_cast<int64>((static_cast<float>(counter) / numVerts) * 100.0f);
-        std::string ss = fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", progressInt);
-        messageHandler(ss);
-        prog = prog + progIncrement;
-      }
-      counter++;
+      return ProcessVertices<SilentType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+    }
+    else
+    {
+      return ProcessVertices<SilentType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
   }
-
-  return {};
+  case k_WarningModeIndex: {
+    if(useMask)
+    {
+      return ProcessVertices<WarningType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+    }
+    else
+    {
+      return ProcessVertices<WarningType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+    }
+  }
+  case k_ErrorModeIndex: {
+    if(useMask)
+    {
+      return ProcessVertices<ErrorType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+    }
+    else
+    {
+      return ProcessVertices<ErrorType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+    }
+  }
+  default: {
+    return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handing Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})",
+                                                               args.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key), k_SilentMode, k_SilentModeIndex, k_WarningMode,
+                                                               k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
+  }
+  }
 }
 
 namespace
