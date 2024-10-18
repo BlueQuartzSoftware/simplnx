@@ -1,5 +1,6 @@
 #include "NumericTypeParameter.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Parameters/DataTypeParameter.hpp"
 

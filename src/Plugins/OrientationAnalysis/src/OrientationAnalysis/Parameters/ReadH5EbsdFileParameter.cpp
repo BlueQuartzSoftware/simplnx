@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 
 #include "EbsdLib/IO/H5EbsdVolumeInfo.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"

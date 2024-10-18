@@ -1,5 +1,7 @@
 #include "DataTypeParameter.hpp"
 
+#include "simplnx/Common/StringLiteralFormatting.hpp"
+
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 

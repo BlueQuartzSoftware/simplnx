@@ -32,6 +32,8 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <nlohmann/json.hpp>
+
 using namespace nx::core;
 namespace
 {
@@ -42,6 +44,55 @@ constexpr StringLiteral k_ParentGroupKey = "parent_group";
 
 namespace nx::core
 {
+// -----------------------------------------------------------------------------
+Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::DatasetImportInfo::ReadJson(const nlohmann::json& json)
+{
+  DatasetImportInfo data;
+  if(!json.contains(k_DatasetPath_Key.view()))
+  {
+    return MakeErrorResult<DatasetImportInfo>(-500, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_DatasetPath_Key));
+  }
+  else if(!json[k_DatasetPath_Key.str()].is_string())
+  {
+    return MakeErrorResult<DatasetImportInfo>(-501, fmt::format("ImportHDF5DatasetParameter ValueType: 'Dataset Path' value is of type {} and is not a string.", json[k_DatasetPath_Key].type_name()));
+  }
+  data.dataSetPath = json[k_DatasetPath_Key.str()];
+
+  if(!json.contains(k_ComponentDimensions_Key.view()))
+  {
+    return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_ComponentDimensions_Key));
+  }
+  else if(!json[k_ComponentDimensions_Key.str()].is_string())
+  {
+    return MakeErrorResult<DatasetImportInfo>(
+        -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Component Dimensions' value is of type {} and is not a string.", json[k_ComponentDimensions_Key].type_name()));
+  }
+  data.componentDimensions = json[k_ComponentDimensions_Key.str()];
+
+  if(!json.contains(k_TupleDimensions_Key.view()))
+  {
+    return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_TupleDimensions_Key));
+  }
+  else if(!json[k_TupleDimensions_Key.str()].is_string())
+  {
+    return MakeErrorResult<DatasetImportInfo>(
+        -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Tuple Dimensions' value is of type {} and is not a string.", json[k_TupleDimensions_Key].type_name()));
+  }
+  data.tupleDimensions = json[k_TupleDimensions_Key.str()];
+
+  return {data};
+}
+
+// -----------------------------------------------------------------------------
+nlohmann::json ReadHDF5DatasetParameter::DatasetImportInfo::writeJson() const
+{
+  nlohmann::json json;
+  json[k_DatasetPath_Key.str()] = dataSetPath;
+  json[k_ComponentDimensions_Key.str()] = componentDimensions;
+  json[k_TupleDimensions_Key.str()] = tupleDimensions;
+  return json;
+}
+
 // -----------------------------------------------------------------------------
 ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : ValueParameter(name, humanName, helpText)

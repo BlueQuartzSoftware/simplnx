@@ -1,6 +1,7 @@
 #include "IParameter.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/StringLiteralFormatting.hpp"
 
 #include <nlohmann/json.hpp>
 
