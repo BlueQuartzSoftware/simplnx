@@ -265,8 +265,8 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
         const Point3Df& maxPoint = imageBounds.getMaxPoint();
         return MakeErrorResult(
             k_ErrorOutOfBounds,
-            fmt::format("Out of bounds value encountered. Vertex Coordinates = X:{} Y:{} Z: {} - Index: {} || Image Bounding Box Coordinates = Min: X: {} Y: {} Z: {} - Max: X: {} Y: {} Z: {}",
-                        coords[0], coords[1], coords[2], i, minPoint.getX(), minPoint.getY(), minPoint.getZ(), maxPoint.getX(), maxPoint.getY(), maxPoint.getZ()));
+            fmt::format("Out of bounds value encountered.\nVertex Index: {}\nVertex Coordinates [X,Y,Z]: [{},{},{}]\nImage Coordinate Bounds:\nX: {} to {}\nY: {} to {}\nZ: {} to {}", i,
+                        coords[0], coords[1], coords[2], minPoint.getX(), maxPoint.getX(), minPoint.getY(), maxPoint.getY(), minPoint.getZ(), maxPoint.getZ()));
       }
 
       // Out of bounds value
