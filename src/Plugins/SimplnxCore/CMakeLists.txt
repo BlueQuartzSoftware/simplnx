@@ -465,17 +465,17 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
     INSTALL
     COPY_DATA
   )
-  add_custom_target(Copy_${PLUGIN_NAME}_ASCIIData ALL
-    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/ASCIIData"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
-    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
-    COMMENT "Copying ${PLUGIN_NAME}/ASCIIData data into Binary Directory"
-    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
-  set_target_properties(Copy_${PLUGIN_NAME}_ASCIIData PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
+  # add_custom_target(Copy_${PLUGIN_NAME}_ASCIIData ALL
+  #   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz"
+  #   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/ASCIIData"
+  #   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
+  #   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+  #   COMMENT "Copying ${PLUGIN_NAME}/ASCIIData data into Binary Directory"
+  #   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+  #   COMMAND_EXPAND_LISTS
+  #   VERBATIM
+  # )
+  # set_target_properties(Copy_${PLUGIN_NAME}_ASCIIData PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
     ARCHIVE_NAME STL_Models.tar.gz
@@ -483,17 +483,17 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
     INSTALL
     COPY_DATA
   )
-  add_custom_target(Copy_${PLUGIN_NAME}_STL_Models ALL
-    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/STL_Models"
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models"
-    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
-    COMMENT "Copying ${PLUGIN_NAME}/STL_Models data into Binary Directory"
-    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-    COMMAND_EXPAND_LISTS
-    VERBATIM
-  )
-  set_target_properties(Copy_${PLUGIN_NAME}_STL_Models PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
+  # add_custom_target(Copy_${PLUGIN_NAME}_STL_Models ALL
+  #   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz"
+  #   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/Data/STL_Models"
+  #   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models"
+  #   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+  #   COMMENT "Copying ${PLUGIN_NAME}/STL_Models data into Binary Directory"
+  #   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+  #   COMMAND_EXPAND_LISTS
+  #   VERBATIM
+  # )
+  # set_target_properties(Copy_${PLUGIN_NAME}_STL_Models PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
 endif()
 

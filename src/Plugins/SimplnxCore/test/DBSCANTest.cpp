@@ -46,7 +46,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
     // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::Iterative)));
     args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(true));
-    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01));
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01f));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(50));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_TargetArrayPath));
