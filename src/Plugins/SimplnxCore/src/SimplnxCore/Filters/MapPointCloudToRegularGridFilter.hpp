@@ -30,6 +30,8 @@ public:
   static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
   static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_OutOfBoundsHandlingType_Key = "out_of_bounds_handling_index";
+  static inline constexpr StringLiteral k_OutOfBoundsValue_Key = "out_of_bounds_value";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
   static inline constexpr StringLiteral k_VoxelIndicesName_Key = "voxel_indices_name";
