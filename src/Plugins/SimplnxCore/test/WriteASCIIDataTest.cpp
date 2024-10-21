@@ -177,7 +177,7 @@ private:
     args.insertOrAssign(WriteASCIIDataFilter::k_OutputPath_Key, std::make_any<fs::path>(fs::path(m_TestOutput.string() + "/" + m_SingleFileName + ".txt")));
     args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(m_TestOutput));
     args.insertOrAssign(WriteASCIIDataFilter::k_FileExtension_Key, std::make_any<std::string>(".txt"));
-    args.insertOrAssign(WriteASCIIDataFilter::k_MaxValPerLine_Key, std::make_any<int32>(0));
+    args.insertOrAssign(WriteASCIIDataFilter::k_MaxTuplePerLine_Key, std::make_any<int32>(0));
     args.insertOrAssign(WriteASCIIDataFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(delimiter)); // uint64 0 - 4 inclusive
     args.insertOrAssign(WriteASCIIDataFilter::k_Includes_Key, std::make_any<ChoicesParameter::ValueType>(1));
     args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps1));

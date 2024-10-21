@@ -140,18 +140,18 @@ struct PrintDataArray
 {
   template <typename ScalarType>
   Result<> operator()(std::ostream& outputStrm, IDataArray* inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
-                      int32 componentsPerLine = 0)
+                      int32 tuplesPerLine = 0)
   {
     auto& dataStore = inputDataArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto start = std::chrono::steady_clock::now();
     auto numTuples = dataStore.getNumberOfTuples();
-    auto maxLine = static_cast<size_t>(componentsPerLine);
-    if(componentsPerLine == 0)
+    if(tuplesPerLine == 0)
     {
-      maxLine = static_cast<size_t>(dataStore.getNumberOfComponents());
+      tuplesPerLine = 1;
     }
 
     usize numComps = dataStore.getNumberOfComponents();
+    int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
       auto now = std::chrono::steady_clock::now();
@@ -165,6 +165,7 @@ struct PrintDataArray
           return {};
         }
       }
+      // Write out all the components for this tuple
       for(size_t index = 0; index < numComps; index++)
       {
         if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
@@ -179,14 +180,21 @@ struct PrintDataArray
         {
           outputStrm << dataStore[tuple * numComps + index];
         }
-        if(index != maxLine - 1)
+        if(index != numComps - 1)
         {
           outputStrm << delimiter;
         }
-        else
-        {
-          outputStrm << "\n";
-        }
+      }
+      // Now figure out if we need a new line character or if we need the delimiter instead.
+      tuplesWritten++;
+      if(tuplesWritten == tuplesPerLine)
+      {
+        outputStrm << '\n';
+        tuplesWritten = 0;
+      }
+      else
+      {
+        outputStrm << delimiter;
       }
     }
     return {};
@@ -377,7 +385,7 @@ std::string DelimiterToString(uint64 delim)
  */
 Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
                                       const std::atomic_bool& shouldCancel, const std::string& fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
-                                      size_t componentsPerLine)
+                                      size_t tuplesPerLine)
 {
   fs::path dirPath(directoryPath);
   if(!fs::is_directory(dirPath))
@@ -412,7 +420,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
         }
         else
         {
-          ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+          ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, dataArray, mesgHandler, shouldCancel, delimiter, tuplesPerLine);
         }
       }
       auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);

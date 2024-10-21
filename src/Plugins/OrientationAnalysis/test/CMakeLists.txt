@@ -384,6 +384,7 @@ set(PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnsembleInfoReader.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadAng.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadCTF.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Convert_Orientations.d3dpipeline"
 )
 
 # -----------------------------------------------------------------------------
