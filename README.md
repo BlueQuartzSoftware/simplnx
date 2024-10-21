@@ -33,9 +33,11 @@ Case Reviewer: M. Allen
 Case Number: AFRL-2022-4403
 
 The material was assigned a clearance of CLEARED on 14 Sep 2022.
+
+This clearance is in effect until 14 SEPT 2025 at which point any new additions created under USAF funding should be cleared. 
 ```
 
-This clearance is in effect until 14 SEPT 2025 at which point any new additions created under USAF funding should be cleared. Public additions through the normal PR process will not be affected.
+Public additions through the normal PR process will not be affected.
 
 ## Get Help
 
