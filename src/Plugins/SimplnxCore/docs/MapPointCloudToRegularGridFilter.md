@@ -10,6 +10,27 @@ This **Filter** determines, for a user-defined grid, in which voxel each point i
 
 Additionally, the user may opt to use a mask; points for which the mask are false are ignored when computing voxel indices (instead, they are initialized to voxel 0).
 
+One of the features provided to the user is control over the value used when a point is Out-of-Bounds. The three options are:
+
+- `Silent`: (default) Will silently use the user supplied value
+- `Warning with Count`: Will emit a filer warning that contains the number of out-of-bounds values were encountered.
+- `Error at First Instance`: Will emit a filter error at the out-of-bounds value that is encountered.
+
+The default selection is `Silent`, but it is mostly provided as a way to preserve existing functionality. What follows are a few use cases we had in mind when adding this functionality, organized by handling type:
+
+- `Silent` option:
+  - User may want to preserve identical functionality between **SIMPL** and **simplnx**
+  - User may expect values to fall outside the target image geometry or intend to crop all that fall outside it anyway
+- `Warning with Count` option:
+  - User may be intending to create a general use pipeline for various different tasks, for which monitoring and validation may be important
+  - User may intend to create a workflow that will be distributed in which the end user may not have control over the parameter, but should be monitoring for anomalies in output
+  - User may want to watch for unexpected behavior
+- `Error at First Instance` option
+  - User may to trace down where a anomaly first occured
+  - User may be creating a pipeline in a known problem space with a well defined outcome where any data anomalies must be caught early to prevent downstream problems
+
+Continuing along the Out-of-Bounds discussion, the Out-of-Bounds value allows the user to specify a specific `uint64` (0 - 18,446,744,073,709,551,616) value to use for every value from the vertex geometry that falls outside the image geometry. The default value is just the max `unsigned long long int` in an effort to make sure that it doesn't intersect with exisiting indexed values. This is identical to previous functionality. However, consider the situation where a user has a geometry that contains 1000 voxels, in this case the actual index values are 0-999, so a user could select 1000 and it wouldn't overlap any existing voxel index. Doing this may reduce skew of coloring or other statistic-based analysis. Advanced users may intentionally select a value that overlaps an existing voxel index they wish to remove in a later filter or to later downcast the datasize without overflow, but this is considered an edge case that is functional, but not recommended.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright
