@@ -72,7 +72,7 @@ using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVo
 
 /**
  * @brief Result is meant for reporting errors/warnings from a function with an optional contained type.
- * Functions similiarly to std::optional. Warnings are always accessible, and either the contained type or errors is accessible at a time.
+ * Functions similarly to std::optional. Warnings are always accessible, and either the contained type or errors is accessible at a time.
  * @tparam T Contained type. May be void.
  */
 template <class T = void>
