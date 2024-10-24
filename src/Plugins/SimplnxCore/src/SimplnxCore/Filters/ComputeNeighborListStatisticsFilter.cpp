@@ -1,6 +1,7 @@
 #include "ComputeNeighborListStatisticsFilter.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeNeighborListStatistics.hpp"
+
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -8,12 +9,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NeighborListSelectionParameter.hpp"
-#include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
-#include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace nx::core
 {
@@ -21,140 +17,6 @@ namespace
 {
 constexpr int64 k_NoAction = -6800;
 constexpr int64 k_MissingInputArray = -6801;
-constexpr int64 k_BoolTypeNeighborList = -6802;
-constexpr int64 k_EmptyNeighborList = -6803;
-
-template <typename T>
-class ComputeNeighborListStatisticsImpl
-{
-public:
-  using NeighborListType = NeighborList<T>;
-
-  ComputeNeighborListStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                    std::vector<IDataArray*>& arrays)
-  : m_Filter(filter)
-  , m_Source(source)
-  , m_Length(length)
-  , m_Min(min)
-  , m_Max(max)
-  , m_Mean(mean)
-  , m_Median(median)
-  , m_StdDeviation(stdDeviation)
-  , m_Summation(summation)
-  , m_Arrays(arrays)
-  {
-  }
-
-  virtual ~ComputeNeighborListStatisticsImpl() = default;
-
-  void compute(usize start, usize end) const
-  {
-    if constexpr(std::is_same_v<bool, T>)
-    {
-      return;
-    }
-
-    using DataArrayType = DataArray<T>;
-    using StoreType = AbstractDataStore<T>;
-
-    auto* array0 = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
-    if(m_Length && array0 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
-    }
-    auto* array1 = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Min && array1 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
-    }
-    auto* array2 = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Max && array2 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
-    }
-    auto* array3 = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Mean && array3 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
-    }
-    auto* array4 = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Median && array4 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
-    }
-    auto* array5 = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_StdDeviation && array5 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
-    }
-    auto* array6 = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Summation && array6 == nullptr)
-    {
-      throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
-    }
-
-    auto& sourceList = dynamic_cast<NeighborListType&>(m_Source);
-
-    for(usize i = start; i < end; i++)
-    {
-      const std::vector<T>& tmpList = sourceList[i];
-
-      if(m_Length)
-      {
-        auto val = static_cast<int64_t>(tmpList.size());
-        array0->setValue(i, val);
-      }
-      if(m_Min)
-      {
-        T val = StatisticsCalculations::findMin(tmpList);
-        array1->setValue(i, val);
-      }
-      if(m_Max)
-      {
-        T val = StatisticsCalculations::findMax(tmpList);
-        array2->setValue(i, val);
-      }
-      if(m_Mean)
-      {
-        float val = StatisticsCalculations::findMean(tmpList);
-        array3->setValue(i, val);
-      }
-      if(m_Median)
-      {
-        float val = StatisticsCalculations::findMedian(tmpList);
-        array4->setValue(i, val);
-      }
-      if(m_StdDeviation)
-      {
-        float val = StatisticsCalculations::findStdDeviation(tmpList);
-        array5->setValue(i, val);
-      }
-      if(m_Summation)
-      {
-        float val = StatisticsCalculations::findSummation(tmpList);
-        array6->setValue(i, val);
-      }
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-private:
-  const IFilter* m_Filter = nullptr;
-  INeighborList& m_Source;
-  bool m_Length = false;
-  bool m_Min = false;
-  bool m_Max = false;
-  bool m_Mean = false;
-  bool m_Median = false;
-  bool m_StdDeviation = false;
-  bool m_Summation = false;
-
-  std::vector<IDataArray*>& m_Arrays;
-};
 
 //------------------------------------------------------------------------------
 OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args)
@@ -257,14 +119,14 @@ Parameters ComputeNeighborListStatisticsFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Specifies whether or not the filter creates the Length array during calculations", true));
-  params.insert(std::make_unique<BoolParameter>(k_FindMinimum_Key, "Find Minimum", "Specifies whether or not the filter creates the Minimum array during calculations", true));
-  params.insert(std::make_unique<BoolParameter>(k_FindMaximum_Key, "Find Maximum", "Specifies whether or not the filter creates the Maximum array during calculations", true));
-  params.insert(std::make_unique<BoolParameter>(k_FindMean_Key, "Find Mean", "Specifies whether or not the filter creates the Mean array during calculations", true));
-  params.insert(std::make_unique<BoolParameter>(k_FindMedian_Key, "Find Median", "Specifies whether or not the filter creates the Median array during calculations", true));
-  params.insert(
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Specifies whether or not the filter creates the Length array during calculations", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMinimum_Key, "Find Minimum", "Specifies whether or not the filter creates the Minimum array during calculations", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMaximum_Key, "Find Maximum", "Specifies whether or not the filter creates the Maximum array during calculations", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMean_Key, "Find Mean", "Specifies whether or not the filter creates the Mean array during calculations", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMedian_Key, "Find Median", "Specifies whether or not the filter creates the Median array during calculations", true));
+  params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_FindStandardDeviation_Key, "Find Standard Deviation", "Specifies whether or not the filter creates the Standard Deviation array during calculations", true));
-  params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_InputNeighborListPath_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(),
@@ -278,6 +140,16 @@ Parameters ComputeNeighborListStatisticsFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_MedianName_Key, "Median", "Path to create the Median array during calculations", "Median"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_StandardDeviationName_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", "StandardDeviation"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SummationName_Key, "Summation", "Path to create the Summation array during calculations", "Summation"));
+
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_FindLength_Key, k_LengthName_Key, true);
+  params.linkParameters(k_FindMinimum_Key, k_MinimumName_Key, true);
+  params.linkParameters(k_FindMaximum_Key, k_MaximumName_Key, true);
+  params.linkParameters(k_FindMean_Key, k_MeanName_Key, true);
+  params.linkParameters(k_FindMedian_Key, k_MedianName_Key, true);
+  params.linkParameters(k_FindStandardDeviation_Key, k_StandardDeviationName_Key, true);
+  params.linkParameters(k_FindSummation_Key, k_SummationName_Key, true);
+
   return params;
 }
 
@@ -307,11 +179,9 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
 
-  //
   if(!findMin && !findMax && !findMean && !findMedian && !findStdDeviation && !findSummation && !findLength)
   {
-    std::string ss = fmt::format("No statistics have been selected");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoAction, ss}})};
+    return MakePreflightErrorResult(k_NoAction, "No statistics have been selected");
   }
 
   std::vector<DataPath> dataArrayPaths;
@@ -319,8 +189,7 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
   auto inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   if(inputArray == nullptr)
   {
-    std::string ss = fmt::format("Missing input array");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, ss}})};
+    return MakePreflightErrorResult(k_MissingInputArray, "Missing input array");
   }
 
   dataArrayPaths.push_back(inputArrayPath);
@@ -332,82 +201,54 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 Result<> ComputeNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-  auto findLength = args.value<bool>(k_FindLength_Key);
-  auto findMin = args.value<bool>(k_FindMinimum_Key);
-  auto findMax = args.value<bool>(k_FindMaximum_Key);
-  auto findMean = args.value<bool>(k_FindMean_Key);
-  auto findMedian = args.value<bool>(k_FindMedian_Key);
-  auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
-  auto findSummation = args.value<bool>(k_FindSummation_Key);
+  ComputeNeighborListStatisticsInputValues inputValues;
 
-  if(!findMin && !findMax && !findMean && !findMedian && !findStdDeviation && findSummation && !findLength)
+  inputValues.FindLength = args.value<bool>(k_FindLength_Key);
+  inputValues.FindMin = args.value<bool>(k_FindMinimum_Key);
+  inputValues.FindMax = args.value<bool>(k_FindMaximum_Key);
+  inputValues.FindMean = args.value<bool>(k_FindMean_Key);
+  inputValues.FindMedian = args.value<bool>(k_FindMedian_Key);
+  inputValues.FindStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
+  inputValues.FindSummation = args.value<bool>(k_FindSummation_Key);
+
+  if(!inputValues.FindMin && !inputValues.FindMax && !inputValues.FindMean && !inputValues.FindMedian && !inputValues.FindStdDeviation && !inputValues.FindSummation && !inputValues.FindLength)
   {
     return {};
   }
 
-  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
-  auto& inputArray = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
-  const DataPath outputGroupPath = inputArrayPath.getParent();
+  inputValues.TargetNeighborListPath = args.value<DataPath>(k_InputNeighborListPath_Key);
+  const DataPath outputGroupPath = inputValues.TargetNeighborListPath.getParent();
 
-  std::vector<IDataArray*> arrays(7, nullptr);
-
-  if(findLength)
+  if(inputValues.FindLength)
   {
-    auto lengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
-    arrays[0] = dataStructure.getDataAs<IDataArray>(lengthPath);
+    inputValues.LengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
   }
-  if(findMin)
+  if(inputValues.FindMin)
   {
-    auto minPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
-    arrays[1] = dataStructure.getDataAs<IDataArray>(minPath);
+    inputValues.MinPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
   }
-  if(findMax)
+  if(inputValues.FindMax)
   {
-    auto maxPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
-    arrays[2] = dataStructure.getDataAs<IDataArray>(maxPath);
+    inputValues.MaxPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
   }
-  if(findMean)
+  if(inputValues.FindMean)
   {
-    auto meanPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
-    arrays[3] = dataStructure.getDataAs<IDataArray>(meanPath);
+    inputValues.MeanPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
   }
-  if(findMedian)
+  if(inputValues.FindMedian)
   {
-    auto medianPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
-    arrays[4] = dataStructure.getDataAs<IDataArray>(medianPath);
+    inputValues.MedianPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
   }
-  if(findStdDeviation)
+  if(inputValues.FindStdDeviation)
   {
-    auto stdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
-    arrays[5] = dataStructure.getDataAs<IDataArray>(stdDeviationPath);
+    inputValues.StdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
   }
-  if(findSummation)
+  if(inputValues.FindSummation)
   {
-    auto summationPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
-    arrays[6] = dataStructure.getDataAs<IDataArray>(summationPath);
+    inputValues.SummationPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
   }
 
-  DataType type = inputArray.getDataType();
-  if(type == DataType::boolean)
-  {
-    std::string ss = fmt::format("ComputeNeighborListStatisticsFilter::NeighborList {} was of type boolean, and thus cannot be processed", inputArray.getName());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BoolTypeNeighborList, ss}})};
-  }
-
-  usize numTuples = inputArray.getNumberOfTuples();
-  if(numTuples == 0)
-  {
-    std::string ss = fmt::format("ComputeNeighborListStatisticsFilter::NeighborList {} was empty", inputArray.getName());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyNeighborList, ss}})};
-  }
-
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation,
-                                                                            arrays);
-
-  return {};
+  return ComputeNeighborListStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

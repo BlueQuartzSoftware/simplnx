@@ -166,6 +166,7 @@ set(AlgorithmList
   ComputeLargestCrossSections
   ComputeMomentInvariants2D
   ComputeNeighborhoods
+  ComputeNeighborListStatistics
   ComputeSurfaceAreaToVolume
   ComputeTriangleGeomCentroids
   ComputeVectorColors
