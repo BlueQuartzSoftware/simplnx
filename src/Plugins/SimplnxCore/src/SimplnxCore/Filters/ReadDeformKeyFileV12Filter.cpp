@@ -63,7 +63,7 @@ std::string ReadDeformKeyFileV12Filter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadDeformKeyFileV12Filter::defaultTags() const
 {
-  return {className(), "IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import", "DEFORM"};
 }
 
 //------------------------------------------------------------------------------
@@ -73,8 +73,8 @@ Parameters ReadDeformKeyFileV12Filter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFilePath_Key, "Input File", "File path that points to the imported file", fs::path(""), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFilePath_Key, "Input File", "File path that points to the imported file", fs::path(""),
+                                                          FileSystemPathParameter::ExtensionsType{".key"}, FileSystemPathParameter::PathType::InputFile));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_QuadGeomPath_Key, "Quad Geometry", "The created Quad Geometry from  imported from file", DataPath({"Quad Geometry"})));
@@ -136,7 +136,8 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
   // Read from the cache and create objects
   {
     auto createAction = std::make_unique<CreateQuadGeometryAction>(pQuadGeomPathValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount,
-                                                                   vertexDataPath.getTargetName(), cellDataPath.getTargetName(), "SharedVertices", "SharedFaces");
+                                                                   vertexDataPath.getTargetName(), cellDataPath.getTargetName(), nx::core::CreateQuadGeometryAction::k_DefaultVerticesName,
+                                                                   nx::core::CreateQuadGeometryAction::k_DefaultFacesName);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
