@@ -79,7 +79,7 @@ std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) c
   for(const AngPhase::Pointer& phase : phases)
   {
     const int32_t phaseID = phase->getPhaseIndex();
-    crystalStructures[phaseID] = phase->determineLaueGroup();
+    crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
     std::string materialName = phase->getMaterialName();
     materialName = nx::core::StringUtilities::replace(materialName, "MaterialName", "");
     materialName = nx::core::StringUtilities::trimmed(materialName);

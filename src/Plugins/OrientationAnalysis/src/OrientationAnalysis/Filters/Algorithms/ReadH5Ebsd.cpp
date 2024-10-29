@@ -90,7 +90,7 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   for(size_t i = 0; i < phases.size(); i++)
   {
     int32_t phaseID = phases[i]->getPhaseIndex();
-    xtalData[phaseID] = phases[i]->determineLaueGroup();
+    xtalData[phaseID] = phases[i]->determineOrientationOpsIndex();
     matNameData[phaseID] = phases[i]->getMaterialName();
     std::vector<float> latticeConstant = phases[i]->getLatticeConstants();
 

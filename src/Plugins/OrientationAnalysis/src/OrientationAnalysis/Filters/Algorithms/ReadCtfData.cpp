@@ -82,7 +82,7 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
   for(const CtfPhase::Pointer& phase : phases)
   {
     const int32_t phaseID = phase->getPhaseIndex();
-    crystalStructures[phaseID] = phase->determineLaueGroup();
+    crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
     const std::string materialName = phase->getMaterialName();
     materialNames[phaseID] = materialName;
 

@@ -119,7 +119,7 @@ public:
     for(const auto& phase : phases)
     {
       const int32 phaseId = phase->getPhaseIndex();
-      crystalStructures[phaseId] = phase->determineLaueGroup();
+      crystalStructures[phaseId] = phase->determineOrientationOpsIndex();
       materialNames[phaseId] = phase->getMaterialName();
       std::vector<float32> lc = phase->getLatticeConstants();
 
