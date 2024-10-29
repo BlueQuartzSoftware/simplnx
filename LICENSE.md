@@ -1,5 +1,7 @@
 # SIMPLNX License Information
 
+Copyright (c) 2024 BlueQuartz Software, LLC
+
 SIMPLNX project is licensed under a dual license appoach. If you need to use SIMPLNX
 in a commercial, network or proprietary use case please obtain a commercial license
 from:
