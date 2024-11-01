@@ -200,9 +200,10 @@ void ComputeShapes::findMoments()
       for(size_t k = 0; k < xPoints; k++)
       {
         int32_t gnum = featureIds[zStride + yStride + k];
-        x = float(k * modXRes) + (origin[0] * static_cast<float>(m_ScaleFactor));
-        y = float(j * modYRes) + (origin[1] * static_cast<float>(m_ScaleFactor));
-        z = float(i * modZRes) + (origin[2] * static_cast<float>(m_ScaleFactor));
+        FloatVec3 voxelCenter = imageGeom.getCoordsf(k, j, i);
+        x = voxelCenter[0] * static_cast<float>(m_ScaleFactor);
+        y = voxelCenter[1] * static_cast<float>(m_ScaleFactor);
+        z = voxelCenter[2] * static_cast<float>(m_ScaleFactor);
         x1 = x + (modXRes / 4.0f);
         x2 = x - (modXRes / 4.0f);
         y1 = y + (modYRes / 4.0f);
