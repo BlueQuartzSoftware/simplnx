@@ -62,6 +62,7 @@ set(FilterList
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
+  ReadChannel5DataFilter
   ReadCtfDataFilter
   ReadEnsembleInfoFilter
   ReadGrainMapper3DFilter
@@ -194,6 +195,7 @@ set(filter_algorithms
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
+  ReadChannel5Data
   ReadCtfData
   ReadEnsembleInfo
   ReadGrainMapper3D

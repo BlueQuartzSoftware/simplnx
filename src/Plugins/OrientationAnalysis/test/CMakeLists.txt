@@ -41,6 +41,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
+  ReadChannel5DataTest.cpp
   ReadCtfDataTest.cpp
   ReadEnsembleInfoTest.cpp
   ReadGrainMapper3DTest.cpp
@@ -142,6 +143,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME GrainMapper3D_Test_Files.tar.gz SHA512 cbd9cde2528d62de6cffecd125795b571f8b1a41c8eebbbbac5908f5382ac3c3c3ea56efc34b6e6ca713055f4fd13485aa6dd5acb9a69e9d4b3b16941ed1f96f)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 7_ReadChannel5_Test.tar.gz SHA512 c43533e8fc4c8c2f5a649a15fda856a023db1cbe972b82c34042ba050a25e7cacffd7cca979504f72a2384c7d7fd66308132f94366e367129d675f35abc82cba)
 
 endif()
 
