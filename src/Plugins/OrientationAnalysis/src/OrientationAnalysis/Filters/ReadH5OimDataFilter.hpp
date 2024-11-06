@@ -15,7 +15,7 @@ namespace nx::core
 class ORIENTATIONANALYSIS_EXPORT ReadH5OimDataFilter : public IFilter
 {
 public:
-  ReadH5OimDataFilter();
+  ReadH5OimDataFilter() = default;
   ~ReadH5OimDataFilter() noexcept override = default;
 
   ReadH5OimDataFilter(const ReadH5OimDataFilter&) = delete;
