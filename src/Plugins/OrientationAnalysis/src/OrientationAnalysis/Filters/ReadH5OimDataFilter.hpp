@@ -15,7 +15,7 @@ namespace nx::core
 class ORIENTATIONANALYSIS_EXPORT ReadH5OimDataFilter : public IFilter
 {
 public:
-  ReadH5OimDataFilter() = default;
+  ReadH5OimDataFilter();
   ~ReadH5OimDataFilter() noexcept override = default;
 
   ReadH5OimDataFilter(const ReadH5OimDataFilter&) = delete;
@@ -25,6 +25,7 @@ public:
   ReadH5OimDataFilter& operator=(ReadH5OimDataFilter&&) noexcept = delete;
 
   // Parameter Keys
+  // V1 Keys
   static inline constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
@@ -32,6 +33,9 @@ public:
   static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+
+  // V2 Keys
+  static inline constexpr StringLiteral k_CombineScans_Key = "combine_scans";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

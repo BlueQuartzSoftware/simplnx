@@ -19,6 +19,7 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
   OEMEbsdScanSelectionParameter::ValueType SelectedScanNames;
+  bool CombineScans;
   bool ReadPatternData;
   DataPath ImageGeometryPath;
   DataPath CellAttributeMatrixPath;
