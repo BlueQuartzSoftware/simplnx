@@ -22,8 +22,8 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
   bool CombineScans;
   bool ReadPatternData;
   DataPath ImageGeometryPath;
-  DataPath CellAttributeMatrixPath;
-  DataPath CellEnsembleAttributeMatrixPath;
+  std::string CellAttributeMatrixName;
+  std::string CellEnsembleAttributeMatrixName;
   bool EdaxHexagonalAlignment;
   bool ConvertPhaseToInt32;
 };
@@ -31,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 /**
  * @class ReadH5Data
  */
-
 template <class T>
 class ORIENTATIONANALYSIS_EXPORT IEbsdOemReader
 {
@@ -55,8 +54,11 @@ public:
 
   Result<> execute()
   {
-    auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-    imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+    if(m_InputValues->CombineScans)
+    {
+      auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+      imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+    }
 
     int index = 0;
     for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
@@ -69,7 +71,16 @@ public:
         return readResults;
       }
 
-      Result<> copyDataResults = copyRawEbsdData(index);
+      Result<> copyDataResults = {};
+      if(m_InputValues->CombineScans)
+      {
+        copyDataResults = copyRawEbsdData(index);
+      }
+      else
+      {
+        copyDataResults = copyRawEbsdData(currentScanName);
+      }
+
       if(copyDataResults.invalid())
       {
         return copyDataResults;
@@ -136,6 +147,7 @@ public:
   }
 
   virtual Result<> copyRawEbsdData(int index) = 0;
+  virtual Result<> copyRawEbsdData(const std::string& scanName) = 0;
 
 protected:
   std::shared_ptr<T> m_Reader;

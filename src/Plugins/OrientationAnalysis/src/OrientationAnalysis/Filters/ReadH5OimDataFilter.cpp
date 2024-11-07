@@ -258,11 +258,12 @@ Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   ReadH5DataInputValues inputValues;
 
+  inputValues.CombineScans = filterArgs.value<bool>(k_CombineScans_Key);
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
 
   return ReadH5OimData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
