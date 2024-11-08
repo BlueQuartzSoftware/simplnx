@@ -150,36 +150,41 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
-
-  const auto& value = GetAnyRef<ValueType>(valueRef);
-
-  if(value.inputPath.empty())
+  try
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Input Path cannot be empty.", prefix));
-  }
+    const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
-  if(value.startIndex > value.endIndex)
-  {
-    return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex must be less than or equal to endIndex.", prefix));
-  }
-  // Generate the file list
-  auto fileList = value.generate();
-  // Validate that they all exist
-  std::vector<Error> errors;
-  for(const auto& currentFilePath : fileList)
-  {
-    if(!fs::exists(currentFilePath))
+    const auto& value = GetAnyRef<ValueType>(valueRef);
+
+    if(value.inputPath.empty())
     {
-      errors.push_back({-4003, fmt::format("{}FILE DOES NOT EXIST: '{}'", prefix, currentFilePath)});
+      return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Input Path cannot be empty.", prefix));
     }
-  }
 
-  if(!errors.empty())
+    if(value.startIndex > value.endIndex)
+    {
+      return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex must be less than or equal to endIndex.", prefix));
+    }
+    // Generate the file list
+    auto fileList = value.generate();
+    // Validate that they all exist
+    std::vector<Error> errors;
+    for(const auto& currentFilePath : fileList)
+    {
+      if(!fs::exists(currentFilePath))
+      {
+        errors.push_back({-4003, fmt::format("{}FILE DOES NOT EXIST: '{}'", prefix, currentFilePath)});
+      }
+    }
+
+    if(!errors.empty())
+    {
+      return {nonstd::make_unexpected(std::move(errors))};
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-    return {nonstd::make_unexpected(std::move(errors))};
+    return MakeErrorResult(-4004, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
-
   return {};
 }
 

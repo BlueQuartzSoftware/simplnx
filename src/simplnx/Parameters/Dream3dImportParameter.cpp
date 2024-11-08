@@ -156,21 +156,27 @@ Result<> Dream3dImportParameter::validate(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
 {
-  std::filesystem::path path = importData.FilePath;
-  if(!fs::exists(path))
+  try
   {
-    return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
-  }
+    std::filesystem::path path = importData.FilePath;
+    if(!fs::exists(path))
+    {
+      return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
+    }
 
-  if(!fs::is_regular_file(path))
-  {
-    return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
-  }
+    if(!fs::is_regular_file(path))
+    {
+      return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
+    }
 
-  nx::core::HDF5::FileReader fileReader(path);
-  if(!fileReader.isValid())
+    nx::core::HDF5::FileReader fileReader(path);
+    if(!fileReader.isValid())
+    {
+      return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));
+    return MakeErrorResult(-5, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
   return {};
 }

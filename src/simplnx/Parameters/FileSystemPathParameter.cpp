@@ -25,14 +25,20 @@ namespace
 //-----------------------------------------------------------------------------
 Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 {
-  if(!fs::exists(path))
+  try
   {
-    return MakeErrorResult(-2, fmt::format("File System Path '{}' does not exist", path.string()));
-  }
+    if(!fs::exists(path))
+    {
+      return MakeErrorResult(-2, fmt::format("File System Path '{}' does not exist", path.string()));
+    }
 
-  if(!fs::is_regular_file(path))
+    if(!fs::is_regular_file(path))
+    {
+      return MakeErrorResult(-3, fmt::format("File System Path '{}' is not a file", path.string()));
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-3, fmt::format("File System Path '{}' is not a file", path.string()));
+    return MakeErrorResult(-9, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
   return {};
 }
@@ -40,52 +46,72 @@ Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 {
-  if(!fs::exists(path))
+
+  try
   {
-    return MakeErrorResult(-4, fmt::format("File System Path '{}' does not exist", path.string()));
-  }
-  if(!fs::is_directory(path))
+    if(!fs::exists(path))
+    {
+      return MakeErrorResult(-4, fmt::format("File System Path '{}' does not exist", path.string()));
+    }
+    if(!fs::is_directory(path))
+    {
+      return MakeErrorResult(-5, fmt::format("File System Path '{}' is not a file", path.string()));
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-5, fmt::format("File System Path '{}' is not a file", path.string()));
+    return MakeErrorResult(-10, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
+
   return {};
 }
 
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
-  if(fs::exists(path) && fs::is_directory(path))
+  try
   {
-    return MakeErrorResult(-8, fmt::format("File System Path '{}' exists AND is a directory. The Parameter is set to save a file.", path.string()));
+    if(fs::exists(path) && fs::is_directory(path))
+    {
+      return MakeErrorResult(-8, fmt::format("File System Path '{}' exists AND is a directory. The Parameter is set to save a file.", path.string()));
+    }
+
+    auto result = FileUtilities::ValidateDirectoryWritePermission(path, true);
+    if(result.invalid())
+    {
+      return result;
+    }
+    if(!fs::exists(path))
+    {
+      return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
+    }
+  } catch(const fs::filesystem_error& exception)
+  {
+    return MakeErrorResult(-11, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
 
-  auto result = FileUtilities::ValidateDirectoryWritePermission(path, true);
-  if(result.invalid())
-  {
-    return result;
-  }
-  if(!fs::exists(path))
-  {
-    return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
-  }
   return {};
 }
 
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
-  auto result = FileUtilities::ValidateDirectoryWritePermission(path, false);
-  if(result.invalid())
+  try
   {
-    return result;
-  }
-  if(!fs::exists(path))
+    auto result = FileUtilities::ValidateDirectoryWritePermission(path, false);
+    if(result.invalid())
+    {
+      return result;
+    }
+    if(!fs::exists(path))
+    {
+      return MakeWarningVoidResult(-7, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-    return MakeWarningVoidResult(-7, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
+    return MakeErrorResult(-12, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
   return {};
 }
-
 } // namespace
 
 namespace nx::core
@@ -204,36 +230,42 @@ Result<> FileSystemPathParameter::validate(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
-  const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
-
-  if(path.empty())
+  try
   {
-    return nx::core::MakeErrorResult(-3001, fmt::format("{} File System Path must not be empty", prefix));
-  }
+    const std::string prefix = fmt::format("Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
 
-  if(!m_acceptAllExtensions && (m_PathType == nx::core::FileSystemPathParameter::PathType::InputFile || m_PathType == nx::core::FileSystemPathParameter::PathType::OutputFile))
-  {
-    if(!path.has_extension())
+    if(path.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string())}})};
+      return nx::core::MakeErrorResult(-3001, fmt::format("{} File System Path must not be empty", prefix));
     }
-    std::string lowerExtension = nx::core::StringUtilities::toLower(path.extension().string());
-    if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
-    {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string())}})};
-    }
-  }
 
-  switch(m_PathType)
+    if(!m_acceptAllExtensions && (m_PathType == nx::core::FileSystemPathParameter::PathType::InputFile || m_PathType == nx::core::FileSystemPathParameter::PathType::OutputFile))
+    {
+      if(!path.has_extension())
+      {
+        return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string())}})};
+      }
+      std::string lowerExtension = nx::core::StringUtilities::toLower(path.extension().string());
+      if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
+      {
+        return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string())}})};
+      }
+    }
+
+    switch(m_PathType)
+    {
+    case nx::core::FileSystemPathParameter::PathType::InputFile:
+      return ValidateInputFile(path);
+    case nx::core::FileSystemPathParameter::PathType::InputDir:
+      return ValidateInputDir(path);
+    case nx::core::FileSystemPathParameter::PathType::OutputFile:
+      return ValidateOutputFile(path);
+    case nx::core::FileSystemPathParameter::PathType::OutputDir:
+      return ValidateOutputDir(path);
+    }
+  } catch(const fs::filesystem_error& exception)
   {
-  case nx::core::FileSystemPathParameter::PathType::InputFile:
-    return ValidateInputFile(path);
-  case nx::core::FileSystemPathParameter::PathType::InputDir:
-    return ValidateInputDir(path);
-  case nx::core::FileSystemPathParameter::PathType::OutputFile:
-    return ValidateOutputFile(path);
-  case nx::core::FileSystemPathParameter::PathType::OutputDir:
-    return ValidateOutputDir(path);
+    return MakeErrorResult(-9, fmt::format("Filesystem excpetion: {}", exception.what()));
   }
 
   return {};
