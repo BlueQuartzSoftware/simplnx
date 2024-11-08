@@ -153,14 +153,14 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
   H5OIMReader::Pointer reader = H5OIMReader::New();
   reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader->setReadPatternData(pReadPatternDataValue);
-  if(const int err = reader->readHeaderOnly(); err < 0)
-  {
-    return MakePreflightErrorResult(-9582, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
-  }
 
   for(const auto& name : pSelectedScanNamesValue.scanNames)
   {
     reader->setHDF5Path(name);
+    if(const int err = reader->readHeaderOnly(); err < 0)
+    {
+      return MakePreflightErrorResult(-9582, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
+    }
 
     CreateImageGeometryAction::SpacingType spacing = {reader->getXStep(), reader->getYStep(), pZSpacingValue};
     CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()),
@@ -260,8 +260,8 @@ Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   ReadH5DataInputValues inputValues;
 
-  inputValues.CombineScans = filterArgs.value<bool>(k_CombineScans_Key);
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  inputValues.CombineScans = filterArgs.value<bool>(k_CombineScans_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);

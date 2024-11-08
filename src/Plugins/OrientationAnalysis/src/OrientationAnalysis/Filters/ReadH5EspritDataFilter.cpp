@@ -70,6 +70,9 @@ Parameters ReadH5EspritDataFilter::parameters() const
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_CombineScans_Key, "Combine Scans", "If true combines each of the multiple scans into a single image geometry along the z axis, else each will result in an individual geometry", true));
+  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
@@ -83,13 +86,22 @@ Parameters ReadH5EspritDataFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
                                                           "Cell Ensemble Data"));
 
+  // Link Parameters
+  params.linkParameters(k_CombineScans_Key, k_Origin_Key, true);
+  params.linkParameters(k_CombineScans_Key, k_CreatedImageGeometryPath_Key, true);
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadH5EspritDataFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_CombineScans_Key = "combine_scans";
+  // Solution - default parameter value 'true' preserves backwards functionality;
 }
 
 //------------------------------------------------------------------------------
@@ -103,6 +115,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  auto pCombineScansValue = filterArgs.value<bool>(k_CombineScans_Key); // V2 Param
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pDegreesToRadiansValue = filterArgs.value<bool>(k_DegreesToRadians_Key);
@@ -111,10 +124,9 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
-  DataPath cellEnsembleAMPath = pImageGeometryNameValue.createChildPath(pCellEnsembleAttributeMatrixNameValue);
-  DataPath cellAMPath = pImageGeometryNameValue.createChildPath(pCellAttributeMatrixNameValue);
+  DataPath cellEnsembleAMPath = {};
+  DataPath cellAMPath = {};
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -131,81 +143,107 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   H5EspritReader::Pointer reader = H5EspritReader::New();
   reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader->setReadPatternData(pReadPatternDataValue);
-  reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
-  if(const int err = reader->readHeaderOnly(); err < 0)
-  {
-    return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
-  }
 
-  // create the Image Geometry and it's attribute matrices
-  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
-  const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
+  for(const auto& name : pSelectedScanNamesValue.scanNames)
   {
-    CreateImageGeometryAction::SpacingType spacing = {static_cast<float32>(reader->getXStep()), static_cast<float32>(reader->getYStep()), pZSpacingValue};
-    for(float& value : spacing)
+    reader->setHDF5Path(name);
+    if(const int err = reader->readHeaderOnly(); err < 0)
     {
-      value = (value == 0.0f ? 1.0f : value);
-    }
-    auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
-    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
-  }
-  const auto phases = reader->getPhaseVector();
-  std::vector<usize> ensembleTupleDims{phases.size() + 1};
-  {
-    auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);
-    resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
-  }
-
-  // create the cell ensemble arrays : these arrays are purposely created using the AngFile constant names to match the corresponding Oim import filter!
-  {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-  }
-  {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-  }
-  {
-    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::MaterialName));
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-  }
-
-  // create the cell data arrays
-  H5EspritFields espritFeatures;
-  const auto names = espritFeatures.getFilterFeatures<std::vector<std::string>>();
-  for(const auto& name : names)
-  {
-    if(name == EbsdLib::H5Esprit::phi1 || name == EbsdLib::H5Esprit::PHI || name == EbsdLib::H5Esprit::phi2)
-    {
-      continue;
+      return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
     }
 
-    if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Int32)
+    CreateImageGeometryAction::SpacingType spacing = {static_cast<CreateImageGeometryAction::SpacingType::value_type>(reader->getXStep()),
+                                                      static_cast<CreateImageGeometryAction::SpacingType::value_type>(reader->getYStep()), pZSpacingValue};
+    std::transform(spacing.cbegin(), spacing.cend(), spacing.begin(), [](CreateImageGeometryAction::SpacingType::value_type value) { return (value == 0.0f ? 1.0f : value); });
+
+    CreateImageGeometryAction::DimensionType dims = {static_cast<CreateImageGeometryAction::DimensionType::value_type>(reader->getXDimension()),
+                                                     static_cast<CreateImageGeometryAction::DimensionType::value_type>(reader->getYDimension()),
+                                                     pCombineScansValue ? pSelectedScanNamesValue.scanNames.size() : static_cast<CreateImageGeometryAction::DimensionType::value_type>(1)};
+    const std::vector<CreateImageGeometryAction::DimensionType::value_type> tupleDims = {dims[2], dims[1], dims[0]};
+
+    if(pCombineScansValue)
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
+      cellEnsembleAMPath = pImageGeometryNameValue.createChildPath(pCellEnsembleAttributeMatrixNameValue);
+      cellAMPath = pImageGeometryNameValue.createChildPath(pCellAttributeMatrixNameValue);
+
+      auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
+      resultOutputActions.value().appendAction(std::move(createDataGroupAction));
+    }
+    else
+    {
+      DataPath imagePath = DataPath({name});
+      cellEnsembleAMPath = imagePath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
+      cellAMPath = imagePath.createChildPath(pCellAttributeMatrixNameValue);
+      CreateImageGeometryAction::OriginType origin = {reader->getXStar(), reader->getYStar(), reader->getZStar()};
+
+      auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(imagePath, dims, origin, spacing, pCellAttributeMatrixNameValue);
+      resultOutputActions.value().appendAction(std::move(createDataGroupAction));
+    }
+
+    const auto phases = reader->getPhaseVector();
+    std::vector<usize> ensembleTupleDims{phases.size() + 1};
+    {
+      auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);
+      resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
+    }
+
+    // create the cell ensemble arrays : these arrays are purposely created using the AngFile constant names to match the corresponding Oim import filter!
+    {
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-  }
-  {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::Esprit::EulerAngles));
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-  }
-  if(pReadPatternDataValue)
-  {
-    std::array<int32, 2> patternDims = {{0, 0}};
-    reader->getPatternDims(patternDims);
-    if(patternDims[0] == 0 || patternDims[1] == 0)
     {
-      return MakePreflightErrorResult(-9683, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::MaterialName));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
-                                                                 cellAMPath.createChildPath(EbsdLib::H5Esprit::RawPatterns));
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
+
+    // create the cell data arrays
+    H5EspritFields espritFeatures;
+    const auto names = espritFeatures.getFilterFeatures<std::vector<std::string>>();
+    for(const auto& featureName : names)
+    {
+      if(featureName == EbsdLib::H5Esprit::phi1 || featureName == EbsdLib::H5Esprit::PHI || featureName == EbsdLib::H5Esprit::phi2)
+      {
+        continue;
+      }
+
+      if(reader->getPointerType(featureName) == EbsdLib::NumericTypes::Type::Int32)
+      {
+        auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(featureName));
+        resultOutputActions.value().appendAction(std::move(createArrayAction));
+      }
+      else if(reader->getPointerType(featureName) == EbsdLib::NumericTypes::Type::Float)
+      {
+        auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(featureName));
+        resultOutputActions.value().appendAction(std::move(createArrayAction));
+      }
+    }
+
+    {
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::Esprit::EulerAngles));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
+    if(pReadPatternDataValue)
+    {
+      std::array<int32, 2> patternDims = {{0, 0}};
+      reader->getPatternDims(patternDims);
+      if(patternDims[0] == 0 || patternDims[1] == 0)
+      {
+        return MakePreflightErrorResult(-9683, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
+      }
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
+                                                                   cellAMPath.createChildPath(EbsdLib::H5Esprit::RawPatterns));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
+
+    if(pCombineScansValue)
+    {
+      break;
+    }
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -216,13 +254,15 @@ Result<> ReadH5EspritDataFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadH5DataInputValues inputValues;
-  ReadH5EspritDataInputValues espritInputValues;
 
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  inputValues.CombineScans = filterArgs.value<bool>(k_CombineScans_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+
+  ReadH5EspritDataInputValues espritInputValues;
   espritInputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);
 
   return ReadH5EspritData(dataStructure, messageHandler, shouldCancel, &inputValues, &espritInputValues)();

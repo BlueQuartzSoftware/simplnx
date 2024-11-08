@@ -142,15 +142,14 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   H5OINAReader reader;
   reader.setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader.setReadPatternData(pReadPatternDataValue);
-  reader.setHDF5Path(pSelectedScanNamesValue.scanNames.front());
-  if(const int err = reader.readHeaderOnly(); err < 0)
-  {
-    return MakePreflightErrorResult(-9582, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader.getErrorMessage()));
-  }
 
   for(const auto& name : pSelectedScanNamesValue.scanNames)
   {
     reader.setHDF5Path(name);
+    if(const int err = reader.readHeaderOnly(); err < 0)
+    {
+      return MakePreflightErrorResult(-9582, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader.getErrorMessage()));
+    }
 
     CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), pZSpacingValue};
     CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()),
@@ -227,6 +226,11 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
                                                                    cellAMPath.createChildPath(EbsdLib::H5OINA::UnprocessedPatterns));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
+
+    if(pCombineScansValue)
+    {
+      break;
     }
   }
 
