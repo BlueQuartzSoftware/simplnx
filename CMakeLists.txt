@@ -336,6 +336,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Filesystem.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Numbers.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Range.hpp
