@@ -107,7 +107,12 @@ Parameters ReadH5OimDataFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadH5OimDataFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_CombineScans_Key = "combine_scans";
+  // Solution - default parameter value 'true' preserves backwards functionality;
 }
 
 //------------------------------------------------------------------------------
@@ -121,7 +126,7 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
                                                             const ExecutionContext& executionContext) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
-  auto pCombineScansValue = filterArgs.value<bool>(k_CombineScans_Key);
+  auto pCombineScansValue = filterArgs.value<bool>(k_CombineScans_Key); // V2 Param
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
@@ -135,16 +140,13 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(pCombineScansValue)
+  if(pZSpacingValue <= 0)
   {
-    if(pZSpacingValue <= 0)
-    {
-      return MakePreflightErrorResult(-9580, "The Z Spacing field contains a value that is non-positive.  The Z Spacing field must be set to a positive value.");
-    }
-    if(pSelectedScanNamesValue.scanNames.empty())
-    {
-      return MakePreflightErrorResult(-9581, "At least one scan must be chosen.  Please select a scan from the list.");
-    }
+    return MakePreflightErrorResult(-9580, "The Z Spacing field contains a value that is non-positive.  The Z Spacing field must be set to a positive value.");
+  }
+  if(pSelectedScanNamesValue.scanNames.empty())
+  {
+    return MakePreflightErrorResult(-9581, "At least one scan must be chosen.  Please select a scan from the list.");
   }
 
   // read in the necessary info from the input h5 file

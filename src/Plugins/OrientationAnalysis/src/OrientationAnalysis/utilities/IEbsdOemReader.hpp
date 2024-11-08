@@ -78,6 +78,8 @@ public:
       }
       else
       {
+        auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(DataPath({currentScanName}));
+        imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
         copyDataResults = copyRawEbsdData(currentScanName);
       }
 
@@ -102,6 +104,12 @@ public:
     // If the user has already set a Scan Name to read then we are good to go.
     m_Reader->setHDF5Path(scanName);
 
+    DataPath imagePath({scanName});
+    if(m_InputValues->CombineScans)
+    {
+      imagePath = m_InputValues->ImageGeometryPath;
+    }
+
     if(const int32 err = m_Reader->readFile(); err < 0)
     {
       return MakeErrorResult(-8970, fmt::format("Attempting to read scan '{}' from file '{}' produced an error from the '{}' class.\n  Error Code: {}\n  Message: {}", scanName,
@@ -115,9 +123,10 @@ public:
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
-    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::MaterialName));
-    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::CrystalStructures));
+    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::MaterialName));
+    auto& latticeConstantsArray =
+        m_DataStructure.getDataRefAs<Float32Array>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::LatticeConstants));
     Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
