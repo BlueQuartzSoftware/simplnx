@@ -98,7 +98,7 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.4.0
+  VERSION 1.5.0
   DESCRIPTION "SIMPLNX is a collection of C++ codes to process data, particularly Materials Science data, including EBSD data."
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
