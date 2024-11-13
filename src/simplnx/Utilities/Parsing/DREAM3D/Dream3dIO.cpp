@@ -165,6 +165,10 @@ void WriteGeomXdmf(std::ostream& out, const RectGridGeom& rectGridGeom, std::str
   const Float32Array* xBounds = rectGridGeom.getXBounds();
   const Float32Array* yBounds = rectGridGeom.getYBounds();
   const Float32Array* zBounds = rectGridGeom.getZBounds();
+  if(xBounds == nullptr || yBounds == nullptr || zBounds == nullptr)
+  {
+    return;
+  }
   DataPath xBoundsPath = xBounds->getDataPaths().at(0);
   DataPath yBoundsPath = yBounds->getDataPaths().at(0);
   DataPath zBoundsPath = zBounds->getDataPaths().at(0);
@@ -202,7 +206,10 @@ void WriteGeomXdmf(std::ostream& out, const VertexGeom& vertexGeom, std::string_
 {
   std::string name = vertexGeom.getName();
   usize numVerts = vertexGeom.getNumberOfVertices();
-
+  if(numVerts == 0)
+  {
+    return;
+  }
   DataPath verticesPath = vertexGeom.getVerticesRef().getDataPaths().at(0);
 
   DataPath geomPath = vertexGeom.getDataPaths().at(0);
@@ -241,6 +248,10 @@ void WriteGeomXdmf(std::ostream& out, const EdgeGeom& edgeGeom, std::string_view
   std::string name = edgeGeom.getName();
   usize numEdges = edgeGeom.getNumberOfCells();
   usize numVerts = edgeGeom.getNumberOfVertices();
+  if(numEdges == 0 || numVerts == 0)
+  {
+    return;
+  }
 
   DataPath edgesPath = edgeGeom.getEdgesRef().getDataPaths().at(0);
   DataPath verticesPath = edgeGeom.getVerticesRef().getDataPaths().at(0);
@@ -276,6 +287,10 @@ void WriteGeomXdmf(std::ostream& out, const TriangleGeom& triangleGeom, std::str
   std::string name = triangleGeom.getName();
   usize numFaces = triangleGeom.getNumberOfFaces();
   usize numVerts = triangleGeom.getNumberOfVertices();
+  if(numFaces == 0 || numVerts == 0)
+  {
+    return;
+  }
 
   DataPath facesPath = triangleGeom.getFacesRef().getDataPaths().at(0);
   DataPath verticesPath = triangleGeom.getVerticesRef().getDataPaths().at(0);
@@ -311,7 +326,10 @@ void WriteGeomXdmf(std::ostream& out, const QuadGeom& quadGeom, std::string_view
   std::string name = quadGeom.getName();
   usize numFaces = quadGeom.getNumberOfFaces();
   usize numVerts = quadGeom.getNumberOfVertices();
-
+  if(numFaces == 0 || numVerts == 0)
+  {
+    return;
+  }
   DataPath facesPath = quadGeom.getFacesRef().getDataPaths().at(0);
   DataPath verticesPath = quadGeom.getVerticesRef().getDataPaths().at(0);
 
@@ -346,7 +364,10 @@ void WriteGeomXdmf(std::ostream& out, const TetrahedralGeom& tetrahedralGeom, st
   std::string name = tetrahedralGeom.getName();
   usize numPolyhedra = tetrahedralGeom.getNumberOfPolyhedra();
   usize numVerts = tetrahedralGeom.getNumberOfVertices();
-
+  if(numPolyhedra == 0 || numVerts == 0)
+  {
+    return;
+  }
   DataPath polyhedraPath = tetrahedralGeom.getPolyhedraRef().getDataPaths().at(0);
   DataPath verticesPath = tetrahedralGeom.getVerticesRef().getDataPaths().at(0);
 
@@ -381,7 +402,10 @@ void WriteGeomXdmf(std::ostream& out, const HexahedralGeom& hexhedralGeom, std::
   std::string name = hexhedralGeom.getName();
   usize numPolyhedra = hexhedralGeom.getNumberOfPolyhedra();
   usize numVerts = hexhedralGeom.getNumberOfVertices();
-
+  if(numPolyhedra == 0 || numVerts == 0)
+  {
+    return;
+  }
   DataPath polyhedraPath = hexhedralGeom.getPolyhedraRef().getDataPaths().at(0);
   DataPath verticesPath = hexhedralGeom.getVerticesRef().getDataPaths().at(0);
 
