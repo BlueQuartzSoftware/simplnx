@@ -174,7 +174,9 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
       DataPath imagePath = DataPath({name});
       cellEnsembleAMPath = imagePath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
       cellAMPath = imagePath.createChildPath(pCellAttributeMatrixNameValue);
-      CreateImageGeometryAction::OriginType origin = {reader->getXStar(), reader->getYStar(), reader->getZStar()};
+
+      // Temporary origin till we read out of file in execute
+      CreateImageGeometryAction::OriginType origin = {0.0f,0.0f,0.0f};
 
       auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(imagePath, dims, origin, spacing, pCellAttributeMatrixNameValue);
       resultOutputActions.value().appendAction(std::move(createDataGroupAction));

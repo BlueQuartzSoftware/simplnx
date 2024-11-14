@@ -34,6 +34,7 @@ public:
   Result<> operator()();
 
   Result<> copyRawEbsdData(int index) override;
+  Result<> copyRawEbsdData(const std::string& scanName) override;
 
 private:
   const ReadH5EspritDataInputValues* m_EspritInputValues = nullptr;

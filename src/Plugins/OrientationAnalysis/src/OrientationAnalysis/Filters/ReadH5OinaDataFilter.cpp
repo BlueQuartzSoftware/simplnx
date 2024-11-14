@@ -169,7 +169,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
       DataPath imagePath = DataPath({name});
       cellEnsembleAMPath = imagePath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
       cellAMPath = imagePath.createChildPath(pCellAttributeMatrixNameValue);
-      CreateImageGeometryAction::OriginType origin = {reader.getXStar(), reader.getYStar(), reader.getZStar()};
+      CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f}; // Will be set later via a min points check
 
       auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(imagePath, dims, origin, spacing, pCellAttributeMatrixNameValue);
       resultOutputActions.value().appendAction(std::move(createDataGroupAction));
