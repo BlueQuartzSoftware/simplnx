@@ -38,7 +38,7 @@ Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-9, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-9, fmt::format("Filesystem exception: {}", exception.what()));
   }
   return {};
 }
@@ -59,7 +59,7 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-10, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-10, fmt::format("Filesystem exception: {}", exception.what()));
   }
 
   return {};
@@ -86,7 +86,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-11, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-11, fmt::format("Filesystem exception: {}", exception.what()));
   }
 
   return {};
@@ -108,7 +108,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-12, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-12, fmt::format("Filesystem exception: {}", exception.what()));
   }
   return {};
 }
@@ -265,7 +265,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-9, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-9, fmt::format("Filesystem exception: {}", exception.what()));
   }
 
   return {};
