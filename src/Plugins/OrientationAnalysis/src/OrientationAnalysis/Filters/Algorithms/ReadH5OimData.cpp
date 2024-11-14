@@ -21,6 +21,18 @@ Result<> ReadH5OimData::operator()()
 }
 
 // -----------------------------------------------------------------------------
+Result<> ReadH5OimData::updateOrigin(const std::string& scanName)
+{
+  /*
+   * This function intentionally has no logic in order to avoid extra calculations;
+   * The origins were set in preflight, but this file type is an outlier in that it stores
+   * the origin in the header. Thus, this function overrides the general need to access
+   * the X and Y positions data as seen in the super/baseclass.
+   */
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 Result<> ReadH5OimData::copyRawEbsdData(int index)
 {
   const DataPath imagePath(m_InputValues->ImageGeometryPath);

@@ -81,6 +81,13 @@ public:
         auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(DataPath({currentScanName}));
         imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
         copyDataResults = copyRawEbsdData(currentScanName);
+
+        if(copyDataResults.invalid())
+        {
+          return copyDataResults;
+        }
+
+        copyDataResults = updateOrigin(currentScanName);
       }
 
       if(copyDataResults.invalid())
@@ -123,10 +130,11 @@ public:
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::CrystalStructures));
-    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::MaterialName));
+    const DataPath cellEnsembleAM = imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::CrystalStructures));
+    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::MaterialName));
     auto& latticeConstantsArray =
-        m_DataStructure.getDataRefAs<Float32Array>(imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName).createChildPath(EbsdLib::AngFile::LatticeConstants));
+        m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::LatticeConstants));
     Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
@@ -157,6 +165,23 @@ public:
 
   virtual Result<> copyRawEbsdData(int index) = 0;
   virtual Result<> copyRawEbsdData(const std::string& scanName) = 0;
+  virtual Result<> updateOrigin(const std::string& scanName)
+  {
+    const DataPath imagePath({scanName});
+
+    auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imagePath);
+    const usize totalCells = imageGeom.getNumberOfCells();
+
+    const auto* xPos = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::XPosition));
+    const auto* yPos = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::YPosition));
+
+    float32 minX = *std::min_element(xPos, xPos + totalCells);
+    float32 minY = *std::min_element(yPos, yPos + totalCells);
+
+    imageGeom.setOrigin(minX, minY, 0.0f);
+
+    return {};
+  }
 
 protected:
   std::shared_ptr<T> m_Reader;

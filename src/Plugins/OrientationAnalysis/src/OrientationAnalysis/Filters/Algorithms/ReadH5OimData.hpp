@@ -26,6 +26,7 @@ public:
 
   Result<> copyRawEbsdData(int index) override;
   Result<> copyRawEbsdData(const std::string& scanName) override;
+  Result<> updateOrigin(const std::string& scanName) override;
 };
 
 } // namespace nx::core
