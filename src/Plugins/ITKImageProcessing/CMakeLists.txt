@@ -167,9 +167,9 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     # ITKBinaryClosingByReconstructionImage
     # ITKBinomialBlurImage
     # ITKLaplacianSharpeningImage
-    # ITKMaximumProjectionImage
-    # ITKMedianProjectionImage
-    # ITKMinimumProjectionImage
+    ITKMaximumProjectionImageFilter
+    ITKMedianProjectionImageFilter
+    ITKMinimumProjectionImageFilter
     # ITKMultiScaleHessianBasedObjectnessImage
     # ITKSaltAndPepperNoiseImage
     # ITKShiftScaleImage
@@ -182,7 +182,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     # -----------------------------------------------------------------------------
     # ITKBoundedReciprocalImage
     # ITKNormalizeToConstantImage
-    # ITKMeanProjectionImage
+    ITKMeanProjectionImageFilter
     # ITKStandardDeviationProjectionImage
     # ITKSumProjectionImage
     # ITKMorphologicalWatershedFromMarkersImage

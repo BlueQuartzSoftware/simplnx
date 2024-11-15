@@ -8,8 +8,8 @@
 namespace nx::core
 {
 /**
- * @class ITKMeanProjectionImageFilter
- * @brief Mean projection.
+ * @class ITKMedianProjectionImageFilter
+ * @brief Median projection.
  *
  * This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71
  *
@@ -19,7 +19,7 @@ namespace nx::core
  * @see ProjectionImageFilter
  *
  *
- * @see MedianProjectionImageFilter
+ * @see MeanProjectionImageFilter
  *
  *
  * @see MinimumProjectionImageFilter
@@ -39,17 +39,17 @@ namespace nx::core
  * ITK Module: ITKImageStatistics
  * ITK Group: ImageStatistics
  */
-class ITKIMAGEPROCESSING_EXPORT ITKMeanProjectionImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMedianProjectionImageFilter : public IFilter
 {
 public:
-  ITKMeanProjectionImageFilter() = default;
-  ~ITKMeanProjectionImageFilter() noexcept override = default;
+  ITKMedianProjectionImageFilter() = default;
+  ~ITKMedianProjectionImageFilter() noexcept override = default;
 
-  ITKMeanProjectionImageFilter(const ITKMeanProjectionImageFilter&) = delete;
-  ITKMeanProjectionImageFilter(ITKMeanProjectionImageFilter&&) noexcept = delete;
+  ITKMedianProjectionImageFilter(const ITKMedianProjectionImageFilter&) = delete;
+  ITKMedianProjectionImageFilter(ITKMedianProjectionImageFilter&&) noexcept = delete;
 
-  ITKMeanProjectionImageFilter& operator=(const ITKMeanProjectionImageFilter&) = delete;
-  ITKMeanProjectionImageFilter& operator=(ITKMeanProjectionImageFilter&&) noexcept = delete;
+  ITKMedianProjectionImageFilter& operator=(const ITKMedianProjectionImageFilter&) = delete;
+  ITKMedianProjectionImageFilter& operator=(ITKMedianProjectionImageFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
@@ -134,4 +134,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMeanProjectionImageFilter, "62ffddba-cc57-45fc-a93a-27914eea11ad");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKMedianProjectionImageFilter, "00e48f6b-8a00-414f-b3d9-49d48a3f9a00");
