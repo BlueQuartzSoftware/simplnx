@@ -49,15 +49,13 @@ Result<> ReadH5OimData::copyRawEbsdData(int index)
   const auto* phi1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi1));
   const auto* phi = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi));
   const auto* phi2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi2));
-  auto& eulerAngles =
-      m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::AngFile::EulerAngles));
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::AngFile::EulerAngles));
 
   const auto* imageQual = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::ImageQuality));
   auto& imageQuality = m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::Ang::ImageQuality));
 
   const auto* confIndex = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::ConfidenceIndex));
-  auto& confidenceIndex =
-      m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::Ang::ConfidenceIndex));
+  auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::Ang::ConfidenceIndex));
 
   const auto* semSig = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::SEMSignal));
   auto& semSignal = m_DataStructure.getDataRefAs<Float32Array>(cellAMPath.createChildPath(EbsdLib::Ang::SEMSignal));
