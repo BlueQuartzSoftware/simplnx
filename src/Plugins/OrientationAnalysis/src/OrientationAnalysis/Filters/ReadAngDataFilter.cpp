@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -175,14 +176,14 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   }
 
   // Create the Ensemble AttributeMatrix
-  DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(ensembleAttributeMatrixPath);
-    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
-  }
-
   std::vector<std::shared_ptr<AngPhase>> angPhases = reader.getPhaseVector();
   tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
+  DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
+  {
+    auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(ensembleAttributeMatrixPath, tupleDims);
+    resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
+  }
+
   // Create the Crystal Structures Array
   {
     cDims[0] = 1;
