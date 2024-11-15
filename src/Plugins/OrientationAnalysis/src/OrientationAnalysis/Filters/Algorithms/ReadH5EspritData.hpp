@@ -33,6 +33,8 @@ public:
 
   Result<> operator()();
 
+  Result<> updateOrigin(const std::string& scanName) override;
+
   Result<> copyRawEbsdData(int index) override;
   Result<> copyRawEbsdData(const std::string& scanName) override;
 

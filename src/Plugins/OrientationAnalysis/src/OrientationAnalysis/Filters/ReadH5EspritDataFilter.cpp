@@ -71,7 +71,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
-      k_CombineScans_Key, "Combine Scans", "If true combines each of the multiple scans into a single image geometry along the z axis, else each will result in an individual geometry", true));
+      k_CombineScans_Key, "Stack Scans Along Z Axis", "If true combines each of the multiple scans into a single image geometry along the z axis, else each will result in an individual geometry", true));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));

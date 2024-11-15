@@ -24,6 +24,19 @@ Result<> ReadH5EspritData::operator()()
 }
 
 // -----------------------------------------------------------------------------
+Result<> ReadH5EspritData::updateOrigin(const std::string& scanName)
+{
+  /*
+   * Unfortunately, the file does not have the correct data to find an origin.
+   * This means that the origin will remain {0,0,0}.
+   *
+   * Down the line, if a solution crops up, look to ReadH5Oina.cpp for an example
+   * implementation.
+   */
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 Result<> ReadH5EspritData::copyRawEbsdData(int index)
 {
   const DataPath imagePath(m_InputValues->ImageGeometryPath);

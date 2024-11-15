@@ -61,6 +61,33 @@ Result<> ReadH5OinaData::operator()()
 }
 
 // -----------------------------------------------------------------------------
+Result<> ReadH5OinaData::updateOrigin(const std::string& scanName)
+{
+  const DataPath imagePath({scanName});
+
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imagePath);
+  const usize totalCells = imageGeom.getNumberOfCells();
+
+  const auto* xPos = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ctf::X));
+  if(xPos == nullptr)
+  {
+    return MakeErrorResult(-9970, fmt::format("{}({}): Function {}: Error. Cannot find {} in supplied scan file ({})", "IEbsdOemReader", __FILE__, __LINE__, EbsdLib::Ctf::X, m_Reader->getFileName()));
+  }
+  const auto* yPos = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ctf::Y));
+  if(yPos == nullptr)
+  {
+    return MakeErrorResult(-9971, fmt::format("{}({}): Function {}: Error. Cannot find {} in supplied scan file ({})", "IEbsdOemReader", __FILE__, __LINE__, EbsdLib::Ctf::Y, m_Reader->getFileName()));
+  }
+
+  float32 minX = *std::min_element(xPos, xPos + totalCells);
+  float32 minY = *std::min_element(yPos, yPos + totalCells);
+
+  imageGeom.setOrigin(minX, minY, 0.0f);
+
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 Result<> ReadH5OinaData::copyRawEbsdData(int index)
 {
   const DataPath imagePath(m_InputValues->ImageGeometryPath);

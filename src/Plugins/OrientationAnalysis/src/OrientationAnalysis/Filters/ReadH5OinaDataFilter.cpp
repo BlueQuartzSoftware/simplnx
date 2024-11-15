@@ -66,8 +66,9 @@ Parameters ReadH5OinaDataFilter::parameters() const
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5oina file. Oxford can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{}, OEMEbsdScanSelectionParameter::EbsdReaderType::H5Oina,
                                                                 OEMEbsdScanSelectionParameter::ExtensionsType{".h5oina"}));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(
-      k_CombineScans_Key, "Combine Scans", "If true combines each of the multiple scans into a single image geometry along the z axis, else each will result in an individual geometry", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_CombineScans_Key, "Stack Scans Along Z Axis",
+                                      "If true combines each of the multiple scans into a single image geometry along the z axis, else each will result in an individual geometry", true));
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
   params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to Int32", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
