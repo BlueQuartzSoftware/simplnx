@@ -178,7 +178,7 @@ In order to import a .dream3d file, we need to tell **simplnx** which data to im
     # import EVERY piece of data from the file.
     import_data.data_paths = None
     # Instantiate and execte the filter immediately.
-    result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_file_data=import_data)
+    result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
     # Check for any execution warnings or errors
     if len(result.errors) != 0:
         print('Errors: {}', result.errors)
