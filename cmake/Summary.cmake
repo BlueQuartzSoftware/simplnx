@@ -72,6 +72,7 @@ message(STATUS "* SIMPLNX_ENABLE_PACKAGING: ${SIMPLNX_ENABLE_PACKAGING}")
 message(STATUS "* SIMPLNX_BUILD_DOCS: ${SIMPLNX_BUILD_DOCS}")
 message(STATUS "* DREAM3D_DATA_DIR: ${DREAM3D_DATA_DIR}")
 
+
 message(STATUS "* -------------- Simplnx Python Configuration Options -------------------------------------")
 message(STATUS "* Pybind11 (${pybind11_VERSION}) ${pybind11_DIR}")
 message(STATUS "* Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
@@ -87,7 +88,10 @@ message(STATUS "* SIMPLNX_EMBED_PYTHON: ${SIMPLNX_EMBED_PYTHON}")
 #     message(STATUS "* SIMPLNX_PLUGIN_ENABLE_${plugin}: ${SIMPLNX_PLUGIN_ENABLE_${plugin}}")
 # endforeach()
 
+
 message(STATUS "* -------------- Plugins ------------------------------------------------------")
+message(STATUS "* SIMPLNX_ENABLE_OrientationAnalysis: ${SIMPLNX_ENABLE_OrientationAnalysis}")
+
 get_property(simplnxPluginTargets GLOBAL PROPERTY simplnxPluginTargets)
 foreach(d3dPlugin ${SIMPLNX_PLUGIN_LIST})
     get_property(PluginNumFilters GLOBAL PROPERTY ${d3dPlugin}_filter_count)

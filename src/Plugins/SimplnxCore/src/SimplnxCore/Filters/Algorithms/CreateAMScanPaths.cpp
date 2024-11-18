@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
-#include <EbsdLib/Core/Orientation.hpp>
-
 using namespace nx::core;
 
 namespace
