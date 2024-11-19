@@ -1,7 +1,6 @@
 #include "ITKMeanProjectionImageFilter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -126,8 +125,6 @@ Result<> ITKMeanProjectionImageFilter::executeImpl(DataStructure& dataStructure,
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
 
   const cxITKMeanProjectionImageFilter::ITKMeanProjectionImageFilterFunctor itkFunctor = {projectionDimension};
-
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   return ITK::Execute<cxITKMeanProjectionImageFilter::ArrayOptionsType, cxITKMeanProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                           shouldCancel);

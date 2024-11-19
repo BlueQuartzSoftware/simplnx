@@ -1,70 +1,43 @@
-# ITK::Maximum Projection Image Filter (KW)  #
-
-
-## Group (Subgroup) ##
-
-ITKImageProcessing (ITKImageProcessing)
-
-## Description ##
+# ITK Maximum Projection Image Filter (ITKMaximumProjectionImage)
 
 Maximum projection.
 
-This class was contributed to the insight journal by Gaetan Lehmann. The original paper can be found at https://hdl.handle.net/1926/164
+## Group (Subgroup)
 
-\author Gaetan Lehmann. Biologie du Developpement et de la reproduction, inra de jouy-en-josas, France.
+ITKImageStatistics (ImageStatistics)
 
-\see ProjectionImageFilter
+## Description
 
-\see MedianProjectionImageFilter
+This class was contributed to the Insight Journal by Gaetan Lehmann. The original paper can be found at https://www.insight-journal.org/browse/publication/71 
 
-\see MeanProjectionImageFilter
+## Author
 
-\see MinimumProjectionImageFilter
+- Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
 
-\see StandardDeviationProjectionImageFilter
+## See Also
 
-\see SumProjectionImageFilter
+- [ProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1ProjectionImageFilter.html)
 
-\see BinaryProjectionImageFilter
+- [MedianProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MedianProjectionImageFilter.html)
 
-## Parameters ##
+- [MinimumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MinimumProjectionImageFilter.html)
 
-| Name | Type | Description |
-|------|------|-------------|
-| ProjectionDimension | double| N/A |
+- [StandardDeviationProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1StandardDeviationProjectionImageFilter.html)
 
+- [SumProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1SumProjectionImageFilter.html)
 
-## Required Geometry ##
+- [BinaryProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1BinaryProjectionImageFilter.html)
 
-Image
+- [MeanProjectionImageFilter](https://itk.org/Doxygen/html/classitk_1_1MeanProjectionImageFilter.html)
 
-## Required Objects ##
+% Auto generated parameter table will be inserted here
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None | N/A | (1)  | Array containing input image
+## Example Pipelines
 
-## Created Objects ##
-
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|------|----------------------|-------------|
-| **Cell Attribute Array** | None |  | (1)  | Array containing filtered image
-
-## References ##
-
-[1] T.S. Yoo, M. J. Ackerman, W. E. Lorensen, W. Schroeder, V. Chalana, S. Aylward, D. Metaxas, R. Whitaker. Engineering and Algorithm Design for an Image Processing API: A Technical Report on ITK - The Insight Toolkit. In Proc. of Medicine Meets Virtual Reality, J. Westwood, ed., IOS Press Amsterdam pp 586-592 (2002). 
-[2] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Design and Functionality. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-28-3
-[3] H. Johnson, M. McCormick, L. Ibanez. The ITK Software Guide: Introduction and Development Guidelines. Fourth Edition. Published by Kitware Inc. 2015 ISBN: 9781-930934-27-6
-
-## Example Pipelines ##
-
-
-
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists ##
+## DREAM3D-NX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

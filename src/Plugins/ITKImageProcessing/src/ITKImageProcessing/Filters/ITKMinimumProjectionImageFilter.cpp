@@ -1,7 +1,6 @@
 #include "ITKMinimumProjectionImageFilter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -126,8 +125,6 @@ Result<> ITKMinimumProjectionImageFilter::executeImpl(DataStructure& dataStructu
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
 
   const cxITKMinimumProjectionImageFilter::ITKMinimumProjectionImageFilterFunctor itkFunctor = {projectionDimension};
-
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   return ITK::Execute<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                           shouldCancel);

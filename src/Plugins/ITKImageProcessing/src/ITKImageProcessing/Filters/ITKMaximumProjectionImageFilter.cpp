@@ -1,7 +1,6 @@
 #include "ITKMaximumProjectionImageFilter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -126,8 +125,6 @@ Result<> ITKMaximumProjectionImageFilter::executeImpl(DataStructure& dataStructu
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
 
   const cxITKMaximumProjectionImageFilter::ITKMaximumProjectionImageFilterFunctor itkFunctor = {projectionDimension};
-
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   return ITK::Execute<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                                           shouldCancel);

@@ -70,6 +70,10 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKLog10ImageTest.cpp
     ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
+    ITKMaximumProjectionImageTest.cpp
+    ITKMeanProjectionImageTest.cpp
+    ITKMedianProjectionImageTest.cpp
+    ITKMinimumProjectionImageTest.cpp
     ITKMinMaxCurvatureFlowImageTest.cpp
     ITKNormalizeImageTest.cpp
     ITKNotImageTest.cpp

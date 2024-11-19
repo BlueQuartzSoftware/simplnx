@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
-#include "ITKImageProcessing/Filters/ITKMeanProjectionImageFilter.hpp"
+#include "ITKImageProcessing/Filters/ITKMinimumProjectionImageFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
@@ -16,10 +16,10 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[ITKImageProcessing][ITKMeanProjectionImage][z_projection]")
+TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter(z_projection)", "[ITKImageProcessing][ITKMinimumProjectionImage][z_projection]")
 {
   DataStructure dataStructure;
-  const ITKMeanProjectionImageFilter filter;
+  const ITKMinimumProjectionImageFilter filter;
 
   const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
   const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
@@ -33,10 +33,10 @@ TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[IT
   } // End Image Comparison Scope
 
   Arguments args;
-  args.insertOrAssign(ITKMeanProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
-  args.insertOrAssign(ITKMeanProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKMeanProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
-  args.insertOrAssign(ITKMeanProjectionImageFilter::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
+  args.insertOrAssign(ITKMinimumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
+  args.insertOrAssign(ITKMinimumProjectionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
+  args.insertOrAssign(ITKMinimumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
+  args.insertOrAssign(ITKMinimumProjectionImageFilter::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -44,7 +44,7 @@ TEST_CASE("ITKImageProcessing::ITKMeanProjectionImageFilter(z_projection)", "[IT
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_MeanProjectionImageFilter_z_projection.nrrd";
+  const fs::path baselineFilePath = fs::path(nx::core::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_MinimumProjectionImageFilter_z_projection.nrrd";
   const DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
   const DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   const DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
