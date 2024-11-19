@@ -27,8 +27,6 @@
 #include <iostream>
 #include <string>
 
-namespace fs = std::filesystem;
-
 #if defined(_MSC_VER)
 #define FSEEK64 _fseeki64
 #else
@@ -629,7 +627,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
   }
 
   const usize numElements = outputDataArray.getSize();
-  // Now start reading the data in chunks if needed.
+  // Now start reading the data in chunkShape if needed.
   usize chunkSize = std::min(numElements, defaultBufferSize);
   std::vector<T> buffer(chunkSize);
 
@@ -686,7 +684,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape, static_cast<T>(0)));
   ArrayType* dataArrayPtr = ArrayType::Create(dataStructure, name, dataStore, parentId);
 
-  const usize fileSize = fs::file_size(filename);
+  const usize fileSize = std::filesystem::file_size(filename);
   const usize numBytesToRead = dataArrayPtr->getSize() * sizeof(T);
   if(numBytesToRead != fileSize)
   {

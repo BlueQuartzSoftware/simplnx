@@ -18,7 +18,8 @@ namespace Chunks
 constexpr int32 k_DimensionMismatchError = -2654;
 
 template <typename T>
-inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
+inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetIO& datasetWriter, const HDF5::ChunkedDataInfo& chunkInfo, const AbstractDataStore<T>& store,
+                                    const nx::core::HDF5::DatasetIO::DimsType& h5dims,
                                     const nx::core::HDF5::DatasetIO::DimsType& chunkDims, const IDataStore::ShapeType& index)
 {
   auto rank = chunkDims.size();
@@ -41,7 +42,7 @@ inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetIO& datasetWriter, co
     std::string ss = fmt::format("Dimension mismatch when writing DataStore chunk. Num Shape Dimensions: {} Num Chunk Dimensions: {}", h5dims.size(), chunkDims.size());
     return MakeErrorResult(k_DimensionMismatchError, ss);
   }
-  auto result = datasetWriter.writeChunk(h5dims, nonstd::span<const T>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
+  auto result = datasetWriter.writeChunk(chunkInfo, h5dims, nonstd::span<const T>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
   delete[] chunkPtr;
   if(result.invalid())
   {
@@ -53,7 +54,7 @@ inline Result<> WriteDataStoreChunk(nx::core::HDF5::DatasetIO& datasetWriter, co
 }
 
 template <>
-inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<bool>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
+inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetIO& datasetWriter, const HDF5::ChunkedDataInfo& chunkInfo, const AbstractDataStore<bool>& store, const nx::core::HDF5::DatasetIO::DimsType& h5dims,
                                           const nx::core::HDF5::DatasetIO::DimsType& chunkDims, const IDataStore::ShapeType& index)
 {
   auto rank = chunkDims.size();
@@ -71,7 +72,7 @@ inline Result<> WriteDataStoreChunk<bool>(nx::core::HDF5::DatasetIO& datasetWrit
   {
     chunkPtr[i] = chunkVector[i];
   }
-  auto result = datasetWriter.writeChunk(h5dims, nonstd::span<const uint8>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
+  auto result = datasetWriter.writeChunk(chunkInfo, h5dims, nonstd::span<const uint8>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
   delete[] chunkPtr;
   if(result.invalid())
   {
@@ -112,7 +113,7 @@ inline Result<> RecursivelyWriteChunks(nx::core::HDF5::DatasetIO& datasetWriter,
     }
   }
 
-  // Successfully wrote all chunks
+  // Successfully wrote all chunkShape
   return {};
 }
 
@@ -161,11 +162,17 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
     return MakeErrorResult(-1, ss);
   }
 
-  dataStore.writeHdf5(datasetWriter);
+  auto writeResult = dataStore.writeHdf5(datasetWriter);
+  if (writeResult.invalid())
+  {
+    return writeResult;
+  }
 
   // Write shape attributes to the dataset
-  datasetWriter.createAttribute(IOConstants::k_TupleShapeTag, dataStore.getTupleShape());
-  datasetWriter.createAttribute(IOConstants::k_ComponentShapeTag, dataStore.getComponentShape());
+  const auto tupleShape = dataStore.getTupleShape();
+  const auto componentShape = dataStore.getComponentShape();
+  datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape);
+  datasetWriter.writeVectorAttribute(IOConstants::k_ComponentShapeTag, componentShape);
 
   return {};
 }

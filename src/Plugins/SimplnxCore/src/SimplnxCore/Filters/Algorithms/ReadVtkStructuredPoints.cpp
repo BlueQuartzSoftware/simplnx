@@ -101,7 +101,7 @@ int32 vtkReadBinaryData(std::istream& in, DataArray<T>& data)
   // Cast our pointer to a pointer that std::istream will take
 
   usize numRead = 0;
-  // Now start reading the data in chunks if needed.
+  // Now start reading the data in chunkShape if needed.
   usize chunkSize = DEFAULT_BLOCKSIZE;
 
   // Sanity check the chunk size to make sure it is not any larger than the chunk of data we are about to read
@@ -119,7 +119,7 @@ int32 vtkReadBinaryData(std::istream& in, DataArray<T>& data)
   usize typeSize = sizeof(T);
   usize totalElementsRead = 0;
 
-  // Now chunk through the file reading up chunks of data that can actually be
+  // Now chunk through the file reading up chunkShape of data that can actually be
   // read in a single read. DEFAULT_BLOCKSIZE will control this.
   while(true)
   {

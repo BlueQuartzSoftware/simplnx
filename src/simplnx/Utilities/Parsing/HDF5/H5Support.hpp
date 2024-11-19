@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
+//#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
@@ -256,6 +256,7 @@ inline std::string HdfTypeForPrimitiveAsStr()
   }
 }
 
+#if 0
 template <typename T>
 Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt)
@@ -338,6 +339,7 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
     return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }
 }
+#endif
 
 #if 0
 /**

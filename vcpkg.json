@@ -38,9 +38,6 @@
       "name": "ghc-filesystem"
     },
     {
-      "name": "highfive"
-    },
-    {
       "name": "xtensor"
     },
     {

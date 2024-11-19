@@ -1,10 +1,13 @@
 #pragma once
 
-#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/ObjectIO.hpp"
 
-#include "highfive/H5Attribute.hpp"
-#include "highfive/H5File.hpp"
-#include "highfive/H5Group.hpp"
+//#include "highfive/H5Attribute.hpp"
+//#include "highfive/H5File.hpp"
+//#include "highfive/H5Group.hpp"
+
+#include <H5Gpublic.h>
+#include <H5Ppublic.h>
 
 #include "fmt/format.h"
 
@@ -13,23 +16,17 @@
 namespace nx::core::HDF5
 {
 class FileIO;
+class DatasetIO;
 
 class SIMPLNX_EXPORT GroupIO : public ObjectIO
 {
 public:
-  static HighFive::Group Open(const std::filesystem::path& filepath, const std::string& objectPath);
+  static std::shared_ptr<GroupIO> Open(const std::filesystem::path& filepath, const std::string& objectPath);
 
   /**
    * @brief Constructs an invalid GroupIO.
    */
   GroupIO();
-
-  /**
-   * @brief Opens and wraps an HDF5 group.
-   * @param filepath
-   * @param groupPath
-   */
-  GroupIO(GroupIO& parentGroup, HighFive::Group&& group, const std::string& groupName);
 
   GroupIO(const GroupIO& other) = delete;
   GroupIO(GroupIO&& other) noexcept = default;
@@ -49,9 +46,9 @@ public:
    * @param name
    * @return GroupIO
    */
-  virtual Result<GroupIO> openGroup(const std::string& name) const;
+  Result<GroupIO> openGroup(const std::string& name) const;
 
-  virtual std::shared_ptr<GroupIO> openGroupPtr(const std::string& name) const;
+  //std::shared_ptr<GroupIO> openGroupPtr(const std::string& name) const;
 
   /**
    * @brief Attempts to open a nested HDF5 dataset with the specified name.
@@ -62,7 +59,7 @@ public:
    */
   Result<DatasetIO> openDataset(const std::string& name) const;
 
-  std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& name) const;
+  //std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& name) const;
 
   /**
    * @brief Creates a GroupIO for writing to a child group with the
@@ -71,9 +68,9 @@ public:
    * @param childName
    * @return GroupIO
    */
-  virtual Result<GroupIO> createGroup(const std::string& childName);
+  Result<GroupIO> createGroup(const std::string& childName);
 
-  virtual std::shared_ptr<GroupIO> createGroupPtr(const std::string& childName);
+  //std::shared_ptr<GroupIO> createGroupPtr(const std::string& childName);
 
   /**
    * @brief Opens a DatasetIO for writing to a child group with the
@@ -114,12 +111,6 @@ public:
   Result<> createLink(const std::string& objectPath);
 
   /**
-   * @brief Returns the IO Classes HighFive ObjectType
-   * @return HighFive::ObjectType
-   */
-  HighFive::ObjectType getObjectType() const override;
-
-  /**
    * @brief Returns the number of children objects within the group.
    *
    * Returns 0 if the GroupIO is invalid.
@@ -134,6 +125,8 @@ public:
    * @return std::vector<std::string>
    */
   virtual std::vector<std::string> getChildNames() const;
+
+  virtual std::string getChildNameByIdx(hsize_t idx) const;
 
   /**
    * @brief Returns true if the target child is a group. Returns false
@@ -155,25 +148,11 @@ public:
    */
   virtual bool isDataset(const std::string& childName) const;
 
-  /**
-   * @brief Returns the number of attributes in the object. Returns 0 if the
-   * object is not valid.
-   * @return usize
-   */
-  usize getNumAttributes() const override;
+  bool exists(const std::string& childName) const;
 
-  /**
-   * @brief Returns a vector with each attribute name.
-   * @return std::vector<std::string>
-   */
-  std::vector<std::string> getAttributeNames() const override;
+  ObjectType getObjectType(const std::string& childName) const;
 
-  /**
-   * @brief Deletes the attribute with the specified name.
-   * @param name
-   */
-  void deleteAttribute(const std::string& name) override;
-
+  #if 0
   /**
    * @brief Creates an attribute with the specified name and value.
    * @param attributeName
@@ -237,7 +216,9 @@ public:
       writeStringAttribute(m_Group.getId(), attributeName, value);
     }
   }
+  #endif
 
+  #if 0
   /**
    * @brief Reads an attribute with the specified name.
    * @param attributeName
@@ -276,7 +257,9 @@ public:
       }
     }
   }
+  #endif
 
+  #if 0
   /**
    * @brief Reads a string attribute with the specified name.
    * @param attributeName
@@ -317,64 +300,53 @@ public:
       }
     }
   }
+  #endif
 
   /**
-   * @brief Returns a reference to the target HighFive::Group.
-   * This should only be called by the HDF5 IO wrappers.
-   * @return HighFive::Group&
-   */
-  HighFive::Group& groupRef();
-
-  /**
-   * @brief Returns a const reference to the target HighFive::Group.
-   * This should only be called by the HDF5 IO wrappers.
-   * @return const HighFive::Group&
-   */
-  const HighFive::Group& groupRef() const;
-
-  /**
-   * @brief Opens and returns the HighFive::DataSet of the target name.
+   * @brief Opens and returns the ID of the target name.
    * This should only be called by the HDF5 IO wrappers.
    * @param name
-   * @return HighFive::DataSet
+   * @return hid_t
    */
-  virtual HighFive::DataSet openH5Dataset(const std::string& name) const;
+  //virtual hid_t openH5Dataset(const std::string& name) const;
 
   /**
-   * @brief Creates or opens and returns the HighFive::DataSet of the target name.
+   * @brief Creates or opens and returns the hid_t of the target name.
    * This should only be called by the HDF5 IO wrappers.
    * @param name
    * @param dims
    * @param dataType
-   * @return HighFive::DataSet
+   * @return hid_t
    */
-  virtual HighFive::DataSet createOrOpenH5Dataset(const std::string& name, const HighFive::DataSpace& dims, HighFive::DataType dataType);
+  //virtual hid_t createOrOpenH5Dataset(const std::string& name, const DimsType& dims, DataType dataType);
 
+  #if 0
   /**
-   * @brief Creates or opens and returns the HighFive::DataSet of the target name.
+   * @brief Creates or opens and returns the hid_t of the target name.
    * This should only be called by the HDF5 IO wrappers.
    * @param name
    * @param dims
-   * @return HighFive::DataSet
+   * @return hid_t
    */
   template <typename T>
-  HighFive::DataSet createOrOpenH5Dataset(const std::string& name, const HighFive::DataSpace& dims)
+  hid_t createOrOpenH5Dataset(const std::string& name, const DimsType& dims)
   {
     return createOrOpenH5Dataset(name, dims, HighFive::create_datatype<T>());
   }
 
   /**
-   * @brief Creates or opens and returns the boolean HighFive::DataSet of the target name.
+   * @brief Creates or opens and returns the boolean hid_t of the target name.
    * This should only be called by the HDF5 IO wrappers.
    * @param name
    * @param dims
-   * @return HighFive::DataSet
+   * @return hid_t
    */
   template <>
-  HighFive::DataSet createOrOpenH5Dataset<bool>(const std::string& name, const HighFive::DataSpace& dims)
+  hid_t createOrOpenH5Dataset<bool>(const std::string& name, const DimsType& dims)
   {
     return createOrOpenH5Dataset(name, dims, HighFive::create_datatype<H5_BOOL_TYPE>());
   }
+  #endif
 
   /**
   * @brief Creates or opens an HDF5 dataset using the HDF5 C api.
@@ -388,15 +360,17 @@ public:
   */
   hid_t createOrOpenHDF5Dataset(const std::string& name, hid_t typeId, hid_t dataspaceId, hid_t propertiesId = H5P_DEFAULT);
 
+protected:
   /**
-   * @param Returns the HDF5 object id.
-   * Should only be called by HDF5 IO wrapper classes.
-   * @return hid_t
+   * @brief Opens and wraps an HDF5 group.
+   * @param filepath
+   * @param groupPath
    */
-  hid_t getH5Id() const override;
+  GroupIO(GroupIO& parentGroup, const std::string& groupName, hid_t groupId);
+
+  void close() override;
 
 private:
-  HighFive::Group m_Group;
 };
 
 // -----------------------------------------------------------------------------

@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -45,8 +47,12 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
     return MakeErrorResult<DataStructure>(-1, ss);
   }
 
-  DataObject::IdType objectId;
-  groupReader.readAttribute(Constants::k_NextIdTag, objectId);
+  auto idResult = groupReader.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  if (idResult.invalid())
+  {
+    return ConvertInvalidResult<DataStructure>(std::move(idResult));
+  }
+  DataObject::IdType objectId = std::move(idResult.value());
 
   m_CurrentStructure = DataStructure();
   m_CurrentStructure.setNextId(objectId);
@@ -79,14 +85,26 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
 
       // Return 0 if object is marked as not importable.
       int32 importable = 0;
-      childObj.readAttribute(Constants::k_ImportableTag, importable);
+      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
+      if(importableResult.invalid())
+      {
+        return ConvertResult(std::move(importableResult));
+      }
+      importable = std::move(importableResult.value());
+
       if(importable == 0)
       {
         return {};
       }
 
       // Check if data has already been read
-      childObj.readAttribute(Constants::k_ObjectIdTag, objectId);
+      auto idResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      if(idResult.invalid())
+      {
+        return ConvertResult(std::move(idResult));
+      }
+      objectId = std::move(idResult.value());
+
       if(getDataStructure().containsData(objectId))
       {
         getDataStructure().setAdditionalParent(objectId, parentId.value());
@@ -94,8 +112,12 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       }
 
       // Get DataObject type for factory
-      std::string typeName;
-      childObj.readAttribute(Constants::k_ObjectTypeTag, typeName);
+      auto attrResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      if(attrResult.invalid())
+      {
+        return ConvertResult(std::move(attrResult));
+      }
+      std::string typeName = std::move(attrResult.value());
 
       factory = getDataFactory(typeName);
     }
@@ -109,15 +131,25 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       auto childObj = std::move(childObjResult.value());
 
       // Return 0 if object is marked as not importable.
+      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
       int32 importable = 0;
-      childObj.readAttribute(Constants::k_ImportableTag, importable);
+      if (importableResult.valid())
+      {
+        importable = std::move(importableResult.value());
+      }
+
       if(importable == 0)
       {
         return {};
       }
 
       // Check if data has already been read
-      childObj.readAttribute(Constants::k_ObjectIdTag, objectId);
+      auto objectIdResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      if (objectIdResult.invalid())
+      {
+        objectId = std::move(objectIdResult.value());
+      }
+
       if(getDataStructure().containsData(objectId))
       {
         getDataStructure().setAdditionalParent(objectId, parentId.value());
@@ -125,8 +157,12 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
       }
 
       // Get DataObject type for factory
-      std::string typeName;
-      childObj.readAttribute(Constants::k_ObjectTypeTag, typeName);
+      auto typeNameResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      if (typeNameResult.invalid())
+      {
+        return ConvertResult(std::move(typeNameResult));
+      }
+      std::string typeName = std::move(typeNameResult.value());
 
       factory = getDataFactory(typeName);
     }

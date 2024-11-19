@@ -16,8 +16,6 @@
 #include <string>
 #include <vector>
 
-namespace fs = std::filesystem;
-
 namespace nx::core::CsvParser
 {
 
@@ -63,7 +61,7 @@ SIMPLNX_EXPORT int CheckErrorBits(std::ifstream* fileStream);
  * @param inputPath The file to check
  * @return
  */
-SIMPLNX_EXPORT uint64_t LineCount(const fs::path& inputPath);
+SIMPLNX_EXPORT uint64_t LineCount(const std::filesystem::path& inputPath);
 
 /**
  * @brief Reads a line from the input stream and returns the result of that operations, Data is read into the buffer
@@ -86,10 +84,10 @@ SIMPLNX_EXPORT int32_t ReadLine(std::istream& in, char* buffer, size_t length);
  * @return Result<> with any errors or warnings that were encountered.
  */
 template <typename T, typename K>
-Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
+Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
   int32 err;
-  if(!fs::exists(filename))
+  if(!std::filesystem::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
   }
@@ -180,10 +178,10 @@ Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t
  * @return Result<> with any errors or warnings that were encountered.
  */
 template <typename T>
-Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter)
+Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter)
 {
   int32 err;
-  if(!fs::exists(filename))
+  if(!std::filesystem::exists(filename))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
   }

@@ -10,10 +10,6 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/ObjectIO.hpp"
 
-#include "highfive/H5DataSet.hpp"
-#include "highfive/H5File.hpp"
-#include "highfive/H5Group.hpp"
-
 #include "fmt/format.h"
 
 namespace nx::core
@@ -24,26 +20,9 @@ Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, n
   dataStructureWriter.addWriter(objectWriter, dataObject->getId());
 
   int32 importablei32 = (importable ? 1 : 0);
-  switch (objectWriter.getObjectType())
-  {
-  case HighFive::ObjectType::File:
-    static_cast<HDF5::FileIO&>(objectWriter).createAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
-    static_cast<HDF5::FileIO&>(objectWriter).createAttribute(Constants::k_ObjectIdTag, dataObject->getId());
-    static_cast<HDF5::FileIO&>(objectWriter).createAttribute(Constants::k_ImportableTag, importablei32);
-    break;
-  case HighFive::ObjectType::Group:
-    static_cast<HDF5::GroupIO&>(objectWriter).createAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
-    static_cast<HDF5::GroupIO&>(objectWriter).createAttribute(Constants::k_ObjectIdTag, dataObject->getId());
-    static_cast<HDF5::GroupIO&>(objectWriter).createAttribute(Constants::k_ImportableTag, importablei32);
-    break;
-  case HighFive::ObjectType::Dataset:
-    static_cast<HDF5::DatasetIO&>(objectWriter).createAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
-    static_cast<HDF5::DatasetIO&>(objectWriter).createAttribute(Constants::k_ObjectIdTag, dataObject->getId());
-    static_cast<HDF5::DatasetIO&>(objectWriter).createAttribute(Constants::k_ImportableTag, importablei32);
-    break;
-  default:
-    break;
-  }
+  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
+  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject->getId());
+  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, importablei32);
 
   return {};
 }

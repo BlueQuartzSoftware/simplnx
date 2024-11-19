@@ -90,7 +90,7 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
     std::string ss = "Failed to write DataStructure to HDF5 group";
     return MakeErrorResult(-700, ss);
   }
-  groupIO.createAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
+  groupIO.writeScalarAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
   return writeDataMap(dataStructure.getDataMap(), groupIO);
 }
 

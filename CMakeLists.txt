@@ -87,8 +87,8 @@ option(SIMPLNX_ENABLE_BENCHMARK_UTILITY "Enables benchmark utility" OFF)
 
 # ------------------------------------------------------------------------------
 # Check if a different Data_Archive web site is being used.
-#   The alternate would be for the internal build bots that can download from a
-#   local webserver
+# The alternate would be for the internal build bots that can download from a
+# local webserver
 # ------------------------------------------------------------------------------
 if("${DATA_ARCHIVE_WEB_SITE}" STREQUAL "")
   set(DATA_ARCHIVE_WEB_SITE "https://github.com/bluequartzsoftware/simplnx/releases/download/Data_Archive/")
@@ -158,6 +158,7 @@ FILE(WRITE \"\${LOG_FILE}\" \"Featch File Log Start\n\")\n
 message(STATUS "FETCH_FILE_PATH: ${FETCH_FILE_PATH}")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
   set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
 endif()
@@ -166,7 +167,8 @@ if(SIMPLNX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
     COMMAND "${CMAKE_COMMAND}" -DCMAKE_CONFIG=$<CONFIG> -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
-  #  WORKING_DIRECTORY "${TEST_WORKING_DIR}"
+
+    # WORKING_DIRECTORY "${TEST_WORKING_DIR}"
   )
   set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 endif()
@@ -188,10 +190,12 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
-find_package(highfive CONFIG REQUIRED)
+
+# find_package(highfive CONFIG REQUIRED)
 find_package(xtl CONFIG REQUIRED)
 find_package(xtensor CONFIG REQUIRED)
-find_package(xtensor-io CONFIG REQUIRED)
+
+# find_package(xtensor-io CONFIG REQUIRED)
 
 # -----------------------------------------------------------------------
 # Find HDF5 and get the path to the DLL libraries and put that into a
@@ -222,6 +226,7 @@ if("${DREAM3D_DATA_DIR}" STREQUAL "")
   message(WARNING "DREAM3D_DATA_DIR is not defined externally. Defining to ${simplnx_BINARY_DIR}/DREAM3D_Data")
   set(DREAM3D_DATA_DIR "${simplnx_BINARY_DIR}/DREAM3D_Data")
 endif()
+
 file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
 
 add_library(simplnx SHARED)
@@ -229,12 +234,12 @@ add_library(simplnx::simplnx ALIAS simplnx)
 
 target_compile_features(simplnx
   PUBLIC
-    cxx_std_17
+  cxx_std_17
 )
 
 set_target_properties(simplnx
   PROPERTIES
-    DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
+  DEBUG_POSTFIX "${SIMPLNX_DEBUG_POSTFIX}"
 )
 
 simplnx_enable_warnings(TARGET simplnx)
@@ -242,7 +247,7 @@ simplnx_enable_warnings(TARGET simplnx)
 if(MSVC)
   target_compile_options(simplnx
     PRIVATE
-      /MP
+    /MP
   )
 endif()
 
@@ -251,7 +256,7 @@ target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
 target_compile_options(simplnx
   PUBLIC
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
 )
 
 if(SIMPLNX_ENABLE_MULTICORE)
@@ -260,8 +265,8 @@ if(SIMPLNX_ENABLE_MULTICORE)
 endif()
 
 find_package(ghc_filesystem CONFIG REQUIRED)
-find_package(HighFive CONFIG REQUIRED)
 
+# find_package(HighFive CONFIG REQUIRED)
 target_link_libraries(simplnx
   PUBLIC
   fmt::fmt
@@ -274,25 +279,28 @@ target_link_libraries(simplnx
   nod::nod
   xtl
   xtensor
-  xtensor-io
+
+  # xtensor-io
   ghcFilesystem::ghc_filesystem
-  HighFive_HighFive
+
+  # HighFive_HighFive
 )
 
 if(UNIX)
   target_link_libraries(simplnx
     PRIVATE
-      ${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS}
   )
 endif()
 
 option(SIMPLNX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
+
 if(SIMPLNX_ENABLE_LINK_FILESYSTEM)
   set(SIMPLNX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
   set_property(CACHE SIMPLNX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
   target_link_libraries(simplnx
     PUBLIC
-      ${SIMPLNX_FILESYSTEM_LIB}
+    ${SIMPLNX_FILESYSTEM_LIB}
   )
 endif()
 
@@ -581,6 +589,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStore.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
@@ -811,23 +820,19 @@ list(APPEND SIMPLNX_GENERATED_HEADERS
 
 # set(SIMPLNX_GENERATED_VERSION_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.h)
 # configure_file(${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.h.in ${SIMPLNX_GENERATED_VERSION_HEADER})
-
-
 set(CMP_VERSION_HDR_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.hpp)
 set(CMP_VERSION_SRC_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.cpp.in)
 set(VERSION_GEN_HEADER_FILE_NAME "SIMPLNXVersion.hpp")
 
 cmpBuildDateRevisionString(GENERATED_HEADER_FILE_PATH "generated/simplnx/SIMPLNXVersion.hpp"
-      GENERATED_SOURCE_FILE_PATH "generated/simplnx/SIMPLNXVersion.cpp"
-      NAMESPACE nx::core
-      PROJECT_NAME simplnx
-      EXPORT_MACRO ""
-      VERSION_MACRO_PATH ""
-      STRING_CLASS std::string
-      STRING_INCLUDE "#include <string>"
+  GENERATED_SOURCE_FILE_PATH "generated/simplnx/SIMPLNXVersion.cpp"
+  NAMESPACE nx::core
+  PROJECT_NAME simplnx
+  EXPORT_MACRO ""
+  VERSION_MACRO_PATH ""
+  STRING_CLASS std::string
+  STRING_INCLUDE "#include <string>"
 )
-
-
 
 list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.hpp
@@ -841,8 +846,8 @@ set(SIMPLNX_ALL_HDRS
 
 target_sources(simplnx
   PRIVATE
-    ${SIMPLNX_ALL_HDRS}
-    ${SIMPLNX_SRCS}
+  ${SIMPLNX_ALL_HDRS}
+  ${SIMPLNX_SRCS}
 )
 
 source_group(TREE ${SIMPLNX_SOURCE_DIR} PREFIX "simplnx" FILES ${SIMPLNX_HDRS})
@@ -853,12 +858,13 @@ set(SIMPLNX_INCLUDE_DIR ${simplnx_SOURCE_DIR}/src)
 
 target_include_directories(simplnx
   PUBLIC
-    $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
-    $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
 
 cmake_dependent_option(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST "Forces test files to download before simplnx builds" OFF "SIMPLNX_DOWNLOAD_TEST_FILES" OFF)
+
 if(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST)
   add_dependencies(simplnx Fetch_Remote_Data_Files)
 endif()
@@ -868,9 +874,9 @@ endif()
 # ------------------------------------------------------------------------------
 add_subdirectory(${simplnx_SOURCE_DIR}/src/nxrunner)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Simplnx Plugins Section
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 get_property(simplnxPluginTargets GLOBAL PROPERTY simplnxPluginTargets)
 
 if(NOT "${simplnxPluginTargets}" STREQUAL "")
@@ -884,17 +890,20 @@ include(${simplnx_SOURCE_DIR}/cmake/Plugin.cmake)
 # message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 set_property(GLOBAL PROPERTY SIMPLNX_PLUGIN_COUNT 0)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add user defined Plugin Dirs based on the SIMPLNX_PLUGIN_SEARCH_DIRS variable
 # and falling back to simplnx_SOURCE_DIR/../simplnx_plugins if not defined
 # Use 'SIMPLNX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
 set(SIMPLNX_PLUGIN_LIST "")
+
 if(SIMPLNX_ENABLE_SimplnxCore)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} SimplnxCore)
 endif()
+
 if(SIMPLNX_ENABLE_ITKImageProcessing)
   set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ITKImageProcessing)
 endif()
+
 # Ensure ITKImageProcessing comes before OrientationAnalysis as there is currently
 # a dependency of ITKImageWriter inside some of the example OrientationAnalysis pipelines
 if(SIMPLNX_ENABLE_OrientationAnalysis)
@@ -908,11 +917,11 @@ endif()
 # Add any plugins to the list
 set(SIMPLNX_PLUGIN_LIST ${SIMPLNX_PLUGIN_LIST} ${SIMPLNX_EXTRA_PLUGINS})
 
-
 foreach(plugin ${SIMPLNX_PLUGIN_LIST})
   if(NOT DEFINED SIMPLNX_PLUGIN_ENABLE_${plugin})
     set(SIMPLNX_PLUGIN_ENABLE_${plugin} ON)
   endif()
+
   simplnx_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
 
@@ -923,10 +932,11 @@ endif()
 
 set(SIMPLNX_PACKAGE_NAMESPACE "simplnx::")
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Install the appropriate example pipelines based on which plugins are loaded
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
 if(is_multi_config)
   set(CX_CONFIG_DIR "$<CONFIG>")
 else()
@@ -939,18 +949,17 @@ set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipeli
 set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 
 if(SIMPLNX_DOWNLOAD_TEST_FILES AND TARGET SimplnxCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
-
   set(PREBUILT_PIPELINE_NAMES
-    )
-    # Install the pipeline files
-    install(FILES
-      ${PREBUILT_PIPELINE_NAMES}
-      DESTINATION "pipelines/Examples"
-      COMPONENT Applications
-    )
+  )
+
+  # Install the pipeline files
+  install(FILES
+    ${PREBUILT_PIPELINE_NAMES}
+    DESTINATION "pipelines/Examples"
+    COMPONENT Applications
+  )
 
   create_pipeline_tests(PLUGIN_NAME OrientationAnalysis PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
-
 endif()
 
 if(SIMPLNX_ENABLE_INSTALL)
@@ -983,15 +992,15 @@ if(SIMPLNX_ENABLE_INSTALL)
   include(GNUInstallDirs)
   install(TARGETS simplnx
     RUNTIME
-      DESTINATION ${CMAKE_INSTALL_BINDIR}
-      COMPONENT runtime
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT runtime
     LIBRARY
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT runtime
-      NAMELINK_COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT runtime
+    NAMELINK_COMPONENT develop
     ARCHIVE
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT develop
   )
 
   install(EXPORT simplnxTargets
@@ -1010,17 +1019,19 @@ if(SIMPLNX_ENABLE_INSTALL)
     COMPONENT develop
     BASE_DIR ${SIMPLNX_GENERATED_HEADER_DIR}
   )
-  
+
   include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 endif()
 
 option(SIMPLNX_ENABLE_PACKAGING "Enablespackaging" ON)
+
 if(SIMPLNX_ENABLE_PACKAGING)
   if(WIN32)
     set(CPACK_GENERATOR ZIP)
   else()
     set(CPACK_GENERATOR TGZ)
   endif()
+
   include(CPack)
 endif()
 
@@ -1037,9 +1048,7 @@ option(SIMPLNX_BUILD_DOCS "Enables building documentation" OFF)
 
 if(SIMPLNX_BUILD_DOCS)
   add_subdirectory(docs)
-endif()
-
-# ------------------------------------------------------------------------------
+endif()# ------------------------------------------------------------------------------
 # Print Summary Information
 # ------------------------------------------------------------------------------
 include(${simplnx_SOURCE_DIR}/cmake/Summary.cmake)

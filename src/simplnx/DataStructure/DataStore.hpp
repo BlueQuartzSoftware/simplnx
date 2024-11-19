@@ -6,11 +6,10 @@
 #define NOMINMAX
 
 #include <xtensor/xarray.hpp>
-#include <xtensor/xchunked_array.hpp>
 #include <xtensor/xfunction.hpp>
 #include <xtensor/xstrides.hpp>
 
-#include <xtensor-io/xhighfive.hpp>
+//#include <xtensor-io/xhighfive.hpp>
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
@@ -409,8 +408,6 @@ public:
 
     try
     {
-      const auto& file = dataset.h5File().value();
-
       XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
       shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
 

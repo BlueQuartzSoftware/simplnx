@@ -33,7 +33,12 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
   auto groupReader = std::move(groupReaderResult.value());
 
   std::vector<usize> tupleShape;
-  groupReader.readAttribute(IOConstants::k_TupleDims, tupleShape);
+  auto tupleShapeResult = groupReader.readVectorAttribute<usize>(IOConstants::k_TupleDims);
+  if (tupleShapeResult.invalid())
+  {
+    return ConvertResult(std::move(tupleShapeResult));
+  }
+  tupleShape = std::move(tupleShapeResult.value());
 
   if(tupleShape.empty())
   {
@@ -60,7 +65,7 @@ Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, 
   auto groupWriter = std::move(groupWriterResult.value());
 
   auto tupleShape = attributeMatrix.getShape();
-  groupWriter.createAttribute(IOConstants::k_TupleDims, tupleShape);
+  groupWriter.writeVectorAttribute(IOConstants::k_TupleDims, tupleShape);
 
   return WriteBaseGroupData(dataStructureWriter, attributeMatrix, parentGroup, importable);
 }

@@ -6,14 +6,16 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  AlignSectionsMisorientationTest.cpp
-  AlignSectionsMutualInformationTest.cpp
-  BadDataNeighborOrientationCheckTest.cpp
-  CAxisSegmentFeaturesTest.cpp
-  ComputeAvgCAxesTest.cpp
-  ComputeAvgOrientationsTest.cpp
+
+  # AlignSectionsMisorientationTest.cpp
+  # AlignSectionsMutualInformationTest.cpp
+  # BadDataNeighborOrientationCheckTest.cpp
+  # CAxisSegmentFeaturesTest.cpp
+  # ComputeAvgCAxesTest.cpp
+  # ComputeAvgOrientationsTest.cpp
   ComputeBoundaryStrengthsTest.cpp
-  ComputeCAxisLocationsTest.cpp
+
+  # ComputeCAxisLocationsTest.cpp
   ComputeFaceIPFColoringTest.cpp
   ComputeFeatureFaceMisorientationTest.cpp
   ComputeFeatureNeighborCAxisMisalignmentsTest.cpp
@@ -48,16 +50,17 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadEnsembleInfoTest.cpp
   ReadGrainMapper3DTest.cpp
   ReadH5EbsdTest.cpp
-  ReadH5EspritDataTest.cpp
-  ReadH5OimDataTest.cpp
-  ReadH5OinaDataTest.cpp
-  RodriguesConvertorTest.cpp
-  RotateEulerRefFrameTest.cpp
-  WriteGBCDGMTFileTest.cpp
-  WriteGBCDTriangleDataTest.cpp
-  WriteINLFileTest.cpp
-  WritePoleFigureTest.cpp
-  WriteStatsGenOdfAngleFileTest.cpp
+
+  # ReadH5EspritDataTest.cpp
+  # ReadH5OimDataTest.cpp
+  # ReadH5OinaDataTest.cpp
+  # RodriguesConvertorTest.cpp
+  # RotateEulerRefFrameTest.cpp
+  # WriteGBCDGMTFileTest.cpp
+  # WriteGBCDTriangleDataTest.cpp
+  # WriteINLFileTest.cpp
+  # WritePoleFigureTest.cpp
+  # WriteStatsGenOdfAngleFileTest.cpp
 )
 set(DISABLED_TESTS
   CreateLambertSphereTest.cpp

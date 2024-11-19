@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -346,8 +347,8 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
     else
     {
-      HighFive::DataType type = datasetReader.getType();
-      DataType dataType = nx::core::HDF5::toCommonType(type).value();
+      Result<DataType> typeResult = datasetReader.getDataType();
+      DataType dataType = std::move(typeResult.value());
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
@@ -388,8 +389,8 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
     // Read dataset into DREAM3D-NX structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
-    HighFive::DataType h5Type = datasetReader.getType();
-    auto type = nx::core::HDF5::toCommonType(h5Type).value();
+    auto h5TypeResult = datasetReader.getDataType();
+    const auto type = std::move(h5TypeResult.value());
     switch(type)
     {
     case DataType::float32: {

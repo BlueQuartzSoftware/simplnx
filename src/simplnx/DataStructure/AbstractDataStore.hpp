@@ -37,7 +37,7 @@ public:
   using index_type = uint64;
 
   /////////////////////////////////
-  // Begin std::iterator support //
+  // Begin std::iterator support  //
   /////////////////////////////////
 #if defined(__linux__)
   class Iterator

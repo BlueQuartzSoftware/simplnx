@@ -64,7 +64,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
 
     usize fileZSlice = 0;
 
-    // Now start reading the data in chunks if needed.
+    // Now start reading the data in chunkShape if needed.
     std::vector<float32> buffer(deltaX);
 
     for(usize z = zShift; z < (zShift + dataFileInput.second); z++)

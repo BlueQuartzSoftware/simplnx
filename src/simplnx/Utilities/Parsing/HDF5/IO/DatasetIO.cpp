@@ -1,14 +1,9 @@
 #include "DatasetIO.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
-
-#include "highfive/H5DataSet.hpp"
-#include "highfive/H5DataSpace.hpp"
-#include "highfive/H5DataType.hpp"
-#include "highfive/H5File.hpp"
 
 #include "H5Dpublic.h"
 #include "H5Spublic.h"
@@ -18,14 +13,25 @@
 #include <iostream>
 #include <numeric>
 #include <span>
+#include <vector>
+
+using namespace nx::core;
 
 namespace nx::core::HDF5
 {
+constexpr int64 k_DimensionMismatchError = -5138;
+
 DatasetIO::DatasetIO() = default;
 
 DatasetIO::DatasetIO(GroupIO& parentGroup, const std::string& dataName)
-: ObjectIO(parentGroup, dataName)
+: ObjectIO(&parentGroup, dataName)
 {
+#if 0
+  if(!tryOpeningDataset(datasetName, dataType))
+  {
+    tryCreatingDataset(datasetName, dataType);
+  }
+#endif
 }
 
 DatasetIO::DatasetIO(DatasetIO&& other) noexcept
@@ -35,62 +41,90 @@ DatasetIO::DatasetIO(DatasetIO&& other) noexcept
 
 DatasetIO::~DatasetIO() noexcept
 {
+  close();
 }
 
-HighFive::Group& DatasetIO::parentGroupRef() const
+void DatasetIO::close()
 {
-  return parentGroup()->groupRef();
+  if(getId() > 0)
+  {
+    H5Dclose(getId());
+    setId(0);
+  }
 }
 
-HighFive::DataSet DatasetIO::openH5Dataset() const
+hid_t DatasetIO::open() const
 {
-  std::string datapath = getObjectPath();
-  return parentGroup()->openH5Dataset(getName());
+  if (getId() > 0)
+  {
+    return getId();
+  }
+  hid_t id = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
+  setId(id);
+  return id;
 }
 
-//template <typename T>
-//HighFive::DataSet createOrOpenDataset(DatasetIO& datasetIO, const HighFive::DataSpace& dims, HighFive::DataType& dataType)
+hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType propertiesId) const
+{
+  if(getId() > 0)
+  {
+    return getId();
+  }
+
+  HDF_ERROR_HANDLER_OFF
+  setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
+  HDF_ERROR_HANDLER_ON
+  if(getId() < 0) // dataset does not exist so create it
+  {
+    setId(H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, propertiesId, H5P_DEFAULT));
+  }
+
+  return getId();
+}
+
+// template <typename T>
+// HighFive::DataSet createOrOpenDataset(DatasetIO& datasetIO, const HighFive::DataSpace& dims, HighFive::DataType& dataType)
 //{
-//  std::string name = datasetIO.getName();
-//  std::string datapath = datasetIO.getObjectPath();
-//  try
-//  {
-//    auto& parentGroup = datasetIO.parentGroup()->groupRef();
-//    if(parentGroup.exist(name))
-//    {
-//      return parentGroup.getDataSet(name);
-//    }
-//    else
-//    {
-//      return parentGroup.createDataSet(name, dims, dataType);
-//    }
-//  } catch(const std::exception& e)
-//  {
-//    throw e;
-//  }
-//}
+//   std::string name = datasetIO.getName();
+//   std::string datapath = datasetIO.getObjectPath();
+//   try
+//   {
+//     auto& parentGroup = datasetIO.parentGroup()->groupRef();
+//     if(parentGroup.exist(name))
+//     {
+//       return parentGroup.getDataSet(name);
+//     }
+//     else
+//     {
+//       return parentGroup.createDataSet(name, dims, dataType);
+//     }
+//   } catch(const std::exception& e)
+//   {
+//     throw e;
+//   }
+// }
 //
-//template <>
-//HighFive::DataSet createOrOpenDataset<bool>(DatasetIO& datasetIO, const HighFive::DataSpace& dims)
+// template <>
+// HighFive::DataSet createOrOpenDataset<bool>(DatasetIO& datasetIO, const HighFive::DataSpace& dims)
 //{
-//  std::string name = datasetIO.getName();
-//  std::string datapath = datasetIO.getObjectPath();
-//  try
-//  {
-//    auto& parentGroup = datasetIO.parentGroup()->groupRef();
-//    if(parentGroup.exist(name))
-//    {
-//      return std::move(parentGroup.getDataSet(name));
-//    }
-//    else
-//    {
-//      return std::move(parentGroup.createDataSet<H5_BOOL_TYPE>(name, dims));
-//    }
-//  } catch(const std::exception& e)
-//  {
-//    throw e;
-//  }
-//}
+//   std::string name = datasetIO.getName();
+//   std::string datapath = datasetIO.getObjectPath();
+//   try
+//   {
+//     auto& parentGroup = datasetIO.parentGroup()->groupRef();
+//     if(parentGroup.exist(name))
+//     {
+//       return std::move(parentGroup.getDataSet(name));
+//     }
+//     else
+//     {
+//       return std::move(parentGroup.createDataSet<H5_BOOL_TYPE>(name, dims));
+//     }
+//   } catch(const std::exception& e)
+//   {
+//     throw e;
+//   }
+// }
 
 DatasetIO& DatasetIO::operator=(DatasetIO&& rhs) noexcept
 {
@@ -98,36 +132,53 @@ DatasetIO& DatasetIO::operator=(DatasetIO&& rhs) noexcept
   return *this;
 }
 
-HighFive::ObjectType DatasetIO::getObjectType() const
-{
-  return HighFive::ObjectType::Dataset;
-}
-
+#if 0
 Result<> DatasetIO::findAndDeleteAttribute()
 {
-  if(!parentGroupRef().exist(getName()))
+  hsize_t attributeNum = 0;
+  //int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
+
+  /* The attribute already exists, delete it */
+  if(hasAttribute())
   {
-    return {};
-  }
-  auto dataset = openH5Dataset();
-  auto attributeNames = dataset.listAttributeNames();
-  for(const auto& attributeName : attributeNames)
-  {
-    dataset.deleteAttribute(attributeName);
+    herr_t error = H5Adelete(getId(), getName().c_str());
+    if(error < 0)
+    {
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      return MakeErrorResult(error, ss);
+    }
   }
   return {};
 }
+#endif
 
-HighFive::DataType DatasetIO::getType() const
+//DataType DatasetIO::getType() const
+//{
+//  auto dataset = open();
+//  return dataset.getDataType();
+//}
+
+hid_t DatasetIO::getTypeId() const
 {
-  auto dataset = openH5Dataset();
-  return dataset.getDataType();
+  auto identifier = getId();
+  return H5Dget_type(identifier);
 }
 
-Result<Type> DatasetIO::getDataType() const
+hid_t DatasetIO::getClassType() const
 {
-  auto dataset = openH5Dataset();
-  auto datasetId = dataset.getId();
+  auto typeId = getTypeId();
+  return H5Tget_class(typeId);
+}
+
+size_t DatasetIO::getTypeSize() const
+{
+  return H5Tget_size(getTypeId());
+}
+
+#if 0
+Result<nx::core::HDF5::Type> DatasetIO::getDataType() const
+{
+  auto datasetId = open();
   hid_t typeId = H5Dget_type(datasetId);
   auto type = getTypeFromId(typeId);
   Result<Type> result;
@@ -171,6 +222,54 @@ Result<Type> DatasetIO::getDataType() const
   H5Tclose(typeId);
   return result;
 }
+#else
+Result<nx::core::DataType> DatasetIO::getDataType() const
+{
+  auto datasetId = open();
+  hid_t typeId = H5Dget_type(datasetId);
+  auto type = getTypeFromId(typeId);
+  Result<DataType> result;
+  switch(type)
+  {
+  case Type::float32:
+    result = {DataType::float32};
+    break;
+  case Type::float64:
+    result = {DataType::float64};
+    break;
+  case Type::int8:
+    result = {DataType::int8};
+    break;
+  case Type::int16:
+    result = {DataType::int16};
+    break;
+  case Type::int32:
+    result = {DataType::int32};
+    break;
+  case Type::int64:
+    result = {DataType::int64};
+    break;
+  case Type::uint8:
+    result = {DataType::uint8};
+    break;
+  case Type::uint16:
+    result = {DataType::uint16};
+    break;
+  case Type::uint32:
+    result = {DataType::uint32};
+    break;
+  case Type::uint64:
+    result = {DataType::uint64};
+    break;
+  default:
+    result = {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for "
+                                                                       "importing. Please select a different data set"}})};
+    break;
+  }
+  H5Tclose(typeId);
+  return result;
+}
+#endif
 
 size_t DatasetIO::getNumElements() const
 {
@@ -178,8 +277,9 @@ size_t DatasetIO::getNumElements() const
   {
     return 0;
   }
-  auto dataset = openH5Dataset();
-  return dataset.getElementCount();
+  std::vector<hsize_t> dims = getDimensions();
+  hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<>());
+  return numElements;
 }
 
 size_t DatasetIO::getNumChunkElements() const
@@ -195,11 +295,11 @@ std::string DatasetIO::readAsString() const
   {
     return "";
   }
-  auto dataset = openH5Dataset();
+  auto datasetId = open();
   std::string data;
 
   // Test if the string is variable length
-  const hid_t typeID = H5Dget_type(dataset.getId());
+  const hid_t typeID = H5Dget_type(datasetId);
   const htri_t isVariableString = H5Tis_variable_str(typeID);
 
   if(isVariableString == 1)
@@ -219,10 +319,10 @@ std::string DatasetIO::readAsString() const
   }
   else
   {
-    hsize_t size = H5Dget_storage_size(dataset.getId());
+    hsize_t size = H5Dget_storage_size(datasetId);
     std::vector<char> buffer(static_cast<size_t>(size + 1),
                              0x00); // Allocate and Zero and array
-    auto error = H5Dread(dataset.getId(), typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.data());
+    auto error = H5Dread(datasetId, typeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer.data());
     if(error < 0)
     {
       std::cout << "Error Reading string dataset." << std::endl;
@@ -234,9 +334,7 @@ std::string DatasetIO::readAsString() const
     }
   }
 
-  return data;
-
-  //return std::move(data);
+  return std::move(data);
 }
 
 std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
@@ -245,13 +343,13 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
   {
     return {};
   }
-  auto dataset = openH5Dataset();
+  //auto dataset = openH5Dataset();
 
   std::vector<std::string> strings;
-  auto datasetId = dataset.getId();
+  auto datasetId = open();
 
   hid_t typeID = H5Dget_type(datasetId);
-  
+
   if(typeID >= 0)
   {
     hsize_t dims[1] = {0};
@@ -289,7 +387,8 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
       H5Sclose(dataspaceID);
       H5Tclose(typeID);
       H5Tclose(memtype);
-      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << parentGroup()->getName() << ") with object name (" << getName() << ")" << std::endl;
+      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << parentGroup()->getName() << ") with object name (" << getName() << ")"
+                << std::endl;
       return {};
     }
     /*
@@ -321,8 +420,8 @@ std::vector<T> DatasetIO::readAsVector() const
     return {};
   }
 
-  auto dataset = openH5Dataset();
-  size_t numElements = dataset.getElementCount();
+  auto dataset = open();
+  size_t numElements = getNumElements();
 
   std::vector<T> data(numElements);
   nonstd::span<T> span(data.data(), data.size());
@@ -337,22 +436,20 @@ std::vector<T> DatasetIO::readAsVector() const
 }
 
 template <class T>
-Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
+nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
 {
   if(!isValid())
   {
     return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
   }
 
-  hid_t dataType = Support::HdfTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
   }
 
-  auto dataset = openH5Dataset();
-
-  hid_t datasetId = dataset.getId();
+  hid_t datasetId = open();
   hid_t fileSpaceId = H5Dget_space(datasetId);
   if(fileSpaceId < 0)
   {
@@ -394,7 +491,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
 }
 
 template <>
-Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data) const
+nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data) const
 {
   if(!isValid())
   {
@@ -416,14 +513,13 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data, const std::optional<std:
     return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} / {}", getFilePath().string(), getName()));
   }
 
-  hid_t dataType = Support::HdfTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
   }
 
-  auto dataset = openH5Dataset();
-  hid_t datasetId = dataset.getId();
+  hid_t datasetId = open();
   hid_t fileSpaceId = H5Dget_space(datasetId);
   if(fileSpaceId < 0)
   {
@@ -519,43 +615,120 @@ Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data, const std::opti
   return result;
 }
 
+#if 0
 template <class T>
 Result<> DatasetIO::readChunkIntoSpan(nonstd::span<T> data, nonstd::span<const usize> chunkOffset, nonstd::span<const usize> chunkDims) const
 {
   if(!isValid())
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-1000, "DatasetReader error: DatasetReader object is not valid.");
   }
 
-  std::vector<T> data2(data.size());
-  auto dataset = openH5Dataset();
-  dataset.select({chunkOffset.data(), chunkDims.data()}).read(data2);
-  std::copy(data2.begin(), data2.end(), data.begin());
-  return {};
-}
-
-template <>
-Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool> data, nonstd::span<const usize> chunkOffset, nonstd::span<const usize> chunkDims) const
-{
-  if(!isValid())
+  hid_t dataType = Support::HdfTypeForPrimitive<T>();
+  if(dataType == -1)
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
   }
 
-  // DataSet does not support bool data.
-  std::vector<uint8> data2(data.size());
-  auto dataset = openH5Dataset();
-  dataset.select({chunkOffset.data(), chunkDims.data()}).read(data2);
-  // Copy data back into span<bool>
-  std::copy(data2.begin(), data2.end(), data.begin());
+  hid_t datasetId = getId();
+  hid_t fileSpaceId = H5Dget_space(datasetId);
+  if(fileSpaceId < 0)
+  {
+    return MakeErrorResult(-1002, "DatasetReader error: Unable to open the dataspace.");
+  }
+
+  hsize_t totalElements;
+  std::vector<hsize_t> memDims;
+  int rank = H5Sget_simple_extent_ndims(fileSpaceId);
+  std::vector<hsize_t> dims(rank), maxDims(rank);
+  H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
+  if(start.has_value() && count.has_value())
+  {
+    // Both start and count are provided
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
+    {
+      return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyperslab.");
+    }
+    memDims = count.value();
+  }
+  else if(start.has_value())
+  {
+    // Only start is provided
+    std::vector<hsize_t> countRemaining(rank);
+    for(int i = 0; i < rank; ++i)
+    {
+      countRemaining[i] = dims[i] - start->at(i);
+    }
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
+    {
+      return MakeErrorResult(-1004, "DatasetReader error: Unable to select hyperslab.");
+    }
+    memDims = countRemaining;
+  }
+  else if(count.has_value())
+  {
+    // Only count is provided
+    std::vector<hsize_t> startZeros(rank, 0);
+    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
+    {
+      return MakeErrorResult(-1005, "DatasetReader error: Unable to select hyperslab.");
+    }
+    memDims = count.value();
+  }
+  else
+  {
+    // Neither start nor count is provided
+    memDims = dims;
+  }
+
+  totalElements = std::accumulate(memDims.begin(), memDims.end(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
+
+  if(data.size() != totalElements)
+  {
+    return MakeErrorResult(-1006, "DatasetReader error: Span size does not match the number of elements to read.");
+  }
+
+  hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), NULL);
+  if(memSpaceId < 0)
+  {
+    return MakeErrorResult(-1007, "DatasetReader error: Unable to create memory dataspace.");
+  }
+
+  if(H5Dread(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, data.data()) < 0)
+  {
+    H5Sclose(memSpaceId);
+    H5Sclose(fileSpaceId);
+    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+  }
+
+  H5Sclose(memSpaceId);
+  H5Sclose(fileSpaceId);
+
   return {};
 }
+#endif
 
-std::vector<usize> DatasetIO::getChunkDimensions() const
+//template <>
+//Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool> data, nonstd::span<const usize> chunkOffset, nonstd::span<const usize> chunkDims) const
+//{
+//  if(!isValid())
+//  {
+//    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+//  }
+//
+//  // DataSet does not support bool data.
+//  std::vector<uint8> data2(data.size());
+//  auto dataset = openH5Dataset();
+//  dataset.select({chunkOffset.data(), chunkDims.data()}).read(data2);
+//  // Copy data back into span<bool>
+//  std::copy(data2.begin(), data2.end(), data.begin());
+//  return {};
+//}
+
+std::vector<nx::core::usize> DatasetIO::getChunkDimensions() const
 {
-  auto dataset = openH5Dataset();
-  auto id = dataset.getId();
-  auto propertyListId = dataset.getCreatePropertyList().getId();
+  auto id = open();
+  auto propertyListId = H5Dget_create_plist(getId());
   H5D_layout_t layout = H5Pget_layout(propertyListId);
   if(layout == H5D_CHUNKED)
   {
@@ -570,11 +743,37 @@ std::vector<usize> DatasetIO::getChunkDimensions() const
   }
 }
 
-std::vector<usize> DatasetIO::getDimensions() const
+std::vector<nx::core::usize> DatasetIO::getDimensions() const
 {
-  auto dataset = openH5Dataset();
-  auto dims = dataset.getDimensions();
-  return std::vector<usize>(dims.begin(), dims.end());
+  std::vector<hsize_t> dims;
+  auto dataspaceId = H5Dget_space(getId());
+  
+  if(dataspaceId >= 0)
+  {
+    if(getClassType() == H5T_STRING)
+    {
+      auto typeId = H5Dget_type(getId());
+      size_t typeSize = H5Tget_size(typeId);
+      dims = {typeSize};
+    }
+    else
+    {
+      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
+      std::vector<hsize_t> hdims(rank, 0);
+      /* Get dimensions */
+      auto error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+      if(error < 0)
+      {
+        std::cout << "Error Getting Attribute dims" << std::endl;
+        return dims;
+      }
+      // Copy the dimensions into the dims vector
+      dims.clear(); // Erase everything in the Vector
+      dims.resize(rank);
+      std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
+    }
+  }
+  return dims;
 }
 
 template <typename T>
@@ -583,7 +782,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   Result<> returnError = {};
   ErrorType error = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
-  hid_t dataType = Support::HdfTypeForPrimitive<T>();
+  hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
     return MakeErrorResult(-1, "DataType was unknown");
@@ -595,20 +794,20 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
 
   if(dataspaceId >= 0)
   {
-    auto result = findAndDeleteAttribute();
-    if(result.invalid())
-    {
-      returnError = MakeErrorResult(result.errors()[0].code, "Error Removing existing Attribute");
-    }
-    else
+    //auto result = findAndDeleteAttribute();
+    //if(result.invalid())
+    //{
+    //  returnError = MakeErrorResult(result.errors()[0].code, "Error Removing existing Attribute");
+    //}
+    //else
     {
       /* Create the attribute. */
-      auto dataset = parentGroup()->createOrOpenH5Dataset<T>(getName(), HighFive::DataSpace(hDims));
-      if(dataset.getId() >= 0)
+      auto datasetId = createOrOpenDataset<T>(dataspaceId);
+      if(datasetId >= 0)
       {
         /* Write the attribute data. */
         const void* data = static_cast<const void*>(values.data());
-        error = H5Dwrite(dataset.getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+        error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
         if(error < 0)
         {
           returnError = MakeErrorResult(error, "Error Writing Attribute");
@@ -616,7 +815,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
       }
       else
       {
-        returnError = MakeErrorResult(dataset.getId(), "Error Creating Dataset");
+        returnError = MakeErrorResult(datasetId, "Error Creating Dataset");
       }
     }
     /* Close the dataspace. */
@@ -650,69 +849,244 @@ Result<> DatasetIO::writeSpan<bool>(const DimsType& dims, nonstd::span<const boo
 }
 
 template <typename T>
-Result<> DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType& chunkDims) const
 {
-  if(parentGroupRef().exist(getName()) == false)
+  ChunkedDataInfo dataInfo;
+  dataInfo.dataspaceId = H5Screate_simple(h5Dims.size(), h5Dims.data(), nullptr);
+  if(dataInfo.dataspaceId < 0)
   {
-    auto dataSpace = HighFive::DataSpace(dims, {HighFive::DataSpace::UNLIMITED, HighFive::DataSpace::UNLIMITED});
-    HighFive::DataSetCreateProps props;
-    props.add(HighFive::Chunking(chunkShape));
-
-    try
-    {
-      parentGroupRef().createDataSet(getName(), dataSpace, HighFive::create_datatype<T>(), props);
-    } catch(const std::exception& e)
-    {
-      return MakeErrorResult(-853535, fmt::format("Failed to create chunked Dataset with error: '{}'", e.what()));
-    }
+    return MakeErrorResult<ChunkedDataInfo>(-120, "Failed to open HDF5 Dataspace");
   }
 
-  try
+  dataInfo.dataType = HdfTypeForPrimitive<T>();
+  if(dataInfo.dataType == -1)
   {
-    std::vector<T> data2(values.begin(), values.end());
-    auto dataset = openH5Dataset();
-    dataset.select({offset.data(), chunkShape.data()}).write(data2);
-  } catch(const std::exception& e)
-  {
-    return MakeErrorResult(-853535, fmt::format("Failed to write to Dataset with error: '{}'", e.what()));
+    return MakeErrorResult<ChunkedDataInfo>(-100, "DataType was unkown");
   }
 
+  dataInfo.chunkProp = CreateH5DatasetChunkProperties(chunkDims);
+  dataInfo.datasetId = createOrOpenDataset(dataInfo.dataType, dataInfo.dataspaceId, dataInfo.chunkProp);
+  if(dataInfo.datasetId < 0)
+  {
+    return MakeErrorResult<ChunkedDataInfo>(-110, "Failed to open HDF5 Dataset");
+  }
+  
+  dataInfo.transferProp = H5Pcreate(H5P_DATASET_XFER);
+  if(dataInfo.transferProp < 0)
+  {
+    return MakeErrorResult<ChunkedDataInfo>(-130, "Failed to create HDF5 transfer properties");
+  }
+
+  setId(dataInfo.datasetId);
+  return {dataInfo};
+}
+
+hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
+{
+  std::vector<hsize_t> hDims(chunkDims.size());
+  std::transform(chunkDims.begin(), chunkDims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+  auto cparms = H5Pcreate(H5P_DATASET_CREATE);
+  auto status = H5Pset_chunk(cparms, hDims.size(), hDims.data());
+  if(status < 0)
+  {
+    return H5P_DEFAULT;
+  }
+  return cparms;
+}
+
+nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const
+{
+  herr_t error = H5Pclose(datasetInfo.transferProp);
+  if(error < 0)
+  {
+    return MakeErrorResult(error, "Error Closing Transfer Property");
+  }  
+  error = H5Dclose(datasetInfo.datasetId);
+  if(error < 0)
+  {
+    return MakeErrorResult(error, "Error Closing DataSet");
+  }
+  else
+  {
+    setId(-1);
+  }
+
+  error = H5Pclose(datasetInfo.chunkProp);
+  if(error < 0)
+  {
+    return MakeErrorResult(error, "Error Closing Chunk Property");
+  }
+  error = H5Sclose(datasetInfo.dataspaceId);
+  if(error < 0)
+  {
+    return MakeErrorResult(error, "Error Closing Dataspace");
+  }
+  
   return {};
+}
+
+template <typename T>
+nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<T> values, const DimsType& chunkShape, nonstd::span<const usize> offset) const
+{
+  if(chunkShape.size() != dims.size())
+  {
+    std::string ss = fmt::format("Dimension mismatch when writing DataStore chunk. Num Shape Dimensions: {} Num Chunk Dimensions: {}", dims.size(), chunkShape.size());
+    return MakeErrorResult(k_DimensionMismatchError, ss);
+  }
+
+  Result<> returnError = {};
+  herr_t error = 0;
+  int32_t rank = static_cast<int32_t>(dims.size());
+  hid_t dataType = chunkInfo.dataType;
+  if(dataType == -1)
+  {
+    return MakeErrorResult(-100, "DataType was unkown");
+  }
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+  hid_t dataspaceId = chunkInfo.dataspaceId;
+  if(dataspaceId >= 0)
+  {
+    //auto result = findAndDeleteAttribute();
+    //if(result.invalid())
+    //{
+    //  returnError = MakeErrorResult(result.errors()[0].code, "Error Removing Existing Attribute");
+    //}
+    //else
+    {
+      /* Create the attribute. */
+      auto h5Id = chunkInfo.datasetId;
+      if(h5Id >= 0)
+      {
+        auto plistId = H5Dget_create_plist(h5Id);
+        if(plistId <= 0)
+        {
+          std::cout << "Error Writing Chunk: No PList ID found" << std::endl;
+        }
+        /* Write the attribute data. */
+        void* data = static_cast<void*>(values.data());
+        auto properties = CreateH5DatasetChunkProperties(chunkShape);
+        // error = H5Dwrite_chunk(h5Id, properties, offset.data(), H5P_DEFAULT, data);
+        error = H5Dread_chunk(h5Id, H5P_DEFAULT, offset.data(), H5P_DEFAULT, data);
+        if(error < 0)
+        {
+          returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");
+        }
+      }
+      else
+      {
+        returnError = MakeErrorResult(h5Id, "Error Creating Dataset Chunk");
+      }
+    }
+    /* Close the dataspace after reading all required chunks. */
+  }
+  else
+  {
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
+  }
+  return returnError;
 }
 
 template <>
-Result<> DatasetIO::writeChunk<bool>(const DimsType& dims, nonstd::span<const bool> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+Result<> DatasetIO::readChunk<bool>(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<bool> values, const DimsType& chunkShape, nonstd::span<const usize> offset) const
 {
-  if(parentGroupRef().exist(getName()) == false)
-  {
-    auto dataSpace = HighFive::DataSpace(dims, {HighFive::DataSpace::UNLIMITED, HighFive::DataSpace::UNLIMITED});
-    HighFive::DataSetCreateProps props;
-    props.add(HighFive::Chunking(chunkShape));
+  std::vector<H5_BOOL_TYPE> h5ValuesVec(values.begin(), values.end());
+  nonstd::span<H5_BOOL_TYPE> h5Values(h5ValuesVec.data(), h5ValuesVec.size());
 
-    try
-    {
-      parentGroupRef().createDataSet(getName(), dataSpace, HighFive::create_datatype<H5_BOOL_TYPE>(), props);
-    } catch(const std::exception& e)
-    {
-      return MakeErrorResult(-853535, fmt::format("Failed to create chunked Dataset with error: '{}'", e.what()));
-    }
+  auto result = readChunk(chunkInfo, dims, h5Values, chunkShape, offset);
+  if(result.invalid())
+  {
+    return result;
   }
-
-  try
-  {
-    // DataSet does not support bool data.
-    std::vector<H5_BOOL_TYPE> data2(values.begin(), values.end());
-    auto dataset = openH5Dataset();
-    dataset.select({offset.data(), chunkShape.data()}).write(data2);
-  } catch(const std::exception& e)
-  {
-    return MakeErrorResult(-853535, fmt::format("Failed to write to Dataset with error: '{}'", e.what()));
-  }
-
+  std::copy(h5Values.begin(), h5Values.end(), values.begin());
   return {};
 }
 
-Result<> DatasetIO::writeString(const std::string& text)
+template <typename T>
+Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+{
+  if(chunkShape.size() != dims.size())
+  {
+    std::string ss = fmt::format("Dimension mismatch when writing DataStore chunk. Num Shape Dimensions: {} Num Chunk Dimensions: {}", dims.size(), chunkShape.size());
+    return MakeErrorResult(k_DimensionMismatchError, ss);
+  }
+
+  Result<> returnError = {};
+  herr_t error = 0;
+  int32_t rank = static_cast<int32_t>(dims.size());
+  hid_t dataType = chunkInfo.dataType;
+  if(dataType == -1)
+  {
+    return MakeErrorResult(-100, "DataType was unkown");
+  }
+  //std::vector<hsize_t> hDims(chunkShape.size());
+  //std::transform(chunkShape.begin(), chunkShape.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+  //hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
+  hid_t dataspaceId = chunkInfo.dataspaceId;
+  if(dataspaceId >= 0)
+  {
+    /*auto result = findAndDeleteAttribute();
+    if(result.invalid())
+    {
+      returnError = MakeErrorResult(result.errors()[0].code, "Error Removing Existing Attribute");
+    }
+    else*/
+    {
+      /* Create the attribute. */
+      auto h5Id = chunkInfo.datasetId;
+      if(h5Id >= 0)
+      {
+        //auto plistId = H5Dget_create_plist(h5Id);
+        //if(plistId <= 0)
+        //{
+        //  std::cout << "Error Writing Chunk: No PList ID found" << std::endl;
+        //}
+        /* Write the attribute data. */
+        const void* data = static_cast<const void*>(values.data());
+
+        // debug
+        #if 0
+        hid_t dspace = H5Dget_space(h5Id);
+        const int ndimsDebug = H5Sget_simple_extent_ndims(dspace);
+        std::vector<hsize_t> dimsDebug(ndimsDebug);
+        H5Sget_simple_extent_dims(dspace, dimsDebug.data(), NULL);
+        #endif
+        // end debug
+
+        error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offset.data(), values.size() * sizeof(T), data);
+        if(error < 0)
+        {
+          returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");
+        }
+      }
+      else
+      {
+        returnError = MakeErrorResult(h5Id, "Error Creating Dataset Chunk");
+      }
+    }
+    //error = H5Sclose(dataspaceId);
+    //if(error < 0)
+    //{
+    //  return MakeErrorResult(error, "Error Closing Dataspace");
+    //}
+  }
+  else
+  {
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
+  }
+  return returnError;
+}
+
+template <>
+nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const bool> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+{
+  std::vector<H5_BOOL_TYPE> h5ValuesVec(values.begin(), values.end());
+  nonstd::span<const H5_BOOL_TYPE> h5Values(h5ValuesVec.data(), h5ValuesVec.size());
+
+  return writeChunk(chunkInfo, dims, h5Values, chunkShape, offset);
+}
+
+nx::core::Result<> DatasetIO::writeString(const std::string& text)
 {
   if(!isValid())
   {
@@ -736,7 +1110,7 @@ Result<> DatasetIO::writeString(const std::string& text)
         if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
         {
           /* Create or open the dataset. */
-          hid_t id = parentGroup()->createOrOpenHDF5Dataset(getName(), typeId, dataspaceId);
+          hid_t id = H5Dcreate(parentGroup()->getId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
           if(id >= 0)
           {
             if(!text.empty())
@@ -754,22 +1128,28 @@ Result<> DatasetIO::writeString(const std::string& text)
           }
           H5Dclose(id);
         }
-        H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
+        if(H5Sclose(dataspaceId) < 0)
+        {
+          returnError = MakeErrorResult(error, "Error closing Dataspace");
+        }
       }
     }
-    H5S_CLOSE_H5_TYPE(typeId, error, returnError)
+    if(H5Sclose(typeId) < 0)
+    {
+      returnError = MakeErrorResult(error, "Error closing DataType");
+    }
   }
   return returnError;
 }
 
-Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string>& text)
+nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string>& text)
 {
   if(!isValid())
   {
     return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
   }
 
-  hid_t parentId = parentGroupRef().getId();
+  hid_t parentId = parentGroup()->getId();
   hid_t dataspaceID = -1;
   hid_t memSpace = -1;
   hid_t datatype = -1;
@@ -821,6 +1201,7 @@ Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string>& text)
   return returnError;
 }
 
+#if 0
 usize DatasetIO::getNumAttributes() const
 {
   if(!exists())
@@ -841,22 +1222,68 @@ std::vector<std::string> DatasetIO::getAttributeNames() const
 
 void DatasetIO::deleteAttribute(const std::string& name)
 {
-  if(!exists())
+  try
   {
-    return;
+    if(!exists())
+    {
+      return;
+    }
+    openH5Dataset().deleteAttribute(name);
   }
-  openH5Dataset().deleteAttribute(name);
+  catch (const std::exception& e)
+  {
+    deleteH5Attribute(name);
+  }
 }
+
+Result<> DatasetIO::deleteH5Attribute(const std::string& name)
+{
+  auto parentId = parentGroupRef().getId();
+  hsize_t attributeNum = 0;
+  int32_t hasAttribute = H5Aiterate(parentId, H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
+
+  /* The attribute already exists, delete it */
+  if(hasAttribute == 1)
+  {
+    herr_t error = H5Adelete(parentId, getName().c_str());
+    if(error < 0)
+    {
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      return MakeErrorResult(error, ss);
+    }
+  }
+  return {};
+}
+#endif
 
 bool DatasetIO::exists() const
 {
-  return parentGroup()->groupRef().exist(getName());
+  if (getId() > 0)
+  {
+    return true;
+  }
+
+  return parentGroup()->isDataset(getName());
 }
 
-hid_t DatasetIO::getH5Id() const
-{
-  return openH5Dataset().getId();
-}
+//hid_t DatasetIO::getH5Id() const
+//{
+//  if (m_Id < 0)
+//  {
+//    m_Id = openH5Dataset().getId();
+//  }
+//  return m_Id;
+//}
+
+//hid_t DatasetIO::getRawH5Id() const
+//{
+//  if (m_Id < 0)
+//  {
+//    auto parentId = parentGroup()->getH5Id();
+//    m_Id = H5Dopen(parentId, getName().c_str(), H5P_DEFAULT);
+//  }
+//  return m_Id;
+//}
 
 // declare readAsVector
 template SIMPLNX_EXPORT std::vector<int8_t> DatasetIO::readAsVector<int8_t>() const;
@@ -903,6 +1330,7 @@ template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<size_t>(nonstd::span<si
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 
+#if 0
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<int8_t>(nonstd::span<int8_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<int16_t>(nonstd::span<int16_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<int32_t>(nonstd::span<int32_t>, nonstd::span<const usize>, nonstd::span<const usize>) const;
@@ -918,6 +1346,7 @@ template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<size_t>(nonstd::sp
 #endif
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<float>(nonstd::span<float>, nonstd::span<const usize>, nonstd::span<const usize>) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunkIntoSpan<double>(nonstd::span<double>, nonstd::span<const usize>, nonstd::span<const usize>) const;
+#endif
 
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpan<int8_t>(const DimsType&, nonstd::span<const int8_t>);
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpan<int16_t>(const DimsType&, nonstd::span<const int16_t>);
@@ -931,16 +1360,42 @@ template SIMPLNX_EXPORT Result<> DatasetIO::writeSpan<float>(const DimsType&, no
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpan<double>(const DimsType&, nonstd::span<const double>);
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpan<bool>(const DimsType&, nonstd::span<const bool>);
 
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int8_t>(const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int16_t>(const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int32_t>(const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int64_t>(const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint8_t>(const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint16_t>(const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint32_t>(const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint64_t>(const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<float>(const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<double>(const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<bool>(const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<char>(const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int8_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int16_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int32_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int64_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<uint8_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<uint16_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<uint32_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<uint64_t>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<float>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<double>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<bool>(const DimsType&, const DimsType&) const;
+template SIMPLNX_EXPORT Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<char>(const DimsType&, const DimsType&) const;
+
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int8_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int16_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<int32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int32_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<int64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int64_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<uint8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<uint8_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<uint16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<uint16_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<uint32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<uint32_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<uint64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<uint64_t>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<float>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<double>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<bool>, const DimsType&, nonstd::span<const usize>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<char>, const DimsType&, nonstd::span<const usize>) const;
+
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const usize>);
 } // namespace nx::core::HDF5

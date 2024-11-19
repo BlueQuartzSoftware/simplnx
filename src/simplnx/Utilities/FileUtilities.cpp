@@ -14,8 +14,6 @@
 #define FSPP_ACCESS_FUNC_NAME access
 #endif
 
-namespace fs = std::filesystem;
-
 namespace
 {
 #ifdef _WIN32
@@ -84,19 +82,19 @@ Result<> ValidateCSVFile(const std::string& filePath)
 {
   constexpr int64_t bufferSize = 2048;
 
-  auto absPath = fs::absolute(filePath);
+  auto absPath = std::filesystem::absolute(filePath);
 
-  if(!fs::exists({absPath}))
+  if(!std::filesystem::exists({absPath}))
   {
     return MakeErrorResult(-300, fmt::format("CSV file does not exist: {}", absPath.string()));
   }
-  if(fs::is_directory({absPath}))
+  if(std::filesystem::is_directory({absPath}))
   {
     return MakeErrorResult(-301, fmt::format("CSV input file is a directory: {}", absPath.string()));
   }
 
   // Obtain the file size
-  usize fileSize = fs::file_size(absPath);
+  const usize fileSize = std::filesystem::file_size(absPath);
 
   // Open the file
   std::ifstream in(absPath.c_str(), std::ios_base::binary);
@@ -180,7 +178,7 @@ bool HasWriteAccess(const std::string& path)
 }
 
 //-----------------------------------------------------------------------------
-Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
+Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, bool isFile)
 {
   if(path.empty())
   {
@@ -200,7 +198,7 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
   {
     try
     {
-      checkedPath = fs::absolute(checkedPath);
+      checkedPath = std::filesystem::absolute(checkedPath);
     } catch(const std::filesystem::filesystem_error& error)
     {
       return MakeErrorResult(-15, fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' was relative and trying to create an absolute path threw an exception with message '{}'. "
@@ -219,7 +217,7 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
   // can try to create the directories.
   //  On Windows the user put in a bogus drive letter which is just a hard failure
   // because we can't make up a new drive letter.
-  while(!fs::exists(checkedPath) && checkedPath != rootPath)
+  while(!std::filesystem::exists(checkedPath) && checkedPath != rootPath)
   {
     checkedPath = checkedPath.parent_path();
   }
@@ -229,7 +227,7 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
     return MakeErrorResult(-19, fmt::format("ValidateDirectoryWritePermission() Error: Input path '{}' resolved to an empty path", path.string()));
   }
 
-  if(!fs::exists(checkedPath))
+  if(!std::filesystem::exists(checkedPath))
   {
     return MakeErrorResult(-11,
                            fmt::format("ValidateDirectoryWritePermission() Error: Input Path '{}' resolved to '{}'. The drive does not exist on this system.", path.string(), checkedPath.string()));

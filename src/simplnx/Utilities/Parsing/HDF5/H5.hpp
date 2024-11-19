@@ -3,7 +3,8 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include <highfive/H5DataType.hpp>
+//#include <highfive/H5DataType.hpp>
+#include <H5Tpublic.h>
 
 #include <cstdint>
 #include <optional>
@@ -44,7 +45,7 @@ std::optional<DataType> SIMPLNX_EXPORT toCommonType(Type typeEnum);
  * @param typeEnum
  * @return DataType
  */
-std::optional<nx::core::DataType> SIMPLNX_EXPORT toCommonType(HighFive::DataType typeEnum);
+//std::optional<nx::core::DataType> SIMPLNX_EXPORT toCommonType(HighFive::DataType typeEnum);
 
 /**
  * @brief Returns a Type enum representing the corresponding type matching the

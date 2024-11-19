@@ -40,12 +40,14 @@ std::optional<nx::core::DataType> nx::core::HDF5::toCommonType(Type typeEnum)
   }
 }
 
+#if 0
 std::optional<nx::core::DataType> nx::core::HDF5::toCommonType(HighFive::DataType typeEnum)
 {
   auto h5Type = getTypeFromId(typeEnum.getId());
   std::string typeStr = typeEnum.string();
   return toCommonType(h5Type);
 }
+#endif
 
 nx::core::HDF5::Type nx::core::HDF5::getTypeFromId(IdType typeId)
 {

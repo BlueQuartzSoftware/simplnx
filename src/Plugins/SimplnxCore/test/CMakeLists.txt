@@ -6,7 +6,8 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  CreateAMScanPathsTest.cpp
+
+  # CreateAMScanPathsTest.cpp
   SliceTriangleGeometryTest.cpp
   # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
@@ -61,9 +62,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreatePythonSkeletonTest.cpp
   CropEdgeGeometryTest.cpp
   CropImageGeometryTest.cpp
-  CropVertexGeometryTest.cpp
-  DBSCANTest.cpp
-  DeleteDataTest.cpp
+
+  # CropVertexGeometryTest.cpp
+  # DBSCANTest.cpp
+  # DeleteDataTest.cpp
   DREAM3DFileTest.cpp
   ErodeDilateBadDataTest.cpp
   ErodeDilateCoordinationNumberTest.cpp

@@ -37,7 +37,12 @@ public:
     try
     {
       std::string numNeighborsName;
-      dataReader.readAttribute("Linked NumNeighbors Dataset", numNeighborsName);
+      auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
+      if (numNeighborsNameResult.invalid())
+      {
+        return {};
+      }
+      numNeighborsName = std::move(numNeighborsNameResult.value());
 
       auto numNeighborsReaderResult = parentGroup.openDataset(numNeighborsName);
       if(numNeighborsReaderResult.invalid())
@@ -174,7 +179,7 @@ public:
     {
       return flattenedResult;
     }
-    datasetWriter.createAttribute("Linked NumNeighbors Dataset", neighborList.getNumNeighborsArrayName());
+    datasetWriter.writeStringAttribute("Linked NumNeighbors Dataset", neighborList.getNumNeighborsArrayName());
     return WriteObjectAttributes(dataStructureWriter, neighborList, datasetWriter, importable);
   }
 

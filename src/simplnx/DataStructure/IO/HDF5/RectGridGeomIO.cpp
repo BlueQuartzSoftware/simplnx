@@ -44,7 +44,9 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   // Read Dimensions
   std::vector<size_t> volumeDimensions(3);
-  groupReader.readAttribute("Dimensions", volumeDimensions);
+  auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
+  volumeDimensions = std::move(volumeDimensionsResult.value());
+
   geometry->setDimensions(volumeDimensions);
 
   // Read DataObject IDs
@@ -78,7 +80,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     dimsVector[i] = dimensions[i];
   }
 
-  groupWriter.createAttribute(IOConstants::k_DimensionsTag, dimsVector);
+  groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector);
 
   // Write DataObject IDs
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);

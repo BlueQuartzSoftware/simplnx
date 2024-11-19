@@ -62,9 +62,14 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
       return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
     }
         
-    groupReader.readAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
-    groupReader.readAttribute(IOConstants::k_H5_ORIGIN, originVector);
-    groupReader.readAttribute(IOConstants::k_H5_SPACING, spacingVector);
+    auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
+    volDimsVector = std::move(volDimsVectorResult.value());
+
+    auto originVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
+    originVector = std::move(originVectorResult.value());
+
+    auto spacingVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
+    spacingVector = std::move(spacingVectorResult.value());
   }
   
   SizeVec3 volDims;
@@ -112,9 +117,9 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
     originVector[i] = origin[i];
   }
 
-  groupWriter.createAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
-  groupWriter.createAttribute(IOConstants::k_H5_ORIGIN, originVector);
-  groupWriter.createAttribute(IOConstants::k_H5_SPACING, spacingVector);
+  groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
+  groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, originVector);
+  groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, spacingVector);
   
   return {};
 }

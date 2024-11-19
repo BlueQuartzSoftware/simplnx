@@ -1,6 +1,8 @@
 #include "IDataIO.hpp"
 
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -15,24 +17,14 @@ DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader
   {
     return {};
   }
-  DataObject::IdType id;
-  auto objectType = groupReader.getObjectType();
-  try
-  {
-    if(objectType == HighFive::ObjectType::Group)
-    {
-      dynamic_cast<const GroupIO&>(groupReader).readAttribute(tag, id);
-    }
-    else if(objectType == HighFive::ObjectType::Dataset)
-    {
-      dynamic_cast<const DatasetIO&>(groupReader).readAttribute(tag, id);
-    }
-  }
-  catch (const std::exception& e)
+  
+  auto result = groupReader.readScalarAttribute<DataObject::IdType>(tag);
+  if (result.invalid())
   {
     return {};
   }
-  
+  DataObject::IdType id = std::move(result.value());
+
   return id;
 }
 
@@ -44,17 +36,7 @@ Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optio
   }
 
   DataObject::IdType id = objectId.value();
-  auto objectType = objectWriter.getObjectType();
-  if(objectType == HighFive::ObjectType::Group)
-  {
-    dynamic_cast<GroupIO&>(objectWriter).createAttribute(tag, id);
-  }
-  if(objectType == HighFive::ObjectType::Dataset)
-  {
-    dynamic_cast<DatasetIO&>(objectWriter).createAttribute(tag, id);
-  }
-  
-  return {};
+  return objectWriter.writeScalarAttribute(tag, id);
 }
 
 Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable)
@@ -63,26 +45,12 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());
 
   std::string dataTypeName = dataObject.getTypeName();
-  auto objectType = objectWriter.getObjectType();
-  if(objectType == HighFive::ObjectType::Group)
-  {
-    auto& groupWriter = dynamic_cast<GroupIO&>(objectWriter);
-    groupWriter.createAttribute(Constants::k_ObjectTypeTag, dataTypeName);
-    groupWriter.createAttribute(Constants::k_ObjectIdTag, dataObject.getId());
+  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataTypeName);
+  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject.getId());
 
-    int32 value = (importable ? 1 : 0);
-    groupWriter.createAttribute(Constants::k_ImportableTag, value);
-  }
-  else if(objectType == HighFive::ObjectType::Dataset)
-  {
-    auto& datasetWriter = dynamic_cast<DatasetIO&>(objectWriter);
-    datasetWriter.createAttribute(Constants::k_ObjectTypeTag, dataTypeName);
-    datasetWriter.createAttribute(Constants::k_ObjectIdTag, dataObject.getId());
+  int32 value = (importable ? 1 : 0);
+  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
 
-    int32 value = (importable ? 1 : 0);
-    datasetWriter.createAttribute(Constants::k_ImportableTag, value);
-  }  
-  
   return {};
 }
 } // namespace nx::core::HDF5

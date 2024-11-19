@@ -58,8 +58,8 @@ public:
   virtual const ShapeType& getComponentShape() const = 0;
 
   /**
-   * @brief Returns the chunk shape if the DataStore is separated into chunks.
-   * If the DataStore does not have chunks, this method returns a null optional.
+   * @brief Returns the chunk shape if the DataStore is separated into chunkShape.
+   * If the DataStore does not have chunkShape, this method returns a null optional.
    * @return optional Shapetype
    */
   virtual std::optional<ShapeType> getChunkShape() const = 0;

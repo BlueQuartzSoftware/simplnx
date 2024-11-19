@@ -69,69 +69,75 @@ public:
     }
     auto datasetReader = std::move(datasetReaderResult.value());
 
-    auto type = datasetReader.getType();
-    const std::string typeStr = type.string();
+    auto typeResult = datasetReader.getDataType();
+    const auto type = std::move(typeResult.value());
+    //const std::string typeStr = type.string();
 
     std::string dataTypeStr;
-    datasetReader.readAttribute(Constants::k_ObjectTypeTag, dataTypeStr);
+    auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    dataTypeStr = std::move(dataTypeStrResult.value());
     const bool isBoolArray = (dataTypeStr.compare("DataArray<bool>") == 0);
 
     // Check ability to import the data
     int32 importable = 0;
-    datasetReader.readAttribute(Constants::k_ImportableTag, importable);
+    auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+    if (importableResult.valid())
+    {
+      importable = std::move(importableResult.value());
+    }
     if(importable == 0)
     {
       return {};
     }
 
     int32 err = 0;
-
+    switch(type)
     {
-      if(typeStr.compare("Float32") == 0)
+    case DataType::float32:
       {
         importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(typeStr.compare("Float64") == 0)
+    case DataType::float64:
       {
         importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<int8>") == 0)
+    case DataType::int8:
       {
         importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<int16>") == 0)
+    case DataType::int16:
       {
         importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<int32>") == 0)
+    case DataType::int32:
       {
         importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<int64>") == 0)
+    case DataType::int64:
       {
         importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<bool>") == 0)
+    case DataType::boolean:
       {
         importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<uint8>") == 0)
+    case DataType::uint8:
       {
         importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<uint16>") == 0)
+    case DataType::uint16:
       {
         importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<uint32>") == 0)
+    case DataType::uint32:
       {
         importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else if(dataTypeStr.compare("DataArray<uint64>") == 0)
+    case DataType::uint64:
       {
         importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      else
+    default:
       {
         err = -777;
       }

@@ -3,6 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace
@@ -38,15 +39,24 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   std::string dataArrayName = datasetReader.getName();
 
   // Check ability to import the data
-  int32 importable = 0;
-  datasetReader.readAttribute(Constants::k_ImportableTag, importable);
+  auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+  if (importableResult.invalid())
+  {
+    return ConvertResult(std::move(importableResult));
+  }
+  int32 importable = std::move(importableResult.value());
   if(importable == 0)
   {
     return {};
   }
 
-  uint64 numValues;
-  datasetReader.readAttribute(k_TupleDimsAttrName, numValues);
+  
+  auto numValuesResult = datasetReader.readScalarAttribute<uint64>(k_TupleDimsAttrName);
+  if(numValuesResult.invalid())
+  {
+    return ConvertResult(std::move(numValuesResult));
+  }
+  uint64 numValues = std::move(numValuesResult.value());
 
   std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
   const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(strings), parentId);
@@ -79,7 +89,7 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
   // Write the number of values as an attribute for quicker preflight times
   {
     uint64 value = dataArray.size();
-    datasetWriter.createAttribute(k_TupleDimsAttrName, value);
+    datasetWriter.writeScalarAttribute(k_TupleDimsAttrName, value);
   }
 
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);

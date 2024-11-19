@@ -13,6 +13,7 @@
 #include <mutex>
 
 using namespace nx::core;
+namespace fs = std::filesystem;
 
 // -----------------------------------------------------------------------------
 ExecuteProcess::ExecuteProcess(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExecuteProcessInputValues* inputValues)

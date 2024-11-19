@@ -693,7 +693,7 @@ inline T* allocate(size_t count = 1)
  * Pooled storage allocator
  *
  * The following routines allow for the efficient allocation of storage in
- * small chunks from a specified pool.  Rather than allowing each structure
+ * small chunkShape from a specified pool.  Rather than allowing each structure
  * to be freed individually, an entire pool of storage is freed at once.
  * This method has two advantages over just using malloc() and free().  First,
  * it is far more efficient for allocating small objects, as there is
@@ -747,7 +747,7 @@ public:
     free_all();
   }
 
-  /** Frees all allocated memory chunks */
+  /** Frees all allocated memory chunkShape */
   void free_all()
   {
     while(base != NULL)
