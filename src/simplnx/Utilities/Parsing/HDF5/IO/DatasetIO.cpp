@@ -1328,6 +1328,7 @@ bool DatasetIO::exists() const
   return false;
   // return parentGroup()->isDataset(getName());
 }
+#endif
 
 // hid_t DatasetIO::getH5Id() const
 //{
@@ -1375,6 +1376,25 @@ std::string DatasetIO::getFilterName() const
   return filterNames;
   // return name;
 }
+
+//hid_t DatasetIO::getH5Id() const
+//{
+//  if (m_Id < 0)
+//  {
+//    m_Id = openH5Dataset().getId();
+//  }
+//  return m_Id;
+//}
+
+//hid_t DatasetIO::getRawH5Id() const
+//{
+//  if (m_Id < 0)
+//  {
+//    auto parentId = parentGroup()->getH5Id();
+//    m_Id = H5Dopen(parentId, getName().c_str(), H5P_DEFAULT);
+//  }
+//  return m_Id;
+//}
 
 // declare readAsVector
 template SIMPLNX_EXPORT std::vector<int8_t> DatasetIO::readAsVector<int8_t>() const;

@@ -244,6 +244,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   H5Aclose(attribId);
   return returnResult;
 }
+#endif
 
 Result<> ObjectIO::writeStringAttribute(const std::string& attributeName, const std::string& text)
 {
