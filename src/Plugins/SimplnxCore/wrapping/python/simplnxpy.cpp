@@ -506,6 +506,55 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "Convert numpy dtype to simplnx DataType", "dtype"_a);
 
+  mod.def(
+      "convert_np_dtype_to_numerictype",
+      [](const py::dtype& dtype) {
+        if((dtype.attr("__eq__")(py::dtype::of<int8>())).cast<bool>())
+        {
+          return NumericType::int8;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<uint8>())).cast<bool>())
+        {
+          return NumericType::uint8;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<int16>())).cast<bool>())
+        {
+          return NumericType::int16;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<uint16>())).cast<bool>())
+        {
+          return NumericType::uint16;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<int32>())).cast<bool>())
+        {
+          return NumericType::int32;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<uint32>())).cast<bool>())
+        {
+          return NumericType::uint32;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<int64>())).cast<bool>())
+        {
+          return NumericType::int64;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<uint64>())).cast<bool>())
+        {
+          return NumericType::uint64;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<float32>())).cast<bool>())
+        {
+          return NumericType::float32;
+        }
+        if((dtype.attr("__eq__")(py::dtype::of<float64>())).cast<bool>())
+        {
+          return NumericType::float64;
+        }
+
+        std::string dtypeStr = py::str(static_cast<py::object>(dtype));
+        throw std::invalid_argument(fmt::format("Unable to convert dtype to NumericType: Unsupported dtype '{}'.", dtypeStr));
+      },
+      "Convert numpy dtype to simplnx NumericType", "dtype"_a);
+
   py::enum_<ArrayHandlingType> arrayHandlingType(mod, "ArrayHandlingType");
   arrayHandlingType.value("Copy", ArrayHandlingType::Copy);
   arrayHandlingType.value("Move", ArrayHandlingType::Move);
@@ -1530,6 +1579,7 @@ PYBIND11_MODULE(simplnx, mod)
   mod.def("get_all_data_types", &GetAllDataTypes);
 
   mod.def("convert_numeric_type_to_data_type", &ConvertNumericTypeToDataType);
+  mod.def("convert_data_type_to_numeric_type", &ConvertDataTypeToNumericType);
 
   mod.def("get_filters", [corePlugin]() {
     auto filterHandles = corePlugin->getFilterHandles();
