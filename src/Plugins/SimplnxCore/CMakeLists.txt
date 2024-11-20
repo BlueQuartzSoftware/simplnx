@@ -76,7 +76,7 @@ set(FilterList
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
   ComputeBoundaryElementFractionsFilter
-  ComputeTriangleGeomSizesFilter
+  ComputeTriangleGeomVolumesFilter
   FlyingEdges3DFilter
   CreateColorMapFilter
   IdentifySampleFilter
@@ -188,7 +188,7 @@ set(AlgorithmList
   ComputeBiasedFeatures
   ComputeBoundaryCells
   FindNRingNeighbors
-  ComputeTriangleGeomSizes
+  ComputeTriangleGeomVolumes
   FlyingEdges3D
   CreateColorMap
   InitializeData

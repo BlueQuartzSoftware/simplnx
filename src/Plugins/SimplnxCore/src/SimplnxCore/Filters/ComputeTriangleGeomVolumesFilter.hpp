@@ -11,17 +11,17 @@ namespace nx::core
  * @class ComputeTriangleGeomSizesFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT ComputeTriangleGeomSizesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeTriangleGeomVolumesFilter : public IFilter
 {
 public:
-  ComputeTriangleGeomSizesFilter() = default;
-  ~ComputeTriangleGeomSizesFilter() noexcept override = default;
+  ComputeTriangleGeomVolumesFilter() = default;
+  ~ComputeTriangleGeomVolumesFilter() noexcept override = default;
 
-  ComputeTriangleGeomSizesFilter(const ComputeTriangleGeomSizesFilter&) = delete;
-  ComputeTriangleGeomSizesFilter(ComputeTriangleGeomSizesFilter&&) noexcept = delete;
+  ComputeTriangleGeomVolumesFilter(const ComputeTriangleGeomVolumesFilter&) = delete;
+  ComputeTriangleGeomVolumesFilter(ComputeTriangleGeomVolumesFilter&&) noexcept = delete;
 
-  ComputeTriangleGeomSizesFilter& operator=(const ComputeTriangleGeomSizesFilter&) = delete;
-  ComputeTriangleGeomSizesFilter& operator=(ComputeTriangleGeomSizesFilter&&) noexcept = delete;
+  ComputeTriangleGeomVolumesFilter& operator=(const ComputeTriangleGeomVolumesFilter&) = delete;
+  ComputeTriangleGeomVolumesFilter& operator=(ComputeTriangleGeomVolumesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
@@ -104,4 +104,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeTriangleGeomSizesFilter, "a979bd9b-834e-4497-84b0-ab7a8add341a");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeTriangleGeomVolumesFilter, "a979bd9b-834e-4497-84b0-ab7a8add341a");

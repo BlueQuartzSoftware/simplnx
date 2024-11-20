@@ -1,4 +1,4 @@
-#include "SimplnxCore/Filters/ComputeTriangleGeomSizesFilter.hpp"
+#include "SimplnxCore/Filters/ComputeTriangleGeomVolumesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -37,15 +37,15 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
 
   {
     // Instantiate the filter and an Arguments Object
-    ComputeTriangleGeomSizesFilter filter;
+    ComputeTriangleGeomVolumesFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
-    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
-    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
+    args.insertOrAssign(ComputeTriangleGeomVolumesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
+    args.insertOrAssign(ComputeTriangleGeomVolumesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+    args.insertOrAssign(ComputeTriangleGeomVolumesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrixPath));
     // Output Path
-    args.insertOrAssign(ComputeTriangleGeomSizesFilter::k_VolumesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VolumesArrayName));
+    args.insertOrAssign(ComputeTriangleGeomVolumesFilter::k_VolumesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VolumesArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
