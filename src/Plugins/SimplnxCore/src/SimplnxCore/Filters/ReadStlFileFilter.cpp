@@ -77,7 +77,7 @@ Parameters ReadStlFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Data [AttributeMatrix]",
                                                           "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Labels", "The name of the triangle normals data array", "Face Normals"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Normals", "The name of the triangle normals data array", "Face Normals"));
 
   return params;
 }
