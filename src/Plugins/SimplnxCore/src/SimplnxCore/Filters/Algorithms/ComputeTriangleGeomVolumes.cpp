@@ -85,26 +85,29 @@ Result<> ComputeTriangleGeomVolumes::operator()()
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   featAttrMat.resizeTuples(tDims);
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
+  volumes.fill(0.0f); // Initialize all volumes to ZERO
 
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
-
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
     triangleGeom.getFacePointIds(i, faceVertexIndices);
-    if(faceLabels[2 * i + 0] == -1)
+    int32 faceLabel0 = faceLabels[2 * i + 0];
+    int32 faceLabel1 = faceLabels[2 * i + 1];
+
+    if(faceLabel0 < 0 && faceLabel1 >= 0)
     {
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabels[2 * i + 1]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
-    else if(faceLabels[2 * i + 1] == -1)
+    else if(faceLabel1 < 0 && faceLabel0 >= 0)
     {
-      volumes[faceLabels[2 * i + 0]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
     else
     {
-      volumes[faceLabels[2 * i + 0]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabels[2 * i + 1]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
   }
 
