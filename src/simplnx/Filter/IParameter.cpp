@@ -44,7 +44,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   }
   else
   {
-    warnings.push_back(Warning{-1, fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}", name(), k_VersionKey, version)});
+    warnings.push_back(Warning{-1, fmt::format("{}: Parameter key '{}' does not exist. Assuming version={}. To fix this, save the pipeline file.", name(), k_VersionKey, version)});
   }
 
   nlohmann::json valueJson;
