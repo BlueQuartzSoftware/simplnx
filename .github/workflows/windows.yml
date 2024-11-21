@@ -51,8 +51,14 @@ jobs:
         run: |
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Configure
+        id: configure
         run: |
           cmake --preset ci-windows-${{matrix.toolset}} ${{github.workspace}} -T ${{matrix.toolset}}
+      - name: Report vcpkg errors
+        if: ${{ failure() && steps.configure.conclusion == 'failure' }}
+        run: |
+          cmake -E cat C:/vcpkg/buildtrees/itk/install-x64-windows-${{matrix.toolset}}-dbg-out.log
+          cmake -E cat C:/vcpkg/buildtrees/itk/install-x64-windows-${{matrix.toolset}}-dbg-err.log
       - name: Build
         run: |
           cmake --build --preset ci-windows-${{matrix.toolset}}
