@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 using namespace nx::core;
 
@@ -141,4 +142,111 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(cons
   float32 lengthZ = ((max[2] - min[2]) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
   FloatVec3 lengthPerPartition = {lengthX, lengthY, lengthZ};
   return Result<FloatVec3>{lengthPerPartition};
+}
+
+/**
+ * @brief The ComputeTriangleAreasImpl class implements a threaded algorithm that computes the area of each
+ * triangle for a set of triangles
+ */
+class ComputeTriangleAreasImpl
+{
+public:
+  ComputeTriangleAreasImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& areas, const std::atomic_bool& shouldCancel)
+  : m_TriangleGeom(triangleGeom)
+  , m_Areas(areas)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+  virtual ~ComputeTriangleAreasImpl() = default;
+
+  void convert(size_t start, size_t end) const
+  {
+    std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
+    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
+    {
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+      std::array<Point3Df, 3> vertCoords;
+      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
+      m_Areas[triangleIndex] = 0.5F * (vertCoords[0] - vertCoords[1]).cross(vertCoords[0] - vertCoords[2]).magnitude();
+    }
+  }
+
+  void operator()(const Range& range) const
+  {
+    convert(range.min(), range.max());
+  }
+
+private:
+  const TriangleGeom* m_TriangleGeom = nullptr;
+  Float64AbstractDataStore& m_Areas;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
+Result<> GeometryUtilities::ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& faceAreas, const std::atomic_bool& shouldCancel)
+{
+  // Parallel algorithm to find duplicate nodes
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(ComputeTriangleAreasImpl(triangleGeom, faceAreas, shouldCancel));
+
+  return {};
+}
+
+/**
+ * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
+ * triangle for a set of triangles
+ */
+class CalculateNormalsImpl
+{
+public:
+  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
+  : m_TriangleGeom(triangleGeom)
+  , m_Normals(normals)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+  virtual ~CalculateNormalsImpl() = default;
+
+  void generate(size_t start, size_t end) const
+  {
+    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
+    {
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+      std::array<Point3Df, 3> vertCoords;
+      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
+
+      auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
+      normal = normal / normal.magnitude();
+
+      m_Normals[triangleIndex * 3] = static_cast<float64>(normal[0]);
+      m_Normals[triangleIndex * 3 + 1] = static_cast<float64>(normal[1]);
+      m_Normals[triangleIndex * 3 + 2] = static_cast<float64>(normal[2]);
+    }
+  }
+
+  void operator()(const Range& range) const
+  {
+    generate(range.min(), range.max());
+  }
+
+private:
+  const TriangleGeom* m_TriangleGeom = nullptr;
+  Float64AbstractDataStore& m_Normals;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
+Result<> GeometryUtilities::ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
+{
+  // Parallel algorithm to find duplicate nodes
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel));
+
+  return {};
 }
