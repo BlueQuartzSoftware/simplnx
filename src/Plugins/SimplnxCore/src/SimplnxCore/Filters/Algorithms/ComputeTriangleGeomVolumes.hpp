@@ -6,11 +6,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-
-*/
-
 namespace nx::core
 {
 

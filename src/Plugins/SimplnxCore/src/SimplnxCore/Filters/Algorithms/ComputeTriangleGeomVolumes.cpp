@@ -111,5 +111,9 @@ Result<> ComputeTriangleGeomVolumes::operator()()
     }
   }
 
+  for(size_t i = 0; i < tDims[0]; i++)
+  {
+    volumes[i] = std::abs(volumes[i]);
+  }
   return {};
 }
