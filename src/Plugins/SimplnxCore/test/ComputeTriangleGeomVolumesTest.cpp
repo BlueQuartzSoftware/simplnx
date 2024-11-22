@@ -62,8 +62,20 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
     const DataPath kNxArrayPath = k_FeatureAttributeMatrixPath.createChildPath(k_VolumesArrayName);
 
     const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
 
+    // The corrected version of the filter ensures there are no negative values. instead of
+    // uploading a new test file, we can just safely ensure the same applies to the
+    // exemplar data.
+    auto& exemplarData = dataStructure.getDataRefAs<Float32Array>(kExemplarArrayPath);
+    auto& resultStore = exemplarData.getIDataStoreRefAs<AbstractDataStore<float32>>();
+    for(auto& value : resultStore)
+    {
+      if(value < 0)
+      {
+        value = std::abs(value);
+      }
+    }
+    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
     CompareDataArrays<float32>(kExemplarsArray, kNxArray);
   }
 

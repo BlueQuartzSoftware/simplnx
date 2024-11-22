@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
