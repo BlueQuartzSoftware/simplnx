@@ -1,4 +1,4 @@
-# SurfaceNets Meshing Filter
+# Create Surface Mesh (Surface Nets)
 
 ## Group (Subgroup)
 
@@ -57,6 +57,11 @@ During the meshing process, each vertex, or node, will get a "Node Type" value a
 Nodes that appear on the exterior of a volume have Node Type values starting at 10 and going up from there. For instance, a triple line that is also on the exterior of the volume should have a value of 12.
 
 ![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
+
+## Notes
+
+This filter should be used in place of the "QuickMesh Surface Filter".
+
 
 % Auto generated parameter table will be inserted here
 

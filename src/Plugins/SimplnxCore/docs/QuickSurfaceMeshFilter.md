@@ -1,8 +1,12 @@
-# Quick Surface Mesh
+# Create Surface Mesh (QuickMesh Nets)
 
 ## Group (Subgroup)
 
 Surface Meshing (Generation)
+
+## Deprecation Notice
+
+The "SurfaceNets" filter should be used instead. Search the filter list for "Surface Nets".
 
 ## Description
 
@@ -58,6 +62,14 @@ One of the arrays to come out of the algorithm is the "Node Type" vertex array. 
 | 12 | Node that is on the exterior of the mesh  |
 | 13 | Node that is on the exterior of the mesh and is a triple line  |
 | 14 | Node that is on the exterior of the mesh and is a quadruple point   |
+
+## Notes
+
+The Quickmesh algorithm is very crude and naive in its implementation. This filter 
+along with the Laplacian Smoothing filter can give you reasonable results. The
+newer filter that should replace both the quick mesh and the Laplacian Smoothing
+filter is the "SurfaceNets" surface meshing algorithm. This will create the surface
+mesh and smooth in a single filter and give subjectively better results.
 
 % Auto generated parameter table will be inserted here
 

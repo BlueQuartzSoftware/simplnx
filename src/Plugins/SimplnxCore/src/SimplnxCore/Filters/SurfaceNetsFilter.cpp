@@ -43,13 +43,13 @@ Uuid SurfaceNetsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string SurfaceNetsFilter::humanName() const
 {
-  return "SurfaceNets Meshing Filter";
+  return "Create Surface Mesh (Surface Nets)";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> SurfaceNetsFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Generation"};
+  return {className(), "Surface Meshing", "Generation", "Create", "Triangle", "Geometry"};
 }
 
 //------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ Parameters SurfaceNetsFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smmothing operation.", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
 
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
   params.insert(
