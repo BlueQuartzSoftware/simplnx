@@ -640,6 +640,7 @@ void GeneratePythonRstFiles()
   for(const auto& plugin : pluginListPtr)
   {
     std::string plugName = plugin->getName();
+    std::string fullPluginName = plugName;
     const std::string pluginRootDir = fmt::format("{}", s_PluginDirMap[plugName]);
     if(pluginRootDir.empty())
     {
@@ -711,7 +712,7 @@ void GeneratePythonRstFiles()
       rstStream << "   " << rstDescription << "\n\n";
 
       // Tack on the link to the web address for the full documentation
-      const std::string webAddress = fmt::format("{}/{}/{}/{}.html", k_WebServerAddress, k_WebServerFilterFolder, plugName, filterClassName);
+      const std::string webAddress = fmt::format("{}/{}/{}/{}.html", k_WebServerAddress, k_WebServerFilterFolder, fullPluginName, filterClassName);
       rstStream << "   `Link to the full online documentation for " << filterClassName << " <" << webAddress << ">`_ \n\n";
 
       const auto& parameters = filter->parameters();
