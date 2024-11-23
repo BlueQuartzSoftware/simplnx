@@ -98,7 +98,7 @@ endif()
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
 project(simplnx
-  VERSION 1.5.0
+  VERSION 1.5.1
   DESCRIPTION "SIMPLNX is a collection of C++ codes to process data, particularly Materials Science data, including EBSD data."
   HOMEPAGE_URL "https://github.com/bluequartzsoftware/simplnx"
   LANGUAGES CXX
@@ -234,6 +234,11 @@ if(MSVC)
     PRIVATE
       /MP
   )
+  #--------------------------------------------------------------------------------
+  # This is here due to https://stackoverflow.com/questions/78598141/first-stdmutexlock-crashes-in-application-built-with-latest-visual-studio
+  # TLDR; MS broke STL binary compatibility, Use this preprocessor to not have std::mutex_lock die with a null pointer
+  target_compile_definitions(simplnx PUBLIC "_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR")
+
 endif()
 
 # Force HDF5 1.10 API
