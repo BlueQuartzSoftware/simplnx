@@ -8,10 +8,11 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
 
@@ -19,6 +20,52 @@ namespace
 {
 constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -75769;
 
+/**
+ * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the area of each
+ * triangle for a set of triangles
+ */
+class CalculateAreasImpl
+{
+public:
+  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& areas, const std::atomic_bool& shouldCancel)
+  : m_TriangleGeom(triangleGeom)
+  , m_Areas(areas)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+  virtual ~CalculateAreasImpl() = default;
+
+  void convert(size_t start, size_t end) const
+  {
+    std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
+    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
+    {
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+      std::array<Point3Df, 3> vertCoords;
+      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
+
+      auto vecA = (vertCoords[0] - vertCoords[1]).toArray();
+      auto vecB = (vertCoords[0] - vertCoords[2]).toArray();
+
+      MatrixMath::CrossProduct(vecA.data(), vecB.data(), cross.data());
+
+      m_Areas[triangleIndex] = 0.5F * MatrixMath::Magnitude3x1(cross.data());
+    }
+  }
+
+  void operator()(const Range& range) const
+  {
+    convert(range.min(), range.max());
+  }
+
+private:
+  const TriangleGeom* m_TriangleGeom = nullptr;
+  Float64AbstractDataStore& m_Areas;
+  const std::atomic_bool& m_ShouldCancel;
+};
 } // namespace
 
 namespace nx::core
@@ -126,7 +173,12 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
   DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
   auto& faceAreas = dataStructure.getDataAs<Float64Array>(pCalculatedAreasDataPath)->getDataStoreRef();
 
-  return nx::core::GeometryUtilities::ComputeTriangleAreas(triangleGeom, faceAreas, shouldCancel);
+  // Parallel algorithm to find duplicate nodes
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(CalculateAreasImpl(triangleGeom, faceAreas, shouldCancel));
+
+  return {};
 }
 
 namespace
