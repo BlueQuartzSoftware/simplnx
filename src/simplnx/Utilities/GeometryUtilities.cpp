@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <cstdio>
 
