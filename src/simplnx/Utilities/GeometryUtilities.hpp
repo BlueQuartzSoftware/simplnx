@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -251,4 +252,23 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
 
   return {};
 }
+
+/**
+ * @brief This will compute, in parallel, the area of each triangle in a triangle geometry
+ * @param triangleGeom
+ * @param faceAreas
+ * @param shouldCancel
+ * @return
+ */
+SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& faceAreas, const std::atomic_bool& shouldCancel);
+
+/**
+ * @brief This will compute, in parallel, the normal of each triangle in a triangle geometry
+ * @param triangleGeom
+ * @param normals
+ * @param shouldCancel
+ * @return
+ */
+SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel);
+
 } // namespace nx::core::GeometryUtilities
