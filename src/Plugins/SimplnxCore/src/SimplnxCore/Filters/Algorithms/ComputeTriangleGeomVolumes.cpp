@@ -1,4 +1,4 @@
-#include "ComputeTriangleGeomSizes.hpp"
+#include "ComputeTriangleGeomVolumes.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -38,8 +38,8 @@ T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const AbstractDataS
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomSizes::ComputeTriangleGeomSizes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                   ComputeTriangleGeomSizesInputValues* inputValues)
+ComputeTriangleGeomVolumes::ComputeTriangleGeomVolumes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                       ComputeTriangleGeomVolumesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -48,16 +48,16 @@ ComputeTriangleGeomSizes::ComputeTriangleGeomSizes(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomSizes::~ComputeTriangleGeomSizes() noexcept = default;
+ComputeTriangleGeomVolumes::~ComputeTriangleGeomVolumes() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeTriangleGeomSizes::getCancel()
+const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeTriangleGeomSizes::operator()()
+Result<> ComputeTriangleGeomVolumes::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
   using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
@@ -85,28 +85,35 @@ Result<> ComputeTriangleGeomSizes::operator()()
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   featAttrMat.resizeTuples(tDims);
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
+  volumes.fill(0.0f); // Initialize all volumes to ZERO
 
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
-
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
     triangleGeom.getFacePointIds(i, faceVertexIndices);
-    if(faceLabels[2 * i + 0] == -1)
+    int32 faceLabel0 = faceLabels[2 * i + 0];
+    int32 faceLabel1 = faceLabels[2 * i + 1];
+
+    if(faceLabel0 < 0 && faceLabel1 >= 0)
     {
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabels[2 * i + 1]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
-    else if(faceLabels[2 * i + 1] == -1)
+    else if(faceLabel1 < 0 && faceLabel0 >= 0)
     {
-      volumes[faceLabels[2 * i + 0]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
     else
     {
-      volumes[faceLabels[2 * i + 0]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabels[2 * i + 1]] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
+      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
     }
   }
 
+  for(size_t i = 0; i < tDims[0]; i++)
+  {
+    volumes[i] = std::abs(volumes[i]);
+  }
   return {};
 }

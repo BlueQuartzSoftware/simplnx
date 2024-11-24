@@ -70,7 +70,7 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrixPath_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{2}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face Ids", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
