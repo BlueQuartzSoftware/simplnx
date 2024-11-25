@@ -31,7 +31,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeSchmidsTest.cpp
   ComputeShapesFilterTest.cpp
   ComputeSlipTransmissionMetricsTest.cpp
-  ComputeTriangleGeomShapesTest.cpp
+  # ComputeTriangleGeomShapesTest.cpp
   ConvertHexGridToSquareGridTest.cpp
   ConvertOrientationsTest.cpp
   ConvertQuaternionTest.cpp

@@ -52,7 +52,7 @@ set(FilterList
   ComputeSchmidsFilter
   ComputeShapesFilter
   ComputeSlipTransmissionMetricsFilter
-  ComputeTriangleGeomShapesFilter
+  # ComputeTriangleGeomShapesFilter
   ConvertHexGridToSquareGridFilter
   ConvertOrientationsFilter
   ConvertQuaternionFilter
@@ -186,7 +186,7 @@ set(filter_algorithms
   ComputeSchmids
   ComputeShapes
   ComputeSlipTransmissionMetrics
-  ComputeTriangleGeomShapes
+  # ComputeTriangleGeomShapes
   ConvertHexGridToSquareGrid
   ConvertQuaternion
   CreateEnsembleInfo
