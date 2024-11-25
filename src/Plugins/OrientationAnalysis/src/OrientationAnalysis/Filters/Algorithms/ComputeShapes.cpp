@@ -199,6 +199,8 @@ void ComputeShapes::find_moments()
       for(size_t k = 0; k < xPoints; k++)
       {
         int32_t gnum = featureIds[zStride + yStride + k];
+
+        // Compute a "modified" x, y and z coordinate which represent the corners of the voxel
         x = float(k * modXRes) + (origin[0] * static_cast<float>(m_ScaleFactor));
         y = float(j * modYRes) + (origin[1] * static_cast<float>(m_ScaleFactor));
         z = float(i * modZRes) + (origin[2] * static_cast<float>(m_ScaleFactor));
@@ -208,6 +210,8 @@ void ComputeShapes::find_moments()
         y2 = y - (modYRes / 4.0f);
         z1 = z + (modZRes / 4.0f);
         z2 = z - (modZRes / 4.0f);
+
+        // Compute the Distance from each corner of the voxel to the centroid of the Feature itself.
         xdist1 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
         ydist1 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
         zdist1 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
@@ -233,6 +237,7 @@ void ComputeShapes::find_moments()
         ydist8 = (y2 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
         zdist8 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
 
+        // Compute the 2nd Order Moments p + q + r = 2?
         xx = ((ydist1) * (ydist1)) + ((zdist1) * (zdist1)) + ((ydist2) * (ydist2)) + ((zdist2) * (zdist2)) + ((ydist3) * (ydist3)) + ((zdist3) * (zdist3)) + ((ydist4) * (ydist4)) +
              ((zdist4) * (zdist4)) + ((ydist5) * (ydist5)) + ((zdist5) * (zdist5)) + ((ydist6) * (ydist6)) + ((zdist6) * (zdist6)) + ((ydist7) * (ydist7)) + ((zdist7) * (zdist7)) +
              ((ydist8) * (ydist8)) + ((zdist8) * (zdist8));
@@ -242,6 +247,7 @@ void ComputeShapes::find_moments()
         zz = ((xdist1) * (xdist1)) + ((ydist1) * (ydist1)) + ((xdist2) * (xdist2)) + ((ydist2) * (ydist2)) + ((xdist3) * (xdist3)) + ((ydist3) * (ydist3)) + ((xdist4) * (xdist4)) +
              ((ydist4) * (ydist4)) + ((xdist5) * (xdist5)) + ((ydist5) * (ydist5)) + ((xdist6) * (xdist6)) + ((ydist6) * (ydist6)) + ((xdist7) * (xdist7)) + ((ydist7) * (ydist7)) +
              ((xdist8) * (xdist8)) + ((ydist8) * (ydist8));
+
         xy = ((xdist1) * (ydist1)) + ((xdist2) * (ydist2)) + ((xdist3) * (ydist3)) + ((xdist4) * (ydist4)) + ((xdist5) * (ydist5)) + ((xdist6) * (ydist6)) + ((xdist7) * (ydist7)) +
              ((xdist8) * (ydist8));
         yz = ((ydist1) * (zdist1)) + ((ydist2) * (zdist2)) + ((ydist3) * (zdist3)) + ((ydist4) * (zdist4)) + ((ydist5) * (zdist5)) + ((ydist6) * (zdist6)) + ((ydist7) * (zdist7)) +
