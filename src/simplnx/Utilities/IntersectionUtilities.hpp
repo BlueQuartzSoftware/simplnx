@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include <array>
-namespace nx
+namespace nx::core
 {
 namespace IntersectionUtilities
 {
@@ -140,8 +140,8 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
  * @param rayOrigin
  * @param rayDirection
  * @param v0 First Vertex of Triangle
- * @param v1  Second Vertex of Triangle
- * @param v2  Third Vertex of Triangle
+ * @param v1 Second Vertex of Triangle
+ * @param v2 Third Vertex of Triangle
  * @param t part of Barycentric Coord
  * @param u part of Barycentric Coord
  * @param v part of Barycentric Coord
@@ -219,4 +219,4 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
 
 } // namespace IntersectionUtilities
 
-} // namespace nx
+} // namespace nx::core

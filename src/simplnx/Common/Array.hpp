@@ -856,6 +856,12 @@ public:
   {
     return Vec3((*this)[0] / r, (*this)[1] / r, (*this)[2] / r);
   }
+
+  inline bool operator<(const Vec3& v) const
+  {
+    return dot(*this) < dot(v); // Ignore the square root of the value. Not needed for this function
+  }
+
   /**
    * @brief Divides this Vec3 with another Vec3 using element wise division. Performs in-place division
    * @param Vec3

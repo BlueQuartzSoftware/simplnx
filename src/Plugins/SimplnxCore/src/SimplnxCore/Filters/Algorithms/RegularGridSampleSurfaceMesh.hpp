@@ -21,6 +21,7 @@ struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
   VectorFloat32Parameter::ValueType Origin;
   DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
+  DataPath ImageGeometryOutputPath;
   DataPath FeatureIdsArrayPath;
 };
 

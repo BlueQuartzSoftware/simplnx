@@ -53,7 +53,7 @@ public:
 protected:
   using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
   using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
-  usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, TriStore& tris, VertsStore& triVerts);
+  // usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, TriStore& tris, VertsStore& triVerts);
 
 private:
   DataStructure& m_DataStructure;

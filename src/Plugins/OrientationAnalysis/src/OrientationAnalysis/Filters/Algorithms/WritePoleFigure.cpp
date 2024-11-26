@@ -2,7 +2,6 @@
 
 #include "OrientationAnalysis/utilities/FiraSansRegular.hpp"
 #include "OrientationAnalysis/utilities/Fonts.hpp"
-#include "OrientationAnalysis/utilities/IntersectionUtilities.hpp"
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/LatoRegular.hpp"
 #include "OrientationAnalysis/utilities/TiffWriter.hpp"
@@ -15,6 +14,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/RTree.hpp"
@@ -123,7 +123,7 @@ public:
     size_t numTris = delaunayGeom->getNumberOfFaces();
     for(size_t tIndex = 0; tIndex < numTris; tIndex++)
     {
-      std::array<float, 6> boundBox = nx::IntersectionUtilities::GetBoundingBoxAtTri(*delaunayGeom, tIndex);
+      std::array<float, 6> boundBox = nx::core::IntersectionUtilities::GetBoundingBoxAtTri(*delaunayGeom, tIndex);
       m_RTree.Insert(boundBox.data(), boundBox.data() + 3, tIndex); // Note, all values including zero are fine in this version
     }
 
@@ -167,7 +167,7 @@ public:
 
         // Get the vertex Indices from the triangle
         delaunayGeom->getFacePointIds(triIndex, triVertIndices);
-        bool inTriangle = nx::IntersectionUtilities::RayTriangleIntersect2(rayOrigin, rayDirection, v0, v1, v2, barycentricCoord);
+        bool inTriangle = nx::core::IntersectionUtilities::RayTriangleIntersect2(rayOrigin, rayDirection, v0, v1, v2, barycentricCoord);
         if(inTriangle)
         {
           // Linear Interpolate dx and dy values using the barycentric coordinates

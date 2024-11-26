@@ -249,7 +249,6 @@ set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/TiffWriter.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/delaunator.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/delaunator.h"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/IntersectionUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/GrainMapper3DUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/GrainMapper3DUtilities.cpp"
 )

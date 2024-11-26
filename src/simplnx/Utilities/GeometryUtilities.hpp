@@ -271,4 +271,59 @@ SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* trian
  */
 SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel);
 
+SIMPLNX_EXPORT usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>& tris,
+                                                 AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd, float32 sliceResolution);
+
+struct SliceTriangleReturnType
+{
+  std::vector<float32> SliceVerts;
+  std::vector<int32> SliceIds;
+  std::vector<int32> RegionIds;
+  usize NumberOfSlices;
+};
+
+/**
+ * @brief This function will generate the vertices, slice ids and optionally RegionIds when slicing a triangle geometry
+ *
+ * The function will return the vertices where each pair of vertices represent an edge that
+ * can be put into an Edge Geometry. The Vertices are packed into the std::vector<float> as XYZ coordinates
+ * so the number of vertices is the size / 3 and the number of edges is size / 6. For
+ * each edge there is a "slice id" that represents the integer slice index. This can be
+ * used to pull out edges for a specific slice that corresponds to a specific Z
+ * height. The total number of slices is also returned from the function.
+ *
+ * @param triangleGeom
+ * @param shouldCancel
+ * @param sliceRange
+ * @param zStart
+ * @param zEnd
+ * @param sliceResolution
+ * @param triRegionIdPtr
+ * @return
+ */
+// SIMPLNX_EXPORT SliceTriangleReturnType SliceTriangleGeometry2(nx::core::TriangleGeom& triangleGeom, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart, float32 zEnd,
+//                                                               float32 sliceResolution, AbstractDataStore<int32>* triRegionIdPtr);
+
+/**
+ * @brief This function will generate the vertices, slice ids and optionally RegionIds when slicing a triangle geometry
+ *
+ * The function will return the vertices where each pair of vertices represent an edge that
+ * can be put into an Edge Geometry. The Vertices are packed into the std::vector<float> as XYZ coordinates
+ * so the number of vertices is the size / 3 and the number of edges is size / 6. For
+ * each edge there is a "slice id" that represents the integer slice index. This can be
+ * used to pull out edges for a specific slice that corresponds to a specific Z
+ * height. The total number of slices is also returned from the function.
+ *
+ * @param triangleGeom
+ * @param shouldCancel
+ * @param sliceRange
+ * @param zStart
+ * @param zEnd
+ * @param sliceResolution
+ * @param triRegionIdPtr
+ * @return
+ */
+SIMPLNX_EXPORT SliceTriangleReturnType SliceTriangleGeometry(nx::core::TriangleGeom& triangleGeom, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart, float32 zEnd,
+                                                             float32 sliceResolution, AbstractDataStore<int32>* triRegionIdPtr);
+
 } // namespace nx::core::GeometryUtilities
