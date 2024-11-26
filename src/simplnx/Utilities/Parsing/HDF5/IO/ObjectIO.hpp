@@ -132,7 +132,7 @@ public:
   template <typename T>
   Result<T> readScalarAttribute(const std::string& attributeName) const
   {
-    if(!isValid())
+    if(getId() <= 0)
     {
       return MakeErrorResult<T>(-970, fmt::format("Cannot read attribute '{}'. Object '{}' is invalid", attributeName, getName()));
     }
@@ -156,7 +156,7 @@ public:
   template <typename T>
   Result<std::vector<T>> readVectorAttribute(const std::string& attributeName) const
   {
-    if(!isValid())
+    if(getId() <= 0)
     {
       return MakeErrorResult<std::vector<T>>(-1, fmt::format("Cannot Read Attribute '{}' within Invalid Object '{}'", attributeName, getName()));
     }
@@ -241,6 +241,7 @@ public:
   {
     Result<> returnError = {};
     herr_t error = 0;
+
     std::vector<usize> dims = {value.size()};
     int32_t rank = static_cast<int32_t>(dims.size());
 
@@ -305,7 +306,7 @@ public:
    * @brief Returns a pointer to the parent GroupIO. Returns null if there is no known parent.
    * @return GroupIO*
    */
-  GroupIO* parentGroup() const;
+  //GroupIO* parentGroup() const;
 
   #if 0
   /**
@@ -409,7 +410,7 @@ protected:
    * @param objectPath
    */
   ObjectIO(const std::filesystem::path& filepath, const std::string& objectPath);
-  ObjectIO(GroupIO* parentObj, const std::string& objectName);
+  ObjectIO(hid_t parentId, const std::string& objectName);
 
   /**
    * @brief Overwrites the filepath to the target HDF5 file.
@@ -431,7 +432,8 @@ protected:
 
   void setId(hid_t id) const;
 
-  void setParentGroup(GroupIO* group);
+  //void setParentGroup(GroupIO* group);
+  void setParentId(hid_t parentId);
 
   /**
    * @brief Reads and returns the string attribute with the target ID.
@@ -449,6 +451,8 @@ protected:
    */
   Result<> writeStringAttribute(int64 objectId, const std::string& attributeName, const std::string& str);
 
+  bool isOpen() const;
+  virtual hid_t open() const = 0;
   virtual void close() = 0;
 
   usize getNumElementsInAttribute(hid_t attribId) const;
@@ -457,6 +461,7 @@ private:
   std::filesystem::path m_FilePath;
   std::string m_ObjectName;
   mutable hid_t m_Id = -1;
-  GroupIO* m_ParentGroup = nullptr;
+  //GroupIO* m_ParentGroup = nullptr;
+  hid_t m_ParentId = 0;
 };
 } // namespace nx::core::HDF5

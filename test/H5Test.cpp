@@ -581,7 +581,7 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
   auto app = Application::GetOrCreateInstance();
   std::filesystem::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
-  try
+  //try
   {
     Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -617,10 +617,10 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
       REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
       REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
     }
-  } catch(const std::exception& e)
+  }/* catch(const std::exception& e)
   {
     FAIL(e.what());
-  }
+  }*/
 }
 #endif
 
@@ -762,7 +762,7 @@ TEST_CASE("NeighborList IO")
   }
 
   // Read HDF5 file
-  try
+  //try
   {
     auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -775,10 +775,10 @@ TEST_CASE("NeighborList IO")
     // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
     auto neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
-  } catch(const std::exception& e)
+  } /*catch(const std::exception& e)
   {
     FAIL(e.what());
-  }
+  }*/
 }
 
 TEST_CASE("DataArray<bool> IO")
@@ -797,7 +797,7 @@ TEST_CASE("DataArray<bool> IO")
   std::string filePathString = filePath.string();
 
   // Write HDF5 file
-  try
+  //try
   {
     DataStructure dataStructure;
     CreateArrayTypes(dataStructure);
@@ -806,13 +806,13 @@ TEST_CASE("DataArray<bool> IO")
 
     Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-  } catch(const std::exception& e)
+  } /*catch(const std::exception& e)
   {
     FAIL(e.what());
-  }
+  }*/
 
   // Read HDF5 file
-  try
+  //try
   {
     auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -821,6 +821,7 @@ TEST_CASE("DataArray<bool> IO")
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
+    auto testOutput = dataStructure.getData(DataPath({"Int8Array"}));
     REQUIRE(dataStructure.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
     REQUIRE(dataStructure.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
     REQUIRE(dataStructure.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
@@ -842,13 +843,13 @@ TEST_CASE("DataArray<bool> IO")
     StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
     REQUIRE(stringArray != nullptr);
     REQUIRE(stringArray->values() == std::vector<std::string>{"Foo", "Bar", "Bazz"});
-  } catch(const std::exception& e)
+  } /*catch(const std::exception& e)
   {
     FAIL(e.what());
-  }
+  }*/
 
   // Read HDF5 file in preflight mode to make sure StringArrays import correctly
-  try
+  //try
   {
     auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -860,10 +861,10 @@ TEST_CASE("DataArray<bool> IO")
     StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
     REQUIRE(stringArray != nullptr);
     REQUIRE(stringArray->size() == 3);
-  } catch(const std::exception& e)
+  } /*catch(const std::exception& e)
   {
     FAIL(e.what());
-  }
+  }*/
 }
 
 TEST_CASE("xdmf")

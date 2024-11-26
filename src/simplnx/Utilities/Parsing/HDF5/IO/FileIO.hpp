@@ -92,6 +92,7 @@ protected:
    */
   FileIO(const std::filesystem::path& filepath, hid_t fileId);
 
+  hid_t open() const override;
   void close() override;
 
 private:

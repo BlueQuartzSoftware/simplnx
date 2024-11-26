@@ -29,13 +29,7 @@ std::string StringArrayIO::getTypeName() const
 Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto datasetReaderResult = parentGroup.openDataset(objectName);
-  if(datasetReaderResult.invalid())
-  {
-    return ConvertResult(std::move(datasetReaderResult));
-  }
-  auto datasetReader = std::move(datasetReaderResult.value());
-
+  auto datasetReader = parentGroup.openDataset(objectName);
   std::string dataArrayName = datasetReader.getName();
 
   // Check ability to import the data
@@ -71,13 +65,8 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 
 Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& dataArray, group_writer_type& parentGroup, bool importable) const
 {
-  auto datasetWriterResult = parentGroup.createDataset(dataArray.getName());
-  if(datasetWriterResult.invalid())
-  {
-    return ConvertResult(std::move(datasetWriterResult));
-  }
-  auto datasetWriter = std::move(datasetWriterResult.value());
-
+  auto datasetWriter = parentGroup.createDataset(dataArray.getName());
+  
   // writeVectorOfStrings may resize the collection
   data_type::collection_type strings = dataArray.values();
   auto result = datasetWriter.writeVectorOfStrings(strings);

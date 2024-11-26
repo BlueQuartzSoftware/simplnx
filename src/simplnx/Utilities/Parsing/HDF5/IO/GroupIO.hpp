@@ -46,7 +46,7 @@ public:
    * @param name
    * @return GroupIO
    */
-  Result<GroupIO> openGroup(const std::string& name) const;
+  GroupIO openGroup(const std::string& name) const;
 
   //std::shared_ptr<GroupIO> openGroupPtr(const std::string& name) const;
 
@@ -57,7 +57,7 @@ public:
    * @param name
    * @return DatasetReader
    */
-  Result<DatasetIO> openDataset(const std::string& name) const;
+  DatasetIO openDataset(const std::string& name) const;
 
   //std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& name) const;
 
@@ -68,7 +68,7 @@ public:
    * @param childName
    * @return GroupIO
    */
-  Result<GroupIO> createGroup(const std::string& childName);
+  GroupIO createGroup(const std::string& childName);
 
   //std::shared_ptr<GroupIO> createGroupPtr(const std::string& childName);
 
@@ -77,9 +77,9 @@ public:
    * target name. Returns an invalid DatasetIO Result if the dataset cannot be
    * created.
    * @param childName
-   * @return Result<DatasetIO>
+   * @return DatasetIO
    */
-  Result<DatasetIO> openDataset(const std::string& childName);
+  DatasetIO openDataset(const std::string& childName);
 
   /**
    * @brief Opens a DatasetIO for writing to a child group with the
@@ -97,7 +97,7 @@ public:
    * @param childName
    * @return DatasetIO
    */
-  Result<DatasetIO> createDataset(const std::string& childName);
+  DatasetIO createDataset(const std::string& childName);
 
   std::shared_ptr<DatasetIO> createDatasetPtr(const std::string& childName);
 
@@ -366,8 +366,9 @@ protected:
    * @param filepath
    * @param groupPath
    */
-  GroupIO(GroupIO& parentGroup, const std::string& groupName, hid_t groupId);
+  GroupIO(hid_t parentId, const std::string& groupName, hid_t groupId);
 
+  hid_t open() const override;
   void close() override;
 
 private:

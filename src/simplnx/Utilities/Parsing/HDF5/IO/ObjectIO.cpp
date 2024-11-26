@@ -8,9 +8,9 @@ namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(GroupIO* parentObj, const std::string& objectName)
-: m_FilePath(parentObj->getFilePath())
-, m_ParentGroup(parentObj)
+ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
+//: m_FilePath(parentObj->getFilePath())
+: m_ParentId(parentId)
 , m_ObjectName(objectName)
 {
 }
@@ -24,7 +24,7 @@ ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& obj
 ObjectIO::ObjectIO(ObjectIO&& other) noexcept
 : m_FilePath(std::move(other.m_FilePath))
 , m_ObjectName(std::move(other.m_ObjectName))
-, m_ParentGroup(std::move(other.m_ParentGroup))
+, m_ParentId(std::move(other.m_ParentId))
 , m_Id(std::move(other.m_Id))
 {
 }
@@ -34,7 +34,7 @@ ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
   m_Id = std::move(other.m_Id);
   m_FilePath = std::move(other.m_FilePath);
   m_ObjectName = std::move(other.m_ObjectName);
-  m_ParentGroup = std::move(other.m_ParentGroup);
+  m_ParentId = std::move(other.m_ParentId);
   return *this;
 }
 
@@ -44,7 +44,8 @@ ObjectIO::~ObjectIO() noexcept
 
 bool ObjectIO::isValid() const
 {
-  return std::filesystem::exists(m_FilePath);
+  return m_Id > 0;
+  //return std::filesystem::exists(m_FilePath);
 }
 
 std::string ObjectIO::getName() const
@@ -54,21 +55,28 @@ std::string ObjectIO::getName() const
 
 std::string ObjectIO::getObjectPath() const
 {
-  std::string parentPath = "";
-  if(m_ParentGroup != nullptr)
+  if(!isValid())
   {
-    parentPath = m_ParentGroup->getObjectPath();
+    return getName();
   }
-  return parentPath + "/" + m_ObjectName;
+  std::string path = "/";
+  path += Support::GetObjectPath(getId());
+  return path;
+  //if(m_ParentGroup != nullptr)
+  //{
+  //  parentPath = m_ParentGroup->getObjectPath();
+  //}
+  //return parentPath + "/" + m_ObjectName;
 }
 
 std::string ObjectIO::getParentName() const
 {
-  if(m_ParentGroup == nullptr)
-  {
-    return "";
-  }
-  return m_ParentGroup->getName();
+  return "";
+  //if(m_ParentGroup == nullptr)
+  //{
+  //  return "";
+  //}
+  //return m_ParentGroup->getName();
 }
 
 void ObjectIO::setFilePath(const std::filesystem::path& filepath)
@@ -81,8 +89,17 @@ void ObjectIO::setName(const std::string& name)
   m_ObjectName = name;
 }
 
+bool ObjectIO::isOpen() const
+{
+  return m_Id > 0;
+}
+
 hid_t ObjectIO::getId() const
 {
+  if(m_Id <= 0)
+  {
+    return open();
+  }
   return m_Id;
 }
 
@@ -91,18 +108,24 @@ void ObjectIO::setId(hid_t id) const
   m_Id = id;
 }
 
-void ObjectIO::setParentGroup(GroupIO* parent)
+//void ObjectIO::setParentGroup(GroupIO* parent)
+//{
+//  m_ParentGroup = parent;
+//}
+
+void ObjectIO::setParentId(hid_t parentId)
 {
-  m_ParentGroup = parent;
+  m_ParentId = parentId;
 }
 
 hid_t ObjectIO::getParentId() const
 {
-  if(m_ParentGroup == nullptr)
-  {
-    return -1;
-  }
-  return m_ParentGroup->getId();
+  return m_ParentId;
+  //if(m_ParentGroup == nullptr)
+  //{
+  //  return -1;
+  //}
+  //return m_ParentGroup->getId();
 }
 
 ObjectIO::ObjectType ObjectIO::getObjectType() const
@@ -113,9 +136,9 @@ ObjectIO::ObjectType ObjectIO::getObjectType() const
   }
 
   herr_t error = 1;
-  H5O_info_t objectInfo{};
+  H5O_info2_t objectInfo{};
 
-  error = H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT);
+  error = H5Oget_info_by_name3(getParentId(), getName().c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
   if(error < 0)
   {
     return ObjectType::Unknown;
@@ -143,7 +166,7 @@ void ObjectIO::moveObj(ObjectIO&& rhs) noexcept
 {
   m_FilePath = std::move(rhs.m_FilePath);
   m_ObjectName = std::move(rhs.m_ObjectName);
-  m_ParentGroup = std::move(rhs.m_ParentGroup);
+  m_ParentId = std::move(rhs.m_ParentId);
   m_Id = std::move(rhs.m_Id);
 }
 
@@ -180,7 +203,10 @@ std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
 
 void ObjectIO::deleteAttribute(const std::string& name)
 {
-  H5Adelete(getId(), name.c_str());
+  if(H5Aexists(getId(), name.c_str()))
+  {
+    H5Adelete(getId(), name.c_str());
+  }
 }
 
 void ObjectIO::deleteAttributes()
@@ -197,6 +223,11 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   std::string data;
   std::vector<char> attributeOutput;
   Result<std::string> returnResult = {};
+
+  if(!hasAttribute(attributeName))
+  {
+    return MakeErrorResult<std::string>(-445, fmt::format("Attribute '{}' does not exist in Object '{}'", attributeName, getName()));
+  }
 
   hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
   hid_t attrTypeId = H5Aget_type(attribId);
@@ -241,11 +272,18 @@ Result<> ObjectIO::writeStringAttribute(const std::string& attributeName, const 
   Result<> returnError = {};
   size_t size = text.size();
 
+  deleteAttribute(attributeName);
+
   hid_t attributeType = H5Tcopy(H5T_C_S1);
   H5Tset_size(attributeType, size);
   H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
   hid_t attributeSpaceID = H5Screate(H5S_SCALAR);
   hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+  if(attributeId < 0)
+  {
+    returnError = MakeErrorResult(attributeId, "Error Creating String Attribute");
+  }
+
   herr_t error = H5Awrite(attributeId, attributeType, text.c_str());
   if(error < 0)
   {
@@ -265,17 +303,18 @@ std::filesystem::path ObjectIO::getFilePath() const
 
 FileIO* ObjectIO::parentFile() const
 {
-  if(m_ParentGroup != nullptr)
-  {
-    return m_ParentGroup->parentFile();
-  }
-  return dynamic_cast<FileIO*>(const_cast<ObjectIO*>(this));
+  return nullptr;
+  //if(m_ParentGroup != nullptr)
+  //{
+  //  return m_ParentGroup->parentFile();
+  //}
+  //return dynamic_cast<FileIO*>(const_cast<ObjectIO*>(this));
 }
 
-GroupIO* ObjectIO::parentGroup() const
-{
-  return m_ParentGroup;
-}
+//GroupIO* ObjectIO::parentGroup() const
+//{
+//  return m_ParentGroup;
+//}
 
 bool ObjectIO::hasAttribute(const std::string& attributeName) const
 {

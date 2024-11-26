@@ -454,8 +454,6 @@ public:
       return MakeErrorResult(-97642, fmt::format("Cannot write non-existant dataset at path '{}'", dataset.getObjectPath()));
     }
 
-    std::string datasetPath = dataset.getObjectPath();
-
     typename HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
     dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     nonstd::span<const T> span(m_Array->data(), m_Array->size());

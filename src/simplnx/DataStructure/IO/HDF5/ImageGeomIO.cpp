@@ -50,13 +50,7 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
   std::vector<float32> originVector(3);
   std::vector<float32> spacingVector(3);
   {
-    auto groupReaderResult = parentGroup.openGroup(objectName);
-    if(groupReaderResult.invalid())
-    {
-      return ConvertResult(std::move(groupReaderResult));
-    }
-    auto groupReader = std::move(groupReaderResult.value());
-
+    auto groupReader = parentGroup.openGroup(objectName);
     if(!groupReader.isValid())
     {
       return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
@@ -97,13 +91,8 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
     return result;
   }
 
-  auto groupWriterResult = parentGroupWriter.createGroup(geometry.getName());
-  if(groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
+  
   SizeVec3 volDims = geometry.getDimensions();
   FloatVec3 spacing = geometry.getSpacing();
   FloatVec3 origin = geometry.getOrigin();

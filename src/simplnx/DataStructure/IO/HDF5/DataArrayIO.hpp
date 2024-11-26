@@ -61,14 +61,8 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataArrayName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
-    auto datasetReaderResult = parentGroup.openDataset(dataArrayName);
-    if(datasetReaderResult.invalid())
-    {
-      std::string ss = fmt::format("Could not open data set '{}' which is a child of '{}'", dataArrayName, parentGroup.getName());
-      return MakeErrorResult(-900, ss);
-    }
-    auto datasetReader = std::move(datasetReaderResult.value());
-
+    auto datasetReader = parentGroup.openDataset(dataArrayName);
+    
     auto typeResult = datasetReader.getDataType();
     const auto type = std::move(typeResult.value());
     //const std::string typeStr = type.string();
@@ -162,13 +156,7 @@ public:
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, group_writer_type& parentGroup, bool importable) const
   {
-    auto datasetWriterResult = parentGroup.createDataset(dataArray.getName());
-    if(datasetWriterResult.invalid())
-    {
-      return ConvertResult(std::move(datasetWriterResult));
-    }
-    auto datasetWriter = std::move(datasetWriterResult.value());
-
+    auto datasetWriter = parentGroup.createDataset(dataArray.getName());
     Result<> result = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(result.invalid())
     {

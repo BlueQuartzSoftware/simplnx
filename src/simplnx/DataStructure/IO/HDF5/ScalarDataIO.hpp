@@ -28,13 +28,8 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& scalarName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
-    auto datasetReaderResult = parentGroup.openDataset(scalarName);
-    if(datasetReaderResult.invalid())
-    {
-      return ConvertResult(std::move(datasetReaderResult));
-    }
-    auto datasetReader = std::move(datasetReaderResult.value());
-
+    auto datasetReader = parentGroup.openDataset(scalarName);
+    
     std::array<T, 1> buffer{};
     auto bufferSpan = nonstd::span<T>{buffer};
     Result<> result = datasetReader.readIntoSpan<T>(bufferSpan);
@@ -63,13 +58,8 @@ public:
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const ScalarData<T>& scalarData, group_writer_type& parentGroup, bool importable) const
   {
-    auto datasetWriterResult = parentGroup.createDataset(scalarData.getName());
-    if(datasetWriterResult.invalid())
-    {
-      return ConvertResult(std::move(datasetWriterResult));
-    }
-    auto datasetWriter = std::move(datasetWriterResult.value());
-
+    auto datasetWriter = parentGroup.createDataset(scalarData.getName());
+    
     nx::core::HDF5::DatasetIO::DimsType dims = {1};
     std::array<T, 1> dataVector = {scalarData.getValue()};
     Result<> h5Result = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});

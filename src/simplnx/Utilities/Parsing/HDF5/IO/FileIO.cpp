@@ -46,9 +46,20 @@ FileIO::~FileIO() noexcept
   close();
 }
 
+hid_t FileIO::open() const
+{
+  if(isOpen())
+  {
+    return getId();
+  }
+  hid_t id = H5Fopen(getFilePath().string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  setId(id);
+  return id;
+}
+
 void FileIO::close()
 {
-  if(getId() > 0)
+  if(isOpen())
   {
     H5Fclose(getId());
     setId(0);

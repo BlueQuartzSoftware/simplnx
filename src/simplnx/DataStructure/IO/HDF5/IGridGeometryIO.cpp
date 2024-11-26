@@ -18,13 +18,7 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
     return result;
   }
 
-  auto groupReaderResult = parentGroup.openGroup(objectName);
-  if(groupReaderResult.invalid())
-  {
-    return ConvertResult(std::move(groupReaderResult));
-  }
-  auto groupReader = std::move(groupReaderResult.value());
-
+  auto groupReader = parentGroup.openGroup(objectName);
   IGeometry::OptionalId cellDataId = ReadDataId(groupReader, IOConstants::k_CellDataTag);
 
   geometry.setCellData(cellDataId);
@@ -39,13 +33,7 @@ Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructu
     return result;
   }
 
-  auto groupWriterResult = parentGroup.createGroup(geometry.getName());
-  if(groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroup.createGroup(geometry.getName());
   Result<> writeResult = WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag);
   return writeResult;
 }

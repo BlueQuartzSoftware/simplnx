@@ -156,11 +156,11 @@ inline Result<> WriteDataStoreChunks(nx::core::HDF5::DatasetIO& datasetWriter, c
 template <typename T>
 inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
 {
-  if(!datasetWriter.isValid())
-  {
-    std::string ss = "Failed to write DataArray. DatasetIO not valid";
-    return MakeErrorResult(-1, ss);
-  }
+  //if(!datasetWriter.isValid())
+  //{
+  //  std::string ss = "Failed to write DataArray. DatasetIO not valid";
+  //  return MakeErrorResult(-1, ss);
+  //}
 
   auto writeResult = dataStore.writeHdf5(datasetWriter);
   if (writeResult.invalid())

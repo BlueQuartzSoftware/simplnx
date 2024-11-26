@@ -32,12 +32,7 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, cons
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO)
 {
   HDF5::DataStructureWriter dataStructureWriter;
-  auto groupIOResult = FileIO.createGroup(Constants::k_DataStructureTag);
-  if(groupIOResult.invalid())
-  {
-    return ConvertResult(std::move(groupIOResult));
-  }
-  auto groupIO = std::move(groupIOResult.value());
+  auto groupIO = FileIO.createGroup(Constants::k_DataStructureTag);
   return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 

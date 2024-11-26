@@ -44,13 +44,7 @@ public:
       }
       numNeighborsName = std::move(numNeighborsNameResult.value());
 
-      auto numNeighborsReaderResult = parentGroup.openDataset(numNeighborsName);
-      if(numNeighborsReaderResult.invalid())
-      {
-        return {};
-      }
-      auto numNeighborsReader = std::move(numNeighborsReaderResult.value());
-
+      auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
       auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
       auto& numNeighborsStore = *numNeighborsPtr.get();
 
@@ -98,13 +92,7 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
-    auto datasetReaderResult = parentGroup.openDataset(objectName);
-    if(datasetReaderResult.invalid())
-    {
-      return ConvertResult(std::move(datasetReaderResult));
-    }
-    auto datasetReader = std::move(datasetReaderResult.value());
-
+    auto datasetReader = parentGroup.openDataset(objectName);
     auto dataVector = ReadHdf5Data(parentGroup, datasetReader);
     auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, dataVector, parentId);
     if(dataObject == nullptr)
@@ -167,13 +155,7 @@ public:
     }
 
     // Write flattened array to HDF5 as a separate array
-    auto datasetWriterResult = parentGroupWriter.createDataset(neighborList.getName());
-    if(datasetWriterResult.invalid())
-    {
-      return ConvertResult(std::move(datasetWriterResult));
-    }
-    auto datasetWriter = std::move(datasetWriterResult.value());
-
+    auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
     Result<> flattenedResult = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
     if(flattenedResult.invalid())
     {

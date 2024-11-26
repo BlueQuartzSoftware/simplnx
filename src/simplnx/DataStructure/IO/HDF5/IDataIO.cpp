@@ -41,15 +41,15 @@ Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optio
 
 Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable)
 {
-  // Add to DataStructureWriter for use in linking
-  dataStructureWriter.addWriter(objectWriter, dataObject.getId());
-
   std::string dataTypeName = dataObject.getTypeName();
   objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataTypeName);
   objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject.getId());
 
   int32 value = (importable ? 1 : 0);
   objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
+
+  // Add to DataStructureWriter for use in linking
+  dataStructureWriter.addWriter(objectWriter, dataObject.getId());
 
   return {};
 }

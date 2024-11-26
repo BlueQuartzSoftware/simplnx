@@ -766,7 +766,7 @@ DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileIO& f
   // HighFive::FixedLenStringArray<8> value;
   std::string version;
   auto versionResult = fileReader.readStringAttribute(k_FileVersionTag.str());
-  if (versionResult.invalid())
+  if(versionResult.invalid())
   {
     return versionResult.errors()[0].message;
   }
@@ -777,13 +777,7 @@ DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileIO& f
 DREAM3D::PipelineVersionType DREAM3D::GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader)
 {
   PipelineVersionType value;
-  auto pipelineGroupResult = fileReader.openGroup(k_PipelineJsonTag);
-  if(pipelineGroupResult.invalid())
-  {
-    return -1;
-  }
-  auto pipelineGroup = std::move(pipelineGroupResult.value());
-
+  auto pipelineGroup = fileReader.openGroup(k_PipelineJsonTag);
   auto valueResult = pipelineGroup.readScalarAttribute<int32>(k_PipelineVersionTag);
   value = std::move(valueResult.value());
   return value;
@@ -958,13 +952,7 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
 
 Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const HDF5::GroupIO& geomGroup, const std::string& arrayName, bool preflight = false)
 {
-  Result<HDF5::DatasetIO> dataArrayReaderResult = geomGroup.openDataset(arrayName);
-  if(dataArrayReaderResult.invalid())
-  {
-    return ConvertInvalidResult<UInt64Array*>(std::move(dataArrayReaderResult));
-  }
-  auto dataArrayReader = std::move(dataArrayReaderResult.value());
-
+  HDF5::DatasetIO dataArrayReader = geomGroup.openDataset(arrayName);
   DataObject::IdType parentId = geometry->getId();
 
   std::vector<usize> tDims;
@@ -1088,15 +1076,16 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   auto dataArrayNames = amGroupReader.getChildNames();
   for(const auto& daName : dataArrayNames)
   {
-    auto dataArraySetResult = amGroupReader.openDataset(daName);
-    if(dataArraySetResult.invalid())
+    auto dataArraySet = amGroupReader.openDataset(daName);
+    #if 0
+    if(!dataArraySet.isValid())
     {
       // Could not open HDF5 DataSet. Could be stats array
       std::string ss = fmt::format("Could not open array '{}'", daName);
       daResults.push_back(nx::core::MakeWarningVoidResult(Legacy::k_LegacyDataArrayH5_Code, ss));
       continue;
     }
-    auto dataArraySet = std::move(dataArraySetResult.value());
+    #endif
 
     if(isLegacyNeighborList(dataArraySet))
     {
@@ -1171,12 +1160,7 @@ void readGenericGeomDims(IGeometry* geom, const nx::core::HDF5::GroupIO& geomGro
 
 Result<IDataArray*> readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const nx::core::HDF5::GroupIO& geomGroup, const std::string& arrayName, bool preflight)
 {
-  auto dataArraySetResult = geomGroup.openDataset(arrayName);
-  if (dataArraySetResult.invalid())
-  {
-    return ConvertInvalidResult<IDataArray*>(std::move(dataArraySetResult));
-  }
-  auto dataArraySet = std::move(dataArraySetResult.value());
+  auto dataArraySet = geomGroup.openDataset(arrayName);
   return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId(), preflight);
 }
 
@@ -1239,14 +1223,9 @@ DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const nx::core:
 
   // DIMENSIONS array
   {
-    auto dimsDatasetResult = geomGroup.openDataset("DIMENSIONS");
-    if(dimsDatasetResult.valid())
-    {
-      auto dimsDataset = std::move(dimsDatasetResult.value());
-
-      auto dims = dimsDataset.readAsVector<int64>();
-      geom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
-    }
+    auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
+    auto dims = dimsDataset.readAsVector<int64>();
+    geom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
 
   auto xBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::XBoundsName, preflight);
@@ -1306,39 +1285,21 @@ DataObject* readLegacyImageGeom(DataStructure& dataStructure, const nx::core::HD
 
   // DIMENSIONS array
   {
-    auto dimsDatasetResult = geomGroup.openDataset("DIMENSIONS");
-    if(dimsDatasetResult.invalid())
-    {
-      return nullptr;
-    }
-    auto dimsDataset = std::move(dimsDatasetResult.value());
-
+    auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
     auto dims = dimsDataset.readAsVector<int64>();
     image->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
 
   // ORIGIN array
   {
-    auto originDatasetResult = geomGroup.openDataset("ORIGIN");
-    if(originDatasetResult.invalid())
-    {
-      return nullptr;
-    }
-    auto originDataset = std::move(originDatasetResult.value());
-
+    auto originDataset = geomGroup.openDataset("ORIGIN");
     auto origin = originDataset.readAsVector<float32>();
     image->setOrigin(FloatVec3(origin[0], origin[1], origin[2]));
   }
 
   // SPACING array
   {
-    auto spacingDatasetResult = geomGroup.openDataset("SPACING");
-    if(spacingDatasetResult.invalid())
-    {
-      return nullptr;
-    }
-    auto spacingDataset = std::move(spacingDatasetResult.value());
-
+    auto spacingDataset = geomGroup.openDataset("SPACING");
     auto spacing = spacingDataset.readAsVector<float32>();
     image->setSpacing(FloatVec3(spacing[0], spacing[1], spacing[2]));
   }
@@ -1353,11 +1314,9 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   const std::string dcName = dcGroup.getName();
 
   // Check for geometry
-  auto geomGroupResult = dcGroup.openGroup(Legacy::GeometryTag.c_str());
-  if(geomGroupResult.valid())
+  auto geomGroup = dcGroup.openGroup(Legacy::GeometryTag.c_str());
+  if(geomGroup.isValid())
   {
-    auto geomGroup = std::move(geomGroupResult.value());
-
     std::string geomName;
     auto geomNameResult = geomGroup.readStringAttribute(Legacy::GeometryTypeNameTag);
     geomName = std::move(geomNameResult.value());
@@ -1410,12 +1369,7 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
       continue;
     }
 
-    auto attributeMatrixGroupResult = dcGroup.openGroup(amName);
-    if(attributeMatrixGroupResult.invalid())
-    {
-      return ConvertResult(std::move(attributeMatrixGroupResult));
-    }
-    auto attributeMatrixGroup = std::move(attributeMatrixGroupResult.value());
+    auto attributeMatrixGroup = dcGroup.openGroup(amName);
 
     amResults.push_back(readLegacyAttributeMatrix(dataStructure, attributeMatrixGroup, *container, preflight));
   }
@@ -1426,24 +1380,14 @@ Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fi
 {
   DataStructure dataStructure;
 
-  auto dcaGroupResult = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-  if(dcaGroupResult.invalid())
-  {
-    return ConvertInvalidResult<DataStructure>(std::move(dcaGroupResult));
-  }
-  auto dcaGroup = std::move(dcaGroupResult.value());
+  auto dcaGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
 
   // Iterate over DataContainers
   std::vector<Result<>> importResults;
   const auto dcNames = dcaGroup.getChildNames();
   for(const auto& dcName : dcNames)
   {
-    auto dcGroupResult = dcaGroup.openGroup(dcName);
-    if(dcGroupResult.invalid())
-    {
-      return ConvertInvalidResult<DataStructure>(std::move(dcGroupResult));
-    }
-    auto dcGroup = std::move(dcGroupResult.value());
+    auto dcGroup = dcaGroup.openGroup(dcName);
     importResults.push_back(readLegacyDataContainer(dataStructure, dcGroup, preflight));
   }
 
@@ -1463,8 +1407,8 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const nx::core::HDF5:
     return ImportLegacyDataStructure(fileReader, preflight);
   }
   // Unsupported file version
-  return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion,
-                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}. Actual value: {}", fileVersion, k_CurrentFileVersion, k_LegacyFileVersion, fileVersion));
+  return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion, fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}. Actual value: {}", fileVersion,
+                                                                                   k_CurrentFileVersion, k_LegacyFileVersion, fileVersion));
 }
 
 Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight)
@@ -1503,20 +1447,9 @@ Result<Pipeline> DREAM3D::ImportPipelineFromFile(const nx::core::HDF5::FileIO& f
 
 Result<nlohmann::json> DREAM3D::ImportPipelineJsonFromFile(const nx::core::HDF5::FileIO& fileReader)
 {
-  auto pipelineGroupReaderResult = fileReader.openGroup(k_PipelineJsonTag);
-  if (pipelineGroupReaderResult.invalid())
-  {
-    return MakeErrorResult<nlohmann::json>(k_PipelineGroupUnavailable, "Could not open '/Pipeline' HDF5 Group.");
-  }
-  auto pipelineGroupReader = std::move(pipelineGroupReaderResult.value());
+  auto pipelineGroupReader = fileReader.openGroup(k_PipelineJsonTag);
 
-  auto pipelineDatasetReaderResult = pipelineGroupReader.openDataset(k_PipelineJsonTag);
-  if(pipelineDatasetReaderResult.invalid())
-  {
-    return MakeErrorResult<nlohmann::json>(k_PipelineGroupUnavailable, "Could not open '/Pipeline' HDF5 Group.");
-  }
-  auto pipelineDatasetReader = std::move(pipelineDatasetReaderResult.value());
-
+  auto pipelineDatasetReader = pipelineGroupReader.openDataset(k_PipelineJsonTag);
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
   auto pipelineJson = nlohmann::json::parse(pipelineJsonString);
   return {pipelineJson};
@@ -1590,23 +1523,11 @@ Result<> WritePipeline(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipel
     return MakeErrorResult(-100, "Cannot Write to Invalid FileWriter");
   }
 
-  auto pipelineGroupWriterResult = fileWriter.createGroup(k_PipelineJsonTag);
-  if (pipelineGroupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(pipelineGroupWriterResult));
-  }
-  auto pipelineGroupWriter = std::move(pipelineGroupWriterResult.value());
-
+  auto pipelineGroupWriter = fileWriter.createGroup(k_PipelineJsonTag);
   pipelineGroupWriter.writeScalarAttribute(k_PipelineVersionTag, static_cast<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion));
   pipelineGroupWriter.writeStringAttribute(k_PipelineNameTag, pipeline.getName());
 
-  auto pipelineDatasetWriterResult = pipelineGroupWriter.createDataset(k_PipelineJsonTag);
-  if (pipelineDatasetWriterResult.invalid())
-  {
-    return ConvertResult(std::move(pipelineDatasetWriterResult));
-  }
-  auto pipelineDatasetWriter = std::move(pipelineDatasetWriterResult.value());
-
+  auto pipelineDatasetWriter = pipelineGroupWriter.createDataset(k_PipelineJsonTag);
   std::string pipelineString = pipeline.toJson().dump();
   return pipelineDatasetWriter.writeString(pipelineString);
 }
@@ -1618,7 +1539,7 @@ Result<> WriteDataStructure(nx::core::HDF5::FileIO& fileWriter, const DataStruct
 
 Result<> WriteFileVersion(nx::core::HDF5::FileIO& fileWriter)
 {
-  fileWriter.writeScalarAttribute(k_FileVersionTag, DREAM3D::k_CurrentFileVersion.str());
+  fileWriter.writeStringAttribute(k_FileVersionTag, DREAM3D::k_CurrentFileVersion.str());
   return {};
 }
 

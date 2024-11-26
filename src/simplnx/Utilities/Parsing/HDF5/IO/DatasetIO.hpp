@@ -46,7 +46,7 @@ public:
    */
   DatasetIO();
 
-  DatasetIO(GroupIO& parentGroup, const std::string& dataName);
+  DatasetIO(hid_t parentId, const std::string& dataName);
 
   DatasetIO(const DatasetIO& other) = delete;
 
@@ -483,7 +483,7 @@ protected:
    * @brief Opens and returns the target HDF5 DataSet.
    * @return hid_t
    */
-  hid_t open() const;
+  hid_t open() const override;
 
   void close() override;
 

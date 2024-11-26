@@ -23,8 +23,8 @@ constexpr int64 k_DimensionMismatchError = -5138;
 
 DatasetIO::DatasetIO() = default;
 
-DatasetIO::DatasetIO(GroupIO& parentGroup, const std::string& dataName)
-: ObjectIO(&parentGroup, dataName)
+DatasetIO::DatasetIO(hid_t parentId, const std::string& dataName)
+: ObjectIO(parentId, dataName)
 {
 #if 0
   if(!tryOpeningDataset(datasetName, dataType))
@@ -46,7 +46,7 @@ DatasetIO::~DatasetIO() noexcept
 
 void DatasetIO::close()
 {
-  if(getId() > 0)
+  if(isOpen())
   {
     H5Dclose(getId());
     setId(0);
@@ -55,7 +55,7 @@ void DatasetIO::close()
 
 hid_t DatasetIO::open() const
 {
-  if (getId() > 0)
+  if (isOpen())
   {
     return getId();
   }
@@ -66,7 +66,7 @@ hid_t DatasetIO::open() const
 
 hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType propertiesId) const
 {
-  if(getId() > 0)
+  if(isOpen())
   {
     return getId();
   }
@@ -74,7 +74,7 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
   HDF_ERROR_HANDLER_OFF
   setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
   HDF_ERROR_HANDLER_ON
-  if(getId() < 0) // dataset does not exist so create it
+  if(!isOpen()) // dataset does not exist so create it
   {
     setId(H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, propertiesId, H5P_DEFAULT));
   }
@@ -387,7 +387,7 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
       H5Sclose(dataspaceID);
       H5Tclose(typeID);
       H5Tclose(memtype);
-      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << parentGroup()->getName() << ") with object name (" << getName() << ")"
+      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getName() << ")"
                 << std::endl;
       return {};
     }
@@ -415,10 +415,10 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
 template <typename T>
 std::vector<T> DatasetIO::readAsVector() const
 {
-  if(!isValid())
-  {
-    return {};
-  }
+  //if(!isValid())
+  //{
+  //  return {};
+  //}
 
   auto dataset = open();
   size_t numElements = getNumElements();
@@ -819,11 +819,11 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
       }
     }
     /* Close the dataspace. */
-    error = H5Sclose(dataspaceId);
-    if(error < 0)
-    {
-      returnError = MakeErrorResult(error, "Error Closing Dataspace");
-    }
+    //error = H5Sclose(dataspaceId);
+    //if(error < 0)
+    //{
+    //  returnError = MakeErrorResult(error, "Error Closing Dataspace");
+    //}
   }
   else
   {
@@ -901,15 +901,15 @@ nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& dataset
   {
     return MakeErrorResult(error, "Error Closing Transfer Property");
   }  
-  error = H5Dclose(datasetInfo.datasetId);
+  /*error = H5Dclose(datasetInfo.datasetId);
   if(error < 0)
   {
     return MakeErrorResult(error, "Error Closing DataSet");
-  }
-  else
-  {
-    setId(-1);
-  }
+  }*/
+  //else
+  //{
+  //  setId(-1);
+  //}
 
   error = H5Pclose(datasetInfo.chunkProp);
   if(error < 0)
@@ -1088,10 +1088,10 @@ nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo& chunkInfo,
 
 nx::core::Result<> DatasetIO::writeString(const std::string& text)
 {
-  if(!isValid())
-  {
-    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
-  }
+  //if(!isValid())
+  //{
+  //  return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
+  //}
 
   herr_t error = 0;
   Result<> returnError = {};
@@ -1110,7 +1110,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
         if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
         {
           /* Create or open the dataset. */
-          hid_t id = H5Dcreate(parentGroup()->getId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          hid_t id = H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
           if(id >= 0)
           {
             if(!text.empty())
@@ -1134,22 +1134,22 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
         }
       }
     }
-    if(H5Sclose(typeId) < 0)
-    {
-      returnError = MakeErrorResult(error, "Error closing DataType");
-    }
+    //if(H5Sclose(typeId) < 0)
+    //{
+    //  returnError = MakeErrorResult(error, "Error closing DataType");
+    //}
   }
   return returnError;
 }
 
 nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string>& text)
 {
-  if(!isValid())
-  {
-    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
-  }
+  //if(!isValid())
+  //{
+  //  return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
+  //}
 
-  hid_t parentId = parentGroup()->getId();
+  hid_t parentId = getParentId();
   hid_t dataspaceID = -1;
   hid_t memSpace = -1;
   hid_t datatype = -1;
@@ -1167,6 +1167,7 @@ nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string
       H5Tset_size(datatype, H5T_VARIABLE);
 
       auto datasetId = H5Dcreate(parentId, getName().c_str(), datatype, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      setId(datasetId);
       if(datasetId >= 0)
       {
         // Select the "memory" to be written out - just 1 record.
@@ -1189,7 +1190,7 @@ nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string
             returnError = MakeErrorResult(error, "Error Writing String Data");
           }
         }
-        H5Dclose(datasetId);
+        //H5Dclose(datasetId);
       }
       H5Tclose(datatype);
       H5Sclose(memSpace);
@@ -1262,8 +1263,8 @@ bool DatasetIO::exists() const
   {
     return true;
   }
-
-  return parentGroup()->isDataset(getName());
+  return false;
+  //return parentGroup()->isDataset(getName());
 }
 
 //hid_t DatasetIO::getH5Id() const

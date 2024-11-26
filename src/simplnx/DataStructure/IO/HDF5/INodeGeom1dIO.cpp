@@ -18,13 +18,7 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
     return result;
   }
 
-  auto groupReaderResult = parentGroup.openGroup(objectName);
-  if(groupReaderResult.invalid())
-  {
-    return ConvertResult(std::move(groupReaderResult));
-  }
-  auto groupReader = std::move(groupReaderResult.value());
-
+  auto groupReader = parentGroup.openGroup(objectName);
   geometry.setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
   geometry.setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
   geometry.setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
@@ -41,13 +35,7 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  auto groupWriterResult = parentGroupWriter.createGroup(geometry.getName());
-  if(groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
   result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
   if(result.invalid())
   {

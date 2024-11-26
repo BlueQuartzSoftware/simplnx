@@ -53,13 +53,8 @@ Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& da
 
 Result<> HDF5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core::HDF5::GroupIO& parentGroupIO, const BaseGroup* baseGroup, bool importable)
 {
-  auto groupWriterResult = parentGroupIO.createGroup(baseGroup->getName());
-  if (groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroupIO.createGroup(baseGroup->getName());
+  
   Result<> error = WriteObjectAttributes(dataStructureWriter, groupWriter, baseGroup, importable);
   if(error.invalid())
   {

@@ -35,13 +35,8 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
     return result;
   }
 
-  auto groupReaderResult = parentGroup.openGroup(objectName);
-  if(groupReaderResult.invalid())
-  {
-    return ConvertResult(std::move(groupReaderResult));
-  }
-  auto groupReader = std::move(groupReaderResult.value());
-
+  auto groupReader = parentGroup.openGroup(objectName);
+  
   // Read Dimensions
   std::vector<size_t> volumeDimensions(3);
   auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
@@ -65,13 +60,8 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return result;
   }
 
-  auto groupWriterResult = parentGroup.createGroup(geometry.getName());
-  if(groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroup.createGroup(geometry.getName());
+  
   // Write dimensions
   auto dimensions = geometry.getDimensions();
   std::vector<size_t> dimsVector(3);

@@ -27,13 +27,7 @@ Result<DataStructure> DataStructureReader::ReadFile(const std::filesystem::path&
 Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores)
 {
   DataStructureReader dataStructureReader;
-  auto groupReaderResult = fileReader.openGroup(Constants::k_DataStructureTag);
-  if(groupReaderResult.invalid())
-  {
-    return ConvertInvalidResult<DataStructure>(std::move(groupReaderResult));
-  }
-  auto groupReader = std::move(groupReaderResult.value());
-
+  auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
   return dataStructureReader.readGroup(groupReader, useEmptyDataStores);
 }
 
@@ -76,13 +70,8 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
 
     if (isGroup)
     {
-      auto childObjResult = parentGroup.openGroup(objectName);
-      if(childObjResult.invalid())
-      {
-        return ConvertResult(std::move(childObjResult));
-      }
-      auto childObj = std::move(childObjResult.value());
-
+      auto childObj = parentGroup.openGroup(objectName);
+      
       // Return 0 if object is marked as not importable.
       int32 importable = 0;
       auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
@@ -123,13 +112,8 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
     }
     else
     {
-      auto childObjResult = parentGroup.openDataset(objectName);
-      if(childObjResult.invalid())
-      {
-        return ConvertResult(std::move(childObjResult));
-      }
-      auto childObj = std::move(childObjResult.value());
-
+      auto childObj = parentGroup.openDataset(objectName);
+      
       // Return 0 if object is marked as not importable.
       auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
       int32 importable = 0;

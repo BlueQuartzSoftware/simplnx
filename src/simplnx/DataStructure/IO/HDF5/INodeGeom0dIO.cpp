@@ -18,13 +18,8 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
     return result;
   }
 
-  auto groupReaderResult = parentGroup.openGroup(objectName);
-  if(groupReaderResult.invalid())
-  {
-    return ConvertResult(std::move(groupReaderResult));
-  }
-  auto groupReader = std::move(groupReaderResult.value());
-
+  auto groupReader = parentGroup.openGroup(objectName);
+  
   geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
 
@@ -38,13 +33,8 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  auto groupWriterResult = parentGroupWriter.createGroup(geometry.getName());
-  if(groupWriterResult.invalid())
-  {
-    return ConvertResult(std::move(groupWriterResult));
-  }
-  auto groupWriter = std::move(groupWriterResult.value());
-
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
+  
   DataObject::OptionalId vertexListId = geometry.getVertexListId();
 
   result = WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag);
@@ -56,13 +46,8 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
   if(vertexListId.has_value())
   {
     usize numVerts = geometry.getNumberOfVertices();
-    auto datasetWriterResultt = groupWriter.createDataset("_VertexIndices");
-    if(datasetWriterResultt.invalid())
-    {
-      return ConvertResult(std::move(datasetWriterResultt));
-    }
-    auto datasetWriter = std::move(datasetWriterResultt.value());
-
+    auto datasetWriter = groupWriter.createDataset("_VertexIndices");
+    
     std::vector<int64> indices(numVerts);
     for(usize i = 0; i < numVerts; i++)
     {
