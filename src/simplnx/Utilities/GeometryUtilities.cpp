@@ -647,8 +647,6 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
 
     // Create the plane
     slice_helper::Plane plane(planeNormal, pointOnPlane);
-    int32 localEdgeCount = 0;
-    std::set<slice_helper::Edge> uniqueEdges;
     // Loop over each Triangle and get edges/vertices of any intersection
     for(usize triIdx = 0; triIdx < numTris; triIdx++)
     {
@@ -658,20 +656,10 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
       {
         regionId = triRegionIdPtr->operator[](triIdx);
       }
-
-      //       std::array<nx::core::Point3Df, 3> faceVertices;
-      //       triangle.getFaceCoordinates(triIdx, faceVertices);
-
       std::array<nx::core::Point3Df, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
 
       // Compute the intersection
       slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane);
-
-      if(intersectionEdge.valid)
-      {
-        uniqueEdges.insert(intersectionEdge);
-      }
-
       if(intersectionEdge.valid)
       {
         slicedVerts.push_back(intersectionEdge.start[0]);
@@ -688,7 +676,6 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
           regionIds.push_back(regionId);
         }
         edgeCounter++;
-        localEdgeCount++;
       }
     }
     sliceIndex++;

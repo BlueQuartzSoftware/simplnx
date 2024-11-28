@@ -43,6 +43,7 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+  void sendThreadSafeUpdate(Int32Array& m_FeatureIds, const std::vector<int32>& rasterBuffer, usize offset);
 
 protected:
   void generatePoints(std::vector<Point3Df>& points) override;
@@ -52,5 +53,11 @@ private:
   const RegularGridSampleSurfaceMeshInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Thread safe Progress Message
+  mutable std::mutex m_ProgressMessage_Mutex;
+  usize m_ProgressCounter = 0;
+  usize m_LastProgressInt = 0;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
 };
 } // namespace nx::core
