@@ -19,7 +19,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
+
 } // namespace
 
 namespace nx::core
@@ -51,7 +51,7 @@ std::string SliceTriangleGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SliceTriangleGeometryFilter::defaultTags() const
 {
-  return {className(), "Sampling", "Geometry"};
+  return {className(), "Sampling", "Geometry", "Slice", "Scan Vectors"};
 }
 
 //------------------------------------------------------------------------------
@@ -88,8 +88,8 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_HaveRegionIds_Key, k_RegionIdArrayPath_Key, true);
 
-  params.linkParameters(k_SliceRange_Key, k_Zstart_Key, k_UserDefinedRange);
-  params.linkParameters(k_SliceRange_Key, k_Zend_Key, k_UserDefinedRange);
+  params.linkParameters(k_SliceRange_Key, k_Zstart_Key, slice_triangle_geometry::constants::k_FullRange);
+  params.linkParameters(k_SliceRange_Key, k_Zend_Key, slice_triangle_geometry::constants::k_UserDefinedRange);
   return params;
 }
 
@@ -122,11 +122,11 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
 
   Result<OutputActions> resultOutputActions;
 
-  if(pSliceRangeValue == k_UserDefinedRange)
+  if(pSliceRangeValue == slice_triangle_geometry::constants::k_UserDefinedRange)
   {
     if(pZStartValue >= pZEndValue)
     {
-      return MakePreflightErrorResult(-62100, "Z end must be larger than Z start.");
+      return MakePreflightErrorResult(-62100, "Z end range must be larger than Z start range.");
     }
   }
 

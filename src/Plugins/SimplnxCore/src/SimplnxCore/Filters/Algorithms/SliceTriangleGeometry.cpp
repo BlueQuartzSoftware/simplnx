@@ -74,7 +74,7 @@ Result<> SliceTriangleGeometry::operator()()
   float zStart = m_InputValues->Zstart;
   float zEnd = m_InputValues->Zend;
 
-  if(m_InputValues->SliceRange == 0)
+  if(m_InputValues->SliceRange == slice_triangle_geometry::constants::k_FullRange)
   {
     auto boundingBox = triangle.getBoundingBox();
     zStart = boundingBox.getMinPoint()[2];

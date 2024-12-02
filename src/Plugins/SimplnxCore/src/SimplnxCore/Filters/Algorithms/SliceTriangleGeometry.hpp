@@ -14,6 +14,12 @@
 namespace nx::core
 {
 
+namespace slice_triangle_geometry::constants
+{
+  constexpr ChoicesParameter::ValueType k_FullRange = 0;
+  constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
+}
+
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
   // VectorFloat32Parameter::ValueType SliceDirection;

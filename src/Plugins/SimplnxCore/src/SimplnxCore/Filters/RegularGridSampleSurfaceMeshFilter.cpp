@@ -7,6 +7,7 @@
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -143,17 +144,17 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   float32 vol = (pDimensionsValue[0] * pSpacingValue[0]) * (pDimensionsValue[1] * pSpacingValue[1]) * (pDimensionsValue[2] * pSpacingValue[2]);
 
-  boxDimensions << "Volume: " << std::setprecision(8) << std::noshowpoint << vol << " " << lengthUnit << "s ^3"
-                << "\n";
+  boxDimensions << "Volume: " << std::setprecision(8) << std::noshowpoint << vol << " " << lengthUnit << "s ^3" << "\n";
 
   preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions.str()});
 
+  /////////////////////////////////////////////////////////////////////////////
   // CREATE THE EDGE GEOMETRY THAT WILL BE USED FOR THE POLYGONS
+  // This Geometry will be deleted after the filter is completed
   {
     DataPath pSliceDataContainerNameValue({fmt::format(".{}_sliced", triangleGeometryPath.getTargetName())});
     std::string pEdgeAttributeMatrixNameValue("EdgeAttributeMatrix");
     std::string pSliceIdArrayNameValue("SliceIds");
-    //    bool pHaveRegionIdsValue = false;
     DataPath pRegionIdArrayPathValue({"NOT USED"});
     std::string pSliceAttributeMatrixNameValue("SliceAttributeMatrix");
     // create the edge geometry
@@ -171,19 +172,16 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
       resultOutputActions.value().appendAction(std::move(createArray));
     }
 
-    //    if(pHaveRegionIdsValue)
-    //    {
-    //      DataPath path = pSliceDataContainerNameValue.createChildPath(pEdgeAttributeMatrixNameValue).createChildPath(pRegionIdArrayPathValue.getTargetName());
-    //      auto createArray = std::make_unique<CreateArrayAction>(DataType::int32, tDims, compDims, path);
-    //      resultOutputActions.value().appendAction(std::move(createArray));
-    //    }
-
     DataPath featureSliceAttrMatPath = pSliceDataContainerNameValue.createChildPath(pSliceAttributeMatrixNameValue);
     {
       auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(featureSliceAttrMatPath, tDims);
       resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
     }
+
+    auto deferredDeleteGeometryAction = std::make_unique<DeleteDataAction>(pSliceDataContainerNameValue);
+    resultOutputActions.value().appendDeferredAction(std::move(deferredDeleteGeometryAction));
   }
+  /////////////////////////////////////////////////////////////////////////////
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

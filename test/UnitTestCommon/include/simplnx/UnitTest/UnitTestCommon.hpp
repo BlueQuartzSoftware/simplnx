@@ -408,9 +408,14 @@ inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom*
  */
 inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
 {
-  return (geom1->getGeomType() == geom2->getGeomType()) && (geom1->getSpatialDimensionality() == geom2->getSpatialDimensionality()) &&
-         (geom1->getUnitDimensionality() == geom2->getUnitDimensionality()) && (geom1->getNumberOfCells() == geom2->getNumberOfCells()) &&
-         (geom1->findAllChildrenOfType<IArray>().size() == geom2->findAllChildrenOfType<IArray>().size()) && (geom1->getParametricCenter() == geom2->getParametricCenter());
+  REQUIRE(geom1->getGeomType() == geom2->getGeomType());
+  REQUIRE(geom1->getSpatialDimensionality() == geom2->getSpatialDimensionality());
+  REQUIRE(geom1->getUnitDimensionality() == geom2->getUnitDimensionality());
+  REQUIRE(geom1->getNumberOfCells() == geom2->getNumberOfCells());
+  REQUIRE(geom1->findAllChildrenOfType<IArray>().size() == geom2->findAllChildrenOfType<IArray>().size());
+  REQUIRE(geom1->getParametricCenter() == geom2->getParametricCenter());
+
+  return true;
 }
 
 /**
