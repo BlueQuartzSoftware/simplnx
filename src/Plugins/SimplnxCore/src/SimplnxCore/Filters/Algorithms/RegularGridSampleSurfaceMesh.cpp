@@ -108,6 +108,11 @@ public:
       }
     }
 
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     std::vector<int32> featureIds(cellsPerSlice, 0);
 
     // Now that we have the edges that are on this slice, iterate over all
@@ -122,21 +127,14 @@ public:
         // featureIds[m_ImageGeomIdx + planeIdx] = 1;
         featureIds[planeIdx] = 1; // Parallel version
       }
+
+      if(m_ShouldCancel)
+      {
+        return;
+      }
     }
 
     m_FilterAlg->sendThreadSafeUpdate(m_FeatureIds, featureIds, m_ImageGeomIdx);
-
-    // for(usize i = 0; i < m_TotalPoints; i++)
-    //    {
-    //      auto now = std::chrono::steady_clock::now();
-    //      //// Only send updates every 1 second
-    //      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    //      {
-    //        const float progress = static_cast<float>(i) / static_cast<float>(m_TotalPoints) * 100.0f;
-    //        m_FilterAlg->updateProgress(fmt::format("Processing {}: {}% completed", m_DataArrayPtr->getName(), static_cast<int>(progress)));
-    //        start = std::chrono::steady_clock::now();
-    //      }
-    //    }
   }
 
 private:
