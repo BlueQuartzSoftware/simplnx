@@ -142,13 +142,15 @@ Result<> ITKBinaryProjectionImageFilter::executeImpl(DataStructure& dataStructur
 
   const cxITKBinaryProjectionImageFilter::ITKBinaryProjectionImageFunctor itkFunctor = {projectionDimension, foregroundValue, backgroundValue};
 
+  auto result = ITK::Execute<cxITKBinaryProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
+  if(result.invalid())
+  {
+    return result;
+  }
+
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  auto result = ITK::Execute<cxITKBinaryProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
-
-  IArray& iArrayRef = dataStructure.getDataRefAs<IArray>(outputArrayPath);
-  auto iArrayTupleShape = iArrayRef.getTupleShape();
-  std::cout << fmt::format("{}", fmt::join(iArrayRef.getTupleShape(), ",")) << std::endl;
+  auto iArrayTupleShape = dataStructure.getDataAs<IArray>(outputArrayPath)->getTupleShape();
 
   // Update the Image Geometry with the new dimensions
   imageGeom.setDimensions({iArrayTupleShape[2], iArrayTupleShape[1], iArrayTupleShape[0]});
@@ -158,10 +160,10 @@ Result<> ITKBinaryProjectionImageFilter::executeImpl(DataStructure& dataStructur
   auto amPathVector = outputArrayPath.getPathVector();
   amPathVector.pop_back();
   DataPath amPath(amPathVector);
-  AttributeMatrix& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+  auto& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
   attributeMatrix.resizeTuples(iArrayTupleShape);
 
-  return result;
+  return {};
 }
 
 namespace

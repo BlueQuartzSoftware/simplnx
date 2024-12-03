@@ -99,7 +99,7 @@ IFilter::UniquePointer ITKMedianProjectionImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKMedianProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -115,7 +115,7 @@ IFilter::PreflightResult ITKMedianProjectionImageFilter::preflightImpl(const Dat
 
 //------------------------------------------------------------------------------
 Result<> ITKMedianProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                     const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -126,7 +126,28 @@ Result<> ITKMedianProjectionImageFilter::executeImpl(DataStructure& dataStructur
 
   const cxITKMedianProjectionImageFilter::ITKMedianProjectionImageFilterFunctor itkFunctor = {projectionDimension};
 
-  return ITK::Execute<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
-                                                                                                                          shouldCancel);
+  auto result = ITK::Execute<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                     itkFunctor, shouldCancel);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+  auto iArrayTupleShape = dataStructure.getDataAs<IArray>(outputArrayPath)->getTupleShape();
+
+  // Update the Image Geometry with the new dimensions
+  imageGeom.setDimensions({iArrayTupleShape[2], iArrayTupleShape[1], iArrayTupleShape[0]});
+
+  // Update the AttributeMatrix with the new tuple shape. THIS WILL ALSO CHANGE ANY OTHER DATA ARRAY THAT IS ALSO
+  // STORED IN THAT ATTRIBUTE MATRIX
+  auto amPathVector = outputArrayPath.getPathVector();
+  amPathVector.pop_back();
+  DataPath amPath(amPathVector);
+  auto& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+  attributeMatrix.resizeTuples(iArrayTupleShape);
+
+  return {};
 }
 } // namespace nx::core
