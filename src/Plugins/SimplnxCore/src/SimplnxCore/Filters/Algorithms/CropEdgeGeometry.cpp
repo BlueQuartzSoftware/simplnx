@@ -243,8 +243,6 @@ Result<> CropEdgeGeometry::operator()()
 
   std::vector<bool> edgesMask(numEdges, false);
   std::vector<bool> vertexReferenced(numVertices, false);
-  usize totalVerticesReferenced = 0;
-  usize totalEdgesKept = 0;
   std::unordered_map<uint64, std::tuple<float32, float32, float32>> interpolatedValuesMap;
 
   for(usize i = 0; i < numEdges; ++i)
@@ -321,23 +319,15 @@ Result<> CropEdgeGeometry::operator()()
 
     if(edgeInsideBoundary || (edgeIntersectingBoundary && behavior != BoundaryIntersectionBehavior::IgnoreEdge))
     {
-      // Mark vertices as referenced, keep the edge, increase edge and vertex referenced totals
-      if(vertexReferenced[v0] != v0_inside)
-      {
-        // Only increment if this is the first time we've detected this vertex
-        totalVerticesReferenced++;
-      }
-      if(vertexReferenced[v1] != v1_inside)
-      {
-        // Only increment if this is the first time we've detected this vertex
-        totalVerticesReferenced++;
-      }
-      totalEdgesKept++;
       vertexReferenced[v0] = true;
       vertexReferenced[v1] = true;
       edgesMask[i] = true;
     }
   }
+
+  // Tally up the number of vertices referenced and edges kept
+  usize totalVerticesReferenced = std::count(vertexReferenced.begin(), vertexReferenced.end(), true);
+  usize totalEdgesKept = std::count(edgesMask.begin(), edgesMask.end(), true);
 
   // Resize to proper sizes
   destVertices.resizeTuples({totalVerticesReferenced});
