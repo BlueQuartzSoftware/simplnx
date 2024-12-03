@@ -207,13 +207,8 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
 
     // Read dataset into DREAM.3D structure
-    auto datasetReaderResult = h5FileReader.openDataset(datasetPath);
-    if(datasetReaderResult.invalid())
-    {
-      return {ConvertInvalidResult<OutputActions>(std::move(datasetReaderResult))};
-    }
-    auto datasetReader = std::move(datasetReaderResult.value());
-
+    auto datasetReader = h5FileReader.openDataset(datasetPath);
+    
     std::vector<hsize_t> dims = datasetReader.getDimensions();
     std::string objectName = datasetReader.getName();
 
@@ -377,13 +372,8 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
-    auto datasetReaderResult = h5FileReader.openDataset(datasetPath);
-    if(datasetReaderResult.invalid())
-    {
-      return ConvertResult(std::move(datasetReaderResult));
-    }
-    auto datasetReader = std::move(datasetReaderResult.value());
-
+    auto datasetReader = h5FileReader.openDataset(datasetPath);
+    
     std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM3D-NX structure

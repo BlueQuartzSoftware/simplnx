@@ -62,10 +62,9 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(dataArrayName);
-    
+
     auto typeResult = datasetReader.getDataType();
     const auto type = std::move(typeResult.value());
-    //const std::string typeStr = type.string();
 
     std::string dataTypeStr;
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
@@ -75,7 +74,7 @@ public:
     // Check ability to import the data
     int32 importable = 0;
     auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
-    if (importableResult.valid())
+    if(importableResult.valid())
     {
       importable = std::move(importableResult.value());
     }
@@ -88,53 +87,47 @@ public:
     switch(type)
     {
     case DataType::float32:
-      {
-        importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::float64:
-      {
-        importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::int8:
-      {
-        importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::int16:
-      {
-        importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::int32:
-      {
-        importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::int64:
-      {
-        importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
-    case DataType::boolean:
+      importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
+    case DataType::uint8: {
+      if(isBoolArray)
       {
         importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-    case DataType::uint8:
+      else
       {
         importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
+    }
+    break;
     case DataType::uint16:
-      {
-        importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::uint32:
-      {
-        importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
+      importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
     case DataType::uint64:
-      {
-        importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
-      }
-    default:
-      {
-        err = -777;
-      }
+      importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      break;
+    default: {
+      err = -777;
+      break;
+    }
     }
 
     if(err < 0)

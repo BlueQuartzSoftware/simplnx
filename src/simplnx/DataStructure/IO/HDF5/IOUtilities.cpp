@@ -32,7 +32,7 @@ Result<> HDF5::ReadBaseGroup(DataStructureReader& dataStructureReader, const nx:
   return ReadDataMap(dataStructureReader, baseGroup->getDataMap(), groupReader, baseGroup->getId(), useEmptyDataStores);
 }
 
-Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, DataObject::IdType parentId, bool useEmptyDataStore)
+Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore)
 {
   auto childrenNames = groupReader.getChildNames();
   if(childrenNames.empty())

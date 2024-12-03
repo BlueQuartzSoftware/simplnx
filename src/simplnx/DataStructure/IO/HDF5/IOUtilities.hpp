@@ -41,7 +41,7 @@ Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructure
  * @param useEmptyDataStore = false
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupIO& parentGroup, DataObject::IdType parentId, bool useEmptyDataStore = false);
+Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupIO& parentGroup, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore = false);
 
 /**
  * @brief Attempts to read the BaseGroup from HDF5.

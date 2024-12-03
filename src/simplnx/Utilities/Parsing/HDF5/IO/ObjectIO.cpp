@@ -9,7 +9,6 @@ namespace nx::core::HDF5
 ObjectIO::ObjectIO() = default;
 
 ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
-//: m_FilePath(parentObj->getFilePath())
 : m_ParentId(parentId)
 , m_ObjectName(objectName)
 {
@@ -45,7 +44,6 @@ ObjectIO::~ObjectIO() noexcept
 bool ObjectIO::isValid() const
 {
   return m_Id > 0;
-  //return std::filesystem::exists(m_FilePath);
 }
 
 std::string ObjectIO::getName() const
@@ -62,21 +60,11 @@ std::string ObjectIO::getObjectPath() const
   std::string path = "/";
   path += Support::GetObjectPath(getId());
   return path;
-  //if(m_ParentGroup != nullptr)
-  //{
-  //  parentPath = m_ParentGroup->getObjectPath();
-  //}
-  //return parentPath + "/" + m_ObjectName;
 }
 
 std::string ObjectIO::getParentName() const
 {
   return "";
-  //if(m_ParentGroup == nullptr)
-  //{
-  //  return "";
-  //}
-  //return m_ParentGroup->getName();
 }
 
 void ObjectIO::setFilePath(const std::filesystem::path& filepath)
@@ -108,11 +96,6 @@ void ObjectIO::setId(hid_t id) const
   m_Id = id;
 }
 
-//void ObjectIO::setParentGroup(GroupIO* parent)
-//{
-//  m_ParentGroup = parent;
-//}
-
 void ObjectIO::setParentId(hid_t parentId)
 {
   m_ParentId = parentId;
@@ -121,11 +104,6 @@ void ObjectIO::setParentId(hid_t parentId)
 hid_t ObjectIO::getParentId() const
 {
   return m_ParentId;
-  //if(m_ParentGroup == nullptr)
-  //{
-  //  return -1;
-  //}
-  //return m_ParentGroup->getId();
 }
 
 ObjectIO::ObjectType ObjectIO::getObjectType() const
@@ -304,96 +282,12 @@ std::filesystem::path ObjectIO::getFilePath() const
 FileIO* ObjectIO::parentFile() const
 {
   return nullptr;
-  //if(m_ParentGroup != nullptr)
-  //{
-  //  return m_ParentGroup->parentFile();
-  //}
-  //return dynamic_cast<FileIO*>(const_cast<ObjectIO*>(this));
 }
-
-//GroupIO* ObjectIO::parentGroup() const
-//{
-//  return m_ParentGroup;
-//}
 
 bool ObjectIO::hasAttribute(const std::string& attributeName) const
 {
   return H5Aexists(getId(), attributeName.c_str()) > 0;
 }
-
-// std::optional<HighFive::File> ObjectIO::h5File() const
-//{
-//   FileIO* fileIO = parentFile();
-//   if (fileIO == nullptr)
-//   {
-//     return {};
-//   }
-//   return fileIO->h5File();
-// }
-
-#if 0
-std::string ObjectIO::readStringAttribute(int64 id) const
-{
-  std::string data;
-  std::vector<char> attributeOutput;
-
-  hid_t attrTypeId = H5Aget_type(id);
-  htri_t isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
-  if(isVariableString == 1)
-  {
-    data.clear();
-    return data;
-  }
-  if(id >= 0)
-  {
-    hsize_t size = H5Aget_storage_size(id);
-    attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
-    if(attrTypeId >= 0)
-    {
-      herr_t error = H5Aread(id, attrTypeId, attributeOutput.data());
-      if(error < 0)
-      {
-        std::cout << "Error Reading Attribute." << std::endl;
-      }
-      else
-      {
-        if(attributeOutput[size - 1] == 0) // null Terminated string
-        {
-          size -= 1;
-        }
-        data.append(attributeOutput.data(),
-                    size); // Append the data to the passed in string
-      }
-    }
-  }
-
-  return data;
-}
-#endif
-
-#if 0
-Result<> ObjectIO::writeStringAttribute(int64 objectId, const std::string& attributeName, const std::string& text)
-{
-  Result<> returnError = {};
-  size_t size = text.size();
-
-  hid_t attributeType = H5Tcopy(H5T_C_S1);
-  H5Tset_size(attributeType, size);
-  H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
-  hid_t attributeSpaceID = H5Screate(H5S_SCALAR);
-  hid_t attributeId = H5Acreate(objectId, attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
-  herr_t error = H5Awrite(attributeId, attributeType, text.c_str());
-  if(error < 0)
-  {
-    returnError = MakeErrorResult(error, "Error Writing String Attribute");
-  }
-  H5Aclose(attributeId);
-  H5Sclose(attributeSpaceID);
-  H5Tclose(attributeType);
-
-  return returnError;
-}
-#endif
 
 usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
 {

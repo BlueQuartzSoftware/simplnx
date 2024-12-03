@@ -4,12 +4,12 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include <H5Opublic.h>
 #include <H5Apublic.h>
-#include <H5Spublic.h>
 #include <H5Epublic.h>
-#include <H5Tpublic.h>
+#include <H5Opublic.h>
 #include <H5Ppublic.h>
+#include <H5Spublic.h>
+#include <H5Tpublic.h>
 
 #include "fmt/format.h"
 
@@ -138,7 +138,7 @@ public:
     }
 
     auto vectorResult = readVectorAttribute<T>(attributeName);
-    if (vectorResult.invalid())
+    if(vectorResult.invalid())
     {
       return ConvertInvalidResult<T>(std::move(vectorResult));
     }
@@ -162,7 +162,7 @@ public:
     }
 
     hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
-    if (attribId < 0)
+    if(attribId < 0)
     {
       return MakeErrorResult<std::vector<T>>(attribId, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
     }
@@ -176,7 +176,7 @@ public:
       std::string ss = fmt::format("Error Reading Vector Attribute '{}'.", attributeName);
       return MakeErrorResult<std::vector<T>>(error, ss);
     }
-    
+
     return {values};
   }
 
@@ -306,9 +306,9 @@ public:
    * @brief Returns a pointer to the parent GroupIO. Returns null if there is no known parent.
    * @return GroupIO*
    */
-  //GroupIO* parentGroup() const;
+  // GroupIO* parentGroup() const;
 
-  #if 0
+#if 0
   /**
    * @brief Returns the HighFive::File for the current IO handler.
    * Returns an empty optional if the file could not be determined.
@@ -317,13 +317,13 @@ public:
    * @return std::optional<HighFive::File>
    */
   virtual std::optional<HighFive::File> h5File() const;
-  #endif
+#endif
 
   /**
-  * @param Returns the HDF5 object id.
-  * Should only be called by HDF5 IO wrapper classes.
-  * @return hid_t
-  */
+   * @param Returns the HDF5 object id.
+   * Should only be called by HDF5 IO wrapper classes.
+   * @return hid_t
+   */
   hid_t getId() const;
 
   hid_t getParentId() const;
@@ -432,7 +432,6 @@ protected:
 
   void setId(hid_t id) const;
 
-  //void setParentGroup(GroupIO* group);
   void setParentId(hid_t parentId);
 
   /**
@@ -461,7 +460,6 @@ private:
   std::filesystem::path m_FilePath;
   std::string m_ObjectName;
   mutable hid_t m_Id = -1;
-  //GroupIO* m_ParentGroup = nullptr;
   hid_t m_ParentId = 0;
 };
 } // namespace nx::core::HDF5
