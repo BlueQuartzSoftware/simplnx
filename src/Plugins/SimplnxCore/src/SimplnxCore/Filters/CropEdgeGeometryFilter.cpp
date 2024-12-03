@@ -76,7 +76,7 @@ Parameters CropEdgeGeometryFilter::parameters() const
                                                          std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxCoord_Key, "Max Coordinate [Inclusive]", "Upper bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Replaces the original Edge Geometry after filter is completed", true));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundaryIntersectionBehavior_Key, "Boundary Intersection Behavior",
                                                    "The behavior to implement if an edge intersects a bound (one vertex is inside, one vertex is outside).\n\n\"Interpolate Outside Vertex\" will move "
                                                    "the outside vertex of a boundary-intersecting edge from its current position to the boundary edge.\n\"Ignore Edge\" will ignore any edge that "
@@ -126,7 +126,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
-    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!")};
+    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::NoDimensionsChosen), "At least one dimension must be selected to crop!")};
   }
 
   float32 xMin = pCropXDim ? minCoords[0] : std::numeric_limits<float32>::lowest();
@@ -142,31 +142,31 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   if(pCropXDim && xMax < xMin)
   {
     const std::string errMsg = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-    return {MakeErrorResult<OutputActions>(-4011, errMsg)};
+    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::XMinLargerThanXMax), errMsg)};
   }
   if(pCropYDim && yMax < yMin)
   {
     const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(-4012, errMsg)};
+    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::YMinLargerThanYMax), errMsg)};
   }
   if(pCropZDim && zMax < zMin)
   {
     const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-4013, errMsg)};
+    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::ZMinLargerThanZMax), errMsg)};
   }
 
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
 
   if(pRemoveOriginalGeometry)
   {
-    // Generate a new name for the current Image Geometry
+    // Generate a new name for the current Edge Geometry
     auto tempPathVector = srcEdgeGeomPath.getPathVector();
     std::string tempName = "." + tempPathVector.back();
     tempPathVector.back() = tempName;
     DataPath tempPath(tempPathVector);
     // Rename the current edge geometry
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(srcEdgeGeomPath, tempName));
-    // After the execute function has been done, delete the moved image geometry
+    // After the execute function has been done, delete the moved edge geometry
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
 
     tempPathVector = srcEdgeGeomPath.getPathVector();
@@ -178,16 +178,12 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   // This section gets the cell attribute matrix for the input Edge Geometry and
   // then creates new arrays from each array that is in that attribute matrix. We
   // also push this attribute matrix into the `ignorePaths` variable since we do
-  // not need to manually copy these arrays to the destination image geometry
+  // not need to manually copy these arrays to the destination edge geometry
   {
-    // Get the name of the Edge Attribute Matrix, so we can use that in the CreateImageGeometryAction
+    // Get the name of the Edge Attribute Matrix, so we can use that in the CreateEdgeGeometryAction
     const auto* srcEdgeGeomPtr = dataStructure.getDataAs<EdgeGeom>(srcEdgeGeomPath);
+    const AttributeMatrix* selectedVertexData = srcEdgeGeomPtr->getVertexAttributeMatrix();
     const AttributeMatrix* selectedEdgeData = srcEdgeGeomPtr->getEdgeAttributeMatrix();
-    if(selectedEdgeData == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have an edge attribute matrix", srcEdgeGeomPath.toString()))};
-    }
-
     {
       auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
       auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
@@ -206,8 +202,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
       ignorePaths.insert(ignorePaths.end(), edgesArrayDataPaths.begin(), edgesArrayDataPaths.end());
     }
 
-    // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
-    // in the destination image geometry's attribute matrix
+    // Now loop over each array in the source edge geometry's cell attribute matrix and create the corresponding arrays
+    // in the destination edge geometry's cell attribute matrix
     DataPath newEdgeAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedEdgeData->getName());
     for(const auto& [identifier, object] : *selectedEdgeData)
     {
@@ -215,6 +211,18 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newEdgeAttributeMatrixPath.createChildPath(srcArray.getName());
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
+    }
+
+    // Now loop over each array in the source edge geometry's vertex attribute matrix and create the corresponding arrays
+    // in the destination edge geometry's vertex attribute matrix
+    DataPath newVertexAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedVertexData->getName());
+    for(const auto& [identifier, object] : *selectedVertexData)
+    {
+      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      DataType dataType = srcArray.getDataType();
+      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      DataPath dataArrayPath = newVertexAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
     }
 

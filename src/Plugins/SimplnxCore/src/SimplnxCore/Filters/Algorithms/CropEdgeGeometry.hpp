@@ -48,6 +48,17 @@ public:
     FilterError = 2
   };
 
+  enum class ErrorCodes : int64
+  {
+    XMinLargerThanXMax = -1210,
+    YMinLargerThanYMax = -1211,
+    ZMinLargerThanZMax = -1212,
+    NoDimensionsChosen = -1213,
+    InvalidVertexIndex = -1220,
+    OutsideVertexError = -1221,
+    InvalidVertexMapping = -1222
+  };
+
   Result<> operator()();
 
   const std::atomic_bool& getCancel();

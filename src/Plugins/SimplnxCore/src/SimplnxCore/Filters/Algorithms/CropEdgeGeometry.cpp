@@ -160,14 +160,6 @@ bool is_inside(float32 x, float32 y, float32 z, const std::array<float32, 6>& bo
 {
   return (x >= boundingBox[0] && x <= boundingBox[3]) && (y >= boundingBox[1] && y <= boundingBox[4]) && (z >= boundingBox[2] && z <= boundingBox[5]);
 }
-
-// Result<> filter_vertices_edges(const AbstractDataStore<float32>& srcVertices, const AttributeMatrix& srcVertexAttrMatrix, const AbstractDataStore<uint64>& srcEdges,
-//                                const AttributeMatrix& srcEdgesAttrMatrix, AbstractDataStore<float32>& destVertices, AttributeMatrix& destVertexAttrMatrix, AbstractDataStore<uint64>& destEdges,
-//                                AttributeMatrix& destEdgesAttrMatrix, const std::vector<float32>& bounding_box, OutOfBoundsBehavior behavior, const IFilter::MessageHandler& messageHandler,
-//                                const std::atomic_bool& shouldCancel)
-//{
-//
-// }
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -231,16 +223,6 @@ Result<> CropEdgeGeometry::operator()()
   destEdges.resizeTuples({numEdges});
   destEdgesAttrMatrix.resizeTuples({numEdges});
 
-  // Validate input sizes
-  if(srcVertices.getNumberOfComponents() != 3)
-  {
-    return MakeErrorResult(-1000, fmt::format("Vertices array MUST have 3 components, but only {} components were detected.", srcVertices.getNumberOfComponents()));
-  }
-  if(srcEdges.getNumberOfComponents() != 2)
-  {
-    return MakeErrorResult(-1001, fmt::format("Edges array MUST have 2 components, but only {} components were detected.", srcEdges.getNumberOfComponents()));
-  }
-
   std::vector<bool> edgesMask(numEdges, false);
   std::vector<bool> vertexReferenced(numVertices, false);
   std::unordered_map<uint64, std::tuple<float32, float32, float32>> interpolatedValuesMap;
@@ -253,12 +235,12 @@ Result<> CropEdgeGeometry::operator()()
     // Validate vertex indices
     if(v0 >= numVertices)
     {
-      return MakeErrorResult(-1002, fmt::format("Edge at index {} with value {} references an invalid vertex index.", 2 * i, v0));
+      return MakeErrorResult(to_underlying(ErrorCodes::InvalidVertexIndex), fmt::format("Edge at index {} with value {} references an invalid vertex index.", 2 * i, v0));
     }
 
     if(v1 >= numVertices)
     {
-      return MakeErrorResult(-1002, fmt::format("Edge at index {} with value {} references an invalid vertex index.", 2 * i + 1, v1));
+      return MakeErrorResult(to_underlying(ErrorCodes::InvalidVertexIndex), fmt::format("Edge at index {} with value {} references an invalid vertex index.", 2 * i + 1, v1));
     }
 
     // Determine if each vertex is inside or outside
@@ -297,7 +279,7 @@ Result<> CropEdgeGeometry::operator()()
         std::string message = fmt::format("Edge {} connects inside vertex ({}, {}, {}) with outside vertex ({}, {}, {}).  This intersects the bounds of ({}, {}, {}) and ({}, {}, {})",
                                           std::to_string(i), std::to_string(x_inside), std::to_string(y_inside), std::to_string(z_inside), std::to_string(x_out), std::to_string(y_out),
                                           std::to_string(z_out), boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3], boundingBox[4], boundingBox[5]);
-        return MakeErrorResult(-1100, message);
+        return MakeErrorResult(to_underlying(ErrorCodes::OutsideVertexError), message);
       }
 
       if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
@@ -395,7 +377,7 @@ Result<> CropEdgeGeometry::operator()()
       // Validate mapping
       if(new_v0 == -1 || new_v1 == -1)
       {
-        return MakeErrorResult(-1007, "Invalid vertex mapping during edge remapping.");
+        return MakeErrorResult(to_underlying(ErrorCodes::InvalidVertexMapping), "Invalid vertex mapping during edge remapping.");
       }
 
       destEdges[newIndex++] = static_cast<uint64>(new_v0);
