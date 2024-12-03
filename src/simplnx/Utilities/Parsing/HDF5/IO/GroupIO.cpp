@@ -90,7 +90,6 @@ DatasetIO GroupIO::openDataset(const std::string& name) const
   }
   return DatasetIO(getId(), name);
 }
-#endif
 
 usize GroupIO::getNumChildren() const
 {
@@ -203,7 +202,6 @@ GroupIO GroupIO::createGroup(const std::string& childName)
   std::cout << ss << std::endl;
   return {};
 }
-#endif
 
 DatasetIO GroupIO::openDataset(const std::string& childName)
 {
