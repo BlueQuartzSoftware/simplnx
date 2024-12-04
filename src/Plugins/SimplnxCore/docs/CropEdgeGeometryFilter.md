@@ -10,9 +10,11 @@ Users can selectively crop specific dimensions of the **Edge Geometry** by toggl
 
 The filter provides options to handle edges that intersect the defined cropping bounds:
 
-- **FilterError**: Throws an error if any edge intersects the cropping boundary, ensuring strict adherence to the ROI.
-- **InterpolateOutsideVertex**: Interpolates the position of vertices that lie outside the ROI, allowing partial edges to be included based on interpolation.
-- **IgnoreEdge**: Excludes edges that intersect the cropping boundary without throwing an error or interpolating vertices.
+- **Filter Error**: Throws an error if any edge intersects the cropping boundary, ensuring strict adherence to the ROI.
+- **Interpolate Outside Vertex**: Interpolates the position of vertices that lie outside the ROI, allowing partial edges to be included based on interpolation.
+- **Ignore Edge**: Excludes edges that intersect the cropping boundary without throwing an error or interpolating vertices.
+
+**NOTE:** When the **Interpolate Outside Vertex** boundary intersection behavior is chosen, this filter DOES NOT interpolate any vertex data, only the vertex position!
 
 ## Examples
 In the following examples, an edge geometry with bounds (-1, 1), (-1, 1), (0, 1) is being used:
