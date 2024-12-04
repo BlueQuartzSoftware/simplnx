@@ -9,7 +9,8 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
@@ -180,7 +181,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   {
     DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
 
-    nx::core::HDF5::DatasetReader datasetReader(dataGid, dataSetName);
+    nx::core::HDF5::DatasetIO datasetReader(dataGid, dataSetName);
 
     if(std::count(floatDataSets.begin(), floatDataSets.end(), dataSetName) > 0)
     {
@@ -240,7 +241,7 @@ Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t 
   DataPath dataArrayPath =
       m_InputValues->AbsorptionImageGeometryPath.createChildPath(m_InputValues->AbsorptionCellAttributeMatrixName).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName);
 
-  nx::core::HDF5::DatasetReader datasetReader(gid, GM3DConst::k_DataGroupName);
+  nx::core::HDF5::DatasetIO datasetReader(gid, GM3DConst::k_DataGroupName);
 
   return nx::core::HDF5::Support::FillDataArray<uint16>(m_DataStructure, dataArrayPath, datasetReader);
 }

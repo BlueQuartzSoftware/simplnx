@@ -60,10 +60,7 @@ void writePointerArrayDataset(nx::core::HDF5::GroupIO& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  auto dsetWriterResult = ptrGroupWriter.createDataset(dsetName);
-  SIMPLNX_RESULT_REQUIRE_VALID(dsetWriterResult);
-  auto dsetWriter = std::move(dsetWriterResult.value());
-
+  auto dsetWriter = ptrGroupWriter.createDataset(dsetName);
   auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
@@ -95,9 +92,7 @@ void writeHDF5File()
   REQUIRE(fileWriter.isValid());
 
   // Create the Pointer group
-  auto ptrGroupWriterResult = fileWriter.createGroup("Pointer");
-  REQUIRE(ptrGroupWriterResult.valid());
-  auto ptrGroupWriter = std::move(ptrGroupWriterResult.value());
+  auto ptrGroupWriter = fileWriter.createGroup("Pointer");
 
   writePointer1DArrayDataset<int8_t>(ptrGroupWriter);
   writePointer1DArrayDataset<uint8_t>(ptrGroupWriter);

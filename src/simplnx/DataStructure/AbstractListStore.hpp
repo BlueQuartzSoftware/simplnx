@@ -8,6 +8,7 @@
 #include <mutex>
 #include <ostream>
 #include <string>
+#include <utility>
 
 namespace nx::core
 {
@@ -89,6 +90,13 @@ public:
     , m_Index(tupleIndex)
     {
     }
+    ReferenceList(ReferenceList&& other)
+    : m_ListStore(std::move(other.m_ListStore))
+    , m_List(std::move(other.m_List))
+    , m_Index(std::move(other.m_Index))
+    , m_Edited(std::move(m_Edited))
+    {
+    }
     ~ReferenceList()
     {
       if(m_Edited)
@@ -128,6 +136,22 @@ public:
       m_Edited = true;
       m_List = rhs;
       return *this;
+    }
+    ReferenceList& operator=(ReferenceList&& rhs)
+    {
+      m_Edited = std::move(rhs.m_Edited);
+      m_List = std::move(rhs.m_List);
+      m_Index = std::move(rhs.m_Index);
+      return *this;
+    }
+    constexpr void swap(ReferenceList& rhs) noexcept
+    {
+      m_Edited = true;
+      rhs.m_Edited = true;
+
+      std::swap(m_Edited, rhs.m_Edited);
+      std::swap(m_List, rhs.m_List);
+      std::swap(m_Index, rhs.m_Index);
     }
 
     usize size() const
@@ -285,6 +309,11 @@ public:
     inline difference_type operator-(const iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
+    }
+
+    constexpr void swap(iterator& rhs) noexcept
+    {
+      std::swap(m_Index, rhs.m_Index);
     }
 
     inline reference operator*() const
@@ -878,4 +907,22 @@ protected:
 
 private:
 };
+
 } // namespace nx::core
+
+template <typename T>
+constexpr void swap(typename nx::core::AbstractListStore<T>::ReferenceList& first, typename nx::core::AbstractListStore<T>::ReferenceList& second) noexcept
+{
+  first.swap(second);
+}
+template <typename T>
+constexpr void swap(typename nx::core::AbstractListStore<T>::ReferenceList first, typename nx::core::AbstractListStore<T>::ReferenceList second) noexcept
+{
+  first.swap(second);
+}
+
+template <typename T>
+constexpr void swap(typename nx::core::AbstractListStore<T>::iterator& first, typename nx::core::AbstractListStore<T>::iterator& second) noexcept
+{
+  first.swap(second);
+}

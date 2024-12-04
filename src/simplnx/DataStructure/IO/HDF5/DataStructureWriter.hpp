@@ -27,7 +27,7 @@ class ObjectIO;
 class SIMPLNX_EXPORT DataStructureWriter
 {
   friend class nx::core::DataObject;
-  friend SIMPLNX_EXPORT Result<> WriteObjectAttributes(DataStructureWriter&, ObjectWriter&, const DataObject*, bool);
+  friend SIMPLNX_EXPORT Result<> WriteObjectAttributes(DataStructureWriter&, ObjectIO&, const DataObject*, bool);
   friend class HDF5::IDataIO;
 
   using DataMapType = std::map<DataObject::IdType, std::string>;

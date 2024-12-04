@@ -32,6 +32,8 @@ public:
 
   NeighborList() = default;
 
+  NeighborList(const NeighborList& other);
+
   /**
    * @brief
    * @param dataStructure
@@ -178,6 +180,13 @@ public:
    * @param neighborList
    */
   void setList(int32 grainId, const SharedVectorType& neighborList);
+
+  /**
+   * @brief setList
+   * @param grainId
+   * @param neighborList
+   */
+  void setList(int32 grainId, const VectorType& neighborList);
 
   /**
    * @brief Updates the tuple count, internal list size, and sets the list values.
@@ -386,8 +395,6 @@ protected:
    * @brief NeighborList
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
-
-  NeighborList(const NeighborList& other);
 
 private:
   std::shared_ptr<store_type> m_Store;

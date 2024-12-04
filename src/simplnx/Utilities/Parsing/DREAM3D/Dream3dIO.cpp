@@ -1065,8 +1065,8 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
 
-  std::vector<int64> tDims;
-  auto tDimsResult = amGroupReader.readVectorAttribute<int64>("TupleDimensions");
+  std::vector<uint64> tDims;
+  auto tDimsResult = amGroupReader.readVectorAttribute<uint64>("TupleDimensions");
   tDims = std::move(tDimsResult.value());
   auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
 
@@ -1097,7 +1097,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     }
     else
     {
-      Result<> result = ConvertResult(std::move(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), tDims, preflight)));
+      Result<> result = ConvertResult(std::move(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight)));
       daResults.push_back(result);
     }
   }

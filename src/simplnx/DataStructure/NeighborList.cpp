@@ -285,6 +285,20 @@ void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborLis
 }
 
 template <typename T>
+void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
+{
+  std::lock_guard<std::mutex> guard(this->m_Mutex);
+
+  if(grainId >= static_cast<int32>(m_Store->size()))
+  {
+    usize old = m_Store->size();
+    m_Store->resizeTuples(grainId + 1);
+    m_IsAllocated = true;
+  }
+  m_Store->setList(grainId, neighborList);
+}
+
+template <typename T>
 void NeighborList<T>::setLists(const std::vector<std::vector<T>>& neighborLists)
 {
   usize totalFeatures = neighborLists.size();
