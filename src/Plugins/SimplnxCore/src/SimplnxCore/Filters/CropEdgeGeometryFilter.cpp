@@ -182,8 +182,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   {
     // Get the name of the Edge Attribute Matrix, so we can use that in the CreateEdgeGeometryAction
     const auto* srcEdgeGeomPtr = dataStructure.getDataAs<EdgeGeom>(srcEdgeGeomPath);
-    const AttributeMatrix* selectedVertexData = srcEdgeGeomPtr->getVertexAttributeMatrix();
-    const AttributeMatrix* selectedEdgeData = srcEdgeGeomPtr->getEdgeAttributeMatrix();
+    const AttributeMatrix& selectedVertexData = *srcEdgeGeomPtr->getVertexAttributeMatrix();
+    const AttributeMatrix& selectedEdgeData = *srcEdgeGeomPtr->getEdgeAttributeMatrix();
     {
       auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
       auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
@@ -204,8 +204,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 
     // Now loop over each array in the source edge geometry's cell attribute matrix and create the corresponding arrays
     // in the destination edge geometry's cell attribute matrix
-    DataPath newEdgeAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedEdgeData->getName());
-    for(const auto& [identifier, object] : *selectedEdgeData)
+    DataPath newEdgeAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedEdgeData.getName());
+    for(const auto& [identifier, object] : selectedEdgeData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
@@ -216,8 +216,17 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 
     // Now loop over each array in the source edge geometry's vertex attribute matrix and create the corresponding arrays
     // in the destination edge geometry's vertex attribute matrix
-    DataPath newVertexAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedVertexData->getName());
-    for(const auto& [identifier, object] : *selectedVertexData)
+    DataPath newVertexAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedVertexData.getName());
+
+    auto vertexArraysResult = selectedVertexData.findAllChildrenOfType<IDataArray>();
+    if(!vertexArraysResult.empty())
+    {
+      // Detected at least one vertex array, throw a warning
+      resultOutputActions.warnings().push_back(Warning(
+          -100, "A vertex data array was detected in the selected edge geometry.  This filter currently only interpolates vertex positions, associated vertex data values will not be interpolated."));
+    }
+
+    for(const auto& [identifier, object] : selectedVertexData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
