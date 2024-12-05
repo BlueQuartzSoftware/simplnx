@@ -9,12 +9,14 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 
   # CreateAMScanPathsTest.cpp
   SliceTriangleGeometryTest.cpp
+
   # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
   AlignSectionsListTest.cpp
-  AppendImageGeometryTest.cpp
+
+  # AppendImageGeometryTest.cpp
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp

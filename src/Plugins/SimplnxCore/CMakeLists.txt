@@ -13,7 +13,8 @@ set(FilterList
   AlignGeometriesFilter
   AlignSectionsFeatureCentroidFilter
   AlignSectionsListFilter
-  AppendImageGeometryFilter
+
+  # AppendImageGeometryFilter
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
@@ -155,7 +156,8 @@ set(AlgorithmList
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
-  AppendImageGeometry
+
+  # AppendImageGeometry
   ApplyTransformationToGeometry
   ArrayCalculator
   CombineNodeBasedGeometries
