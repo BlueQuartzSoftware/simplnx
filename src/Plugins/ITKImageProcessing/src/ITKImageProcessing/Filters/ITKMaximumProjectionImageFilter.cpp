@@ -2,10 +2,13 @@
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
+#include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
 #include <itkMaximumProjectionImageFilter.h>
 
@@ -71,6 +74,7 @@ Parameters ITKMaximumProjectionImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The dimension index to project. 0=Slowest moving dimension.", 0u));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -78,9 +82,12 @@ Parameters ITKMaximumProjectionImageFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Output Data"});
+  params.insert(std::make_unique<StringParameter>(k_OutputImageGeomName_Key, "Created Image Geometry", "The name of the projected geometry", "Projected Image"));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+
+  params.linkParameters(k_RemoveOriginalGeometry_Key, k_OutputImageGeomName_Key, false);
 
   return params;
 }
@@ -105,10 +112,31 @@ IFilter::PreflightResult ITKMaximumProjectionImageFilter::preflightImpl(const Da
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
-  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
+  auto preformInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  auto outputGeomName = filterArgs.value<std::string>(k_OutputImageGeomName_Key);
+  DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  Result<OutputActions> resultOutputActions =
+  Result<OutputActions> resultOutputActions;
+  // The input geometry must be preserved, so we will just copy the needed array into newly created output geometry
+  if(!preformInPlace)
+  {
+    DataPath outputGeomPath({outputGeomName});
+
+    const auto& originalGeometry = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+    // Make copy of input geometry
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
+        outputGeomPath, originalGeometry.getDimensions().toContainer<CreateImageGeometryAction::DimensionType>(), originalGeometry.getOrigin().toContainer<CreateImageGeometryAction::OriginType>(),
+        originalGeometry.getSpacing().toContainer<CreateImageGeometryAction::SpacingType>(), originalGeometry.getCellDataPath().getTargetName()));
+
+    outputArrayPath = outputGeomPath.createChildPath(originalGeometry.getCellDataPath().getTargetName()).createChildPath(outputArrayName);
+  }
+
+  Result<OutputActions> helperOutputActions =
       ITK::DataCheck<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+
+  // Consolidate actions
+  resultOutputActions.value().actions.insert(resultOutputActions.value().actions.end(), helperOutputActions.value().actions.begin(), helperOutputActions.value().actions.end());
 
   return {std::move(resultOutputActions)};
 }
@@ -120,7 +148,17 @@ Result<> ITKMaximumProjectionImageFilter::executeImpl(DataStructure& dataStructu
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
-  const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
+  DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
+
+  auto preformInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+
+  if(!preformInPlace)
+  {
+    const auto& originalGeometry = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+    imageGeomPath = DataPath({filterArgs.value<std::string>(k_OutputImageGeomName_Key)});
+    outputArrayPath = imageGeomPath.createChildPath(originalGeometry.getCellDataPath().getTargetName()).createChildPath(outputArrayName);
+  }
 
   auto projectionDimension = filterArgs.value<uint32>(k_ProjectionDimension_Key);
 
@@ -134,7 +172,6 @@ Result<> ITKMaximumProjectionImageFilter::executeImpl(DataStructure& dataStructu
   }
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-
   auto iArrayTupleShape = dataStructure.getDataAs<IArray>(outputArrayPath)->getTupleShape();
 
   // Update the Image Geometry with the new dimensions
@@ -142,11 +179,7 @@ Result<> ITKMaximumProjectionImageFilter::executeImpl(DataStructure& dataStructu
 
   // Update the AttributeMatrix with the new tuple shape. THIS WILL ALSO CHANGE ANY OTHER DATA ARRAY THAT IS ALSO
   // STORED IN THAT ATTRIBUTE MATRIX
-  auto amPathVector = outputArrayPath.getPathVector();
-  amPathVector.pop_back();
-  DataPath amPath(amPathVector);
-  auto& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
-  attributeMatrix.resizeTuples(iArrayTupleShape);
+  dataStructure.getDataAs<AttributeMatrix>(outputArrayPath.getParent())->resizeTuples(iArrayTupleShape);
 
   return {};
 }
