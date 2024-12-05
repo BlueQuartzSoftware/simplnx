@@ -5,7 +5,7 @@
 
 #include "simplnx/Common/Result.hpp"
 
-//#include "highfive/H5File.hpp"
+// #include "highfive/H5File.hpp"
 #include <H5Fpublic.h>
 
 #include <filesystem>
@@ -35,7 +35,7 @@ public:
   /**
    * @brief Releases the HDF5 file ID.
    */
-  ~FileIO() noexcept;
+  ~FileIO() noexcept override;
 
   /**
    * @brief Returns the HDF5 file name. Returns an empty string if the file
@@ -50,7 +50,7 @@ public:
    */
   std::string getObjectPath() const override;
 
-  #if 0
+#if 0
   /**
    * @brief Returns true if the target child is a group. Returns false
    * otherwise.
@@ -70,7 +70,7 @@ public:
    * @return bool
    */
   bool isDataset(const std::string& childName) const override;
-  #endif
+#endif
 
   /**
    * @brief Creates or opens an HDF5 dataset with the given name, dimensions, and datatype.
@@ -81,7 +81,7 @@ public:
    * @param dataType
    * @return HighFive::DataSet
    */
-  //hid_t createOrOpenH5Dataset(const std::string& name, const DimsType& dims, DataType dataType) override;
+  // hid_t createOrOpenH5Dataset(const std::string& name, const DimsType& dims, DataType dataType) override;
 
 protected:
   /**

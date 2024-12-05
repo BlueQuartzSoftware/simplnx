@@ -30,7 +30,7 @@ template <typename T, uint8 Dims = 1>
 void writePointerArrayDataset(nx::core::HDF5::GroupIO& ptrGroupWriter)
 {
   std::string dsetName = nx::core::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
-  std::vector<hsize_t> dims = {};
+  std::vector<usize> dims = {};
 
   if constexpr(Dims == 1)
   {

@@ -188,7 +188,7 @@ protected:
    * @brief Write store to ostream.
    * @param out
    */
-  void write(std::ostream& out) const
+  void write(std::ostream& out) const override
   {
     out << xt::print_options::threshold(200) << *m_Array.get() << std::endl;
   }

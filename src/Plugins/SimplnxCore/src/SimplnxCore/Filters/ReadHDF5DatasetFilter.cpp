@@ -7,8 +7,8 @@
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -208,8 +208,8 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
     // Read dataset into DREAM.3D structure
     auto datasetReader = h5FileReader.openDataset(datasetPath);
-    
-    std::vector<hsize_t> dims = datasetReader.getDimensions();
+
+    std::vector<usize> dims = datasetReader.getDimensions();
     std::string objectName = datasetReader.getName();
 
     if(dims.empty())
@@ -328,7 +328,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     }
 
     // Avoid including "/" as an object name within AttributeMatrix.
-    //if(pSelectedAttributeMatrixValue.has_value() && objectName.find('/') != std::string::npos)
+    // if(pSelectedAttributeMatrixValue.has_value() && objectName.find('/') != std::string::npos)
     //{
     //  objectName = objectName.substr(objectName.find_last_of('/') + 1);
     //}
@@ -373,7 +373,7 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
     auto datasetReader = h5FileReader.openDataset(datasetPath);
-    
+
     std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM3D-NX structure

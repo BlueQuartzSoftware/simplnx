@@ -18,7 +18,9 @@ Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, c
     Result<> result;
     if(start.has_value() && count.has_value())
     {
-      result = datasetReader.readIntoSpan<T>(dataSpan, start.value(), count.value());
+      std::vector<unsigned long long> startVec(start->begin(), start->end());
+      std::vector<unsigned long long> countVec(start->begin(), start->end());
+      result = datasetReader.readIntoSpan<T>(dataSpan, startVec, countVec);
     }
     else
     {
@@ -87,5 +89,5 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
     return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }
 }
-}
+} // namespace Support
 } // namespace nx::core::HDF5

@@ -922,6 +922,8 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
   case DataType::int64:
     daResult = createLegacyDataArray<int64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
     break;
+  case DataType::boolean:
+    [[fallthrough]];
   case DataType::uint8: {
     std::string typeTag;
     auto typeTagResult = dataArrayReader.readStringAttribute(Constants::k_ObjectTypeTag);
@@ -1015,6 +1017,8 @@ Result<> readLegacyNeighborList(DataStructure& dataStructure, const nx::core::HD
   case DataType::float64:
     result = createLegacyNeighborList<float64>(dataStructure, parentId, parentReader, datasetReader, tDims);
     break;
+  case DataType::boolean:
+    [[fallthrough]];
   case DataType::int8:
     result = createLegacyNeighborList<int8>(dataStructure, parentId, parentReader, datasetReader, tDims);
     break;
@@ -1077,7 +1081,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   for(const auto& daName : dataArrayNames)
   {
     auto dataArraySet = amGroupReader.openDataset(daName);
-    #if 0
+#if 0
     if(!dataArraySet.isValid())
     {
       // Could not open HDF5 DataSet. Could be stats array
@@ -1085,7 +1089,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
       daResults.push_back(nx::core::MakeWarningVoidResult(Legacy::k_LegacyDataArrayH5_Code, ss));
       continue;
     }
-    #endif
+#endif
 
     if(isLegacyNeighborList(dataArraySet))
     {
