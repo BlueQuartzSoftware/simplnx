@@ -8,15 +8,21 @@
 
 #include <type_traits>
 
-MMCellFlag::MMCellFlag()
-: m_bitFlag(0)
+namespace MMCellFlag
 {
-}
-MMCellFlag::~MMCellFlag()
-{
-}
+// MMCellFlag()
+//: m_bitFlag(0)
+//{
+//}
+// ~MMCellFlag()
+//{
+//}
+// void clear(unsigned int& bitflag)
+//{
+//  bitflag = 0;
+//}
 
-void MMCellFlag::set(int32_t cellLabels[8])
+void set(unsigned int& m_bitFlag, unsigned char& m_numJunctions, int32_t cellLabels[8])
 {
   // By default the cell has no vertex and no face or edge crossings
   m_bitFlag = 0;
@@ -108,10 +114,10 @@ void MMCellFlag::set(int32_t cellLabels[8])
   m_numJunctions = 0;
   for(Face face = Face::LeftFace; face <= Face::TopFace; ++face)
   {
-    if(faceCrossingType(face) != FaceCrossingType::NoFaceCrossing)
+    if(faceCrossingType(m_bitFlag, face) != FaceCrossingType::NoFaceCrossing)
     {
       numFaceCrossings++;
-      if(faceCrossingType(face) == FaceCrossingType::JunctionFaceCrossing)
+      if(faceCrossingType(m_bitFlag, face) == FaceCrossingType::JunctionFaceCrossing)
       {
         m_numJunctions++;
       }
@@ -136,12 +142,12 @@ void MMCellFlag::set(int32_t cellLabels[8])
   }
 }
 
-unsigned char MMCellFlag::numJunctions() const
-{
-  return m_numJunctions;
-}
+// unsigned char numJunctions() const
+//{
+//   return m_numJunctions;
+// }
 
-MMCellFlag::VertexType MMCellFlag::vertexType()
+VertexType vertexType(unsigned int& m_bitFlag)
 {
   unsigned int vertexTypeBits = (m_bitFlag & m_vertexTypeBits) >> VertexTypeShift;
   switch(vertexTypeBits)
@@ -158,7 +164,7 @@ MMCellFlag::VertexType MMCellFlag::vertexType()
     return (VertexType::NoVertex);
   }
 }
-MMCellFlag::FaceCrossingType MMCellFlag::faceCrossingType(Face face)
+FaceCrossingType faceCrossingType(unsigned int& m_bitFlag, Face face)
 {
   unsigned int faceTypeBits = 0;
   switch(face)
@@ -197,7 +203,8 @@ MMCellFlag::FaceCrossingType MMCellFlag::faceCrossingType(Face face)
     return (FaceCrossingType::NoFaceCrossing);
   }
 }
-bool MMCellFlag::isEdgeCrossing(Edge edge)
+
+bool isEdgeCrossing(unsigned int& m_bitFlag, Edge edge)
 {
   switch(edge)
   {
@@ -267,7 +274,7 @@ bool MMCellFlag::isEdgeCrossing(Edge edge)
   }
 }
 
-unsigned int MMCellFlag::faceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
+unsigned int faceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
 {
   int numUniqueTypes = 0;
   int32_t uniqueTypes[4];
@@ -308,3 +315,5 @@ unsigned int MMCellFlag::faceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t 
   }
   return (unsigned int)crossingType;
 }
+
+} // namespace MMCellFlag

@@ -32,12 +32,14 @@ public:
   void getVertexPosition(int vertexIndex, float position[3]);
 
   MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
+
   struct Cell
   {
     int32_t label;
-    MMCellFlag flag;
     int vertexIndex;
     float vertexOffset[3];
+    unsigned int m_bitFlag;
+    unsigned char m_numJunctions = 0;
   };
   struct Vertex
   {

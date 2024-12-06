@@ -82,11 +82,11 @@ void MMCellMap::relax(MMSurfaceNet::RelaxAttrs relaxAttrs)
 
       int numNeighbors = 0;
       float avgP[3] = {0.0f, 0.0f, 0.0f};
-      if(pCell->flag.vertexType() == MMCellFlag::VertexType::SurfaceVertex)
+      if(MMCellFlag::vertexType(pCell->m_bitFlag) == MMCellFlag::VertexType::SurfaceVertex)
       {
         for(MMCellFlag::Face face = MMCellFlag::Face::LeftFace; face <= MMCellFlag::Face::TopFace; ++face)
         {
-          if(pCell->flag.faceCrossingType(face) != MMCellFlag::FaceCrossingType::NoFaceCrossing)
+          if(MMCellFlag::faceCrossingType(pCell->m_bitFlag, face) != MMCellFlag::FaceCrossingType::NoFaceCrossing)
           {
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
@@ -101,7 +101,7 @@ void MMCellMap::relax(MMSurfaceNet::RelaxAttrs relaxAttrs)
       {
         for(MMCellFlag::Face face = MMCellFlag::Face::LeftFace; face <= MMCellFlag::Face::TopFace; ++face)
         {
-          if(pCell->flag.faceCrossingType(face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing)
+          if(MMCellFlag::faceCrossingType(pCell->m_bitFlag, face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing)
           {
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
@@ -253,7 +253,7 @@ void MMCellMap::getVertexPosition(int vertexIndex, float position[3])
 void MMCellMap::initCell(Cell* cell, int32_t label)
 {
   cell->label = label;
-  cell->flag.clear();
+  cell->m_bitFlag = 0;
   cell->vertexIndex = -1;
   cell->vertexOffset[0] = 0.5f;
   cell->vertexOffset[1] = 0.5f;
@@ -274,8 +274,8 @@ void MMCellMap::setCellVertices()
         Cell* pCell = getCell(i, j, k);
         int32_t cellLabels[8];
         getCellLabels(pCell, cellLabels);
-        pCell->flag.set(cellLabels);
-        if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
+        MMCellFlag::set(pCell->m_bitFlag, pCell->m_numJunctions, cellLabels);
+        if(MMCellFlag::vertexType(pCell->m_bitFlag) != MMCellFlag::VertexType::NoVertex)
         {
           m_numVertices++;
         }
@@ -287,7 +287,9 @@ void MMCellMap::setCellVertices()
   try
   {
     if(m_vertices != NULL)
+    {
       delete[] m_vertices;
+    }
     m_vertices = new Vertex[m_numVertices];
   } catch(std::bad_alloc& ba)
   {
@@ -305,7 +307,7 @@ void MMCellMap::setCellVertices()
       for(int i = 0; i < m_arraySize[0] - 1; i++)
       {
         Cell* pCell = getCell(i, j, k);
-        if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
+        if(MMCellFlag::vertexType(pCell->m_bitFlag) != MMCellFlag::VertexType::NoVertex)
         {
           pCell->vertexIndex = idxVtx;
           Vertex* pVtx = &m_vertices[idxVtx++];
@@ -513,12 +515,13 @@ void MMCellMap::getCellLabels(Cell* pCell, int32_t labels[8])
 bool MMCellMap::isEdgeCrossing(int cellMapIndex, MMCellFlag::Edge edge)
 {
   Cell* pCell = getCell(cellMapIndex);
-  return (pCell->flag.isEdgeCrossing(edge));
+  return MMCellFlag::isEdgeCrossing(pCell->m_bitFlag, edge);
 }
+
 MMCellFlag::VertexType MMCellMap::cellVertexType(int cellMapIndex)
 {
   Cell* pCell = getCell(cellMapIndex);
-  return (pCell->flag.vertexType());
+  return MMCellFlag::vertexType(pCell->m_bitFlag);
 }
 
 // Access vertex data
