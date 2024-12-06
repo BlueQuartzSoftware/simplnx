@@ -152,7 +152,7 @@ Result<> SurfaceNets::operator()()
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
     MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->m_numJunctions);
+    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
   }
   usize triangleCount = 0;
   // First Pass through to just count the number of triangles:
