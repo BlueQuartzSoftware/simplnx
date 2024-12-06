@@ -14,7 +14,7 @@ class MMCellFlag
 {
 public:
   MMCellFlag();
-  virtual ~MMCellFlag();
+  ~MMCellFlag();
 
   void operator=(const MMCellFlag& t)
   {
@@ -96,25 +96,25 @@ private:
   };
 
   // Flag bits associated with each component of the cell flag
-  const unsigned int m_vertexTypeBits = (1 << VertexTypeShift) | (1 << (VertexTypeShift + 1));
-  const unsigned int m_leftFaceCrossingBits = (1 << LeftFaceShift) | (1 << (LeftFaceShift + 1));
-  const unsigned int m_rightFaceCrossingBits = (1 << RightFaceShift) | (1 << (RightFaceShift + 1));
-  const unsigned int m_backFaceCrossingBits = (1 << BackFaceShift) | (1 << (BackFaceShift + 1));
-  const unsigned int m_frontFaceCrossingBits = (1 << FrontFaceShift) | (1 << (FrontFaceShift + 1));
-  const unsigned int m_bottomFaceCrossingBits = (1 << BottomFaceShift) | (1 << (BottomFaceShift + 1));
-  const unsigned int m_topFaceCrossingBits = (1 << TopFaceShift) | (1 << (TopFaceShift + 1));
-  const unsigned int m_leftBottomEdgeCrossingBit = 1 << 14;
-  const unsigned int m_rightBottomEdgeCrossingBit = 1 << 15;
-  const unsigned int m_backBottomEdgeCrossingBit = 1 << 16;
-  const unsigned int m_frontBottomEdgeCrossingBit = 1 << 17;
-  const unsigned int m_leftTopEdgeCrossingBit = 1 << 18;
-  const unsigned int m_rightTopEdgeCrossingBit = 1 << 19;
-  const unsigned int m_backTopEdgeCrossingBit = 1 << 20;
-  const unsigned int m_frontTopEdgeCrossingBit = 1 << 21;
-  const unsigned int m_leftBackEdgeCrossingBit = 1 << 22;
-  const unsigned int m_rightBackEdgeCrossingBit = 1 << 23;
-  const unsigned int m_leftFrontEdgeCrossingBit = 1 << 24;
-  const unsigned int m_rightFrontEdgeCrossingBit = 1 << 25;
+  static const unsigned int m_vertexTypeBits = (1 << VertexTypeShift) | (1 << (VertexTypeShift + 1));
+  static const unsigned int m_leftFaceCrossingBits = (1 << LeftFaceShift) | (1 << (LeftFaceShift + 1));
+  static const unsigned int m_rightFaceCrossingBits = (1 << RightFaceShift) | (1 << (RightFaceShift + 1));
+  static const unsigned int m_backFaceCrossingBits = (1 << BackFaceShift) | (1 << (BackFaceShift + 1));
+  static const unsigned int m_frontFaceCrossingBits = (1 << FrontFaceShift) | (1 << (FrontFaceShift + 1));
+  static const unsigned int m_bottomFaceCrossingBits = (1 << BottomFaceShift) | (1 << (BottomFaceShift + 1));
+  static const unsigned int m_topFaceCrossingBits = (1 << TopFaceShift) | (1 << (TopFaceShift + 1));
+  static const unsigned int m_leftBottomEdgeCrossingBit = 1 << 14;
+  static const unsigned int m_rightBottomEdgeCrossingBit = 1 << 15;
+  static const unsigned int m_backBottomEdgeCrossingBit = 1 << 16;
+  static const unsigned int m_frontBottomEdgeCrossingBit = 1 << 17;
+  static const unsigned int m_leftTopEdgeCrossingBit = 1 << 18;
+  static const unsigned int m_rightTopEdgeCrossingBit = 1 << 19;
+  static const unsigned int m_backTopEdgeCrossingBit = 1 << 20;
+  static const unsigned int m_frontTopEdgeCrossingBit = 1 << 21;
+  static const unsigned int m_leftBackEdgeCrossingBit = 1 << 22;
+  static const unsigned int m_rightBackEdgeCrossingBit = 1 << 23;
+  static const unsigned int m_leftFrontEdgeCrossingBit = 1 << 24;
+  static const unsigned int m_rightFrontEdgeCrossingBit = 1 << 25;
 
   // The bitflag
   unsigned int m_bitFlag;
