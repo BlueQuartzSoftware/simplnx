@@ -1,4 +1,4 @@
-# Create Surface Mesh (QuickMesh Nets)
+# Create Surface Mesh (QuickMesh)
 
 ## Group (Subgroup)
 

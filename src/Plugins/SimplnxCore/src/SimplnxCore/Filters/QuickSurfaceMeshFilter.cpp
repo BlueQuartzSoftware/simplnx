@@ -41,7 +41,7 @@ Uuid QuickSurfaceMeshFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string QuickSurfaceMeshFilter::humanName() const
 {
-  return "Create Surface Mesh (QuickMesh Nets)";
+  return "Create Surface Mesh (QuickMesh)";
 }
 
 //------------------------------------------------------------------------------
