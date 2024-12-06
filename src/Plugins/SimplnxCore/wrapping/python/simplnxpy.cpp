@@ -869,6 +869,8 @@ PYBIND11_MODULE(simplnx, mod)
   baseGroup.def("contains", py::overload_cast<const std::string&>(&BaseGroup::contains, py::const_));
   baseGroup.def("__getitem__", py::overload_cast<const std::string&>(&BaseGroup::at), py::return_value_policy::reference_internal);
   baseGroup.def("__len__", &BaseGroup::getSize);
+  baseGroup.def("__iter__", [](BaseGroup& self) { return py::make_iterator(self.begin(), self.end()); });
+  baseGroup.def("keys", [](const BaseGroup& self) { return self.getDataMap().getNames(); });
 
   auto baseGroupType = py::enum_<BaseGroup::GroupType>(baseGroup, "GroupType");
   baseGroupType.value("BaseGroup", BaseGroup::GroupType::BaseGroup);
