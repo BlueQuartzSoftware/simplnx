@@ -176,7 +176,7 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-5, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-5, fmt::format("Filesystem exception: {}", exception.what()));
   }
   return {};
 }

@@ -183,7 +183,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
     }
   } catch(const fs::filesystem_error& exception)
   {
-    return MakeErrorResult(-4004, fmt::format("Filesystem excpetion: {}", exception.what()));
+    return MakeErrorResult(-4004, fmt::format("Filesystem exception: {}", exception.what()));
   }
   return {};
 }
