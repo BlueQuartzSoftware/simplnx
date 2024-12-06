@@ -56,32 +56,32 @@ private:
   /**
    * @brief find_moments Determines the second order moments for each Feature
    */
-  void find_moments();
+  void findMoments();
 
   /**
    * @brief find_moments2D Determines the second order moments for each Feature (2D version)
    */
-  void find_moments2D();
+  void findMoments2D();
 
   /**
    * @brief find_axes Determine principal axis lengths for each Feature
    */
-  void find_axes();
+  void findAxes();
 
   /**
    * @brief find_axes2D Determine principal axis lengths for each Feature (2D version)
    */
-  void find_axes2D();
+  void findAxes2D();
 
   /**
    * @brief find_axiseulers Determine principal axis directions for each Feature
    */
-  void find_axiseulers();
+  void findAxisEulers();
 
   /**
    * @brief find_axiseulers2D Determine principal axis directions for each Feature (2D version)
    */
-  void find_axiseulers2D();
+  void findAxisEulers2D();
 };
 
 } // namespace nx::core

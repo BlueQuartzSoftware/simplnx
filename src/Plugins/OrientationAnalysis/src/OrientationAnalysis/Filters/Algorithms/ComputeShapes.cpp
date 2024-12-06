@@ -139,27 +139,28 @@ Result<> ComputeShapes::operator()()
 
   if(imageGeom.getNumXCells() > 1 && imageGeom.getNumYCells() > 1 && imageGeom.getNumZCells() > 1)
   {
-    find_moments();
-    find_axes();
-    find_axiseulers();
+    findMoments();
+    findAxes();
+    findAxisEulers();
   }
   if(imageGeom.getNumXCells() == 1 || imageGeom.getNumYCells() == 1 || imageGeom.getNumZCells() == 1)
   {
-    find_moments2D();
-    find_axes2D();
-    find_axiseulers2D();
+    findMoments2D();
+    findAxes2D();
+    findAxisEulers2D();
   }
 
   return {};
 }
 
 // -----------------------------------------------------------------------------
-void ComputeShapes::find_moments()
+void ComputeShapes::findMoments()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+  // Calculated Arrays
   auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
   auto& omega3s = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
 
@@ -208,9 +209,11 @@ void ComputeShapes::find_moments()
         y2 = y - (modYRes / 4.0f);
         z1 = z + (modZRes / 4.0f);
         z2 = z - (modZRes / 4.0f);
+
         xdist1 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
         ydist1 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
         zdist1 = (z1 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
+
         xdist2 = (x1 - (centroids[gnum * 3 + 0] * static_cast<float>(m_ScaleFactor)));
         ydist2 = (y1 - (centroids[gnum * 3 + 1] * static_cast<float>(m_ScaleFactor)));
         zdist2 = (z2 - (centroids[gnum * 3 + 2] * static_cast<float>(m_ScaleFactor)));
@@ -296,6 +299,7 @@ void ComputeShapes::find_moments()
     m_FeatureEigenVals[featureId * 3 + 1] = eigenValues[idxs[1]].real();
     m_FeatureEigenVals[featureId * 3 + 2] = eigenValues[idxs[2]].real();
 
+    // These values will be used to compute the axis eulers
     // EigenVector associated with the largest EigenValue goes in the 3rd column
     auto col = eigenVectors.col(idxs[0]);
     m_EFVec[featureId * 9 + 2] = col(0).real();
@@ -321,6 +325,7 @@ void ComputeShapes::find_moments()
     u110 = static_cast<float>(-m_FeatureMoments[featureId * 6 + 3]);
     u011 = static_cast<float>(-m_FeatureMoments[featureId * 6 + 4]);
     u101 = static_cast<float>(-m_FeatureMoments[featureId * 6 + 5]);
+
     o3 = static_cast<double>((u200 * u020 * u002) + (2.0f * u110 * u101 * u011) - (u200 * u011 * u011) - (u020 * u101 * u101) - (u002 * u110 * u110));
     vol5 = pow(vol5, 5.0);
     omega3 = vol5 / o3;
@@ -338,9 +343,7 @@ void ComputeShapes::find_moments()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeShapes::find_moments2D()
+void ComputeShapes::findMoments2D()
 {
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -430,9 +433,7 @@ void ComputeShapes::find_moments2D()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeShapes::find_axes()
+void ComputeShapes::findAxes()
 {
   auto& axisLengths = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
   auto& aspectRatios = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
@@ -476,9 +477,7 @@ void ComputeShapes::find_axes()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeShapes::find_axes2D()
+void ComputeShapes::findAxes2D()
 {
   auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
   auto& axisLengths = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
@@ -551,9 +550,7 @@ void ComputeShapes::find_axes2D()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeShapes::find_axiseulers()
+void ComputeShapes::findAxisEulers()
 {
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
   auto& axisEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
@@ -588,9 +585,7 @@ void ComputeShapes::find_axiseulers()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeShapes::find_axiseulers2D()
+void ComputeShapes::findAxisEulers2D()
 {
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
   auto& axisEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
