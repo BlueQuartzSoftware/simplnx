@@ -58,9 +58,19 @@ Nodes that appear on the exterior of a volume have Node Type values starting at 
 
 ![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
 
+### Exterior or Boundary Faces
+
+Triangle faces that bound the virtual volume will have one of the Face Labels components
+set to a value of -1. If you want to filter out those triangles, you can set any
+triangle face where at least one of the Face Labels = -1 to be filtered out. You can also
+run a Threshold Objects (Advanced) filter, those face labels as "TRUE" instead and 
+then run the "Remove Marked Triangles" filter to remove them from the surface mesh.
+
 ## Notes
 
-This filter should be used in place of the "QuickMesh Surface Filter".
+- This filter can be used in place of the "QuickMesh Surface Filter" and "Laplacian Smoothing Filter".
+- This filter can use substantially more memory than the QuickMesh Filter
+
 
 
 % Auto generated parameter table will be inserted here

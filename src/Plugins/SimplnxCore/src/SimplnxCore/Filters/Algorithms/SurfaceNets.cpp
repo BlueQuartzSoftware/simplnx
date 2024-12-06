@@ -254,11 +254,11 @@ Result<> SurfaceNets::operator()()
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
@@ -314,11 +314,11 @@ Result<> SurfaceNets::operator()()
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -372,11 +372,11 @@ Result<> SurfaceNets::operator()()
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
       if(quadLabels[0] == MMSurfaceNet::Padding)
       {
-        quadLabels[0] = 0;
+        quadLabels[0] = -1;
       }
       if(quadLabels[1] == MMSurfaceNet::Padding)
       {
-        quadLabels[1] = 0;
+        quadLabels[1] = -1;
       }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
