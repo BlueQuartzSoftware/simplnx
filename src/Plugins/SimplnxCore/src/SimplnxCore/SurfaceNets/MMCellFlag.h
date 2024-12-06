@@ -73,13 +73,16 @@ public:
   bool isEdgeCrossing(Edge edge) const;
   uint8_t numJunctions() const
   {
-    return m_NumJunctions;
+    return m_BitFlag >> k_NumJunctionsBitShift;
   }
 
 private:
+  static inline constexpr uint32_t k_NumJunctionsBitShift = 29;
+
   // The bitflag
+  // The last 3 bits of the bitflag are the number of junctions
+  // numJunctions can at most be 6
   uint32_t m_BitFlag = 0;
-  uint8_t m_NumJunctions = 0;
 };
 
 // For iterating over cell faces

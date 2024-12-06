@@ -194,7 +194,7 @@ void MMCellFlag::set(const int32_t cellLabels[8])
 
   // Determine vertex type
   int32_t numFaceCrossings = 0;
-  m_NumJunctions = 0;
+  uint32_t numJunctions = 0;
   for(Face face = Face::LeftFace; face <= Face::TopFace; ++face)
   {
     if(faceCrossingType(face) != FaceCrossingType::NoFaceCrossing)
@@ -202,18 +202,18 @@ void MMCellFlag::set(const int32_t cellLabels[8])
       numFaceCrossings++;
       if(faceCrossingType(face) == FaceCrossingType::JunctionFaceCrossing)
       {
-        m_NumJunctions++;
+        numJunctions++;
       }
     }
   }
   if(numFaceCrossings != 0)
   {
     uint32_t vertexTypeBits = 0;
-    if(m_NumJunctions < 1)
+    if(numJunctions < 1)
     {
       vertexTypeBits = static_cast<uint32_t>(VertexType::SurfaceVertex);
     }
-    else if(m_NumJunctions <= 2)
+    else if(numJunctions <= 2)
     {
       vertexTypeBits = static_cast<uint32_t>(VertexType::EdgeVertex);
     }
@@ -223,6 +223,8 @@ void MMCellFlag::set(const int32_t cellLabels[8])
     }
     m_BitFlag |= (vertexTypeBits << k_VertexTypeShift);
   }
+
+  m_BitFlag |= numJunctions << k_NumJunctionsBitShift;
 }
 
 MMCellFlag::VertexType MMCellFlag::vertexType() const
