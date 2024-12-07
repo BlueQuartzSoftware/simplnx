@@ -400,4 +400,3 @@ void ComputeTriangleGeomShapes::findAxisEulers()
     axisEulerAngles[3 * i + 2] = euler[2];
   }
 }
-
