@@ -64,17 +64,42 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const I
  */
 SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis);
 
-///**
-//   * @brief Constructs a new BoundingBox3D defined by the array of position values.
-//   * The format is min X, min Y, min Z, max X, max Y, max Z.
-//   * @param arr
-// */
-// template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT, Point3D<ValueType>>::value>>
-// explicit BoundingBox(nonstd::span<const ValueType, 6> arr)
-//: m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
-//, m_Upper(Point3D<ValueType>(arr[3], arr[4], arr[5]))
-//{
-//}
+/**
+ * @brief This function will find the volume of a tetrahedron
+ * @tparam T
+ * @param verts
+ * @param v4
+ * @return
+ */
+template <typename T>
+T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const std::array<T, 3>& v4)
+{
+  using Point3DType = Point3D<T>;
+
+  // Create the 4 Vertices of the tetrahedron
+  const Point3DType& a = verts[0];
+  const Point3DType& b = verts[1];
+  const Point3DType& c = verts[2];
+  const Point3DType& d = v4;
+
+  // The volume of the tetrahedron can be calculated through V= 1/6 |M| (where M is the volume matrix)
+  // v1 = b-a, v2 = c-a, v3 = d-a
+  //      | v1x     v2x    v3x  |
+  //  M = | v1y     v2y    v3y  |
+  //      | v1z     v2z    v3z  |
+  // clang-format off
+    std::array<T, 9> volumeMatrix = {b[0] - a[0], c[0] - a[0], d[0] - a[0],
+                                     b[1] - a[1], c[1] - a[1], d[1] - a[1],
+                                     b[2] - a[2], c[2] - a[2], d[2] - a[2]};
+
+    // det(M) = v1x(v2y*v3z - v2z*v3y) - v1y(v2x*v3z - v3x*v2z)  +  v1z(v2x*v3y - v3x*v2y)
+    T determinant = (volumeMatrix[0] * (volumeMatrix[4] * volumeMatrix[8] - volumeMatrix[5] * volumeMatrix[7])) -
+                    (volumeMatrix[3] * (volumeMatrix[1] * volumeMatrix[8] - volumeMatrix[2] * volumeMatrix[7])) +
+                    (volumeMatrix[6] * (volumeMatrix[1] * volumeMatrix[5] - volumeMatrix[2] * volumeMatrix[4]));
+  // clang-format on
+
+  return std::abs((determinant / 6.0f)); // The final volume of the tetrahedron
+}
 
 /**
  * @brief Removes duplicate nodes to ensure the vertex list is unique

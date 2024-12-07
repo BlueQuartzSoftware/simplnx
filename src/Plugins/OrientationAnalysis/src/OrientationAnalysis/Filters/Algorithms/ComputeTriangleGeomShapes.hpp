@@ -48,6 +48,7 @@ private:
 
   std::vector<double> m_FeatureMoments;
   std::vector<double> m_FeatureEigenVals;
+
   void findMoments();
   void findAxes();
   void findAxisEulers();

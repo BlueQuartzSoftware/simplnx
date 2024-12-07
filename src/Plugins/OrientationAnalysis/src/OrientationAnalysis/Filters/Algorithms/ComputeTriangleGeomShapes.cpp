@@ -12,99 +12,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr float64 k_ScaleFactor = 1.0;
-constexpr usize k_00 = 0;
-constexpr usize k_01 = 1;
-constexpr usize k_02 = 2;
-
-constexpr usize k_10 = 3;
-constexpr usize k_11 = 4;
-constexpr usize k_12 = 5;
-
-constexpr usize k_20 = 6;
-constexpr usize k_21 = 7;
-constexpr usize k_22 = 8;
-
-// -----------------------------------------------------------------------------
-/**
- * @brief This function will calculate the volume and centroid for 8 sub tetrahedrons that are generated
- * from the triangle given by the "verts" and a centroid point give by "centroid"
- * @tparam T
- * @param verts The 3 Vertices of the triangle
- * @param centroid Another point in space that represents the centroid of the feature that the triangle belongs to
- * @param tetInfo The array of TetInfo data which is the volume and centroid of each sub-tetrahedron that is formed.
- */
-template <typename T>
-void FindTetrahedronInfo(const std::array<nx::core::Point3Df, 3>& verts, const std::array<T, 3>& centroid, std::array<T, 32>& tetInfo)
-{
-  // clang-format off
-  std::array<float64, 30> coords = {verts[0][0], verts[0][1], verts[0][2],   // V0
-                                    verts[1][0], verts[1][1], verts[1][2],   // V1
-                                    verts[2][0], verts[2][1], verts[2][2],   // V2
-
-                                    centroid[0], centroid[1], centroid[2],   // Centroid Vertex
-
-                                    0.5 * (verts[0][0] + centroid[0]), 0.5 * (verts[0][1] + centroid[1]), 0.5 * (verts[0][2] + centroid[2]), // Average of V0 and Centroid
-                                    0.5 * (verts[1][0] + centroid[0]), 0.5 * (verts[1][1] + centroid[1]), 0.5 * (verts[1][2] + centroid[2]), // Average of V1 and Centroid
-                                    0.5 * (verts[2][0] + centroid[0]), 0.5 * (verts[2][1] + centroid[1]), 0.5 * (verts[2][2] + centroid[2]), // Average of V2 and Centroid
-
-                                    0.5 * (verts[0][0] + verts[1][0]), 0.5 * (verts[0][1] + verts[1][1]), 0.5 * (verts[0][2] + verts[1][2]), // Average of V0 & V1 Distance
-                                    0.5 * (verts[1][0] + verts[2][0]), 0.5 * (verts[1][1] + verts[2][1]), 0.5 * (verts[1][2] + verts[2][2]), // Average of V1 & V2 Distance
-                                    0.5 * (verts[2][0] + verts[0][0]), 0.5 * (verts[2][1] + verts[0][1]), 0.5 * (verts[2][2] + verts[0][2])  // Average of V2 & V0 Distance
-  };
-
-  // Create 8 Tetrahedrons
-  std::array<int32, 32> tets = {
-       4, 5, 6, 3,
-       0, 7, 9, 4,
-       1, 8, 7, 5,
-       2, 9, 8, 6,
-       7, 5, 6, 4,
-       6, 9, 7, 4,
-       6, 5, 7, 8,
-       7, 9, 6, 8
-      };
-  // clang-format on
-
-  using Point3DType = Point3D<T>;
-  // Loop over each Tetrahedron
-  for(usize iter = 0; iter < 8; iter++)
-  {
-    usize i0 = 4 * iter + 0;
-    usize i1 = 4 * iter + 1;
-    usize i2 = 4 * iter + 2;
-    usize i3 = 4 * iter + 3;
-    // Create the 4 Vertices of the sub-tetrahedron
-    Point3DType a(coords[3 * tets[i0] + 0], coords[3 * tets[i0] + 1], coords[3 * tets[i0] + 2]);
-    Point3DType b(coords[3 * tets[i1] + 0], coords[3 * tets[i1] + 1], coords[3 * tets[i1] + 2]);
-    Point3DType c(coords[3 * tets[i2] + 0], coords[3 * tets[i2] + 1], coords[3 * tets[i2] + 2]);
-    Point3DType d(coords[3 * tets[i3] + 0], coords[3 * tets[i3] + 1], coords[3 * tets[i3] + 2]);
-
-    // The volume of the tetrahedron can be calculated through V= 1/6 |M| (where M is the volume matrix)
-    // v1 = b-a, v2 = c-a, v3 = d-a
-    //      | v1x     v2x    v3x
-    //  M = | v1y     v2y    v3y
-    //      | v1z     v2z    v3z
-
-    // clang-format off
-    std::array<T, 9> volumeMatrix = {b[0] - a[0], c[0] - a[0], d[0] - a[0],
-                                     b[1] - a[1], c[1] - a[1], d[1] - a[1],
-                                     b[2] - a[2], c[2] - a[2], d[2] - a[2]};
-
-    // det(M) = v1x(v2y*v3z - v2z*v3y) - v1y(v2x*v3z - v3x*v2z)  +  v1z(v2x*v3y - v3x*v2y)
-    T determinant = (volumeMatrix[k_00] * (volumeMatrix[k_11] * volumeMatrix[k_22] - volumeMatrix[k_12] * volumeMatrix[k_21])) -
-                    (volumeMatrix[k_10] * (volumeMatrix[k_01] * volumeMatrix[k_22] - volumeMatrix[k_02] * volumeMatrix[k_21])) +
-                    (volumeMatrix[k_20] * (volumeMatrix[k_01] * volumeMatrix[k_12] - volumeMatrix[k_02] * volumeMatrix[k_11]));
-    // clang-format on
-
-    tetInfo[4 * iter + 0] = std::abs((determinant / 6.0f)); // The final volume of the tetrahedron
-    // Encode the centroid of the sub-tetrahedron
-    tetInfo[4 * iter + 1] = 0.25 * (a[0] + b[0] + c[0] + d[0]);
-    tetInfo[4 * iter + 2] = 0.25 * (a[1] + b[1] + c[1] + d[1]);
-    tetInfo[4 * iter + 3] = 0.25 * (a[2] + b[2] + c[2] + d[2]);
-  }
-}
-
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
@@ -124,18 +31,44 @@ inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, co
 } // namespace
 
 // -----------------------------------------------------------------------------
+ComputeTriangleGeomShapes::ComputeTriangleGeomShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     ComputeTriangleGeomShapesInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+ComputeTriangleGeomShapes::~ComputeTriangleGeomShapes() noexcept = default;
+
+// -----------------------------------------------------------------------------
+const std::atomic_bool& ComputeTriangleGeomShapes::getCancel()
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+Result<> ComputeTriangleGeomShapes::operator()()
+{
+  findMoments();
+  findAxes();
+  findAxisEulers();
+
+  return {};
+}
+
+// -----------------------------------------------------------------------------
 void ComputeTriangleGeomShapes::findMoments()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
-  // using SharedVertexListType = IGeometry::SharedVertexList;
-
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const TriStore& triangleList = triangleGeom.getFacesRef().getDataStoreRef();
   const VertsStore& verts = triangleGeom.getVerticesRef().getDataStoreRef();
 
   const auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath);
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
-  const auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
   // Calculated Arrays
   auto& omega3S = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
 
@@ -143,107 +76,97 @@ void ComputeTriangleGeomShapes::findMoments()
   usize numFeatures = centroids.getNumberOfTuples();
   m_FeatureMoments.resize(numFeatures * 6, 0.0);
 
-  std::array<float32, 3> centroid = {0.0F, 0.0F, 0.0F};
-  std::array<float32, 32> tetInfo = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F,
-                                     0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
-  // std::array<usize, 3> vertIds = {0, 0, 0};
+  nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
 
-  // Loop over all triangle faces
-  for(usize i = 0; i < numFaces; i++)
-  {
-    // Get the indices to the 3 vertices of the triangle
-    // triangleGeom.getFacePointIds(i, vertIds); // This line is SLOW!!!
-
-    std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
-
-    // Loop over each FaceLabel, which is basically the pair of "Feature Id" for the triangle
-    for(usize j = 0; j < 2; j++)
-    {
-      // Flips the winding, Assuming the triangle winding was correct in the first place.
-      if(j == 1)
-      {
-        std::swap(vertCoords[2], vertCoords[1]);
-      }
-      int32 gnum = faceLabels[2 * i + j];
-      if(gnum > 0)
-      {
-        // Get the centroid for the feature
-        centroid[0] = centroids[3 * gnum + 0];
-        centroid[1] = centroids[3 * gnum + 1];
-        centroid[2] = centroids[3 * gnum + 2];
-        // Generate the volumes for the 8 sub-tetrahedrons
-        FindTetrahedronInfo<float32>(vertCoords, centroid, tetInfo);
-
-        // Loop over those 8 sub-tetrahedrons
-        for(usize iter = 0; iter < 8; iter++)
-        {
-
-          // Compute the distance between the feature's centroid and the centroid of
-          // the current sub-tetrahedron.
-          float64 xdist = (tetInfo[4 * iter + 1] - centroids[gnum * 3 + 0]);
-          float64 ydist = (tetInfo[4 * iter + 2] - centroids[gnum * 3 + 1]);
-          float64 zdist = (tetInfo[4 * iter + 3] - centroids[gnum * 3 + 2]);
-
-          // Compute the second order moments
-          auto xx = static_cast<float32>((ydist * ydist) + (zdist * zdist));
-          auto yy = static_cast<float32>((xdist * xdist) + (zdist * zdist));
-          auto zz = static_cast<float32>((xdist * xdist) + (ydist * ydist));
-          auto xy = static_cast<float32>(xdist * ydist);
-          auto yz = static_cast<float32>(ydist * zdist);
-          auto xz = static_cast<float32>(xdist * zdist);
-
-          // Sum the volume contributions into the "Feature Moments" array
-          m_FeatureMoments[gnum * 6 + 0] = m_FeatureMoments[gnum * 6 + 0] + (xx * tetInfo[4 * iter + 0]);
-          m_FeatureMoments[gnum * 6 + 1] = m_FeatureMoments[gnum * 6 + 1] + (yy * tetInfo[4 * iter + 0]);
-          m_FeatureMoments[gnum * 6 + 2] = m_FeatureMoments[gnum * 6 + 2] + (zz * tetInfo[4 * iter + 0]);
-          m_FeatureMoments[gnum * 6 + 3] = m_FeatureMoments[gnum * 6 + 3] + (xy * tetInfo[4 * iter + 0]);
-          m_FeatureMoments[gnum * 6 + 4] = m_FeatureMoments[gnum * 6 + 4] + (yz * tetInfo[4 * iter + 0]);
-          m_FeatureMoments[gnum * 6 + 5] = m_FeatureMoments[gnum * 6 + 5] + (xz * tetInfo[4 * iter + 0]);
-        }
-      }
-    }
-  }
-
+  using Matrix3x3 = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
+  // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
+  // will be normalized using this value;
   const float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
-  for(usize i = 1; i < numFeatures; i++)
-  {
 
-    m_FeatureMoments[i * 6 + 3] = -m_FeatureMoments[i * 6 + 3];
-    m_FeatureMoments[i * 6 + 4] = -m_FeatureMoments[i * 6 + 4];
-    m_FeatureMoments[i * 6 + 5] = -m_FeatureMoments[i * 6 + 5];
-    auto u200 = static_cast<float32>((m_FeatureMoments[i * 6 + 1] + m_FeatureMoments[i * 6 + 2] - m_FeatureMoments[i * 6 + 0]) / 2.0f);
-    auto u020 = static_cast<float32>((m_FeatureMoments[i * 6 + 0] + m_FeatureMoments[i * 6 + 2] - m_FeatureMoments[i * 6 + 1]) / 2.0f);
-    auto u002 = static_cast<float32>((m_FeatureMoments[i * 6 + 0] + m_FeatureMoments[i * 6 + 1] - m_FeatureMoments[i * 6 + 2]) / 2.0f);
-    auto u110 = static_cast<float32>(-m_FeatureMoments[i * 6 + 3]);
-    auto u011 = static_cast<float32>(-m_FeatureMoments[i * 6 + 4]);
-    auto u101 = static_cast<float32>(-m_FeatureMoments[i * 6 + 5]);
-    auto o3 = static_cast<float64>((u200 * u020 * u002) + (2.0f * u110 * u101 * u011) - (u200 * u011 * u011) - (u020 * u101 * u101) - (u002 * u110 * u110));
-    float64 vol5 = pow(volumes[i], 5.0);
-    float64 omega3 = vol5 / o3;
-    omega3 = omega3 / k_Sphere;
-    if(omega3 > 1)
+  // define the canonical C matrix
+  double aa = 1.0 / 60.0;
+  double bb = aa / 2.0;
+  // clang-format off
+  Matrix3x3 C;
+  C << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+
+  // and the identity matrix
+  aa = 1.0;
+  bb = 0.0;
+  Matrix3x3 ID;
+  ID << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+
+  // The C-Prime matrix
+  Matrix3x3 CC;
+  CC << -0.50000000, 0.50000000, 0.50000000,
+        0.50000000, -0.50000000, 0.50000000,
+        0.50000000, 0.50000000, -0.50000000;
+  // clang-format on
+
+  // Loop over each "Feature" which is the number of tuples in the "Centroids" array
+  // We could parallelize over the features?
+  for(usize featureId = 1; featureId < numFeatures; featureId++)
+  {
+    if(m_ShouldCancel)
     {
-      omega3 = 1.0;
+      return;
     }
-    if(vol5 == 0.0)
+    double Vol = 0.0;
+    // define the accumulator arrays
+    Matrix3x3 Cacc;
+    Cacc << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+
+    // Get the centroid for the feature
+    centroid[0] = centroids[3 * featureId + 0];
+    centroid[1] = centroids[3 * featureId + 1];
+    centroid[2] = centroids[3 * featureId + 2];
+
+    // for each triangle we need the transformation matrix A defined by the three points as columns
+    // Loop over all triangle faces
+    int32_t tCount = 0;
+    for(usize i = 0; i < numFaces; i++)
     {
-      omega3 = 0.0;
+      if(faceLabels[2 * i] != featureId && faceLabels[2 * i + 1] != featureId)
+      {
+        continue;
+      }
+      tCount++;
+      usize compIndex = (faceLabels[2 * i] == featureId ? 0 : 1);
+      std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
+
+      const nx::core::Point3Df& a = vertCoords[0] - centroid;
+      const nx::core::Point3Df& b = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
+      const nx::core::Point3Df& c = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
+
+      Matrix3x3 A;
+      A << a[0], b[0], c[0], a[1], b[1], c[1], a[2], b[2], c[2];
+
+      float64 dA = A.determinant();
+
+      Cacc = (Cacc + dA * (A * (C * (A.transpose())))).eval();
+      Vol += (dA / 6.0f); // accumulate the volumes
     }
-    omega3S[i] = static_cast<float32>(omega3);
+
+    Cacc = (Cacc / Vol).eval();
+    Matrix3x3 Cinertia = ID * Cacc.trace() - Cacc;
+    // extract the moments from the inertia tensor
+    Eigen::Vector3d e(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
+    auto sols = CC * e;
+    omega3S[featureId] = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
+
+    m_FeatureMoments[featureId * 6 + 0] = sols[0];
+    m_FeatureMoments[featureId * 6 + 1] = sols[1];
+    m_FeatureMoments[featureId * 6 + 2] = sols[2];
+    m_FeatureMoments[featureId * 6 + 3] = -Cinertia(0, 1);
+    m_FeatureMoments[featureId * 6 + 4] = -Cinertia(0, 2);
+    m_FeatureMoments[featureId * 6 + 5] = -Cinertia(1, 2);
   }
 }
 
 // -----------------------------------------------------------------------------
 void ComputeTriangleGeomShapes::findAxes()
 {
-  //  float64 I1 = 0.0, I2 = 0.0, I3 = 0.0;
-  //  float64 a = 0.0, b = 0.0, c = 0.0, d = 0.0, f = 0.0, g = 0.0, h = 0.0;
-  //  float64 rsquare = 0.0, r = 0.0, theta = 0.0;
-  //  float64 A = 0.0, B = 0.0, C = 0.0;
-  //  float64 r1 = 0.0, r2 = 0.0, r3 = 0.0;
-  //  float32 bovera = 0.0f, covera = 0.0f;
-  //  float64 value = 0.0;
-
+  constexpr float64 k_ScaleFactor = 1.0;
   const Float32Array& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
 
   auto& axisLengths = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
@@ -255,6 +178,10 @@ void ComputeTriangleGeomShapes::findAxes()
 
   for(usize i = 1; i < numFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     float64 ixx = m_FeatureMoments[i * 6 + 0];
     float64 iyy = m_FeatureMoments[i * 6 + 1];
     float64 izz = m_FeatureMoments[i * 6 + 2];
@@ -344,6 +271,10 @@ void ComputeTriangleGeomShapes::findAxisEulers()
 
   for(usize i = 1; i < numFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     float64 ixx = m_FeatureMoments[i * 6 + 0];
     float64 iyy = m_FeatureMoments[i * 6 + 1];
     float64 izz = m_FeatureMoments[i * 6 + 2];
@@ -470,31 +401,3 @@ void ComputeTriangleGeomShapes::findAxisEulers()
   }
 }
 
-// -----------------------------------------------------------------------------
-ComputeTriangleGeomShapes::ComputeTriangleGeomShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     ComputeTriangleGeomShapesInputValues* inputValues)
-: m_DataStructure(dataStructure)
-, m_InputValues(inputValues)
-, m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
-{
-}
-
-// -----------------------------------------------------------------------------
-ComputeTriangleGeomShapes::~ComputeTriangleGeomShapes() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeTriangleGeomShapes::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-Result<> ComputeTriangleGeomShapes::operator()()
-{
-  findMoments();
-  findAxes();
-  findAxisEulers();
-
-  return {};
-}
