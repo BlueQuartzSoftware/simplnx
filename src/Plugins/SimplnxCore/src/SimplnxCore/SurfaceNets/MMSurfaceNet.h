@@ -76,7 +76,7 @@ public:
   // Label used internally. Not available as a material index.
   enum ReservedLabel
   {
-    Padding = std::numeric_limits<int32_t>::max()
+    Padding = -1 // std::numeric_limits<int32_t>::max()
   };
 
   MMCellMap* getCellMap() const
