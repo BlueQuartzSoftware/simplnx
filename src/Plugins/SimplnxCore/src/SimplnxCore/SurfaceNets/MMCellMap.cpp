@@ -39,7 +39,6 @@ MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
   // corner.
   Cell* pCell = m_cellArray;
   int32_t* pLabel = labels;
-  int32_t padLabel = (int32_t)MMSurfaceNet::ReservedLabel::Padding;
   for(int k = 0; k < m_arraySize[2]; k++)
   {
     for(int j = 0; j < m_arraySize[1]; j++)
@@ -48,7 +47,7 @@ MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
       {
         if(i == 0 || i == m_arraySize[0] - 1 || j == 0 || j == m_arraySize[1] - 1 || k == 0 || k == m_arraySize[2] - 1)
         {
-          initCell(pCell++, padLabel);
+          initCell(pCell++, static_cast<int32_t>(MMSurfaceNet::ReservedLabel::Padding));
         }
         else
         {

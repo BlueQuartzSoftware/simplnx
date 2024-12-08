@@ -252,14 +252,6 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
-      if(quadLabels[0] == MMSurfaceNet::Padding)
-      {
-        quadLabels[0] = -1;
-      }
-      if(quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        quadLabels[1] = -1;
-      }
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -311,15 +303,8 @@ Result<> SurfaceNets::operator()()
       vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
-      const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
-      if(quadLabels[0] == MMSurfaceNet::Padding)
-      {
-        quadLabels[0] = -1;
-      }
-      if(quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        quadLabels[1] = -1;
-      }
+      const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
@@ -370,14 +355,7 @@ Result<> SurfaceNets::operator()()
       vData[3] = {vertexIndices[3], 00.0f, 0.0f, 0.0f};
 
       const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
-      if(quadLabels[0] == MMSurfaceNet::Padding)
-      {
-        quadLabels[0] = -1;
-      }
-      if(quadLabels[1] == MMSurfaceNet::Padding)
-      {
-        quadLabels[1] = -1;
-      }
+
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
