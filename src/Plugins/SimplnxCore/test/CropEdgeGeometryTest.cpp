@@ -90,8 +90,8 @@ DataStructure CreateDataStructure()
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][CropEdgeGeometryFilter]")
 {
-  fs::path vertexCoordsPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "VertexCoordinates.csv";
-  fs::path edgeConnectivityPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
+  fs::path vertexCoordsPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "VertexCoordinates.csv";
+  fs::path edgeConnectivityPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
 
   CropEdgeGeometryFilter filter;
   DataStructure dataStructure = CreateDataStructure();
@@ -138,8 +138,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Ignore Edges", "[SimplnxCore][CropEdgeGeometryFilter]")
 {
-  fs::path vertexCoordsPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "VertexCoordinates.csv";
-  fs::path edgeConnectivityPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
+  fs::path vertexCoordsPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "VertexCoordinates.csv";
+  fs::path edgeConnectivityPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
 
   CropEdgeGeometryFilter filter;
   DataStructure dataStructure = CreateDataStructure();
@@ -199,8 +199,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Ignore Edges", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Interpolate Outside Vertices", "[SimplnxCore][CropEdgeGeometryFilter]")
 {
-  fs::path vertexCoordsPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "VertexCoordinates.csv";
-  fs::path edgeConnectivityPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
+  fs::path vertexCoordsPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "VertexCoordinates.csv";
+  fs::path edgeConnectivityPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
 
   CropEdgeGeometryFilter filter;
   DataStructure dataStructure = CreateDataStructure();
@@ -277,8 +277,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Interpolate Outside Vertices", 
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Invalid Params", "[SimplnxCore][CropEdgeGeometryFilter]")
 {
-  fs::path vertexCoordsPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "VertexCoordinates.csv";
-  fs::path edgeConnectivityPath = fs::path(nx::core::unit_test::k_BuildDir) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
+  fs::path vertexCoordsPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "VertexCoordinates.csv";
+  fs::path edgeConnectivityPath = fs::path(std::string(nx::core::unit_test::k_BuildDir)) / "Data" / "Test_Data" / "EdgeConnectivity.csv";
 
   CropEdgeGeometryFilter filter;
   DataStructure dataStructure = CreateDataStructure();

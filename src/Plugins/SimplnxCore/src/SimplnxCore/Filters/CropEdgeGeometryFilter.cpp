@@ -222,8 +222,8 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     if(!vertexArraysResult.empty())
     {
       // Detected at least one vertex array, throw a warning
-      resultOutputActions.warnings().push_back(Warning(
-          -100, "A vertex data array was detected in the selected edge geometry.  This filter currently only interpolates vertex positions, associated vertex data values will not be interpolated."));
+      resultOutputActions.warnings().push_back(
+          {-100, "A vertex data array was detected in the selected edge geometry.  This filter currently only interpolates vertex positions, associated vertex data values will not be interpolated."});
     }
 
     for(const auto& [identifier, object] : selectedVertexData)
