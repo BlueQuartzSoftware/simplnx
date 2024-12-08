@@ -36,16 +36,14 @@ public:
 
   void operator()() const
   {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
     usize newIndex = 0;
     for(usize i = 0; i < m_SrcAttrMatrix.getNumTuples(); ++i)
     {
-      if(m_TupleMask[i])
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      else if(m_TupleMask[i])
       {
         CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, newIndex, i, 1);
         newIndex++;
@@ -266,35 +264,33 @@ Result<> CropEdgeGeometry::operator()()
     if(edgeIntersectingBoundary)
     {
       // Found an edge intersecting the boundary
+      // Calculate the interpolated value for the outside vertex and store it in the interpolatedValuesMap
+      uint64 insideVertexIdx = v0;
+      uint64 outsideVertexIdx = v1;
+      if(v1_inside)
+      {
+        insideVertexIdx = v1;
+        outsideVertexIdx = v0;
+      }
+
+      float32 insideX = srcVertices[3 * insideVertexIdx + 0];
+      float32 insideY = srcVertices[3 * insideVertexIdx + 1];
+      float32 insideZ = srcVertices[3 * insideVertexIdx + 2];
+      float32 outsideX = srcVertices[3 * outsideVertexIdx + 0];
+      float32 outsideY = srcVertices[3 * outsideVertexIdx + 1];
+      float32 outsideZ = srcVertices[3 * outsideVertexIdx + 2];
+
       if(behavior == BoundaryIntersectionBehavior::FilterError)
       {
         // Throw a filter error
-        float32 x_inside = v0_inside ? srcVertices[3 * v0 + 0] : srcVertices[3 * v1 + 0];
-        float32 y_inside = v0_inside ? srcVertices[3 * v0 + 1] : srcVertices[3 * v1 + 1];
-        float32 z_inside = v0_inside ? srcVertices[3 * v0 + 2] : srcVertices[3 * v1 + 2];
-        float32 x_out = v0_inside ? srcVertices[3 * v1 + 0] : srcVertices[3 * v0 + 0];
-        float32 y_out = v0_inside ? srcVertices[3 * v1 + 1] : srcVertices[3 * v0 + 1];
-        float32 z_out = v0_inside ? srcVertices[3 * v1 + 2] : srcVertices[3 * v0 + 2];
-
         std::string message = fmt::format("Edge {} connects inside vertex ({}, {}, {}) with outside vertex ({}, {}, {}).  This intersects the bounds of ({}, {}, {}) and ({}, {}, {})",
-                                          std::to_string(i), std::to_string(x_inside), std::to_string(y_inside), std::to_string(z_inside), std::to_string(x_out), std::to_string(y_out),
-                                          std::to_string(z_out), boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3], boundingBox[4], boundingBox[5]);
+                                          std::to_string(i), std::to_string(insideX), std::to_string(insideY), std::to_string(insideZ), std::to_string(outsideX), std::to_string(outsideY),
+                                          std::to_string(outsideZ), boundingBox[0], boundingBox[1], boundingBox[2], boundingBox[3], boundingBox[4], boundingBox[5]);
         return MakeErrorResult(to_underlying(ErrorCodes::OutsideVertexError), message);
       }
-
-      if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
+      else if(behavior == BoundaryIntersectionBehavior::InterpolateOutsideVertex)
       {
         // Calculate the interpolated value for the outside vertex and store it in the interpolatedValuesMap
-        uint64 insideVertexIdx = (v1_inside) ? v1 : v0;
-        uint64 outsideVertexIdx = (v1_inside) ? v0 : v1;
-
-        float32 insideX = srcVertices[3 * insideVertexIdx + 0];
-        float32 insideY = srcVertices[3 * insideVertexIdx + 1];
-        float32 insideZ = srcVertices[3 * insideVertexIdx + 2];
-        float32 outsideX = srcVertices[3 * outsideVertexIdx + 0];
-        float32 outsideY = srcVertices[3 * outsideVertexIdx + 1];
-        float32 outsideZ = srcVertices[3 * outsideVertexIdx + 2];
-
         interpolatedValuesMap[outsideVertexIdx] = interpolate_outside_vertex(std::make_tuple(insideX, insideY, insideZ), std::make_tuple(outsideX, outsideY, outsideZ), boundingBox);
       }
     }
@@ -369,10 +365,9 @@ Result<> CropEdgeGeometry::operator()()
   {
     if(edgesMask[i])
     {
-      uint64 old_v0 = srcEdges[2 * i + 0];
-      uint64 old_v1 = srcEdges[2 * i + 1];
-      int64 new_v0 = vertexMapping[old_v0];
-      int64 new_v1 = vertexMapping[old_v1];
+      // Get new vertices via indexing into vertex mapping with the old index from srcEdges
+      int64 new_v0 = vertexMapping[srcEdges[2 * i + 0]];
+      int64 new_v1 = vertexMapping[srcEdges[2 * i + 1]];
 
       // Validate mapping
       if(new_v0 == -1 || new_v1 == -1)
