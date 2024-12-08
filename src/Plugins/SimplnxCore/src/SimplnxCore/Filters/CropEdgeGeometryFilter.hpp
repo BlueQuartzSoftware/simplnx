@@ -29,7 +29,7 @@ public:
   static inline constexpr StringLiteral k_SelectedEdgeGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_CreatedEdgeGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static inline constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior";
+  static inline constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
 
   /**
    * @brief
