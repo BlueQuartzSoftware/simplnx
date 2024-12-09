@@ -318,11 +318,12 @@ size_t DatasetIO::getNumChunkElements() const
 
 std::string DatasetIO::readAsString() const
 {
+  auto datasetId = open();
   if(!isValid())
   {
     return "";
   }
-  auto datasetId = open();
+
   std::string data;
 
   // Test if the string is variable length
