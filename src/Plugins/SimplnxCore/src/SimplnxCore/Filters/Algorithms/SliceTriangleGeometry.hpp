@@ -16,9 +16,9 @@ namespace nx::core
 
 namespace slice_triangle_geometry::constants
 {
-  constexpr ChoicesParameter::ValueType k_FullRange = 0;
-  constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
-}
+constexpr ChoicesParameter::ValueType k_FullRange = 0;
+constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
+} // namespace slice_triangle_geometry::constants
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {

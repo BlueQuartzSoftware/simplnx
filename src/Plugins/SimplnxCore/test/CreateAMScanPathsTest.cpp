@@ -31,9 +31,9 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "scan_path_test_data.tar.gz", "scan_path_test_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "scan_path_test_data_v2.tar.gz", "scan_path_test_data");
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/scan_path_test_data/scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/scan_path_test_data_v2/scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -42,7 +42,7 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(CreateAMScanPathsFilter::k_StripeWidth_Key, std::make_any<float32>(10.0f));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_StripeWidth_Key, std::make_any<float32>(7.0f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(0.33f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_Power_Key, std::make_any<float32>(100.0f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_Speed_Key, std::make_any<float32>(1000.0f));
@@ -92,8 +92,3 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 }
-
-// TEST_CASE("SimplnxCore::ScanVectorsGeneratorFilter: InValid Filter Execution")
-//{
-//
-// }
