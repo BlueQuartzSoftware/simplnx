@@ -19,7 +19,7 @@ namespace cxITKMaximumProjectionImageFilter
 using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
 template <class PixelT>
-using FilterOutputType = double;
+using FilterOutputType = float;
 
 struct ITKMaximumProjectionImageFilterFunctor
 {
@@ -59,7 +59,7 @@ Uuid ITKMaximumProjectionImageFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMaximumProjectionImageFilter::humanName() const
 {
-  return "ITK Mean Projection Image Filter";
+  return "ITK Maximum Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------

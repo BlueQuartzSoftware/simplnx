@@ -19,7 +19,7 @@ namespace cxITKMedianProjectionImageFilter
 using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
 template <class PixelT>
-using FilterOutputType = double;
+using FilterOutputType = float;
 
 struct ITKMedianProjectionImageFilterFunctor
 {
@@ -59,7 +59,7 @@ Uuid ITKMedianProjectionImageFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ITKMedianProjectionImageFilter::humanName() const
 {
-  return "ITK Mean Projection Image Filter";
+  return "ITK Median Projection Image Filter";
 }
 
 //------------------------------------------------------------------------------
