@@ -59,6 +59,8 @@ const int32 k_CellAttrMatrixUnusedWarning = -5555;
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -102,6 +104,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -146,6 +150,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -191,6 +197,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -239,6 +247,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -289,6 +299,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
  ******************************************************************************/
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -329,6 +341,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -368,6 +382,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linea
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -409,6 +425,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear",
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -452,6 +470,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear"
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -498,6 +518,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Li
  ******************************************************************************/
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -539,6 +561,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -579,6 +603,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", 
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -621,6 +647,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[S
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
                                                                "6_6_apply_transformation_to_geometry");
 
@@ -665,6 +693,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   //  {
   //    DataStructure ds;
   //    ImageGeom* imageGeom = ImageGeom::Create(ds, "IG");

@@ -2,6 +2,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -26,7 +27,7 @@ const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_TestTwoPluginId);
 TEST_CASE("Test Loading Plugins")
 {
   auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto& filterHandles = filterListPtr->getFilterHandles();
@@ -64,7 +65,7 @@ TEST_CASE("Test Loading Plugins")
 TEST_CASE("Test Singleton")
 {
   auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   REQUIRE(app != nullptr);
 

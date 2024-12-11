@@ -16,7 +16,7 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnalysis][ReadAngData]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_read_ang_data.tar.gz", "6_6_read_ang_data");
 

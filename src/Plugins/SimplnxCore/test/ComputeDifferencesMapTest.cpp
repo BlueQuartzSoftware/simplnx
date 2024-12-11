@@ -11,6 +11,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Instantiate Filter", "[ComputeDifferencesMapFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ComputeDifferencesMapFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -34,6 +36,8 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Instantiate Filter", "[Comp
 
 TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeDifferencesMapFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ComputeDifferencesMapFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;

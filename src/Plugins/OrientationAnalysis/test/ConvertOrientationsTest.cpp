@@ -84,7 +84,7 @@ void _make_code()
 
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[OrientationAnalysis][ConvertOrientations]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   //------------------------------
   // This code is commented out because it generates a bunch of code. See the comment
@@ -147,6 +147,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
  */
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
 {
+  UnitTest::LoadPlugins();
 
   std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};
   std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};

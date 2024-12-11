@@ -23,6 +23,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -59,6 +61,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
                    uint64, float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -101,6 +105,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -137,6 +143,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
                    uint64, float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -179,6 +187,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -211,6 +221,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -252,6 +264,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -299,6 +313,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -325,6 +341,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -355,6 +373,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -389,6 +409,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;

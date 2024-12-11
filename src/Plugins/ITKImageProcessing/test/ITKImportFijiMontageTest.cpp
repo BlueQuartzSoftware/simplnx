@@ -27,10 +27,9 @@ const DataPath k_DataGroupPath = {{k_DataGroupName}};
 
 TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[ITKImageProcessing][ITKImportFijiMontage]")
 {
+  UnitTest::LoadPlugins();
+  
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fiji_montage.tar.gz", "fiji_montage");
-
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/fiji_montage/2x2_fiji_montage_test.dream3d", unit_test::k_TestFilesDir)));
 

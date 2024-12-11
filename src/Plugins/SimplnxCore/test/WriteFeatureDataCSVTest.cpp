@@ -50,6 +50,8 @@ std::vector<char> readIn(fs::path filePath)
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
 {
+  UnitTest::LoadPlugins();
+
   WriteFeatureDataCSVFilter filter;
   DataStructure dataStructure;
   AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData", k_VertexTupleDims);

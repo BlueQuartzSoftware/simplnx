@@ -355,6 +355,14 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
 }
 
 /**
+ * @brief Loads all simplnx plugins
+ */
+inline void LoadPlugins()
+{
+  Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
+}
+
+/**
  * @brief Writes out a DataStructure to a .dream3d file at the given file path
  * @param dataStructure
  * @param filepath

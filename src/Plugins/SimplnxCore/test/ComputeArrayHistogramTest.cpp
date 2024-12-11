@@ -48,6 +48,8 @@ void fillArray(DataArray<T>& data, const std::vector<T>& values)
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: Valid Filter Execution", "[SimplnxCore][ComputeArrayHistogram]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeArrayHistogramFilter filter;
   DataStructure dataStruct;

@@ -56,6 +56,8 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instantiate)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;
   DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
@@ -74,6 +76,8 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;
   DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;

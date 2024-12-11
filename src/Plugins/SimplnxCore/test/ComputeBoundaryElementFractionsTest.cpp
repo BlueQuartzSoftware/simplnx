@@ -19,6 +19,8 @@ const DataPath k_GeneratedBCFPath = k_FeatureDataAMPath.createChildPath(k_BCFNam
 
 TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Execution", "[SimplnxCore][ComputeBoundaryElementFractionsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz",
                                                               "6_6_find_feature_boundary_element_fractions");
 

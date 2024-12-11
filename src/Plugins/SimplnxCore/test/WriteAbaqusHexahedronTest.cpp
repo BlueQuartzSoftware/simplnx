@@ -70,6 +70,8 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Filter Execution", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
                                                                "abaqus_hexahedron_writer_test");
 

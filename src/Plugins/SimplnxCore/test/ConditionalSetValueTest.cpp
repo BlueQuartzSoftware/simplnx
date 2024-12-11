@@ -48,6 +48,8 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Missing/Empty DataPaths", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
@@ -84,6 +86,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Missing/Empty DataPaths", "[C
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
@@ -129,6 +133,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
@@ -166,6 +172,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[Cond
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
@@ -203,6 +211,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[Condi
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::vector<size_t> imageDims = {40, 60, 80};
   FloatVec3 imageSpacing = {0.10F, 2.0F, 33.0F};
   FloatVec3 imageOrigin = {
@@ -278,6 +288,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConditionalSetValueFilter filter;
   Arguments args;
 
@@ -320,6 +332,8 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Inverted Mask Algorithm Bool", "[ConditionalSetValueFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});

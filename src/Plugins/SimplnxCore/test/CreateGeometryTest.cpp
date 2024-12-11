@@ -2307,6 +2307,8 @@ void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::st
 
 TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateGeometryFilter filter;
   DataStructure dataStructure;

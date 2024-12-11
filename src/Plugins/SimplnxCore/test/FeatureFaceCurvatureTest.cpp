@@ -48,6 +48,8 @@ void CompareDataArrays(const DataStructure& dataStructure, const DataPath& array
 
 TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFaceCurvatureFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataPath triangleGeomPath({"TriangleDataContainer"});
   DataPath faceAttribMatrixPath = triangleGeomPath.createChildPath("FaceData");
 

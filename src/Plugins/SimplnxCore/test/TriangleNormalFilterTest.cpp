@@ -25,6 +25,8 @@ constexpr float64 k_max_difference = 0.0001;
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
   std::string normalsDataArrayName = "Face Normals";

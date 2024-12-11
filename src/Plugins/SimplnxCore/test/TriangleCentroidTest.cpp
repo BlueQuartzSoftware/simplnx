@@ -46,6 +46,8 @@ static const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const Da
 
 TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroidFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, k_TriangleGeometryName);
   AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());

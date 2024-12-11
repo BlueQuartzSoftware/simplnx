@@ -69,6 +69,7 @@ std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usiz
 
 TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][PointSampleTriangleGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;

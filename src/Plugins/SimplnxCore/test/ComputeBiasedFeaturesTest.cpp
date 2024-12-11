@@ -28,6 +28,8 @@ const DataPath k_WrongSurfaceFeaturePath({Constants::k_SmallIN100, Constants::k_
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
                                                               "6_6_find_biased_features.dream3d");
 
@@ -80,6 +82,8 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
                                                               "6_6_find_biased_features.dream3d");
 

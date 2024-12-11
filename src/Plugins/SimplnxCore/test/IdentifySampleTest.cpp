@@ -10,6 +10,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter : Valid filter execution", "[SimplnxCore][IdentifySampleFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_identify_sample.tar.gz", "6_6_identify_sample");
 
   // Read Input/Exemplar DREAM3D File data
@@ -45,6 +47,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter : Valid filter execution", "[Simpln
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter : Invalid filter execution", "[SimplnxCore][IdentifySampleFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_identify_sample.tar.gz", "6_6_identify_sample");
 
   // Read Input/Exemplar DREAM3D File data

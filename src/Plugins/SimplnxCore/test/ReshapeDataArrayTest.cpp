@@ -21,6 +21,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Sam
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -60,6 +62,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Shr
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -105,6 +109,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Exp
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -139,6 +145,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -169,6 +177,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -198,6 +208,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - S
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -233,6 +245,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - E
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -262,6 +276,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
                    float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -313,6 +329,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -349,6 +367,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -380,6 +400,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - 
 
 TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid Tuple Dimensions", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;

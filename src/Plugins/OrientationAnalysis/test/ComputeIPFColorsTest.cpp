@@ -44,7 +44,7 @@ constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColors]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
                                                               "so3_cubic_high_ipf_001.dream3d");

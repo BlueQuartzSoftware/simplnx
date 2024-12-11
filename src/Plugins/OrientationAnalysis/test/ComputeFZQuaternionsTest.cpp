@@ -63,7 +63,7 @@ void MessageHandlerFunction(const IFilter::Message& message)
 
 TEST_CASE("OrientationAnalysis::ComputeFZQuaternions", "[OrientationAnalysis][ComputeFZQuaternions]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeFZQuaternionsFilter filter;

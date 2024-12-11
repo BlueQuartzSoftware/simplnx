@@ -319,6 +319,8 @@ void TestCase4_TestPrimitives(NumericType scalarType)
 // Case1: This tests when skipHeaderBytes equals 0, and checks to see if the data read is the same as the data written.
 TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case1)", "[SimplnxCore][ReadRawBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
 
@@ -337,6 +339,8 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case1)", "[SimplnxCore][ReadRawBinar
 // Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
 TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case2)", "[SimplnxCore][ReadRawBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
 
@@ -346,6 +350,8 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case2)", "[SimplnxCore][ReadRawBinar
 // Case3: This tests when the wrong component size is chosen. (The total number of scalar elements in the file does not evenly divide by the chosen component size).
 TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case3)", "[SimplnxCore][ReadRawBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
 
@@ -355,6 +361,8 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case3)", "[SimplnxCore][ReadRawBinar
 // Case4: This tests when skipHeaderBytes is non-zero, and checks to see if the data read is the same as the data written.
 TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case4)", "[SimplnxCore][ReadRawBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
 
@@ -373,6 +381,8 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case4)", "[SimplnxCore][ReadRawBinar
 // Case5: This tests when skipHeaderBytes equals the file size
 TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case5)", "[SimplnxCore][ReadRawBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestOutput.parent_path());
 

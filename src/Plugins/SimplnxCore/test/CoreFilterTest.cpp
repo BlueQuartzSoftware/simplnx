@@ -9,6 +9,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -42,7 +43,7 @@ struct StringMaker<Warning>
 TEST_CASE("CoreFilterTest:Create Core Filter")
 {
   auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
@@ -65,7 +66,7 @@ TEST_CASE("CoreFilterTest:Create Core Filter")
 
 TEST_CASE("CoreFilterTest:RunCoreFilter")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   static const fs::path k_FileName = fmt::format("{}/ascii_data.txt", nx::core::unit_test::k_BinaryTestOutputDir);
   static constexpr uint64 k_NLines = 25;
@@ -132,7 +133,7 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
 
 TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   CreateDataGroupFilter filter;

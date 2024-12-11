@@ -21,6 +21,8 @@ const DataPath k_CellFeatureArrayPath({k_FeatureDataArrayName + k_CellTempArrayS
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", "[Core][CopyFeatureArrayToElementArrayFilter]")
 {
+  UnitTest::LoadPlugins();
+  
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArrayFilter filter;
   DataStructure dataStructure;
@@ -53,6 +55,8 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", 
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;
 TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Valid filter execution", "[Core][CopyFeatureArrayToElementArrayFilter]", ListOfTypes)
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
 
   // Create Cell FeatureIds array

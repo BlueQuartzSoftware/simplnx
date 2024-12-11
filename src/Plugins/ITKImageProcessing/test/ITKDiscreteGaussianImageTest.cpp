@@ -20,7 +20,7 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][float]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
@@ -58,7 +58,7 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(float)", "[ITKImag
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][short]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
@@ -96,7 +96,7 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(short)", "[ITKImag
 
 TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImageProcessing][ITKDiscreteGaussianImageFilter][bigG]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   const ITKDiscreteGaussianImageFilter filter;
@@ -129,7 +129,7 @@ TEST_CASE("ITKImageProcessing::ITKDiscreteGaussianImageFilter(bigG)", "[ITKImage
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // md5 hash only works on in-memory DataStore<T>
+  // md5 hash only works on in-memory DataStore<T>
   if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));

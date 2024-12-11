@@ -26,7 +26,7 @@ const std::string k_mPrimes = "mPrimeList_COMPUTED";
 
 TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
                                                               "feature_boundary_neighbor_slip_transmission");

@@ -112,6 +112,8 @@ struct IsDataWithinInclusiveRangeFunctor
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
@@ -147,6 +149,8 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCor
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
@@ -181,6 +185,8 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCor
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 

@@ -122,6 +122,8 @@ SharedFileSentinelType s_FileSentinel;
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const std::string partitionIdsArrayName = "PartitioningSchemeIds";
   const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
 
@@ -212,6 +214,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][PartitionGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const std::string partitionIdsArrayName = "PartitioningSchemeIds";
   const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
 
@@ -309,6 +313,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][PartitionGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const std::string partitionIdsArrayName = "PartitioningSchemeIds";
   const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
 
@@ -404,6 +410,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plugins][PartitionGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
 
   Arguments partitionGeometryArgs;
@@ -524,6 +532,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
 
   Arguments partitionGeometryArgs;

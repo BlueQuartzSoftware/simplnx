@@ -43,12 +43,12 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
                                                               "6_6_find_gbcd_metric_based");
 
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
   const auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
@@ -164,7 +164,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Execution")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
                                                               "6_6_find_gbcd_metric_based");

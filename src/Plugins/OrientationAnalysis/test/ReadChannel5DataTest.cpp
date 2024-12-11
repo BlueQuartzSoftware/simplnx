@@ -16,7 +16,7 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 
@@ -70,7 +70,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 

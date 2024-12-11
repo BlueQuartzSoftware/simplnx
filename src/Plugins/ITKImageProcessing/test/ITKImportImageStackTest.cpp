@@ -47,7 +47,7 @@ const FilterHandle k_ImportImageStackFilterHandle(nx::core::FilterTraits<ITKImpo
 void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
 {
   // Filter needs RotateSampleRefFrameFilter to run
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
   auto* filterListPtr = nx::core::Application::Instance()->getFilterList();
   REQUIRE(filterListPtr != nullptr);
 
@@ -240,8 +240,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: FileDoesNotExist", "[I
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   ITKImportImageStackFilter filter;
   DataStructure dataStructure;
@@ -394,8 +393,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   ITKImportImageStackFilter filter;
   DataStructure dataStructure;
@@ -461,8 +459,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[I
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   ITKImportImageStackFilter filter;
   DataStructure dataStructure;
@@ -528,8 +525,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProces
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   ITKImportImageStackFilter filter;
   DataStructure dataStructure;
@@ -598,8 +594,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[I
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
 
   ITKImportImageStackFilter filter;
   DataStructure dataStructure;

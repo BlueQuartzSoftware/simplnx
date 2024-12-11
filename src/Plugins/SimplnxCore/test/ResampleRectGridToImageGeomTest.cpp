@@ -26,6 +26,8 @@ const std::string k_StringArrayName = "StringArray";
 
 TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Execution", "[SimplnxCore][ResampleRectGridToImageGeomFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
                                                               "6_6_resample_rect_grid_to_image_geom.dream3d");
 
@@ -88,6 +90,8 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
 
 TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execution")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
                                                               "6_6_resample_rect_grid_to_image_geom.dream3d");
   // Instantiate the filter, a DataStructure object and an Arguments Object

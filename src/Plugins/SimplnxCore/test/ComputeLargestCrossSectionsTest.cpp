@@ -283,6 +283,8 @@ DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Execution", "[SimplnxCore][ComputeLargestCrossSectionsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeLargestCrossSectionsFilter filter;
   DataStructure ds = CreateValidTestDataStructure();
@@ -321,6 +323,8 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Executio
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execution")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeLargestCrossSectionsFilter filter;
   Arguments args;

@@ -333,7 +333,7 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Valid Execution", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Luminosity Algorithm testing
   // Test defaults

@@ -15,6 +15,7 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
 
@@ -92,6 +93,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][Surface
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: With Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
 
   // Read the Small IN100 Data set

@@ -16,7 +16,7 @@ const std::string k_CAxisLocationsComputed = "NX_CAxisLocations";
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeCAxisLocationsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 
@@ -48,7 +48,7 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Valid Filter Execut
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Execution")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 

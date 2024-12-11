@@ -83,6 +83,8 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
@@ -114,6 +116,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution")
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
 {
+  UnitTest::LoadPlugins();
+
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
@@ -161,6 +165,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution with
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
 {
+  UnitTest::LoadPlugins();
+
   const usize file1WrongZCount = 2;
 
   // Write binary test files
@@ -184,6 +190,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
 {
+  UnitTest::LoadPlugins();
+
   const std::string k_MissingFileName = "this_should_not_exist.nsidat";
 
   // Write binary test files
@@ -207,6 +215,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
 {
+  UnitTest::LoadPlugins();
+
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
   WriteNsiBinaryDataFiles<xDim, yDim, file1ZCount, file2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);

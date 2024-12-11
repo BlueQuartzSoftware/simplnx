@@ -429,6 +429,8 @@ void TestOverwriteArray()
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::cout << "#### ConvertDataTest Starting ####" << std::endl;
 
   TestInt8Signed();

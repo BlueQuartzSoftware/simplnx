@@ -16,6 +16,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set

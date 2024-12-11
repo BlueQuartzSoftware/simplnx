@@ -253,6 +253,8 @@ private:
 
 TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 
   DataStructure dataStructure;
@@ -276,6 +278,8 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 // definitely would NOT happen macOS. Linux is iffy.
 TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
 {
+  UnitTest::LoadPlugins();
+
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
   // would be responsible to create.

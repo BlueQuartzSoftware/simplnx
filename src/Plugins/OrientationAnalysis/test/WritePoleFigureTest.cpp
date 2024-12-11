@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-//#define SIMPLNX_WRITE_TEST_OUTPUT
+// #define SIMPLNX_WRITE_TEST_OUTPUT
 
 namespace
 {
@@ -63,7 +63,7 @@ void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPat
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
 
@@ -116,7 +116,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
 
@@ -170,7 +170,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
 

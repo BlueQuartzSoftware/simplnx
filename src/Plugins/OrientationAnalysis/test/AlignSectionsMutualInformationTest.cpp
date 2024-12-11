@@ -14,8 +14,18 @@ using namespace nx::core;
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filter execution")
 {
+  UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "align_sections_mutual_information.tar.gz",
                                                               "align_sections_mutual_information");
+
+  // We are just going to generate a big number so that we can use that in the output
+  // file path. This tests the creation of intermediate directories that the filter
+  // would be responsible to create.
+  const uint64_t millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+  auto* filterList = Application::Instance()->getFilterList();
+
+  const DataPath k_ExemplarShiftsPath = k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_mutual_information/6_5_align_sections_mutual_information.dream3d", unit_test::k_TestFilesDir));
@@ -54,6 +64,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: InValid filter execution")
 {
+  UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
 
   // Read the Small IN100 Data set

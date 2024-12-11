@@ -37,6 +37,8 @@ static const std::vector<float> s_Vertices = {
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[ApproximatePointCloudHullFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "FaceData";
   std::string normalsDataArrayName = "FaceNormals";

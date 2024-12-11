@@ -60,6 +60,8 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {2.5f, 2.5f, 0.0f};
   const CreateImageGeometryAction::SpacingType refSpacing = {1.0f, 1.0f, 1.0f};
@@ -115,6 +117,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {10.0f, 10.0f, 3.0f};
   const CreateImageGeometryAction::SpacingType refSpacing = {1.0f, 1.0f, 1.0f};
@@ -149,6 +153,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Exe
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {1.0f, 1.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType refSpacing = {0.25f, 0.25f, 0.25f};
@@ -204,6 +210,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {-2.0f, -2.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType refSpacing = {2.0f, 2.0f, 2.0f};
@@ -259,6 +267,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType refSpacing = {1.0f, 1.0f, 1.0f};

@@ -15,7 +15,7 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShapesFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
 

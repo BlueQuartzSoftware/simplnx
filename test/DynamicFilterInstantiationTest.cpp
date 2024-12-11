@@ -10,7 +10,7 @@
  */
 TEST_CASE("Filter List Instantiation")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
   auto* filterList = nx::core::Application::Instance()->getFilterList();
   REQUIRE(filterList != nullptr);
 

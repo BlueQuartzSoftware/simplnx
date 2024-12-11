@@ -155,6 +155,8 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::SplitAttributeArray", "[SimplnxCore][SplitAttributeArrayFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = createDataStructure();
 
   TestSplitByType<uint32>(dataStructure, "uint32");

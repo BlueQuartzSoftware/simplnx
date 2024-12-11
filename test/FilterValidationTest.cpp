@@ -7,6 +7,7 @@
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -94,12 +95,10 @@ void GenerateParameterList()
 
 TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
 {
-  GenerateParameterList();
-  auto appPtr = Application::GetOrCreateInstance();
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
-  REQUIRE(appPtr != nullptr);
+  UnitTest::LoadPlugins();
 
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
+  GenerateParameterList();
+
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
@@ -184,12 +183,10 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
 
 TEST_CASE("nx::core::Test Filter Parameter Help Text", "[simplnx][Filter]")
 {
-  GenerateParameterList();
-  auto appPtr = Application::GetOrCreateInstance();
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
-  REQUIRE(appPtr != nullptr);
+  UnitTest::LoadPlugins();
 
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
+  GenerateParameterList();
+
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto pluginListPtr = Application::Instance()->getPluginList();
 
@@ -233,12 +230,10 @@ TEST_CASE("nx::core::Test Filter Parameter Help Text", "[simplnx][Filter]")
 
 TEST_CASE("nx::core::Test Filter Name", "[simplnx][Filter]")
 {
+  UnitTest::LoadPlugins();
+  
   GenerateParameterList();
-  auto appPtr = Application::GetOrCreateInstance();
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
-  REQUIRE(appPtr != nullptr);
 
-  appPtr->loadPlugins(unit_test::k_BuildDir.view());
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto pluginListPtr = Application::Instance()->getPluginList();
 

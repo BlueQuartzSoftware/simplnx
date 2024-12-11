@@ -680,6 +680,8 @@ TEST_CASE("ImageGeometryIO")
 
 TEST_CASE("Node Based Geometry IO")
 {
+  UnitTest::LoadPlugins();
+
   auto app = Application::GetOrCreateInstance();
 
   fs::path dataDir = GetDataDir();

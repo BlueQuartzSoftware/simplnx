@@ -17,6 +17,8 @@ const DataPath k_GeneratedArray = DataPath({Constants::k_SmallIN100, Constants::
 
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Valid Filter Execution", "[SimplnxCore][ComputeFeaturePhasesBinaryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "bin_feature_phases.tar.gz", "bin_feature_phases.dream3d");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));

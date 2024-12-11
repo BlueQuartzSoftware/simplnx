@@ -17,6 +17,8 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
 {
   const DataPath k_ExemplarShiftsPath = Constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
+  UnitTest::LoadPlugins();
+  auto* filterList = Application::Instance()->getFilterList();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz",
                                                               "align_sections_feature_centroids");
 

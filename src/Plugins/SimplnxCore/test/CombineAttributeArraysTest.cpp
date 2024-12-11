@@ -37,6 +37,7 @@ DataStructure CreateTestDataStructure()
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore][CombineAttributeArrays]")
 {
+  UnitTest::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -117,6 +118,8 @@ Result<> ValidateFilterOutput(const DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[SimplnxCore][CombineAttributeArrays]")
 {
+  UnitTest::LoadPlugins();
+
   MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
 
   SECTION("UINT8")

@@ -30,7 +30,7 @@ void InitApplicationAndPlugins()
 {
   if(!s_PluginsLoaded)
   {
-    Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+    UnitTest::LoadPlugins();
     s_FilterList = Application::Instance()->getFilterList();
     s_PluginsLoaded = true;
   }

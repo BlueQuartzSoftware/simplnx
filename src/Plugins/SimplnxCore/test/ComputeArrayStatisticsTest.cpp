@@ -21,7 +21,7 @@ bool VectorContains(const std::vector<T>& vector, T value)
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -208,7 +208,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");

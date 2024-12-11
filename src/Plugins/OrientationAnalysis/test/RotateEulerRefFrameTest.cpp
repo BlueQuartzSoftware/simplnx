@@ -23,7 +23,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const uint64 k_NumComponents = 3;
   const static DynamicTableInfo::TableDataType k_NumTuples = {{static_cast<double>(480000)}};

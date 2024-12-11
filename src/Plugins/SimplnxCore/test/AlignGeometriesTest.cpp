@@ -31,6 +31,8 @@ DataStructure createTestData()
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeometriesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
@@ -54,6 +56,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeome
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeometriesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
@@ -77,6 +81,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeome
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometriesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   AlignGeometriesFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;

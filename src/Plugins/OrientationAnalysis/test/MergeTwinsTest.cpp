@@ -21,7 +21,7 @@ using namespace nx::core::Constants;
 
 TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz",
                                                               "neighbor_orientation_correlation.dream3d");

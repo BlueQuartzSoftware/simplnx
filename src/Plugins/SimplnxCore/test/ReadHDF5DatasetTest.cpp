@@ -603,6 +603,8 @@ void testFilterExecute(ReadHDF5DatasetFilter& filter)
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::ReadHDF5DatasetFilter Filter")
 {
+  UnitTest::LoadPlugins();
+
   {
     writeHDF5File();
 

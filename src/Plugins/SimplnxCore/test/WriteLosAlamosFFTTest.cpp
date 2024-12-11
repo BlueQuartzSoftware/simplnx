@@ -59,6 +59,8 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Valid Filter Execution", "[SimplnxCore][WriteLosAlamosFFTFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "bin_feature_phases.tar.gz", "bin_feature_phases");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "LosAlamosFFTExemplar.tar.gz", "LosAlamosFFTExemplar.txt");

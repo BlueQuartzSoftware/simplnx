@@ -1455,8 +1455,11 @@ Result<nlohmann::json> DREAM3D::ImportPipelineJsonFromFile(const nx::core::HDF5:
 
   auto pipelineDatasetReader = pipelineGroupReader.openDataset(k_PipelineJsonTag);
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
-  auto pipelineJson = nlohmann::json::parse(pipelineJsonString);
-  return {pipelineJson};
+  if(pipelineJsonString.empty())
+  {
+    return {nlohmann::json()};
+  }
+  return {nlohmann::json::parse(pipelineJsonString)};
 }
 
 Result<Pipeline> DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)

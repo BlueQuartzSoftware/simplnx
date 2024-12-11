@@ -12,6 +12,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[ComputeNeighborListStatisticsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData"});
@@ -144,6 +146,8 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array", "[ComputeNeighborListStatisticsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
   DataPath statsDataPath({"TestData"});

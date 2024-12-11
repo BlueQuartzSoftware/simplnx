@@ -31,6 +31,8 @@ const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameN
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[SimplnxCore][ComputeKMedoidsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 

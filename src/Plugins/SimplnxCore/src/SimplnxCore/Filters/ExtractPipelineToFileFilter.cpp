@@ -88,6 +88,11 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   Result<OutputActions> results;
 
   const nlohmann::json pipelineJson = pipelineResult.value();
+  if(pipelineJson.empty())
+  {
+    return {MakePreflightErrorResult(-2570, fmt::format("No DREAM3D pipeline exists inside dream3d file '{}'.", importFile.string()))};
+  }
+
   const bool isLegacy = pipelineJson.contains(nx::core::Pipeline::k_SIMPLPipelineBuilderKey);
 
   fs::path finalOutputPath = outputFile;

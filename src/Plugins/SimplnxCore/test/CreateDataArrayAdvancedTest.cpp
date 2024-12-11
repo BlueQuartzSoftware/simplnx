@@ -10,6 +10,8 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
   const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
@@ -31,6 +33,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
   const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};

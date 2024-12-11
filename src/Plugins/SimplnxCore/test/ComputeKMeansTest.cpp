@@ -34,6 +34,8 @@ const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameN
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][ComputeKMeans]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
 

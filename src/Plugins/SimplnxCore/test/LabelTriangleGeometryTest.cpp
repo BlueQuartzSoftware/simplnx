@@ -24,6 +24,8 @@ const DataPath k_NumTrianglesPath = k_CellFeatureAMPath.createChildPath(k_NumTri
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test.tar.gz",
                                                               "label_triangle_geometry_test");
 

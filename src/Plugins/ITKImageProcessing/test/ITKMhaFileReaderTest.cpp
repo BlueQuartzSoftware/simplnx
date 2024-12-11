@@ -17,7 +17,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReaderFilter: Read 2D & 3D Image Data",
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz", "ITKMhaFileReaderTest_v3");
 
   // Load plugins (this is needed because ITKMhaFileReaderFilter needs access to the SimplnxCore plugin)
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Test reading 2D & 3D image data
   const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/ExemplarySmallIN100.dream3d";

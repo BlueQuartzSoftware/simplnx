@@ -80,6 +80,8 @@ DataStructure CreateDataStructure()
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
@@ -100,6 +102,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
@@ -122,6 +126,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
@@ -152,6 +158,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
@@ -195,6 +203,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
@@ -228,6 +238,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();

@@ -21,6 +21,8 @@ const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName}
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[SimplnxCore][CombineStlFilesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz",
                                                               "6_6_combine_stl_files.dream3d");
 
@@ -65,6 +67,8 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CombineStlFilesFilter filter;
   DataStructure dataStructure;

@@ -36,6 +36,8 @@ const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::
 
 TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][FlyingEdges3D]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz",
                                                               "flying_edges_exemplar.dream3d");
 

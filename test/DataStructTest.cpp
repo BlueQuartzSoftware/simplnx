@@ -46,6 +46,8 @@ constexpr StringLiteral k_HexGeo = "Hex Geometry";
 
 TEST_CASE("SimplnxCore::DataObjectType Check")
 {
+  UnitTest::LoadPlugins();
+
   static_assert(DataObject::Type::IGeometry == static_cast<DataObject::Type>(8));
   static_assert(DataObject::Type::IGridGeometry == static_cast<DataObject::Type>(9));
   static_assert(DataObject::Type::RectGridGeom == static_cast<DataObject::Type>(10));
@@ -65,6 +67,8 @@ TEST_CASE("SimplnxCore::DataObjectType Check")
 // This test will ensure we don't run into runtime exceptions trying to run the functions
 TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << std::endl;
@@ -75,6 +79,8 @@ TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 // This test will ensure we don't run into runtime exceptions trying to run the functions
 TEST_CASE("SimplnxCore::exportHierarchyAsText")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << std::endl;

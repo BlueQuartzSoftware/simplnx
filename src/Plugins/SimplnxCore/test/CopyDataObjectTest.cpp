@@ -15,6 +15,8 @@ const int32 k_TupleDimMismatchWarningCode = -27361;
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][CopyDataObjectFilter]")
 {
+  UnitTest::LoadPlugins();
+
   static const DataPath k_DataPath1({Constants::k_SmallIN100, "Phase Data"});
   static const DataPath k_DataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
 
@@ -63,6 +65,8 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore][CopyDataObjectFilter]")
 {
+  UnitTest::LoadPlugins();
+
   CopyDataObjectFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;

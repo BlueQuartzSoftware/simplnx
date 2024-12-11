@@ -113,6 +113,8 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -141,6 +143,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore]
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -167,6 +171,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][W
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStlFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz",

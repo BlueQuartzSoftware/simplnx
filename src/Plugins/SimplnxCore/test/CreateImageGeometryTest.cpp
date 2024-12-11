@@ -21,6 +21,8 @@ const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
   std::vector<usize> imageDims = {40, 60, 80};

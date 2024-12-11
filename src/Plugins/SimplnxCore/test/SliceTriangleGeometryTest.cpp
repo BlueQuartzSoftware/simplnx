@@ -30,6 +30,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   /// The test data set was reviewed manually by MAJ and found to be correct in output to the
   /// the best of our abilities. This is needed because DREAM3D-NX did not have
   /// this functionality and so we have nothing to compare against.
+  UnitTest::LoadPlugins();
 
   //  Read Exemplar DREAM3D File Filter
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",

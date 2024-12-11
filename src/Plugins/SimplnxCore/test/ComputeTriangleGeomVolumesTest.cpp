@@ -29,6 +29,8 @@ using namespace ComputeTriangleGeomSizesFilterTest;
 
 TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangleGeomSizes]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter

@@ -25,6 +25,8 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Valid filter execution", "[SimplnxCore][ComputeNumFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeNumFeaturesFilter filter;
   Arguments args;
@@ -58,6 +60,8 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Valid filter execution", "[Sim
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: InValid filter execution", "[SimplnxCore][ComputeNumFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeNumFeaturesFilter filter;
   Arguments args;
