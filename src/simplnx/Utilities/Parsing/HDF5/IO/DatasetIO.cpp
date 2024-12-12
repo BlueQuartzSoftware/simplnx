@@ -465,7 +465,8 @@ std::vector<T> DatasetIO::readAsVector() const
 template <class T>
 nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
 {
-  if(!isValid())
+  hid_t datasetId = open();
+  if(datasetId <= 0)
   {
     return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
   }
@@ -476,7 +477,6 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
     return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
   }
 
-  hid_t datasetId = open();
   hid_t fileSpaceId = H5Dget_space(datasetId);
   if(fileSpaceId < 0)
   {
