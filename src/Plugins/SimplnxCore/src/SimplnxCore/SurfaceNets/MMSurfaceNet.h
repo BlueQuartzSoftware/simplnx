@@ -57,7 +57,14 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
+  /**
+   * @brief Constructs the MMSurfaceNet Object
+   * @param labels
+   * @param arraySize X Y Z Order
+   * @param voxelSize
+   */
   MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3]);
+
   ~MMSurfaceNet();
 
   // Surface smoothing (relaxation)
@@ -65,7 +72,7 @@ public:
   {
     int numRelaxIterations;      // More iterations --> smoother and slower
     float relaxFactor;           // Range (0.0, 1.0); larger --> faster but less stable
-    float maxDistFromCellCenter; // Maximun displacement of relaxed surface in voxel units
+    float maxDistFromCellCenter; // Maximum displacement of relaxed surface in voxel units
   };
   void relax(const RelaxAttrs relaxAttrs);
   void reset();
@@ -88,7 +95,7 @@ private:
   friend class MMGeometryGL;
   friend class MMGeometryOBJ;
 
-  MMCellMap* m_cellMap;
+  MMCellMap* m_cellMap = nullptr;
 };
 
 #endif

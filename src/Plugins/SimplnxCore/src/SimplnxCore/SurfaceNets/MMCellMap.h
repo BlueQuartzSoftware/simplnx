@@ -10,6 +10,8 @@
 #include "MMCellFlag.h"
 #include "MMSurfaceNet.h"
 
+#include <array>
+
 class MMCellMap
 {
 public:
@@ -27,8 +29,8 @@ public:
   int numVertices();
   int numEdgeCrossings();
   MMCellFlag::VertexType vertexType(int vertexIndex);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2]);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], std::array<int32_t, 3>& cellIndex);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2], std::array<int32_t, 3>& cellIndex);
   void getVertexPosition(int vertexIndex, float position[3]);
 
   MMCellFlag::VertexType cellVertexType(int cellArrayIndex);

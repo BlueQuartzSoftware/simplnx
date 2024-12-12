@@ -103,11 +103,13 @@ Result<> SurfaceNets::operator()()
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
 
+  // X Y Z Ordering
   IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
-  using LabelType = int32;
+  // THIS IS MAKING A COPY OF THE IMAGE GEOMETRY CELL "FEATURE IDS" array
+  using LabelType = int32_t;
   std::vector<LabelType> labels(featureIds.getNumberOfTuples());
   for(size_t idx = 0; idx < featureIds.getNumberOfTuples(); idx++)
   {
@@ -115,6 +117,7 @@ Result<> SurfaceNets::operator()()
   }
 
   MMSurfaceNet surfaceNet(labels.data(), arraySize.data(), voxelSize.data());
+  labels.resize(0); // Free that copy... because there is another copy in the surfaceNet object.
 
   // Use current parameters to relax the SurfaceNet
   if(m_InputValues->ApplySmoothing)
@@ -155,12 +158,15 @@ Result<> SurfaceNets::operator()()
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
   }
   usize triangleCount = 0;
+  std::array<ptrdiff_t, 2> cellDataIndex = {0, 0};
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
     std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
     std::array<LabelType, 2> quadLabels = {0, 0};
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+    std::array<int32_t, 3> cellIndices = {0, 0, 0};
+
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -178,7 +184,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -196,7 +202,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -221,6 +227,7 @@ Result<> SurfaceNets::operator()()
   // Resize the face labels Int32Array
   auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
   faceLabels.resizeTuples({triangleCount});
+  faceLabels.fill(-1000);
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
@@ -240,12 +247,29 @@ Result<> SurfaceNets::operator()()
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
   std::array<LabelType, 2> quadLabels = {0, 0};
   std::array<VertexData, 4> vData{};
+  std::array<int32_t, 3> cellIndices = {0, 0, 0};
+
+  constexpr size_t x_idx = 0;
+  constexpr size_t y_idx = 1;
+  constexpr size_t z_idx = 2;
+
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
 
-    // Back-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+    //        std::array<int32_t, 3> cellIndex;
+    //        cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
+    //        std::cout << cellIndex[0] << ", " << cellIndex[1] << ", " << cellIndex[2] << std::endl;
+
+    GenerateTriangles(idxVtx, MMCellFlag::Edge::BackBottomEdge, cellMapPtr, imageGeom, triangleGeom, faceIndex, faceLabels, featureIds, tupleTransferFunctions);
+    GenerateTriangles(idxVtx, MMCellFlag::Edge::LeftBottomEdge, cellMapPtr, imageGeom, triangleGeom, faceIndex, faceLabels, featureIds, tupleTransferFunctions);
+    GenerateTriangles(idxVtx, MMCellFlag::Edge::LeftBackEdge, cellMapPtr, imageGeom, triangleGeom, faceIndex, faceLabels, featureIds, tupleTransferFunctions);
+
+#if 0
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
+      size_t cellIndex1 = cellIndices[z_idx] * gridDimensions[y_idx] * gridDimensions[x_idx] + cellIndices[y_idx] * gridDimensions[x_idx] + cellIndices[x_idx];
+      size_t cellIndex2 = (cellIndices[z_idx] - 1) * gridDimensions[y_idx] * gridDimensions[x_idx] + cellIndices[y_idx] * gridDimensions[x_idx] + cellIndices[x_idx];
+
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
       vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
@@ -271,7 +295,7 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
 
       faceIndex++;
@@ -290,14 +314,17 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
       faceIndex++;
     }
 
-    // Left-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    // Left-bottom edge Y
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
+      size_t cellIndex1 = cellIndices[z_idx] * gridDimensions[y_idx] * gridDimensions[x_idx] + cellIndices[y_idx] * gridDimensions[x_idx] + cellIndices[x_idx];
+      size_t cellIndex2 = cellIndices[z_idx] * (gridDimensions[y_idx] - 1) * gridDimensions[x_idx] + (cellIndices[y_idx] - 1) * gridDimensions[x_idx] + cellIndices[x_idx];
+
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
       vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
@@ -323,7 +350,7 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
       faceIndex++;
 
@@ -341,14 +368,17 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
       faceIndex++;
     }
 
-    // Left-back edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    // Left-back edge X
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), cellIndices))
     {
+      size_t cellIndex1 = cellIndices[z_idx] * gridDimensions[y_idx] * gridDimensions[x_idx] + cellIndices[y_idx] * gridDimensions[x_idx] + cellIndices[x_idx];
+      size_t cellIndex2 = cellIndices[z_idx] * gridDimensions[y_idx] * gridDimensions[x_idx] + cellIndices[y_idx] * gridDimensions[x_idx] + (cellIndices[x_idx] - 1);
+
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
       vData[2] = {vertexIndices[2], 00.0f, 0.0f, 0.0f};
@@ -374,7 +404,7 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
       faceIndex++;
 
@@ -392,11 +422,134 @@ Result<> SurfaceNets::operator()()
       // Copy any Cell Data to the Triangle Mesh
       for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellIndex1, cellIndex2);
       }
       faceIndex++;
     }
+#endif
   }
 
   return {};
+}
+
+using LabelType = int32;
+
+/**
+ *
+ * @param idxVtx
+ * @param edgeType
+ * @param cellMapPtr
+ * @param imageGeom
+ * @param triangleGeom
+ * @param faceIndex
+ * @param faceLabels
+ * @param tupleTransferFunctions
+ */
+void SurfaceNets::GenerateTriangles(int idxVtx, MMCellFlag::Edge edgeType, MMCellMap* cellMapPtr, const ImageGeom& imageGeom, TriangleGeom& triangleGeom, usize& faceIndex,
+                                    AbstractDataStore<int32_t>& faceLabels, AbstractDataStore<int32_t>& featureIds, std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
+{
+  auto gridDimensions = imageGeom.getDimensions();
+
+  std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
+  std::array<LabelType, 2> quadLabels = {0, 0};
+  std::array<int32_t, 3> cellIndex = {0, 0, 0};
+  if(!cellMapPtr->getEdgeQuad(idxVtx, edgeType, vertexIndices.data(), quadLabels.data(), cellIndex))
+  {
+    return;
+  }
+  constexpr size_t x_idx = 0;
+  constexpr size_t y_idx = 1;
+  constexpr size_t z_idx = 2;
+
+  //  cellIndex[x_idx] = (cellIndex[x_idx] > 0 ? cellIndex[x_idx] - 1 : cellIndex[x_idx]);
+  //  cellIndex[y_idx] = (cellIndex[y_idx] > 0 ? cellIndex[y_idx] - 1 : cellIndex[y_idx]);
+  //  cellIndex[z_idx] = (cellIndex[z_idx] > 0 ? cellIndex[z_idx] - 1 : cellIndex[z_idx]);
+
+  std::array<size_t, 2> cellOffset = {(cellIndex[z_idx] * gridDimensions[y_idx] * gridDimensions[x_idx]) + (cellIndex[y_idx] * gridDimensions[x_idx]) + cellIndex[x_idx], 0};
+
+  if(edgeType == MMCellFlag::Edge::LeftBottomEdge)
+  {
+    cellOffset[1] = cellOffset[0] + gridDimensions[x_idx];
+  }
+  else if(edgeType == MMCellFlag::Edge::BackBottomEdge)
+  {
+    cellOffset[1] = cellOffset[0] + 1;
+  }
+  else if(edgeType == MMCellFlag::Edge::LeftBackEdge)
+  {
+    cellOffset[1] = cellOffset[0] + gridDimensions[x_idx] * gridDimensions[y_idx];
+  }
+  else
+  {
+    throw std::runtime_error("SurfaceNets: GenerateTriangles used unknown enumeration for edge type");
+  }
+
+  std::array<VertexData, 4> vData = {VertexData{vertexIndices[0], 00.0f, 0.0f, 0.0f}, VertexData{vertexIndices[1], 00.0f, 0.0f, 0.0f}, VertexData{vertexIndices[2], 00.0f, 0.0f, 0.0f},
+                                     VertexData{vertexIndices[3], 00.0f, 0.0f, 0.0f}};
+
+  const bool isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+
+  std::array<int, 6> triangleVtxIDs = {0, 0, 0, 0, 0, 0};
+  getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs);
+  std::array<usize, 3> t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
+  triangleGeom.setFacePointIds(faceIndex, t1);
+  std::array<usize, 3> t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
+  triangleGeom.setFacePointIds(faceIndex + 1, t2);
+
+  if(quadLabels[0] != -1 && quadLabels[1] != -1)
+  {
+    size_t firstIdx = 0;
+    size_t secIdx = 1;
+    if(quadLabels[1] < quadLabels[0])
+    {
+      firstIdx = 1;
+      secIdx = 0;
+    }
+
+    std::cout << quadLabels[firstIdx] << "\t" << quadLabels[secIdx] << "\t" << featureIds[cellOffset[firstIdx]] << '\t' << featureIds[cellOffset[secIdx]] << "\n";
+
+    faceLabels[faceIndex * 2] = (quadLabels[firstIdx] == -1 ? -1 : faceLabels[cellOffset[firstIdx]]); // quadLabels[firstIdx];
+    faceLabels[faceIndex * 2 + 1] = (quadLabels[secIdx] == -1 ? -1 : faceLabels[cellOffset[secIdx]]); // quadLabels[firstIdx];
+
+    faceLabels[(faceIndex + 1) * 2] = (quadLabels[firstIdx] == -1 ? -1 : faceLabels[cellOffset[firstIdx]]); // quadLabels[firstIdx];
+    faceLabels[(faceIndex + 1) * 2 + 1] = (quadLabels[secIdx] == -1 ? -1 : faceLabels[cellOffset[secIdx]]); // quadLabels[firstIdx];
+  }
+  else // One of the Quad Labels is -1, which means we are on the virtual border
+  {
+    // Assume the first Quad Label = -1
+    size_t firstIdx = 0;
+    size_t secIdx = 1;
+    if(quadLabels[1] == -1)
+    {
+      firstIdx = 1;
+      secIdx = 0;
+    }
+
+    std::cout << quadLabels[firstIdx] << "\t" << quadLabels[secIdx] << "\t" << featureIds[cellOffset[firstIdx]] << '\t' << featureIds[cellOffset[secIdx]] << "\n";
+
+    if(quadLabels[secIdx] != -1 && quadLabels[secIdx] != featureIds[cellOffset[secIdx]])
+    {
+      std::cout << "   " << cellIndex[0] << "\t" << cellIndex[1] << "\t" << cellIndex[2] << "\n";
+    }
+
+    faceLabels[faceIndex * 2] = (quadLabels[firstIdx] == -1 ? -666 : faceLabels[cellOffset[firstIdx]]); // quadLabels[firstIdx];
+    faceLabels[faceIndex * 2 + 1] = (quadLabels[secIdx] == -1 ? -1 : faceLabels[cellOffset[secIdx]]);   // quadLabels[firstIdx];
+
+    faceLabels[(faceIndex + 1) * 2] = (quadLabels[firstIdx] == -1 ? -666 : faceLabels[cellOffset[firstIdx]]); // quadLabels[firstIdx];
+    faceLabels[(faceIndex + 1) * 2 + 1] = (quadLabels[secIdx] == -1 ? -1 : faceLabels[cellOffset[secIdx]]);   // quadLabels[firstIdx];
+
+    // Copy any Cell Data to the Triangle Mesh for the first triangle
+    for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+    {
+      tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, cellOffset[firstIdx], cellOffset[secIdx], faceLabels);
+    }
+    // Copy any Cell Data to the Triangle Mesh for the second triangle
+    for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+    {
+      tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex + 1, cellOffset[firstIdx], cellOffset[secIdx], faceLabels);
+    }
+  }
+
+  // Increment the 'faceIndex' index by 2
+  faceIndex = faceIndex + 2;
 }

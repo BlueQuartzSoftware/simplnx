@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 class MMCellFlag
@@ -57,24 +58,15 @@ public:
   // edge or face crossings.
   void set(const int32_t cellLabels[8]);
 
-  uint32_t getBitFlag() const
-  {
-    return m_BitFlag;
-  }
+  uint32_t getBitFlag() const;
 
-  void clear()
-  {
-    m_BitFlag = 0;
-  }
+  void clear();
 
   // Get components of the cell flag
   VertexType vertexType() const;
   FaceCrossingType faceCrossingType(Face face) const;
   bool isEdgeCrossing(Edge edge) const;
-  uint8_t numJunctions() const
-  {
-    return m_BitFlag >> k_NumJunctionsBitShift;
-  }
+  uint8_t numJunctions() const;
 
 private:
   static inline constexpr uint32_t k_NumJunctionsBitShift = 29;
@@ -83,6 +75,8 @@ private:
   // The last 3 bits of the bitflag are the number of junctions
   // numJunctions can at most be 6
   uint32_t m_BitFlag = 0;
+
+  size_t m_CellIndex = 0;
 };
 
 // For iterating over cell faces

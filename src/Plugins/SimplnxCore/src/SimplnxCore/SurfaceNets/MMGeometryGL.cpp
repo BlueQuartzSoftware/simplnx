@@ -71,13 +71,15 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
   m_numIndices = 0;
   float* pVertices = m_vertices;
   unsigned int* pIndices = m_indices;
+  std::array<int32_t, 3> cellIndices = {0, 0, 0};
+
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     float vertexPositions[12];
     int32_t labelsTmp[2];
 
     // Back-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexPositions, labelsTmp) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexPositions, labelsTmp, cellIndices) == true)
     {
       MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;
@@ -87,7 +89,7 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
     }
 
     // Left-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexPositions, labelsTmp) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexPositions, labelsTmp, cellIndices) == true)
     {
       MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;
@@ -97,7 +99,7 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
     }
 
     // Left-back edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexPositions, labelsTmp) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexPositions, labelsTmp, cellIndices) == true)
     {
       MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;

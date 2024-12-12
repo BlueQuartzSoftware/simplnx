@@ -345,3 +345,18 @@ bool MMCellFlag::isEdgeCrossing(Edge edge) const
   }
   }
 }
+
+uint8_t MMCellFlag::numJunctions() const
+{
+  return m_BitFlag >> k_NumJunctionsBitShift;
+}
+
+uint32_t MMCellFlag::getBitFlag() const
+{
+  return m_BitFlag;
+}
+
+void MMCellFlag::clear()
+{
+  m_BitFlag = 0;
+}

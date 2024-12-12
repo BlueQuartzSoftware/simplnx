@@ -4,6 +4,7 @@
 //
 // Sarah Frisken, Brigham and Women's Hospital, Boston MA USA
 
+#include <array>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -207,40 +208,38 @@ MMCellFlag::VertexType MMCellMap::vertexType(int vertexIndex)
 // [x0, y0, z0, x1, y1 ...] in clockwise order and the quad face labels are inserted
 // into quadLabels as [labelTopFaceOfQuad, labelBottomFaceOfQuad]. If there is no edge
 // crossing, quadCorners and quadLabels will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], std::array<int32_t, 3>& cellIndex)
 {
-  int cellIndex[3];
-  getVertexCellIndex(vertexIndex, cellIndex);
-  if(!isEdgeCrossing(cellArrayIndex(cellIndex), edge))
+  getVertexCellIndex(vertexIndex, cellIndex.data());
+  if(!isEdgeCrossing(cellArrayIndex(cellIndex.data()), edge))
   {
     return false;
   }
 
   // Because there is an edge crossing, cell map access in the following will be
   // in-bounds by construction of the cell map.
-  getEdgeLabels(cellIndex, edge, quadLabels);
-  getEdgeQuadPositions(cellIndex, edge, quadCorners);
+  getEdgeLabels(cellIndex.data(), edge, quadLabels);
+  getEdgeQuadPositions(cellIndex.data(), edge, quadCorners);
   return true;
 }
 // Returns true if there is an edge crossing and false otherwise. If there is an edge
-// crossing, we defince a surface quad from vertices in the 4 cells touching the edge.
+// crossing, we define a surface quad from vertices in the 4 cells touching the edge.
 // The indices of these 4 vertices are inserted into quadVtxIndices in clockwise order
 // and the quad face labels are inserted into quadLabels as [labelTopFaceOfQuad,
 // labelBottomFaceOfQuad]. If there is no edge crossing, quadCorners and quadLabels
 // will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2], std::array<int32_t, 3>& cellIndex)
 {
-  int cellIndex[3];
-  getVertexCellIndex(vertexIndex, cellIndex);
-  if(!isEdgeCrossing(cellArrayIndex(cellIndex), edge))
+  getVertexCellIndex(vertexIndex, cellIndex.data());
+  if(!isEdgeCrossing(cellArrayIndex(cellIndex.data()), edge))
   {
     return false;
   }
 
   // Because there is an edge crossing, cell map access in the following will be
   // in-bounds by construction of the cell map.
-  getEdgeLabels(cellIndex, edge, quadLabels);
-  getEdgeQuadVtxIndices(cellIndex, edge, quadVtxIndices);
+  getEdgeLabels(cellIndex.data(), edge, quadLabels);
+  getEdgeQuadVtxIndices(cellIndex.data(), edge, quadVtxIndices);
   return true;
 }
 
@@ -320,9 +319,14 @@ void MMCellMap::setCellVertices()
 // The caller is responsible for bounds checking to allow for optimal performance.
 void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2])
 {
+  std::array<int, 3> idx = {0, 0, 0};
+  Cell* zeroCell = getCell(idx.data());
+  idx = {52, 27, 52};
+  Cell* lastCell = getCell(idx.data());
+
   Cell* pCell = getCell(cellIndex);
-  Cell* pCellFirstLabel;
-  Cell* pCellSecondLabel;
+  Cell* pCellFirstLabel = nullptr;
+  Cell* pCellSecondLabel = nullptr;
   switch(edge)
   {
   case MMCellFlag::Edge::LeftBottomEdge:
@@ -378,12 +382,17 @@ void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t q
     pCellSecondLabel = pCell;
     break;
   }
+
+  ptrdiff_t diff_last_zero = lastCell - zeroCell;
+  ptrdiff_t diff_first_zero = pCellFirstLabel - zeroCell;
+  ptrdiff_t diff_first_second = pCellSecondLabel - zeroCell;
+
   quadLabels[0] = pCellFirstLabel->label;
   quadLabels[1] = pCellSecondLabel->label;
 }
 
 // The caller is responsible for bounds checking to allow for optimal performance.
-// Vertices are ordered clockwise around each edge begining with the cell vertex, with
+// Vertices are ordered clockwise around each edge beginning with the cell vertex, with
 // edges oriented left-to-right, back-to-front and bottom-to-top.
 void MMCellMap::getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12])
 {

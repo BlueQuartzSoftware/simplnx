@@ -1,15 +1,21 @@
 #pragma once
 
+#include "SimplnxCore/Filters/Algorithms/TupleTransfer.hpp"
 #include "SimplnxCore/SimplnxCore_export.hpp"
+#include "SimplnxCore/SurfaceNets/MMCellFlag.h"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+
+class MMCellMap;
 
 namespace nx::core
 {
@@ -55,6 +61,9 @@ private:
   const SurfaceNetsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  void GenerateTriangles(int idxVtx, MMCellFlag::Edge edgeType, MMCellMap* cellMapPtr, const ImageGeom& imageGeom, TriangleGeom& triangleGeom, usize& faceIndex, AbstractDataStore<int32_t>& featureIds,
+                         AbstractDataStore<int32_t>& faceLabels, std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions);
 };
 
 } // namespace nx::core

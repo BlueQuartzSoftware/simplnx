@@ -70,27 +70,29 @@ MMGeometryOBJ::MMGeometryOBJ(MMSurfaceNet* surfaceNet)
   // Create temporary storage for cell quads which are constructed around edges
   // crossed by the surface. Handle 3 edges per cell. The other 9 cell edges will
   // be handled when neighboring cells that share edges with this cell are visited.
+  std::array<int32_t, 3> cellIndices = {0, 0, 0};
+
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     int vertexIndices[4];
     int32_t quadLabels[2];
 
     // Back-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels, cellIndices) == true)
     {
       MMQuad quad(vertexIndices, quadLabels);
       m_quads.push_back(quad);
     }
 
     // Left-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices, quadLabels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices, quadLabels, cellIndices) == true)
     {
       MMQuad quad(vertexIndices, quadLabels);
       m_quads.push_back(quad);
     }
 
     // Left-back edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices, quadLabels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices, quadLabels, cellIndices) == true)
     {
       MMQuad quad(vertexIndices, quadLabels);
       m_quads.push_back(quad);

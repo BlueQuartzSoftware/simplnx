@@ -18,15 +18,15 @@
 MMSurfaceNet::MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3])
 : m_cellMap(nullptr)
 {
-  if(m_cellMap != NULL)
-    delete m_cellMap;
   m_cellMap = new MMCellMap(labels, arraySize, voxelSize);
 }
 MMSurfaceNet::~MMSurfaceNet()
 {
   // Delete cellMap if it exists
   if(m_cellMap)
+  {
     delete m_cellMap;
+  }
 }
 
 // Surface smoothing (relaxation)
@@ -46,6 +46,9 @@ void MMSurfaceNet::reset()
 std::vector<int> MMSurfaceNet::labels()
 {
   std::vector<int> labels;
+  std::array<int32_t, 3> cellIndices = {0, 0, 0};
+  std::array<ptrdiff_t, 2> cellDataIndex = {0, 0};
+
   if(m_cellMap != nullptr)
   {
     // Find the unique material labels
@@ -56,21 +59,21 @@ std::vector<int> MMSurfaceNet::labels()
       int32_t quadLabels[2];
 
       // Back-bottom edge
-      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)
+      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels, cellIndices) == true)
       {
         labelSet.insert((int)quadLabels[0]);
         labelSet.insert((int)quadLabels[1]);
       }
 
       // Left-bottom edge
-      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices, quadLabels) == true)
+      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices, quadLabels, cellIndices) == true)
       {
         labelSet.insert(quadLabels[0]);
         labelSet.insert(quadLabels[1]);
       }
 
       // Left-back edge
-      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices, quadLabels) == true)
+      if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices, quadLabels, cellIndices) == true)
       {
         labelSet.insert(quadLabels[0]);
         labelSet.insert(quadLabels[1]);
