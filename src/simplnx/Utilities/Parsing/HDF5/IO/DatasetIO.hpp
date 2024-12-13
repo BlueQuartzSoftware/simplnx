@@ -492,6 +492,23 @@ protected:
 private:
 };
 
+extern template std::vector<int8_t> DatasetIO::readAsVector() const;
+extern template std::vector<int16_t> DatasetIO::readAsVector() const;
+extern template std::vector<int32_t> DatasetIO::readAsVector() const;
+extern template std::vector<int64_t> DatasetIO::readAsVector() const;
+extern template std::vector<uint8_t> DatasetIO::readAsVector() const;
+extern template std::vector<uint16_t> DatasetIO::readAsVector() const;
+extern template std::vector<uint32_t> DatasetIO::readAsVector() const;
+extern template std::vector<uint64_t> DatasetIO::readAsVector() const;
+#ifdef __APPLE__
+extern template std::vector<usize> DatasetIO::readAsVector() const;
+#endif
+extern template std::vector<float> DatasetIO::readAsVector() const;
+extern template std::vector<double> DatasetIO::readAsVector() const;
+#ifdef _WIN32
+extern template std::vector<bool> DatasetIO::readAsVector() const;
+#endif
+
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&) const;
@@ -502,6 +519,9 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&) const;
+#ifdef _WIN32
+extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&) const;
+#endif
 
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
@@ -513,6 +533,9 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+#ifdef _WIN32
+extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+#endif
 
 #if 0
 extern template nx::core::Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const usize>, nonstd::span<const usize>) const;
@@ -539,6 +562,9 @@ extern template nx::core::Result<> DatasetIO::writeSpan<uint32_t>(const DimsType
 extern template nx::core::Result<> DatasetIO::writeSpan<uint64_t>(const DimsType&, nonstd::span<const uint64_t>);
 extern template nx::core::Result<> DatasetIO::writeSpan<float>(const DimsType&, nonstd::span<const float>);
 extern template nx::core::Result<> DatasetIO::writeSpan<double>(const DimsType&, nonstd::span<const double>);
+#ifdef _WIN32
+extern template nx::core::Result<> DatasetIO::writeSpan<bool>(const DimsType&, nonstd::span<const bool>);
+#endif
 
 extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int8_t>(const DimsType&, const DimsType&) const;
 extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<int16_t>(const DimsType&, const DimsType&) const;
@@ -552,6 +578,9 @@ extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<float>(con
 extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<double>(const DimsType&, const DimsType&) const;
 extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<bool>(const DimsType&, const DimsType&) const;
 extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<char>(const DimsType&, const DimsType&) const;
+#ifdef _WIN32
+extern template Result<ChunkedDataInfo> DatasetIO::initChunkedDataset<bool>(const DimsType&, const DimsType&) const;
+#endif
 
 extern template nx::core::Result<> DatasetIO::readChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int8_t>, const DimsType&, nonstd::span<const usize>) const;
 extern template nx::core::Result<> DatasetIO::readChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<int16_t>, const DimsType&, nonstd::span<const usize>) const;
@@ -564,6 +593,9 @@ extern template nx::core::Result<> DatasetIO::readChunk<uint64_t>(const ChunkedD
 extern template nx::core::Result<> DatasetIO::readChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<float>, const DimsType&, nonstd::span<const usize>) const;
 extern template nx::core::Result<> DatasetIO::readChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<double>, const DimsType&, nonstd::span<const usize>) const;
 extern template nx::core::Result<> DatasetIO::readChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<char>, const DimsType&, nonstd::span<const usize>) const;
+#ifdef _WIN32
+extern template nx::core::Result<> DatasetIO::readChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<bool>, const DimsType&, nonstd::span<const usize>) const;
+#endif
 
 extern template nx::core::Result<> DatasetIO::writeChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const usize>);
 extern template nx::core::Result<> DatasetIO::writeChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const usize>);
@@ -576,4 +608,7 @@ extern template nx::core::Result<> DatasetIO::writeChunk<uint64_t>(const Chunked
 extern template nx::core::Result<> DatasetIO::writeChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const usize>);
 extern template nx::core::Result<> DatasetIO::writeChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const usize>);
 extern template nx::core::Result<> DatasetIO::writeChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const usize>);
+#ifdef _WIN32
+extern template nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const usize>);
+#endif
 } // namespace nx::core::HDF5
