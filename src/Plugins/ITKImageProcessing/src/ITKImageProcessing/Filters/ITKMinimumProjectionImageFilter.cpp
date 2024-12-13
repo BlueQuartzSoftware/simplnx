@@ -25,6 +25,9 @@ template <class PixelT>
 using FilterOutputTypeUI8 = uint8;
 
 template <class PixelT>
+using FilterOutputTypeI16 = int16;
+
+template <class PixelT>
 using FilterOutputTypeUI16 = uint16;
 
 template <class PixelT>
@@ -150,6 +153,11 @@ IFilter::PreflightResult ITKMinimumProjectionImageFilter::preflightImpl(const Da
         ITK::DataCheck<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputTypeUI8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
     break;
   }
+  case DataType::int16: {
+    helperOutputActions =
+        ITK::DataCheck<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputTypeI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    break;
+  }
   case DataType::uint16: {
     helperOutputActions =
         ITK::DataCheck<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -161,8 +169,6 @@ IFilter::PreflightResult ITKMinimumProjectionImageFilter::preflightImpl(const Da
     break;
   }
   case DataType::int8:
-    [[fallthrough]];
-  case DataType::int16:
     [[fallthrough]];
   case DataType::int32:
     [[fallthrough]];
@@ -223,6 +229,11 @@ Result<> ITKMinimumProjectionImageFilter::executeImpl(DataStructure& dataStructu
                                                                                                                                        outputArrayPath, itkFunctor, shouldCancel);
     break;
   }
+  case DataType::int16: {
+    result = ITK::Execute<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputTypeI16>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                       outputArrayPath, itkFunctor, shouldCancel);
+    break;
+  }
   case DataType::uint16: {
     result = ITK::Execute<cxITKMinimumProjectionImageFilter::ArrayOptionsType, cxITKMinimumProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                         outputArrayPath, itkFunctor, shouldCancel);
@@ -234,8 +245,6 @@ Result<> ITKMinimumProjectionImageFilter::executeImpl(DataStructure& dataStructu
     break;
   }
   case DataType::int8:
-    [[fallthrough]];
-  case DataType::int16:
     [[fallthrough]];
   case DataType::int32:
     [[fallthrough]];

@@ -28,6 +28,9 @@ template <class PixelT>
 using FilterOutputTypeUI8 = uint8;
 
 template <class PixelT>
+using FilterOutputTypeI16 = int16;
+
+template <class PixelT>
 using FilterOutputTypeUI16 = uint16;
 
 template <class PixelT>
@@ -153,6 +156,11 @@ IFilter::PreflightResult ITKMedianProjectionImageFilter::preflightImpl(const Dat
         ITK::DataCheck<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputTypeUI8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
     break;
   }
+  case DataType::int16: {
+    helperOutputActions =
+        ITK::DataCheck<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputTypeI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    break;
+  }
   case DataType::uint16: {
     helperOutputActions =
         ITK::DataCheck<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
@@ -164,8 +172,6 @@ IFilter::PreflightResult ITKMedianProjectionImageFilter::preflightImpl(const Dat
     break;
   }
   case DataType::int8:
-    [[fallthrough]];
-  case DataType::int16:
     [[fallthrough]];
   case DataType::int32:
     [[fallthrough]];
@@ -227,6 +233,11 @@ Result<> ITKMedianProjectionImageFilter::executeImpl(DataStructure& dataStructur
                                                                                                                                      itkFunctor, shouldCancel);
     break;
   }
+  case DataType::int16: {
+    result = ITK::Execute<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputTypeI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+                                                                                                                                     itkFunctor, shouldCancel);
+    break;
+  }
   case DataType::uint16: {
     result = ITK::Execute<cxITKMedianProjectionImageFilter::ArrayOptionsType, cxITKMedianProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                                       itkFunctor, shouldCancel);
@@ -238,8 +249,6 @@ Result<> ITKMedianProjectionImageFilter::executeImpl(DataStructure& dataStructur
     break;
   }
   case DataType::int8:
-    [[fallthrough]];
-  case DataType::int16:
     [[fallthrough]];
   case DataType::int32:
     [[fallthrough]];
