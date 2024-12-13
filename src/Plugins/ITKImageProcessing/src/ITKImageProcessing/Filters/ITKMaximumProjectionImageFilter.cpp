@@ -2,6 +2,8 @@
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -18,8 +20,15 @@ namespace cxITKMaximumProjectionImageFilter
 {
 using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 // VectorPixelIDTypeList;
+
 template <class PixelT>
-using FilterOutputType = float;
+using FilterOutputTypeUI8 = uint8;
+
+template <class PixelT>
+using FilterOutputTypeUI16 = uint16;
+
+template <class PixelT>
+using FilterOutputTypeF32 = float32;
 
 struct ITKMaximumProjectionImageFilterFunctor
 {
@@ -132,8 +141,49 @@ IFilter::PreflightResult ITKMaximumProjectionImageFilter::preflightImpl(const Da
     outputArrayPath = outputGeomPath.createChildPath(originalGeometry.getCellDataPath().getTargetName()).createChildPath(outputArrayName);
   }
 
-  Result<OutputActions> helperOutputActions =
-      ITK::DataCheck<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> helperOutputActions = {};
+  DataType type = dataStructure.getDataAs<IDataArray>(selectedInputArray)->getDataType();
+  switch(type)
+  {
+  case DataType::uint8: {
+    helperOutputActions =
+        ITK::DataCheck<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeUI8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    break;
+  }
+  case DataType::uint16: {
+    helperOutputActions =
+        ITK::DataCheck<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    break;
+  }
+  case DataType::float32: {
+    helperOutputActions =
+        ITK::DataCheck<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeF32>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    break;
+  }
+  case DataType::int8:
+    [[fallthrough]];
+  case DataType::int16:
+    [[fallthrough]];
+  case DataType::int32:
+    [[fallthrough]];
+  case DataType::uint32:
+    [[fallthrough]];
+  case DataType::int64:
+    [[fallthrough]];
+  case DataType::uint64: {
+    [[fallthrough]];
+  }
+  case DataType::float64: {
+    [[fallthrough]];
+  }
+  case DataType::boolean: {
+    return MakePreflightErrorResult(-76600, fmt::format("Input {} type is not currently supported. Please reach out to devs if you have a use case.", DataTypeToString(type)));
+  }
+  }
+  if(helperOutputActions.invalid())
+  {
+    return {std::move(helperOutputActions)};
+  }
 
   // Consolidate actions
   resultOutputActions.value().actions.insert(resultOutputActions.value().actions.end(), helperOutputActions.value().actions.begin(), helperOutputActions.value().actions.end());
@@ -164,8 +214,45 @@ Result<> ITKMaximumProjectionImageFilter::executeImpl(DataStructure& dataStructu
 
   const cxITKMaximumProjectionImageFilter::ITKMaximumProjectionImageFilterFunctor itkFunctor = {projectionDimension};
 
-  auto result = ITK::Execute<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath,
+  Result<> result = {};
+  DataType type = dataStructure.getDataAs<IDataArray>(selectedInputArray)->getDataType();
+  switch(type)
+  {
+  case DataType::uint8: {
+    result = ITK::Execute<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeUI8>(dataStructure, selectedInputArray, imageGeomPath,
                                                                                                                                        outputArrayPath, itkFunctor, shouldCancel);
+    break;
+  }
+  case DataType::uint16: {
+    result = ITK::Execute<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeUI16>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                        outputArrayPath, itkFunctor, shouldCancel);
+    break;
+  }
+  case DataType::float32: {
+    result = ITK::Execute<cxITKMaximumProjectionImageFilter::ArrayOptionsType, cxITKMaximumProjectionImageFilter::FilterOutputTypeF32>(dataStructure, selectedInputArray, imageGeomPath,
+                                                                                                                                       outputArrayPath, itkFunctor, shouldCancel);
+    break;
+  }
+  case DataType::int8:
+    [[fallthrough]];
+  case DataType::int16:
+    [[fallthrough]];
+  case DataType::int32:
+    [[fallthrough]];
+  case DataType::uint32:
+    [[fallthrough]];
+  case DataType::int64:
+    [[fallthrough]];
+  case DataType::uint64: {
+    [[fallthrough]];
+  }
+  case DataType::float64: {
+    [[fallthrough]];
+  }
+  case DataType::boolean: {
+    return MakeErrorResult(-76601, fmt::format("Input {} type is not currently supported. Please reach out to devs if you have a use case.", DataTypeToString(type)));
+  }
+  }
   if(result.invalid())
   {
     return result;
