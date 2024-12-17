@@ -8,6 +8,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr uint64 k_FullRange = 0;
+constexpr uint64 k_UserDefinedRange = 1;
 constexpr float32 k_PartitionEdgePadding = 0.000001;
 const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
 } // namespace
@@ -464,141 +466,13 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
   }
 
   // adjust sectioning range if user selected a specific range - check that user range is within actual range
-  if(sliceRange == 1)
+  if(sliceRange == k_UserDefinedRange)
   {
-    // if(m_InputValues->Zstart > minDim)
-    {
-      minDim = zStart;
-    }
-    // if(m_InputValues->Zend < maxDim)
-    {
-      maxDim = zEnd;
-    }
+    minDim = zStart;
+    maxDim = zEnd;
   }
-  // TODO: Is this still correct? Why have the subtraction at all?
-  const auto numberOfSlices = static_cast<usize>((maxDim - minDim) / sliceResolution) + 1;
-  // const auto numberOfSlices = static_cast<usize>((maxDim - minDim) / m_InputValues->SliceResolution) + 1;
-  return numberOfSlices;
+  return static_cast<usize>((maxDim - minDim) / sliceResolution) + 1;
 }
-#if 0
-GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeometry2(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
-                                                                                     float32 zEnd, float32 sliceResolution, AbstractDataStore<int32>* triRegionIdPtr)
-{
-  using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-  using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
-
-  // geometry will be rotated so that the sectioning direction is always 001 before rotating back
-  std::array<float32, 3> n = {0.0f, 0.0f, 1.0f};
-
-  TriStore& tris = triangle.getFaces()->getDataStoreRef();
-  VertsStore& triVerts = triangle.getVertices()->getDataStoreRef();
-  usize numTris = triangle.getNumberOfFaces();
-  usize numTriVerts = triangle.getNumberOfVertices();
-
-  // determine bounds and number of slices needed for CAD geometry
-  nx::core::Point3Df q = {0.0f, 0.0f, 0.0f};
-  nx::core::Point3Df r = {0.0f, 0.0f, 0.0f};
-  nx::core::Point3Df p = {0.0f, 0.0f, 0.0f};
-  nx::core::Point3Df corner = {0.0f, 0.0f, 0.0f};
-  float32 d = 0;
-  float32 minZValue = std::numeric_limits<float32>::max();
-  float32 maxZValue = -minZValue;
-  usize numberOfSlices = determineBoundsAndNumSlices(minZValue, maxZValue, numTris, tris, triVerts, sliceRange, zStart, zEnd, sliceResolution);
-  const auto minSlice = static_cast<int64>(minZValue / sliceResolution);
-  const auto maxSlice = static_cast<int64>(maxZValue / sliceResolution);
-
-  std::vector<float32> slicedVerts;
-  std::vector<int32> sliceIds;
-  std::vector<int32> regionIds;
-
-  int32 edgeCounter = 0;
-  for(usize triIdx = 0; triIdx < numTris; triIdx++)
-  {
-    int32 regionId = 0;
-    // get regionId of this triangle (if they are available)
-    if(nullptr != triRegionIdPtr)
-    {
-      regionId = triRegionIdPtr->operator[](triIdx);
-    }
-
-    // determine which slices would hit the triangle
-
-    // 1: Find the min and max z vertex value
-    float32 zValue0 = triVerts[3 * tris[3 * triIdx + 0] + 2];
-    float32 zValue1 = triVerts[3 * tris[3 * triIdx + 1] + 2];
-    float32 zValue2 = triVerts[3 * tris[3 * triIdx + 2] + 2];
-    float minCurrentTriVertexZValue = std::min(std::min(zValue0, zValue1), zValue2);
-    float maxCurrentTriVertexZValue = std::max(std::max(zValue0, zValue1), zValue2);
-
-    // 2: Check if this triangle would hit _any_ of the slices
-    if(minCurrentTriVertexZValue > maxZValue || maxCurrentTriVertexZValue < minZValue)
-    {
-      continue;
-    }
-
-    // 3: Clamp the current triangle's min and max z vertex value to be within the global z min and max
-    if(minCurrentTriVertexZValue < minZValue)
-    {
-      minCurrentTriVertexZValue = minZValue;
-    }
-    if(maxCurrentTriVertexZValue > maxZValue)
-    {
-      maxCurrentTriVertexZValue = maxZValue;
-    }
-
-    // 4: Compute the first and last slice planes and clamp to the min and max slice
-    auto firstSlice = static_cast<int64>(minCurrentTriVertexZValue / sliceResolution);
-    auto lastSlice = static_cast<int64>(maxCurrentTriVertexZValue / sliceResolution);
-    if(firstSlice < minSlice)
-    {
-      firstSlice = minSlice;
-    }
-    if(lastSlice > maxSlice)
-    {
-      lastSlice = maxSlice;
-    }
-
-    std::array<Point3Df, 3> vertCoords;
-    triangle.getFaceCoordinates(triIdx, vertCoords);
-    auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
-
-    for(int64 j = firstSlice; j <= lastSlice; j++)
-    {
-      d = (sliceResolution * static_cast<float32>(j));
-
-      std::array<nx::core::Point3Df, 3> faceVertices;
-      triangle.getFaceCoordinates(triIdx, faceVertices);
-      // Define a plane with a normal vector and a point on the plane
-      Point3Df planeNormal(0.0f, 0.0f, 1.0f); // Plane normal pointing along +Z
-      Point3Df pointOnPlane(0.0f, 0.0f, d);   // Plane passes through current Z Plane
-
-      // Create the plane
-      slice_helper::Plane plane(planeNormal, pointOnPlane);
-      // Compute the intersection
-      slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane);
-      if(intersectionEdge.valid)
-      {
-        slicedVerts.push_back(intersectionEdge.start[0]);
-        slicedVerts.push_back(intersectionEdge.start[1]);
-        slicedVerts.push_back(intersectionEdge.start[2]);
-
-        slicedVerts.push_back(intersectionEdge.end[0]);
-        slicedVerts.push_back(intersectionEdge.end[1]);
-        slicedVerts.push_back(intersectionEdge.end[2]);
-
-        sliceIds.push_back(j - firstSlice);
-        if(nullptr != triRegionIdPtr)
-        {
-          regionIds.push_back(regionId);
-        }
-        edgeCounter++;
-      }
-    }
-  }
-
-  return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
-}
-#endif
 
 // ----------------------------------------------------------------------------
 //
@@ -617,7 +491,7 @@ inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, Ve
 // ----------------------------------------------------------------------------
 //
 GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeometry(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
-                                                                                    float32 zEnd, float32 sliceResolution, AbstractDataStore<int32>* triRegionIdPtr)
+                                                                                    float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
 {
   // Get the Abstract Data Store Classes
   TriStore& triEdgeStore = triangle.getFaces()->getDataStoreRef();
@@ -628,7 +502,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   float32 d = 0;
   float32 minZValue = std::numeric_limits<float32>::max();
   float32 maxZValue = -minZValue;
-  usize numberOfSlices = determineBoundsAndNumSlices(minZValue, maxZValue, numTris, triEdgeStore, triVertStore, sliceRange, zStart, zEnd, sliceResolution);
+  usize numberOfSlices = determineBoundsAndNumSlices(minZValue, maxZValue, numTris, triEdgeStore, triVertStore, sliceRange, zStart, zEnd, sliceSpacing);
 
   std::vector<float32> slicedVerts;
   std::vector<int32> sliceIds;
@@ -637,8 +511,12 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   int32 edgeCounter = 0;
   int32 sliceIndex = 0;
   // Loop over each slice plane
-  for(float zValue = zStart; zValue <= zEnd; zValue = zValue + sliceResolution)
+  for(float zValue = zStart; zValue <= zEnd; zValue = zValue + sliceSpacing)
   {
+    if(shouldCancel)
+    {
+      break;
+    }
     d = zValue;
 
     // Define a plane with a normal vector and a point on the plane
