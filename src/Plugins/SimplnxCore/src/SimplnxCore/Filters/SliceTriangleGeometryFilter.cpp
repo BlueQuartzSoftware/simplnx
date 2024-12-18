@@ -63,8 +63,8 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SliceRange_Key, "Slice Range", "Type of slice range to use, either Full Range or User Defined Range", 0,
                                                                     ChoicesParameter::Choices{"Full Range", "User Defined Range"}));
-  params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value. Only needed for 'User Defined Range'", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value. Only needed for 'User Defined Range'", 0.0f));
   params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
@@ -88,7 +88,7 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_HaveRegionIds_Key, k_RegionIdArrayPath_Key, true);
 
-  params.linkParameters(k_SliceRange_Key, k_Zstart_Key, slice_triangle_geometry::constants::k_FullRange);
+  params.linkParameters(k_SliceRange_Key, k_Zstart_Key, slice_triangle_geometry::constants::k_UserDefinedRange);
   params.linkParameters(k_SliceRange_Key, k_Zend_Key, slice_triangle_geometry::constants::k_UserDefinedRange);
   return params;
 }

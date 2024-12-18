@@ -327,7 +327,7 @@ struct PointInfo
     {
       location = 1; // Above the plane
     }
-    else if(SignedDistance < EPSILON)
+    else if(SignedDistance < -EPSILON)
     {
       location = 2; // Below the plane
     }
@@ -380,41 +380,45 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     return e.start + (e.end - e.start) * t; // Return the interpolated point
   };
 
-  // Handle cases where only one intersection point is found (vertex lies on plane)
-  // Find the vertex that lies on the plane
-
-  if(p0.onPlane() && zeroCount == 1)
-  {
-    return {v0, v0};
-  }
-  else if(p1.onPlane() && zeroCount == 1)
-  {
-    return {v1, v1};
-  }
-  else if(p2.onPlane() && zeroCount == 1)
-  {
-    return {v2, v2};
-  }
-
-  // Check edges for coincidence with plane
-  if(p0.onPlane() && p1.onPlane())
-  {
-    return {v0, v1};
-  }
-  if(p1.onPlane() && p2.onPlane())
-  {
-    return {v1, v2};
-  }
-  if(p0.onPlane() && p2.onPlane())
-  {
-    return {v0, v2};
-  }
-
   // Handle case where the triangle lies entirely on the plane
   if(zeroCount == 3)
   {
     // Return any edge of the triangle
+    //    return {v0, v1};
+    return {}; // Return invalid
+  }
+
+  // Handle cases where only one intersection point is found (vertex lies on plane)
+  // Find the vertex that lies on the plane
+  if(zeroCount == 1)
+  {
+    return {};
+  }
+  //  if(p0.onPlane() && zeroCount == 1)
+  //  {
+  //    return {v0, v0};
+  //  }
+  //  else if(p1.onPlane() && zeroCount == 1)
+  //  {
+  //    return {v1, v1};
+  //  }
+  //  else if(p2.onPlane() && zeroCount == 1)
+  //  {
+  //    return {v2, v2};
+  //  }
+
+  // Check edges for coincidence with plane
+  if(p0.onPlane() && p1.onPlane() && zeroCount == 2)
+  {
     return {v0, v1};
+  }
+  if(p1.onPlane() && p2.onPlane() && zeroCount == 2)
+  {
+    return {v1, v2};
+  }
+  if(p0.onPlane() && p2.onPlane() && zeroCount == 2)
+  {
+    return {v0, v2};
   }
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
