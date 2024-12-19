@@ -72,7 +72,7 @@ class WriteAbaqusFile:
     params = nx.Parameters()
 
     params.insert(params.Separator("Input Parameters"))
-    params.insert(nx.GeometrySelectionParameter(WriteAbaqusFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the ABAQUS file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
+    params.insert(nx.GeometrySelectionParameter(WriteAbaqusFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the ABAQUS file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Vertex, nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
 
     params.insert(params.Separator("Output Parameters"))
     params.insert(nx.FileSystemPathParameter(WriteAbaqusFile.OUTPUT_FILE_PATH_KEY, 'Output File (.inp)', 'The output file that contains the specified geometry as a mesh.', '', extensions_type={'.inp'}, path_type=nx.FileSystemPathParameter.PathType.OutputFile))
@@ -108,4 +108,5 @@ class WriteAbaqusFile:
     input_geometry_path: nx.DataPath = args[WriteAbaqusFile.INPUT_GEOMETRY_KEY]
     output_file_path: Path = args[WriteAbaqusFile.OUTPUT_FILE_PATH_KEY]
 
-    return mu.execute_meshio_writer_filter(file_format='abaqus', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=None, point_data_array_paths=None, output_file_path=output_file_path)
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Writing geometry to Abaqus file "{str(output_file_path)}"'))
+    return mu.execute_meshio_writer_filter(file_format='abaqus', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=None, point_data_array_paths=None, output_file_path=output_file_path, message_handler=message_handler, should_cancel=should_cancel)

@@ -83,14 +83,14 @@ class ReadMeshFile:
     params = nx.Parameters()
 
     params.insert(params.Separator("Input Parameters"))
-    params.insert(nx.FileSystemPathParameter(ReadMeshFile.INPUT_FILE_PATH_KEY, 'Input File (.inp, .msh, .med, .node, .ele, .vtu)', 'The input file that contains the mesh which will be read in as a geometry.', '', extensions_type={'.inp', '.msh', '.med', '.node', '.ele', '.vtu'}, path_type=nx.FileSystemPathParameter.PathType.InputFile))
+    params.insert(nx.FileSystemPathParameter(ReadMeshFile.INPUT_FILE_PATH_KEY, 'Input File (.inp, .msh, .med, .node, .ele, .ply, .vtu)', 'The input file that contains the mesh which will be read in as a geometry.', '', extensions_type={'.inp', '.msh', '.med', '.node', '.ele', '.vtu', '.ply'}, path_type=nx.FileSystemPathParameter.PathType.InputFile))
 
     params.insert(params.Separator("Created Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadMeshFile.CREATED_GEOMETRY_PATH, 'Created Geometry', 'The path to where the geometry will be created in the data structure.', nx.DataPath()))
     params.insert(nx.DataObjectNameParameter(ReadMeshFile.VERTEX_ATTR_MATRIX_NAME, 'Vertex Attribute Matrix Name', 'The name of the vertex attribute matrix that will be created inside the geometry.', 'Vertex Data'))
-    params.insert(nx.DataObjectNameParameter(ReadMeshFile.CELL_ATTR_MATRIX_NAME, 'Cell Attribute Matrix Name', 'The name of the cell attribute matrix that will be created inside the geometry.', 'Cell Data'))
+    params.insert(nx.DataObjectNameParameter(ReadMeshFile.CELL_ATTR_MATRIX_NAME, 'Cell Attribute Matrix Name', 'The name of the cell attribute matrix that will be created inside the geometry.  This attribute matrix will only be created IF the input mesh file has cells!', 'Cell Data'))
     params.insert(nx.DataObjectNameParameter(ReadMeshFile.VERTEX_ARRAY_NAME, 'Vertex Array Name', 'The name of the vertex array that will be created inside the geometry.', 'Vertices'))
-    params.insert(nx.DataObjectNameParameter(ReadMeshFile.CELL_ARRAY_NAME, 'Cell Array Name', 'The name of the cell array that will be created inside the geometry.', 'Cells'))
+    params.insert(nx.DataObjectNameParameter(ReadMeshFile.CELL_ARRAY_NAME, 'Cell Array Name', 'The name of the cell array that will be created inside the geometry.  This array will only be created IF the input mesh file has cells!', 'Cells'))
 
     return params
 
@@ -118,17 +118,14 @@ class ReadMeshFile:
       _mesh_cache = meshio.read(str(input_file_path))
       _input_file_path_cache = input_file_path
     
-    if len(_mesh_cache.cells) == 0:
-      return nx.IFilter.PreflightResult(errors=[make_error_result(code=-3040, message=f"Mesh file '{str(input_file_path)}' does not contain a cell type.  A cell type is required to be able to create a geometry from the mesh file!")])
-
     if len(_mesh_cache.cells) > 1:
       return nx.IFilter.PreflightResult(errors=[make_error_result(code=-3041, message=f"Mesh file '{str(input_file_path)}' has more than one declared cell type.  Multiple cell types in one file are not supported.")])
     
     # Create the proper geometry
     output_actions: nx.OutputActions = nx.OutputActions()
     warnings: List[nx.Warning] = []
-    cell_type: str = _mesh_cache.cells[0].type
-    cells_array: np.ndarray = _mesh_cache.cells[0].data
+    cell_type: str = _mesh_cache.cells[0].type if len(_mesh_cache.cells) != 0 else mu.VERTEX_TYPE_STR
+    cells_array: np.ndarray = _mesh_cache.cells[0].data if len(_mesh_cache.cells) != 0 else None
     points_array: np.ndarray = _mesh_cache.points
 
     if cell_type == mu.EDGE_TYPE_STR:
@@ -141,6 +138,8 @@ class ReadMeshFile:
       output_actions.append_action(nx.CreateTetrahedralGeometryAction(created_geometry_path, cells_array.shape[0], points_array.shape[0], vertex_attr_matrix_name, cell_attr_matrix_name, vertex_array_name, cell_array_name))
     elif cell_type == mu.HEXAHEDRAL_TYPE_STR:
       output_actions.append_action(nx.CreateHexahedralGeometryAction(created_geometry_path, cells_array.shape[0], points_array.shape[0], vertex_attr_matrix_name, cell_attr_matrix_name, vertex_array_name, cell_array_name))
+    elif cell_type == mu.VERTEX_TYPE_STR:
+      output_actions.append_action(nx.CreateVertexGeometryAction(created_geometry_path, points_array.shape[0], vertex_attr_matrix_name, vertex_array_name))
     else:
       return nx.IFilter.PreflightResult(errors=[nx.Error(code=-3042, message=f"Unsupported mesh type '{cell_type}'.  Only '{mu.EDGE_TYPE_STR}', '{mu.TRIANGLE_TYPE_STR}', '{mu.QUAD_TYPE_STR}', '{mu.TETRAHEDRAL_TYPE_STR}', and '{mu.HEXAHEDRAL_TYPE_STR}' types are supported.")])
 
@@ -161,7 +160,6 @@ class ReadMeshFile:
     # Create the point data arrays
     vertex_attr_mat_path = created_geometry_path.create_child_path(vertex_attr_matrix_name)
     for point_data_array_name, point_data_array in _mesh_cache.point_data.items():
-      point_data_array = point_data_array[0]
       point_array_path = vertex_attr_mat_path.create_child_path(point_data_array_name)
       point_data_tuple_dims = [point_data_array.shape[0]]
       point_data_comp_dims = point_data_array.shape[1:]
@@ -187,23 +185,22 @@ class ReadMeshFile:
     geometry: nx.INodeGeometry1D = data_structure[created_geometry_path]
 
     # Grab the proper cells array from the geometry
+    cells_array = None
     if isinstance(geometry, nx.INodeGeometry3D):
       cells_array = geometry.polyhedra
     elif isinstance(geometry, nx.INodeGeometry2D):
       cells_array = geometry.faces
     elif isinstance(geometry, nx.INodeGeometry1D):
       cells_array = geometry.edges
-    else:
-      # This SHOULD NOT happen, but we'll check for it anyways...
-      return Result(errors=[make_error_result(code=-3042, message=f"Created geometry at path '{str(created_geometry_path)}' with type '{type(geometry).__name__}' is not a 1D, 2D, or 3D node-based geometry.")])
 
     # Copy over the vertices
     vertices_np_array = geometry.vertices.npview()
     vertices_np_array[:] = _mesh_cache.points[:]
 
     # Copy over the cells
-    cells_np_array = cells_array.npview()
-    cells_np_array[:] = _mesh_cache.cells[0].data[:]
+    if cells_array is not None:
+      cells_np_array = cells_array.npview()
+      cells_np_array[:] = _mesh_cache.cells[0].data[:]
 
     # Copy over the cell data
     cell_attr_mat_path = created_geometry_path.create_child_path(cell_attr_matrix_name)
@@ -211,14 +208,13 @@ class ReadMeshFile:
       cell_data_array = cell_data_array[0]
       cell_data_array_path = cell_attr_mat_path.create_child_path(cell_data_array_name)
       cell_data_np_array = np.squeeze(data_structure[cell_data_array_path].npview())
-      cell_data_np_array[:] = _mesh_cache.cell_data[cell_data_array_name][0][:]
+      cell_data_np_array[:] = np.squeeze(cell_data_array[:])
 
     # Copy over the point data
     vertex_attr_mat_path = created_geometry_path.create_child_path(vertex_attr_matrix_name)
     for point_data_array_name, point_data_array in _mesh_cache.point_data.items():
-      point_data_array = point_data_array[0]
       point_data_array_path = vertex_attr_mat_path.create_child_path(point_data_array_name)
       point_data_np_array = np.squeeze(data_structure[point_data_array_path].npview())
-      point_data_np_array[:] = _mesh_cache.point_data[point_data_array_name][0][:]
+      point_data_np_array[:] = np.squeeze(point_data_array[:])
 
     return nx.Result()

@@ -1,6 +1,7 @@
 from typing import List
 from pathlib import Path
 import simplnx as nx
+import numpy as np
 import meshio
 from .utilities import meshio_utilities as mu
 
@@ -75,7 +76,7 @@ class WriteGmshFile:
     params = nx.Parameters()
 
     params.insert(params.Separator("Input Parameters"))
-    params.insert(nx.GeometrySelectionParameter(WriteGmshFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the ANSYS file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
+    params.insert(nx.GeometrySelectionParameter(WriteGmshFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the ANSYS file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Vertex, nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
     params.insert(nx.MultiArraySelectionParameter(WriteGmshFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the ANSYS file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
     params.insert(nx.MultiArraySelectionParameter(WriteGmshFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the ANSYS file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
 
@@ -117,4 +118,16 @@ class WriteGmshFile:
     cell_data_array_paths = args[WriteGmshFile.CELL_DATA_ARRAY_PATHS_KEY]
     point_data_array_paths = args[WriteGmshFile.POINT_DATA_ARRAY_PATHS_KEY]
 
-    return mu.execute_meshio_writer_filter(file_format='gmsh', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path)
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Writing geometry to Gmsh file "{str(output_file_path)}"'))
+    mesh, result = mu.create_mesh(file_format='gmsh', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path, message_handler=message_handler, should_cancel=should_cancel)
+    if result.invalid():
+        return result
+    
+    # Write the dim_tags for the point data
+    geom = data_structure[input_geometry_path]
+    mesh.point_data["gmsh:dim_tags"] = np.full((geom.vertices.tdims[0], 2), [3, 0], dtype=np.int64)
+
+    # Output the mesh
+    meshio.write(output_file_path, mesh, file_format='gmsh')
+
+    return nx.Result()

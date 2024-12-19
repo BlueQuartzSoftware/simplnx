@@ -91,7 +91,7 @@ class WriteVtuFile:
     params = nx.Parameters()
 
     params.insert(params.Separator("Input Parameters"))
-    params.insert(nx.GeometrySelectionParameter(WriteVtuFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the VTK file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
+    params.insert(nx.GeometrySelectionParameter(WriteVtuFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the VTK file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Vertex, nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
     params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
     params.insert(nx.MultiArraySelectionParameter(WriteVtuFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the VTK file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
 
@@ -135,4 +135,5 @@ class WriteVtuFile:
     cell_data_array_paths = args[WriteVtuFile.CELL_DATA_ARRAY_PATHS_KEY]
     point_data_array_paths = args[WriteVtuFile.POINT_DATA_ARRAY_PATHS_KEY]
 
-    return mu.execute_meshio_writer_filter(file_format='vtu', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path, remove_array_name_spaces=True, binary=True, compression=self.compression_type_values[compression_type])
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Writing geometry to Vtu file "{str(output_file_path)}"'))
+    return mu.execute_meshio_writer_filter(file_format='vtu', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path, message_handler=message_handler, should_cancel=should_cancel, remove_array_name_spaces=True, binary=True, compression=self.compression_type_values[compression_type])

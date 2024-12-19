@@ -117,4 +117,6 @@ class WriteTetGenFile:
     cell_data_array_paths = args[WriteTetGenFile.CELL_DATA_ARRAY_PATHS_KEY]
     point_data_array_paths = args[WriteTetGenFile.POINT_DATA_ARRAY_PATHS_KEY]
 
-    return mu.execute_meshio_writer_filter(file_format='tetgen', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path)
+    no_suffix_path = output_file_path.with_suffix("")
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Writing geometry to TetGen files "{str(no_suffix_path.with_suffix(".node"))}" and "{str(no_suffix_path.with_suffix(".ele"))}"'))
+    return mu.execute_meshio_writer_filter(file_format='tetgen', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path, message_handler=message_handler, should_cancel=should_cancel)

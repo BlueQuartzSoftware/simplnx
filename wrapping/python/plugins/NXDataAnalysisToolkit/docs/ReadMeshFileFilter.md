@@ -11,6 +11,7 @@ The following mesh formats are supported by this filter:
 + Ansys (.msh)
 + Gmsh (.msh)
 + Med (.med)
++ PLY (.ply)
 + TetGen (.node/.ele)
 + VTK (.vtu)
 

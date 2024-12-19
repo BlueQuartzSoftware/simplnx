@@ -75,7 +75,7 @@ class WriteMedFile:
     params = nx.Parameters()
 
     params.insert(params.Separator("Input Parameters"))
-    params.insert(nx.GeometrySelectionParameter(WriteMedFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the MED file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
+    params.insert(nx.GeometrySelectionParameter(WriteMedFile.INPUT_GEOMETRY_KEY, 'Input Geometry', 'The input geometry that will be written to the MED file.', nx.DataPath(), allowed_types={nx.IGeometry.Type.Vertex, nx.IGeometry.Type.Edge, nx.IGeometry.Type.Triangle, nx.IGeometry.Type.Quad, nx.IGeometry.Type.Tetrahedral, nx.IGeometry.Type.Hexahedral}))
     params.insert(nx.MultiArraySelectionParameter(WriteMedFile.CELL_DATA_ARRAY_PATHS_KEY, 'Cell Data Arrays To Write', 'The cell data arrays to write to the MED file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
     params.insert(nx.MultiArraySelectionParameter(WriteMedFile.POINT_DATA_ARRAY_PATHS_KEY, 'Point Data Arrays To Write', 'The point data arrays to write to the MED file.', [], allowed_types={nx.IArray.ArrayType.DataArray}, allowed_data_types=nx.get_all_data_types()))
 
@@ -117,4 +117,5 @@ class WriteMedFile:
     cell_data_array_paths = args[WriteMedFile.CELL_DATA_ARRAY_PATHS_KEY]
     point_data_array_paths = args[WriteMedFile.POINT_DATA_ARRAY_PATHS_KEY]
 
-    return mu.execute_meshio_writer_filter(file_format='med', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path)
+    message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'Writing geometry to Med file "{str(output_file_path)}"'))
+    return mu.execute_meshio_writer_filter(file_format='med', data_structure=data_structure, input_geometry_path=input_geometry_path, cell_data_array_paths=cell_data_array_paths, point_data_array_paths=point_data_array_paths, output_file_path=output_file_path, message_handler=message_handler, should_cancel=should_cancel)
