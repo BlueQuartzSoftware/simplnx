@@ -46,7 +46,7 @@ The user can select the tuple dimensions that will be applied to the imported ar
 
 ![Input Text File Field](Images/Read_CSV_8.png)
 
-The imported arrays can be stored in either an existing attribute matrix or a new attribute matrix can be created.
+The imported arrays can be stored in an existing attribute matrix or data group, or a new attribute matrix can be created.
 
 ![Input Text File Field](Images/Read_CSV_9.png)
 

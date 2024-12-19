@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
 #include "simplnx/Utilities/FileUtilities.hpp"
@@ -87,7 +88,7 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
 {
   if(groupPath.empty())
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_EXISTING_DG), "'Existing Attribute Matrix' - Data path is empty.")};
+    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::EMPTY_EXISTING_DG), "'Existing Data Group or Attribute Matrix' - Data path is empty.")};
   }
 
   const auto& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(groupPath);
@@ -426,10 +427,11 @@ Parameters ReadCSVFileFilter::parameters() const
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
 
   params.insertSeparator(Parameters::Separator{"Attribute Matrix Options"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Attribute Matrix", "Store the imported CSV data arrays in an existing attribute matrix.", false));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedAttributeMatrixPath_Key, "Existing Attribute Matrix",
-                                                                    "Store the imported CSV data arrays in this existing attribute matrix.", DataPath{}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Data Group or Attribute Matrix",
+                                                                 "Store the imported CSV data arrays in an existing data group or attribute matrix.", false));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedAttributeMatrixPath_Key, "Existing Data Group or Attribute Matrix",
+                                                              "Store the imported CSV data arrays in an existing data group or attribute matrix.", DataPath{},
+                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Attribute Matrix", "Store the imported CSV data arrays in a newly created attribute matrix.",
                                                              DataPath{{"Imported Data"}}));
 
@@ -457,8 +459,8 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
                                                           const std::atomic_bool& shouldCancel) const
 {
   auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
-  auto useExistingAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  auto selectedAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
+  auto useExistingGroupOrAM = filterArgs.value<bool>(k_UseExistingGroup_Key);
+  auto selectedGroupOrAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
   auto createdDataAM = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
@@ -601,7 +603,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has 0 total tuples.  At least 1 tuple is required.", tupleDimsStr, tupleTotal, totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
   }
-  else if(tupleTotal > totalImportedLines && !useExistingAM)
+  else if(tupleTotal > totalImportedLines && !useExistingGroupOrAM)
   {
     std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} total tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr,
@@ -611,14 +613,14 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
   // Validate the existing/created group
   DataPath groupPath;
-  if(useExistingAM)
+  if(useExistingGroupOrAM)
   {
-    Result<OutputActions> result = validateExistingGroup(selectedAM, dataStructure, headers);
+    Result<OutputActions> result = validateExistingGroup(selectedGroupOrAM, dataStructure, headers);
     if(result.invalid())
     {
       return {std::move(result)};
     }
-    groupPath = selectedAM;
+    groupPath = selectedGroupOrAM;
   }
   else
   {
@@ -634,16 +636,19 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   // Create the arrays
   std::vector<usize> tupleDims(readCSVData.tupleDims.size());
   std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](usize d) { return d; });
-  if(useExistingAM)
+  if(useExistingGroupOrAM)
   {
-    const auto& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
-    tupleDims = am.getShape();
+    const auto* am = dataStructure.getDataAs<AttributeMatrix>(groupPath);
+    if(am != nullptr)
+    {
+      tupleDims = am->getShape();
 
-    auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+      auto totalLinesRead = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
-    std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used. The total number of lines read will be {}.",
-                                  fmt::join(readCSVData.tupleDims, "x"), fmt::join(tupleDims, "x"), totalLinesRead);
-    resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
+      std::string msg = fmt::format("The Array Tuple Dimensions ({}) will be ignored and the Existing Attribute Matrix tuple dimensions ({}) will be used. The total number of lines read will be {}.",
+                                    fmt::join(readCSVData.tupleDims, "x"), fmt::join(tupleDims, "x"), totalLinesRead);
+      resultOutputActions.warnings().push_back(Warning{to_underlying(IssueCodes::IGNORED_TUPLE_DIMS), msg});
+    }
   }
 
   for(usize i = 0; i < headers.size(); i++)
@@ -671,7 +676,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 {
   auto readCSVData = filterArgs.value<ReadCSVData>(k_ReadCSVData_Key);
   auto useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
-  auto selectedDataGroup = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
+  auto selectedDataGroupOrAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
   auto createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
@@ -691,7 +696,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   DataPath groupPath = createdDataGroup;
   if(useExistingGroup)
   {
-    groupPath = selectedDataGroup;
+    groupPath = selectedDataGroupOrAM;
   }
 
   Result<ParsersVector> parsersResult = createParsers(dataTypes, skippedArrays, groupPath, headers, dataStructure);
@@ -716,8 +721,11 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   usize numTuples = std::accumulate(readCSVData.tupleDims.cbegin(), readCSVData.tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   if(useExistingGroup)
   {
-    const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(groupPath);
-    numTuples = std::accumulate(am.getShape().cbegin(), am.getShape().cend(), static_cast<usize>(1), std::multiplies<>());
+    const AttributeMatrix* am = dataStructure.getDataAs<AttributeMatrix>(groupPath);
+    if(am != nullptr)
+    {
+      numTuples = std::accumulate(am->getShape().cbegin(), am->getShape().cend(), static_cast<usize>(1), std::multiplies<>());
+    }
   }
   usize lineNum = startImportRow;
   for(usize i = 0; i < numTuples && !in.eof(); i++)
