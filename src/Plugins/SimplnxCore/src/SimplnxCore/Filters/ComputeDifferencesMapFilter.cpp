@@ -5,7 +5,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <optional>
@@ -141,8 +140,8 @@ Parameters ComputeDifferencesMapFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_FirstInputArrayPath_Key, "First Input Array", "DataPath to the first input DataArray", DataPath{}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_SecondInputArrayPath_Key, "Second Input Array", "DataPath to the second input DataArray", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstInputArrayPath_Key, "First Input Array", "DataPath to the first input DataArray", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondInputArrayPath_Key, "Second Input Array", "DataPath to the second input DataArray", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DifferenceMapArrayPath_Key, "Difference Map", "DataPath for created Difference Map DataArray", DataPath{}));
   return params;
 }

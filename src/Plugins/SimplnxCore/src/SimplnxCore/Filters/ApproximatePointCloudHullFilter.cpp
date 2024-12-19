@@ -5,7 +5,7 @@
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
@@ -67,7 +67,8 @@ Parameters ApproximatePointCloudHullFilter::parameters() const
   params.insert(std::make_unique<UInt64Parameter>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex geometry", DataPath()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex geometry", DataPath(),
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_HullVertexGeomPath_Key, "Hull Vertex Geometry", "Path to create the hull Vertex geometry", DataPath{}));
