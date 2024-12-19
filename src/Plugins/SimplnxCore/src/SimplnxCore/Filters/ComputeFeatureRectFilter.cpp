@@ -6,7 +6,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -54,9 +53,8 @@ Parameters ComputeFeatureRectFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
-                                                              "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
+                                                                    "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayName_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
 

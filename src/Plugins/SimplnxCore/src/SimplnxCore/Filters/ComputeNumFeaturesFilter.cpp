@@ -6,7 +6,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -56,9 +55,9 @@ Parameters ComputeNumFeaturesFilter::parameters() const
                                                           DataPath({"DataContainer", "Feature Data", "Phases"}), nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
-                                                              "The path to the ensemble attribute matrix where the number of features array will be stored",
-                                                              DataPath({"DataContainer", "Ensemble Data"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
+                                                                    "The path to the ensemble attribute matrix where the number of features array will be stored",
+                                                                    DataPath({"DataContainer", "Ensemble Data"})));
 
   params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NumFeaturesArrayName_Key, "Number of Features", "The number of Features that belong to each Ensemble", "Number of Features"));

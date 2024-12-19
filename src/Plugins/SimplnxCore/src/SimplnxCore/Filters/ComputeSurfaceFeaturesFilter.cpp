@@ -1,4 +1,5 @@
 #include "ComputeSurfaceFeaturesFilter.hpp"
+#include <simplnx/Parameters/DataGroupSelectionParameter.hpp>
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -7,7 +8,6 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -239,9 +239,8 @@ Parameters ComputeSurfaceFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Cell Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
-                                                              "The path to the cell feature attribute matrix associated with the input feature ids array", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
+                                                                    "The path to the cell feature attribute matrix associated with the input feature ids array", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeaturesArrayName_Key, "Surface Features",
                                                           "The created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not", "SurfaceFeatures"));

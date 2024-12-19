@@ -6,7 +6,6 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -57,9 +56,9 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
                                                           DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
-                                                              "The path to the cell ensemble attribute matrix where the output volume fractions array will be stored",
-                                                              DataPath({"DataContainer", "Cell Ensemble Data"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
+                                                                    "The path to the cell ensemble attribute matrix where the output volume fractions array will be stored",
+                                                                    DataPath({"DataContainer", "Cell Ensemble Data"})));
   params.insertSeparator(Parameters::Separator{"Output Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VolFractionsArrayName_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", "Volume Fractions"));
 

@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -55,9 +55,9 @@ Parameters ComputeTriangleGeomCentroidsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
-                                                              "The DataPath to the AttributeMatrix that holds feature data for the faces", DataPath({"TriangleDataContainer", "Face Feature Data"}),
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
+                                                                    "The DataPath to the AttributeMatrix that holds feature data for the faces",
+                                                                    DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Calculated Centroids", "Centroid values created in the Face Feature Data", "Centroids"));
 
