@@ -175,39 +175,58 @@ void ComputeTriangleGeomShapes::findMoments()
      *  - QR Factorization is different than QR Decomposition.
      *  - QR Decomposition expresses the product of an Orthogonal Matrix (Q) and an right/upper triangular matrix (R) as a singular matrix (A).
      */
+
+    // Zero out small numbers in Cinertia: https://stackoverflow.com/a/54505281
+    Cinertia = (0.000000001 < Cinertia.array().abs()).select(Cinertia, 0.0);
+
     // TODO:
     //  - Remove Copying between processing (inline integration)
     //  - Extract real part of complexes stored in eigenvalues/vectors
     Eigen::HessenbergDecomposition<Matrix3x3> hessDecomp(Cinertia);
     Matrix3x3 hessenMatrixUpper = hessDecomp.matrixH();
 
-    Eigen::HouseholderQR<Matrix3x3> hQR(hessenMatrixUpper);
+    // It is important to maintain the FullPivHouseholderQR implementation here, it is rank preserving and most numerically stable
+    Eigen::FullPivHouseholderQR<Matrix3x3> hQR(hessenMatrixUpper);
     Matrix3x3 hqrMatrix = hQR.matrixQR();
 
     // Extract eigenvalues and eigenvectors
     Eigen::EigenSolver<Matrix3x3> eigenSolver(hqrMatrix);
 
-    // The primary axis is the largest eigenvector
+    // The primary axis is the largest eigenvalue
     Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
 
     // This is the angular velocity vector, each row represents an axial alignment (principle axis)
     Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
 
-    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
-    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
-
-    constexpr char k_BaselineAxisLabel = 'x'; // x
-    char axisLabel = 'x';
-    double primaryAxis = eigenvalues[0].real();
-    for(usize i = 1; i < eigenvalues.size(); i++)
-    {
-      if(primaryAxis < eigenvalues[i].real())
-      {
-        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
-        primaryAxis = eigenvalues[i].real();
-      }
-    }
-    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
+    /**
+     * Following section for debugging
+     */
+    //    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+    //    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
+    //
+    //    constexpr char k_BaselineAxisLabel = 'x'; // x
+    //    char axisLabel = 'x';
+    //    double primaryAxis = eigenvalues[0].real();
+    //    for(usize i = 1; i < eigenvalues.size(); i++)
+    //    {
+    //      if(primaryAxis < eigenvalues[i].real())
+    //      {
+    //        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
+    //        primaryAxis = eigenvalues[i].real();
+    //      }
+    //    }
+    //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
+    //
+    //    // Condition Number calculations from here: https://stackoverflow.com/questions/33575478/how-can-you-find-the-condition-number-in-eigen
+    //    // Calculate Condition Number from JacobiSVD
+    //    Eigen::JacobiSVD<Matrix3x3, 3> svd(hqrMatrix);
+    //    double cond = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
+    //    std::cout << "\n Condition Number from JacobiSVD: " << cond << std::endl;
+    //
+    //    // Calculate Condition Number from Norms
+    //    double condNumNorms = hqrMatrix.completeOrthogonalDecomposition().pseudoInverse().norm() * hqrMatrix.norm();
+    //
+    //    std::cout << "\n Condition Number from Norms: " << condNumNorms << std::endl;
   }
 }
 
