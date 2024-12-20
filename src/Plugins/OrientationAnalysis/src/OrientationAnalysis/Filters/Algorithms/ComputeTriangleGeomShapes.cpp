@@ -160,6 +160,54 @@ void ComputeTriangleGeomShapes::findMoments()
     m_FeatureMoments[featureId * 6 + 3] = -Cinertia(0, 1);
     m_FeatureMoments[featureId * 6 + 4] = -Cinertia(0, 2);
     m_FeatureMoments[featureId * 6 + 5] = -Cinertia(1, 2);
+
+    /**
+     * This next section finds the principle axis via eigenvalues.
+     * Paper/Lecture Notes (Page 5): https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/dd277ec654440f4c2b5b07d6c286c3fd_MIT16_07F09_Lec26.pdf
+     * Video Walkthrough [0:00-10:45]: https://www.youtube.com/watch?v=IEDniK9kmaw
+     *
+     * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
+     * which are the angular velocity vectors.
+     *
+     * Code Keynotes for reviewers:
+     *  - Hessenburg Decomposition is pre-processing to get an upper/right triangular matrix.
+     *  - This significantly reduces the iterations needed for QR Decomposition
+     *  - QR Factorization is different than QR Decomposition.
+     *  - QR Decomposition expresses the product of an Orthogonal Matrix (Q) and an right/upper triangular matrix (R) as a singular matrix (A).
+     */
+    // TODO:
+    //  - Remove Copying between processing (inline integration)
+    //  - Extract real part of complexes stored in eigenvalues/vectors
+    Eigen::HessenbergDecomposition<Matrix3x3> hessDecomp(Cinertia);
+    Matrix3x3 hessenMatrixUpper = hessDecomp.matrixH();
+
+    Eigen::HouseholderQR<Matrix3x3> hQR(hessenMatrixUpper);
+    Matrix3x3 hqrMatrix = hQR.matrixQR();
+
+    // Extract eigenvalues and eigenvectors
+    Eigen::EigenSolver<Matrix3x3> eigenSolver(hqrMatrix);
+
+    // The primary axis is the largest eigenvector
+    Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
+
+    // This is the angular velocity vector, each row represents an axial alignment (principle axis)
+    Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
+
+    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
+
+    constexpr char k_BaselineAxisLabel = 'x'; // x
+    char axisLabel = 'x';
+    double primaryAxis = eigenvalues[0].real();
+    for(usize i = 1; i < eigenvalues.size(); i++)
+    {
+      if(primaryAxis < eigenvalues[i].real())
+      {
+        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
+        primaryAxis = eigenvalues[i].real();
+      }
+    }
+    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
   }
 }
 
