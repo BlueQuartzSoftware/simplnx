@@ -71,11 +71,12 @@ def create_mesh(file_format: str, data_structure: nx.DataStructure, input_geomet
 
         # Create meshio cell_data
         if cell_data_array_paths is not None:
+            cell_data = {}
             for data_array_path in cell_data_array_paths:
                 data_array = data_structure[data_array_path]
                 if data_array.tdims != geom_cell_tdims:
                     return None, nx.Result(errors=[nx.Error(-4010, f"Cell data array '{data_array_path}' has tuple dimensions {data_array.tdims} but the input geometry requires tuple dimensions {geom_cell_tdims}.")])
-                cell_data[data_array.name.replace(' ', '') if remove_array_name_spaces else data_array.name] = np.squeeze(data_array.npview()) # Remove spaces in cell data array names (this is required for some formats like VTK)
+                cell_data[data_array.name.replace(' ', '') if remove_array_name_spaces else data_array.name] = [np.squeeze(data_array.npview()).flatten()] # Remove spaces in cell data array names (this is required for some formats like VTK)
 
     # Create meshio point_data
     point_data = {}
@@ -84,11 +85,10 @@ def create_mesh(file_format: str, data_structure: nx.DataStructure, input_geomet
             data_array = data_structure[data_array_path]
             if data_array.tdims != geom.vertices.tdims:
                 return None, nx.Result(errors=[nx.Error(-4011, f"Point data array '{data_array_path}' has tuple dimensions {data_array.tdims} but the input geometry point data requires tuple dimensions {geom.vertices.tdims}.")])
-            point_data[data_array.name.replace(' ', '') if remove_array_name_spaces else data_array.name] = np.squeeze(data_array.npview()) # Remove spaces in point data array names (this is required for some formats like VTK)
+            point_data[data_array.name.replace(' ', '') if remove_array_name_spaces else data_array.name] = [np.squeeze(data_array.npview()).flatten()] # Remove spaces in point data array names (this is required for some formats like VTK)
 
     # Create meshio Mesh
     mesh = meshio.Mesh(points=list(geom.vertices.npview().astype(np.float64)), cells=cells, cell_data=cell_data, point_data=point_data)
-
     return mesh, nx.Result()
 
 def execute_meshio_writer_filter(file_format: str, data_structure: nx.DataStructure, input_geometry_path: nx.DataPath, cell_data_array_paths: List[nx.DataPath], point_data_array_paths: List[nx.DataPath], output_file_path: Path, message_handler: nx.IFilter.MessageHandler, should_cancel: nx.AtomicBoolProxy, remove_array_name_spaces: bool = False, **write_kwargs):
