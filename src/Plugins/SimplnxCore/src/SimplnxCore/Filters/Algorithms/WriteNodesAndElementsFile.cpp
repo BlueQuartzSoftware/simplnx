@@ -1,0 +1,175 @@
+#include "WriteNodesAndElementsFile.hpp"
+
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
+
+#include <algorithm>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+using namespace nx::core;
+
+namespace
+{
+template <typename T>
+Result<> WriteFile(const fs::path& outputFilePath, const T& array, bool includeArrayHeaders, std::vector<std::string_view> arrayHeaders, bool numberRows, bool includeComponentCount)
+{
+  std::ofstream file(outputFilePath.string());
+  if(!file.is_open())
+  {
+    return MakeErrorResult(to_underlying(WriteNodesAndElementsFile::ErrorCodes::FailedToOpenOutputFile), fmt::format("Failed to open output file \"{}\".", outputFilePath.string()));
+  }
+
+  if(includeArrayHeaders)
+  {
+    file << StringUtilities::join(arrayHeaders, " ") << std::endl;
+  }
+  usize numComps = array.getNumberOfComponents();
+  for(usize i = 0; i < array.getNumberOfTuples(); i++)
+  {
+    if(numberRows)
+    {
+      file << i << " ";
+    }
+
+    if(includeComponentCount)
+    {
+      file << numComps << " ";
+    }
+
+    for(usize j = 0; j < numComps; j++)
+    {
+      file << array[i * numComps + j];
+      if(j != numComps - 1)
+      {
+        file << " ";
+      }
+    }
+    file << std::endl;
+  }
+
+  return {};
+}
+} // namespace
+
+// -----------------------------------------------------------------------------
+WriteNodesAndElementsFile::WriteNodesAndElementsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     WriteNodesAndElementsFileInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+WriteNodesAndElementsFile::~WriteNodesAndElementsFile() noexcept = default;
+
+// -----------------------------------------------------------------------------
+const std::atomic_bool& WriteNodesAndElementsFile::getCancel()
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void WriteNodesAndElementsFile::sendMessage(const std::string& message)
+{
+  m_MessageHandler(IFilter::Message::Type::Info, message);
+}
+
+// -----------------------------------------------------------------------------
+Result<> WriteNodesAndElementsFile::operator()()
+{
+  auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto geomType = iNodeGeometry.getGeomType();
+  UInt64Array* cellsArray = nullptr;
+
+  switch(geomType)
+  {
+  case IGeometry::Type::Edge: {
+    auto& geom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SelectedGeometryPath);
+    cellsArray = geom.getEdges();
+    break;
+  }
+  case IGeometry::Type::Triangle: {
+    auto& geom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->SelectedGeometryPath);
+    cellsArray = geom.getFaces();
+    break;
+  }
+  case IGeometry::Type::Quad: {
+    auto& geom = m_DataStructure.getDataRefAs<QuadGeom>(m_InputValues->SelectedGeometryPath);
+    cellsArray = geom.getFaces();
+    break;
+  }
+  case IGeometry::Type::Tetrahedral: {
+    auto& geom = m_DataStructure.getDataRefAs<TetrahedralGeom>(m_InputValues->SelectedGeometryPath);
+    cellsArray = geom.getPolyhedra();
+    break;
+  }
+  case IGeometry::Type::Hexahedral: {
+    auto& geom = m_DataStructure.getDataRefAs<HexahedralGeom>(m_InputValues->SelectedGeometryPath);
+    cellsArray = geom.getPolyhedra();
+    break;
+  }
+  case IGeometry::Type::Vertex: {
+    break;
+  }
+  case IGeometry::Type::Image:
+    return MakeErrorResult(to_underlying(ErrorCodes::UnsupportedGeometryType), fmt::format("The Image geometry type is not supported by this filter.  Please choose another geometry."));
+  case IGeometry::Type::RectGrid: {
+    return MakeErrorResult(to_underlying(ErrorCodes::UnsupportedGeometryType), fmt::format("The Rectilinear Grid geometry type is not supported by this filter.  Please choose another geometry."));
+  }
+  }
+
+  const Float32Array& vertices = iNodeGeometry.getVerticesRef();
+
+  if(m_InputValues->WriteNodeFile)
+  {
+    std::vector<std::string> arrayHeaders;
+    if(m_InputValues->NumberNodes)
+    {
+      arrayHeaders.push_back("NODE_NUM");
+    }
+    arrayHeaders.insert(arrayHeaders.end(), {"X", "Y", "Z"});
+
+    std::vector<std::string_view> arrayHeadersViews(arrayHeaders.size());
+    std::transform(arrayHeaders.begin(), arrayHeaders.end(), arrayHeadersViews.begin(), [](const std::string& s) { return std::string_view(s); });
+    auto result = WriteFile(m_InputValues->NodeFilePath, vertices, m_InputValues->IncludeNodeFileHeader, arrayHeadersViews, m_InputValues->NumberNodes, false);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  if(m_InputValues->WriteElementFile && geomType != IGeometry::Type::Vertex)
+  {
+    std::vector<std::string> arrayHeaders;
+    if(m_InputValues->NumberElements)
+    {
+      arrayHeaders.push_back("ELEMENT_NUM");
+    }
+    arrayHeaders.push_back("NUM_VERTS_IN_ELEMENT");
+    for(usize i = 0; i < cellsArray->getNumberOfComponents(); i++)
+    {
+      std::string vertexHeader = fmt::format("V{}_Index", i);
+      arrayHeaders.push_back(vertexHeader);
+    }
+
+    std::vector<std::string_view> arrayHeadersViews(arrayHeaders.size());
+    std::transform(arrayHeaders.begin(), arrayHeaders.end(), arrayHeadersViews.begin(), [](const std::string& s) { return std::string_view(s); });
+    auto result = WriteFile(m_InputValues->ElementFilePath, *cellsArray, m_InputValues->IncludeElementFileHeader, arrayHeadersViews, m_InputValues->NumberElements, true);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  return {};
+}
