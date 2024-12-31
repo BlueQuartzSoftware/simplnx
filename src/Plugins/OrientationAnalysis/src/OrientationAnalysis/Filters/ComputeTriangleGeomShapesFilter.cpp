@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -57,7 +58,7 @@ Parameters ComputeTriangleGeomShapesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(
       k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix", "The DataPath to the AttributeMatrix that holds feature data for the faces",
-      DataPath({"TriangleDataContainer", "Face Feature Data"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+      DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
                                                           DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Face Feature Volumes", "Input DataPath to the **Feature Volumes** for the face data",

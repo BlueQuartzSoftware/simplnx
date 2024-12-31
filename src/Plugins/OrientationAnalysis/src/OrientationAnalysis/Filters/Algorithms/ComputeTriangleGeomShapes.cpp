@@ -240,23 +240,13 @@ Result<> ComputeTriangleGeomShapes::operator()()
      *
      * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
      * which are the angular velocity vectors.
-     *
-     * Hessenburg Decomposition is pre-processing to get an upper/right triangular matrix.
-     * QR Decomposition expresses the product of an Orthogonal Matrix (Q) and an right/upper triangular matrix (R) as a singular matrix (A).
      */
 
     // !!! DO NOT REMOVE ZEROING !!! It is integral to numerical stability in the following calculations
     // Zero out small numbers in Cinertia: https://stackoverflow.com/a/54505281
     Cinertia = (0.000000001 < Cinertia.array().abs()).select(Cinertia, 0.0);
 
-    // pre-processing to get an upper/right triangular matrix.
-    Eigen::HessenbergDecomposition<Matrix3x3> hessDecomp(Cinertia); // Pass in Cinertia for implicit calculation
-
-    // It is important to maintain the FullPivHouseholderQR implementation here, it is rank preserving and most numerically stable
-    Eigen::FullPivHouseholderQR<Matrix3x3> hQR(hessDecomp.matrixH()); // pass in Hessenburg Matrix (Upper) for implicit calculation
-
-    // Extract eigenvalues and eigenvectors
-    Eigen::EigenSolver<Matrix3x3> eigenSolver(hQR.matrixQR()); // pass in HQR Matrix for implicit calculation
+    Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia); // pass in HQR Matrix for implicit calculation
 
     // The primary axis is the largest eigenvalue
     Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
@@ -267,32 +257,21 @@ Result<> ComputeTriangleGeomShapes::operator()()
     /**
      * Following section for debugging
      */
-    //    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
-    //    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
+    //        std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+    //        std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
     //
-    //    constexpr char k_BaselineAxisLabel = 'x'; // x
-    //    char axisLabel = 'x';
-    //    double primaryAxis = eigenvalues[0].real();
-    //    for(usize i = 1; i < eigenvalues.size(); i++)
-    //    {
-    //      if(primaryAxis < eigenvalues[i].real())
-    //      {
-    //        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
-    //        primaryAxis = eigenvalues[i].real();
-    //      }
-    //    }
-    //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
-    //
-    //    // Condition Number calculations from here: https://stackoverflow.com/questions/33575478/how-can-you-find-the-condition-number-in-eigen
-    //    // Calculate Condition Number from JacobiSVD
-    //    Eigen::JacobiSVD<Matrix3x3, 3> svd(hqrMatrix);
-    //    double cond = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
-    //    std::cout << "\n Condition Number from JacobiSVD: " << cond << std::endl;
-    //
-    //    // Calculate Condition Number from Norms
-    //    double condNumNorms = hqrMatrix.completeOrthogonalDecomposition().pseudoInverse().norm() * hqrMatrix.norm();
-    //
-    //    std::cout << "\n Condition Number from Norms: " << condNumNorms << std::endl;
+    //        constexpr char k_BaselineAxisLabel = 'x'; // x
+    //        char axisLabel = 'x';
+    //        double primaryAxis = eigenvalues[0].real();
+    //        for(usize i = 1; i < eigenvalues.size(); i++)
+    //        {
+    //          if(primaryAxis < eigenvalues[i].real())
+    //          {
+    //            axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
+    //            primaryAxis = eigenvalues[i].real();
+    //          }
+    //        }
+    //        std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
 
     // Presort eigen ordering for following sections
     // Returns the argument order sorted high to low
@@ -306,7 +285,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
       {
         return {};
       }
-      // Formula: I = (15.0 * eigenvalue) / 4.0 * Pi;
+      // Formula: I = (15.0 * eigenvalue) / (4.0 * Pi);
       // in the below implementation the original divisor has been put under one to avoid repeated division during execution
       double I1 = (15.0 * eigenvalues[idxs[0]].real()) * k_Multiplier;
       double I2 = (15.0 * eigenvalues[idxs[1]].real()) * k_Multiplier;
