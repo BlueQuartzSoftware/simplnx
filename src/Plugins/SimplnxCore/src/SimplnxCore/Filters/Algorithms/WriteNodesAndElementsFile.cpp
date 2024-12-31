@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
@@ -19,7 +20,22 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-Result<> WriteFile(const fs::path& outputFilePath, const T& array, bool includeArrayHeaders, std::vector<std::string_view> arrayHeaders, bool numberRows, bool includeComponentCount)
+void WriteValue(std::ofstream& file, const T& value)
+{
+  if constexpr(std::is_floating_point<T>::value)
+  {
+    // For floating-point numbers, use up to 4 decimal places
+    file << std::fixed << std::setprecision(4) << value;
+  }
+  else
+  {
+    // For non-floating-point types, reset to default format with no precision
+    file << std::defaultfloat << std::setprecision(0) << value;
+  }
+}
+
+template <typename T>
+Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bool includeArrayHeaders, std::vector<std::string_view> arrayHeaders, bool numberRows, bool includeComponentCount)
 {
   std::ofstream file(outputFilePath.string());
   if(!file.is_open())
@@ -27,26 +43,31 @@ Result<> WriteFile(const fs::path& outputFilePath, const T& array, bool includeA
     return MakeErrorResult(to_underlying(WriteNodesAndElementsFile::ErrorCodes::FailedToOpenOutputFile), fmt::format("Failed to open output file \"{}\".", outputFilePath.string()));
   }
 
+  file << fmt::format("# This file was created by simplnx v{}", Version::Complete()) << std::endl;
+
   if(includeArrayHeaders)
   {
-    file << StringUtilities::join(arrayHeaders, " ") << std::endl;
+    WriteValue(file, StringUtilities::join(arrayHeaders, " "));
+    file << std::endl;
   }
   usize numComps = array.getNumberOfComponents();
   for(usize i = 0; i < array.getNumberOfTuples(); i++)
   {
     if(numberRows)
     {
-      file << i << " ";
+      WriteValue(file, i);
+      file << " ";
     }
 
     if(includeComponentCount)
     {
-      file << numComps << " ";
+      WriteValue(file, numComps);
+      file << " ";
     }
 
     for(usize j = 0; j < numComps; j++)
     {
-      file << array[i * numComps + j];
+      WriteValue(file, array[i * numComps + j]);
       if(j != numComps - 1)
       {
         file << " ";
