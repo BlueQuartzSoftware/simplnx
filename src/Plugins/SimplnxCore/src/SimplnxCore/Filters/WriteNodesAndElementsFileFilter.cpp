@@ -64,10 +64,10 @@ Parameters WriteNodesAndElementsFileFilter::parameters() const
       std::make_unique<BoolParameter>(k_IncludeElementFileHeader, "Include Element/Cell File Header", "Whether or not to include the element/cell file header in the element/cell output file.", true));
 
   params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_NodeFilePath, "Output Node File Path", "The node information will be written to this file path.", "Untitled.node",
-                                                          FileSystemPathParameter::ExtensionsType{".node", ".txt"}, FileSystemPathParameter::PathType::OutputFile, true));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_ElementFilePath, "Output Element/Cell File Path", "The element/cell information will be written to this file path.", "Untitled.ele",
-                                                          FileSystemPathParameter::ExtensionsType{".ele", ".txt"}, FileSystemPathParameter::PathType::OutputFile, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_NodeFilePath, "Output Node File Path", "The node information will be written to this file path.", "Nodes.csv",
+                                                          FileSystemPathParameter::ExtensionsType{".csv", ".node", ".txt"}, FileSystemPathParameter::PathType::OutputFile, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_ElementFilePath, "Output Element/Cell File Path", "The element/cell information will be written to this file path.", "Elements.csv",
+                                                          FileSystemPathParameter::ExtensionsType{".csv", ".ele", ".txt"}, FileSystemPathParameter::PathType::OutputFile, true));
 
   params.linkParameters(k_WriteNodeFile, k_NumberNodes, true);
   params.linkParameters(k_WriteNodeFile, k_IncludeNodeFileHeader, true);
