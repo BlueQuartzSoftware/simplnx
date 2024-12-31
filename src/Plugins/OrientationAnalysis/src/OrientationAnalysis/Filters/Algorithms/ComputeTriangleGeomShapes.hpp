@@ -45,13 +45,5 @@ private:
   const ComputeTriangleGeomShapesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  std::vector<double> m_FeatureMoments;
-  std::vector<double> m_FeatureEigenVals;
-
-  void findMoments();
-  void findAxes();
-  void findAxisEulers();
 };
-
 } // namespace nx::core
