@@ -1,4 +1,4 @@
-#include "WriteNodesAndElementsFile.hpp"
+#include "WriteNodesAndElementsFiles.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
@@ -40,7 +40,7 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
   std::ofstream file(outputFilePath.string());
   if(!file.is_open())
   {
-    return MakeErrorResult(to_underlying(WriteNodesAndElementsFile::ErrorCodes::FailedToOpenOutputFile), fmt::format("Failed to open output file \"{}\".", outputFilePath.string()));
+    return MakeErrorResult(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::FailedToOpenOutputFile), fmt::format("Failed to open output file \"{}\".", outputFilePath.string()));
   }
 
   file << fmt::format("# This file was created by simplnx v{}", Version::Complete()) << std::endl;
@@ -81,8 +81,8 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
 } // namespace
 
 // -----------------------------------------------------------------------------
-WriteNodesAndElementsFile::WriteNodesAndElementsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     WriteNodesAndElementsFileInputValues* inputValues)
+WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                       WriteNodesAndElementsFilesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -91,22 +91,22 @@ WriteNodesAndElementsFile::WriteNodesAndElementsFile(DataStructure& dataStructur
 }
 
 // -----------------------------------------------------------------------------
-WriteNodesAndElementsFile::~WriteNodesAndElementsFile() noexcept = default;
+WriteNodesAndElementsFiles::~WriteNodesAndElementsFiles() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& WriteNodesAndElementsFile::getCancel()
+const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-void WriteNodesAndElementsFile::sendMessage(const std::string& message)
+void WriteNodesAndElementsFiles::sendMessage(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
 
 // -----------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFile::operator()()
+Result<> WriteNodesAndElementsFiles::operator()()
 {
   auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   auto geomType = iNodeGeometry.getGeomType();

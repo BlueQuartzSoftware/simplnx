@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "SimplnxCore/Filters/Algorithms/WriteNodesAndElementsFile.hpp"
-#include "SimplnxCore/Filters/WriteNodesAndElementsFileFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteNodesAndElementsFiles.hpp"
+#include "SimplnxCore/Filters/WriteNodesAndElementsFilesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
@@ -93,10 +93,10 @@ void ValidateFile(const fs::path& filePath, const std::vector<std::string>& expe
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::WriteNodesAndElementsFileFilter: Valid Execution", "[SimplnxCore][WriteNodesAndElementsFileFilter]")
+TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Valid Execution", "[SimplnxCore][WriteNodesAndElementsFilesFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  WriteNodesAndElementsFileFilter filter;
+  WriteNodesAndElementsFilesFilter filter;
 
   DataStructure dataStructure;
   Arguments args;
@@ -148,15 +148,15 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFileFilter: Valid Execution", "[Sim
   }
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_SelectedGeometry, std::make_any<DataPath>(k_GeometryPath));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteNodeFile, std::make_any<bool>(writeNodeFile));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberNodes, std::make_any<bool>(numberNodes));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeNodeFileHeader, std::make_any<bool>(includeNodeFileHeader));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NodeFilePath, std::make_any<fs::path>(k_OutputNodeFilePath));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteElementFile, std::make_any<bool>(writeElementFile));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberElements, std::make_any<bool>(numberElements));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeElementFileHeader, std::make_any<bool>(includeElementFileHeader));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_ElementFilePath, std::make_any<fs::path>(k_OutputElementFilePath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_SelectedGeometry, std::make_any<DataPath>(k_GeometryPath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteNodeFile, std::make_any<bool>(writeNodeFile));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberNodes, std::make_any<bool>(numberNodes));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeNodeFileHeader, std::make_any<bool>(includeNodeFileHeader));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NodeFilePath, std::make_any<fs::path>(k_OutputNodeFilePath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteElementFile, std::make_any<bool>(writeElementFile));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberElements, std::make_any<bool>(numberElements));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeElementFileHeader, std::make_any<bool>(includeElementFileHeader));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_ElementFilePath, std::make_any<fs::path>(k_OutputElementFilePath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -201,10 +201,10 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFileFilter: Valid Execution", "[Sim
   Cleanup();
 }
 
-TEST_CASE("SimplnxCore::WriteNodesAndElementsFileFilter: Invalid Execution", "[SimplnxCore][WriteNodesAndElementsFileFilter]")
+TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Invalid Execution", "[SimplnxCore][WriteNodesAndElementsFilesFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  WriteNodesAndElementsFileFilter filter;
+  WriteNodesAndElementsFilesFilter filter;
 
   DataStructure dataStructure;
   Arguments args;
@@ -213,31 +213,31 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFileFilter: Invalid Execution", "[S
   SECTION("No File Writer Chosen")
   {
     CreateEdgeGeometry(dataStructure);
-    code = to_underlying(WriteNodesAndElementsFile::ErrorCodes::NoFileWriterChosen);
+    code = to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen);
 
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteNodeFile, std::make_any<bool>(false));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberNodes, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeNodeFileHeader, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteElementFile, std::make_any<bool>(false));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberElements, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeElementFileHeader, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteNodeFile, std::make_any<bool>(false));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberNodes, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeNodeFileHeader, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteElementFile, std::make_any<bool>(false));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberElements, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeElementFileHeader, std::make_any<bool>(true));
   }
   SECTION("Writing A Node File Using A Vertex Geometry")
   {
     CreateVertexGeometry(dataStructure);
-    code = to_underlying(WriteNodesAndElementsFile::ErrorCodes::VertexGeomHasNoElements);
+    code = to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements);
 
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteNodeFile, std::make_any<bool>(false));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberNodes, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeNodeFileHeader, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_WriteElementFile, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NumberElements, std::make_any<bool>(true));
-    args.insertOrAssign(WriteNodesAndElementsFileFilter::k_IncludeElementFileHeader, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteNodeFile, std::make_any<bool>(false));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberNodes, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeNodeFileHeader, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_WriteElementFile, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NumberElements, std::make_any<bool>(true));
+    args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_IncludeElementFileHeader, std::make_any<bool>(true));
   }
 
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_SelectedGeometry, std::make_any<DataPath>(k_GeometryPath));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_NodeFilePath, std::make_any<fs::path>(k_OutputNodeFilePath));
-  args.insertOrAssign(WriteNodesAndElementsFileFilter::k_ElementFilePath, std::make_any<fs::path>(k_OutputElementFilePath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_SelectedGeometry, std::make_any<DataPath>(k_GeometryPath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_NodeFilePath, std::make_any<fs::path>(k_OutputNodeFilePath));
+  args.insertOrAssign(WriteNodesAndElementsFilesFilter::k_ElementFilePath, std::make_any<fs::path>(k_OutputElementFilePath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

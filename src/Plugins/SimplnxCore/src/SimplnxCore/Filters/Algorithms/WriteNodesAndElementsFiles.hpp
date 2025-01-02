@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 
-struct SIMPLNXCORE_EXPORT WriteNodesAndElementsFileInputValues
+struct SIMPLNXCORE_EXPORT WriteNodesAndElementsFilesInputValues
 {
   DataPath SelectedGeometryPath;
   bool WriteNodeFile;
@@ -31,16 +31,16 @@ struct SIMPLNXCORE_EXPORT WriteNodesAndElementsFileInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT WriteNodesAndElementsFile
+class SIMPLNXCORE_EXPORT WriteNodesAndElementsFiles
 {
 public:
-  WriteNodesAndElementsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteNodesAndElementsFileInputValues* inputValues);
-  ~WriteNodesAndElementsFile() noexcept;
+  WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteNodesAndElementsFilesInputValues* inputValues);
+  ~WriteNodesAndElementsFiles() noexcept;
 
-  WriteNodesAndElementsFile(const WriteNodesAndElementsFile&) = delete;
-  WriteNodesAndElementsFile(WriteNodesAndElementsFile&&) noexcept = delete;
-  WriteNodesAndElementsFile& operator=(const WriteNodesAndElementsFile&) = delete;
-  WriteNodesAndElementsFile& operator=(WriteNodesAndElementsFile&&) noexcept = delete;
+  WriteNodesAndElementsFiles(const WriteNodesAndElementsFiles&) = delete;
+  WriteNodesAndElementsFiles(WriteNodesAndElementsFiles&&) noexcept = delete;
+  WriteNodesAndElementsFiles& operator=(const WriteNodesAndElementsFiles&) = delete;
+  WriteNodesAndElementsFiles& operator=(WriteNodesAndElementsFiles&&) noexcept = delete;
 
   enum class ErrorCodes : int64
   {
@@ -58,7 +58,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const WriteNodesAndElementsFileInputValues* m_InputValues = nullptr;
+  const WriteNodesAndElementsFilesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

@@ -10,21 +10,21 @@
 namespace nx::core
 {
 /**
- * @class WriteNodesAndElementsFileFilter
- * @brief The WriteNodesAndElementsFileFilter is an IFilter class designed to export the
+ * @class WriteNodesAndElementsFilesFilter
+ * @brief The WriteNodesAndElementsFilesFilter is an IFilter class designed to export the
  * DataStructure to a target HDF5 file.
  */
-class SIMPLNXCORE_EXPORT WriteNodesAndElementsFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteNodesAndElementsFilesFilter : public IFilter
 {
 public:
-  WriteNodesAndElementsFileFilter() = default;
-  ~WriteNodesAndElementsFileFilter() noexcept override = default;
+  WriteNodesAndElementsFilesFilter() = default;
+  ~WriteNodesAndElementsFilesFilter() noexcept override = default;
 
-  WriteNodesAndElementsFileFilter(const WriteNodesAndElementsFileFilter&) = delete;
-  WriteNodesAndElementsFileFilter(WriteNodesAndElementsFileFilter&&) noexcept = delete;
+  WriteNodesAndElementsFilesFilter(const WriteNodesAndElementsFilesFilter&) = delete;
+  WriteNodesAndElementsFilesFilter(WriteNodesAndElementsFilesFilter&&) noexcept = delete;
 
-  WriteNodesAndElementsFileFilter& operator=(const WriteNodesAndElementsFileFilter&) = delete;
-  WriteNodesAndElementsFileFilter& operator=(WriteNodesAndElementsFileFilter&&) noexcept = delete;
+  WriteNodesAndElementsFilesFilter& operator=(const WriteNodesAndElementsFilesFilter&) = delete;
+  WriteNodesAndElementsFilesFilter& operator=(WriteNodesAndElementsFilesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedGeometry = "selected_geometry_path";
@@ -57,7 +57,7 @@ public:
   std::string className() const override;
 
   /**
-   * @brief Returns the WriteNodesAndElementsFileFilter class's UUID.
+   * @brief Returns the WriteNodesAndElementsFilesFilter class's UUID.
    * @return Uuid
    */
   Uuid uuid() const override;
@@ -119,4 +119,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteNodesAndElementsFileFilter, "8c563174-0183-45fe-8ef8-756104f215d5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, WriteNodesAndElementsFilesFilter, "8c563174-0183-45fe-8ef8-756104f215d5");

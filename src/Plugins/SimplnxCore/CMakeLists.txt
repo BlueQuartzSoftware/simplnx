@@ -137,7 +137,7 @@ set(FilterList
   WriteDREAM3DFilter
   WriteFeatureDataCSVFilter
   WriteLosAlamosFFTFilter
-  WriteNodesAndElementsFileFilter
+  WriteNodesAndElementsFilesFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
@@ -227,7 +227,7 @@ set(AlgorithmList
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate
   WriteLosAlamosFFT
-  WriteNodesAndElementsFile
+  WriteNodesAndElementsFiles
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints

@@ -1,4 +1,4 @@
-#include "WriteNodesAndElementsFileFilter.hpp"
+#include "WriteNodesAndElementsFilesFilter.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -9,7 +9,7 @@
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/WriteNodesAndElementsFile.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteNodesAndElementsFiles.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -17,37 +17,37 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string WriteNodesAndElementsFileFilter::name() const
+std::string WriteNodesAndElementsFilesFilter::name() const
 {
-  return FilterTraits<WriteNodesAndElementsFileFilter>::name;
+  return FilterTraits<WriteNodesAndElementsFilesFilter>::name;
 }
 
 //------------------------------------------------------------------------------
-std::string WriteNodesAndElementsFileFilter::className() const
+std::string WriteNodesAndElementsFilesFilter::className() const
 {
-  return FilterTraits<WriteNodesAndElementsFileFilter>::className;
+  return FilterTraits<WriteNodesAndElementsFilesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid WriteNodesAndElementsFileFilter::uuid() const
+Uuid WriteNodesAndElementsFilesFilter::uuid() const
 {
-  return FilterTraits<WriteNodesAndElementsFileFilter>::uuid;
+  return FilterTraits<WriteNodesAndElementsFilesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string WriteNodesAndElementsFileFilter::humanName() const
+std::string WriteNodesAndElementsFilesFilter::humanName() const
 {
   return "Write Nodes And Elements File(s)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> WriteNodesAndElementsFileFilter::defaultTags() const
+std::vector<std::string> WriteNodesAndElementsFilesFilter::defaultTags() const
 {
   return {className(), "IO", "Output", "Write", "Export", "Nodes", "Elements", "Cells", "Vertices", "Geometry"};
 }
 
 //------------------------------------------------------------------------------
-Parameters WriteNodesAndElementsFileFilter::parameters() const
+Parameters WriteNodesAndElementsFilesFilter::parameters() const
 {
   Parameters params;
 
@@ -80,20 +80,20 @@ Parameters WriteNodesAndElementsFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType WriteNodesAndElementsFileFilter::parametersVersion() const
+IFilter::VersionType WriteNodesAndElementsFilesFilter::parametersVersion() const
 {
   return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteNodesAndElementsFileFilter::clone() const
+IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
 {
-  return std::make_unique<WriteNodesAndElementsFileFilter>();
+  return std::make_unique<WriteNodesAndElementsFilesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteNodesAndElementsFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+                                                                         const std::atomic_bool& shouldCancel) const
 {
   DataPath selectedGeometryPath = args.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
   bool writeNodeFile = args.value<BoolParameter::ValueType>(k_WriteNodeFile);
@@ -105,7 +105,7 @@ IFilter::PreflightResult WriteNodesAndElementsFileFilter::preflightImpl(const Da
 
   if(!writeNodeFile && !writeElementFile)
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFile::ErrorCodes::NoFileWriterChosen),
+    return {MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
                                            "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
@@ -113,7 +113,7 @@ IFilter::PreflightResult WriteNodesAndElementsFileFilter::preflightImpl(const Da
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
     return {MakeErrorResult<OutputActions>(
-        to_underlying(WriteNodesAndElementsFile::ErrorCodes::VertexGeomHasNoElements),
+        to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
         "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a different geometry with a type other than Vertex.")};
   }
 
@@ -121,10 +121,10 @@ IFilter::PreflightResult WriteNodesAndElementsFileFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
-  WriteNodesAndElementsFileInputValues inputValues;
+  WriteNodesAndElementsFilesInputValues inputValues;
 
   inputValues.SelectedGeometryPath = args.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
   inputValues.WriteNodeFile = args.value<BoolParameter::ValueType>(k_WriteNodeFile);
@@ -136,6 +136,6 @@ Result<> WriteNodesAndElementsFileFilter::executeImpl(DataStructure& dataStructu
   inputValues.IncludeElementFileHeader = args.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
   inputValues.ElementFilePath = args.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
 
-  return WriteNodesAndElementsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return WriteNodesAndElementsFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core
