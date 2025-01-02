@@ -241,12 +241,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
      * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
      * which are the angular velocity vectors.
      */
-
-    // !!! DO NOT REMOVE ZEROING !!! It is integral to numerical stability in the following calculations
-    // Zero out small numbers in Cinertia: https://stackoverflow.com/a/54505281
-    Cinertia = (0.000000001 < Cinertia.array().abs()).select(Cinertia, 0.0);
-
-    Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia); // pass in HQR Matrix for implicit calculation
+    Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
 
     // The primary axis is the largest eigenvalue
     Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
@@ -257,25 +252,67 @@ Result<> ComputeTriangleGeomShapes::operator()()
     /**
      * Following section for debugging
      */
-    //        std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
-    //        std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
+    //    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+    //    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
     //
-    //        constexpr char k_BaselineAxisLabel = 'x'; // x
-    //        char axisLabel = 'x';
-    //        double primaryAxis = eigenvalues[0].real();
-    //        for(usize i = 1; i < eigenvalues.size(); i++)
-    //        {
-    //          if(primaryAxis < eigenvalues[i].real())
-    //          {
-    //            axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
-    //            primaryAxis = eigenvalues[i].real();
-    //          }
-    //        }
-    //        std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
+    //    constexpr char k_BaselineAxisLabel = 'x'; // x
+    //    char axisLabel = 'x';
+    //    double primaryAxis = eigenvalues[0].real();
+    //    for(usize i = 1; i < eigenvalues.size(); i++)
+    //    {
+    //      if(primaryAxis < eigenvalues[i].real())
+    //      {
+    //        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
+    //        primaryAxis = eigenvalues[i].real();
+    //      }
+    //    }
+    //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
 
     // Presort eigen ordering for following sections
     // Returns the argument order sorted high to low
     std::array<size_t, 3> idxs = ::TripletSort(eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real(), false);
+
+    /**
+     * The following section calculates the axis eulers
+     */
+    {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
+      // EigenVector associated with the largest EigenValue goes in the 3rd column
+      auto col3 = eigenvectors.col(idxs[0]);
+
+      // Then the next largest into the 2nd column
+      auto col2 = eigenvectors.col(idxs[1]);
+
+      // The smallest into the 1rst column
+      auto col1 = eigenvectors.col(idxs[2]);
+
+      // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
+      //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
+      // clang-format off
+      double g[3][3] = {{col1(0).real(), col1(1).real(), col1(2).real()},
+                        {col2(0).real(), col2(1).real(), col2(2).real()},
+                        {col3(0).real(), col3(1).real(), col3(2).real()}};
+      // clang-format on
+
+      // check for right-handedness
+      OrientationTransformation::ResultType result = OrientationTransformation::om_check(OrientationD(g));
+      if(result.result == 0)
+      {
+        g[2][0] *= -1.0f;
+        g[2][1] *= -1.0f;
+        g[2][2] *= -1.0f;
+      }
+
+      auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(g));
+
+      axisEulerAngles[3 * featureId] = euler[0];
+      axisEulerAngles[3 * featureId + 1] = euler[1];
+      axisEulerAngles[3 * featureId + 2] = euler[2];
+    }
 
     /**
      * The following section finds axes
@@ -312,48 +349,6 @@ Result<> ComputeTriangleGeomShapes::operator()()
       }
       aspectRatios[2 * featureId] = bOverA;
       aspectRatios[2 * featureId + 1] = cOverA;
-    }
-
-    /**
-     * The following section calculates the axis eulers
-     */
-    {
-      if(m_ShouldCancel)
-      {
-        return {};
-      }
-
-      // EigenVector associated with the largest EigenValue goes in the 3rd column
-      auto col3 = eigenvectors.col(idxs[0]);
-
-      // Then the next largest into the 2nd column
-      auto col2 = eigenvectors.col(idxs[1]);
-
-      // The smallest into the 1rst column
-      auto col1 = eigenvectors.col(idxs[2]);
-
-      // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
-      //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
-      // clang-format off
-    double g[3][3] = {{col1(0).real(), col1(1).real(), col1(2).real()},
-                     {col2(0).real(), col2(1).real(), col2(2).real()},
-                     {col3(0).real(), col3(1).real(), col3(2).real()}};
-      // clang-format on
-
-      // check for right-handedness
-      OrientationTransformation::ResultType result = OrientationTransformation::om_check(OrientationD(g));
-      if(result.result == 0)
-      {
-        g[2][0] *= -1.0f;
-        g[2][1] *= -1.0f;
-        g[2][2] *= -1.0f;
-      }
-
-      auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(g));
-
-      axisEulerAngles[3 * featureId] = euler[0];
-      axisEulerAngles[3 * featureId + 1] = euler[1];
-      axisEulerAngles[3 * featureId + 2] = euler[2];
     }
   }
 
