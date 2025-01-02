@@ -15,7 +15,6 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeTriangleGeomShapesInputValues
   DataPath FaceLabelsArrayPath;
   DataPath FeatureAttributeMatrixPath;
   DataPath CentroidsArrayPath;
-  DataPath VolumesArrayPath;
   DataPath Omega3sArrayPath;
   DataPath AxisLengthsArrayPath;
   DataPath AxisEulerAnglesArrayPath;
