@@ -25,7 +25,6 @@ const std::string k_FaceLabelsName = "Face Labels";
 const std::string k_FaceFeatureName = "Face Feature Data";
 const std::string k_FaceDataName = "Face Data";
 const std::string k_CentroidsArrayName = "Centroids";
-const std::string k_VolumesArrayName = "Volumes";
 
 const std::string k_Omega3SArrayName = "Omega3s [NX Computed]";
 const std::string k_AxisLengthsArrayName = "AxisLengths [NX Computed]";
@@ -88,7 +87,7 @@ TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysi
 
       args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(faceFeatureDataPath));
       args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(faceFeatureDataPath.createChildPath(k_CentroidsArrayName)));
-      args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_VolumesArrayPath_Key, std::make_any<DataPath>(faceFeatureDataPath.createChildPath(k_VolumesArrayName)));
+
       // Output Vars
       args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_Omega3sArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Omega3SArrayName));
       args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_AxisLengthsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName));
