@@ -4,38 +4,8 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
-#include "simplnx/Utilities/IntersectionUtilities.hpp"
 
 using namespace nx::core;
-
-namespace
-{
-// -----------------------------------------------------------------------------
-char RayIntersectsPlane(const float32 d, const nx::core::Point3Df& q, const nx::core::Point3Df& r, nx::core::Point3Df& p)
-{
-  const float64 rqDelZ = r[2] - q[2];
-  const float64 dqDelZ = d - q[2];
-  const float64 t = dqDelZ / rqDelZ;
-  for(int i = 0; i < 3; i++)
-  {
-    p[i] = q[i] + (t * (r[i] - q[i]));
-  }
-  if(t > 0.0 && t < 1.0)
-  {
-    return '1';
-  }
-  if(t == 0.0)
-  {
-    return 'q';
-  }
-  if(t == 1.0)
-  {
-    return 'r';
-  }
-
-  return '0';
-}
-} // namespace
 
 // -----------------------------------------------------------------------------
 SliceTriangleGeometry::SliceTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -94,13 +64,13 @@ Result<> SliceTriangleGeometry::operator()()
     return MakeErrorResult(-62102, fmt::format("Number of sectioned vertices and edges do not make sense.  Number of Vertices: {} and Number of Edges: {}", numVerts, numEdges));
   }
 
-  auto& edge = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
-  edge.resizeVertexList(numVerts);
-  edge.resizeEdgeList(numEdges);
-  INodeGeometry0D::SharedVertexList& verts = edge.getVerticesRef();
-  INodeGeometry1D::SharedEdgeList& edges = edge.getEdgesRef();
-  edge.getVertexAttributeMatrix()->resizeTuples({numVerts});
-  edge.getEdgeAttributeMatrix()->resizeTuples({numEdges});
+  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
+  edgeGeom.resizeVertexList(numVerts);
+  edgeGeom.resizeEdgeList(numEdges);
+  INodeGeometry0D::SharedVertexList& verts = edgeGeom.getVerticesRef();
+  INodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
+  edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
+  edgeGeom.getEdgeAttributeMatrix()->resizeTuples({numEdges});
   auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->SliceAttributeMatrixName));
   sliceAM.resizeTuples({sliceTriangleResult.NumberOfSlices});
 
@@ -131,5 +101,38 @@ Result<> SliceTriangleGeometry::operator()()
     }
   }
 
-  return GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edge);
+  Result<> result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  // REMOVE DUPLICATE EDGES FROM THE GENERATED EDGE GEOMETRY
+  // Remember to also fix up the sliceIds and regionIds arrays
+  using UniqueEdges = std::set<std::pair<uint64, uint64>>;
+  UniqueEdges uniqueEdges;
+  usize currentEdgeListSize = 0;
+  for(usize edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+  {
+    uniqueEdges.insert(std::minmax(edges[edgeIdx * 2], edges[edgeIdx * 2 + 1]));
+    // Did something get inserted
+    if(currentEdgeListSize < uniqueEdges.size())
+    {
+      edges[currentEdgeListSize * 2] = edges[edgeIdx * 2];
+      edges[currentEdgeListSize * 2 + 1] = edges[edgeIdx * 2 + 1];
+      sliceId[currentEdgeListSize] = sliceId[edgeIdx];
+      if(m_InputValues->HaveRegionIds)
+      {
+        (*triRegionIds)[currentEdgeListSize] = (*triRegionIds)[edgeIdx];
+      }
+      currentEdgeListSize++;
+    }
+  }
+  if(numEdges != uniqueEdges.size())
+  {
+    edgeGeom.resizeEdgeList(uniqueEdges.size());
+    edgeGeom.getEdgeAttributeMatrix()->resizeTuples({uniqueEdges.size()});
+  }
+
+  return result;
 }

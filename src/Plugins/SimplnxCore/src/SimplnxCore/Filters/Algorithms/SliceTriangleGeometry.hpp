@@ -22,7 +22,6 @@ constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
-  // VectorFloat32Parameter::ValueType SliceDirection;
   ChoicesParameter::ValueType SliceRange;
   float32 Zstart;
   float32 Zend;
@@ -59,7 +58,6 @@ public:
 protected:
   using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
   using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
-  // usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, TriStore& tris, VertsStore& triVerts);
 
 private:
   DataStructure& m_DataStructure;

@@ -4,6 +4,8 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
+#include <cstdio>
+
 using namespace nx::core;
 
 namespace
@@ -12,6 +14,7 @@ constexpr uint64 k_FullRange = 0;
 constexpr uint64 k_UserDefinedRange = 1;
 constexpr float32 k_PartitionEdgePadding = 0.000001;
 const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
+
 } // namespace
 
 GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds)
@@ -264,6 +267,9 @@ struct Edge
   Point3Df end;
   bool valid;
   int32 regionId;
+  uint8 positiveCount = 0;
+  uint8 negativeCount = 0;
+  uint8 zeroCount = 0;
 
   // Constructors
   Edge()
@@ -313,13 +319,15 @@ struct Plane
   }
 };
 
+/**
+ * @brief
+ */
 struct PointInfo
 {
-
   float SignedDistance;
   uint8 location;
 
-  PointInfo(float signedDistance)
+  explicit PointInfo(float signedDistance)
   : SignedDistance(signedDistance)
   , location(3) // Default the point is on the plane
   {
@@ -355,9 +363,9 @@ struct PointInfo
 // Function to compute the intersection between a triangle and a plane
 Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane)
 {
-  PointInfo p0 = {plane.signedDistance(v0)};
-  PointInfo p1 = {plane.signedDistance(v1)};
-  PointInfo p2 = {plane.signedDistance(v2)};
+  PointInfo p0{plane.signedDistance(v0)};
+  PointInfo p1{plane.signedDistance(v1)};
+  PointInfo p2{plane.signedDistance(v2)};
 
   // Count the number of vertices on each side of the plane
   int positiveCount = p0.positive() + p1.positive() + p2.positive();
@@ -365,14 +373,21 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   int zeroCount = p0.onPlane() + p1.onPlane() + p2.onPlane();
 
   // No intersection if all vertices are on one side of the plane
-  if(positiveCount == 3 || negativeCount == 3)
+  // Handle case where the triangle lies entirely on the plane
+  if(positiveCount == 3 || negativeCount == 3 || zeroCount == 3)
   {
-    return {}; // Invalid edge because triangle is completely above or below the plane
+    Edge e;
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e); // Invalid edge because triangle is completely above or below the plane
   }
 
   // Edge to store the intersection line segment
   Edge intersectionEdge;
-  // int intersectionCount = 0;
+  intersectionEdge.positiveCount = positiveCount;
+  intersectionEdge.negativeCount = negativeCount;
+  intersectionEdge.zeroCount = zeroCount;
 
   // Helper lambda to compute intersection point
   auto computeIntersection = [](const Edge& e, float _dist1, float _dist2) -> Point3Df {
@@ -380,70 +395,109 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     return e.start + (e.end - e.start) * t; // Return the interpolated point
   };
 
-  // Handle case where the triangle lies entirely on the plane
-  if(zeroCount == 3)
+  // Handle cases where only one intersection point is found (vertex lies on plane)
+  // and the other two vertices are either both above or below the plane
+  // Find the vertex that lies on the plane
+  if(zeroCount == 1 && (positiveCount == 2 || negativeCount == 2))
   {
-    // Return any edge of the triangle
-    //    return {v0, v1};
-    return {}; // Return invalid
+    Edge e;
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
 
-  // Handle cases where only one intersection point is found (vertex lies on plane)
-  // Find the vertex that lies on the plane
-  if(zeroCount == 1)
+  if(positiveCount == 1 && negativeCount == 1 && zeroCount == 1)
   {
-    return {};
+    Edge e;
+    if(p0.onPlane())
+    {
+      e.start = v0;
+      e.end = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
+    }
+    else if(p1.onPlane())
+    {
+      e.start = v1;
+      e.end = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance);
+    }
+    else if(p2.onPlane())
+    {
+      e.start = v2;
+      e.end = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
+    }
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    e.valid = true;
+    return std::move(e);
   }
-  //  if(p0.onPlane() && zeroCount == 1)
-  //  {
-  //    return {v0, v0};
-  //  }
-  //  else if(p1.onPlane() && zeroCount == 1)
-  //  {
-  //    return {v1, v1};
-  //  }
-  //  else if(p2.onPlane() && zeroCount == 1)
-  //  {
-  //    return {v2, v2};
-  //  }
 
   // Check edges for coincidence with plane
   if(p0.onPlane() && p1.onPlane() && zeroCount == 2)
   {
-    return {v0, v1};
+    Edge e{v0, v1};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
   if(p1.onPlane() && p2.onPlane() && zeroCount == 2)
   {
-    return {v1, v2};
+    Edge e{v1, v2};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
   if(p0.onPlane() && p2.onPlane() && zeroCount == 2)
   {
-    return {v0, v2};
+    Edge e{v0, v2};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
   {
     auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
     auto intersectionPoint1 = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance);
-    return {intersectionPoint0, intersectionPoint1};
+
+    Edge e{intersectionPoint0, intersectionPoint1};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
 
   if(p0.planeSplitsEdge(p1) && p1.planeSplitsEdge(p2))
   {
     auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance);
     auto intersectionPoint1 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
-    return {intersectionPoint0, intersectionPoint1};
+    Edge e{intersectionPoint0, intersectionPoint1};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
 
   if(p1.planeSplitsEdge(p2) && p2.planeSplitsEdge(p0))
   {
     auto intersectionPoint0 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance);
     auto intersectionPoint1 = computeIntersection({v2, v0}, p2.SignedDistance, p0.SignedDistance);
-    return {intersectionPoint0, intersectionPoint1};
+    Edge e{intersectionPoint0, intersectionPoint1};
+    e.positiveCount = positiveCount;
+    e.negativeCount = negativeCount;
+    e.zeroCount = zeroCount;
+    return std::move(e);
   }
 
   // No valid intersection found
-  return {}; // Invalid edge
+  Edge e;
+  e.positiveCount = positiveCount;
+  e.negativeCount = negativeCount;
+  e.zeroCount = zeroCount;
+  return std::move(e); // Invalid edge
 }
 } // namespace slice_helper
 
@@ -513,7 +567,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   std::vector<int32> regionIds;
 
   int32 edgeCounter = 0;
-  int32 sliceIndex = 0;
+  int32 sliceIndex = -1;
   // Loop over each slice plane
   for(float zValue = zStart; zValue <= zEnd; zValue = zValue + sliceSpacing)
   {
@@ -521,6 +575,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
     {
       break;
     }
+    sliceIndex++;
     d = zValue;
 
     // Define a plane with a normal vector and a point on the plane
@@ -529,6 +584,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
 
     // Create the plane
     slice_helper::Plane plane(planeNormal, pointOnPlane);
+
     // Loop over each Triangle and get edges/vertices of any intersection
     for(usize triIdx = 0; triIdx < numTris; triIdx++)
     {
@@ -559,9 +615,10 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
         }
         edgeCounter++;
       }
-    }
+    } // END TRIANGLE LOOP
+
     sliceIndex++;
-  }
+  } // END SLICE LOOP
 
   return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
 }
