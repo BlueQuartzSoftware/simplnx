@@ -16,17 +16,14 @@ struct SIMPLNXCORE_EXPORT CreateAMScanPathsInputValues
 {
   float32 StripeWidth;
   float32 HatchSpacing;
-  float32 Power;
-  float32 Speed;
+  float32 SliceHatchRotationAngle;
   DataPath CADSliceDataContainerName;
   DataPath CADSliceIdsArrayPath;
   DataPath CADRegionIdsArrayPath;
   DataPath HatchDataContainerName;
   DataObjectNameParameter::ValueType VertexAttributeMatrixName;
   DataObjectNameParameter::ValueType HatchAttributeMatrixName;
-  DataObjectNameParameter::ValueType TimeArrayName;
   DataObjectNameParameter::ValueType RegionIdsArrayName;
-  DataObjectNameParameter::ValueType PowersArrayName;
 };
 
 /**

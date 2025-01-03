@@ -5,71 +5,20 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
+#include <Eigen/Dense>
+
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <utility>
+#include <vector>
+
 using namespace nx::core;
 
 namespace
 {
-std::array<float32, 9> ax2om(const std::array<float32, 4>& a)
-{
-  std::array<float32, 9> res = {};
-  float32 q = 0.0L;
-  float32 c = 0.0L;
-  float32 s = 0.0L;
-  float32 omc = 0.0L;
-
-  c = cos(a[3]);
-  s = sin(a[3]);
-
-  omc = static_cast<float32>(1.0 - c);
-
-  res[0] = a[0] * a[0] * omc + c;
-  res[4] = a[1] * a[1] * omc + c;
-  res[8] = a[2] * a[2] * omc + c;
-  int _01 = 1;
-  int _10 = 3;
-  int _12 = 5;
-  int _21 = 7;
-  int _02 = 2;
-  int _20 = 6;
-  // Check to see if we need to transpose
-  // if(Rotations::Constants::epsijk == 1.0L)
-  {
-    _01 = 3;
-    _10 = 1;
-    _12 = 7;
-    _21 = 5;
-    _02 = 6;
-    _20 = 2;
-  }
-
-  q = omc * a[0] * a[1];
-  res[_01] = q + s * a[2];
-  res[_10] = q - s * a[2];
-  q = omc * a[1] * a[2];
-  res[_12] = q + s * a[0];
-  res[_21] = q - s * a[0];
-  q = omc * a[2] * a[0];
-  res[_02] = q - s * a[1];
-  res[_20] = q + s * a[1];
-
-  return res;
-}
-
-ImageRotationUtilities::Matrix3fR toGMatrix(std::array<float32, 9> om)
-{
-  ImageRotationUtilities::Matrix3fR g;
-  g(0, 0) = om[0];
-  g(0, 1) = om[1];
-  g(0, 2) = om[2];
-  g(1, 0) = om[3];
-  g(1, 1) = om[4];
-  g(1, 2) = om[5];
-  g(2, 0) = om[6];
-  g(2, 1) = om[7];
-  g(2, 2) = om[8];
-  return g;
-}
-
 // -----------------------------------------------------------------------------
 char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<float32, 2>& q1, const std::array<float32, 2>& p2, const std::array<float32, 2>& q2, float32& coordX)
 {
@@ -122,6 +71,252 @@ char determineIntersectCoord(const std::array<float32, 2>& p1, const std::array<
   }
   return 'n';
 }
+
+// A structure to store line segments resulting from the fill.
+// Each filled line is represented by start and end points in 3D.
+struct LineSegment
+{
+  Eigen::Vector3f start;
+  Eigen::Vector3f end;
+};
+
+// Intersect a line defined as y' = const_line with a segment defined by two points in rotated space.
+// The segment endpoints are (x1', y1') and (x2', y2'). We want to find intersection with y' = lineY'.
+bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vector3f& p2, float lineYprime, Eigen::Vector3f& intersection)
+{
+  float y1 = p1.y();
+  float y2 = p2.y();
+
+  // Check if the horizontal line at lineYprime intersects the segment.
+  if((y1 <= lineYprime && y2 >= lineYprime) || (y2 <= lineYprime && y1 >= lineYprime))
+  {
+    // The segment crosses y' = lineYprime
+    float dy = y2 - y1;
+    if(std::abs(dy) < 1e-9f)
+    {
+      // Horizontal line segment: intersection can be direct
+      // If the lineYprime equals y1=y2, then the whole segment is on the line.
+      // This is a rare case; we can handle by returning one endpoint as intersection.
+      intersection = p1;
+      return true;
+    }
+    else if(std::abs(lineYprime - p1.y()) < 1e-9f)
+    {
+      intersection = p1;
+      return true;
+    }
+    else if(std::abs(lineYprime - p2.y()) < 1e-9f)
+    {
+      intersection = p2;
+      return true;
+    }
+    else
+    {
+      float t = (lineYprime - y1) / dy;
+      // Linear interpolation for x and y
+      float x = p1.x() + t * (p2.x() - p1.x());
+      // z unchanged, assuming flat polygon
+      intersection = Eigen::Vector3f(x, lineYprime, p1.z());
+      return true;
+    }
+  }
+  return false;
+}
+
+// Main function that generates fill lines.
+std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& vertices, const std::vector<usize>& edges, float lineSpacing, float angleRadians)
+{
+  float rotAngle = -angleRadians;
+  Eigen::Matrix3f k_RotationMatrix;
+  k_RotationMatrix << std::cos(rotAngle), -std::sin(rotAngle), 0.0f, std::sin(rotAngle), std::cos(rotAngle), 0.0f, 0.0f, 0.0f, 1.0f;
+
+  Eigen::Matrix3f k_InvRotationMatrix;
+  k_InvRotationMatrix << std::cos(angleRadians), -std::sin(angleRadians), 0.0f, std::sin(angleRadians), std::cos(angleRadians), 0.0f, 0.0f, 0.0f, 1.0f;
+
+  usize numVerts = vertices.size() / 3;
+  usize numEdges = edges.size() / 2;
+
+  // Rotate all vertices by -angleRadians to align fill lines horizontally in the rotated frame
+  std::vector<Eigen::Vector3f> rotatedVertices(numVerts);
+  for(size_t i = 0; i < numVerts; ++i)
+  {
+    Eigen::Vector3f pt(vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]);
+    rotatedVertices[i] = k_RotationMatrix * pt; // rotatePoint(vertices[i], rotAngle);
+  }
+
+  // Build rotated edges
+  // Actually, edges remain the same indices, but we consider rotatedVertices now.
+
+  // Compute bounding box in rotated frame
+  float minX = std::numeric_limits<float>::infinity();
+  float maxX = -std::numeric_limits<float>::infinity();
+  float minY = std::numeric_limits<float>::infinity();
+  float maxY = -std::numeric_limits<float>::infinity();
+  for(auto& v : rotatedVertices)
+  {
+    minX = std::min(v.x(), minX);
+    maxX = std::max(v.x(), maxX);
+
+    minY = std::min(v.y(), minY);
+    maxY = std::max(v.y(), maxY);
+  }
+
+  // Determine the set of parallel lines: they will be horizontal lines in the rotated frame,
+  // starting from minY to maxY, spaced by lineSpacing.
+  // We can start from a line at floor(minY/lineSpacing)*lineSpacing to be neat:
+  float startLineY = std::floor(minY / lineSpacing) * lineSpacing;
+  if(startLineY < minY)
+  {
+    startLineY += lineSpacing;
+  }
+
+  std::vector<LineSegment> filledSegments;
+
+  // For each line, we find intersection points with polygon edges.
+  // The polygon edges are (rotatedVertices[ei.first], rotatedVertices[ei.second]).
+  for(float lineY = startLineY; lineY <= maxY; lineY += lineSpacing)
+  {
+    std::vector<Eigen::Vector3f> intersections;
+
+    for(size_t edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+    {
+      Eigen::Vector3f p1 = rotatedVertices[edges[edgeIdx * 2]];
+      Eigen::Vector3f p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
+      Eigen::Vector3f inter;
+      if(lineSegmentHorizontalIntersect(p1, p2, lineY, inter))
+      {
+        intersections.push_back({inter});
+      }
+    }
+
+    // Sort intersections by x to find pairs that form inside segments
+    std::sort(intersections.begin(), intersections.end(), [](const Eigen::Vector3f& a, const Eigen::Vector3f& b) { return a.x() < b.x(); });
+
+    // Polygon fill lines: between intersections, we pick pairs (every two intersection points form a segment inside the polygon)
+    // This simple approach assumes a well-formed polygon where intersection points on a scanline come in pairs and the starting
+    // point of the scan line is ALWAYS OUTSIDE of the polygon.
+    //
+    // ******* Complex polygons simply break in very subtle an unique ways. Don't try to fix the code. Fix the mesh instead.
+    for(size_t i = 0; i + 1 < intersections.size(); i++)
+    {
+      Eigen::Vector3f startPt = intersections[i];
+      Eigen::Vector3f endPt = intersections[i + 1];
+
+      if(startPt == endPt)
+      {
+        if(intersections.size() % 2 == 0)
+        {
+          i++;
+        }
+        continue;
+      }
+
+      // Rotate back the line segment to the original frame
+      // Rotation back is by angleRadians
+      Eigen::Vector3f origStart = k_InvRotationMatrix * startPt;
+      Eigen::Vector3f origEnd = k_InvRotationMatrix * endPt;
+
+      LineSegment seg;
+      seg.start = origStart;
+      seg.end = origEnd;
+      filledSegments.push_back(seg);
+      i++;
+    }
+  }
+
+  return filledSegments;
+}
+
+// ----------------------------------------------------------------------------
+void extractRegion(INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, AbstractDataStore<int32>& regionIds, AbstractDataStore<int32>& sliceIds,
+                   int32_t regionIdToExtract, int32_t sliceIdToExtract, std::vector<float>& outVertices, std::vector<size_t>& outEdges)
+{
+  outVertices.clear();
+  outVertices.reserve(750);
+  outEdges.clear();
+  outEdges.reserve(500);
+
+  // Mapping from old vertex index to new vertex index
+  std::unordered_map<size_t, size_t> vertexMap;
+  vertexMap.reserve(750);
+
+  const size_t numEdges = edges.getNumberOfTuples();
+
+  // Iterate over all edges
+  for(size_t i = 0; i < numEdges; ++i)
+  {
+    if(regionIds[i] == regionIdToExtract && sliceIds[i] == sliceIdToExtract)
+    {
+      // This edge belongs to the target region
+      size_t oldV0 = edges[2 * i];
+      size_t oldV1 = edges[2 * i + 1];
+
+      // Check if we have already encountered oldV0
+      size_t newV0;
+      auto itV0 = vertexMap.find(oldV0);
+      if(itV0 == vertexMap.end())
+      {
+        // Add new vertex
+        newV0 = outVertices.size() / 3;
+        outVertices.push_back(vertices[oldV0 * 3]);
+        outVertices.push_back(vertices[oldV0 * 3 + 1]);
+        outVertices.push_back(vertices[oldV0 * 3 + 2]);
+        vertexMap[oldV0] = newV0;
+      }
+      else
+      {
+        newV0 = itV0->second;
+      }
+
+      // Check oldV1 similarly
+      size_t newV1;
+      auto itV1 = vertexMap.find(oldV1);
+      if(itV1 == vertexMap.end())
+      {
+        newV1 = outVertices.size() / 3;
+        outVertices.push_back(vertices[oldV1 * 3]);
+        outVertices.push_back(vertices[oldV1 * 3 + 1]);
+        outVertices.push_back(vertices[oldV1 * 3 + 2]);
+
+        vertexMap[oldV1] = newV1;
+      }
+      else
+      {
+        newV1 = itV1->second;
+      }
+
+      // Now add the edge to outEdges
+      outEdges.push_back(newV0);
+      outEdges.push_back(newV1);
+    }
+  }
+}
+
+void printRegionSliceFiles(int32 regionId, int32 sliceId, const std::vector<LineSegment>& lineSegments)
+{
+  if(lineSegments.empty())
+  {
+    fmt::print("NO LINES: Region {}  Slice {}\n", regionId, sliceId);
+    return;
+  }
+  std::string outputVertsFilePath = fmt::format("/tmp/{}_{}_verts.csv", regionId, sliceId);
+  std::ofstream vertsFile(outputVertsFilePath, std::ios_base::binary);
+  vertsFile << "X,Y,Z\n";
+
+  std::string outputEdgeFilePath = fmt::format("/tmp/{}_{}_edges.csv", regionId, sliceId);
+  std::ofstream edgesFile(outputEdgeFilePath, std::ios_base::binary);
+  edgesFile << "V0,V1\n";
+  usize vertIndex = 0;
+
+  for(const auto& segment : lineSegments)
+  {
+    vertsFile << fmt::format("{}\n", fmt::join(segment.start, ","));
+    vertsFile << fmt::format("{}\n", fmt::join(segment.end, ","));
+
+    edgesFile << vertIndex++ << "," << vertIndex++ << "\n";
+  }
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -145,14 +340,26 @@ const std::atomic_bool& CreateAMScanPaths::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreateAMScanPaths::operator()()
 {
-  // find number of CAD slices and regions
+  // Get References to all the INPUT Data Objects
   auto& CADLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
-  INodeGeometry1D::SharedEdgeList& CADLayerEdges = CADLayers.getEdgesRef();
-  INodeGeometry0D::SharedVertexList& CADLayerVerts = CADLayers.getVerticesRef();
+  INodeGeometry1D::SharedEdgeList& outlineEdges = CADLayers.getEdgesRef();
+  INodeGeometry0D::SharedVertexList& outlineVertices = CADLayers.getVerticesRef();
   auto& cadSliceIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath)->getDataStoreRef();
   auto& cadRegionIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath)->getDataStoreRef();
   usize numCADLayerEdges = CADLayers.getNumberOfEdges();
-  usize numCADLayerVerts = CADLayers.getNumberOfVertices();
+
+  // Get References to all the OUTPUT Data Objects
+  auto& hatchesEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->HatchDataContainerName);
+  hatchesEdgeGeom.resizeEdgeList(0ULL);
+  hatchesEdgeGeom.resizeVertexList(0ULL);
+
+  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& hatchVertsDataStore = hatchesEdgeGeom.getVertices()->getDataStoreRef();
+  AbstractDataStore<INodeGeometry1D::SharedEdgeList::value_type>& hatchesDataStore = hatchesEdgeGeom.getEdges()->getDataStoreRef();
+
+  const DataPath hatchAttributeMatrixPath = m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->HatchAttributeMatrixName);
+  auto& hatchSliceIdsDataStore = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()))->getDataStoreRef();
+  auto& hatchRegionIdsDataStore = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->RegionIdsArrayName))->getDataStoreRef();
+
   int32 numCADLayers = 0;
   int32 numCADRegions = 0;
   for(usize i = 0; i < numCADLayerEdges; i++)
@@ -171,491 +378,75 @@ Result<> CreateAMScanPaths::operator()()
   numCADLayers += 1;
   numCADRegions += 1;
 
-  // get CAD slice heights and find list of edges for each region on each slice
-  std::vector<usize> cDims(1, 2);
-  std::vector<std::vector<std::vector<int32>>> regionEdgeLists(numCADLayers);
-  for(int32 i = 0; i < numCADLayers; i++)
+  using LineSegmentsType = std::vector<LineSegment>;
+
+  // Loop on every Region
+  // Parallelize over the regions?
+  for(int32 regionId = 0; regionId < numCADRegions; regionId++)
   {
-    regionEdgeLists[i].resize(numCADRegions);
-  }
-  std::vector<float32> CADLayerHeights(numCADLayers);
-  for(usize i = 0; i < numCADLayerEdges; i++)
-  {
-    int32 layer = cadSliceIds[i];
-    int32 region = cadRegionIds[i];
-    regionEdgeLists[layer][region].push_back(i);
-    CADLayerHeights[layer] = CADLayerVerts[3 * CADLayerEdges[2 * i] + 2];
-  }
-  if(getCancel())
-  {
-    return {};
-  }
-  // set rotations for each layer, determine number of stripes possible on each layer and determine minimum and maximum coordinates
-  ImageRotationUtilities::Matrix3fR rotMat;
-  rotMat.fill(0.0f);
-  rotMat(0, 0) = 1.0f;
-  rotMat(1, 1) = 1.0f;
-  rotMat(2, 2) = 1.0f;
-  Eigen::Vector3f coords = {0.0f, 0.0f, 0.0f};
-  Eigen::Vector3f newcoords = {0.0f, 0.0f, 0.0f};
-  //  usize numPossibleStripes = 0;
-  std::vector<float32> rotationAngles(numCADLayers, 0.0f);
-  std::vector<std::vector<std::vector<float32>>> boundingBoxes(numCADLayers);
-  for(int32 i = 0; i < numCADLayers; i++)
-  {
-    boundingBoxes[i].resize(numCADRegions);
-    for(int32 j = 0; j < numCADRegions; j++)
+    float angle = 0; // Start at zero degree rotation
+
+    std::vector<LineSegmentsType> regionHatches(numCADLayers);
+
+    // Loop on every slice within that region
+    for(int32 sliceId = 0; sliceId < numCADLayers; sliceId++)
     {
-      boundingBoxes[i][j].resize(4, 0.0);
-      if(!regionEdgeLists[i][j].empty())
+      // Extract the Edges for just this region and slice
+      // This should be output to its own function
+      std::vector<float> outVertices;
+      std::vector<size_t> outEdges;
+
+      extractRegion(outlineVertices, outlineEdges, cadRegionIds, cadSliceIds, regionId, sliceId, outVertices, outEdges);
+
+      regionHatches[sliceId] = ::fillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle);
+
+      // printRegionSliceFiles(regionId, sliceId, regionHatches[sliceId]);
+      angle = angle + m_InputValues->SliceHatchRotationAngle; // Rotate each layer by 67 degrees.
+    }
+
+    // This can come out into a function that could be thread safe in order
+    // to parallelize over each Region
+    // Now that we have our Hatches for a given Region, copy those into an ever expanding Edge Geometry.
+    usize currentNumVerts = hatchVertsDataStore.getNumberOfTuples();
+    usize currentNumEdges = hatchesDataStore.getNumberOfTuples();
+    usize vertStartOffset = currentNumVerts;
+    usize edgeStartOffset = currentNumEdges;
+
+    for(const auto& lineSegmentVector : regionHatches)
+    {
+      currentNumVerts = currentNumVerts + lineSegmentVector.size() * 2;
+      currentNumEdges = currentNumEdges + lineSegmentVector.size();
+    }
+    // Resize the Edge Geometry
+    hatchesEdgeGeom.resizeVertexList(currentNumVerts);
+    hatchesEdgeGeom.resizeEdgeList(currentNumEdges);
+    // Resize the Vertex and Edge Attribute Matrix to the new values
+    hatchesEdgeGeom.getVertexAttributeMatrix()->resizeTuples({currentNumVerts});
+    hatchesEdgeGeom.getEdgeAttributeMatrix()->resizeTuples({currentNumEdges});
+
+    int32 currentSliceId = 0;
+    for(const auto& lineSegmentVector : regionHatches)
+    {
+      for(const auto& lineSegment : lineSegmentVector)
       {
-        boundingBoxes[i][j][0] = std::numeric_limits<float32>::max();
-        boundingBoxes[i][j][1] = std::numeric_limits<float32>::max();
-        boundingBoxes[i][j][2] = -std::numeric_limits<float32>::max();
-        boundingBoxes[i][j][3] = -std::numeric_limits<float32>::max();
+        hatchRegionIdsDataStore[edgeStartOffset] = regionId;
+        hatchSliceIdsDataStore[edgeStartOffset] = currentSliceId;
+
+        hatchVertsDataStore[vertStartOffset * 3] = lineSegment.start[0];
+        hatchVertsDataStore[vertStartOffset * 3 + 1] = lineSegment.start[1];
+        hatchVertsDataStore[vertStartOffset * 3 + 2] = lineSegment.start[2];
+        hatchesDataStore[edgeStartOffset * 2] = vertStartOffset;
+        vertStartOffset++;
+
+        hatchVertsDataStore[vertStartOffset * 3] = lineSegment.end[0];
+        hatchVertsDataStore[vertStartOffset * 3 + 1] = lineSegment.end[1];
+        hatchVertsDataStore[vertStartOffset * 3 + 2] = lineSegment.end[2];
+        hatchesDataStore[edgeStartOffset * 2 + 1] = vertStartOffset;
+        vertStartOffset++;
+        edgeStartOffset++;
       }
-    }
-    rotationAngles[i] = static_cast<float32>(i) * 67.0f * Constants::k_PiOver180D;
-  }
-  if(getCancel())
-  {
-    return {};
-  }
-  // rotate CAD slices so hatching direction will always be 100
-  std::vector<bool> rotatedPtIds(numCADLayerVerts, false);
-  for(int64 i = 0; i < numCADLayerEdges; i++)
-  {
-    int32 curLayer = cadSliceIds[i];
-    int32 curRegion = cadRegionIds[i];
-    if(curLayer < numCADLayers)
-    {
-      float32 angle = rotationAngles[curLayer];
-      std::array<float32, 4> ax = {0.0f, 0.0f, 1.0f, -angle};
-      std::array<float32, 9> om = ax2om(ax);
-      rotMat = toGMatrix(om);
-      for(int j = 0; j < 2; j++)
-      {
-        usize vertIndex = 2 * i + j;
-        usize vert = CADLayerEdges[vertIndex];
-        if(rotatedPtIds[vert])
-        {
-          continue;
-        }
-        coords[0] = CADLayerVerts[3 * vert];
-        coords[1] = CADLayerVerts[3 * vert + 1];
-        coords[2] = CADLayerVerts[3 * vert + 2];
-        newcoords = rotMat * coords;
-        CADLayerVerts[3 * vert] = newcoords[0];
-        CADLayerVerts[3 * vert + 1] = newcoords[1];
-        CADLayerVerts[3 * vert + 2] = newcoords[2];
-        rotatedPtIds[vert] = true;
-        if(boundingBoxes[curLayer][curRegion][0] > newcoords[0])
-        {
-          boundingBoxes[curLayer][curRegion][0] = newcoords[0];
-        }
-        if(boundingBoxes[curLayer][curRegion][1] > newcoords[1])
-        {
-          boundingBoxes[curLayer][curRegion][1] = newcoords[1];
-        }
-        if(boundingBoxes[curLayer][curRegion][2] < newcoords[0])
-        {
-          boundingBoxes[curLayer][curRegion][2] = newcoords[0];
-        }
-        if(boundingBoxes[curLayer][curRegion][3] < newcoords[1])
-        {
-          boundingBoxes[curLayer][curRegion][3] = newcoords[1];
-        }
-      }
+      currentSliceId++;
     }
   }
-
-  // determine hatch positions
-  // create points to use for checking if hatch endpoints are inside of objects
-  std::array<float32, 2> p1 = {0.0f, 0.0f};
-  std::array<float32, 2> p2 = {0.0f, 0.0f};
-
-  std::map<float32, int, std::less<float32>> intersectionCoords;
-  //  int32 headIntersectionCount;
-  //  int32 tailIntersectionCount;
-  //  bool headIsIn = false;
-  //  bool tailIsIn = false;
-  usize hatchCount = 0;
-  //  float32 oneOverHatchSpacing = 1.0f / m_InputValues->HatchSpacing;
-
-  if(getCancel())
-  {
-    return {};
-  }
-
-  float32 coord;
-
-  float32 stripeDir = m_InputValues->HatchSpacing;
-  float32 hatchDir = 1.0;
-  float32 xCoord1, xCoord2, yCoord;
-  float64 timeBase = 0.0;
-  //  float64 hatchTime = m_StripeWidth / m_Speed;
-  float64 turnTime = 0.0005;
-
-  std::vector<float64> vertCoords(60000000, 0.0);
-  std::vector<int32> edgeVertIds(20000000, 0);
-  std::vector<int32> edgeSliceIds(10000000, 0);
-  std::vector<int32> edgeRegionIds(10000000, 0);
-  std::vector<float32> edgePowers(10000000, 0);
-  std::vector<float64> vertTimes(20000000, 0);
-  usize numLayers = boundingBoxes.size();
-  for(usize i = 0; i < numLayers; i++)
-  {
-    usize layer = i;
-    float32 zCoord = CADLayerHeights[layer];
-    timeBase += 10.0;
-    usize numRegions = boundingBoxes[i].size();
-    for(usize j = 0; j < numRegions; j++)
-    {
-      usize region = j;
-      std::vector<int> curEdgeList = regionEdgeLists[layer][region];
-      usize mSize = curEdgeList.size();
-      if(mSize > 0)
-      {
-        float32 minX = (floor(boundingBoxes[i][j][0] / m_InputValues->StripeWidth) - 1) * m_InputValues->StripeWidth;
-        float32 maxX = (ceil(boundingBoxes[i][j][2] / m_InputValues->StripeWidth) + 1) * m_InputValues->StripeWidth;
-        float32 minY = (floor(boundingBoxes[i][j][1] / m_InputValues->HatchSpacing) - 1) * m_InputValues->HatchSpacing;
-        float32 maxY = (ceil(boundingBoxes[i][j][3] / m_InputValues->HatchSpacing) + 1) * m_InputValues->HatchSpacing;
-        xCoord1 = minX;
-        yCoord = minY;
-        while(xCoord1 < maxX)
-        {
-          xCoord2 = xCoord1 + m_InputValues->StripeWidth;
-          while(yCoord >= minY && yCoord <= maxY)
-          {
-            intersectionCoords.clear();
-            p1[0] = xCoord1 - 1000;
-            p1[1] = yCoord;
-            p2[0] = xCoord2 + 1000;
-            p2[1] = yCoord;
-            int* ptr = curEdgeList.data();
-            for(usize m = 0; m < mSize; m++)
-            {
-              usize curEdge = *ptr;
-              usize CADvert1 = CADLayerEdges[2 * curEdge];
-              usize CADvert2 = CADLayerEdges[2 * curEdge + 1];
-              usize vertOffset1 = 3 * CADvert1;
-              usize vertOffset2 = 3 * CADvert2;
-              std::array<float32, 2> vert1 = {CADLayerVerts[vertOffset1], CADLayerVerts[vertOffset1 + 1]};
-              std::array<float32, 2> vert2 = {CADLayerVerts[vertOffset2], CADLayerVerts[vertOffset2 + 1]};
-              char good = determineIntersectCoord(p1, p2, vert1, vert2, coord);
-              if(good == 'i')
-              {
-                intersectionCoords.insert(std::pair<float, usize>(coord, 0ULL));
-              }
-              else if(good == 'c' || good == 'd')
-              {
-                int hitType = 1;
-                if(vert1[1] >= yCoord && vert2[1] >= yCoord)
-                {
-                  hitType = 1;
-                }
-                else if(vert1[1] <= yCoord && vert2[1] <= yCoord)
-                {
-                  hitType = -1;
-                }
-                auto it = intersectionCoords.find(coord);
-                if(it == intersectionCoords.end())
-                {
-                  intersectionCoords.insert(std::pair<float32, int>(coord, hitType));
-                }
-                else
-                {
-                  int curHitType = it->second;
-                  if(curHitType != hitType)
-                  {
-                    it->second = 0;
-                  }
-                  else
-                  {
-                    intersectionCoords.erase(coord);
-                  }
-                }
-              }
-              ptr++;
-            }
-            int32 intersectionSize = intersectionCoords.size();
-            if(intersectionSize > 1)
-            {
-              bool addTurnTime = false;
-              for(auto it = intersectionCoords.begin(); it != intersectionCoords.end(); ++it)
-              {
-                int hitType = it->second;
-                float32 val = it->first;
-                auto itNext = std::next(it);
-                if(itNext != intersectionCoords.end())
-                {
-                  float32 nextVal = itNext->first;
-                  if(hitType != 0)
-                  {
-                    if(hatchDir > 0)
-                    {
-                      intersectionCoords.erase(val);
-                      itNext->second = 0;
-                    }
-                    else
-                    {
-                      intersectionCoords.erase(nextVal);
-                      it->second = 0;
-                    }
-                    it = intersectionCoords.begin();
-                  }
-                }
-              }
-              if(hatchDir > 0)
-              {
-                usize count = 0;
-                usize size = intersectionCoords.size();
-                std::vector<float32> coordVector(size);
-                for(auto it = intersectionCoords.begin(); it != intersectionCoords.end(); ++it)
-                {
-                  coordVector[count] = it->first;
-                  count++;
-                }
-                float32 lastPos = coordVector[0];
-                for(usize k = 0; k < size; k += 2)
-                {
-                  float32 x1 = coordVector[k];
-                  float32 x2 = coordVector[k + 1];
-                  if(x2 <= xCoord1)
-                  {
-                    continue;
-                  }
-                  if(x1 >= xCoord2)
-                  {
-                    continue;
-                  }
-                  if(x1 < xCoord1)
-                  {
-                    x1 = xCoord1;
-                    if(k == 0)
-                    {
-                      lastPos = x1;
-                    }
-                  }
-                  if(x2 > xCoord2)
-                  {
-                    x2 = xCoord2;
-                  }
-                  vertCoords[3 * (2 * hatchCount)] = x1;
-                  vertCoords[3 * (2 * hatchCount) + 1] = yCoord;
-                  vertCoords[3 * (2 * hatchCount) + 2] = zCoord;
-                  vertCoords[3 * (2 * hatchCount + 1)] = x2;
-                  vertCoords[3 * (2 * hatchCount + 1) + 1] = yCoord;
-                  vertCoords[3 * (2 * hatchCount + 1) + 2] = zCoord;
-                  edgeVertIds[2 * hatchCount] = 2 * hatchCount;
-                  edgeVertIds[2 * hatchCount + 1] = 2 * hatchCount + 1;
-                  edgeSliceIds[hatchCount] = layer;
-                  edgeRegionIds[hatchCount] = region;
-                  edgePowers[hatchCount] = m_InputValues->Power;
-                  timeBase += (abs(x1 - lastPos) / m_InputValues->Speed);
-                  lastPos = x1;
-                  vertTimes[2 * hatchCount] = timeBase;
-                  timeBase += (abs(x2 - lastPos) / m_InputValues->Speed);
-                  lastPos = x2;
-                  vertTimes[2 * hatchCount + 1] = timeBase;
-                  hatchCount++;
-                  addTurnTime = true;
-                  if(6 * hatchCount >= vertCoords.size())
-                  {
-                    int64_t newSize = hatchCount + 1000000;
-                    vertCoords.resize(newSize * 6);
-                    edgeVertIds.resize(newSize * 2);
-                    edgeSliceIds.resize(newSize);
-                    edgeRegionIds.resize(newSize);
-                    edgePowers.resize(newSize);
-                    vertTimes.resize(newSize * 2);
-                  }
-                }
-              }
-              else
-              {
-                usize count = 0;
-                usize size = intersectionCoords.size();
-                std::vector<float32> coordVector(size);
-                for(auto it = intersectionCoords.begin(); it != intersectionCoords.end(); ++it)
-                {
-                  coordVector[count] = it->first;
-                  count++;
-                }
-                float32 lastPos = coordVector[size - 1];
-                for(int64 k = size - 1; k > 0; k -= 2)
-                {
-                  float32 x1 = coordVector[k];
-                  float32 x2 = coordVector[k - 1];
-                  if(x2 >= xCoord2)
-                  {
-                    continue;
-                  }
-                  if(x1 <= xCoord1)
-                  {
-                    continue;
-                  }
-                  if(x1 > xCoord2)
-                  {
-                    x1 = xCoord2;
-                    if(k == 0)
-                    {
-                      lastPos = x1;
-                    }
-                  }
-                  if(x2 < xCoord1)
-                  {
-                    x2 = xCoord1;
-                  }
-                  vertCoords[3 * (2 * hatchCount)] = x1;
-                  vertCoords[3 * (2 * hatchCount) + 1] = yCoord;
-                  vertCoords[3 * (2 * hatchCount) + 2] = zCoord;
-                  vertCoords[3 * (2 * hatchCount + 1)] = x2;
-                  vertCoords[3 * (2 * hatchCount + 1) + 1] = yCoord;
-                  vertCoords[3 * (2 * hatchCount + 1) + 2] = zCoord;
-                  edgeVertIds[2 * hatchCount] = 2 * hatchCount;
-                  edgeVertIds[2 * hatchCount + 1] = 2 * hatchCount + 1;
-                  edgeSliceIds[hatchCount] = layer;
-                  edgeRegionIds[hatchCount] = region;
-                  edgePowers[hatchCount] = m_InputValues->Power;
-                  timeBase += (abs(x1 - lastPos) / m_InputValues->Speed);
-                  lastPos = x1;
-                  vertTimes[2 * hatchCount] = timeBase;
-                  timeBase += (abs(x2 - lastPos) / m_InputValues->Speed);
-                  lastPos = x2;
-                  vertTimes[2 * hatchCount + 1] = timeBase;
-                  hatchCount++;
-                  addTurnTime = true;
-                  if(6 * hatchCount >= vertCoords.size())
-                  {
-                    int64 newSize = hatchCount + 1000000;
-                    vertCoords.resize(newSize * 6);
-                    edgeVertIds.resize(newSize * 2);
-                    edgeSliceIds.resize(newSize);
-                    edgeRegionIds.resize(newSize);
-                    edgePowers.resize(newSize);
-                    vertTimes.resize(newSize * 2);
-                  }
-                }
-              }
-              if(addTurnTime)
-              {
-                timeBase += turnTime;
-              }
-            }
-            yCoord += stripeDir;
-            hatchDir *= -1.0;
-          }
-          xCoord1 += m_InputValues->StripeWidth;
-          stripeDir *= -1.0f;
-          if(yCoord < minY)
-          {
-            yCoord = minY;
-          }
-          else if(yCoord > maxY)
-          {
-            yCoord = maxY;
-          }
-        }
-      }
-    }
-    if(i % 10 == 0)
-    {
-      m_MessageHandler(fmt::format("Generating Hatches || Layer {} of {}", i, numLayers));
-    }
-  }
-
-  // size hatch geometry correctly now
-  auto& fitHatches = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->HatchDataContainerName);
-  usize numHatchVerts = 2 * hatchCount;
-  fitHatches.resizeVertexList(numHatchVerts);
-  fitHatches.resizeEdgeList(hatchCount);
-  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& hatchVerts = fitHatches.getVertices()->getDataStoreRef();
-  AbstractDataStore<INodeGeometry1D::SharedEdgeList::value_type>& hatches = fitHatches.getEdges()->getDataStoreRef();
-  std::vector<usize> tDims(1, numHatchVerts);
-  fitHatches.getVertexAttributeMatrix()->resizeTuples(tDims);
-  tDims[0] = hatchCount;
-  fitHatches.getEdgeAttributeMatrix()->resizeTuples(tDims);
-
-  auto& times = m_DataStructure.getDataAs<Float64Array>(m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(m_InputValues->TimeArrayName))
-                    ->getDataStoreRef();
-  const DataPath hatchAttributeMatrixPath = m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->HatchAttributeMatrixName);
-  auto& powers = m_DataStructure.getDataAs<Float32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->PowersArrayName))->getDataStoreRef();
-  auto& hatchSliceIds = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()))->getDataStoreRef();
-  auto& hatchRegionIds = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->RegionIdsArrayName))->getDataStoreRef();
-
-  if(getCancel())
-  {
-    return {};
-  }
-  for(usize i = 0; i < hatchCount; i++)
-  {
-    hatchVerts[3 * (2 * i) + 0] = vertCoords[3 * (2 * i) + 0];
-    hatchVerts[3 * (2 * i) + 1] = vertCoords[3 * (2 * i) + 1];
-    hatchVerts[3 * (2 * i) + 2] = vertCoords[3 * (2 * i) + 2];
-    hatchVerts[3 * (2 * i + 1) + 0] = vertCoords[3 * (2 * i + 1) + 0];
-    hatchVerts[3 * (2 * i + 1) + 1] = vertCoords[3 * (2 * i + 1) + 1];
-    hatchVerts[3 * (2 * i + 1) + 2] = vertCoords[3 * (2 * i + 1) + 2];
-    hatches[2 * i + 0] = edgeVertIds[2 * i + 0];
-    hatches[2 * i + 1] = edgeVertIds[2 * i + 1];
-    hatchSliceIds[i] = edgeSliceIds[i];
-    hatchRegionIds[i] = edgeRegionIds[i];
-    powers[i] = edgePowers[i];
-    times[2 * i + 0] = vertTimes[2 * i + 0];
-    times[2 * i + 1] = vertTimes[2 * i + 1];
-  }
-
-  // rotate all vertices back to original orientations of the hatching
-  // rotate the CAD slices back too
-  for(usize i = 0; i < hatchCount; i++)
-  {
-    int32 curLayer = hatchSliceIds[i];
-    float32 angle = rotationAngles[curLayer];
-    std::array<float32, 4> ax = {0.0f, 0.0f, 1.0f, angle};
-    std::array<float32, 9> om = ax2om(ax);
-    rotMat = toGMatrix(om);
-    for(int j = 0; j < 2; j++)
-    {
-      int64 vert = hatches[2 * i + j];
-      coords[0] = hatchVerts[3 * vert];
-      coords[1] = hatchVerts[3 * vert + 1];
-      coords[2] = hatchVerts[3 * vert + 2];
-      newcoords = rotMat * coords;
-      hatchVerts[3 * vert] = newcoords[0];
-      hatchVerts[3 * vert + 1] = newcoords[1];
-      hatchVerts[3 * vert + 2] = newcoords[2];
-    }
-  }
-  for(int64 i = 0; i < numCADLayerEdges; i++)
-  {
-    int32 curLayer = cadSliceIds[i];
-    if(curLayer < numCADLayers)
-    {
-      float32 angle = rotationAngles[curLayer];
-      std::array<float32, 4> ax = {0.0f, 0.0f, 1.0f, angle};
-      std::array<float32, 9> om = ax2om(ax);
-      rotMat = toGMatrix(om);
-      for(int j = 0; j < 2; j++)
-      {
-        usize vertIndex = 2 * i + j;
-        int64 vert = CADLayerEdges[vertIndex];
-        if(!rotatedPtIds[vert])
-        {
-          continue;
-        }
-        coords[0] = CADLayerVerts[3 * vert];
-        coords[1] = CADLayerVerts[3 * vert + 1];
-        coords[2] = CADLayerVerts[3 * vert + 2];
-        newcoords = rotMat * coords;
-        CADLayerVerts[3 * vert] = newcoords[0];
-        CADLayerVerts[3 * vert + 1] = newcoords[1];
-        CADLayerVerts[3 * vert + 2] = newcoords[2];
-        rotatedPtIds[vert] = false;
-      }
-    }
-  }
-
-  m_MessageHandler("Complete");
-
   return {};
 }
