@@ -17,6 +17,8 @@ If *Fill Holes* is set to *true*:
 
 *Note:* if there are in fact "holes" in the sample, then this **Filter** will "close" them (if *Fill Holes* is set to true) by calling all the **Cells** "inside" the sample *good*.  If the user wants to reidentify those holes, then reuse the threshold **Filter** with the criteria of *GoodVoxels = 1* and whatever original criteria identified the "holes", as this will limit applying those original criteria to within the sample and not the outer border region.
 
+*Additional Note:* Only completely water-tight, internal holes within the sample are addressed when *Fill Holes* is enabled.  To fill in a contiguous group of good cells that includes holes located along the outer edge of the sample, try enabling *Process Data Slice-By-Slice*.  For each slice of the chosen plane, this will search for the largest contiguous set of *good* **Cells**, set all other *good* **Cells** to be *bad* **Cells**, and (if *Fill Holes* is enabled) fill all water-tight holes PER SLICE instead of the whole 3D volume at once.  This option can be used to allow non water-tight holes to be filled without also accidentally filling the surrounding overscan area.
+
 | Name | Description |
 |------|-------------|
 |![Small IN100 IPF Map](Images/Small_IN100.png) | Good dataset to use this filter |
