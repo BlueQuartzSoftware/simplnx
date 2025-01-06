@@ -3,6 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -30,18 +31,9 @@ AlignSectionsMutualInformation::~AlignSectionsMutualInformation() noexcept = def
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMutualInformation::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  Result<> result = execute(imageGeom.getDimensions());
-  if(result.invalid())
-  {
-    return result;
-  }
-  if(m_Result.invalid())
-  {
-    return m_Result;
-  }
-  return {};
+  return execute(gridGeom.getDimensions());
 }
 
 // -----------------------------------------------------------------------------

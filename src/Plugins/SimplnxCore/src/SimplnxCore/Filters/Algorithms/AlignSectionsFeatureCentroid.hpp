@@ -13,12 +13,13 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
+  DataPath ImageGeometryPath;
+  DataPath MaskArrayPath;
   bool WriteAlignmentShifts;
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
+
   bool UseReferenceSlice;
   int32 ReferenceSlice;
-  DataPath MaskArrayPath;
-  DataPath inputImageGeometry;
   DataPath cellDataGroupPath;
 };
 
@@ -48,7 +49,6 @@ private:
   const AlignSectionsFeatureCentroidInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  Result<> m_Result;
 };
 
 } // namespace nx::core

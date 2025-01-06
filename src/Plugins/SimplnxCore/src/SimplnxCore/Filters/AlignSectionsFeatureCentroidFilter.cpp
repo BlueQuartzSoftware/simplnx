@@ -161,7 +161,7 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
   inputValues.UseReferenceSlice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
   inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();

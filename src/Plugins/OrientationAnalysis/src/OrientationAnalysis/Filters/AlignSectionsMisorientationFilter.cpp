@@ -191,16 +191,16 @@ Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStruc
                                                         const std::atomic_bool& shouldCancel) const
 {
   AlignSectionsMisorientationInputValues inputValues;
-  inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputValues.inputImageGeometry);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputValues.ImageGeometryPath);
   inputValues.cellDataGroupPath = inputGeom->getCellDataPath();
   inputValues.writeAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
-  inputValues.alignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
+  inputValues.AlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  inputValues.useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return AlignSectionsMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();

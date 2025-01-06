@@ -15,14 +15,15 @@ namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
 {
+  DataPath ImageGeometryPath;
+  bool UseMask;
+  DataPath MaskArrayPath;
   bool WriteAlignmentShifts;
   FileSystemPathParameter::ValueType AlignmentShiftFileName;
+
   float32 MisorientationTolerance;
-  bool UseMask;
-  DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
-  DataPath MaskArrayPath;
   DataPath CrystalStructuresArrayPath;
 };
 
@@ -55,7 +56,6 @@ private:
   const AlignSectionsMutualInformationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  Result<> m_Result = {};
 
   std::unique_ptr<MaskCompare> m_MaskCompare = nullptr;
 };

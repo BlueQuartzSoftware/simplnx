@@ -1,6 +1,7 @@
 #include "AlignSectionsFeatureCentroid.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -26,17 +27,9 @@ AlignSectionsFeatureCentroid::~AlignSectionsFeatureCentroid() noexcept = default
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::operator()()
 {
-  const auto& gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->inputImageGeometry);
-  Result<> result = execute(gridGeom->getDimensions());
-  if(result.invalid())
-  {
-    return result;
-  }
-  if(m_Result.invalid())
-  {
-    return m_Result;
-  }
-  return {};
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+
+  return execute(gridGeom.getDimensions());
 }
 
 // -----------------------------------------------------------------------------
@@ -90,7 +83,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
             << "Slice_A,Slice_B,New X Shift,New Y Shift,X Shift, Y Shift, X Centroid, Y Centroid" << std::endl;
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->inputImageGeometry);
+  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
   SizeVec3 dims = gridGeom->getDimensions();
 

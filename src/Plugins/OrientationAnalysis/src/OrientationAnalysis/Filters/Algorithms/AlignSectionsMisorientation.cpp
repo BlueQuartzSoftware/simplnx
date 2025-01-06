@@ -29,18 +29,9 @@ AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::operator()()
 {
-  const auto& gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->inputImageGeometry);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  Result<> result = execute(gridGeom->getDimensions());
-  if(result.invalid())
-  {
-    return result;
-  }
-  if(m_Result.invalid())
-  {
-    return m_Result;
-  }
-  return {};
+  return execute(gridGeom.getDimensions());
 }
 
 // -----------------------------------------------------------------------------
@@ -62,16 +53,16 @@ std::vector<DataPath> AlignSectionsMisorientation::getSelectedDataPaths() const
 Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
-  if(m_InputValues->useGoodVoxels)
+  if(m_InputValues->UseMask)
   {
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
+      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
       return MakeErrorResult(-53900, message);
     }
   }
@@ -81,20 +72,20 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   {
     // Make sure any directory path is also available as the user may have just typed
     // in a path without actually creating the full path
-    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->alignmentShiftFileName.parent_path());
+    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->AlignmentShiftFileName.parent_path());
     if(createDirectoriesResult.invalid())
     {
       return createDirectoriesResult;
     }
-    outFile.open(m_InputValues->alignmentShiftFileName, std::ios_base::out);
+    outFile.open(m_InputValues->AlignmentShiftFileName, std::ios_base::out);
     if(!outFile.is_open())
     {
-      std::string message = fmt::format("Error creating output shifts file with file path {}", m_InputValues->alignmentShiftFileName.string());
+      std::string message = fmt::format("Error creating output shifts file with file path {}", m_InputValues->AlignmentShiftFileName.string());
       return MakeErrorResult(-53801, message);
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->inputImageGeometry);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
@@ -173,7 +164,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                   count++;
                   int64_t refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
                   int64_t curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
-                  if(!m_InputValues->useGoodVoxels || maskCompare->bothTrue(refposition, curposition))
+                  if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
                   {
                     float angle = std::numeric_limits<float>::max();
                     if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
@@ -193,7 +184,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                       disorientation++;
                     }
                   }
-                  if(m_InputValues->useGoodVoxels)
+                  if(m_InputValues->UseMask)
                   {
                     if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
                     {

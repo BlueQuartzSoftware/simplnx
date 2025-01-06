@@ -18,15 +18,16 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMisorientationInputValues
 {
+  DataPath ImageGeometryPath;
+  bool UseMask;
+  DataPath MaskArrayPath;
   bool writeAlignmentShifts;
-  FileSystemPathParameter::ValueType alignmentShiftFileName;
+  FileSystemPathParameter::ValueType AlignmentShiftFileName;
+
   float32 misorientationTolerance;
-  bool useGoodVoxels;
-  DataPath inputImageGeometry;
   DataPath cellDataGroupPath;
   DataPath quatsArrayPath;
   DataPath cellPhasesArrayPath;
-  DataPath goodVoxelsArrayPath;
   DataPath crystalStructuresArrayPath;
 };
 
@@ -56,6 +57,5 @@ private:
   const AlignSectionsMisorientationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  Result<> m_Result;
 };
 } // namespace nx::core
