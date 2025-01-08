@@ -5,9 +5,12 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
+
+#include <unordered_set>
 
 using namespace nx::core;
 
@@ -19,134 +22,16 @@ using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_ty
 constexpr double k_Multiplier = 1.0 / (4.0 * Constants::k_PiD);
 constexpr float64 k_ScaleFactor = 1.0;
 
-constexpr uint64 k_MaxOptimizedValue = static_cast<uint64>(std::numeric_limits<uint32>::max());
-
-template<typename T>
-usize SafeEdgeCount(const AbstractDataStore<T>& faceStore)
-{
-  const usize numFaces = faceStore.getNumberOfTuples();
-  const usize numComp = faceStore.getNumberOfComponents();
-  T v0 = 0;
-  T v1 = 0;
-  
-  std::set<std::pair<T, T>> edgeSet;
-
-  for(usize i = 0; i < numFaces; i++)
-  {
-    const usize offset = i * numComp;
-
-    for(usize j = 0; j < numComp; j++)
-    {
-      if(j == (numComp - 1))
-      {
-        if(faceStore[offset + j] > faceStore[offset + 0])
-        {
-          v0 = faceStore[offset + 0];
-          v1 = faceStore[offset + j];
-        }
-        else
-        {
-          v0 = faceStore[offset + j];
-          v1 = faceStore[offset + 0];
-        }
-      }
-      else
-      {
-        if(faceStore[offset + j] > faceStore[offset + j + 1])
-        {
-          v0 = faceStore[offset + j + 1];
-          v1 = faceStore[offset + j];
-        }
-        else
-        {
-          v0 = faceStore[offset + j];
-          v1 = faceStore[offset + j + 1];
-        }
-      }
-      std::pair<T, T> edge = std::make_pair(v0, v1);
-      edgeSet.insert(edge);
-    }
-  }
-
-  return edgeSet.size();
-}
-
-template<typename T>
-usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
-{
-  const usize numFaces = faceStore.getNumberOfTuples();
-  const usize numComp = faceStore.getNumberOfComponents();
-  uint32 v0 = 0;
-  uint32 v1 = 0;
-
-  std::set<uint64> edgeSet;
-
-  for(usize i = 0; i < numFaces; i++)
-  {
-    const usize offset = i * numComp;
-
-    for(usize j = 0; j < numComp; j++)
-    {
-      if(j == (numComp - 1))
-      {
-        if(faceStore[offset + j] > faceStore[offset + 0])
-        {
-          v0 = static_cast<uint32>(faceStore[offset + 0]);
-          v1 = static_cast<uint32>(faceStore[offset + j]);
-        }
-        else
-        {
-          v0 = static_cast<uint32>(faceStore[offset + j]);
-          v1 = static_cast<uint32>(faceStore[offset + 0]);
-        }
-      }
-      else
-      {
-        if(faceStore[offset + j] > faceStore[offset + j + 1])
-        {
-          v0 = static_cast<uint32>(faceStore[offset + j + 1]);
-          v1 = static_cast<uint32>(faceStore[offset + j]);
-        }
-        else
-        {
-          v0 = static_cast<uint32>(faceStore[offset + j]);
-          v1 = static_cast<uint32>(faceStore[offset + j + 1]);
-        }
-      }
-
-      edgeSet.insert(static_cast<uint64>(v0) << 32 | v1);
-    }
-  }
-
-  return edgeSet.size();
-}
-
-template<typename T>
-usize FindNumEdges(const AbstractDataStore<T>& faceStore, usize numVertices = (k_MaxOptimizedValue + 1))
-{
-  // This case may seem niche, but it is designed with Indexing types in mind specifically IGeometry::MeshIndexType
-  if constexpr(!std::is_signed_v<T>)
-  {
-    if(numVertices < k_MaxOptimizedValue)
-    {
-      // speedier method because max vertices value fits into uint32
-      return FastEdgeCount(faceStore);
-    }
-  }
-  // Slower method to avoid overflow
-  return SafeEdgeCount(faceStore);
-}
-
 usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
 {
   return numVertices + numFaces - (2 * numRegions);
 }
 
-template<typename T>
+template <typename T>
 bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usize numRegions)
 {
   // Expensive call
-  usize numEdges = FindNumEdges(faceStore, numVertices);
+  usize numEdges = GeometryHelpers::Connectivity::FindNumEdges(faceStore, numVertices);
 
   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
 }
@@ -274,7 +159,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
   // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
   // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
   usize numRegions = *std::max_element(faceLabels.begin(), faceLabels.end());
-  
+
   if(!ValidateMesh(triangleList, verts.getNumberOfTuples(), numRegions))
   {
     return MakeErrorResult(-64720, fmt::format("The Euler Characteristic of the shape was found to be unequal to 2, this implies the shape may not be watertight or is malformed."));

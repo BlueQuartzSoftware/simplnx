@@ -9,6 +9,8 @@
 
 #include <Eigen/Dense>
 
+#include <unordered_set>
+
 namespace nx::core
 {
 namespace GeometryHelpers
@@ -32,6 +34,146 @@ SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, 
 
 namespace Connectivity
 {
+namespace detail
+{
+constexpr uint64 k_MaxOptimizedValue = static_cast<uint64>(std::numeric_limits<uint32>::max());
+
+/**
+ * @brief !!! DO NOT CALL DIRECTLY !!! Prefer FindNumEdges()
+ * @tparam T indexing type of the face store
+ * @param faceStore This is the  face indexing list containing values that correspond to indices in the SharedVertexList
+ * @return usize This is the number of edges
+ */
+template <typename T>
+usize SafeEdgeCount(const AbstractDataStore<T>& faceStore)
+{
+  const usize numFaces = faceStore.getNumberOfTuples();
+  const usize numComp = faceStore.getNumberOfComponents();
+  T v0 = 0;
+  T v1 = 0;
+
+  std::set<std::pair<T, T>> edgeSet;
+
+  for(usize i = 0; i < numFaces; i++)
+  {
+    const usize offset = i * numComp;
+
+    for(usize j = 0; j < numComp; j++)
+    {
+      if(j == (numComp - 1))
+      {
+        if(faceStore[offset + j] > faceStore[offset + 0])
+        {
+          v0 = faceStore[offset + 0];
+          v1 = faceStore[offset + j];
+        }
+        else
+        {
+          v0 = faceStore[offset + j];
+          v1 = faceStore[offset + 0];
+        }
+      }
+      else
+      {
+        if(faceStore[offset + j] > faceStore[offset + j + 1])
+        {
+          v0 = faceStore[offset + j + 1];
+          v1 = faceStore[offset + j];
+        }
+        else
+        {
+          v0 = faceStore[offset + j];
+          v1 = faceStore[offset + j + 1];
+        }
+      }
+      std::pair<T, T> edge = std::make_pair(v0, v1);
+      edgeSet.insert(edge);
+    }
+  }
+
+  return edgeSet.size();
+}
+
+/**
+ * @brief !!! DO NOT CALL DIRECTLY !!! Prefer FindNumEdges()
+ * @tparam T indexing type of the face store
+ * @param faceStore This is the  face indexing list containing values that correspond to indices in the SharedVertexList
+ * @return usize This is the number of edges
+ */
+template <typename T>
+usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
+{
+  const usize numFaces = faceStore.getNumberOfTuples();
+  const usize numComp = faceStore.getNumberOfComponents();
+  uint32 v0 = 0;
+  uint32 v1 = 0;
+
+  std::unordered_set<uint64> edgeSet;
+
+  for(usize i = 0; i < numFaces; i++)
+  {
+    const usize offset = i * numComp;
+
+    for(usize j = 0; j < numComp; j++)
+    {
+      if(j == (numComp - 1))
+      {
+        if(faceStore[offset + j] > faceStore[offset + 0])
+        {
+          v0 = static_cast<uint32>(faceStore[offset + 0]);
+          v1 = static_cast<uint32>(faceStore[offset + j]);
+        }
+        else
+        {
+          v0 = static_cast<uint32>(faceStore[offset + j]);
+          v1 = static_cast<uint32>(faceStore[offset + 0]);
+        }
+      }
+      else
+      {
+        if(faceStore[offset + j] > faceStore[offset + j + 1])
+        {
+          v0 = static_cast<uint32>(faceStore[offset + j + 1]);
+          v1 = static_cast<uint32>(faceStore[offset + j]);
+        }
+        else
+        {
+          v0 = static_cast<uint32>(faceStore[offset + j]);
+          v1 = static_cast<uint32>(faceStore[offset + j + 1]);
+        }
+      }
+
+      edgeSet.insert(static_cast<uint64>(v0) << 32 | v1);
+    }
+  }
+
+  return edgeSet.size();
+}
+} // namespace detail
+
+/**
+ * @brief !!! EXPENSIVE !!! This function is a wrapper method for implicitly determining the correct edge calculation/counting algorithm
+ * @tparam T indexing type of the face store
+ * @param faceStore This is the  face indexing list containing values that correspond to indices in the SharedVertexList
+ * @param numVertices This value is optional, since it is exclusively used for determining if faster algorithm is viable
+ * @return usize This is the number of edges
+ */
+template <typename T>
+usize FindNumEdges(const AbstractDataStore<T>& faceStore, usize numVertices = (detail::k_MaxOptimizedValue + 1))
+{
+  // This case may seem niche, but it is designed with Indexing types in mind specifically IGeometry::MeshIndexType
+  if constexpr(!std::is_signed_v<T>)
+  {
+    if(numVertices < detail::k_MaxOptimizedValue)
+    {
+      // speedier method because max vertices value fits into uint32
+      return detail::FastEdgeCount(faceStore);
+    }
+  }
+  // Slower method to avoid overflow
+  return detail::SafeEdgeCount(faceStore);
+}
+
 /**
  * @brief
  * @tparam T
