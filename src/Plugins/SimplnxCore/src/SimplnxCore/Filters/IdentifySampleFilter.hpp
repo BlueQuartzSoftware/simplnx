@@ -23,7 +23,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_FillHoles_Key = "fill_holes";
   static inline constexpr StringLiteral k_SliceBySlice_Key = "slice_by_slice";
-  static inline constexpr StringLiteral k_SliceBySlicePlane_Key = "slice_by_slice_plane";
+  static inline constexpr StringLiteral k_SliceBySlicePlane_Key = "slice_by_slice_plane_index";
   static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
