@@ -469,7 +469,7 @@ Parameters IdentifySampleFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the mask array defining what is sample and what is not", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::boolean, nx::core::DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  
+
   params.linkParameters(k_SliceBySlice_Key, k_SliceBySlicePlane_Key, true);
 
   return params;
