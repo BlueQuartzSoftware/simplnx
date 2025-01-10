@@ -36,6 +36,166 @@ bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usiz
   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
 }
 
+// Be sure to pass validity bool
+struct FeatureIntersectionTriangles
+{
+  IGeometry::MeshIndexType xIndex = 0;
+  IGeometry::MeshIndexType yIndex = 0;
+  IGeometry::MeshIndexType zIndex = 0;
+};
+
+std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStore<int32>& faceLabelsStore, const AbstractDataStore<IGeometry::MeshIndexType>& TriStore,
+                                                          const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore, const AbstractDataStore<float32>& centroidsStore,
+                                                          IGeometry::MeshIndexType featureId, std::vector<FeatureIntersectionTriangles>& intersections)
+{
+  // Alias for templating later
+  using T = IGeometry::SharedVertexList::value_type;
+
+  for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
+  {
+    // TODO:
+    //  - Cancel Check Here
+    //  - pass in orientation matrix
+    //  - Sort out directional vectors
+    //  - Potentially calc dist from feature centroid to triangle centroid
+
+    if(faceLabelsStore[i] != featureId && faceLabelsStore[i + 1] != featureId)
+    {
+      // Triangle not in feature continue
+      continue;
+    }
+
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> orientationMatrix;
+
+    // derive the direction vector for each corresponding axis
+    Eigen::Vector3d xDirVec = Eigen::Vector3d{1.0, 0.0, 0.0} * orientationMatrix;
+    Eigen::Vector3d yDirVec = Eigen::Vector3d{0.0, 1.0, 0.0} * orientationMatrix;
+    Eigen::Vector3d zDirVec = Eigen::Vector3d{0.0, 0.0, 1.0} * orientationMatrix;
+
+    using PointT = Eigen::Vector3<T>;
+
+    PointT pointA = PointT{vertexStore[TriStore[i]], vertexStore[TriStore[i] + 1], vertexStore[TriStore[i] + 2]};
+    PointT pointB = PointT{vertexStore[TriStore[i + 1]], vertexStore[TriStore[i + 1] + 1], vertexStore[TriStore[i + 1] + 2]};
+    PointT pointC = PointT{vertexStore[TriStore[i + 2]], vertexStore[TriStore[i + 2] + 1], vertexStore[TriStore[i + 2] + 2]};
+
+    // Feature centroid
+    PointT origin = PointT{centroidsStore[i], centroidsStore[i + 1], centroidsStore[i + 2]};
+
+    constexpr T epsilon = std::numeric_limits<T>::epsilon();
+
+    PointT edge1 = pointB - pointA;
+    PointT edge2 = pointC - pointA;
+
+    PointT xCrossE2 = xDirVec.cross(edge2);
+    T xDet = edge1.dot(xCrossE2);
+    PointT yCrossE2 = yDirVec.cross(edge2);
+    T yDet = edge1.dot(yCrossE2);
+    PointT zCrossE2 = zDirVec.cross(edge2);
+    T zDet = edge1.dot(zCrossE2);
+
+    if(xDet > -epsilon && xDet < epsilon)
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if(yDet > -epsilon && yDet < epsilon)
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if(zDet > -epsilon && zDet < epsilon)
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    PointT s = origin - pointA;
+
+    T xInvDet = 1.0 / xDet;
+    T yInvDet = 1.0 / yDet;
+    T zInvDet = 1.0 / zDet;
+
+    T xU = xInvDet * s.dot(xCrossE2);
+    T yU = yInvDet * s.dot(yCrossE2);
+    T zU = zInvDet * s.dot(zCrossE2);
+
+    // Allow ADL for efficient absolute value function
+    using std::abs;
+
+    if((xU < 0 && abs(xU) > epsilon) || (xU > 1 && abs(xU - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if((yU < 0 && abs(yU) > epsilon) || (yU > 1 && abs(yU - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if((zU < 0 && abs(zU) > epsilon) || (zU > 1 && abs(zU - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    PointT sCrossE1 = s.cross(edge1);
+
+    T xV = xInvDet * xDirVec.dot(sCrossE1);
+    T yV = yInvDet * yDirVec.dot(sCrossE1);
+    T zV = zInvDet * zDirVec.dot(sCrossE1);
+
+    if((xV < 0 && abs(xV) > epsilon) || (xU + xV > 1 && abs(xU + xV - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if((yV < 0 && abs(yV) > epsilon) || (yU + yV > 1 && abs(yU + yV - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    if((zV < 0 && abs(zV) > epsilon) || (zU + zV > 1 && abs(zU + zV - 1.0) > epsilon))
+    {
+      // Ray is parallel to given triangle
+      return {};
+    }
+
+    T xT = xInvDet * edge2.dot(sCrossE1);
+    T yT = yInvDet * edge2.dot(sCrossE1);
+    T zT = zInvDet * edge2.dot(sCrossE1);
+
+    if(xT > epsilon)
+    {
+      // Ray intersection
+      intersections[featureId].xIndex = i;
+      return origin + xDirVec * xT;
+    }
+
+    if(yT > epsilon)
+    {
+      // Ray intersection
+      intersections[featureId].yIndex = i;
+      return origin + yDirVec * yT;
+    }
+
+    if(zT > epsilon)
+    {
+      // Ray intersection
+      intersections[featureId].zIndex = i;
+      return origin + zDirVec * zT;
+    }
+
+    // Line intersection but not ray intersection
+    return {};
+  }
+}
+
 /**
  * @brief This will extract the 3 vertices from a given triangle face of a triangle geometry. This is MUCH faster
  * than calling the function in the Triangle Geometry because of the dynamic_cast<> that goes on in that function.
