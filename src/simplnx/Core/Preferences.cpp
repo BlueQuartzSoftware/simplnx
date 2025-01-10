@@ -29,10 +29,12 @@ constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 constexpr int32 k_FailedToCreateDirectory_Code = -585;
 constexpr int32 k_FileDoesNotExist_Code = -586;
 constexpr int32 k_FileCouldNotOpen_Code = -587;
+constexpr int32 k_JsonParseError_Code = -588;
 
 constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to the parent directory when saving Preferences";
 constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
 constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
+constexpr StringLiteral k_JsonParseError_Message = "Parsing the JSON Preferences file failed.";
 
 std::filesystem::path getHomeDirectory()
 {
@@ -230,7 +232,14 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
   {
     return MakeErrorResult(k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
   }
-  m_Values = nlohmann::json::parse(fileStream);
+
+  nlohmann::json parsedResult = nlohmann::json::parse(fileStream, nullptr, false);
+  if(parsedResult.is_discarded())
+  {
+    return MakeErrorResult(k_JsonParseError_Code, k_JsonParseError_Message);
+  }
+
+  m_Values = parsedResult;
 
   checkUseOoc();
   return {};
