@@ -14,13 +14,15 @@ namespace
 const std::string k_TestArrayFloatName = "TestArrayFloat";
 const std::string k_TestArrayIntName = "TestArrayInt";
 const std::string k_ThresholdArrayName = "ThresholdArray";
+const std::string k_MultiComponentArrayName = "MultiComponent";
 
 const DataPath k_ImageCellDataName({k_ImageGeometry, k_CellData});
 const DataPath k_TestArrayFloatPath = k_ImageCellDataName.createChildPath(k_TestArrayFloatName);
 const DataPath k_TestArrayIntPath = k_ImageCellDataName.createChildPath(k_TestArrayIntName);
+const DataPath k_MultiComponentArrayPath = k_ImageCellDataName.createChildPath(k_MultiComponentArrayName);
 const DataPath k_ThresholdArrayPath = k_ImageCellDataName.createChildPath(k_ThresholdArrayName);
 
-const DataPath k_MultiComponentArrayPath = k_ImageCellDataName.createChildPath("MultiComponentArray");
+const DataPath k_MismatchingComponentsArrayPath = k_ImageCellDataName.createChildPath("MismatchingComponentsArray");
 const DataPath k_MismatchingTuplesArrayPath({"MismatchingTuplesArray"});
 
 DataStructure CreateTestDataStructure()
@@ -34,24 +36,34 @@ DataStructure CreateTestDataStructure()
 
   std::vector<usize> tDims = {20};
   std::vector<usize> cDims = {1};
+  std::vector<usize> cDimsMulti = {3};
   float fnum = 0.0f;
   int inum = 0;
   AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());
   Float32Array* data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, am->getId());
   Int32Array* data1 = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, am->getId());
+  Int32Array* multiComponentData = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, am->getId());
 
-  Float32Array* invalid1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MultiComponentArrayPath.getTargetName(), tDims, std::vector<usize>{3}, am->getId());
+  Float32Array* invalid1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingComponentsArrayPath.getTargetName(), tDims, cDimsMulti, am->getId());
   invalid1->fill(1.0);
   Float32Array* invalid2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
   invalid2->fill(2.0);
 
+  usize numComponents = multiComponentData->getNumberOfComponents();
+  int32 sign = 1;
+
   // Fill the float array with {.01,.02,.03,.04,.05,.06,.07,.08,.09,.10,.11,.12,.13,.14,.15.,16,.17,.18,.19,.20}
   // Fill the int array with { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 }
+  // Fill multi-component array with {{0, 0, 0}, {1, -1, 1}, {-2, 2, -2}, ..., {17, -17, 17}, {-18, 18, -18}, {19, -19, 19}}
   for(usize i = 0; i < 20; i++)
   {
     fnum += 0.01f;
     (*data)[i] = fnum;  // float array
     (*data1)[i] = inum; // int array
+    multiComponentData->setComponent(i, 0, i * -sign);
+    multiComponentData->setComponent(i, 1, i * sign);
+    multiComponentData->setComponent(i, 2, i * -sign);
+    sign *= -1;
     ++inum;
   }
   return dataStructure;
@@ -221,13 +233,13 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
 
   SECTION("Empty ArrayThresholdSet")
   {
     ArrayThresholdSet thresholdSet;
 
     args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
   SECTION("Empty ArrayThreshold DataPath")
   {
@@ -238,19 +250,33 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
     thresholdSet.setArrayThresholds({threshold});
 
     args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
-  SECTION("MultiComponents in Threshold Array")
+  SECTION("Mismatching Components in Threshold Arrays")
+  {
+    ArrayThresholdSet thresholdSet;
+    auto threshold1 = std::make_shared<ArrayThreshold>();
+    threshold1->setArrayPath(k_TestArrayFloatPath);
+    threshold1->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold1->setComparisonValue(0.1);
+    auto threshold2 = std::make_shared<ArrayThreshold>();
+    threshold2->setArrayPath(k_MismatchingComponentsArrayPath);
+    threshold2->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold2->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold1, threshold2});
+
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Out of Bounds Component Index")
   {
     ArrayThresholdSet thresholdSet;
     auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_MultiComponentArrayPath);
+    threshold->setArrayPath(k_TestArrayFloatPath);
     threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
     threshold->setComparisonValue(0.1);
+    threshold->setComponentIndex(1);
     thresholdSet.setArrayThresholds({threshold});
 
     args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
   SECTION("Mismatching Tuples in Threshold Arrays")
   {
@@ -266,7 +292,6 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
     thresholdSet.setArrayThresholds({threshold1, threshold2});
 
     args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
 
   // Preflight the filter and check result
@@ -674,5 +699,55 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     checkMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
+  }
+}
+
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent", "[SimplnxCore][MultiThresholdObjects]")
+{
+  DataStructure dataStructure = CreateTestDataStructure();
+
+  MultiThresholdObjectsFilter filter;
+  Arguments args;
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setArrayPath(k_MultiComponentArrayPath);
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  threshold->setComparisonValue(0);
+  threshold->setComponentIndex(1);
+  thresholdSet.setArrayThresholds({threshold});
+
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArray != nullptr);
+
+  usize numTuples = thresholdArray->getNumberOfTuples();
+
+  // (x, y, z)
+  // y > 0
+  // even tuple indices should be true except 0
+  REQUIRE_FALSE((*thresholdArray)[0]);
+  for(usize i = 1; i < numTuples; i++)
+  {
+    bool value = (*thresholdArray)[i];
+    if(i % 2 == 0)
+    {
+      REQUIRE(value);
+    }
+    else
+    {
+      REQUIRE_FALSE(value);
+    }
   }
 }
