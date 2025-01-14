@@ -47,11 +47,8 @@ struct IdentifySampleFunctor
     std::vector<bool> checked(totalPoints, false);
     std::vector<bool> sample(totalPoints, false);
     int64 biggestBlock = 0;
-    usize count = 0;
-    int32 good = 0;
+
     int64 neighbor = 0;
-    int64 column = 0, row = 0, plane = 0;
-    int64 index = 0;
 
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
@@ -71,16 +68,16 @@ struct IdentifySampleFunctor
       if(!checked[i] && goodVoxels.getValue(i))
       {
         currentVList.push_back(i);
-        count = 0;
+        usize count = 0;
         while(count < currentVList.size())
         {
-          index = currentVList[count];
-          column = index % xp;
-          row = (index / xp) % yp;
-          plane = index / (xp * yp);
+          int64 index = currentVList[count];
+          int64 column = index % xp;
+          int64 row = (index / xp) % yp;
+          int64 plane = index / (xp * yp);
           for(int32 j = 0; j < 6; j++)
           {
-            good = 1;
+            int32 good = 1;
             neighbor = index + neighborPoints[j];
             if(j == 0 && plane == 0)
             {
@@ -157,21 +154,21 @@ struct IdentifySampleFunctor
         if(!checked[i] && !goodVoxels.getValue(i))
         {
           currentVList.push_back(i);
-          count = 0;
+          usize count = 0;
           touchesBoundary = false;
           while(count < currentVList.size())
           {
-            index = currentVList[count];
-            column = index % xp;
-            row = (index / xp) % yp;
-            plane = index / (xp * yp);
+            int64 index = currentVList[count];
+            int64 column = index % xp;
+            int64 row = (index / xp) % yp;
+            int64 plane = index / (xp * yp);
             if(column == 0 || column == (xp - 1) || row == 0 || row == (yp - 1) || plane == 0 || plane == (zp - 1))
             {
               touchesBoundary = true;
             }
             for(int32 j = 0; j < 6; j++)
             {
-              good = 1;
+              int32 good = 1;
               neighbor = index + neighborPoints[j];
               if(j == 0 && plane == 0)
               {
