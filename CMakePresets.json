@@ -120,13 +120,55 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-v143"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/python.exe"
+        },
+        "MKDOCS_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/Scripts/mkdocs.exe"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "$env{ANACONDA_ROOT}/envs/dream3d/Scripts/sphinx-build.exe"
+        },
+        "VTK_DIR": {
+          "type": "PATH",
+          "value": "$env{VTK_DIR}"
+        },
+        "Qt6_DIR": {
+          "type": "PATH",
+          "value": "$env{Qt6_DIR}"
+        },
+        "CMAKE_PREFIX_PATH": {
+          "type": "STRING",
+          "value": "$env{CMAKE_PREFIX_PATH}"
+        },
+        "BUILDNAME": {
+          "type": "STRING",
+          "value": "$env{PRESET_NAME}-$env{BUILD_BUILDNUMBER}-PR$env{SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "$env{NINJA_INSTALL}/ninja.exe"
+        },
+        "PLUSNative_DIR":{
+          "type": "PATH",
+          "value": "$env{PLUSNative_DIR}"
         }
+      },
+      "environment": {
       }
     },
     {
       "name": "ci-macos-x64",
       "displayName": "ci-macos-x64",
-      "description": "Build configuration for GitHub Actions CI",
+      "description": "Build configuration for Azure SIMPLNX CI",
       "generator": "Ninja",
       "inherits": "ci",
       "cacheVariables": {
@@ -140,12 +182,47 @@
         },
         "Python3_EXECUTABLE": {
           "type": "PATH",
-          "value": "/Users/runner/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/python"
         },
-        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
-          "type": "BOOL",
-          "value": "ON"
+        "MKDOCS_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/mkdocs"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/sphinx-build"
+        },
+        "VTK_DIR": {
+          "type": "PATH",
+          "value": "/Users/Shared/NX_SDK/VTK-9.3.1-Release/lib/cmake/vtk-9.3"
+        },
+        "Qt6_DIR": {
+          "type": "PATH",
+          "value": "/Users/Shared/NX_SDK/Qt/6.6.3/macos/lib/cmake/Qt6"
+        },
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {
+          "type": "STRING",
+          "value": "11.7"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "/opt/local/bin/ninja"
+        },
+        "BUILDNAME": {
+          "type": "STRING",
+          "value": "$env{PRESET_NAME}-$env{BUILD_BUILDNUMBER}-PR$env{SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "PLUSNative_DIR":{
+          "type": "PATH",
+          "value": "/Users/Shared/NX_SDK/Protection_PLUS_5"
         }
+      },
+      "environment": {
+        "VCPKG_INSTALLATION_ROOT": "/opt/AzureDevOps/vcpkg"
       }
     },
     {
@@ -176,69 +253,7 @@
     {
       "name": "ci-linux-x64",
       "displayName": "ci-linux-x64",
-      "description": "Build configuration for GitHub Actions CI",
-      "generator": "Ninja",
-      "inherits": "ci",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-linux-dynamic"
-        },
-        "VCPKG_HOST_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-linux-dynamic"
-        },
-        "Python3_EXECUTABLE": {
-          "type": "PATH",
-          "value": "/opt/hostedtoolcache/Python/3.10.13/x64/bin/python3.10"
-        }
-      }
-    },
-    {
-      "name": "ci-windows-v143-ooc",
-      "displayName": "ci-windows-v143-ooc",
-      "description": "Build configuration for Azure Out-of-Core builds",
-      "generator": "Visual Studio 17 2022",
-      "inherits": "ci",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-windows-v143"
-        },
-        "VCPKG_HOST_TRIPLET": {
-          "type": "STRING",
-          "value": "x64-windows-v143"
-        },        
-        "VCPKG_MANIFEST_FEATURES": {
-          "type": "STRING",
-          "value": "python;tests;parallel;itk;ebsd;compressors"
-        },
-        "SIMPLNX_ENABLE_COMPRESSORS": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "SIMPLNX_EXTRA_PLUGINS": {
-          "type": "STRING",
-          "value": "FileStore;SimplnxReview"
-        },
-        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "SIMPLNX_SimplnxReview_SOURCE_DIR": {
-          "type": "PATH",
-          "value": "${sourceDir}/SimplnxReview"
-        },
-        "SIMPLNX_FileStore_SOURCE_DIR": {
-          "type": "PATH",
-          "value": "${sourceDir}/FileStore"
-        }
-      }
-    },
-    {
-      "name": "ci-linux-x64-ooc",
-      "displayName": "ci-linux-x64-ooc",
-      "description": "Build configuration for Azure Out-of-Core builds",
+      "description": "Build configuration for Azure SIMPLNX CI",
       "generator": "Ninja",
       "inherits": "ci",
       "cacheVariables": {
@@ -253,31 +268,38 @@
         "Python3_EXECUTABLE": {
           "type": "PATH",
           "value": "/opt/local/anaconda3/envs/dream3d/bin/python"
-        },        
-        "VCPKG_MANIFEST_FEATURES": {
-          "type": "STRING",
-          "value": "python;tests;parallel;itk;ebsd;compressors"
         },
-        "SIMPLNX_ENABLE_COMPRESSORS": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "SIMPLNX_EXTRA_PLUGINS": {
-          "type": "STRING",
-          "value": "FileStore;SimplnxReview"
-        },
-        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
-          "type": "BOOL",
-          "value": "ON"
-        },
-        "SIMPLNX_SimplnxReview_SOURCE_DIR": {
+        "MKDOCS_EXECUTABLE": {
           "type": "PATH",
-          "value": "${sourceDir}/SimplnxReview"
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/mkdocs"
         },
-        "SIMPLNX_FileStore_SOURCE_DIR": {
+        "SPHINX_BUILD_EXECUTABLE": {
           "type": "PATH",
-          "value": "${sourceDir}/FileStore"
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/sphinx-build"
+        },
+        "VTK_DIR": {
+          "type": "PATH",
+          "value": "/opt/NX_SDK/VTK-9.3.1-Release/lib/cmake/vtk-9.3"
+        },
+        "Qt6_DIR": {
+          "type": "PATH",
+          "value": "/opt/NX_SDK/Qt/6.6.3/gcc_64/lib/cmake/Qt6"
+        },
+        "BUILDNAME": {
+          "type": "STRING",
+          "value": "$env{PRESET_NAME}-$env{BUILD_BUILDNUMBER}-PR$env{SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "PLUSNative_DIR":{
+          "type": "PATH",
+          "value": "/opt/NX_SDK/softwarekey/protectionplus5"
         }
+      },
+      "environment": {
+        "VCPKG_INSTALLATION_ROOT": "/opt/buildbot/agent/vcpkg"
       }
     },
     {
