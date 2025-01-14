@@ -670,6 +670,7 @@ PYBIND11_MODULE(simplnx, mod)
   arrayThreshold.def_property("array_path", &ArrayThreshold::getArrayPath, &ArrayThreshold::setArrayPath);
   arrayThreshold.def_property("value", &ArrayThreshold::getComparisonValue, &ArrayThreshold::setComparisonValue);
   arrayThreshold.def_property("comparison", &ArrayThreshold::getComparisonType, &ArrayThreshold::setComparisonType);
+  arrayThreshold.def_property("component_index", &ArrayThreshold::getComponentIndex, &ArrayThreshold::setComponentIndex);
 
   py::class_<ArrayThresholdSet, IArrayThreshold, std::shared_ptr<ArrayThresholdSet>> arrayThresholdSet(mod, "ArrayThresholdSet");
   arrayThresholdSet.def(py::init<>());

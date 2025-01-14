@@ -30,7 +30,7 @@ IParameter::AcceptedTypes ArrayThresholdsParameter::acceptedTypes() const
 //------------------------------------------------------------------------------
 IParameter::VersionType ArrayThresholdsParameter::getVersion() const
 {
-  return 1;
+  return 2;
 }
 
 nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const

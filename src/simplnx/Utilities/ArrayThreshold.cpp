@@ -11,6 +11,7 @@ constexpr StringLiteral k_Inverted_Tag = "inverted";
 constexpr StringLiteral k_Union_Tag = "union";
 constexpr StringLiteral k_Value_Tag = "value";
 constexpr StringLiteral k_ArrayPath_Tag = "array_path";
+constexpr StringLiteral k_ComponentIndex_Tag = "component_index";
 constexpr StringLiteral k_Comparison_Tag = "comparison";
 constexpr StringLiteral k_Thresholds_Tag = "thresholds";
 
@@ -114,6 +115,16 @@ void ArrayThreshold::setComparisonValue(ComparisonValue value)
   m_Value = value;
 }
 
+usize ArrayThreshold::getComponentIndex() const
+{
+  return m_ComponentIndex;
+}
+
+void ArrayThreshold::setComponentIndex(usize index)
+{
+  m_ComponentIndex = index;
+}
+
 ArrayThreshold::ComparisonType ArrayThreshold::getComparisonType() const
 {
   return m_Comparison;
@@ -133,6 +144,7 @@ nlohmann::json ArrayThreshold::toJson() const
   auto json = IArrayThreshold::toJson();
   json[k_Type_Tag] = k_ArrayType;
   json[k_ArrayPath_Tag] = getArrayPath().toString();
+  json[k_ComponentIndex_Tag] = getComponentIndex();
   json[k_Value_Tag] = getComparisonValue();
   json[k_Comparison_Tag] = getComparisonType();
 
@@ -157,6 +169,8 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
       return nullptr;
     }
     threshold->setArrayPath(arrayPath.value());
+    usize componentIndex = json.contains(k_ComponentIndex_Tag) ? json[k_ComponentIndex_Tag].get<usize>() : 0;
+    threshold->setComponentIndex(componentIndex);
     threshold->setComparisonType(static_cast<ComparisonType>(json[k_Comparison_Tag].get<int32>()));
     threshold->setComparisonValue(json[k_Value_Tag].get<ComparisonValue>());
 

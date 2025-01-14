@@ -75,6 +75,9 @@ public:
   [[nodiscard]] ComparisonValue getComparisonValue() const;
   void setComparisonValue(ComparisonValue value);
 
+  [[nodiscard]] usize getComponentIndex() const;
+  void setComponentIndex(usize index);
+
   [[nodiscard]] ComparisonType getComparisonType() const;
   void setComparisonType(ComparisonType comparison);
 
@@ -86,6 +89,7 @@ public:
 private:
   DataPath m_ArrayPath;
   ComparisonValue m_Value{0.0};
+  usize m_ComponentIndex = 0;
   ComparisonType m_Comparison{ComparisonType::GreaterThan};
 };
 
