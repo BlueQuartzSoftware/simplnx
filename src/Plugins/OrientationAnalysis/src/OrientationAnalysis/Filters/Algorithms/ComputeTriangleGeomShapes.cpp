@@ -36,28 +36,28 @@ bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usiz
   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
 }
 
-// Be sure to pass validity bool
-struct FeatureIntersectionTriangles
+struct AxialLengths
 {
-  IGeometry::MeshIndexType xIndex = 0;
-  IGeometry::MeshIndexType yIndex = 0;
-  IGeometry::MeshIndexType zIndex = 0;
+  IGeometry::SharedVertexList::value_type xLength = 0.0;
+  IGeometry::SharedVertexList::value_type yLength = 0.0;
+  IGeometry::SharedVertexList::value_type zLength = 0.0;
 };
 
-std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStore<int32>& faceLabelsStore, const AbstractDataStore<IGeometry::MeshIndexType>& TriStore,
+// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
+AxialLengths FindIntersections(const AbstractDataStore<int32>& faceLabelsStore, const AbstractDataStore<IGeometry::MeshIndexType>& TriStore,
                                                           const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore, const AbstractDataStore<float32>& centroidsStore,
-                                                          IGeometry::MeshIndexType featureId, std::vector<FeatureIntersectionTriangles>& intersections)
+                                                          IGeometry::MeshIndexType featureId, bool& valid)
 {
   // Alias for templating later
   using T = IGeometry::SharedVertexList::value_type;
+
+  AxialLengths lengths;
 
   for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
   {
     // TODO:
     //  - Cancel Check Here
     //  - pass in orientation matrix
-    //  - Sort out directional vectors
-    //  - Potentially calc dist from feature centroid to triangle centroid
 
     if(faceLabelsStore[i] != featureId && faceLabelsStore[i + 1] != featureId)
     {
@@ -65,18 +65,19 @@ std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStor
       continue;
     }
 
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> orientationMatrix;
+    Eigen::Matrix<T, 3, 3, Eigen::RowMajor> orientationMatrix;
+    using PointT = Eigen::Vector3<T>;
 
     // derive the direction vector for each corresponding axis
-    Eigen::Vector3d xDirVec = Eigen::Vector3d{1.0, 0.0, 0.0} * orientationMatrix;
-    Eigen::Vector3d yDirVec = Eigen::Vector3d{0.0, 1.0, 0.0} * orientationMatrix;
-    Eigen::Vector3d zDirVec = Eigen::Vector3d{0.0, 0.0, 1.0} * orientationMatrix;
-
-    using PointT = Eigen::Vector3<T>;
+    PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
+    PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
+    PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
 
     PointT pointA = PointT{vertexStore[TriStore[i]], vertexStore[TriStore[i] + 1], vertexStore[TriStore[i] + 2]};
     PointT pointB = PointT{vertexStore[TriStore[i + 1]], vertexStore[TriStore[i + 1] + 1], vertexStore[TriStore[i + 1] + 2]};
     PointT pointC = PointT{vertexStore[TriStore[i + 2]], vertexStore[TriStore[i + 2] + 1], vertexStore[TriStore[i + 2] + 2]};
+
+    PointT triCentroid = (pointA + pointB + pointC) / 3;
 
     // Feature centroid
     PointT origin = PointT{centroidsStore[i], centroidsStore[i + 1], centroidsStore[i + 2]};
@@ -96,19 +97,19 @@ std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStor
     if(xDet > -epsilon && xDet < epsilon)
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if(yDet > -epsilon && yDet < epsilon)
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if(zDet > -epsilon && zDet < epsilon)
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     PointT s = origin - pointA;
@@ -127,19 +128,19 @@ std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStor
     if((xU < 0 && abs(xU) > epsilon) || (xU > 1 && abs(xU - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if((yU < 0 && abs(yU) > epsilon) || (yU > 1 && abs(yU - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if((zU < 0 && abs(zU) > epsilon) || (zU > 1 && abs(zU - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     PointT sCrossE1 = s.cross(edge1);
@@ -151,19 +152,19 @@ std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStor
     if((xV < 0 && abs(xV) > epsilon) || (xU + xV > 1 && abs(xU + xV - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if((yV < 0 && abs(yV) > epsilon) || (yU + yV > 1 && abs(yU + yV - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     if((zV < 0 && abs(zV) > epsilon) || (zU + zV > 1 && abs(zU + zV - 1.0) > epsilon))
     {
       // Ray is parallel to given triangle
-      return {};
+      continue;
     }
 
     T xT = xInvDet * edge2.dot(sCrossE1);
@@ -173,27 +174,46 @@ std::array<IGeometry::MeshIndexType, 3> FindIntersections(const AbstractDataStor
     if(xT > epsilon)
     {
       // Ray intersection
-      intersections[featureId].xIndex = i;
-      return origin + xDirVec * xT;
+      using std::sqrt; // Allow ADL
+      T distance = sqrt((triCentroid - origin).array().square().sum());
+      if(distance > lengths.xLength)
+      {
+        lengths.xLength = distance;
+      }
     }
 
     if(yT > epsilon)
     {
       // Ray intersection
-      intersections[featureId].yIndex = i;
-      return origin + yDirVec * yT;
+      using std::sqrt; // Allow ADL
+      T distance = sqrt((triCentroid - origin).array().square().sum());
+      if(distance > lengths.xLength)
+      {
+        lengths.yLength = distance;
+      }
     }
 
     if(zT > epsilon)
     {
       // Ray intersection
-      intersections[featureId].zIndex = i;
-      return origin + zDirVec * zT;
+      using std::sqrt; // Allow ADL
+      T distance = sqrt((triCentroid - origin).array().square().sum());
+      if(distance > lengths.xLength)
+      {
+        lengths.zLength = distance;
+      }
     }
 
     // Line intersection but not ray intersection
-    return {};
   }
+
+  // Check for zeroes (probably invalid)
+  if(!lengths.xLength || !lengths.yLength || !lengths.zLength)
+  {
+    valid = false;
+  }
+
+  return lengths;
 }
 
 /**
