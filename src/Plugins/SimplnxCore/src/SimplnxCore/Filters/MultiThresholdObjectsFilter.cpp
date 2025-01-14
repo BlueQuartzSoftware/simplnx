@@ -19,93 +19,77 @@ namespace nx::core
 {
 namespace
 {
-template <typename U>
+Result<> CheckComponentIndicesInThresholds(const ArrayThresholdSet& thresholds, const DataStructure& dataStructure)
+{
+  Result<> finalResult;
+  for(const auto& threshold : thresholds.getArrayThresholds())
+  {
+    const IArrayThreshold* thresholdPtr = threshold.get();
+    if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
+    {
+      Result<> result = CheckComponentIndicesInThresholds(*comparisonSet, dataStructure);
+      finalResult = MergeResults(std::move(result), std::move(finalResult));
+    }
+    else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
+    {
+      DataPath dataPath = comparisonValue->getArrayPath();
+      const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+      usize index = comparisonValue->getComponentIndex();
+      usize numComponents = currentDataArray.getNumberOfComponents();
+      if(index >= currentDataArray.getNumberOfComponents())
+      {
+        finalResult = MergeResults(MakeErrorResult(to_underlying(MultiThresholdObjectsFilter::ErrorCodes::InvalidComponentIndex),
+                                                   fmt::format("Array '{}' has {} component(s) but index {} was selected", dataPath.toString(), numComponents, index)),
+                                   std::move(finalResult));
+      }
+    }
+  }
+  return finalResult;
+}
+
+template <class U>
 class ThresholdFilterHelper
 {
 public:
-  ThresholdFilterHelper(nx::core::ArrayThreshold::ComparisonType compType, nx::core::ArrayThreshold::ComparisonValue compValue, std::vector<U>& output)
+  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output)
   : m_ComparisonOperator(compType)
   , m_ComparisonValue(compValue)
+  , m_ComponentIndex(componentIndex)
   , m_Output(output)
   {
   }
 
-  ~ThresholdFilterHelper() = default;
-
-  /**
-   * @brief
-   */
-  template <typename T>
-  void filterDataLessThan(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
+  template <class CompT, class T>
+  void filterDataWithComparision(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
   {
-    size_t m_NumValues = m_Input.getNumberOfTuples();
+    size_t numTuples = m_Input.getNumberOfTuples();
     T value = static_cast<T>(m_ComparisonValue);
-    for(size_t i = 0; i < m_NumValues; ++i)
+    for(size_t tupleIndex = 0; tupleIndex < numTuples; ++tupleIndex)
     {
-      m_Output[i] = (m_Input[i] < value) ? trueValue : falseValue;
+      T inputValue = m_Input.getComponentValue(tupleIndex, m_ComponentIndex);
+      T outputValue = CompT{}(inputValue, value) ? trueValue : falseValue;
+      m_Output[tupleIndex] = outputValue;
     }
   }
 
-  /**
-   * @brief
-   */
-  template <typename T>
-  void filterDataGreaterThan(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
-  {
-    size_t m_NumValues = m_Input.getNumberOfTuples();
-    T value = static_cast<T>(m_ComparisonValue);
-    for(size_t i = 0; i < m_NumValues; ++i)
-    {
-      m_Output[i] = (m_Input[i] > value) ? trueValue : falseValue;
-    }
-  }
-
-  /**
-   * @brief
-   */
-  template <typename T>
-  void filterDataEqualTo(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
-  {
-    size_t m_NumValues = m_Input.getNumberOfTuples();
-    T value = static_cast<T>(m_ComparisonValue);
-    for(size_t i = 0; i < m_NumValues; ++i)
-    {
-      m_Output[i] = (m_Input[i] == value) ? trueValue : falseValue;
-    }
-  }
-
-  /**
-   * @brief
-   */
-  template <typename T>
-  void filterDataNotEqualTo(const AbstractDataStore<T>& m_Input, T trueValue, T falseValue)
-  {
-    size_t m_NumValues = m_Input.getNumberOfTuples();
-    T value = static_cast<T>(m_ComparisonValue);
-    for(size_t i = 0; i < m_NumValues; ++i)
-    {
-      m_Output[i] = (m_Input[i] != value) ? trueValue : falseValue;
-    }
-  }
-
-  template <typename Type>
-  void filterData(const AbstractDataStore<Type>& input, Type trueValue, Type falseValue)
+  template <class T>
+  void filterData(const AbstractDataStore<T>& input, T trueValue, T falseValue)
   {
     if(m_ComparisonOperator == ArrayThreshold::ComparisonType::LessThan)
     {
-      filterDataLessThan<Type>(input, trueValue, falseValue);
+      filterDataWithComparision<std::less<>, T>(input, trueValue, falseValue);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::GreaterThan)
     {
-      filterDataGreaterThan<Type>(input, trueValue, falseValue);
+      filterDataWithComparision<std::greater<>, T>(input, trueValue, falseValue);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_Equal)
     {
-      filterDataEqualTo<Type>(input, trueValue, falseValue);
+      filterDataWithComparision<std::equal_to<>, T>(input, trueValue, falseValue);
     }
     else if(m_ComparisonOperator == ArrayThreshold::ComparisonType::Operator_NotEqual)
     {
-      filterDataNotEqualTo<Type>(input, trueValue, falseValue);
+      filterDataWithComparision<std::not_equal_to<>, T>(input, trueValue, falseValue);
     }
     else
     {
@@ -115,23 +99,18 @@ public:
   }
 
 private:
-  nx::core::ArrayThreshold::ComparisonType m_ComparisonOperator;
-  nx::core::ArrayThreshold::ComparisonValue m_ComparisonValue;
+  ArrayThreshold::ComparisonType m_ComparisonOperator;
+  ArrayThreshold::ComparisonValue m_ComparisonValue;
+  usize m_ComponentIndex = 0;
   std::vector<U>& m_Output;
-
-public:
-  ThresholdFilterHelper(const ThresholdFilterHelper&) = delete;            // Copy Constructor Not Implemented
-  ThresholdFilterHelper(ThresholdFilterHelper&&) = delete;                 // Move Constructor Not Implemented
-  ThresholdFilterHelper& operator=(const ThresholdFilterHelper&) = delete; // Copy Assignment Not Implemented
-  ThresholdFilterHelper& operator=(ThresholdFilterHelper&&) = delete;      // Move Assignment Not Implemented
 };
 
 struct ExecuteThresholdHelper
 {
   template <typename Type, typename MaskType>
-  void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray* iDataArray, Type trueValue, Type falseValue)
+  void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray& iDataArray, Type trueValue, Type falseValue)
   {
-    const auto& dataStore = iDataArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
+    const auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<Type>>();
     helper.template filterData<Type>(dataStore, trueValue, falseValue);
   }
 };
@@ -167,30 +146,26 @@ void InsertThreshold(usize numItems, AbstractDataStore<T>& currentStore, nx::cor
 }
 
 template <typename T>
-void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse,
-                    T trueValue, T falseValue)
+void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+                    T falseValue)
 {
-  if(nullptr == comparisonValue)
-  {
-    err = -1;
-    return;
-  }
-
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultStore.getNumberOfTuples();
   std::vector<T> tempResultVector(totalTuples, falseValue);
 
-  nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue->getComparisonType();
-  nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue->getComparisonValue();
-  nx::core::IArrayThreshold::UnionOperator unionOperator = comparisonValue->getUnionOperator();
+  nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue.getComparisonType();
+  nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue.getComparisonValue();
+  nx::core::IArrayThreshold::UnionOperator unionOperator = comparisonValue.getUnionOperator();
 
-  DataPath inputDataArrayPath = comparisonValue->getArrayPath();
+  DataPath inputDataArrayPath = comparisonValue.getArrayPath();
 
-  ThresholdFilterHelper<T> helper(compOperator, compValue, tempResultVector);
+  usize componentIndex = comparisonValue.getComponentIndex();
 
-  const auto* iDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
+  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector);
 
-  ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray->getDataType(), helper, iDataArray, trueValue, falseValue);
+  const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
+
+  ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray, trueValue, falseValue);
 
   if(replaceInput)
   {
@@ -214,44 +189,36 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, const Data
 struct ThresholdValueFunctor
 {
   template <typename T>
-  void operator()(std::shared_ptr<ArrayThreshold>& comparisonValue, const DataStructure& dataStructure, IDataArray* outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                  T falseValue)
+  void operator()(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue, T falseValue)
   {
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
-    ThresholdValue(comparisonValue, dataStructure, outputResultArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
+    ThresholdValue(comparisonValue, dataStructure, outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
 };
 
 template <typename T>
-void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse,
-                  T trueValue, T falseValue)
+void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultStore, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+                  T falseValue)
 {
-  if(nullptr == inputComparisonSet)
-  {
-    return;
-  }
-
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultStore.getNumberOfTuples();
   std::vector<T> tempResultVector(totalTuples, falseValue);
 
-  T firstValueFound = 0;
+  bool firstValueFound = false;
 
-  ArrayThresholdSet::CollectionType thresholds = inputComparisonSet->getArrayThresholds();
+  ArrayThresholdSet::CollectionType thresholds = inputComparisonSet.getArrayThresholds();
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholds)
   {
-    if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
+    const IArrayThreshold* thresholdPtr = threshold.get();
+    if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ThresholdSet<T>(comparisonSet, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
+      ThresholdSet<T>(*comparisonSet, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
       firstValueFound = true;
     }
-    else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
+    else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-
-      ThresholdValue<T>(comparisonValue, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
+      ThresholdValue<T>(*comparisonValue, dataStructure, outputResultStore, err, !firstValueFound, false, trueValue, falseValue);
       firstValueFound = true;
     }
   }
@@ -271,24 +238,19 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, const 
   else
   {
     // insert into current threshold
-    InsertThreshold<T>(totalTuples, outputResultStore, inputComparisonSet->getUnionOperator(), tempResultVector, inverse, trueValue, falseValue);
+    InsertThreshold<T>(totalTuples, outputResultStore, inputComparisonSet.getUnionOperator(), tempResultVector, inverse, trueValue, falseValue);
   }
 }
 
 struct ThresholdSetFunctor
 {
   template <typename T>
-  void operator()(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, const DataStructure& dataStructure, IDataArray* outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
                   T falseValue)
   {
-    if(outputResultArray == nullptr)
-    {
-      return;
-    }
-
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
-    ThresholdSet<T>(inputComparisonSet, dataStructure, outputResultArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
+    ThresholdSet<T>(inputComparisonSet, dataStructure, outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), err, replaceInput, inverse, trueValue, falseValue);
   }
 };
 
@@ -359,7 +321,7 @@ Parameters MultiThresholdObjectsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholdsObject_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{},
-                                                           ArrayThresholdsParameter::AllowedComponentShapes{{1}}));
+                                                           ArrayThresholdsParameter::AllowedComponentShapes{}));
   params.insert(std::make_unique<DataTypeParameter>(k_CreatedMaskType_Key, "Mask Type", "DataType used for the created Mask Array", DataType::boolean));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomTrueValue, "Use Custom TRUE Value", "Specifies whether to output a custom TRUE value (the default value is 1)", false));
   params.insert(std::make_unique<NumberParameter<float64>>(k_CustomTrueValue, "Custom TRUE Value", "This is the custom TRUE value that will be output to the mask array", 1.0));
@@ -404,52 +366,46 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
     return MakePreflightErrorResult(-4000, "No data arrays were found for calculating threshold");
   }
 
-  for(const auto& path : thresholdPaths)
-  {
-    if(dataStructure.getData(path) == nullptr)
-    {
-      auto errorMessage = fmt::format("Could not find DataArray at path {}.", path.toString());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::PathNotFoundError), errorMessage}})};
-    }
-  }
-
-  // Check for Scalar arrays
-  for(const auto& dataPath : thresholdPaths)
-  {
-    const auto* currentDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
-    {
-      auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::NonScalarArrayFound), errorMessage}})};
-    }
-  }
-
-  // Check that all arrays the number of tuples match
   DataPath firstDataPath = *(thresholdPaths.begin());
-  const auto* dataArray = dataStructure.getDataAs<IDataArray>(firstDataPath);
-  size_t numTuples = dataArray->getNumberOfTuples();
+  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(firstDataPath);
 
+  // Check for same number of tuples and components
+  usize numTuples = dataArray.getNumberOfTuples();
+  usize numComponents = dataArray.getNumberOfComponents();
   for(const auto& dataPath : thresholdPaths)
   {
-    const auto* currentDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    if(numTuples != currentDataArray->getNumberOfTuples())
+    const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    usize currentNumTuples = currentDataArray.getNumberOfTuples();
+    if(currentNumTuples != numTuples)
+    {
+      auto errorMessage = fmt::format("Data Arrays do not have same equal number of tuples. '{}:{}' and '{}:{}'", firstDataPath.toString(), numTuples, dataPath.toString(), currentNumTuples);
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::UnequalTuples), errorMessage);
+    }
+    usize currentNumComponents = currentDataArray.getNumberOfComponents();
+    if(currentNumComponents != numComponents)
     {
       auto errorMessage =
-          fmt::format("Data Arrays do not have same equal number of tuples. '{}:{}' and '{}'", firstDataPath.toString(), numTuples, dataPath.toString(), currentDataArray->getNumberOfTuples());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::UnequalTuples), errorMessage}})};
+          fmt::format("Data Arrays do not have same equal number of components. '{}:{}' and '{}:{}'", firstDataPath.toString(), numComponents, dataPath.toString(), currentNumComponents);
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::UnequalComponents), errorMessage);
     }
+  }
+
+  Result<> componentIndicesResult = CheckComponentIndicesInThresholds(thresholdsObject, dataStructure);
+  if(componentIndicesResult.invalid())
+  {
+    return {ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
   }
 
   if(maskArrayType == DataType::boolean)
   {
     if(useCustomTrueValue)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomTrueWithBoolean), "Cannot use custom TRUE value with a boolean Mask Type."}})};
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::CustomTrueWithBoolean), "Cannot use custom TRUE value with a boolean Mask Type.");
     }
 
     if(useCustomFalseValue)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomFalseWithBoolean), "Cannot use custom FALSE value with a boolean Mask Type."}})};
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::CustomFalseWithBoolean), "Cannot use custom FALSE value with a boolean Mask Type.");
     }
   }
 
@@ -459,7 +415,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom TRUE value ({}) is outside the bounds of the chosen Mask Type ({}).", customTrueValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomTrueOutOfBounds), errorMessage}})};
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::CustomTrueOutOfBounds), errorMessage);
     }
   }
 
@@ -469,13 +425,13 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom FALSE value ({}) is outside the bounds of the chosen Mask Type ({}).", customFalseValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{to_underlying(ErrorCodes::CustomFalseOutOfBounds), errorMessage}})};
+      return MakePreflightErrorResult(to_underlying(ErrorCodes::CustomFalseOutOfBounds), errorMessage);
     }
   }
 
   // Create the output boolean array
   auto action =
-      std::make_unique<CreateArrayAction>(maskArrayType, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray->getDataFormat());
+      std::make_unique<CreateArrayAction>(maskArrayType, dataArray.getIDataStoreRef().getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray.getDataFormat());
 
   OutputActions actions;
   actions.appendAction(std::move(action));
@@ -504,17 +460,16 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
   {
-    if(std::dynamic_pointer_cast<ArrayThresholdSet>(threshold))
+    const IArrayThreshold* thresholdPtr = threshold.get();
+    if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      std::shared_ptr<ArrayThresholdSet> comparisonSet = std::dynamic_pointer_cast<ArrayThresholdSet>(threshold);
-      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, comparisonSet, dataStructure, dataStructure.getDataAs<IDataArray>(maskArrayPath), err, !firstValueFound, thresholdsObject.isInverted(),
-                          trueValue, falseValue);
+      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, *comparisonSet, dataStructure, dataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
+                          thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
-    else if(std::dynamic_pointer_cast<ArrayThreshold>(threshold))
+    else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      std::shared_ptr<ArrayThreshold> comparisonValue = std::dynamic_pointer_cast<ArrayThreshold>(threshold);
-      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, comparisonValue, dataStructure, dataStructure.getDataAs<IDataArray>(maskArrayPath), err, !firstValueFound,
+      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, *comparisonValue, dataStructure, dataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
