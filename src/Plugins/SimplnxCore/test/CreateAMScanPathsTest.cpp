@@ -25,7 +25,7 @@ const nx::core::DataPath k_ComputedScanVectorsPath = DataPath({"Output Scan Vect
 
 const DataObjectNameParameter::ValueType k_EdgeData("Edge Data");
 // const DataObjectNameParameter::ValueType k_VertexData("VertexData");
-const DataObjectNameParameter::ValueType k_RegionIdsName("Part Number");
+const DataObjectNameParameter::ValueType k_RegionIdsName("RegionIds");
 } // namespace
 
 TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[SimplnxCore][CreateAMScanPathsFilter]")
@@ -64,37 +64,27 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write out the .dream3d file now
-#ifndef SIMPLNX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   std::cout << "Writing File: " << fmt::format("{}/create_am_scan_paths_test.dream3d", unit_test::k_BinaryTestOutputDir) << "\n";
   WriteTestDataStructure(dataStructure, fmt::format("{}/create_am_scan_paths_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  //  // Compare the exemplar and the computed outputs
-  //  {
-  //    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarScanVectorsPath);
-  //    auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedScanVectorsPath);
-  //    REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
-  //  }
-  //  {
-  //    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath(k_VertexData).createChildPath(k_Times);
-  //    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_VertexData).createChildPath(k_Times);
-  //    UnitTest::CompareArrays<float64>(dataStructure, exemplarDataArray, computedDataArray);
-  //  }
-  //
-  //  {
-  //    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
-  //    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
-  //    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
-  //  }
-  //  {
-  //    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_Powers);
-  //    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_Powers);
-  //    UnitTest::CompareArrays<float32>(dataStructure, exemplarDataArray, computedDataArray);
-  //  }
-  //
-  //  {
-  //    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_SliceIdsPath.getTargetName());
-  //    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_SliceIdsPath.getTargetName());
-  //    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
-  //  }
+  // Compare the exemplar and the computed outputs
+  {
+    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarScanVectorsPath);
+    auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedScanVectorsPath);
+    REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
+  }
+
+  {
+    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath(k_SliceIdsPath.getTargetName());
+    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_SliceIdsPath.getTargetName());
+    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
+  }
+
+  {
+    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath("RegionIds");
+    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
+    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
+  }
 }
