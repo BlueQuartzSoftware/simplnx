@@ -63,14 +63,12 @@ Parameters CombineStlFilesFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputDir));
 
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_LabelFaces_Key, "Generate Triangle Part Numbers", "When true, each triangle will get an index associated with the index of the STL file", true));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelName_Key, "Created Part Number Array", "The name of the part numbers data array", "Part Number"));
-  params.linkParameters(k_LabelFaces_Key, k_FaceLabelName_Key, true);
+      std::make_unique<BoolParameter>(k_CreatePartNumbers_Key, "Generate Triangle Part Numbers", "When true, each triangle will get an index associated with the index of the STL file", true));
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateFaceLabels_Key, "Generate Triangle Face Labels", "When true, the 'Face Labels' array will be created.", true));
 
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_LabelVertices_Key, "Generate Vertex Part Numbers", "When true, each vertex will get an index associated with the index of the STL file", true));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Part Number Labels", "The name of the part numbers data array", "Part Number"));
-  params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The path to the triangle geometry to be created from the combined STL files",
@@ -80,10 +78,17 @@ Parameters CombineStlFilesFilter::parameters() const
                                                           TriangleGeom::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsArrayName_Key, "Face Normals", "The name of the data array in which to store the face normals for the created triangle geometry",
                                                           "FaceNormals"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PartNumbersName_Key, "Created Part Number Array", "The name of the part numbers data array", "Part Number"));
+  params.linkParameters(k_CreatePartNumbers_Key, k_PartNumbersName_Key, true);
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsName_Key, "Created Face Labels Array", "The name of the 'Face Labels' data array", "Face Labels"));
+  params.linkParameters(k_CreateFaceLabels_Key, k_FaceLabelsName_Key, true);
+
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex level attribute matrix to be created with the geometry",
                                                           TriangleGeom::k_VertexDataName));
 
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Part Number Labels", "The name of the part numbers data array", "Part Number"));
+  params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created feature attribute matrix", "Cell Feature Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(
@@ -117,8 +122,11 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   auto pFaceNormalsArrayNameValue = filterArgs.value<std::string>(k_FaceNormalsArrayName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 
-  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_LabelFaces_Key);
-  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelName_Key);
+  auto createPartNumbers = filterArgs.value<BoolParameter::ValueType>(k_CreatePartNumbers_Key);
+  auto partNumbersName = filterArgs.value<std::string>(k_PartNumbersName_Key);
+
+  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
+  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
 
   auto createVertexLabels = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
   auto vertexLabelsName = filterArgs.value<std::string>(k_VertexLabelName_Key);
@@ -155,10 +163,18 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   }
 
   // If the user wants to label the faces
+  if(createPartNumbers)
+  {
+    auto facePath = faceAttributeMatrixDataPath.createChildPath(partNumbersName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, facePath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
+
+  // If the user wants to label the faces
   if(createFaceLabels)
   {
     auto facePath = faceAttributeMatrixDataPath.createChildPath(faceLabelsName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, facePath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{1}, std::vector<usize>{2}, facePath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -205,8 +221,11 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.FaceAttributeMatrixName = inputValues.TriangleDataContainerName.createChildPath(filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key));
   inputValues.FaceNormalsArrayName = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
 
-  inputValues.LabelFaces = filterArgs.value<BoolParameter::ValueType>(k_LabelFaces_Key);
-  inputValues.FaceFileIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceLabelName_Key));
+  inputValues.CreatePartNumbers = filterArgs.value<BoolParameter::ValueType>(k_CreatePartNumbers_Key);
+  inputValues.PartNumberIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_PartNumbersName_Key));
+
+  inputValues.CreateFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
+  inputValues.FaceLabelIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceLabelsName_Key));
 
   inputValues.LabelVertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
   inputValues.VertexFileIndexArrayPath = DataPath({inputValues.TriangleDataContainerName.getTargetName(), pVertexAttributeMatrixNameValue, filterArgs.value<std::string>(k_VertexLabelName_Key)});

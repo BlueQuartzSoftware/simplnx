@@ -195,11 +195,11 @@ Result<> CombineStlFiles::operator()()
       triCounter += currentGeomNumVertices;
     }
 
-    if(m_InputValues->LabelFaces)
+    if(m_InputValues->CreatePartNumbers)
     {
       // Type checked in preflight; Unsafe acceptable; pointer for speed
-      auto* faceLabelsStore = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->FaceFileIndexArrayPath)->getDataStore();
-      std::fill(faceLabelsStore->begin() + faceLabelOffset, faceLabelsStore->begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
+      auto* partNumberDataStore = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->PartNumberIndexArrayPath)->getDataStore();
+      std::fill(partNumberDataStore->begin() + faceLabelOffset, partNumberDataStore->begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
     }
 
     faceLabelOffset += currentGeomNumTriangles;
@@ -223,6 +223,31 @@ Result<> CombineStlFiles::operator()()
     fileIndex++;
   }
   taskRunner.wait(); // This will spill over if the number of geometries to processes does not divide evenly by the number of threads.
+
+  // Create the Face Labels Array if the user asked for it.
+  if(m_InputValues->CreateFaceLabels)
+  {
+    auto* faceLabelDataStorePtr = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelIndexArrayPath).getDataStore();
+    usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
+    AbstractDataStore<int32>* partNumberDataStorePtr = nullptr;
+    if(m_InputValues->CreatePartNumbers)
+    {
+      partNumberDataStorePtr = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PartNumberIndexArrayPath).getDataStore();
+    }
+
+    for(usize idx = 0; idx < numTuples; idx++)
+    {
+      faceLabelDataStorePtr->setComponent(idx, 0, 0);
+      if(partNumberDataStorePtr != nullptr)
+      {
+        faceLabelDataStorePtr->setComponent(idx, 1, (*partNumberDataStorePtr)[idx]);
+      }
+      else
+      {
+        faceLabelDataStorePtr->setComponent(idx, 1, 1);
+      }
+    }
+  }
 
   return {};
 }

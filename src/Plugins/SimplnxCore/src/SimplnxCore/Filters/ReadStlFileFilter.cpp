@@ -59,12 +59,13 @@ Parameters ReadStlFileFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path(""), FileSystemPathParameter::ExtensionsType{".stl"},
+                                                          FileSystemPathParameter::PathType::InputFile));
+
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
   params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
-
-  params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path(""), FileSystemPathParameter::ExtensionsType{".stl"},
-                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateFaceLabels_Key, "Generate Triangle Face Labels", "When true, the 'Face Labels' array will be created.", true));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
   params.insert(
@@ -78,6 +79,8 @@ Parameters ReadStlFileFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Data [AttributeMatrix]",
                                                           "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Normals", "The name of the triangle normals data array", "Face Normals"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsName_Key, "Created Face Labels Array", "The name of the 'Face Labels' data array", "Face Labels"));
+  params.linkParameters(k_CreateFaceLabels_Key, k_FaceLabelsName_Key, true);
 
   return params;
 }
@@ -103,6 +106,9 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   auto vertexMatrixName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
   auto faceMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
   auto faceNormalsName = filterArgs.value<std::string>(k_FaceNormalsName_Key);
+
+  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
+  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -143,13 +149,23 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   // Create the Triangle Geometry action and store it
-  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
-                                                                                     CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
-  auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
-  resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
-  // Create the face Normals DataArray action and store it
-  auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, faceNormalsPath);
-  resultOutputActions.value().appendAction(std::move(createArrayAction));
+  {
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
+                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+    auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
+    resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
+    // Create the face Normals DataArray action and store it
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, faceNormalsPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+    // If the user wants to label the faces
+    if(createFaceLabels)
+    {
+      DataPath faceAttributeMatrixDataPath = pTriangleGeometryPath.createChildPath(faceMatrixName);
+      auto facePath = faceAttributeMatrixDataPath.createChildPath(faceLabelsName);
+      createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{2}, facePath);
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
+  }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods. (None to store for this filter... yet)
@@ -172,11 +188,28 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 
   auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(faceNormalsName);
 
+  auto createFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
+  auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
+
   auto scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
   auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
   Result<> result = ReadStlFile(dataStructure, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel, messageHandler)();
+
+  // Create the Face Labels Array if the user asked for it.
+  if(createFaceLabels)
+  {
+    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(pTriangleGeometryPath.createChildPath(faceMatrixName).createChildPath(faceLabelsName)).getDataStore();
+    usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
+
+    for(usize idx = 0; idx < numTuples; idx++)
+    {
+      faceLabelDataStorePtr->setComponent(idx, 0, 0);
+      faceLabelDataStorePtr->setComponent(idx, 1, 1);
+    }
+  }
+
   return result;
 }
 
