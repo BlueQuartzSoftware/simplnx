@@ -27,7 +27,7 @@ struct RunITKProjectionDataCheckFunctor
   template <class FixedOutputType>
   auto operator()(const DataStructure& dataStructure, const DataPath& selectedInputArray, const DataPath& imageGeomPath, const DataPath& outputArrayPath) const
   {
-    return ITK::DataCheck<ArrayOptionsType, typename FixedOutputTypeHelper<FixedOutputType>::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+    return ITK::DataCheck<ArrayOptionsType, FixedOutputTypeHelper<FixedOutputType>::template FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   }
 };
 
@@ -38,7 +38,7 @@ struct RunITKProjectionExecuteFunctor
   auto operator()(DataStructure& dataStructure, const DataPath& selectedInputArray, const DataPath& imageGeomPath, const DataPath& outputArrayPath, ITKFunctorType&& itkFunctor,
                   const std::atomic_bool& shouldCancel) const
   {
-    return ITK::Execute<ArrayOptionsType, typename FixedOutputTypeHelper<FixedOutputType>::FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+    return ITK::Execute<ArrayOptionsType, FixedOutputTypeHelper<FixedOutputType>::template FilterOutputType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
                                                                                                              shouldCancel);
   }
 };
