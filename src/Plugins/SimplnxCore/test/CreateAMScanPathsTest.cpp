@@ -16,28 +16,26 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Edge Geometry"});
-const nx::core::DataPath k_ExemplarScanVectorsPath = DataPath({"Exemplar Scan Vectors"});
-const nx::core::DataPath k_RegionIdsPath = DataPath({"Exemplar Edge Geometry", "Edge Data", "Region Ids"});
-const nx::core::DataPath k_SliceIdsPath = DataPath({"Exemplar Edge Geometry", "Edge Data", "Slice Ids"});
+const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Slice Geometry"});
+const nx::core::DataPath k_ExemplarScanVectorsPath = DataPath({"Exemplar Scan Paths Geometry"});
+const nx::core::DataPath k_RegionIdsPath = DataPath({"Exemplar Slice Geometry", "Edge Data", "Part Number"});
+const nx::core::DataPath k_SliceIdsPath = DataPath({"Exemplar Slice Geometry", "Edge Data", "Slice Ids"});
 
 const nx::core::DataPath k_ComputedScanVectorsPath = DataPath({"Output Scan Vectors"});
 
 const DataObjectNameParameter::ValueType k_EdgeData("Edge Data");
-// const DataObjectNameParameter::ValueType k_VertexData("Vertex Data");
-const DataObjectNameParameter::ValueType k_Times("Times");
-const DataObjectNameParameter::ValueType k_Powers("Powers");
-const DataObjectNameParameter::ValueType k_RegionIdsName("Region Ids");
+// const DataObjectNameParameter::ValueType k_VertexData("VertexData");
+const DataObjectNameParameter::ValueType k_RegionIdsName("Part Number");
 } // namespace
 
 TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[SimplnxCore][CreateAMScanPathsFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  // const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "scan_path_test_data_v2.tar.gz", "scan_path_test_data");
-  // auto baseDataFilePath = fs::path(fmt::format("{}/scan_path_test_data_v2/scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
-
-  auto baseDataFilePath = fs::path("/Users/Shared/Data/7_create_am_scan_paths_test/create_am_scan_paths_test.dream3d");
+  //  Read Exemplar DREAM3D File Filter
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",
+                                                              "7_0_SurfaceMesh_Test_Files");
+  auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -47,8 +45,8 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   Arguments args;
 
   // Create default Parameters for the filter.
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(0.14f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_StripeWidth_Key, std::make_any<float32>(7.0f));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(0.1f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, std::make_any<float32>(67.0f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(k_ExemplarEdgeGeometryPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(k_SliceIdsPath));

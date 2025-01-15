@@ -14,28 +14,28 @@ using namespace nx::core;
 
 namespace
 {
-const nx::core::DataPath k_InputTriangleGeometryPath = DataPath({"Exemplar Triangle Geometry"});
-const nx::core::DataPath k_RegionIdsPath = DataPath({"Exemplar Triangle Geometry", "Face Data", "RegionIds"});
-const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Edge Geometry"});
+const nx::core::DataPath k_InputTriangleGeometryPath = DataPath({"Input Triangle Geometry"});
+const nx::core::DataPath k_RegionIdsPath = DataPath({"Input Triangle Geometry", "FaceData", "Part Number"});
+const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Slice Geometry"});
 
 const nx::core::DataPath k_ComputedEdgeGeometryPath = DataPath({"Output Edge Geometry"});
 const DataObjectNameParameter::ValueType k_EdgeData("Edge Data");
-const DataObjectNameParameter::ValueType k_SliceData("Slice Data");
+const DataObjectNameParameter::ValueType k_SliceData("Slice Feature Data");
 const DataObjectNameParameter::ValueType k_SliceIds("Slice Ids");
-const DataObjectNameParameter::ValueType k_RegionIdsName("RegionIds");
+const DataObjectNameParameter::ValueType k_RegionIdsName("Part Number");
 } // namespace
 
 TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][SliceTriangleGeometryFilter]")
 {
-
   /// The test data set was reviewed manually by MAJ and found to be correct in output to the
   /// the best of our abilities. This is needed because DREAM.3D did not have
   /// this functionality and so we have nothing to compare against.
 
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "scan_path_test_data_v2.tar.gz", "scan_path_test_data_v2");
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/scan_path_test_data_v2/scan_path_test_data.dream3d", nx::core::unit_test::k_TestFilesDir));
+  //  Read Exemplar DREAM3D File Filter
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",
+                                                              "7_0_SurfaceMesh_Test_Files");
+  auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
+
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -45,7 +45,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   // Create default Parameters for the filter.
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zstart_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_Zend_Key, std::make_any<float32>(0.0f));
-  args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.075000003f));
+  args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceResolution_Key, std::make_any<float32>(0.1f));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_SliceRange_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(true));
   args.insertOrAssign(SliceTriangleGeometryFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(k_InputTriangleGeometryPath));
@@ -63,12 +63,12 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
-  // Write the DataStructure out to the file system
-  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
+// Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   fs::path testFileOutputPath(fmt::format("{}/slice_triangle_geometry.dream3d", unit_test::k_BinaryTestOutputDir));
   std::cout << "Writing Output file: " << testFileOutputPath << std::endl;
   UnitTest::WriteTestDataStructure(dataStructure, testFileOutputPath);
-  // #endif
+#endif
 
   // Compare the exemplar and the computed outputs
   {

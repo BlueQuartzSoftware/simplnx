@@ -198,10 +198,11 @@ void RegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>& points)
 // -----------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
+  const ChoicesParameter::ValueType k_UserDefinedRange = 1;
   /////////////////////////////////////////////////////////////////////////////
   // Slice the Triangle Geometry
   SliceTriangleGeometryInputValues inputValues;
-  inputValues.SliceRange = 1;
+  inputValues.SliceRange = k_UserDefinedRange;
   inputValues.Zstart = m_InputValues->Origin[2] + (m_InputValues->Spacing[2] * 0.5);
   inputValues.Zend = m_InputValues->Origin[2] + (m_InputValues->Dimensions[2] * m_InputValues->Spacing[2]) + (m_InputValues->Spacing[2] * 0.5);
   inputValues.SliceResolution = m_InputValues->Spacing[2];

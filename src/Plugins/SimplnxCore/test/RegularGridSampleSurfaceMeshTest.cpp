@@ -11,11 +11,11 @@ using namespace nx::core;
 
 namespace
 {
-const std::string k_TriGeomName = "STL-Cylinder";
+const std::string k_TriGeomName = "Input Triangle Geometry";
 const DataPath k_TriGeomPath = DataPath({k_TriGeomName});
 const DataPath k_FaceLabelsPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath(Constants::k_FaceLabels);
 
-const std::string k_ExemplarImageGeomName = "RegularGrid";
+const std::string k_ExemplarImageGeomName = "Exemplar Sample Triangle Geometry on Regular Grid";
 const DataPath k_ExemplarImageGeomPath = DataPath({k_ExemplarImageGeomName});
 const DataPath k_ExemplarFeatureIdsPath = k_ExemplarImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
 
@@ -25,16 +25,13 @@ const DataPath k_GeneratedFeatureIdsPath = k_GeneratedImageGeomPath.createChildP
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Execution", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  /**
-   * THe generated test case file for this was generated on a temporary modification of the 6.6 DREAM3D-SIMPL fork where the
-   * random generation was modified to use the same generator, engine, and distribution used in standard SIMPLNX random generation
-   * utilizing the standard library. It was seeded with the std::mt19937::default_seed.
-   */
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_sample_surface_mesh.tar.gz", "6_6_sample_surface_mesh");
+  //  Read Exemplar DREAM3D File Filter
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",
+                                                              "7_0_SurfaceMesh_Test_Files");
+  auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
 
-  // Read Exemplar DREAM3D File Filter
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_sample_surface_mesh/6_6_grid_sample_surface_mesh.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -42,10 +39,10 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{179, 18, 2}));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0f, 1.0f, 1.0f}));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.25f, 0.25f, 0.25f}));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{171, 200, 150}));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0f, 1.99f, 0.0f}));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.1f, 0.1f, 0.02f}));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriGeomPath));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(::k_FaceLabelsPath));
@@ -56,11 +53,10 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    auto result = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result)
   }
 
 // Write the DataStructure out to the file system
