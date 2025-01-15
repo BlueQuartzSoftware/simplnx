@@ -19,7 +19,7 @@ namespace
 {
 const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
-const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("ImageData");
+const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
 
 /**
  * @return

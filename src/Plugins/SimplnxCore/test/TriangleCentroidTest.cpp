@@ -48,9 +48,9 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
 {
   DataStructure dataStructure;
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, k_TriangleGeometryName);
-  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceDataName, {k_FaceTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
   acuteTriangle.setFaceAttributeMatrix(*faceData);
-  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexDataName, {k_VertexTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
   acuteTriangle.setVertexAttributeMatrix(*vertData);
   auto vertexList = CreateVertexList(acuteTriangle, vertData->getId());
   auto facesList = CreateFaceList(acuteTriangle, faceData->getId());
@@ -79,7 +79,7 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
   Arguments args;
 
   DataPath geometryPath = dataStructure.getDataPathsForId(acuteTriangle.getId())[0];
-  DataPath triangleCentroidsDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceDataName).createChildPath(k_CentroidsName);
+  DataPath triangleCentroidsDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName).createChildPath(k_CentroidsName);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(TriangleCentroidFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));

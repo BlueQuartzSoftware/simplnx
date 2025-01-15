@@ -20,8 +20,6 @@ const DataPath k_VertexGeomPath({"VertexGeometry"});
 const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(Constants::k_Mask);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
-
-const DataPath k_VertexListPath = k_ReducedGeomPath.createChildPath("SharedVertexList");
 } // namespace
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
@@ -153,21 +151,21 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_DataName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_DataName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_DataName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_DataName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_CopyTestName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_VertexListName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_SharedVertexListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
 
     UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));

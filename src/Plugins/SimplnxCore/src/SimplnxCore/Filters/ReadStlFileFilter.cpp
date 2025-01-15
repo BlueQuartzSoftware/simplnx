@@ -73,11 +73,12 @@ Parameters ReadStlFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data [AttributeMatrix]",
-                                                          "The name of the AttributeMatrix where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
+                                                          "The name of the AttributeMatrix where the Vertex Data of the Triangle Geometry will be created",
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Data [AttributeMatrix]",
-                                                          "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
+                                                          "The name of the AttributeMatrix where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsName_Key, "Face Normals", "The name of the triangle normals data array", "Face Normals"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsName_Key, "Created Face Labels Array", "The name of the 'Face Labels' data array", "Face Labels"));
   params.linkParameters(k_CreateFaceLabels_Key, k_FaceLabelsName_Key, true);
@@ -151,7 +152,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   // Create the Triangle Geometry action and store it
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
-                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
     // Create the face Normals DataArray action and store it

@@ -288,8 +288,8 @@ Parameters ITKMhaFileReaderFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(ITKImageReaderFilter::k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry",
                                                              DataPath({"ImageDataContainer"})));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_CellDataName_Key, "Created Cell Attribute Matrix", "The name of the created cell attribute matrix",
+                                                          ImageGeom::k_CellAttributeMatrixName));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(ITKImageReaderFilter::k_ImageDataArrayPath_Key, "Created Cell Data",
                                                           "The name of the created image data array. Will be stored in the created Cell Attribute Matrix", "ImageData"));

@@ -86,8 +86,8 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
                                                              "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
   params.insertSeparator(Parameters::Separator{"Output Vertex Attribute Matrix"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry", INodeGeometry0D::k_VertexDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry",
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
@@ -134,7 +134,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
       numTuples = dataStructure.getDataAs<IDataArray>(pSelectedDataArrayPaths[0])->getNumberOfTuples();
     }
 
-    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName, CreateVertexGeometryAction::k_SharedVertexListName);
+    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName, VertexGeom::k_SharedVertexListName);
     resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
   }
 

@@ -134,7 +134,7 @@ class ReadPeregrineHDF5File:
 
     params.insert(nx.Parameters.Separator("Slice Data Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SLICE_DATA_KEY, 'Slice Data Geometry', 'The path to the newly created Slice Data image geometry', nx.DataPath(['Slice Data'])))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SLICE_DATA_CELL_ATTR_MAT_KEY, 'Slice Data Cell Attribute Matrix Name', 'The name of the Slice Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellAttributeMatrixName
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SEGMENTATION_RESULTS_KEY, 'Read Segmentation Results', 'Specifies whether or not to read the segmentation results from the input file.', False))
     params.insert(nx.StringParameter(ReadPeregrineHDF5File.SEGMENTATION_RESULTS_VALUES_KEY, 'Segmentation Results (comma-delimited)', 'The segmentation results numbers that will be read, separated by commas', '0,1,2,3,4,5,6,7,8,9,10,11'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_CAMERA_DATA_KEY, 'Read Camera #1 Data', 'Specifies whether or not to read camera #1 data from the input file.', False))
@@ -157,7 +157,7 @@ class ReadPeregrineHDF5File:
     
     params.insert(nx.Parameters.Separator("Registered Data Parameters"))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.REGISTERED_DATA_KEY, 'Registered Data Geometry', 'The path to the newly created Registered Data image geometry', nx.DataPath(['Registered Data'])))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY, 'Registered Data Cell Attribute Matrix Name', 'The name of the Registered Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellDataName
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.REGISTERED_DATA_CELL_ATTR_MAT_KEY, 'Registered Data Cell Attribute Matrix Name', 'The name of the Registered Data cell attribute matrix', 'Cell Data')) # ImageGeom::k_CellAttributeMatrixName
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_ANOMALY_DETECTION_KEY, 'Read Anomaly Detection', 'Specifies whether or not to read the anomaly detection (part of the registered data) from the input file.', False))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.ANOMALY_DETECTION_ARRAY_NAME_KEY, 'Anomaly Detection Array Name', 'The name of the Anomaly Detection array.', 'Anomaly Detection'))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_X_RAY_CT_KEY, 'Read X-Ray CT', 'Specifies whether or not to read the x-ray CT (part of the registered data) from the input file.', False))
@@ -170,8 +170,8 @@ class ReadPeregrineHDF5File:
     params.insert(nx.Parameters.Separator("Scan Data Parameters"))
     params.insert_linkable_parameter(nx.BoolParameter(ReadPeregrineHDF5File.READ_SCAN_DATASETS_KEY, 'Read Scan Datasets', 'Specifies whether or not to read the scan datasets from the input file.', False))
     params.insert(nx.DataGroupCreationParameter(ReadPeregrineHDF5File.SCAN_DATA_KEY, 'Scan Data Geometry', 'The path to the newly created Scan Data edge geometry', nx.DataPath(['Scan Data'])))
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_CELL_ATTR_MAT_KEY, 'Scan Data Edge Attribute Matrix Name', 'The name of the Scan Data edge attribute matrix', 'Edge Data')) # EdgeGeom::k_EdgeDataName
-    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_ATTR_MAT_KEY, 'Scan Data Vertex Attribute Matrix Name', 'The name of the Scan Data vertex attribute matrix', 'Vertex Data')) # EdgeGeom::k_VertexDataName
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_CELL_ATTR_MAT_KEY, 'Scan Data Edge Attribute Matrix Name', 'The name of the Scan Data edge attribute matrix', 'Edge Data')) # EdgeGeom::k_EdgeAttributeMatrixName
+    params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_ATTR_MAT_KEY, 'Scan Data Vertex Attribute Matrix Name', 'The name of the Scan Data vertex attribute matrix', 'Vertex Data')) # EdgeGeom::k_VertexAttributeMatrixName
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_VERTEX_LIST_NAME_KEY, 'Scan Data Vertex List Array Name', 'The name of the Scan Data vertex list array.', 'Vertices'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.SCAN_DATA_EDGE_LIST_NAME_KEY, 'Scan Data Edge List Array Name', 'The name of the Scan Data edge list array.', 'Edges'))
     params.insert(nx.DataObjectNameParameter(ReadPeregrineHDF5File.TIME_OF_TRAVEL_ARRAY_NAME, 'Scan Data Time of Travel Array Name', 'The name of the Scan Data Time of Travel array.', 'Time of Travel'))

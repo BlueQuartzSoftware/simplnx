@@ -2315,10 +2315,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   const std::string geometryName = "[Geometry Test]";
   const DataPath geometryPath({geometryName});
 
-  const std::string vertexAmName = INodeGeometry0D::k_VertexDataName;
-  const std::string edgeAmName = INodeGeometry1D::k_EdgeDataName;
-  const std::string faceAmName = INodeGeometry2D::k_FaceDataName;
-  const std::string cellAmName = IGridGeometry::k_CellDataName;
+  const std::string vertexAmName = INodeGeometry0D::k_VertexAttributeMatrixName;
+  const std::string edgeAmName = INodeGeometry1D::k_EdgeAttributeMatrixName;
+  const std::string faceAmName = INodeGeometry2D::k_FaceAttributeMatrixName;
+  const std::string cellAmName = IGridGeometry::k_CellAttributeMatrixName;
 
   const std::string vertexListName = "Shared Vertex List";
   const std::string edgeListName = "Edge List";

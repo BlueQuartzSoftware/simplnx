@@ -145,11 +145,11 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
-    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdges)); unsharedEdgesCopy != nullptr)
+    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdgesListName)); unsharedEdgesCopy != nullptr)
     {
       copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_Edges)); edgesCopy != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_SharedEdgeListName)); edgesCopy != nullptr)
     {
       copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
@@ -321,7 +321,7 @@ IGeometry::StatusCode QuadGeom::findUnsharedEdges(bool recalculate)
   if(unsharedEdgeList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-    unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
+    unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdgesListName, std::move(dataStore), getId());
   }
   if(unsharedEdgeList == nullptr)
   {

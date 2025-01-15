@@ -21,7 +21,7 @@ using namespace nx::core::Constants;
 TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTriangleAreasFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";
 
   DataStructure dataStructure;

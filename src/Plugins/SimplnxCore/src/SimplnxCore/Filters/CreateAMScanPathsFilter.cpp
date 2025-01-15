@@ -107,7 +107,7 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
 
   {
     auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pHatchDataContainerNameValue, 1, 2, pVertexAttributeMatrixNameValue, pHatchAttributeMatrixNameValue,
-                                                                           CreateEdgeGeometryAction::k_DefaultVerticesName, CreateEdgeGeometryAction::k_DefaultEdgesName);
+                                                                           EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
   const DataPath hatchAttributeMatrixPath = pHatchDataContainerNameValue.createChildPath(pHatchAttributeMatrixNameValue);

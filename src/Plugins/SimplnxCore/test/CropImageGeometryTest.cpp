@@ -41,7 +41,7 @@ DataStructure CreateDataStructure()
 
   auto imageDimsArray = imageGeomDims.toArray();
   AttributeMatrix::ShapeType cellDataDims{imageDimsArray.crbegin(), imageDimsArray.crend()};
-  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellDataName, cellDataDims, imageGeom->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, cellDataDims, imageGeom->getId());
   imageGeom->setCellData(*cellDataPtr);
 
   Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellDataDims, {1}, cellDataPtr->getId());

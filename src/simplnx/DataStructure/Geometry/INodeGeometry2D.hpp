@@ -18,8 +18,9 @@ inline constexpr int8_t SurfaceQuadPoint = 14;
 class SIMPLNX_EXPORT INodeGeometry2D : public INodeGeometry1D
 {
 public:
-  static inline constexpr StringLiteral k_FaceDataName = "Face Data";
-  static inline constexpr StringLiteral k_Edges = "Shared Edge List";
+  static inline constexpr StringLiteral k_FaceAttributeMatrixName = "Face Data";
+  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName = "Face Feature Data";
+  static inline constexpr StringLiteral k_SharedFacesListName = "Shared Faces List";
   static inline constexpr StringLiteral k_TypeName = "INodeGeometry2D";
 
   INodeGeometry2D() = delete;

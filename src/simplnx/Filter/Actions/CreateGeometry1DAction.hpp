@@ -24,9 +24,6 @@ class CreateGeometry1DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
-  static constexpr StringLiteral k_DefaultEdgesName = "SharedEdgeList";
-
   /**
    * @brief Constructor to create the 1D geometry and allocate a default arrays for the shared vertex & shared edge lists
    * @param geometryPath The path to the created geometry

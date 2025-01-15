@@ -70,7 +70,7 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Pole Figure"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created image geometry", DataPath({"GBCD Pole Figure"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the cell attribute matrix for the created image geometry",
-                                                          ImageGeom::k_CellDataName));
+                                                          ImageGeom::k_CellAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellIntensityArrayName_Key, "Cell MRD Array Name", "The name of the created cell intensity data array", "MRD"));
 
   return params;

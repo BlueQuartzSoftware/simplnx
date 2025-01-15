@@ -79,17 +79,19 @@ Parameters SurfaceNetsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
+                                                          "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created",
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "Node Type", "The complete path to the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
+                                                          "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created",
+                                                          INodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
                                                           "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry1D::k_FaceFeatureAttributeMatrix));
+                                                          "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry2D::k_FaceFeatureAttributeMatrixName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ApplySmoothing_Key, k_SmoothingIterations_Key, true);
@@ -144,7 +146,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   // Create the Triangle Geometry action and store it
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName,
-                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // Create the face NodesType DataArray action and store it

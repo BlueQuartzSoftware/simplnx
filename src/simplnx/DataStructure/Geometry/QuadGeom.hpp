@@ -21,7 +21,6 @@ public:
   static inline constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
   static inline constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
   static inline constexpr StringLiteral k_EltCentroids = "Quad Centroids";
-  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
   static inline constexpr StringLiteral k_TypeName = "QuadGeom";
   /**
    * @brief

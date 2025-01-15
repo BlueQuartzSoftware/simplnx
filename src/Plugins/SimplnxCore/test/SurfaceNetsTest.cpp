@@ -78,8 +78,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][Surface
     REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
 
     // Compare the shift values
-    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath("SharedTriList"), DataPath({exemplarGeometryPath, "SharedTriList"}));
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath("SharedVertexList"), DataPath({exemplarGeometryPath, "SharedVertexList"}));
+    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName), DataPath({exemplarGeometryPath, "SharedTriList"}));
+    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
   }
 
   CompareExemplarToGeneratedData(dataStructure, dataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), exemplarGeometryPath);
@@ -155,8 +155,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: With Smoothing", "[SimplnxCore][Surfa
     REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
 
     // Compare the shift values
-    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath("SharedTriList"), DataPath({exemplarGeometryPath, "SharedTriList"}));
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath("SharedVertexList"), DataPath({exemplarGeometryPath, "SharedVertexList"}));
+    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName), DataPath({exemplarGeometryPath, "SharedTriList"}));
+    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
   }
 
   CompareExemplarToGeneratedData(dataStructure, dataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), exemplarGeometryPath);

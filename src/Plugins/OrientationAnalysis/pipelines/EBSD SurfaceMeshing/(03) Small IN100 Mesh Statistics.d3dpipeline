@@ -50,14 +50,14 @@
               "DataContainer/Cell Feature Data/SlipSystems",
               "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
               "TriangleDataContainer",
-              "TriangleDataContainer/SharedTriList",
-              "TriangleDataContainer/SharedVertexList",
+              "TriangleDataContainer/Shared Faces List",
+              "TriangleDataContainer/Shared Vertex List",
               "TriangleDataContainer/Face Data",
               "TriangleDataContainer/Vertex Data",
               "TriangleDataContainer/Vertex Data/NodeType",
               "TriangleDataContainer/Face Data/FaceLabels",
               "TriangleDataContainer/QM Face Feature Data",
-              "TriangleDataContainer/Edge List"
+              "TriangleDataContainer/Shared Edge List"
             ],
             "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
           },

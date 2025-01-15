@@ -50,9 +50,9 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   std::string dihedralAnglesDataArrayName = "DihedralAngles";
   DataStructure dataStructure;
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, triangleGeometryName);
-  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceDataName, {k_FaceTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
   acuteTriangle.setFaceAttributeMatrix(*faceData);
-  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexDataName, {k_VertexTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
   acuteTriangle.setVertexAttributeMatrix(*vertData);
   auto vertexList = createVertexList(acuteTriangle, vertData->getId());
   auto facesList = createFaceList(acuteTriangle, faceData->getId());
@@ -82,7 +82,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   std::string triangleDihedralAnglesName = "Triangle Dihedral Angles";
 
   DataPath geometryPath = dataStructure.getDataPathsForId(acuteTriangle.getId())[0];
-  DataPath triangleDihedralAnglesDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceDataName).createChildPath(triangleDihedralAnglesName);
+  DataPath triangleDihedralAnglesDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName).createChildPath(triangleDihedralAnglesName);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));

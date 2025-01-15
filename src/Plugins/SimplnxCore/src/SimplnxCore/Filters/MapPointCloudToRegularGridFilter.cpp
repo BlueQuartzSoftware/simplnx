@@ -354,7 +354,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndicesName_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Data Name", "The name of the cell data attribute matrix to be created within the created Image Geometry",
-                                                          ImageGeom::k_CellDataName));
+                                                          ImageGeom::k_CellAttributeMatrixName));
 
   params.linkParameters(k_UseMask_Key, k_InputMaskPath_Key, std::make_any<bool>(true));
   params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, std::make_any<ChoicesParameter::ValueType>(0));

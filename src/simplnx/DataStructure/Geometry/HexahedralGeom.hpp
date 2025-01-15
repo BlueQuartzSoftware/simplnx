@@ -21,8 +21,6 @@ public:
   static inline constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
   static inline constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
   static inline constexpr StringLiteral k_EltCentroids = "Hex Centroids";
-  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
-  static inline constexpr StringLiteral k_UnsharedFaces = "Unshared Face List";
   static inline constexpr StringLiteral k_TypeName = "HexahedralGeom";
 
   /**

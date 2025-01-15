@@ -139,9 +139,10 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name",
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
+      std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceAttributeMatrixName));
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
@@ -210,7 +211,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   usize numFaces = triangleGeom.getNumberOfFaces();
   usize numVertices = triangleGeom.getNumberOfVertices();
   auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeometryAction>(internalTrianglesGeomPath, numFaces, numVertices, vertexDataName, faceDataName,
-                                                                                      CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+                                                                                      TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
   DataPath internalVertexDataPath = createInternalTrianglesAction->getVertexDataPath();
   DataPath internalFaceDataPath = createInternalTrianglesAction->getFaceDataPath();
   actions.appendAction(std::move(createInternalTrianglesAction));
@@ -282,10 +283,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
 
   auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(nodeTypesArrayPath);
 
-  auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultVerticesName);
+  auto internalVerticesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedVertexListName);
   internalTriangleGeom.setVertices(*dataStructure.getDataAs<Float32Array>(internalVerticesPath));
 
-  auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultFacesName);
+  auto internalFacesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedFacesListName);
   internalTriangleGeom.setFaceList(*dataStructure.getDataAs<UInt64Array>(internalFacesPath));
 
   // int64 progIncrement = numTris / 100;

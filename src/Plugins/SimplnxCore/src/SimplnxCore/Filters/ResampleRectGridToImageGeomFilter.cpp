@@ -68,7 +68,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
                                                        std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "Path to the created Image Geometry", DataPath({"Image Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageGeomCellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data Attribute Matrix created with the Image Geometry",
-                                                          ImageGeom::k_CellDataName));
+                                                          ImageGeom::k_CellAttributeMatrixName));
 
   return params;
 }

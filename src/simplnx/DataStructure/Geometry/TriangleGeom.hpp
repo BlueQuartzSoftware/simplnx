@@ -23,8 +23,6 @@ public:
   static inline constexpr StringLiteral k_EltsContainingVert = "Triangles Containing Vert";
   static inline constexpr StringLiteral k_EltNeighbors = "Triangle Neighbors";
   static inline constexpr StringLiteral k_EltCentroids = "Triangle Centroids";
-  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
-  static inline constexpr StringLiteral k_Edges = "Edge List";
   static inline constexpr StringLiteral k_TypeName = "TriangleGeom";
 
   /**

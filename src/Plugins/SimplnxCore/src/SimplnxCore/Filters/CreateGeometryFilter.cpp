@@ -149,13 +149,13 @@ Parameters CreateGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex attribute matrix to be created with the geometry",
-                                                          INodeGeometry0D::k_VertexDataName));
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "The name of the edge attribute matrix to be created with the geometry",
-                                                          INodeGeometry1D::k_EdgeDataName));
+                                                          INodeGeometry1D::k_EdgeAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "The name of the face attribute matrix to be created with the geometry",
-                                                          INodeGeometry2D::k_FaceDataName));
+                                                          INodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell attribute matrix to be created with the geometry",
-                                                          IGridGeometry::k_CellDataName));
+                                                          IGridGeometry::k_CellAttributeMatrixName));
 
   // setup linked parameters
   // image

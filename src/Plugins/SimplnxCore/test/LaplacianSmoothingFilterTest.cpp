@@ -21,9 +21,9 @@ using namespace nx::core::Constants;
 TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";
-  std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexDataName;
+  std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexAttributeMatrixName;
   std::string nodeTypeArrayName = "Node Type";
 
   DataStructure dataStructure;

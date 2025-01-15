@@ -16,7 +16,7 @@ namespace SharedFeatureFaceFilterTest
 const std::string k_TriangleGeometryName = "TriangleDataContainer";
 const std::string k_FaceLabelsName = "FaceLabels";
 const std::string k_FaceFeatureName = "FaceFeatureData";
-const std::string k_FaceDataName = "FaceData";
+const std::string k_FaceAttributeMatrixName = "FaceData";
 const std::string k_GrainBoundaryName = "GrainBoundaryData";
 
 const std::string k_FeatureFaceIdsArrayName = "SharedFeatureFaceId [NX Computed]";
@@ -26,7 +26,7 @@ const std::string k_FeatureFaceLabelsArrayName = "FaceLabels [NX Computed]";
 
 const DataPath k_GeometryPath = DataPath({k_TriangleGeometryName});
 const DataPath k_FeatureAttributeMatrixPath = k_GeometryPath.createChildPath(k_FaceFeatureName);
-const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceDataName).createChildPath(k_FaceLabelsName);
+const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FaceLabelsName);
 
 } // namespace SharedFeatureFaceFilterTest
 
@@ -66,8 +66,8 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
   // Compare the results
   {
     const std::string kExemplarArrayName = "FeatureFaceId";
-    const DataPath kExemplarArrayPath = k_GeometryPath.createChildPath(k_FaceDataName).createChildPath(kExemplarArrayName);
-    const DataPath kNxArrayPath = k_GeometryPath.createChildPath(k_FaceDataName).createChildPath(k_FeatureFaceIdsArrayName);
+    const DataPath kExemplarArrayPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(kExemplarArrayName);
+    const DataPath kNxArrayPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FeatureFaceIdsArrayName);
 
     const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);

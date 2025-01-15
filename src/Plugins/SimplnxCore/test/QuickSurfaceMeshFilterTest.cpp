@@ -16,6 +16,8 @@ using namespace nx::core::Constants;
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
+  const std::string k_SharedTriListName = "SharedTriList";
+  const std::string k_SharedVertexListName = "SharedVertexList";
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -78,8 +80,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
     REQUIRE(vertices->getNumberOfTuples() == 28894);
 
     // Compare the shift values
-    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath("SharedTriList"), DataPath({exemplarGeometryPath, "SharedTriList"}));
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath("SharedVertexList"), DataPath({exemplarGeometryPath, "SharedVertexList"}));
+    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName), DataPath({exemplarGeometryPath, k_SharedTriListName}));
+    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, k_SharedVertexListName}));
   }
 
   CompareExemplarToGeneratedData(dataStructure, dataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), exemplarGeometryPath);

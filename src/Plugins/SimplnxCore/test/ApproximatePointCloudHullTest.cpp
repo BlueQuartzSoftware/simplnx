@@ -75,7 +75,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
     DataArray<float>* triangleVertices = triangleGeom.getVertices();
 
     DataPath vertexGeomPath({"[Vertex Geometry]"});
-    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples(), INodeGeometry0D::k_VertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
+    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples(), INodeGeometry0D::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName);
     Result<> createVertexResult = createVertexGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
     REQUIRE(createVertexResult.valid());
 

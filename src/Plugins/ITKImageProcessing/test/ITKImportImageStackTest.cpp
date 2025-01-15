@@ -23,7 +23,7 @@ namespace
 {
 const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
-const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("ImageData");
+const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("ImageData");
 const std::string k_FlippedImageStackDirName = "image_flip_test_images";
 const DataPath k_XGeneratedImageGeomPath = DataPath({"xGeneratedImageGeom"});
 const DataPath k_YGeneratedImageGeomPath = DataPath({"yGeneratedImageGeom"});

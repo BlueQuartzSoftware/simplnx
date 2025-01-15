@@ -75,7 +75,7 @@ Parameters CombineStlFilesFilter::parameters() const
                                                              DataPath({"TriangleGeometry"})));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "The name of the face level attribute matrix to be created with the geometry",
-                                                          TriangleGeom::k_FaceDataName));
+                                                          TriangleGeom::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceNormalsArrayName_Key, "Face Normals", "The name of the data array in which to store the face normals for the created triangle geometry",
                                                           "FaceNormals"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_PartNumbersName_Key, "Created Part Number Array", "The name of the part numbers data array", "Part Number"));
@@ -85,7 +85,7 @@ Parameters CombineStlFilesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex level attribute matrix to be created with the geometry",
-                                                          TriangleGeom::k_VertexDataName));
+                                                          TriangleGeom::k_VertexAttributeMatrixName));
 
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexLabelName_Key, "Created Part Number Labels", "The name of the part numbers data array", "Part Number"));
   params.linkParameters(k_LabelVertices_Key, k_VertexLabelName_Key, true);
@@ -150,7 +150,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
 
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
-                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
 

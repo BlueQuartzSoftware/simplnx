@@ -30,8 +30,8 @@ const std::string k_ExemplarTriangleContourName = "Contouring Geometry";
 const DataPath k_ExemplarContourPath = DataPath({k_ExemplarTriangleContourName});
 const DataPath k_NewContourPath = DataPath({k_NewTriangleContourName});
 
-const DataPath k_ExemplarNormals = k_ExemplarContourPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
-const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
+const DataPath k_ExemplarNormals = k_ExemplarContourPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
+const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
 } // namespace ContourTest
 
 TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][FlyingEdges3D]")

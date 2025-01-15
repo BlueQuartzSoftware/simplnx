@@ -25,9 +25,6 @@ class CreateGeometry3DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
-  static constexpr StringLiteral k_DefaultCellsName = "SharedCellList";
-
   /**
    * @brief Constructor to create the 3D geometry and allocate a default arrays for the shared vertex & shared calls lists
    * @param geometryPath The path to the created geometry

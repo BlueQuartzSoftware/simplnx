@@ -181,7 +181,7 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
     RenameDataObjectFilter renameFilter;
     Arguments renameArgs;
     renameArgs.insert(RenameDataObjectFilter::k_NewName_Key, std::make_any<std::string>(k_CellData));
-    renameArgs.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(newGeometryPath.createChildPath(ImageGeom::k_CellDataName)));
+    renameArgs.insert(RenameDataObjectFilter::k_SourceDataObjectPath_Key, std::make_any<DataPath>(newGeometryPath.createChildPath(ImageGeom::k_CellAttributeMatrixName)));
     auto renameResult = renameFilter.execute(dataStructure, renameArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(renameResult.result)
   }

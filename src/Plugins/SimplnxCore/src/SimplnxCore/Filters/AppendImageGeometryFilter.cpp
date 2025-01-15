@@ -168,7 +168,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   {
     pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
     auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
-                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellDataName);
+                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellAttributeMatrixName);
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
@@ -191,7 +191,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     DataPath newCellDataPath;
     if(pSaveAsNewGeometry)
     {
-      newCellDataPath = pNewImageGeomPath.createChildPath(ImageGeom::k_CellDataName);
+      newCellDataPath = pNewImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName);
     }
     std::vector<std::string> childNames1 = inputCellData->getDataMap().getNames();
     std::vector<std::string> childNames2 = destCellData->getDataMap().getNames();

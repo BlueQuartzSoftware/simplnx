@@ -7,8 +7,12 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
-  static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrix = "Face Feature Data";
+  static inline constexpr StringLiteral k_EdgeAttributeMatrixName = "Edge Data";
+  static inline constexpr StringLiteral k_EdgeFeatureAttributeMatrix = "Edge Feature Data";
+  static inline constexpr StringLiteral k_SharedEdgeListName = "Shared Edge List";
+  static inline constexpr StringLiteral k_UnsharedEdgesListName = "Unshared Edge List";
+  static inline constexpr StringLiteral k_UnsharedFacesListName = "Unshared Face List";
+
   static inline constexpr StringLiteral k_TypeName = "INodeGeometry1D";
 
   static inline constexpr usize k_NumEdgeVerts = 2;

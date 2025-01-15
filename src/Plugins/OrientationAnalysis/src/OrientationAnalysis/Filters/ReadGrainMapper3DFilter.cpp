@@ -77,7 +77,7 @@ Parameters ReadGrainMapper3DFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadLabDCT_Key, "Read LabDCT Data", "Read the LabDCT Data", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDCTImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({"LabDCT"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data attribute matrix for the created Image Geometry",
-                                                          ImageGeom::k_CellDataName));
+                                                          ImageGeom::k_CellAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "The Attribute Matrix where the phase information is stored.",
                                                           "Cell Ensemble Data"));
 
@@ -85,7 +85,7 @@ Parameters ReadGrainMapper3DFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadAbsorptionCT_Key, "Read AbsorptionCT Data", "Read the AbsorptionCT data", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedAbsorptionGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({"AbsorptionCT"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAbsorptionAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data attribute matrix for the created Image Geometry",
-                                                          ImageGeom::k_CellDataName));
+                                                          ImageGeom::k_CellAttributeMatrixName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ReadLabDCT_Key, k_CreatedDCTImageGeometryPath_Key, true);

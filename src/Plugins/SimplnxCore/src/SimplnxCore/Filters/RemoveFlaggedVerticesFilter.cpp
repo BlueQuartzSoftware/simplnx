@@ -141,7 +141,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 
   // Create vertex geometry
   const uint64 numVertices = inputVertexGeomPtr->getNumberOfVertices();
-  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexAttrMatName, CreateVertexGeometryAction::k_SharedVertexListName);
+  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexAttrMatName, VertexGeom::k_SharedVertexListName);
   const DataPath reducedVertexDataPath = reduced->getVertexDataPath();
   resultOutputActions.value().appendAction(std::move(reduced));
 
@@ -161,7 +161,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     }
     const std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(vertexGeomPath.createChildPath(cellDataName));
-    ignorePaths.push_back(vertexGeomPath.createChildPath(CreateVertexGeometryAction::k_SharedVertexListName));
+    ignorePaths.push_back(vertexGeomPath.createChildPath(VertexGeom::k_SharedVertexListName));
 
     // Now loop over each array in the source vertex geometry's vertex attribute matrix and create the corresponding arrays
     // in the destination vertex geometry's vertex attribute matrix

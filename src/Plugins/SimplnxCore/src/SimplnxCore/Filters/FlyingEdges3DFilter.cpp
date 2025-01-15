@@ -96,8 +96,8 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
 
   // Create the Triangle Geometry action and store it
   auto createTriangleGeometryAction =
-      std::make_unique<CreateTriangleGeometryAction>(pTriangleGeomName, static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
-                                                     CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+      std::make_unique<CreateTriangleGeometryAction>(pTriangleGeomName, static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexAttributeMatrixName,
+                                                     INodeGeometry2D::k_FaceAttributeMatrixName, TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
   auto vertexNormalsPath = createTriangleGeometryAction->getVertexDataPath().createChildPath(k_VertexNormals);
   resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
 
@@ -118,7 +118,7 @@ Result<> FlyingEdges3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
   inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
-  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
+  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexAttributeMatrixName).createChildPath(k_VertexNormals);
 
   return FlyingEdges3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

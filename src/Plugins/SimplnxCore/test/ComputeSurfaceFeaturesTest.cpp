@@ -16,7 +16,7 @@ namespace
 const std::string k_SurfaceFeatures("Surface Features");
 
 const DataPath k_FeatureGeometryPath({"Feature Geometry"});
-const DataPath k_FeatureIDsPath = k_FeatureGeometryPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("Feature IDs");
+const DataPath k_FeatureIDsPath = k_FeatureGeometryPath.createChildPath(ImageGeom::k_CellAttributeMatrixName).createChildPath("Feature IDs");
 const DataPath k_CellFeatureAMPath = k_FeatureGeometryPath.createChildPath(Constants::k_CellFeatureData);
 const DataPath k_SurfaceFeaturesExemplaryPath = k_CellFeatureAMPath.createChildPath("Surface Features Exemplary");
 const DataPath k_SurfaceFeaturesArrayPath = k_CellFeatureAMPath.createChildPath(k_SurfaceFeatures);

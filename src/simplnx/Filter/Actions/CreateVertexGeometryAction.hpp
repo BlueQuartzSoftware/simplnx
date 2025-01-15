@@ -22,9 +22,6 @@ namespace nx::core
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
-  static constexpr StringLiteral k_SharedVertexListName = "SharedVertexList";
-  static constexpr StringLiteral k_VertexAttributeMatrixName = "Vertex Data";
-
   /**
    * @brief Constructor to create the vertex geometry and allocate a default array for the shared vertex list
    * @param geometryPath The path to the created geometry

@@ -25,9 +25,6 @@ class CreateGeometry2DAction : public IDataCreationAction
 public:
   using DimensionType = std::vector<size_t>;
 
-  static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
-  static constexpr StringLiteral k_DefaultFacesName = "SharedTriList";
-
   /**
    * @brief Constructor to create the 2D geometry and allocate a default arrays for the shared vertex & shared face lists
    * @param geometryPath The path to the created geometry

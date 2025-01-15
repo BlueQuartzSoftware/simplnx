@@ -208,7 +208,7 @@ void INodeGeometry2D::setFaceAttributeMatrix(const AttributeMatrix& attributeMat
 INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize numEdges)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numEdges}, std::vector<usize>{2}, 0);
-  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), k_Edges, std::move(dataStore), getId());
+  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
   return edges;
 }
 
