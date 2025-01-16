@@ -154,7 +154,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
       continue;
     }
 
-    usize threeCompIndex = 3 * 1;
+    usize threeCompIndex = 3 * i;
     usize vertAIndex = triStore[threeCompIndex];
     cache.pointA = PointT{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
     usize vertBIndex = triStore[threeCompIndex + 1];
