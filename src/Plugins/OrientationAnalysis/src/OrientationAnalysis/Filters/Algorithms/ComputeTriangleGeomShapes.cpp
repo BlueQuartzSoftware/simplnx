@@ -43,175 +43,172 @@ struct AxialLengths
   IGeometry::SharedVertexList::value_type zLength = 0.0;
 };
 
-// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
-AxialLengths FindIntersections(const AbstractDataStore<int32>& faceLabelsStore, const AbstractDataStore<IGeometry::MeshIndexType>& TriStore,
-                                                          const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore, const AbstractDataStore<float32>& centroidsStore,
-                                                          IGeometry::MeshIndexType featureId, bool& valid)
+// These are values that are not associated with the direction of the ray
+// Precalculating is only useful when calculating multiple rays (same origin/different directions) on the same triangle
+template<typename T>
+struct MTPointsCache
 {
-  // Alias for templating later
-  using T = IGeometry::SharedVertexList::value_type;
+  using PointT = Eigen::Vector3<T>;
+
+  // Ray origin
+  PointT origin;
+
+  // Triangle Vertices
+  PointT pointA;
+  PointT pointB;
+  PointT pointC;
+
+  // Specific edges
+  // edge1 = pointB - pointA;
+  PointT edge1;
+  // edge2 = pointC - pointA;
+  PointT edge2;
+
+  // Pre-calculations
+  // s = origin - pointA;
+  PointT s;
+  // sCrossE1 = s.cross(edge1);
+  PointT sCrossE1;
+};
+
+// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
+template<typename T>
+bool MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
+{
+  using PointT = Eigen::Vector3<T>;
+  constexpr T epsilon = std::numeric_limits<T>::epsilon();
+
+  PointT crossE2 = dirVec.cross(cache.edge2);
+  T det = cache.edge1.dot(crossE2);
+
+  if(det > -epsilon && det < epsilon)
+  {
+    // Ray is parallel to given triangle
+    return false;
+  }
+
+  T invDet = 1.0 / det;
+  T u = invDet * cache.s.dot(crossE2);
+
+  // Allow ADL for efficient absolute value function
+  using std::abs;
+  if((u < 0 && abs(u) > epsilon) || (u > 1 && abs(u - 1.0) > epsilon))
+  {
+    // Ray is parallel to given triangle
+    return false;
+  }
+
+  T v = invDet * dirVec.dot(cache.sCrossE1);
+
+  if((v < 0 && abs(v) > epsilon) || (u + v > 1 && abs(u + v - 1.0) > epsilon))
+  {
+    // Ray is parallel to given triangle
+    return false;
+  }
+
+  T t = invDet * cache.edge2.dot(cache.sCrossE1);
+
+  if(t > epsilon)
+  {
+    // Ray intersection
+    return true;
+  }
+
+  // line intersection not ray intersection
+  return false;
+}
+
+// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
+template <typename T = IGeometry::SharedVertexList::value_type>
+AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
+                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
+                               const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, bool& valid, const std::atomic_bool& shouldCancel)
+{
+  constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
   AxialLengths lengths;
 
+  using PointT = Eigen::Vector3<T>;
+
+  // derive the direction vector for each corresponding axis (using unit vectors)
+  PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
+  PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
+  PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
+
+  MTPointsCache<T> cache;
+
+  // Feature Centroid
+  cache.origin = PointT{centroidsStore[3 * featureId], centroidsStore[3 * featureId + 1], centroidsStore[3 * featureId + 2]};
+
   for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
   {
-    // TODO:
-    //  - Cancel Check Here
-    //  - pass in orientation matrix
+    if(shouldCancel)
+    {
+      valid = false;
+      return {};
+    }
 
-    if(faceLabelsStore[i] != featureId && faceLabelsStore[i + 1] != featureId)
+    if(faceLabelsStore[2 * i] != featureId && faceLabelsStore[2 * i + 1] != featureId)
     {
       // Triangle not in feature continue
       continue;
     }
 
-    Eigen::Matrix<T, 3, 3, Eigen::RowMajor> orientationMatrix;
-    using PointT = Eigen::Vector3<T>;
+    usize threeCompIndex = 3 * 1;
+    usize vertAIndex = triStore[threeCompIndex];
+    cache.pointA = PointT{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
+    usize vertBIndex = triStore[threeCompIndex + 1];
+    cache.pointB = PointT{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
+    usize vertCIndex = triStore[threeCompIndex + 2];
+    cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
-    // derive the direction vector for each corresponding axis
-    PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
-    PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
-    PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
+    PointT triCentroid = (cache.pointA + cache.pointB + cache.pointC) / 3;
 
-    PointT pointA = PointT{vertexStore[TriStore[i]], vertexStore[TriStore[i] + 1], vertexStore[TriStore[i] + 2]};
-    PointT pointB = PointT{vertexStore[TriStore[i + 1]], vertexStore[TriStore[i + 1] + 1], vertexStore[TriStore[i + 1] + 2]};
-    PointT pointC = PointT{vertexStore[TriStore[i + 2]], vertexStore[TriStore[i + 2] + 1], vertexStore[TriStore[i + 2] + 2]};
+    cache.edge1 = cache.pointB - cache.pointA;
+    cache.edge2 = cache.pointC - cache.pointA;
 
-    PointT triCentroid = (pointA + pointB + pointC) / 3;
+    cache.s = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.s.cross(cache.edge1);
 
-    // Feature centroid
-    PointT origin = PointT{centroidsStore[i], centroidsStore[i + 1], centroidsStore[i + 2]};
-
-    constexpr T epsilon = std::numeric_limits<T>::epsilon();
-
-    PointT edge1 = pointB - pointA;
-    PointT edge2 = pointC - pointA;
-
-    PointT xCrossE2 = xDirVec.cross(edge2);
-    T xDet = edge1.dot(xCrossE2);
-    PointT yCrossE2 = yDirVec.cross(edge2);
-    T yDet = edge1.dot(yCrossE2);
-    PointT zCrossE2 = zDirVec.cross(edge2);
-    T zDet = edge1.dot(zCrossE2);
-
-    if(xDet > -epsilon && xDet < epsilon)
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if(yDet > -epsilon && yDet < epsilon)
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if(zDet > -epsilon && zDet < epsilon)
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    PointT s = origin - pointA;
-
-    T xInvDet = 1.0 / xDet;
-    T yInvDet = 1.0 / yDet;
-    T zInvDet = 1.0 / zDet;
-
-    T xU = xInvDet * s.dot(xCrossE2);
-    T yU = yInvDet * s.dot(yCrossE2);
-    T zU = zInvDet * s.dot(zCrossE2);
-
-    // Allow ADL for efficient absolute value function
-    using std::abs;
-
-    if((xU < 0 && abs(xU) > epsilon) || (xU > 1 && abs(xU - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if((yU < 0 && abs(yU) > epsilon) || (yU > 1 && abs(yU - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if((zU < 0 && abs(zU) > epsilon) || (zU > 1 && abs(zU - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    PointT sCrossE1 = s.cross(edge1);
-
-    T xV = xInvDet * xDirVec.dot(sCrossE1);
-    T yV = yInvDet * yDirVec.dot(sCrossE1);
-    T zV = zInvDet * zDirVec.dot(sCrossE1);
-
-    if((xV < 0 && abs(xV) > epsilon) || (xU + xV > 1 && abs(xU + xV - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if((yV < 0 && abs(yV) > epsilon) || (yU + yV > 1 && abs(yU + yV - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    if((zV < 0 && abs(zV) > epsilon) || (zU + zV > 1 && abs(zU + zV - 1.0) > epsilon))
-    {
-      // Ray is parallel to given triangle
-      continue;
-    }
-
-    T xT = xInvDet * edge2.dot(sCrossE1);
-    T yT = yInvDet * edge2.dot(sCrossE1);
-    T zT = zInvDet * edge2.dot(sCrossE1);
-
-    if(xT > epsilon)
+    if(MTIntersection(xDirVec, cache))
     {
       // Ray intersection
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - origin).array().square().sum());
-      if(distance > lengths.xLength)
+      using std::abs;
+      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      if(abs(distance) > abs(lengths.xLength))
       {
         lengths.xLength = distance;
       }
     }
 
-    if(yT > epsilon)
+    if(MTIntersection(yDirVec, cache))
     {
       // Ray intersection
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - origin).array().square().sum());
-      if(distance > lengths.xLength)
+      using std::abs;
+      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      if(abs(distance) > abs(lengths.yLength))
       {
         lengths.yLength = distance;
       }
     }
 
-    if(zT > epsilon)
+    if(MTIntersection(zDirVec, cache))
     {
       // Ray intersection
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - origin).array().square().sum());
-      if(distance > lengths.xLength)
+      using std::abs;
+      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      if(abs(distance) > abs(lengths.zLength))
       {
         lengths.zLength = distance;
       }
     }
-
-    // Line intersection but not ray intersection
   }
 
-  // Check for zeroes (probably invalid)
-  if(!lengths.xLength || !lengths.yLength || !lengths.zLength)
-  {
-    valid = false;
-  }
+  // Check for zeroes (zeroes = probably invalid)
+  valid = lengths.xLength && lengths.yLength && lengths.zLength;
 
   return lengths;
 }
@@ -478,6 +475,8 @@ Result<> ComputeTriangleGeomShapes::operator()()
     // Returns the argument order sorted high to low
     std::array<size_t, 3> idxs = ::TripletSort(eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real(), false);
 
+    Matrix3x3 orientationMatrix = {};
+
     /**
      * The following section calculates the axis eulers
      */
@@ -504,6 +503,10 @@ Result<> ComputeTriangleGeomShapes::operator()()
                         {col3(0).real(), col3(1).real(), col3(2).real()}};
       // clang-format on
 
+      orientationMatrix.col(0) = col1.real();
+      orientationMatrix.col(1) = col2.real();
+      orientationMatrix.col(2) = col3.real();
+
       // check for right-handedness
       OrientationTransformation::ResultType result = OrientationTransformation::om_check(OrientationD(g));
       if(result.result == 0)
@@ -528,31 +531,20 @@ Result<> ComputeTriangleGeomShapes::operator()()
       {
         return {};
       }
-      // Formula: I = (15.0 * eigenvalue) / (4.0 * Pi);
-      // in the below implementation the original divisor has been put under one to avoid repeated division during execution
-      double I1 = (15.0 * eigenvalues[idxs[0]].real()) * k_Multiplier;
-      double I2 = (15.0 * eigenvalues[idxs[1]].real()) * k_Multiplier;
-      double I3 = (15.0 * eigenvalues[idxs[2]].real()) * k_Multiplier;
 
-      // Adjust to ABC of ellipsoid volume
-      double aRatio = (I1 + I2 - I3) * 0.5;
-      double bRatio = (I1 + I3 - I2) * 0.5;
-      double cRatio = (I2 + I3 - I1) * 0.5;
-      double a = (aRatio * aRatio * aRatio * aRatio) / (bRatio * cRatio);
-      a = std::pow(a, 0.1);
-      double b = bRatio / aRatio;
-      b = std::sqrt(b) * a;
-      double c = aRatio / (a * a * a * b);
+      bool isValid = false;
+      auto lengths = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, isValid, m_ShouldCancel);
 
-      axisLengths[3 * featureId] = static_cast<float32>(a / k_ScaleFactor);
-      axisLengths[3 * featureId + 1] = static_cast<float32>(b / k_ScaleFactor);
-      axisLengths[3 * featureId + 2] = static_cast<float32>(c / k_ScaleFactor);
-      auto bOverA = static_cast<float32>(b / a);
-      auto cOverA = static_cast<float32>(c / a);
-      if(aRatio == 0 || bRatio == 0 || cRatio == 0)
+      if(!isValid)
       {
-        bOverA = 0.0f, cOverA = 0.0f;
+        return MakeErrorResult(-64721, fmt::format("{}({}): Error. The feature at id ({}) failed to have its lengths calculated.", __FILE__, __LINE__, featureId));
       }
+
+      axisLengths[3 * featureId] = static_cast<float32>(lengths.xLength);
+      axisLengths[3 * featureId + 1] = static_cast<float32>(lengths.yLength);
+      axisLengths[3 * featureId + 2] = static_cast<float32>(lengths.zLength);
+      auto bOverA = static_cast<float32>(lengths.yLength / lengths.xLength);
+      auto cOverA = static_cast<float32>(lengths.zLength / lengths.xLength);
       aspectRatios[2 * featureId] = bOverA;
       aspectRatios[2 * featureId + 1] = cOverA;
     }
