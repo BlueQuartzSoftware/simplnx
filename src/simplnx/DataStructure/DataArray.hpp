@@ -379,7 +379,7 @@ public:
     return m_DataStore->getValue(index);
   }
 
-  const_reference getComponent(usize tupleIndex, usize componentIndex)
+  value_type getComponent(usize tupleIndex, usize componentIndex)
   {
     const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
     return m_DataStore->getValue(index);
