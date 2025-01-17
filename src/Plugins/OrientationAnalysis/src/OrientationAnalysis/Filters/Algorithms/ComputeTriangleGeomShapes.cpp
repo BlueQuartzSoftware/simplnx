@@ -45,7 +45,7 @@ struct AxialLengths
 
 // These are values that are not associated with the direction of the ray
 // Precalculating is only useful when calculating multiple rays (same origin/different directions) on the same triangle
-template<typename T>
+template <typename T>
 struct MTPointsCache
 {
   using PointT = Eigen::Vector3<T>;
@@ -72,7 +72,7 @@ struct MTPointsCache
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
-template<typename T>
+template <typename T>
 bool MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
 {
   using PointT = Eigen::Vector3<T>;
@@ -162,7 +162,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     usize vertCIndex = triStore[threeCompIndex + 2];
     cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
-    PointT triCentroid = (cache.pointA + cache.pointB + cache.pointC) / 3;
+    PointT triCentroid = (cache.pointA + cache.pointB + cache.pointC).cwiseQuotient(PointT{3.0, 3.0, 3.0});
 
     cache.edge1 = cache.pointB - cache.pointA;
     cache.edge2 = cache.pointC - cache.pointA;
@@ -173,8 +173,8 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     if(MTIntersection(xDirVec, cache))
     {
       // Ray intersection
-      using std::sqrt; // Allow ADL
       using std::abs;
+      using std::sqrt; // Allow ADL
       T distance = sqrt((triCentroid - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.xLength))
       {
@@ -185,8 +185,8 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     if(MTIntersection(yDirVec, cache))
     {
       // Ray intersection
-      using std::sqrt; // Allow ADL
       using std::abs;
+      using std::sqrt; // Allow ADL
       T distance = sqrt((triCentroid - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.yLength))
       {
@@ -197,8 +197,8 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     if(MTIntersection(zDirVec, cache))
     {
       // Ray intersection
-      using std::sqrt; // Allow ADL
       using std::abs;
+      using std::sqrt; // Allow ADL
       T distance = sqrt((triCentroid - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.zLength))
       {
