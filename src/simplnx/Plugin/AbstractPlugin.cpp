@@ -26,6 +26,8 @@ std::string AbstractPlugin::getName() const
   return m_Name;
 }
 
+
+
 std::string AbstractPlugin::getDescription() const
 {
   return m_Description;
