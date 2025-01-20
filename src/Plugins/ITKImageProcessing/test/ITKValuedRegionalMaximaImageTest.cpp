@@ -18,6 +18,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKValuedRegionalMaximaImageFilter(defaults)", "[ITKImageProcessing][ITKValuedRegionalMaximaImage][defaults]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKValuedRegionalMaximaImageFilter filter;
 
@@ -44,7 +46,7 @@ TEST_CASE("ITKImageProcessing::ITKValuedRegionalMaximaImageFilter(defaults)", "[
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // md5 hash only works on in-memory DataStore<T>
-  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "c94b3702844c508818e4718a75102472");

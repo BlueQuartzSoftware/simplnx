@@ -19,6 +19,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][defaults]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKMorphologicalWatershedImageFilter filter;
 
@@ -45,7 +47,7 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // md5 hash only works on in-memory DataStore<T>
-  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "406079d7904d4e9ab0b5f29f7a3a1ea8");
@@ -54,6 +56,8 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", 
 
 TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][level_1]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKMorphologicalWatershedImageFilter filter;
 
@@ -82,7 +86,7 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // md5 hash only works on in-memory DataStore<T>
-  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "a204ce7cf8ec4e7bc6538f0515a8910e");

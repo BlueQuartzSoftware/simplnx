@@ -360,10 +360,6 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
   const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageArrayPath);
-  if(inputArray->getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageArrayPath.toString()));
-  }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored fastest to slowest i.e. X Y Z
@@ -373,10 +369,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   usize nComp = imageArray.getNumberOfComponents();
   const IDataStore& currentData = imageArray.getIDataStoreRef();
 
-  if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
-  {
-    return {MakeErrorResult(-1, "DataArray must be in memory")};
-  }
+  //if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
+  //{
+  //  return {MakeErrorResult(-1, "DataArray must be in memory")};
+  //}
 
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
 

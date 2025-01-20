@@ -19,6 +19,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKHConvexImageFilter(HConvex)", "[ITKImageProcessing][ITKHConvexImage][HConvex]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKHConvexImageFilter filter;
 
@@ -46,7 +48,7 @@ TEST_CASE("ITKImageProcessing::ITKHConvexImageFilter(HConvex)", "[ITKImageProces
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // md5 hash only works on in-memory DataStore<T>
-  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "f3a7b95a51710d51b3b73e0eb77eb1eb");

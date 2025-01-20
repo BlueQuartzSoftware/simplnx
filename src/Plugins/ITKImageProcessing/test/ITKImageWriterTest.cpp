@@ -75,6 +75,8 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
 TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImageProcessing][ITKImageWriterFilter]")
 {
   auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   {
     ITKImportImageStackFilter filter;

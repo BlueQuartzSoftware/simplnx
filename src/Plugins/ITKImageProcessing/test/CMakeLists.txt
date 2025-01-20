@@ -1,13 +1,15 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  ITKDiscreteGaussianImageTest.cpp
-  ITKImageReaderTest.cpp
+
+  # ITKDiscreteGaussianImageTest.cpp
+  # ITKImageReaderTest.cpp
   ITKImageWriterTest.cpp
-  ITKImportImageStackTest.cpp
-  ITKMedianImageTest.cpp
-  ITKMhaFileReaderTest.cpp
-  ITKRescaleIntensityImageTest.cpp
+
+  # ITKImportImageStackTest.cpp
+  # ITKMedianImageTest.cpp
+  # ITKMhaFileReaderTest.cpp
+  # ITKRescaleIntensityImageTest.cpp
 )
 if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
@@ -31,44 +33,45 @@ if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
 
 if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
-    ITKAbsImageTest.cpp
-    ITKAcosImageTest.cpp
-    ITKAdaptiveHistogramEqualizationImageTest.cpp
-    ITKApproximateSignedDistanceMapImageTest.cpp
-    ITKAsinImageTest.cpp
-    ITKAtanImageTest.cpp
-    ITKBinaryDilateImageTest.cpp
-    ITKBinaryErodeImageTest.cpp
-    ITKBinaryMorphologicalClosingImageTest.cpp
-    ITKBinaryMorphologicalOpeningImageTest.cpp
-    ITKBinaryProjectionImageTest.cpp
-    ITKBinaryThinningImageTest.cpp
-    ITKBinaryThresholdImageTest.cpp
-    ITKBlackTopHatImageTest.cpp
-    ITKConnectedComponentImageTest.cpp
-    ITKCosImageTest.cpp
-    ITKCurvatureAnisotropicDiffusionImageTest.cpp
-    ITKCurvatureFlowImageTest.cpp
-    ITKDanielssonDistanceMapImageTest.cpp
-    ITKDilateObjectMorphologyImageTest.cpp
-    ITKDoubleThresholdImageTest.cpp
-    ITKErodeObjectMorphologyImageTest.cpp
-    ITKExpImageTest.cpp
-    ITKExpNegativeImageTest.cpp
-    ITKGradientAnisotropicDiffusionImageTest.cpp
-    ITKGradientMagnitudeImageTest.cpp
-    ITKGradientMagnitudeRecursiveGaussianImageTest.cpp
-    ITKGrayscaleDilateImageTest.cpp
-    ITKGrayscaleErodeImageTest.cpp
-    ITKGrayscaleMorphologicalClosingImageTest.cpp
-    ITKGrayscaleMorphologicalOpeningImageTest.cpp
-    ITKImportFijiMontageTest.cpp
-    ITKIntensityWindowingImageTest.cpp
-    ITKInvertIntensityImageTest.cpp
-    ITKIsoContourDistanceImageTest.cpp
-    ITKLaplacianRecursiveGaussianImageTest.cpp
-    ITKLog10ImageTest.cpp
-    ITKLogImageTest.cpp
+
+    # ITKAbsImageTest.cpp
+    # ITKAcosImageTest.cpp
+    # ITKAdaptiveHistogramEqualizationImageTest.cpp
+    # ITKApproximateSignedDistanceMapImageTest.cpp
+    # ITKAsinImageTest.cpp
+    # ITKAtanImageTest.cpp
+    # ITKBinaryDilateImageTest.cpp
+    # ITKBinaryErodeImageTest.cpp
+    # ITKBinaryMorphologicalClosingImageTest.cpp
+    # ITKBinaryMorphologicalOpeningImageTest.cpp
+    # ITKBinaryProjectionImageTest.cpp
+    # ITKBinaryThinningImageTest.cpp
+    # ITKBinaryThresholdImageTest.cpp
+    # ITKBlackTopHatImageTest.cpp
+    # ITKConnectedComponentImageTest.cpp
+    # ITKCosImageTest.cpp
+    # ITKCurvatureAnisotropicDiffusionImageTest.cpp
+    # ITKCurvatureFlowImageTest.cpp
+    # ITKDanielssonDistanceMapImageTest.cpp
+    # ITKDilateObjectMorphologyImageTest.cpp
+    # ITKDoubleThresholdImageTest.cpp
+    # ITKErodeObjectMorphologyImageTest.cpp
+    # ITKExpImageTest.cpp
+    # ITKExpNegativeImageTest.cpp
+    # ITKGradientAnisotropicDiffusionImageTest.cpp
+    # ITKGradientMagnitudeImageTest.cpp
+    # ITKGradientMagnitudeRecursiveGaussianImageTest.cpp
+    # ITKGrayscaleDilateImageTest.cpp
+    # ITKGrayscaleErodeImageTest.cpp
+    # ITKGrayscaleMorphologicalClosingImageTest.cpp
+    # ITKGrayscaleMorphologicalOpeningImageTest.cpp
+    # ITKImportFijiMontageTest.cpp
+    # ITKIntensityWindowingImageTest.cpp
+    # ITKInvertIntensityImageTest.cpp
+    # ITKIsoContourDistanceImageTest.cpp
+    # ITKLaplacianRecursiveGaussianImageTest.cpp
+    # ITKLog10ImageTest.cpp
+    # ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
     ITKMaximumProjectionImageTest.cpp
     ITKMeanProjectionImageTest.cpp

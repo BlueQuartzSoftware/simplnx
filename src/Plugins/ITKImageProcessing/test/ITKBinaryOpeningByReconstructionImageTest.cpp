@@ -22,6 +22,8 @@ using namespace nx::core::UnitTest;
 TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruction)",
           "[ITKImageProcessing][ITKBinaryOpeningByReconstructionImage][BinaryOpeningByReconstruction]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKBinaryOpeningByReconstructionImageFilter filter;
 
@@ -51,7 +53,7 @@ TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(Binar
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // md5 hash only works on in-memory DataStore<T>
-  if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "2dff38c9c5d2f516e7435f3e2291d6c1");

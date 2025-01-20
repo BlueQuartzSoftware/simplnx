@@ -347,7 +347,7 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDa
 
   typename FilterType::DirectionType imageDirection = FilterType::DirectionType::GetIdentity();
 
-  if (dataStore.getDataFormat().empty())
+  if(dataStore.getDataFormat().empty())
   {
     auto& inMemoryStore = dynamic_cast<DataStore<UnderlyingType_t<PixelT>>&>(dataStore);
     auto importFilter = FilterType::New();
@@ -363,26 +363,27 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDa
   else
   {
     using ImageType = itk::Image<PixelT, Dimensions>;
+    const usize numComponents = dataStore.getNumberOfComponents();
+
     auto image = ImageType::New();
     image->SetOrigin(imageOrigin);
     image->SetRegions(imageRegion);
     image->SetSpacing(imageSpacing);
     image->SetDirection(imageDirection);
+    image->SetNumberOfComponentsPerPixel(numComponents);
     image->Allocate();
 
-    const usize count = dataStore.getSize();
-    const std::vector<uint64> shape(imageSize.begin(), imageSize.end());
-    typename ImageType::IndexType pixelIndex;
-    for(uint64 i = 0; i < count; i++)
+    typename ImageType::PixelContainer* pixelContainer = image->GetPixelContainer();
+    auto* rawBufferPtr = reinterpret_cast<UnderlyingType_t<PixelT>*>(pixelContainer->GetBufferPointer());
+    #if 0
+    const usize size = dataStore.size();
+    for(usize i = 0; i < size; i++)
     {
-      auto position = Indexing::FindPosition(i, shape);
-      itk::IndexValueType pos3[3];
-      std::reverse(position.begin(), position.end());
-      std::copy(position.begin(), position.end(), std::begin(pos3));
-      
-      pixelIndex.SetIndex(pos3);
-      image->SetPixel(pixelIndex, dataStore.getValue(i));
+      dataStore[i] = rawBufferPtr[i];
     }
+    #else
+    std::copy(dataStore.begin(), dataStore.end(), rawBufferPtr);
+    #endif
 
     image->UpdateOutputData();
     return image;
@@ -413,7 +414,7 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
   pixelContainer->ContainerManageMemoryOff();
   std::unique_ptr<T[]> newData(bufferPtr);
 
-  if (dataStore.getDataFormat().empty())
+  if(dataStore.getDataFormat().empty())
   {
     DataStore<T> newDataStore(std::move(newData), std::move(tDims), std::move(cDims));
     auto& outputDataStore = dynamic_cast<DataStore<UnderlyingType_t<PixelT>>&>(dataStore);
@@ -423,7 +424,7 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
   {
     dataStore.resizeTuples(tDims);
     usize count = dataStore.getSize();
-    for (usize i = 0; i < count; i++)
+    for(usize i = 0; i < count; i++)
     {
       dataStore.setValue(i, bufferPtr[i]);
     }
