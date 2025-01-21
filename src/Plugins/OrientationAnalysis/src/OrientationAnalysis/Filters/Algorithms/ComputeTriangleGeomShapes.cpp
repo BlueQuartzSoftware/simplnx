@@ -248,12 +248,17 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
       continue;
     }
 
-    usize threeCompIndex = 3 * i;
-    usize vertAIndex = triStore[threeCompIndex];
+    // Here we are manually extracting the vertex points from the SharedVertexList
+    const usize threeCompIndex = 3 * i;
+
+    // Extract tuple index of the first vertex and compute the index to the first x-value in the SharedVertexList
+    usize vertAIndex = triStore[threeCompIndex] * 3;
     cache.pointA = PointT{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
-    usize vertBIndex = triStore[threeCompIndex + 1];
+
+    usize vertBIndex = triStore[threeCompIndex + 1] * 3;
     cache.pointB = PointT{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
-    usize vertCIndex = triStore[threeCompIndex + 2];
+
+    usize vertCIndex = triStore[threeCompIndex + 2] * 3;
     cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
     cache.edge1 = cache.pointB - cache.pointA;
@@ -463,22 +468,22 @@ Result<> ComputeTriangleGeomShapes::operator()()
   // will be normalized using this value;
   const float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
 
-  // define the canonical C matrix
+  // define the canonical cMatrix matrix
   double aa = 1.0 / 60.0;
   double bb = aa / 2.0;
   // clang-format off
-  Matrix3x3 C;
-  C << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+  Matrix3x3 cMatrix;
+  cMatrix << aa, bb, bb, bb, aa, bb, bb, bb, aa;
 
   // and the identity matrix
   aa = 1.0;
   bb = 0.0;
-  Matrix3x3 ID;
-  ID << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+  Matrix3x3 identityMat;
+  identityMat << aa, bb, bb, bb, aa, bb, bb, bb, aa;
 
-  // The C-Prime matrix
-  Matrix3x3 CC;
-  CC << -0.50000000, 0.50000000, 0.50000000,
+  // The cMatrix-Prime matrix
+  Matrix3x3 cPrime;
+  cPrime << -0.50000000, 0.50000000, 0.50000000,
         0.50000000, -0.50000000, 0.50000000,
         0.50000000, 0.50000000, -0.50000000;
   // clang-format on
@@ -527,15 +532,15 @@ Result<> ComputeTriangleGeomShapes::operator()()
 
         float64 dA = A.determinant();
 
-        Cacc = (Cacc + dA * (A * (C * (A.transpose())))).eval();
+        Cacc = (Cacc + dA * (A * (cMatrix * (A.transpose())))).eval();
         Vol += (dA / 6.0f); // accumulate the volumes
       }
 
       Cacc = (Cacc / Vol).eval();
-      Cinertia = ID * Cacc.trace() - Cacc;
+      Cinertia = identityMat * Cacc.trace() - Cacc;
       // extract the moments from the inertia tensor
       Eigen::Vector3d e(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
-      auto sols = CC * e;
+      auto sols = cPrime * e;
       omega3S[featureId] = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
     }
 
