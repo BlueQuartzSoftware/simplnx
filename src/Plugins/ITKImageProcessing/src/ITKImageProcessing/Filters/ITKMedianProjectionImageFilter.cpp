@@ -117,7 +117,8 @@ IFilter::PreflightResult ITKMedianProjectionImageFilter::preflightImpl(const Dat
   auto performInPlace = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto outputGeomName = filterArgs.value<std::string>(k_OutputImageGeomName_Key);
 
-  return ProjectionUtilities::RunITKProjectionDataCheck<cxITKMedianProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputGeomName, performInPlace, outputArrayName);
+  return ProjectionUtilities::RunITKProjectionDataCheck<cxITKMedianProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputGeomName, performInPlace,
+                                                                                                            outputArrayName);
 }
 
 //------------------------------------------------------------------------------
@@ -133,7 +134,7 @@ Result<> ITKMedianProjectionImageFilter::executeImpl(DataStructure& dataStructur
 
   const cxITKMedianProjectionImageFilter::ITKMedianProjectionImageFilterFunctor itkFunctor = {projectionDimension};
 
-  return ProjectionUtilities::RunITKProjectionExecute<cxITKMedianProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, shouldCancel, outputArrayName, performInPlace, itkFunctor,
-                                                                                     outputImageGeomName);
+  return ProjectionUtilities::RunITKProjectionExecute<cxITKMedianProjectionImageFilter::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, shouldCancel, outputArrayName,
+                                                                                                          performInPlace, itkFunctor, outputImageGeomName);
 }
 } // namespace nx::core
