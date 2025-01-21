@@ -1,6 +1,5 @@
 #include "ComputeTriangleGeomShapes.hpp"
 
-#include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -19,9 +18,6 @@ namespace
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
-constexpr double k_Multiplier = 1.0 / (4.0 * Constants::k_PiD);
-constexpr float64 k_ScaleFactor = 1.0;
-
 usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
 {
   return numVertices + numFaces - (2 * numRegions);
@@ -31,7 +27,7 @@ template <typename T>
 bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usize numRegions)
 {
   // Expensive call
-  usize numEdges = GeometryHelpers::Connectivity::FindNumEdges(faceStore, numVertices);
+  const usize numEdges = GeometryHelpers::Connectivity::FindNumEdges(faceStore, numVertices);
 
   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
 }
@@ -65,57 +61,155 @@ struct MTPointsCache
   PointT edge2;
 
   // Pre-calculations
-  // s = origin - pointA;
-  PointT s;
-  // sCrossE1 = s.cross(edge1);
+  // sDist = origin - pointA;
+  PointT sDist;
+  // sCrossE1 = sDist.cross(edge1);
   PointT sCrossE1;
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
 template <typename T>
-bool MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
+std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
 {
   using PointT = Eigen::Vector3<T>;
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
   PointT crossE2 = dirVec.cross(cache.edge2);
-  T det = cache.edge1.dot(crossE2);
+  T determinant = cache.edge1.dot(crossE2);
 
-  if(det > -epsilon && det < epsilon)
+  if(determinant > -epsilon && determinant < epsilon)
   {
     // Ray is parallel to given triangle
-    return false;
+    return {};
   }
 
-  T invDet = 1.0 / det;
-  T u = invDet * cache.s.dot(crossE2);
+  T invDet = 1.0 / determinant;
+  T uCoff = invDet * cache.sDist.dot(crossE2);
 
   // Allow ADL for efficient absolute value function
   using std::abs;
-  if((u < 0 && abs(u) > epsilon) || (u > 1 && abs(u - 1.0) > epsilon))
+  if((uCoff < 0 && abs(uCoff) > epsilon) || (uCoff > 1 && abs(uCoff - 1.0) > epsilon))
   {
-    // Ray is parallel to given triangle
-    return false;
+    // Ray intersects plane, but not triangle
+    return {};
   }
 
-  T v = invDet * dirVec.dot(cache.sCrossE1);
+  T vCoff = invDet * dirVec.dot(cache.sCrossE1);
 
-  if((v < 0 && abs(v) > epsilon) || (u + v > 1 && abs(u + v - 1.0) > epsilon))
+  if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
   {
-    // Ray is parallel to given triangle
-    return false;
+    // Ray intersects plane, but not triangle
+    return {};
   }
 
-  T t = invDet * cache.edge2.dot(cache.sCrossE1);
+  T tCoff = invDet * cache.edge2.dot(cache.sCrossE1);
 
-  if(t > epsilon)
+  if(tCoff > epsilon)
   {
     // Ray intersection
-    return true;
+    return {cache.origin + dirVec * tCoff};
   }
 
   // line intersection not ray intersection
-  return false;
+  return {};
+}
+
+bool TestMTIntersection()
+{
+  using PointT = Eigen::Vector3<float32>;
+  MTPointsCache<float32> cache;
+  cache.pointA = PointT{0.5, 0, 0};
+  cache.pointB = PointT{-0.5, 0.5, 0};
+  cache.pointC = PointT{-0.5, -0.5, 0};
+
+  cache.edge1 = cache.pointB - cache.pointA;
+  cache.edge2 = cache.pointC - cache.pointA;
+  {
+    // Case 1 (Intersection)
+    cache.origin = PointT{0, 0, -1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
+
+    if(!result)
+    {
+      return false;
+    }
+  }
+
+  {
+    // Case 2 (No Intersection [Origin Above])
+    cache.origin = PointT{0, 0, 1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
+
+    if(result)
+    {
+      return false;
+    }
+  }
+
+  {
+    // Case 3 (No Intersection [Ray Parallel])
+    cache.origin = PointT{0, 0, -1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    bool result = MTIntersection(PointT{0, 1, 0}, cache).has_value();
+
+    if(result)
+    {
+      return false;
+    }
+  }
+
+  {
+    // Case 4 (Intersection)
+    cache.origin = PointT{0, 0, -1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    PointT dirVec = PointT{0.1, 0.1, 1};
+    dirVec.normalize();
+    bool result = MTIntersection(dirVec, cache).has_value();
+
+    if(!result)
+    {
+      return false;
+    }
+  }
+
+  {
+    // Case 5 (No Intersection [Misaligned Origin])
+    cache.origin = PointT{10, 0, -1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
+
+    if(result)
+    {
+      return false;
+    }
+  }
+
+  {
+    // Case 5 (No Intersection [Wrong Direction])
+    cache.origin = PointT{0, 0, -1};
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+
+    bool result = MTIntersection(PointT{0, 0, -1}, cache).has_value();
+
+    if(result)
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
@@ -162,49 +256,56 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     usize vertCIndex = triStore[threeCompIndex + 2];
     cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
-    PointT triCentroid = (cache.pointA + cache.pointB + cache.pointC).cwiseQuotient(PointT{3.0, 3.0, 3.0});
-
     cache.edge1 = cache.pointB - cache.pointA;
     cache.edge2 = cache.pointC - cache.pointA;
 
-    cache.s = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.s.cross(cache.edge1);
+    cache.sDist = cache.origin - cache.pointA;
+    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
 
-    if(MTIntersection(xDirVec, cache))
+    int foo = 0;
+    const std::optional<PointT> xIntersect = MTIntersection(xDirVec, cache);
+    if(xIntersect.has_value())
     {
+      foo = 1;
       // Ray intersection
       using std::abs;
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      T distance = sqrt((xIntersect.value() - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.xLength))
       {
         lengths.xLength = distance;
       }
     }
 
-    if(MTIntersection(yDirVec, cache))
+    const std::optional<PointT> yIntersect = MTIntersection(yDirVec, cache);
+    if(yIntersect.has_value())
     {
+      foo = 1;
       // Ray intersection
       using std::abs;
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      T distance = sqrt((yIntersect.value() - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.yLength))
       {
         lengths.yLength = distance;
       }
     }
 
-    if(MTIntersection(zDirVec, cache))
+    const std::optional<PointT> zIntersect = MTIntersection(zDirVec, cache);
+    if(zIntersect.has_value())
     {
+      foo = 1;
       // Ray intersection
       using std::abs;
       using std::sqrt; // Allow ADL
-      T distance = sqrt((triCentroid - cache.origin).array().square().sum());
+      T distance = sqrt((zIntersect.value() - cache.origin).array().square().sum());
       if(abs(distance) > abs(lengths.zLength))
       {
         lengths.zLength = distance;
       }
     }
+
+    std::cout << foo << std::endl;
   }
 
   // Check for zeroes (zeroes = probably invalid)
@@ -325,6 +426,8 @@ const std::atomic_bool& ComputeTriangleGeomShapes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTriangleGeomShapes::operator()()
 {
+  bool result = TestMTIntersection();
+
   using MeshIndexType = IGeometry::MeshIndexType;
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const TriStore& triangleList = triangleGeom.getFacesRef().getDataStoreRef();
@@ -335,7 +438,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
 
   // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
   // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
-  usize numRegions = *std::max_element(faceLabels.begin(), faceLabels.end());
+  const usize numRegions = *std::max_element(faceLabels.begin(), faceLabels.end());
 
   if(!ValidateMesh(triangleList, verts.getNumberOfTuples(), numRegions))
   {
@@ -497,26 +600,26 @@ Result<> ComputeTriangleGeomShapes::operator()()
 
       // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
       //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
-      // clang-format off
-      double g[3][3] = {{col1(0).real(), col1(1).real(), col1(2).real()},
-                        {col2(0).real(), col2(1).real(), col2(2).real()},
-                        {col3(0).real(), col3(1).real(), col3(2).real()}};
-      // clang-format on
+      //      // clang-format off
+      //      double g[3][3] = {{col1(0).real(), col1(1).real(), col1(2).real()},
+      //                        {col2(0).real(), col2(1).real(), col2(2).real()},
+      //                        {col3(0).real(), col3(1).real(), col3(2).real()}};
+      //      // clang-format on
 
-      orientationMatrix.col(0) = col1.real();
-      orientationMatrix.col(1) = col2.real();
-      orientationMatrix.col(2) = col3.real();
+      orientationMatrix.row(0) = col1.real();
+      orientationMatrix.row(1) = col2.real();
+      orientationMatrix.row(2) = col3.real();
+
+      // orientationMatrix.transposeInPlace();
 
       // check for right-handedness
-      OrientationTransformation::ResultType result = OrientationTransformation::om_check(OrientationD(g));
-      if(result.result == 0)
-      {
-        g[2][0] *= -1.0f;
-        g[2][1] *= -1.0f;
-        g[2][2] *= -1.0f;
-      }
+      //      OrientationTransformation::ResultType result = OrientationTransformation::om_check(orientationMatrix);
+      //      if(result.result < 0)
+      //      {
+      //        return MakeErrorResult(-64722, result.msg);
+      //      }
 
-      auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(g));
+      auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(orientationMatrix.data(), 9));
 
       axisEulerAngles[3 * featureId] = euler[0];
       axisEulerAngles[3 * featureId + 1] = euler[1];
