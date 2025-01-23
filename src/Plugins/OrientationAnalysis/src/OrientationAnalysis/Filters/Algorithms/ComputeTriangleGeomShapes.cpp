@@ -449,7 +449,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
 
       auto result = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
 
-      if(!result.invalid())
+      if(result.invalid())
       {
         Result<> outResult = {};
         outResult.errors().push_back(std::move(*result.errors().begin()));
