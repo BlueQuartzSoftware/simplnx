@@ -42,9 +42,9 @@ struct AxialLengths
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
 template <typename T = IGeometry::SharedVertexList::value_type>
-AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
-                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
-                               const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, bool& valid, const std::atomic_bool& shouldCancel)
+Result<AxialLengths> FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
+                                       const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
+                                       const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
 {
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
@@ -53,24 +53,23 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
   using PointT = Eigen::Vector3<T>;
 
   // derive the direction vector for each corresponding axis (using unit vectors)
-  PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
-  PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
-  PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
+  const PointT xDirVec = PointT{1.0, 0.0, 0.0}.transpose() * orientationMatrix;
+  const PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
+  const PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
 
   IntersectionUtilities::MTPointsCache<T> cache;
 
   // Feature Centroid
-  cache.origin = PointT{centroidsStore[3 * featureId], centroidsStore[3 * featureId + 1], centroidsStore[3 * featureId + 2]};
+  cache.origin = PointT{centroidsStore[3 * featureId], centroidsStore[(3 * featureId) + 1], centroidsStore[(3 * featureId) + 2]};
 
   for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
   {
     if(shouldCancel)
     {
-      valid = false;
       return {};
     }
 
-    if(faceLabelsStore[2 * i] != featureId && faceLabelsStore[2 * i + 1] != featureId)
+    if(faceLabelsStore[2 * i] != featureId && faceLabelsStore[(2 * i) + 1] != featureId)
     {
       // Triangle not in feature continue
       continue;
@@ -80,13 +79,13 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     const usize threeCompIndex = 3 * i;
 
     // Extract tuple index of the first vertex and compute the index to the first x-value in the SharedVertexList
-    usize vertAIndex = triStore[threeCompIndex] * 3;
+    const usize vertAIndex = triStore[threeCompIndex] * 3;
     cache.pointA = PointT{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
 
-    usize vertBIndex = triStore[threeCompIndex + 1] * 3;
+    const usize vertBIndex = triStore[threeCompIndex + 1] * 3;
     cache.pointB = PointT{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
 
-    usize vertCIndex = triStore[threeCompIndex + 2] * 3;
+    const usize vertCIndex = triStore[threeCompIndex + 2] * 3;
     cache.pointC = PointT{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
     cache.edge1 = cache.pointB - cache.pointA;
@@ -95,16 +94,12 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     cache.sDist = cache.origin - cache.pointA;
     cache.sCrossE1 = cache.sDist.cross(cache.edge1);
 
-    int foo = 0;
     const std::optional<PointT> xIntersect = IntersectionUtilities::MTIntersection(xDirVec, cache);
     if(xIntersect.has_value())
     {
-      foo = 1;
       // Ray intersection
-      using std::abs;
-      using std::sqrt; // Allow ADL
-      T distance = sqrt((xIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > abs(lengths.xLength))
+      T distance = std::sqrt((xIntersect.value() - cache.origin).array().square().sum());
+      if(abs(distance) > std::abs(lengths.xLength))
       {
         lengths.xLength = distance;
       }
@@ -113,12 +108,9 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     const std::optional<PointT> yIntersect = IntersectionUtilities::MTIntersection(yDirVec, cache);
     if(yIntersect.has_value())
     {
-      foo = 1;
       // Ray intersection
-      using std::abs;
-      using std::sqrt; // Allow ADL
-      T distance = sqrt((yIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > abs(lengths.yLength))
+      T distance = std::sqrt((yIntersect.value() - cache.origin).array().square().sum());
+      if(abs(distance) > std::abs(lengths.yLength))
       {
         lengths.yLength = distance;
       }
@@ -127,105 +119,111 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     const std::optional<PointT> zIntersect = IntersectionUtilities::MTIntersection(zDirVec, cache);
     if(zIntersect.has_value())
     {
-      foo = 1;
       // Ray intersection
-      using std::abs;
-      using std::sqrt; // Allow ADL
-      T distance = sqrt((zIntersect.value() - cache.origin).array().square().sum());
-      if(abs(distance) > abs(lengths.zLength))
+      T distance = std::sqrt((zIntersect.value() - cache.origin).array().square().sum());
+      if(abs(distance) > std::abs(lengths.zLength))
       {
         lengths.zLength = distance;
       }
     }
-
-    std::cout << foo << std::endl;
   }
 
   // Check for zeroes (zeroes = probably invalid)
-  valid = lengths.xLength && lengths.yLength && lengths.zLength;
+  if(lengths.xLength && lengths.yLength && lengths.zLength)
+  {
+    // Valid
+    return {lengths};
+  }
 
-  return lengths;
+  Result<AxialLengths> invalid = {};
+
+  invalid.errors().push_back(
+      nx::core::Error{.code = -64721,
+                      .message = fmt::format("{}({}): One or more of the axis lengths was unable to be found. This indicates the geometry was malformed.\nX Length: {}\nY Length: {}\nZ Length: {}",
+                                             __FILE__, __LINE__, lengths.xLength, lengths.yLength, lengths.zLength)});
+
+  return invalid;
 }
 
 /**
- * @brief This will extract the 3 vertices from a given triangle face of a triangle geometry. This is MUCH faster
+ * @brief This will extract the 3 vertices from aVal given triangle face of aVal triangle geometry. This is MUCH faster
  * than calling the function in the Triangle Geometry because of the dynamic_cast<> that goes on in that function.
  */
 inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, const VertsStore& verts, const TriStore& triangleList)
 {
-  usize v0Idx = triangleList[triangleId * 3];
-  usize v1Idx = triangleList[triangleId * 3 + 1];
-  usize v2Idx = triangleList[triangleId * 3 + 2];
-  return {Point3Df{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, Point3Df{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]},
-          Point3Df{verts[v2Idx * 3], verts[v2Idx * 3 + 1], verts[v2Idx * 3 + 2]}};
+  const usize v0Idx = triangleList[triangleId * 3];
+  const usize v1Idx = triangleList[(triangleId * 3) + 1];
+  const usize v2Idx = triangleList[(triangleId * 3) + 2];
+  return {Point3Df{verts[v0Idx * 3], verts[(v0Idx * 3) + 1], verts[(v0Idx * 3) + 2]}, Point3Df{verts[v1Idx * 3], verts[(v1Idx * 3) + 1], verts[(v1Idx * 3) + 2]},
+          Point3Df{verts[v2Idx * 3], verts[(v2Idx * 3) + 1], verts[(v2Idx * 3) + 2]}};
 }
 
 /**
  * @brief Sorts the 3 values
- * @param a First Value
- * @param b Second Value
- * @param c Third Value
+ * @param aVal First Value
+ * @param bVal Second Value
+ * @param cVal Third Value
  * @return The indices in their sorted order
  */
 template <typename T>
-std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
+std::array<size_t, 3> TripletSort(T aVal, T bVal, T cVal, bool lowToHigh)
 {
-  constexpr size_t A = 0;
-  constexpr size_t B = 1;
-  constexpr size_t C = 2;
+  constexpr size_t k_AIdx = 0;
+  constexpr size_t k_BIdx = 1;
+  constexpr size_t k_CIdx = 2;
   std::array<size_t, 3> idx = {0, 1, 2};
-  if(a > b && a > c)
+  if(aVal > bVal && aVal > cVal)
   {
-    // sorted[2] = a;
-    if(b > c)
+    // sorted[2] = aVal;
+    if(bVal > cVal)
     {
-      // sorted[1] = b;
-      // sorted[0] = c;
-      idx = {C, B, A};
+      // sorted[1] = bVal;
+      // sorted[0] = cVal;
+      idx = {k_CIdx, k_BIdx, k_AIdx};
     }
     else
     {
-      // sorted[1] = c;
-      // sorted[0] = b;
-      idx = {B, C, A};
+      // sorted[1] = cVal;
+      // sorted[0] = bVal;
+      idx = {k_BIdx, k_CIdx, k_AIdx};
     }
   }
-  else if(b > a && b > c)
+  else if(bVal > aVal && bVal > cVal)
   {
-    // sorted[2] = b;
-    if(a > c)
+    // sorted[2] = bVal;
+    if(aVal > cVal)
     {
-      // sorted[1] = a;
-      // sorted[0] = c;
-      idx = {C, A, B};
+      // sorted[1] = aVal;
+      // sorted[0] = cVal;
+      idx = {k_CIdx, k_AIdx, k_BIdx};
     }
     else
     {
-      // sorted[1] = c;
-      // sorted[0] = a;
-      idx = {A, C, B};
+      // sorted[1] = cVal;
+      // sorted[0] = aVal;
+      idx = {k_AIdx, k_CIdx, k_BIdx};
     }
   }
-  else if(a > b)
+  else if(aVal > bVal)
   {
-    // sorted[1] = a;
-    // sorted[0] = b;
-    // sorted[2] = c;
-    idx = {B, A, C};
+    // sorted[1] = aVal;
+    // sorted[0] = bVal;
+    // sorted[2] = cVal;
+    idx = {k_BIdx, k_AIdx, k_CIdx};
   }
-  else if(a >= c && b >= c)
+  else if(aVal >= cVal && bVal >= cVal)
   {
-    // sorted[0] = c;
-    // sorted[1] = a;
-    // sorted[2] = b;
-    idx = {C, A, B};
+    // sorted[0] = cVal;
+    // sorted[1] = aVal;
+    // sorted[2] = bVal;
+    idx = {k_CIdx, k_AIdx, k_BIdx};
   }
   else
   {
-    // sorted[0] = a;
-    // sorted[1] = b;
-    // sorted[2] = c;
-    idx = {A, B, C};
+    // sorted[0] = aVal;
+    // sorted[1] = bVal;
+    // sorted[2] = cVal;
+    idx = {k_AIdx, k_BIdx, k_CIdx};
   }
 
   if(!lowToHigh)
@@ -282,30 +280,28 @@ Result<> ComputeTriangleGeomShapes::operator()()
   auto& axisLengths = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
   auto& aspectRatios = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
 
-  using Matrix3x3 = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
+  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
   Matrix3x3 Cinertia;
 
-  usize numFaces = faceLabels.getNumberOfTuples();
-  usize numFeatures = centroids.getNumberOfTuples();
+  const usize numFaces = faceLabels.getNumberOfTuples();
+  const usize numFeatures = centroids.getNumberOfTuples();
 
   nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
 
   // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
   // will be normalized using this value;
-  const float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
+  constexpr float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
 
   // define the canonical cMatrix matrix
-  double aa = 1.0 / 60.0;
-  double bb = aa / 2.0;
+  constexpr float64 aVal = 1.0 / 60.0;
+  constexpr float64 bVal = aVal / 2.0;
   // clang-format off
   Matrix3x3 cMatrix;
-  cMatrix << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+  cMatrix << aVal, bVal, bVal, bVal, aVal, bVal, bVal, bVal, aVal;
 
   // and the identity matrix
-  aa = 1.0;
-  bb = 0.0;
   Matrix3x3 identityMat;
-  identityMat << aa, bb, bb, bb, aa, bb, bb, bb, aa;
+  identityMat << 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
 
   // The cMatrix-Prime matrix
   Matrix3x3 cPrime;
@@ -326,47 +322,47 @@ Result<> ComputeTriangleGeomShapes::operator()()
       {
         return {};
       }
-      double Vol = 0.0;
+      float64 Vol = 0.0;
       // define the accumulator arrays
       Matrix3x3 Cacc;
       Cacc << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
       // Get the centroid for the feature
-      centroid[0] = centroids[3 * featureId + 0];
-      centroid[1] = centroids[3 * featureId + 1];
-      centroid[2] = centroids[3 * featureId + 2];
+      centroid[0] = centroids[(3 * featureId) + 0];
+      centroid[1] = centroids[(3 * featureId) + 1];
+      centroid[2] = centroids[(3 * featureId) + 2];
 
       // for each triangle we need the transformation matrix A defined by the three points as columns
       // Loop over all triangle faces
       int32_t tCount = 0;
       for(usize i = 0; i < numFaces; i++)
       {
-        if(faceLabels[2 * i] != featureId && faceLabels[2 * i + 1] != featureId)
+        if(faceLabels[2 * i] != featureId && faceLabels[(2 * i) + 1] != featureId)
         {
           continue;
         }
         tCount++;
-        usize compIndex = (faceLabels[2 * i] == featureId ? 0 : 1);
+        const usize compIndex = (faceLabels[2 * i] == featureId ? 0 : 1);
         std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
 
-        const nx::core::Point3Df& a = vertCoords[0] - centroid;
-        const nx::core::Point3Df& b = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
-        const nx::core::Point3Df& c = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
+        const nx::core::Point3Df& aVert = vertCoords[0] - centroid;
+        const nx::core::Point3Df& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
+        const nx::core::Point3Df& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
 
-        Matrix3x3 A;
-        A << a[0], b[0], c[0], a[1], b[1], c[1], a[2], b[2], c[2];
+        Matrix3x3 aMat;
+        aMat << aVert[0], bVert[0], cVert[0], aVert[1], bVert[1], cVert[1], aVert[2], bVert[2], cVert[2];
 
-        float64 dA = A.determinant();
+        const float64 detA = aMat.determinant();
 
-        Cacc = (Cacc + dA * (A * (cMatrix * (A.transpose())))).eval();
-        Vol += (dA / 6.0f); // accumulate the volumes
+        Cacc = (Cacc + detA * (aMat * (cMatrix * (aMat.transpose())))).eval();
+        Vol += (detA / 6.0f); // accumulate the volumes
       }
 
       Cacc = (Cacc / Vol).eval();
       Cinertia = identityMat * Cacc.trace() - Cacc;
       // extract the moments from the inertia tensor
-      Eigen::Vector3d e(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
-      auto sols = cPrime * e;
+      const Eigen::Vector3d eVec(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
+      auto sols = cPrime * eVec;
       omega3S[featureId] = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
     }
 
@@ -378,7 +374,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
      * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
      * which are the angular velocity vectors.
      */
-    Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
+    const Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
 
     // The primary axis is the largest eigenvalue
     Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
@@ -394,7 +390,7 @@ Result<> ComputeTriangleGeomShapes::operator()()
     //
     //    constexpr char k_BaselineAxisLabel = 'x'; // x
     //    char axisLabel = 'x';
-    //    double primaryAxis = eigenvalues[0].real();
+    //    float64 primaryAxis = eigenvalues[0].real();
     //    for(usize i = 1; i < eigenvalues.size(); i++)
     //    {
     //      if(primaryAxis < eigenvalues[i].real())
@@ -431,30 +427,15 @@ Result<> ComputeTriangleGeomShapes::operator()()
 
       // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
       //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
-      //      // clang-format off
-      //      double g[3][3] = {{col1(0).real(), col1(1).real(), col1(2).real()},
-      //                        {col2(0).real(), col2(1).real(), col2(2).real()},
-      //                        {col3(0).real(), col3(1).real(), col3(2).real()}};
-      //      // clang-format on
-
       orientationMatrix.row(0) = col1.real();
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
 
-      // orientationMatrix.transposeInPlace();
-
-      // check for right-handedness
-      //      OrientationTransformation::ResultType result = OrientationTransformation::om_check(orientationMatrix);
-      //      if(result.result < 0)
-      //      {
-      //        return MakeErrorResult(-64722, result.msg);
-      //      }
-
       auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(orientationMatrix.data(), 9));
 
-      axisEulerAngles[3 * featureId] = euler[0];
-      axisEulerAngles[3 * featureId + 1] = euler[1];
-      axisEulerAngles[3 * featureId + 2] = euler[2];
+      axisEulerAngles[3 * featureId] = static_cast<float32>(euler[0]);
+      axisEulerAngles[(3 * featureId) + 1] = static_cast<float32>(euler[1]);
+      axisEulerAngles[(3 * featureId) + 2] = static_cast<float32>(euler[2]);
     }
 
     /**
@@ -466,21 +447,24 @@ Result<> ComputeTriangleGeomShapes::operator()()
         return {};
       }
 
-      bool isValid = false;
-      auto lengths = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, isValid, m_ShouldCancel);
+      auto result = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
 
-      if(!isValid)
+      if(!result.invalid())
       {
-        return MakeErrorResult(-64721, fmt::format("{}({}): Error. The feature at id ({}) failed to have its lengths calculated.", __FILE__, __LINE__, featureId));
+        Result<> outResult = {};
+        outResult.errors().push_back(std::move(*result.errors().begin()));
+        return outResult;
       }
 
+      const ::AxialLengths lengths = result.value();
+
       axisLengths[3 * featureId] = static_cast<float32>(lengths.xLength);
-      axisLengths[3 * featureId + 1] = static_cast<float32>(lengths.yLength);
-      axisLengths[3 * featureId + 2] = static_cast<float32>(lengths.zLength);
+      axisLengths[(3 * featureId) + 1] = static_cast<float32>(lengths.yLength);
+      axisLengths[(3 * featureId) + 2] = static_cast<float32>(lengths.zLength);
       auto bOverA = static_cast<float32>(lengths.yLength / lengths.xLength);
       auto cOverA = static_cast<float32>(lengths.zLength / lengths.xLength);
       aspectRatios[2 * featureId] = bOverA;
-      aspectRatios[2 * featureId + 1] = cOverA;
+      aspectRatios[(2 * featureId) + 1] = cOverA;
     }
   }
 
