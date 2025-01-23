@@ -4,7 +4,10 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
+#include <Eigen/Dense>
+
 #include <array>
+
 namespace nx::core
 {
 namespace IntersectionUtilities
@@ -215,6 +218,136 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   bcoord[2] = v;
 
   return true;
+}
+
+// These are values that are not associated with the direction of the ray
+// Precalculating is only useful when calculating multiple rays (same origin/different directions) on the same triangle
+template <typename T>
+struct MTPointsCache
+{
+  using PointT = Eigen::Vector3<T>;
+
+  // Ray origin
+  PointT origin;
+
+  // Triangle Vertices
+  PointT pointA;
+  PointT pointB;
+  PointT pointC;
+
+  // Specific edges
+  // edge1 = pointB - pointA;
+  PointT edge1;
+  // edge2 = pointC - pointA;
+  PointT edge2;
+
+  // Pre-calculations
+  // sDist = origin - pointA;
+  PointT sDist;
+  // sCrossE1 = sDist.cross(edge1);
+  PointT sCrossE1;
+};
+
+// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance (Cached)
+template <typename T>
+std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
+{
+  using PointT = Eigen::Vector3<T>;
+  constexpr T epsilon = std::numeric_limits<T>::epsilon();
+
+  PointT crossE2 = dirVec.cross(cache.edge2);
+  T determinant = cache.edge1.dot(crossE2);
+
+  if(determinant > -epsilon && determinant < epsilon)
+  {
+    // Ray is parallel to given triangle
+    return {};
+  }
+
+  T invDet = 1.0 / determinant;
+  T uCoff = invDet * cache.sDist.dot(crossE2);
+
+  // Allow ADL for efficient absolute value function
+  using std::abs;
+  if((uCoff < 0 && abs(uCoff) > epsilon) || (uCoff > 1 && abs(uCoff - 1.0) > epsilon))
+  {
+    // Ray intersects plane, but not triangle
+    return {};
+  }
+
+  T vCoff = invDet * dirVec.dot(cache.sCrossE1);
+
+  if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
+  {
+    // Ray intersects plane, but not triangle
+    return {};
+  }
+
+  T tCoff = invDet * cache.edge2.dot(cache.sCrossE1);
+
+  if(tCoff > epsilon)
+  {
+    // Ray intersection
+    return {cache.origin + dirVec * tCoff};
+  }
+
+  // line intersection not ray intersection
+  return {};
+}
+
+// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
+template <typename T>
+std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin, const Eigen::Vector3<T>& dirVec, const Eigen::Vector3<T>& pointA, const Eigen::Vector3<T>& pointB,
+                                                const Eigen::Vector3<T>& pointC)
+{
+  using PointT = Eigen::Vector3<T>;
+  constexpr T epsilon = std::numeric_limits<T>::epsilon();
+
+  PointT edge1 = pointB - pointA;
+  PointT edge2 = pointC - pointA;
+
+  PointT crossE2 = dirVec.cross(edge2);
+  T determinant = edge1.dot(crossE2);
+
+  if(determinant > -epsilon && determinant < epsilon)
+  {
+    // Ray is parallel to given triangle
+    return {};
+  }
+
+  PointT sDist = origin - pointA;
+
+  T invDet = 1.0 / determinant;
+  T uCoff = invDet * sDist.dot(crossE2);
+
+  // Allow ADL for efficient absolute value function
+  using std::abs;
+  if((uCoff < 0 && abs(uCoff) > epsilon) || (uCoff > 1 && abs(uCoff - 1.0) > epsilon))
+  {
+    // Ray intersects plane, but not triangle
+    return {};
+  }
+
+  PointT sCrossE1 = sDist.cross(edge1);
+
+  T vCoff = invDet * dirVec.dot(sCrossE1);
+
+  if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
+  {
+    // Ray intersects plane, but not triangle
+    return {};
+  }
+
+  T tCoff = invDet * edge2.dot(sCrossE1);
+
+  if(tCoff > epsilon)
+  {
+    // Ray intersection
+    return {origin + dirVec * tCoff};
+  }
+
+  // line intersection not ray intersection
+  return {};
 }
 
 } // namespace IntersectionUtilities

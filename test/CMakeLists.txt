@@ -31,6 +31,7 @@ add_executable(simplnx_test
   GeometryTest.cpp
   GeometryTestUtilities.hpp
   H5Test.cpp
+  IntersectionUtilitiesTest.cpp
   IOFormat.cpp
   MontageTest.cpp
   PluginTest.cpp

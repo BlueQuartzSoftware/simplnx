@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/IntersectionUtilities.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -39,179 +40,6 @@ struct AxialLengths
   IGeometry::SharedVertexList::value_type zLength = 0.0;
 };
 
-// These are values that are not associated with the direction of the ray
-// Precalculating is only useful when calculating multiple rays (same origin/different directions) on the same triangle
-template <typename T>
-struct MTPointsCache
-{
-  using PointT = Eigen::Vector3<T>;
-
-  // Ray origin
-  PointT origin;
-
-  // Triangle Vertices
-  PointT pointA;
-  PointT pointB;
-  PointT pointC;
-
-  // Specific edges
-  // edge1 = pointB - pointA;
-  PointT edge1;
-  // edge2 = pointC - pointA;
-  PointT edge2;
-
-  // Pre-calculations
-  // sDist = origin - pointA;
-  PointT sDist;
-  // sCrossE1 = sDist.cross(edge1);
-  PointT sCrossE1;
-};
-
-// Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
-template <typename T>
-std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
-{
-  using PointT = Eigen::Vector3<T>;
-  constexpr T epsilon = std::numeric_limits<T>::epsilon();
-
-  PointT crossE2 = dirVec.cross(cache.edge2);
-  T determinant = cache.edge1.dot(crossE2);
-
-  if(determinant > -epsilon && determinant < epsilon)
-  {
-    // Ray is parallel to given triangle
-    return {};
-  }
-
-  T invDet = 1.0 / determinant;
-  T uCoff = invDet * cache.sDist.dot(crossE2);
-
-  // Allow ADL for efficient absolute value function
-  using std::abs;
-  if((uCoff < 0 && abs(uCoff) > epsilon) || (uCoff > 1 && abs(uCoff - 1.0) > epsilon))
-  {
-    // Ray intersects plane, but not triangle
-    return {};
-  }
-
-  T vCoff = invDet * dirVec.dot(cache.sCrossE1);
-
-  if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
-  {
-    // Ray intersects plane, but not triangle
-    return {};
-  }
-
-  T tCoff = invDet * cache.edge2.dot(cache.sCrossE1);
-
-  if(tCoff > epsilon)
-  {
-    // Ray intersection
-    return {cache.origin + dirVec * tCoff};
-  }
-
-  // line intersection not ray intersection
-  return {};
-}
-
-bool TestMTIntersection()
-{
-  using PointT = Eigen::Vector3<float32>;
-  MTPointsCache<float32> cache;
-  cache.pointA = PointT{0.5, 0, 0};
-  cache.pointB = PointT{-0.5, 0.5, 0};
-  cache.pointC = PointT{-0.5, -0.5, 0};
-
-  cache.edge1 = cache.pointB - cache.pointA;
-  cache.edge2 = cache.pointC - cache.pointA;
-  {
-    // Case 1 (Intersection)
-    cache.origin = PointT{0, 0, -1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
-
-    if(!result)
-    {
-      return false;
-    }
-  }
-
-  {
-    // Case 2 (No Intersection [Origin Above])
-    cache.origin = PointT{0, 0, 1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
-
-    if(result)
-    {
-      return false;
-    }
-  }
-
-  {
-    // Case 3 (No Intersection [Ray Parallel])
-    cache.origin = PointT{0, 0, -1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    bool result = MTIntersection(PointT{0, 1, 0}, cache).has_value();
-
-    if(result)
-    {
-      return false;
-    }
-  }
-
-  {
-    // Case 4 (Intersection)
-    cache.origin = PointT{0, 0, -1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    PointT dirVec = PointT{0.1, 0.1, 1};
-    dirVec.normalize();
-    bool result = MTIntersection(dirVec, cache).has_value();
-
-    if(!result)
-    {
-      return false;
-    }
-  }
-
-  {
-    // Case 5 (No Intersection [Misaligned Origin])
-    cache.origin = PointT{10, 0, -1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    bool result = MTIntersection(PointT{0, 0, 1}, cache).has_value();
-
-    if(result)
-    {
-      return false;
-    }
-  }
-
-  {
-    // Case 5 (No Intersection [Wrong Direction])
-    cache.origin = PointT{0, 0, -1};
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
-
-    bool result = MTIntersection(PointT{0, 0, -1}, cache).has_value();
-
-    if(result)
-    {
-      return false;
-    }
-  }
-  return true;
-}
-
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
 template <typename T = IGeometry::SharedVertexList::value_type>
 AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
@@ -229,7 +57,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
   PointT yDirVec = PointT{0.0, 1.0, 0.0}.transpose() * orientationMatrix;
   PointT zDirVec = PointT{0.0, 0.0, 1.0}.transpose() * orientationMatrix;
 
-  MTPointsCache<T> cache;
+  IntersectionUtilities::MTPointsCache<T> cache;
 
   // Feature Centroid
   cache.origin = PointT{centroidsStore[3 * featureId], centroidsStore[3 * featureId + 1], centroidsStore[3 * featureId + 2]};
@@ -268,7 +96,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
     cache.sCrossE1 = cache.sDist.cross(cache.edge1);
 
     int foo = 0;
-    const std::optional<PointT> xIntersect = MTIntersection(xDirVec, cache);
+    const std::optional<PointT> xIntersect = IntersectionUtilities::MTIntersection(xDirVec, cache);
     if(xIntersect.has_value())
     {
       foo = 1;
@@ -282,7 +110,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
       }
     }
 
-    const std::optional<PointT> yIntersect = MTIntersection(yDirVec, cache);
+    const std::optional<PointT> yIntersect = IntersectionUtilities::MTIntersection(yDirVec, cache);
     if(yIntersect.has_value())
     {
       foo = 1;
@@ -296,7 +124,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
       }
     }
 
-    const std::optional<PointT> zIntersect = MTIntersection(zDirVec, cache);
+    const std::optional<PointT> zIntersect = IntersectionUtilities::MTIntersection(zDirVec, cache);
     if(zIntersect.has_value())
     {
       foo = 1;
@@ -431,8 +259,6 @@ const std::atomic_bool& ComputeTriangleGeomShapes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTriangleGeomShapes::operator()()
 {
-  bool result = TestMTIntersection();
-
   using MeshIndexType = IGeometry::MeshIndexType;
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const TriStore& triangleList = triangleGeom.getFacesRef().getDataStoreRef();

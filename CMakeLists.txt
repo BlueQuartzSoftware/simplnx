@@ -529,6 +529,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
@@ -548,7 +549,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ClusteringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
