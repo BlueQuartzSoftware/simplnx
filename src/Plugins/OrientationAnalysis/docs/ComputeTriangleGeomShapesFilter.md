@@ -61,7 +61,7 @@ Polycrystalline Microstructures, Part 1: Statistical Characterization Acta Mater
 
 ## Exemplars For Test/Validation
 
-Note that the `AxisEulerAngles` are in radians. The `_NUMBER` is the component index. The names correspond to files in the test data. The test data also contains a `.dream3d` file (and corresponding `.xdmf` file) that has the preprocessed input data as well as two vertex geometries that correspond to the axial intersection points for both this filter (named `stl`) and the voxelized implementation (named `voxelized`) to demonstrate the difference between the two results. The code to generate this was not production level so it was not included in the release of this filter.
+Note that the `AxisEulerAngles` are in radians. The `_NUMBER` is the component index. The names correspond to files in the test data. The test data also contains a `.dream3d` file (and corresponding `.xdmf` file) that has the preprocessed input data as well as two vertex geometries that correspond to the axial intersection points for both this filter (named `stl`) and the voxelized implementation (named `voxelized`) to demonstrate the difference between the two results. See `validation` folder in the associated test file. The code to generate this was not production level so it was not included in the release of this filter.
 
 | Index | Exemplar Omega3s | Exemplar AxisEulerAngles_0 | Exemplar AxisEulerAngles_1 | Exemplar AxisEulerAngles_2 | Exemplar AxisLengths_0 | Exemplar AxisLengths_1 | Exemplar AxisLengths_2 | Centroids_0 | Centroids_1 | Centroids_2 | STL File List |
 |---|---|---|---|---|---|---|---|---|---|---|--------|
