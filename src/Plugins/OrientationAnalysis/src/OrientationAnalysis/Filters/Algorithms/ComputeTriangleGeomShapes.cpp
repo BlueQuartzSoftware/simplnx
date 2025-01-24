@@ -135,7 +135,7 @@ Result<AxialLengths> FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMa
     return {lengths};
   }
 
-  Result<AxialLengths> invalid = {};
+  Result<AxialLengths> invalid = {lengths};
 
   invalid.errors().push_back(
       nx::core::Error{.code = -64721,
