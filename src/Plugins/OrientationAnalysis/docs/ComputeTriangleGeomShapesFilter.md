@@ -4,6 +4,17 @@
 
 Statistics (Morphological)
 
+## Warning
+
+This filter has two caveats.
+
+Firstly, the axial lengths of this filter will be different than those produced voxelized counterpart. This is for two reasons:
+
+- The sampling rate and density for the grid that was used to voxelize the mesh. See *Sample Triangle Geometry on Regular Grid* (RegularGridSampleSurfaceMesh).
+- This filter determines axial lengths via distance from feature centroid to mesh intersection points along each of the principle axes. This means they are relative to the mesh itself rather than the grid it exists in.
+
+Secondly, shapes that exhibit rotational symmetry (e.g. cube, sphere, regular octahedron, etc.) may have different Euler Angles than those of the voxelized implementation, but they are functionally identical. This is more prevalent in meshes with less traingles, but this is seemly due to the fact the tested shapes are more uniform in low-poly. It is presumed that fiducial markers will stabilize ouputs for these specific shapes.
+
 ## Description
 
 This **Filter** calculates the second-order moments of each enclosed **Feature** in a **Triangle Geometry**. The
@@ -32,7 +43,7 @@ but any shape with clear sharp corners may be affected.
 
 % Auto generated parameter table will be inserted here
 
-## References ##
+## References
 
 [1] Representation and Reconstruction of Three-dimensional Microstructures in Ni-based Superalloys, AFOSR
 FA9550-07-1-0179 Final Report, 20 Dec 2010.
