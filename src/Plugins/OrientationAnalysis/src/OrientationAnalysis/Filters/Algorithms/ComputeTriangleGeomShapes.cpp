@@ -436,10 +436,12 @@ Result<> ComputeTriangleGeomShapes::operator()()
       const ::AxialLengths lengths = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
 
       // Check for zeroes (zeroes = probably invalid)
-      if(lengths.xLength && lengths.yLength && lengths.zLength)
+      if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
       {
-        return MakeErrorResult(-64721, fmt::format("{}({}): One or more of the axis lengths was unable to be found. This indicates the geometry was malformed.\nX Length: {}\nY Length: {}\nZ Length: {}",
-                                                   __FILE__, __LINE__, lengths.xLength, lengths.yLength, lengths.zLength));
+        return MakeErrorResult(-64721, fmt::format("{}({}): One or more of the axis lengths for feature {} was unable to be found. This indicates the geometry was malformed.\nFeature Centroid(XYZ): "
+                                                   "[{},{},{}]\nX Length: {}\nY Length: {}\nZ Length: {}",
+                                                   __FILE__, __LINE__, featureId, centroids[(3 * featureId) + 0], centroids[(3 * featureId) + 1], centroids[(3 * featureId) + 2], lengths.xLength,
+                                                   lengths.yLength, lengths.zLength));
       }
 
       axisLengths[3 * featureId] = static_cast<float32>(lengths.xLength);
