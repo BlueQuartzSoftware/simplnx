@@ -59,6 +59,26 @@ Polycrystalline Microstructures, Part 1: Statistical Characterization Acta Mater
 
 ## Example Pipelines
 
+## Exemplars For Test/Validation
+
+Note that the `AxisEulerAngles` are in radians. The `_NUMBER` is the component index. The names correspond to files in the test data. The test data also contains a `.dream3d` file (and corresponding `.xdmf` file) that has the preprocessed input data as well as two vertex geometries that correspond to the axial intersection points for both this filter (named `stl`) and the voxelized implementation (named `voxelized`) to demonstrate the difference between the two results. The code to generate this was not production level so it was not included in the release of this filter.
+
+| Index | Exemplar Omega3s | Exemplar AxisEulerAngles_0 | Exemplar AxisEulerAngles_1 | Exemplar AxisEulerAngles_2 | Exemplar AxisLengths_0 | Exemplar AxisLengths_1 | Exemplar AxisLengths_2 | Centroids_0 | Centroids_1 | Centroids_2 | STL File List |
+|---|---|---|---|---|---|---|---|---|---|---|--------|
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 'JUNK' |
+| 1 | 0.78787351 | 6.2519455 | 0.46384287 | 1.5707964 | 0.55903065 | 0.5 | 0.5590716 | 11 | 1.5 | 0.5 | '101_cube.stl' |
+| 2 | 0.90795749 | 1.5712752 | 1.5711994 | 4.711997 | 0.50000107 | 0.50000107 | 0.50000536 | 7.9999948 | 1.500001 | 0.50000101 | '102_rounded_cube.stl' |
+| 3 | 0.99998772 | 3.1415451 | 1.5707964 | 1.5707963 | 0.4999963 | 0.50000113 | 0.49999821 | 5.0000029 | 1.4999999 | 0.50000352 | '103_sphere.stl' |
+| 4 | 0.81056947 | 0 | 0 | 0 | 0.5 | 0.5 | 0.5 | 2 | 1.5 | 0.5 | '104_octahedron.stl' |
+| 5 | 0.78787351 | 0 | 1.5707964 | 4.712389 | 1.5 | 1 | 0.5 | 11 | 3.5 | 1.5 | '105_rectangular_prism.stl' |
+| 6 | 0.90794492 | 2.3219979e-10 | 1.5707964 | 1.5707964 | 1.5000002 | 1.0000105 | 0.50000501 | 8.0000105 | 3.500005 | 1.4999998 | '106_rounded_cube_elongated.stl' |
+| 7 | 0.99998951 | 3.1415927 | 1.5707964 | 1.5707964 | 1.499998 | 0.99999982 | 0.50000066 | 5 | 3.4999993 | 1.5000019 | '107_ellipsoid.stl' |
+| 8 | 0.4052847 | 2.9784336 | 1.2776501 | 2.7590237 | 0.72980016 | 0.63307023 | 0.90308428 | 11.949251 | 5.9832501 | 0.56225002 | '108_tetrahedron.stl' |
+| 9 | 0.86399871 | 4.7129421 | 1.5707964 | 1.5707964 | 1.25 | 1.0001171 | 1.0003718 | 2.0074062 | 6.1888757 | 1.25 | '109_cylinder.stl' |
+| 10 | 0.96753073 | 4.712389 | 1.7409153 | 4.712389 | 1.0468618 | 1.1038886 | 1.2814574 | 8.2501669 | 6.1889997 | 1.03175 | '110_icosahedron.stl' |
+| 11 | 0.95603704 | 1.5717114 | 2.5809844 | 4.7131243 | 0.95104223 | 0.95071417 | 0.94695413 | 4.8930006 | 6.1890001 | 0.80900002 | '111_dodecahedron.stl' |
+| 12 | 0.81056947 | 3.1415927 | 1.5707964 | 1.5707964 | 1.5 | 1 | 0.5 | 2 | 3.5 | 1.5 | '112_octahedron.stl' |
+
 ## License & Copyright
 
 Please see the description file distributed with this plugin.
