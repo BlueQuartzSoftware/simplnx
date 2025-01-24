@@ -42,7 +42,7 @@ struct AxialLengths
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
 template <typename T = IGeometry::SharedVertexList::value_type>
-Result<AxialLengths> FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
+AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
                                        const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
                                        const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
 {
@@ -66,7 +66,7 @@ Result<AxialLengths> FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMa
   {
     if(shouldCancel)
     {
-      return {};
+      return lengths;
     }
 
     if(faceLabelsStore[2 * i] != featureId && faceLabelsStore[(2 * i) + 1] != featureId)
@@ -128,21 +128,7 @@ Result<AxialLengths> FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMa
     }
   }
 
-  // Check for zeroes (zeroes = probably invalid)
-  if(lengths.xLength && lengths.yLength && lengths.zLength)
-  {
-    // Valid
-    return {lengths};
-  }
-
-  Result<AxialLengths> invalid = {lengths};
-
-  invalid.errors().push_back(
-      nx::core::Error{.code = -64721,
-                      .message = fmt::format("{}({}): One or more of the axis lengths was unable to be found. This indicates the geometry was malformed.\nX Length: {}\nY Length: {}\nZ Length: {}",
-                                             __FILE__, __LINE__, lengths.xLength, lengths.yLength, lengths.zLength)});
-
-  return invalid;
+  return lengths;
 }
 
 /**
@@ -447,16 +433,14 @@ Result<> ComputeTriangleGeomShapes::operator()()
         return {};
       }
 
-      auto result = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
+      const ::AxialLengths lengths = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
 
-      if(result.invalid())
+      // Check for zeroes (zeroes = probably invalid)
+      if(lengths.xLength && lengths.yLength && lengths.zLength)
       {
-        Result<> outResult = {};
-        outResult.errors().push_back(std::move(*result.errors().begin()));
-        return outResult;
+        return MakeErrorResult(-64721, fmt::format("{}({}): One or more of the axis lengths was unable to be found. This indicates the geometry was malformed.\nX Length: {}\nY Length: {}\nZ Length: {}",
+                                                   __FILE__, __LINE__, lengths.xLength, lengths.yLength, lengths.zLength));
       }
-
-      const ::AxialLengths lengths = result.value();
 
       axisLengths[3 * featureId] = static_cast<float32>(lengths.xLength);
       axisLengths[(3 * featureId) + 1] = static_cast<float32>(lengths.yLength);
