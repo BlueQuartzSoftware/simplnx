@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ComputeTriangleGeomShapesFilter
+ * @class ComputeShapesTriangleGeomFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeTriangleGeomShapesFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeomFilter : public IFilter
 {
 public:
-  ComputeTriangleGeomShapesFilter() = default;
-  ~ComputeTriangleGeomShapesFilter() noexcept override = default;
+  ComputeShapesTriangleGeomFilter() = default;
+  ~ComputeShapesTriangleGeomFilter() noexcept override = default;
 
-  ComputeTriangleGeomShapesFilter(const ComputeTriangleGeomShapesFilter&) = delete;
-  ComputeTriangleGeomShapesFilter(ComputeTriangleGeomShapesFilter&&) noexcept = delete;
+  ComputeShapesTriangleGeomFilter(const ComputeShapesTriangleGeomFilter&) = delete;
+  ComputeShapesTriangleGeomFilter(ComputeShapesTriangleGeomFilter&&) noexcept = delete;
 
-  ComputeTriangleGeomShapesFilter& operator=(const ComputeTriangleGeomShapesFilter&) = delete;
-  ComputeTriangleGeomShapesFilter& operator=(ComputeTriangleGeomShapesFilter&&) noexcept = delete;
+  ComputeShapesTriangleGeomFilter& operator=(const ComputeShapesTriangleGeomFilter&) = delete;
+  ComputeShapesTriangleGeomFilter& operator=(ComputeShapesTriangleGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
@@ -108,4 +108,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeTriangleGeomShapesFilter, "e8f0fed3-d0d8-456e-b5a1-7961cc17b739");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeShapesTriangleGeomFilter, "e8f0fed3-d0d8-456e-b5a1-7961cc17b739");

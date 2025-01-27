@@ -1,4 +1,4 @@
-#include "OrientationAnalysis/Filters/ComputeTriangleGeomShapesFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeShapesTriangleGeomFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -18,7 +18,7 @@ using namespace nx::core;
 
 #define SIMPLNX_WRITE_TEST_OUTPUT
 
-namespace ComputeTriangleGeomShapesFilterTest
+namespace ComputeShapesTriangleGeomFilterTest
 {
 const std::string k_FaceLabelsName = "Face Labels";
 const std::string k_FaceFeatureName = "Face Feature Data";
@@ -43,12 +43,12 @@ const DataPath k_FaceFeatureAttributeMatrixPath = k_GeometryPath.createChildPath
 const DataPath k_FaceDataPath = k_GeometryPath.createChildPath(k_FaceDataName);
 const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(k_FaceLabelsName);
 const DataPath k_FaceFeatureCentroidsPath = k_FaceFeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
-} // namespace ComputeTriangleGeomShapesFilterTest
+} // namespace ComputeShapesTriangleGeomFilterTest
 
-using namespace ComputeTriangleGeomShapesFilterTest;
+using namespace ComputeShapesTriangleGeomFilterTest;
 
 // !!! See filter documentation for information on included data and how it was generated and visually validated !!!
-TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysis][ComputeTriangleGeomShapes]")
+TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom", "[OrientationAnalysis][ComputeShapesTriangleGeom]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_compute_triangle_shapes_test.tar.gz",
                                                               "7_compute_triangle_shapes_test");
@@ -56,21 +56,21 @@ TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysi
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/7_compute_triangle_shapes_test/test/7_exemplar_triangle_shapes.dream3d", unit_test::k_TestFilesDir)));
 
   // Instantiate the filter and an Arguments Object
-  ComputeTriangleGeomShapesFilter filter;
+  ComputeShapesTriangleGeomFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_TriGeometryDataPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_GeometryPath));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
 
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FaceFeatureAttributeMatrixPath));
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_FaceFeatureCentroidsPath));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FaceFeatureAttributeMatrixPath));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_FaceFeatureCentroidsPath));
 
   // Output Vars
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_Omega3sArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Omega3SArrayName));
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_AxisLengthsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName));
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName));
-  args.insertOrAssign(ComputeTriangleGeomShapesFilter::k_AspectRatiosArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_Omega3sArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Omega3SArrayName));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_AxisLengthsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName));
+  args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_AspectRatiosArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(exemplarDataStructure, args);
@@ -81,7 +81,7 @@ TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysi
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(exemplarDataStructure, fs::path(fmt::format("{}/{}.dream3d", unit_test::k_BinaryTestOutputDir, "ComputeTriangleGeomShapesTestOutput")));
+  UnitTest::WriteTestDataStructure(exemplarDataStructure, fs::path(fmt::format("{}/{}.dream3d", unit_test::k_BinaryTestOutputDir, "ComputeShapesTriangleGeomTestOutput")));
 #endif
 
   UnitTest::CompareArrays<float32>(exemplarDataStructure, k_FaceFeatureAttributeMatrixPath.createChildPath(k_Omega3SArrayName),

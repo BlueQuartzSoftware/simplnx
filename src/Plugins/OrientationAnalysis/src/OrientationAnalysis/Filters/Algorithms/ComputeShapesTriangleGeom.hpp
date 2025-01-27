@@ -9,7 +9,7 @@
 namespace nx::core
 {
 
-struct ORIENTATIONANALYSIS_EXPORT ComputeTriangleGeomShapesInputValues
+struct ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeomInputValues
 {
   DataPath TriangleGeometryPath;
   DataPath FaceLabelsArrayPath;
@@ -24,16 +24,16 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeTriangleGeomShapesInputValues
 /**
  * @class
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeTriangleGeomShapes
+class ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeom
 {
 public:
-  ComputeTriangleGeomShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeTriangleGeomShapesInputValues* inputValues);
-  ~ComputeTriangleGeomShapes() noexcept;
+  ComputeShapesTriangleGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeShapesTriangleGeomInputValues* inputValues);
+  ~ComputeShapesTriangleGeom() noexcept;
 
-  ComputeTriangleGeomShapes(const ComputeTriangleGeomShapes&) = delete;
-  ComputeTriangleGeomShapes(ComputeTriangleGeomShapes&&) noexcept = delete;
-  ComputeTriangleGeomShapes& operator=(const ComputeTriangleGeomShapes&) = delete;
-  ComputeTriangleGeomShapes& operator=(ComputeTriangleGeomShapes&&) noexcept = delete;
+  ComputeShapesTriangleGeom(const ComputeShapesTriangleGeom&) = delete;
+  ComputeShapesTriangleGeom(ComputeShapesTriangleGeom&&) noexcept = delete;
+  ComputeShapesTriangleGeom& operator=(const ComputeShapesTriangleGeom&) = delete;
+  ComputeShapesTriangleGeom& operator=(ComputeShapesTriangleGeom&&) noexcept = delete;
 
   Result<> operator()();
 
@@ -41,7 +41,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  const ComputeTriangleGeomShapesInputValues* m_InputValues = nullptr;
+  const ComputeShapesTriangleGeomInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

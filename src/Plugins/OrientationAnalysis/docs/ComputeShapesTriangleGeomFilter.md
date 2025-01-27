@@ -8,7 +8,7 @@ Statistics (Morphological)
 
 This filter has two caveats.
 
-Firstly, the axial lengths of this filter will be different than those produced voxelized counterpart. This is for two reasons:
+Firstly, the axial lengths of this filter will be different than those produced by the voxelized version of this filter. This is for two reasons:
 
 - The sampling rate and density for the grid that was used to voxelize the mesh. See *Sample Triangle Geometry on Regular Grid* (RegularGridSampleSurfaceMesh).
 - This filter determines axial lengths via distance from feature centroid to mesh intersection points along each of the principle axes. This means they are relative to the mesh itself rather than the grid it exists in.

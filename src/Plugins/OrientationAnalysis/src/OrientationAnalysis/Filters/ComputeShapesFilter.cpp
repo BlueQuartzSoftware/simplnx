@@ -37,13 +37,13 @@ Uuid ComputeShapesFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeShapesFilter::humanName() const
 {
-  return "Compute Feature Shapes";
+  return "Compute Feature Shapes (Image Geometry)";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeShapesFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Morphological", "Find", "Generate", "Calculate", "Determine"};
+  return {className(), "Statistics", "Morphological", "Find", "Generate", "Calculate", "Determine", "Omega3", "Axis Length"};
 }
 
 //------------------------------------------------------------------------------
@@ -52,9 +52,9 @@ Parameters ComputeShapesFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs", DataPath({"FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
 

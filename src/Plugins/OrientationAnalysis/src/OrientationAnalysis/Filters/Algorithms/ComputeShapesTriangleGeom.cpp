@@ -1,4 +1,4 @@
-#include "ComputeTriangleGeomShapes.hpp"
+#include "ComputeShapesTriangleGeom.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -222,8 +222,8 @@ std::array<size_t, 3> TripletSort(T aVal, T bVal, T cVal, bool lowToHigh)
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomShapes::ComputeTriangleGeomShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     ComputeTriangleGeomShapesInputValues* inputValues)
+ComputeShapesTriangleGeom::ComputeShapesTriangleGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     ComputeShapesTriangleGeomInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -232,16 +232,16 @@ ComputeTriangleGeomShapes::ComputeTriangleGeomShapes(DataStructure& dataStructur
 }
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomShapes::~ComputeTriangleGeomShapes() noexcept = default;
+ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeTriangleGeomShapes::getCancel()
+const std::atomic_bool& ComputeShapesTriangleGeom::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeTriangleGeomShapes::operator()()
+Result<> ComputeShapesTriangleGeom::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
