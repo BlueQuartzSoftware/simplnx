@@ -36,7 +36,7 @@ namespace Connectivity
 {
 namespace detail
 {
-constexpr uint64 k_MaxOptimizedValue = static_cast<uint64>(std::numeric_limits<uint32>::max());
+inline constexpr uint64 k_MaxOptimizedValue = static_cast<uint64>(std::numeric_limits<uint32>::max());
 
 /**
  * @brief !!! DO NOT CALL DIRECTLY !!! Prefer FindNumEdges()
