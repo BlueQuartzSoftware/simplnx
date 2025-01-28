@@ -63,13 +63,20 @@ One of the arrays to come out of the algorithm is the "Node Type" vertex array. 
 | 13 | Node that is on the exterior of the mesh and is a triple line  |
 | 14 | Node that is on the exterior of the mesh and is a quadruple point   |
 
+### Exterior or Boundary Triangles
+
+Each triangle that is created will have an 2 component attribute called `Face Labels` that represent the Feature ID on either
+side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
+have a value of -1.
+
 ## Notes
 
-The Quickmesh algorithm is very crude and naive in its implementation. This filter 
+The Quick Mesh algorithm is very crude and naive in its implementation. This filter
 along with the Laplacian Smoothing filter can give you reasonable results. The
-newer filter that should replace both the quick mesh and the Laplacian Smoothing
-filter is the "SurfaceNets" surface meshing algorithm. This will create the surface
-mesh and smooth in a single filter and give subjectively better results.
+newer filter that should replace both the Quick Mesh and the Laplacian Smoothing
+filter is the "Surface Nets" surface meshing algorithm. This will create the surface
+mesh and smooth in a single filter and give subjectively better results and perform
+much faster at both.
 
 % Auto generated parameter table will be inserted here
 
