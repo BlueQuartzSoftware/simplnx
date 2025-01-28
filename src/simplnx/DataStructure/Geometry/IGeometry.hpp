@@ -174,6 +174,13 @@ public:
 
   /**
    * @brief
+   * @param geomType
+   * @return std::string
+   */
+  static std::string GeomTypeToString(Type geomType);
+
+  /**
+   * @brief
    * @param unit
    * @return std::string
    */
