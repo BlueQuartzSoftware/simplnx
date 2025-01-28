@@ -22,6 +22,7 @@ set(FilterList
   ComputeTriangleAreasFilter
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
+  CombineNodeBasedGeometriesFilter
   CombineStlFilesFilter
   ComputeDifferencesMapFilter
   ComputeEuclideanDistMapFilter
@@ -155,6 +156,7 @@ set(AlgorithmList
   AppendImageGeometry
   ApplyTransformationToGeometry
   ArrayCalculator
+  CombineNodeBasedGeometries
   ComputeArrayHistogram
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
