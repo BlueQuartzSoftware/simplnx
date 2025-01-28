@@ -55,21 +55,12 @@ void IGeometry::setSpatialDimensionality(uint32 value)
   m_SpacialDimensionality = value;
 }
 
-std::set<std::string> IGeometry::StringListFromGeometryType(const std::set<Type>& geomTypes)
+std::set<std::string> IGeometry::StringListFromGeometryType(const std::set<IGeometry::Type>& geomTypes)
 {
-  static const std::map<Type, std::string> k_TypeToStringMap = {{Type::Image, GeomTypeToString(Type::Image)},
-                                                                {Type::RectGrid, GeomTypeToString(Type::RectGrid)},
-                                                                {Type::Vertex, GeomTypeToString(Type::Vertex)},
-                                                                {Type::Edge, GeomTypeToString(Type::Edge)},
-                                                                {Type::Triangle, GeomTypeToString(Type::Triangle)},
-                                                                {Type::Quad, GeomTypeToString(Type::Quad)},
-                                                                {Type::Tetrahedral, GeomTypeToString(Type::Tetrahedral)},
-                                                                {Type::Hexahedral, GeomTypeToString(Type::Hexahedral)}};
-
   std::set<std::string> stringValues;
   for(auto geomType : geomTypes)
   {
-    stringValues.insert(k_TypeToStringMap.at(geomType));
+    stringValues.insert(IGeometry::k_GeomTypeStrings[to_underlying(geomType)]);
   }
   return stringValues;
 }
@@ -104,35 +95,9 @@ void IGeometry::setUnits(LengthUnit units)
   m_Units = units;
 }
 
-std::string IGeometry::GeomTypeToString(Type geomType)
+std::string IGeometry::GeomTypeToString(IGeometry::Type geomType)
 {
-  switch(geomType)
-  {
-  case Type::Image: {
-    return "Image";
-  }
-  case Type::RectGrid: {
-    return "RectGrid";
-  }
-  case Type::Vertex: {
-    return "Vertex";
-  }
-  case Type::Edge: {
-    return "Edge";
-  }
-  case Type::Triangle: {
-    return "Triangle";
-  }
-  case Type::Quad: {
-    return "Quad";
-  }
-  case Type::Tetrahedral: {
-    return "Tetrahedral";
-  }
-  case Type::Hexahedral: {
-    return "Hexahedral";
-  }
-  }
+  return IGeometry::k_GeomTypeStrings[to_underlying(geomType)];
 }
 
 std::string IGeometry::LengthUnitToString(LengthUnit unit)

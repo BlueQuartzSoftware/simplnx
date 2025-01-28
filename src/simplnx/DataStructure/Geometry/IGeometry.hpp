@@ -29,17 +29,27 @@ public:
   static inline constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
   static inline constexpr StringLiteral k_TypeName = "IGeometry";
 
+  /* We are leveraging the bounded nature of the following enum to expedite processing
+   *
+   * Steps for modification:
+   * Tack new Type on the end of enum
+   * Specify it's underlying value explicitly (increment of one from previous highest value)
+   * Add the new typename to k_GeomTypeStrings
+   *
+   * DO NOT REORDER */
   enum class Type : uint32
   {
-    Image,
-    RectGrid,
-    Vertex,
-    Edge,
-    Triangle,
-    Quad,
-    Tetrahedral,
-    Hexahedral
+    Image = 0u,
+    RectGrid = 1u,
+    Vertex = 2u,
+    Edge = 3u,
+    Triangle = 4u,
+    Quad = 5u,
+    Tetrahedral = 6u,
+    Hexahedral = 7u
   };
+
+  inline static constexpr std::array<StringLiteral, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
 
   enum class LengthUnit : EnumType
   {
