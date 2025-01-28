@@ -151,8 +151,8 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
-                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, TriangleGeom::k_SharedVertexListName,
+                                                                                       TriangleGeom::k_SharedFacesListName);
     auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
     // Create the face Normals DataArray action and store it
