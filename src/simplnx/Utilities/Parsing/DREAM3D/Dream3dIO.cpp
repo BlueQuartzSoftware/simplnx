@@ -904,8 +904,6 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
 Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetReader& dataArrayReader, DataObject::IdType parentId, std::vector<uint64>& amTDims,
                                         bool preflight = false)
 {
-  auto size = H5Dget_storage_size(dataArrayReader.getId());
-
   std::vector<usize> tDims;
   std::vector<usize> cDims;
   Result<> dimsResult = readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
@@ -1014,8 +1012,6 @@ Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure
 {
   HDF5::DatasetReader dataArrayReader = geomGroup.openDataset(arrayName);
   DataObject::IdType parentId = geometry->getId();
-
-  auto size = H5Dget_storage_size(dataArrayReader.getId());
 
   std::vector<usize> tDims;
   std::vector<usize> cDims;
@@ -1333,7 +1329,6 @@ DataObject* readLegacyHexGeom(DataStructure& dataStructure, const nx::core::HDF5
 DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const nx::core::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = EdgeGeom::Create(dataStructure, name);
-  auto edge = dynamic_cast<EdgeGeom*>(geom);
   readGenericGeomDims(geom, geomGroup);
   auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
   auto sharedEdgeList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::EdgeListName, preflight);

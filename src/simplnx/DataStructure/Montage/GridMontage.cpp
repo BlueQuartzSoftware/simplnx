@@ -252,7 +252,6 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
 {
   const usize numCols = dims[0];
   const usize numRows = dims[1];
-  const usize numDeep = dims[2];
 
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }

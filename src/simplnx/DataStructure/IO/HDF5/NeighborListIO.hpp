@@ -54,7 +54,6 @@ public:
     {
       const auto numNeighbors = numNeighborsStore[i];
       auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
-      std::vector<T>& vector = *sharedVector.get();
 
       size_t neighborListStart = offset;
       size_t neighborListEnd = offset + numNeighbors;

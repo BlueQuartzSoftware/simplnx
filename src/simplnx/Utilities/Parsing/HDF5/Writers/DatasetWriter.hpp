@@ -175,7 +175,7 @@ public:
           }
           /* Write the attribute data. */
           const void* data = static_cast<const void*>(values.data());
-          auto properties = CreateTransferChunkProperties(chunkShape);
+          // auto properties = CreateTransferChunkProperties(chunkShape);
           // error = H5Dwrite_chunk(getId(), properties, H5P_DEFAULT, offset.data(), values.size(), data);
           error = H5Dwrite_chunk(getId(), H5P_DEFAULT, H5P_DEFAULT, offset.data(), values.size() * sizeof(T), data);
           if(error < 0)

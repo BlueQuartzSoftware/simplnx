@@ -112,7 +112,7 @@ DeleteDataAction::~DeleteDataAction() noexcept = default;
 
 Result<> DeleteDataAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto* targetObject = dataStructure.getDataAs<BaseGroup>(path());
+  // auto* targetObject = dataStructure.getDataAs<BaseGroup>(path());
   switch(type())
   {
   case DeleteType::JustObject:

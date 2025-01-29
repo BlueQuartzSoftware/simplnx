@@ -185,9 +185,6 @@ usize FindNumEdges(const AbstractDataStore<T>& faceStore, usize numVertices = (d
 template <typename T, typename K>
 void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T, K>* dynamicList, usize numVerts)
 {
-  DataStructure* dataStructure = dynamicList->getDataStructure();
-  auto parentId = dynamicList->getParentIds().front();
-
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();
@@ -197,7 +194,6 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
 
   // Fill out lists with number of references to cells
   std::vector<K> linkLoc(numVerts, static_cast<K>(0));
-  K* verts = nullptr;
 
   // vtkPolyData *pdata = static_cast<vtkPolyData *>(data);
   // Traverse data to determine number of uses of each point
@@ -236,8 +232,6 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
 template <typename T, typename K>
 ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
 {
-  DataStructure* dataStructure = dynamicList->getDataStructure();
-  auto parentId = dynamicList->getParentIds().front();
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();

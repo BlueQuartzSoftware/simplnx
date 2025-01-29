@@ -165,7 +165,6 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
     for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
       if(m_ShouldCancel)

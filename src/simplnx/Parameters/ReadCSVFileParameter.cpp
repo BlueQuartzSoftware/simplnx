@@ -154,7 +154,7 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   value.headersLine = json[k_HeaderLineKey].get<int32>();
 
   bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
-  bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
+  // bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
 
   if(headerIsCustom)
   {
