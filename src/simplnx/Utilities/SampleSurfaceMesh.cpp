@@ -92,8 +92,8 @@ public:
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
-  , m_FeatureId(featureId)
   , m_PolyIds(polyIds)
+  , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
   {
   }

@@ -595,8 +595,8 @@ class ApplyTransformationToNodeGeometry
 
 public:
   ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
-  : m_Vertices(verticesPtr)
-  , m_TransformationMatrix(transformationMatrix)
+  : m_TransformationMatrix(transformationMatrix)
+  , m_Vertices(verticesPtr)
   , m_FilterCallback(filterCallback)
   {
   }

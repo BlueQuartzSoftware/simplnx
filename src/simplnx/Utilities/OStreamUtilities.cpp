@@ -284,8 +284,8 @@ class TupleWriter : public ITupleWriter
 
 public:
   TupleWriter(const IDataArray& iDataArray, const std::string& delimiter)
-  : m_DataStore(iDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
-  , m_Name(iDataArray.getName())
+  : m_Name(iDataArray.getName())
+  , m_DataStore(iDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
   , m_Delimiter(delimiter)
   {
     m_NumComps = m_DataStore.getNumberOfComponents();
