@@ -1578,7 +1578,7 @@ Result<DREAM3D::FileData> DREAM3D::ReadFile(const std::filesystem::path& path)
   {
     return MakeErrorResult<FileData>(-1, fmt::format("DREAM3D::ReadFile: Unable to read '{}'", path.string()));
   }
-  return {std::move(fileData)};
+  return fileData;
 }
 
 Result<> WritePipeline(nx::core::HDF5::FileWriter& fileWriter, const Pipeline& pipeline)

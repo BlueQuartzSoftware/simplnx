@@ -256,7 +256,7 @@ DatasetIO GroupIO::createDataset(const std::string& childName)
   }
 
   DatasetIO dataset(getId(), childName);
-  return std::move(dataset);
+  return dataset;
 }
 
 std::shared_ptr<DatasetIO> GroupIO::createDatasetPtr(const std::string& childName)

@@ -378,7 +378,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e); // Invalid edge because triangle is completely above or below the plane
+    return e; // Invalid edge because triangle is completely above or below the plane
   }
 
   // Edge to store the intersection line segment
@@ -402,7 +402,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
 
   if(positiveCount == 1 && negativeCount == 1 && zeroCount == 1)
@@ -427,7 +427,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
     e.valid = true;
-    return std::move(e);
+    return e;
   }
 
   // Check edges for coincidence with plane
@@ -437,7 +437,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
   if(p1.onPlane() && p2.onPlane() && zeroCount == 2)
   {
@@ -445,7 +445,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
   if(p0.onPlane() && p2.onPlane() && zeroCount == 2)
   {
@@ -453,7 +453,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
@@ -465,7 +465,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p1.planeSplitsEdge(p2))
@@ -476,7 +476,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
 
   if(p1.planeSplitsEdge(p2) && p2.planeSplitsEdge(p0))
@@ -487,7 +487,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     e.positiveCount = positiveCount;
     e.negativeCount = negativeCount;
     e.zeroCount = zeroCount;
-    return std::move(e);
+    return e;
   }
 
   // No valid intersection found
@@ -495,7 +495,7 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   e.positiveCount = positiveCount;
   e.negativeCount = negativeCount;
   e.zeroCount = zeroCount;
-  return std::move(e); // Invalid edge
+  return e; // Invalid edge
 }
 } // namespace slice_helper
 

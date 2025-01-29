@@ -234,7 +234,7 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
     }
     pipeline->push_front(std::move(segment));
   }
-  return std::move(pipeline);
+  return pipeline;
 }
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
@@ -252,7 +252,7 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
   }
 
   auto iter = parentPipeline->find(this);
-  return std::move(parentPipeline->copySegment(parentPipeline->begin(), iter));
+  return parentPipeline->copySegment(parentPipeline->begin(), iter);
 }
 
 nx::core::FaultState AbstractPipelineNode::getFaultState() const

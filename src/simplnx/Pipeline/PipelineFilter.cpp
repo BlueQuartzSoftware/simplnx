@@ -632,7 +632,7 @@ nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& error
   {
     warnings.emplace_back(Warning{error.code, prefix + error.message});
   }
-  return std::move(warnings);
+  return warnings;
 }
 
 std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollection& errors, const std::string& prefix)

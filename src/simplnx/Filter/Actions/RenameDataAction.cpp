@@ -31,7 +31,7 @@ Result<> TerminateNodesRecursively(DataStructure& dataStructure, DataObject::IdT
     {
       for(const auto& childId : childIds)
       {
-        result = MergeResults(result, std::move(TerminateNodesRecursively(dataStructure, childId, mode, checkDependence)));
+        result = MergeResults(result, TerminateNodesRecursively(dataStructure, childId, mode, checkDependence));
       }
     }
   }

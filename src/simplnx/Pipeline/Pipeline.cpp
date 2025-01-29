@@ -725,7 +725,7 @@ std::unique_ptr<Pipeline> Pipeline::copySegment(const iterator& startIter, const
   {
     pipelineCopy->push_back(iter->get()->deepCopy());
   }
-  return std::move(pipelineCopy);
+  return pipelineCopy;
 }
 
 std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter, const const_iterator& endIter) const
@@ -740,7 +740,7 @@ std::unique_ptr<Pipeline> Pipeline::copySegment(const const_iterator& startIter,
   {
     pipelineCopy->push_back(endIter->get()->deepCopy());
   }
-  return std::move(pipelineCopy);
+  return pipelineCopy;
 }
 
 Pipeline::iterator Pipeline::begin()
