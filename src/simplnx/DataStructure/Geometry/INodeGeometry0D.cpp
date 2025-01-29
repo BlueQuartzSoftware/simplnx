@@ -117,7 +117,7 @@ BoundingBox3Df INodeGeometry0D::getBoundingBox() const
       ll[2] = (z < ll[2]) ? z : ll[2];
       ur[2] = (z > ur[2]) ? z : ur[2];
     }
-  } catch(std::bad_cast ex)
+  } catch(const std::bad_cast& ex)
   {
     return {ll, ur}; // will be invalid
   }

@@ -139,7 +139,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
     }
 
     return LinkedPath(this, pathIds);
-  } catch(std::exception e)
+  } catch(const std::exception& e)
   {
     return LinkedPath();
   }
