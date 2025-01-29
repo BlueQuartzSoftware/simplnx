@@ -158,15 +158,6 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
     if(const auto* attributeMatrix = dataStructure.getDataAs<AttributeMatrix>(outputGroupPath); attributeMatrix != nullptr)
     {
       calculatedTupleShape = attributeMatrix->getShape();
-      resultOutputActions.warnings().push_back(Warning{static_cast<int>(CalculatorItem::WarningCode::NumericValueWarning),
-                                                       "The result of the chosen expression will be a numeric value. This numeric value will be used to initialize an "
-                                                       "array with the number of tuples equal to the number of tuples in the destination group."});
-    }
-    else
-    {
-      resultOutputActions.warnings().push_back(
-          Warning{static_cast<int>(CalculatorItem::WarningCode::NumericValueWarning),
-                  "The result of the chosen expression will be a numeric value or contain one tuple. This numeric value will be stored in an array with the number of tuples equal to 1"});
     }
   }
 
