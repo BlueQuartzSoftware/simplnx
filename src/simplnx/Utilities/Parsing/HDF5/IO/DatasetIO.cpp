@@ -911,7 +911,7 @@ template <typename T>
 nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType& chunkDims) const
 {
   ChunkedDataInfo dataInfo;
-  std::vector<unsigned long long> h5DimsVec(h5Dims.begin(), h5Dims.end());
+  std::vector<hsize_t> h5DimsVec(h5Dims.begin(), h5Dims.end());
   dataInfo.dataspaceId = H5Screate_simple(h5Dims.size(), h5DimsVec.data(), nullptr);
   if(dataInfo.dataspaceId < 0)
   {
@@ -1027,7 +1027,7 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
         void* data = static_cast<void*>(values.data());
         auto properties = CreateH5DatasetChunkProperties(chunkShape);
         // error = H5Dwrite_chunk(h5Id, properties, offset.data(), H5P_DEFAULT, data);
-        std::vector<unsigned long long> offsetVec(offset.begin(), offset.end());
+        std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
         error = H5Dread_chunk(h5Id, H5P_DEFAULT, offsetVec.data(), H5P_DEFAULT, data);
         if(error < 0)
         {
@@ -1114,7 +1114,7 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
 #endif
         // end debug
 
-        std::vector<unsigned long long> offsetVec(offset.begin(), offset.end());
+        std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
         error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offsetVec.data(), values.size() * sizeof(T), data);
         if(error < 0)
         {

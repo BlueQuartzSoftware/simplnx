@@ -18,8 +18,8 @@ Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, c
     Result<> result;
     if(start.has_value() && count.has_value())
     {
-      std::vector<unsigned long long> startVec(start->begin(), start->end());
-      std::vector<unsigned long long> countVec(start->begin(), start->end());
+      std::vector<uint64> startVec(start->begin(), start->end());
+      std::vector<uint64> countVec(start->begin(), start->end());
       result = datasetReader.readIntoSpan<T>(dataSpan, startVec, countVec);
     }
     else

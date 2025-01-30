@@ -193,21 +193,9 @@ public:
     : m_DataVector(dataVector)
     , m_Index(index)
     {
-      m_Index = rhs.m_Index;
-      return *this;
-    }
-    ConstIterator& operator=(ConstIterator&& rhs) noexcept
-    {
-      m_Index = rhs.m_Index;
-      return *this;
     }
 
     ConstIterator(const ConstIterator& other)
-    : m_DataVector(other.m_DataVector)
-    , m_Index(other.m_Index)
-    {
-    }
-    ConstIterator(ConstIterator&& other) noexcept
     : m_DataVector(other.m_DataVector)
     , m_Index(other.m_Index)
     {
@@ -219,6 +207,7 @@ public:
       m_Index = rhs.m_Index;
       return *this;
     }
+    
     ConstIterator& operator=(ConstIterator&& rhs) noexcept
     {
       m_DataVector = rhs.m_DataVector;
