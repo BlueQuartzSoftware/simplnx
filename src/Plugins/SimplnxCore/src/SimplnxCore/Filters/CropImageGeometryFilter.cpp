@@ -515,11 +515,11 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     }
     if(!warningMsg.empty())
     {
-      resultOutputActions.m_Warnings.push_back(Warning(
-          {-55503,
+      preflightUpdatedValues.push_back(
+          {"Invalidated NeighborLists",
            fmt::format(
-               "This filter will modify the Cell Level Array '{}' which causes all Feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
-               featureIdsArrayPath.toString(), warningMsg)}));
+               "This filter will modify the Cell Level Array(s) '{}' which causes all feature level NeighborLists to become invalid. These NeighborLists will not be copied to the new geometry:{}",
+               featureIdsArrayPath.toString(), warningMsg)});
     }
   }
 
