@@ -56,9 +56,9 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Algorithm Modifiers"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindCoherence_Key, "Find Coherence", "", true));
-  params.insert(std::make_unique<Float32Parameter>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)", "", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)", "", 0.0f));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindCoherence_Key, "Find Coherence", "If true, compute the coherence between the Face normal and the misorientation axis", true));
+  params.insert(std::make_unique<Float32Parameter>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)", "Degree of tolerance for angular distance from the [111] axis", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)", "Degree of tolerance for angular deviation from 60 degrees", 0.0f));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundariesArrayType_Key, "Output Type for Twin Boundaries Array",
                                                    "The Twin Boundaries Array is essentially a mask; This allows for determining how the mask is stored", 0ULL,
                                                    ChoicesParameter::Choices{"boolean", "uint8"}));
@@ -67,8 +67,9 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "Specifies to which Feature each Face of Triangle belongs to",
                                                           DataPath({"Face/Cell Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face", DataPath({"Face/Cell Data", "FaceNormals"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face. Only required if Find Coherence is checked",
+                                                          DataPath({"Face/Cell Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
@@ -86,6 +87,7 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesName_Key, "Twin Boundaries Array name", "", "Twin Boundaries"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesIncoherenceName_Key, "Twin Boundaries Incoherence Array name", "", "Twin Boundaries Incoherence"));
 
+  params.linkParameters(k_FindCoherence_Key, k_FaceNormalsArrayPath_Key, true);
   params.linkParameters(k_FindCoherence_Key, k_TwinBoundariesIncoherenceName_Key, true);
 
   return params;
@@ -138,7 +140,7 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
   if(pFindCoherence)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
+        std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
