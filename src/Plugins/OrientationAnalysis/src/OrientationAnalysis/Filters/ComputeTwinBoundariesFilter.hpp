@@ -25,14 +25,17 @@ public:
   ComputeTwinBoundariesFilter& operator=(ComputeTwinBoundariesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static inline constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
-  static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
-  static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
-  static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
-  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static inline constexpr StringLiteral k_FindCoherence_Key = "find_coherence";
+  static inline constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";
+  static inline constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
+  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static inline constexpr StringLiteral k_FaceNormalsArrayPath_Key = "face_normals_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_BoundariesArrayType_Key = "boundaries_array_type_index";
+  static inline constexpr StringLiteral k_TwinBoundariesName_Key = "twin_boundaries_name";
+  static inline constexpr StringLiteral k_TwinBoundariesIncoherenceName_Key = "twin_boundaries_incoherence_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

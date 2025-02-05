@@ -51,15 +51,15 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter", "[SimplnxCore][Com
     const DataPath k_SelectedGeometryPath({k_DataContainer});
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsArrayPath));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_Omega3sArrayName_Key, std::make_any<std::string>(k_Omega3sArrayNameNX));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisLengthsArrayName_Key, std::make_any<std::string>(k_AxisLengthsArrayNameNX));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<std::string>(k_AxisEulerAnglesArrayNameNX));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AspectRatiosArrayName_Key, std::make_any<std::string>(k_AspectRatiosArrayNameNX));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_VolumesArrayName_Key, std::make_any<std::string>(k_VolumesArrayNameNX));
-    args.insertOrAssign(ComputeTwinBoundariesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
-    // Preflight the filter and check result
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsArrayPath));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_Omega3sArrayName_Key, std::make_any<std::string>(k_Omega3sArrayNameNX));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisLengthsArrayName_Key, std::make_any<std::string>(k_AxisLengthsArrayNameNX));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<std::string>(k_AxisEulerAnglesArrayNameNX));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_AspectRatiosArrayName_Key, std::make_any<std::string>(k_AspectRatiosArrayNameNX));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_VolumesArrayName_Key, std::make_any<std::string>(k_VolumesArrayNameNX));
+//    args.insertOrAssign(ComputeTwinBoundariesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
+//    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 

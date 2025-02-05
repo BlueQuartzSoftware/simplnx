@@ -10,18 +10,18 @@
 
 namespace nx::core
 {
-
 struct ORIENTATIONANALYSIS_EXPORT ComputeTwinBoundariesInputValues
 {
-  DataPath FeatureIdsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath CentroidsArrayPath;
-  DataPath Omega3sArrayPath;
-  DataPath AxisLengthsArrayPath;
-  DataPath AxisEulerAnglesArrayPath;
-  DataPath AspectRatiosArrayPath;
-  DataPath VolumesArrayPath;
-  DataPath ImageGeometryPath;
+  bool FindCoherence;
+  float32 AngleTolerance;
+  float32 AxisTolerance;
+  DataPath FaceLabelsArrayPath;
+  DataPath FaceNormalsArrayPath;
+  DataPath AvgQuatsArrayPath;
+  DataPath FeaturePhasesArrayPath;
+  DataPath CrystalStructuresArrayPath;
+  DataPath TwinBoundariesArrayPath;
+  DataPath TwinBoundaryIncoherenceArrayPath;
 };
 
 /**
@@ -47,41 +47,5 @@ private:
   const ComputeTwinBoundariesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  double m_ScaleFactor = {1.0};
-  std::vector<double> m_FeatureMoments;
-  std::vector<double> m_FeatureEigenVals;
-  std::vector<float> m_EFVec;
-
-  /**
-   * @brief find_moments Determines the second order moments for each Feature
-   */
-  void findMoments();
-
-  /**
-   * @brief find_moments2D Determines the second order moments for each Feature (2D version)
-   */
-  void findMoments2D();
-
-  /**
-   * @brief find_axes Determine principal axis lengths for each Feature
-   */
-  void findAxes();
-
-  /**
-   * @brief find_axes2D Determine principal axis lengths for each Feature (2D version)
-   */
-  void findAxes2D();
-
-  /**
-   * @brief find_axiseulers Determine principal axis directions for each Feature
-   */
-  void findAxisEulers();
-
-  /**
-   * @brief find_axiseulers2D Determine principal axis directions for each Feature (2D version)
-   */
-  void findAxisEulers2D();
 };
-
 } // namespace nx::core

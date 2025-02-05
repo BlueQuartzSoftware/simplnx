@@ -6,7 +6,10 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -37,13 +40,13 @@ Uuid ComputeTwinBoundariesFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ComputeTwinBoundariesFilter::humanName() const
 {
-  return "Compute Feature Shapes (Image Geometry)";
+  return "Compute Twin Boundaries";
 }
 
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeTwinBoundariesFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Morphological", "Find", "Generate", "Calculate", "Determine", "Omega3", "Axis Length"};
+  return {className(), "Statistics", "Find", "Generate", "Calculate", "Determine"};
 }
 
 //------------------------------------------------------------------------------
@@ -52,26 +55,38 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs", DataPath({"FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insertSeparator(Parameters::Separator{"Algorithm Modifiers"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindCoherence_Key, "Find Coherence", "", true));
+  params.insert(std::make_unique<Float32Parameter>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)", "", 0.0f));
+  params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)", "", 0.0f));
+  params.insert(std::make_unique<ChoicesParameter>(k_BoundariesArrayType_Key, "Output Type for Twin Boundaries Array",
+                                                   "The Twin Boundaries Array is essentially a mask; This allows for determining how the mask is stored", 0ULL,
+                                                   ChoicesParameter::Choices{"boolean", "uint8"}));
+
+  params.insertSeparator(Parameters::Separator{"Input Face Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "Specifies to which Feature each Face of Triangle belongs to",
+                                                          DataPath({"Face/Cell Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face", DataPath({"Face/Cell Data", "FaceNormals"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Feature Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath({"Centroids"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
+                                                          DataPath({"Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath({"Feature Data", "Phases"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s",
-                                                          "3rd invariant of the second-order moment matrix for the Feature, does not assume a shape type (i.e., ellipsoid)", "Omega3s"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "Semi-axis lengths (a, b, c) for best-fit ellipsoid to Feature", "AxisLengths"));
-  params.insert(std::make_unique<DataObjectNameParameter>(
-      k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles",
-      "Euler angles (in radians) necessary to rotate the sample reference frame to the reference frame of the Feature, where the principal axes of the best-fit ellipsoid are (X, Y, Z)",
-      "AxisEulerAngles"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "Ratio of semi-axis lengths (b/a and c/a) for best-fit ellipsoid to Feature", "AspectRatios"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesArrayName_Key, "Volumes", "The volume of each Feature", "Shape Volumes"));
+  params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Specifies the crystal structure for each phase (in enumeration representation)",
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Output Face Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesName_Key, "Twin Boundaries Array name", "", "Twin Boundaries"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesIncoherenceName_Key, "Twin Boundaries Incoherence Array name", "", "Twin Boundaries Incoherence"));
+
+  params.linkParameters(k_FindCoherence_Key, k_TwinBoundariesIncoherenceName_Key, true);
 
   return params;
 }
@@ -90,93 +105,66 @@ IFilter::UniquePointer ComputeTwinBoundariesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel) const
 {
-  auto pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pCentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  auto pOmega3sArrayName = filterArgs.value<std::string>(k_Omega3sArrayName_Key);
-  auto pAxisLengthsArrayName = filterArgs.value<std::string>(k_AxisLengthsArrayName_Key);
-  auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
-  auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
-  auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
-  auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
-  auto pOmega3sArrayPath = featureAttrMatrixPath.createChildPath(pOmega3sArrayName);
-  auto pAxisLengthsArrayPath = featureAttrMatrixPath.createChildPath(pAxisLengthsArrayName);
-  auto pAxisEulerAnglesArrayPath = featureAttrMatrixPath.createChildPath(pAxisEulerAnglesArrayName);
-  auto pAspectRatiosArrayPath = featureAttrMatrixPath.createChildPath(pAspectRatiosArrayName);
-  auto pVolumesArrayPath = featureAttrMatrixPath.createChildPath(pVolumesArrayName);
-
-  PreflightResult preflightResult;
+  auto pFindCoherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
+  auto pBoundariesArrayTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_BoundariesArrayType_Key);
+  auto pFaceLabelsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsArrayPath_Key);
+  auto pTwinBoundariesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesName_Key);
+  auto pTwinBoundariesIncoherenceName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesIncoherenceName_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const auto* faceLabels = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
+  if(faceLabels == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString())}})};
+    return MakePreflightErrorResult(-94730, "Input Face Labels Array must be valid.");
   }
 
-  // Get the Centroids Feature Array and get its TupleShape
-  const auto* centroids = dataStructure.getDataAs<Float32Array>(pCentroidsArrayPath);
-  if(nullptr == centroids)
+  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
+  if(pBoundariesArrayTypeChoice == 0ULL)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12802, "Centroids Feature Data Array is not of the correct type"}})};
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(DataType::boolean, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
+  else if(pBoundariesArrayTypeChoice == 1ULL)
+  {
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{1ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesName));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();
-
-  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
+  if(pFindCoherence)
   {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, pOmega3sArrayPath);
-    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
-  }
-  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
-  {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pAxisLengthsArrayPath);
-    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
-  }
-  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
-  {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pAxisEulerAnglesArrayPath);
-    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
-  }
-  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
-  {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{2ULL}, pAspectRatiosArrayPath);
-    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
-  }
-  // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
-  {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, pVolumesArrayPath);
-    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3ULL}, pFaceLabelsArrayPath.getParent().createChildPath(pTwinBoundariesIncoherenceName));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  // Return both the resultOutputActions via std::move()
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
 Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel) const
 {
   ComputeTwinBoundariesInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = inputValues.CentroidsArrayPath.getParent();
-  auto pOmega3sArrayName = filterArgs.value<std::string>(k_Omega3sArrayName_Key);
-  auto pAxisLengthsArrayName = filterArgs.value<std::string>(k_AxisLengthsArrayName_Key);
-  auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
-  auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
-  auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
-  inputValues.Omega3sArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pOmega3sArrayName);
-  inputValues.AxisLengthsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisLengthsArrayName);
-  inputValues.AxisEulerAnglesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisEulerAnglesArrayName);
-  inputValues.AspectRatiosArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAspectRatiosArrayName);
-  inputValues.VolumesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pVolumesArrayName);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.FindCoherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
+  inputValues.AxisTolerance = filterArgs.value<Float32Parameter::ValueType>(k_AxisTolerance_Key);
+  inputValues.AngleTolerance = filterArgs.value<Float32Parameter::ValueType>(k_AngleTolerance_Key);
+  inputValues.FaceLabelsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsArrayPath_Key);
+  inputValues.FaceNormalsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceNormalsArrayPath_Key);
+  inputValues.AvgQuatsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
+  inputValues.FeaturePhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
+  inputValues.CrystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+
+  const DataPath parentPath = inputValues.FaceLabelsArrayPath.getParent();
+
+  inputValues.TwinBoundariesArrayPath = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesName_Key));
+  inputValues.TwinBoundaryIncoherenceArrayPath = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesIncoherenceName_Key));
 
   return ComputeTwinBoundaries(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -185,14 +173,16 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
-constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
-constexpr StringLiteral k_Omega3sArrayNameKey = "Omega3sArrayName";
-constexpr StringLiteral k_AxisLengthsArrayNameKey = "AxisLengthsArrayName";
-constexpr StringLiteral k_AxisEulerAnglesArrayNameKey = "AxisEulerAnglesArrayName";
-constexpr StringLiteral k_AspectRatiosArrayNameKey = "AspectRatiosArrayName";
-constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
+constexpr StringLiteral k_FindCoherenceKey = "FindCoherence";
+constexpr StringLiteral k_AxisToleranceKey = "AxisTolerance";
+constexpr StringLiteral k_AngleToleranceKey = "AngleTolerance";
+constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
+constexpr StringLiteral k_SurfaceMeshTwinBoundaryArrayNameKey = "SurfaceMeshTwinBoundaryArrayName";
+constexpr StringLiteral k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey = "SurfaceMeshTwinBoundaryIncoherenceArrayName";
 } // namespace SIMPL
 } // namespace
 
@@ -202,16 +192,32 @@ Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
+  // Algorithm Modifiers
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindCoherenceKey, k_FindCoherence_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, SIMPL::k_AxisToleranceKey, k_AxisTolerance_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<Float32Parameter::ValueType>>(args, json, SIMPL::k_AngleToleranceKey, k_AngleTolerance_Key));
+
+  // Input Face Data
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey,
+                                                                                                                                      k_FaceLabelsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceNormalsArrayPathKey,
+                                                                                                                                      k_FaceNormalsArrayPath_Key));
+
+  // Input Feature Data
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  // Cell Feature Attribute Matrix parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_Omega3sArrayNameKey, k_Omega3sArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AxisLengthsArrayNameKey, k_AxisLengthsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AxisEulerAnglesArrayNameKey, k_AxisEulerAnglesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_AspectRatiosArrayNameKey, k_AspectRatiosArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VolumesArrayNameKey, k_VolumesArrayName_Key));
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+
+  // Input Ensemble Data
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey,
+                                                                                                                                      k_CrystalStructuresArrayPath_Key));
+
+  // Output Face Data
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryArrayNameKey,
+                                                                                                                                  k_TwinBoundariesName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
+                                                                                                                                  k_TwinBoundariesIncoherenceName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
