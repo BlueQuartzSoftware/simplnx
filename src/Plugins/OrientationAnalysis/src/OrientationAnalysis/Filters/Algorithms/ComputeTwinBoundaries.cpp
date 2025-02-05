@@ -69,19 +69,22 @@ public:
   {
   }
 
-  ~CalculateTwinBoundaryWithIncoherenceImpl() = default;
-
   void generate(usize start, usize end) const
   {
-    int32 feature1 = 0, feature2 = 0;
+    int32 feature1 = 0;
+    int32 feature2 = 0;
     Matrix3x3 orientationMatrix = {};
     float64 w = 0.0;
-    uint32 phase1 = 0, phase2 = 0;
+    uint32 phase1 = 0;
+    uint32 phase2 = 0;
 
-    float64 axisdiff111 = 0.0, angdiff60 = 0.0;
+    float64 axisdiff111 = 0.0;
+    float64 angdiff60 = 0.0;
     Eigen::Vector3d n = {0.0, 0.0, 0.0};
     float64 incoherence = 0.0;
-    float64 n1 = 0.0, n2 = 0.0, n3 = 0.0;
+    float64 n1 = 0.0;
+    float64 n2 = 0.0;
+    float64 n3 = 0.0;
 
     Eigen::Vector4d misq;
     Eigen::Vector4d sym_q;
@@ -99,24 +102,24 @@ public:
       }
 
       feature1 = m_FaceLabels[2 * i];
-      feature2 = m_FaceLabels[2 * i + 1];
+      feature2 = m_FaceLabels[(2 * i) + 1];
 
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
         w = std::numeric_limits<float32>::max();
-        const Eigen::Vector4d q1(m_AvgQuats[feature1 * 4 + 0], m_AvgQuats[feature1 * 4 + 1], m_AvgQuats[feature1 * 4 + 2], m_AvgQuats[feature1 * 4 + 3]);
-        Eigen::Vector4d q2(m_AvgQuats[feature2 * 4 + 0], m_AvgQuats[feature2 * 4 + 1], m_AvgQuats[feature2 * 4 + 2], m_AvgQuats[feature2 * 4 + 3]);
+        const Eigen::Vector4d q1(m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2], m_AvgQuats[(feature1 * 4) + 3]);
+        Eigen::Vector4d q2(m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2], m_AvgQuats[(feature2 * 4) + 3]);
 
         phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
         phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
         if(phase1 == phase2)
         {
-          int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
+          const int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
           q2 = q2.conjugate();
           misq = q1.cwiseProduct(q2);
           orientationMatrix = Matrix3x3{OrientationTransformation::qu2om<Eigen::Vector4d, std::vector<float64>>(q1, QuatD::Order::VectorScalar).data()};
 
-          xstl_norm = Eigen::Vector3d{m_FaceNormals[3 * i], m_FaceNormals[3 * i + 1], m_FaceNormals[3 * i + 2]}.transpose() * orientationMatrix;
+          xstl_norm = Eigen::Vector3d{m_FaceNormals[3 * i], m_FaceNormals[(3 * i) + 1], m_FaceNormals[(3 * i) + 2]}.transpose() * orientationMatrix;
 
           for(int32 j = 0; j < nsym; j++)
           {
@@ -163,7 +166,7 @@ public:
                 }
                 if(incoherence < m_TwinBoundaryIncoherence[i])
                 {
-                  m_TwinBoundaryIncoherence[i] = incoherence;
+                  m_TwinBoundaryIncoherence[i] = static_cast<float32>(incoherence);
                 }
               }
             }
@@ -198,8 +201,6 @@ private:
  */
 class CalculateTwinBoundaryImpl
 {
-  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
-
 public:
   CalculateTwinBoundaryImpl(float32 angtol, float32 axistol, const Int32AbstractDataStore& faceLabels, const Float32AbstractDataStore& avgQuats, const Int32AbstractDataStore& featurePhases,
                             const UInt32AbstractDataStore& crystalStructures, std::unique_ptr<MaskCompare>& twinBoundaries, const std::atomic_bool& shouldCancel)
@@ -215,26 +216,25 @@ public:
   {
   }
 
-  ~CalculateTwinBoundaryImpl() = default;
-
   void generate(usize start, usize end) const
   {
-    int32 feature1 = 0, feature2 = 0;
-    Matrix3x3 orientationMatrix = {};
+    int32 feature1 = 0;
+    int32 feature2 = 0;
     float64 w = 0.0;
-    uint32 phase1 = 0, phase2 = 0;
+    uint32 phase1 = 0;
+    uint32 phase2 = 0;
 
-    float64 axisdiff111 = 0.0, angdiff60 = 0.0;
+    float64 axisdiff111 = 0.0;
+    float64 angdiff60 = 0.0;
     Eigen::Vector3d n = {0.0, 0.0, 0.0};
-    float64 n1 = 0.0, n2 = 0.0, n3 = 0.0;
+    float64 n1 = 0.0;
+    float64 n2 = 0.0;
+    float64 n3 = 0.0;
 
     Eigen::Vector4d misq;
     Eigen::Vector4d sym_q;
     Eigen::Vector4d s1_misq;
     Eigen::Vector4d s2_misq;
-
-    Eigen::Vector3d xstl_norm = {0.0, 0.0, 0.0};
-    Eigen::Vector3d s_xstl_norm = {0.0, 0.0, 0.0};
 
     for(usize i = start; i < end; i++)
     {
@@ -244,19 +244,19 @@ public:
       }
 
       feature1 = m_FaceLabels[2 * i];
-      feature2 = m_FaceLabels[2 * i + 1];
+      feature2 = m_FaceLabels[(2 * i) + 1];
 
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
         w = std::numeric_limits<float32>::max();
-        const Eigen::Vector4d q1(m_AvgQuats[feature1 * 4 + 0], m_AvgQuats[feature1 * 4 + 1], m_AvgQuats[feature1 * 4 + 2], m_AvgQuats[feature1 * 4 + 3]);
-        Eigen::Vector4d q2(m_AvgQuats[feature2 * 4 + 0], m_AvgQuats[feature2 * 4 + 1], m_AvgQuats[feature2 * 4 + 2], m_AvgQuats[feature2 * 4 + 3]);
+        const Eigen::Vector4d q1(m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2], m_AvgQuats[(feature1 * 4) + 3]);
+        Eigen::Vector4d q2(m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2], m_AvgQuats[(feature2 * 4) + 3]);
 
         phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
         phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
         if(phase1 == phase2)
         {
-          int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
+          const int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
           q2 = q2.conjugate();
           misq = q1.cwiseProduct(q2);
 
@@ -276,8 +276,8 @@ public:
               OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq).toAxisAngle(n1, n2, n3, w);
 
               w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos(std::fabs(n1) * 0.57735f + std::fabs(n2) * 0.57735f + std::fabs(n3) * 0.57735f);
-              angdiff60 = std::fabs(w - 60.0f);
+              axisdiff111 = acos((std::abs(n1) * 0.57735f) + (std::abs(n2) * 0.57735f) + (std::abs(n3) * 0.57735f));
+              angdiff60 = std::abs(w - 60.0f);
               if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
               {
                 n[0] = n1;
