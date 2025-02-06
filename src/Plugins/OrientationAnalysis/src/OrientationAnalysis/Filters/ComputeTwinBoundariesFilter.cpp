@@ -69,7 +69,7 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
                                                           DataPath({"Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath({"Feature Data", "Phases"}),
