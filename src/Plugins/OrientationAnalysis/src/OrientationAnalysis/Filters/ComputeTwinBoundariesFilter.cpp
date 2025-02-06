@@ -62,10 +62,10 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "Specifies to which Feature each Face of Triangle belongs to",
-                                                          DataPath({"Face/Cell Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          DataPath({"Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face. Only required if Find Coherence is checked",
-                                                          DataPath({"Face/Cell Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          DataPath({"Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
