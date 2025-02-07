@@ -3,7 +3,6 @@
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -32,8 +31,6 @@ Result<> CreatePythonSkeleton::operator()()
   {
     return nx::core::WritePythonFiltersToPlugin(m_InputValues->pluginInputDir, m_InputValues->filterNames);
   }
-  else
-  {
-    return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
-  }
+
+  return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginName, "Description", m_InputValues->filterNames);
 }

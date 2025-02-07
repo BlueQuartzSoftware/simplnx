@@ -172,17 +172,11 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
 
 /**
  *
- * @param outputPath
- * @param filterName
- * @param humanName
- * @param uuidString
  * @return
  */
-inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPath, const std::string& filterName)
+inline Result<> AtomicallyWriteFile(const std::string& content, const std::filesystem::path& outputFilePath)
 {
-  std::string content = GeneratePythonFilter(filterName, filterName, Uuid::GenerateV4().str());
-  fs::path outputPath = pluginPath / fmt::format("{}.py", filterName);
-  auto atomicFileResult = AtomicFile::Create(outputPath);
+  auto atomicFileResult = AtomicFile::Create(outputFilePath);
   if(atomicFileResult.invalid())
   {
     return ConvertResult(std::move(atomicFileResult));
@@ -200,13 +194,64 @@ inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& pluginPat
     fout << content;
   }
 
-  Result<> commitResult = tempFile.commit();
-  if(commitResult.invalid())
+  return tempFile.commit();
+}
+
+/**
+ *
+ * @param outputPath
+ * @param filterName
+ * @param humanName
+ * @param uuidString
+ * @return
+ */
+inline Result<> WritePythonFilterToPlugin(const std::filesystem::path& outputPath, const std::string& filterName, const std::string& humanName, bool updatePluginFiles)
+{
+  Result<> result;
+
+  // **************************************************************************
+  // Write Python Filter Skeleton code
+  // **************************************************************************
   {
-    return commitResult;
+    const std::string content = GeneratePythonFilter(filterName, filterName, Uuid::GenerateV4().str());
+
+    const fs::path outputFilePath = outputPath / fmt::format("{}.py", filterName);
+
+    result = AtomicallyWriteFile(content, outputFilePath);
   }
 
-  return InsertFilterNameInPluginFiles(pluginPath, filterName);
+  // **************************************************************************
+  // Write Matching Documentation Stub File
+  // **************************************************************************
+  {
+    std::stringstream docOut;
+    docOut << "# " << filterName << "\n";
+    docOut << "\n\n";
+    docOut << "## Group (Subgroup)\n";
+    docOut << "\n\n";
+    docOut << "## Description\n";
+    docOut << "\nThis filter....\n";
+    docOut << "## Parameters\n\n";
+    docOut << "List each parameter, its type and brief description\n";
+
+    docOut << "## Example Pipelines\n";
+    docOut << "  \n";
+    docOut << "  \n";
+    docOut << "\n";
+    docOut << "## License & Copyright\n";
+    docOut << "\n";
+    docOut << "Please see the description file distributed with this **Plugin**\n";
+
+    const fs::path outputFilePath = outputPath / ".." / ".." / "docs" / fmt::format("{}.md", filterName);
+
+    result = AtomicallyWriteFile(docOut.str(), outputFilePath);
+  }
+
+  if(updatePluginFiles)
+  {
+    result = InsertFilterNameInPluginFiles(outputPath, filterName);
+  }
+  return result;
 }
 
 /**
@@ -223,7 +268,7 @@ inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPa
   auto filterNamesSplit = StringUtilities::split(filterNames, ',');
   for(const auto& filterName : filterNamesSplit)
   {
-    auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginPath, filterName);
+    auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginPath, filterName, filterName, true);
     if(filterWriteResult.invalid())
     {
       return filterWriteResult;
@@ -232,45 +277,6 @@ inline Result<> WritePythonFiltersToPlugin(const std::filesystem::path& pluginPa
   }
 
   return result;
-}
-
-/**
- *
- * @param outputPath
- * @param filterName
- * @param humanName
- * @param uuidString
- * @return
- */
-inline Result<> WritePythonFilterToFile(const std::filesystem::path& outputPath, const std::string& filterName, const std::string& humanName, const std::string& uuidString)
-{
-
-  std::string content = GeneratePythonFilter(filterName, humanName, uuidString);
-  fs::path outputFilePath = outputPath / fmt::format("{}.py", filterName);
-  auto atomicFileResult = AtomicFile::Create(outputFilePath);
-  if(atomicFileResult.invalid())
-  {
-    return ConvertResult(std::move(atomicFileResult));
-  }
-  AtomicFile tempFile = std::move(atomicFileResult.value());
-  {
-    // Scope this so that the file closes first before we then 'commit' with the atomic file
-    std::ofstream fout(tempFile.tempFilePath(), std::ios_base::out | std::ios_base::binary);
-    if(!fout.is_open())
-    {
-      return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", tempFile.tempFilePath().string()));
-    }
-
-    fout << content;
-  }
-
-  Result<> commitResult = tempFile.commit();
-  if(commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  return {};
 }
 
 /**
@@ -503,12 +509,17 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
   }
 
   // Now loop over each Filter and generate the skeleton files
-  auto filterList = StringUtilities::split(pluginFilterList, ',');
-  for(const auto& name : filterList)
+  auto filterNamesSplit = StringUtilities::split(pluginFilterList, ',');
+  for(const auto& filterName : filterNamesSplit)
   {
-    WritePythonFilterToFile(pluginSrcPath, name, name, Uuid::GenerateV4().str());
+    auto filterWriteResult = nx::core::WritePythonFilterToPlugin(pluginSrcPath, filterName, filterName, false);
+    if(filterWriteResult.invalid())
+    {
+      return filterWriteResult;
+    }
+    result = MergeResults(result, filterWriteResult);
   }
 
-  return {};
+  return result;
 }
 } // namespace nx::core
