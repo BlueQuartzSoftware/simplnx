@@ -10,6 +10,7 @@
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <Eigen/Dense>
+#include <numbers>
 
 using namespace nx::core;
 
@@ -140,7 +141,7 @@ public:
               OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq).toAxisAngle(n1, n2, n3, w);
 
               w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * 0.57735f) + (std::abs(n2) * 0.57735f) + (std::abs(n3) * 0.57735f));
+              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float32>) + (std::abs(n2) * std::numbers::inv_sqrt3_v<float32>) + (std::abs(n3) * std::numbers::inv_sqrt3_v<float32>));
               angdiff60 = std::abs(w - 60.0f);
               if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
               {
@@ -276,7 +277,7 @@ public:
               OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq).toAxisAngle(n1, n2, n3, w);
 
               w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * 0.57735f) + (std::abs(n2) * 0.57735f) + (std::abs(n3) * 0.57735f));
+              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float32>) + (std::abs(n2) * std::numbers::inv_sqrt3_v<float32>) + (std::abs(n3) * std::numbers::inv_sqrt3_v<float32>));
               angdiff60 = std::abs(w - 60.0f);
               if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
               {
