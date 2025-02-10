@@ -34,7 +34,8 @@ result = nx_filter.execute(
     min_voxel=[41, 41, 0],
     remove_original_geometry=True,
     renumber_features=True,
-    input_image_geometry_path=nx.DataPath("DataContainer")
+    input_image_geometry_path=nx.DataPath("DataContainer"),
+    use_physical_bounds=False
 )
 nxtest.check_filter_result(nx_filter, result)
 

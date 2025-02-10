@@ -49,6 +49,7 @@ void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, co
   args.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
   args.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insert(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -294,6 +295,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
       cropArgs.insert(CropImageGeometryFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
       cropArgs.insert(CropImageGeometryFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
       cropArgs.insert(CropImageGeometryFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+      cropArgs.insert(CropImageGeometryFilter::k_UsePhysicalBounds_Key, std::make_any<bool>(false));
 
       auto cropResult = cropFilter.execute(dataStructure, cropArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(cropResult.result)

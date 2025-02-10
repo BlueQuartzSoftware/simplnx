@@ -49,7 +49,8 @@ result = nx_filter.execute(
     min_voxel=[488, 0, 0],
     remove_original_geometry=True,
     renumber_features=False,
-    input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2")
+    input_image_geometry_path=nx.DataPath("Cugrid_after 2nd_15kv_2kx_2"),
+    use_physical_bounds=False
 )
 nxtest.check_filter_result(nx_filter, result)
 
