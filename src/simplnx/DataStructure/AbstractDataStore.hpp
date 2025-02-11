@@ -972,6 +972,38 @@ public:
   }
 
   /**
+   * @brief Returns the number of chunks used to store the data.
+   * @return uint64
+   */
+  virtual uint64 getNumberOfChunks() const
+  {
+    return 1;
+  }
+
+  /**
+   * @brief Returns the number of elements in the specified chunk index.
+   * @param flatChunkIndex
+   * @return
+   */
+  virtual uint64 getChunkSize(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return 0;
+    }
+    return size();
+  }
+
+  /**
+   * @brief Makes sure the target chunk is loaded in memory.
+   * This method does nothing for in-memory DataStores.
+   * @param flatChunkIndex
+   */
+  virtual void loadChunk(uint64 flatChunkIndex)
+  {
+  }
+
+  /**
    * @brief Flushes the data store to its respective target.
    * In-memory DataStores are not affected.
    */
