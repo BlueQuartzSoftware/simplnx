@@ -31,7 +31,7 @@ public:
    * @param secondcIndex
    * @param forceSecondToZero
    */
-  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero = false) = 0;
+  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero) = 0;
 
   virtual void transfer(size_t faceIndex, size_t firstcIndex) = 0;
 
@@ -82,7 +82,7 @@ public:
    * @param secondcIndex
    * @param forceSecondToZero
    */
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero = false) override
+  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero) override
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
