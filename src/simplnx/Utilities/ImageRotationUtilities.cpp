@@ -7,11 +7,10 @@ namespace nx::core::ImageRotationUtilities
 {
 
 //------------------------------------------------------------------------------
-FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
+FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fR& transformationMatrix)
 {
-  auto origImageGeomBox = imageGeometry.getBoundingBoxf();
-  auto min = origImageGeomBox.getMinPoint();
-  auto max = origImageGeomBox.getMaxPoint();
+  auto min = imageGeomBoundingBox.getMinPoint();
+  auto max = imageGeomBoundingBox.getMaxPoint();
   // clang-format off
   std::vector<FloatVec3> imageGeomCornerCoords = {{min[0], min[1], min[2]},
                                                   {min[0], min[1], max[2]},
@@ -42,6 +41,13 @@ FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR&
     minMaxValues[5] = std::max(newCoords[2], minMaxValues[5]);
   }
   return minMaxValues;
+}
+
+//------------------------------------------------------------------------------
+FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
+{
+  auto origImageGeomBox = imageGeometry.getBoundingBoxf();
+  return DetermineMinMaxCoords(origImageGeomBox, transformationMatrix);
 }
 
 //------------------------------------------------------------------------------
