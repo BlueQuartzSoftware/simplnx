@@ -257,19 +257,6 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
       FloatVec3 transformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(transformedOrigin, spacing, imageGeomPath));
     }
-
-    //    if(eulerTransAngle > 0)
-    //    {
-    //      auto sampleTransAxis = reader->getSampleTransformationAxis();
-    //      Eigen::Vector3f axis(sampleTransAxis.data());
-    //      Eigen::AngleAxisf rotation(sampleTransAxis, axis);
-    //      Eigen::Vector3f point(origin[0], origin[1], origin[2]);
-    //
-    //      // Apply the rotation transformation to the point
-    //      Eigen::Vector3f transformedPoint = rotation * point;
-    //      FloatVec3 originVec = {transformedPoint.x(), transformedPoint.y(), transformedPoint.z()};
-    //      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacing, imageGeomPath));
-    //    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
