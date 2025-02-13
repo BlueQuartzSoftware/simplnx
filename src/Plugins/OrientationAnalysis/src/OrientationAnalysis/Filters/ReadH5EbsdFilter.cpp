@@ -9,6 +9,7 @@
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
+#include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
@@ -16,6 +17,7 @@
 #include "EbsdLib/IO/HKL/H5CtfVolumeReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
 
+#include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/IO/TSL/H5AngVolumeReader.h"
@@ -126,8 +128,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
-  resultOutputActions.value().appendAction(
-      std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(imageGeomDims), std::move(origin), std::move(spacing), pCellAttributeMatrixNameValue));
+  resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
 
   EbsdLib::OEM m_Manufacturer = {EbsdLib::OEM::Unknown};
   std::string manufacturer = reader->getManufacturer();
@@ -239,6 +240,36 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
+  }
+
+  if(pReadH5EbsdFilterValue.useRecommendedTransform)
+  {
+    auto sampleTransAngle = reader->getSampleTransformationAngle();
+    if(sampleTransAngle > 0)
+    {
+      auto sampleTransAxis = reader->getSampleTransformationAxis();
+      const std::vector<float32> rotAxisAngle = {sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle};
+      ImageRotationUtilities::Matrix4fR rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(rotAxisAngle);
+      std::array<float32, 6> arr{
+          origin[0], origin[1], origin[2], origin[0] + (imageGeomDims[0] * spacing[0]), origin[1] + (imageGeomDims[1] * spacing[1]), origin[2] + (imageGeomDims[2] * spacing[2])};
+      BoundingBox3Df boundingBox = BoundingBox3Df(arr);
+      auto minMaxCoords = ImageRotationUtilities::DetermineMinMaxCoords(boundingBox, rotationMatrix);
+      FloatVec3 transformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(transformedOrigin, spacing, imageGeomPath));
+    }
+
+    //    if(eulerTransAngle > 0)
+    //    {
+    //      auto sampleTransAxis = reader->getSampleTransformationAxis();
+    //      Eigen::Vector3f axis(sampleTransAxis.data());
+    //      Eigen::AngleAxisf rotation(sampleTransAxis, axis);
+    //      Eigen::Vector3f point(origin[0], origin[1], origin[2]);
+    //
+    //      // Apply the rotation transformation to the point
+    //      Eigen::Vector3f transformedPoint = rotation * point;
+    //      FloatVec3 originVec = {transformedPoint.x(), transformedPoint.y(), transformedPoint.z()};
+    //      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacing, imageGeomPath));
+    //    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

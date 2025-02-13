@@ -99,6 +99,14 @@ SIMPLNX_EXPORT Matrix4fR GenerateTranslationTransformationMatrix(const VectorFlo
 SIMPLNX_EXPORT Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue);
 
 /**
+ * @brief Function to determine the min and max coordinates of the transformed Image Geometry using the bounding box.
+ * @param imageGeomBoundingBox
+ * @param transformationMatrix
+ * @return
+ */
+SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fR& transformationMatrix);
+
+/**
  * @brief Function to determine the min and max coordinates (bounding box) of the transformed Image Geometry.
  * @param imageGeometry
  * @param transformationMatrix
