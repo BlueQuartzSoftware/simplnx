@@ -104,7 +104,7 @@ public:
             s1_misq = misq * sym_q;
             s_xstl_norm = sym_q._transformVector(xstl_norm);
 
-            for(int32 k = 0; k < nsym; k++)
+            for(int32 k = j + 1; k < nsym; k++)
             {
               // calculate the symmetric misorienation
               QuatD kQuat = m_OrientationOps[phase1]->getQuatSymOp(k);
@@ -115,7 +115,7 @@ public:
               OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq.coeffs(), QuatD::Order::VectorScalar).toAxisAngle(n1, n2, n3, w);
 
               w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float32>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float32>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float32>));
+              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float64>));
               angdiff60 = std::abs(w - 60.0f);
               if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
               {
@@ -244,7 +244,7 @@ public:
             // calculate crystal direction parallel to normal
             s1_misq = misq * sym_q;
 
-            for(int32 k = 0; k < nsym; k++)
+            for(int32 k = j + 1; k < nsym; k++)
             {
               // calculate the symmetric misorienation
               QuatD kQuat = m_OrientationOps[phase1]->getQuatSymOp(k);
@@ -255,7 +255,7 @@ public:
               OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq.coeffs(), QuatD::Order::VectorScalar).toAxisAngle(n1, n2, n3, w);
 
               w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float32>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float32>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float32>));
+              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float64>));
               angdiff60 = std::abs(w - 60.0f);
               if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
               {
