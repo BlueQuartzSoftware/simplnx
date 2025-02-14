@@ -995,6 +995,102 @@ public:
   }
 
   /**
+   * @brief Returns the Smallest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return std::vector<uint64>
+   */
+  virtual std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+    usize tupleDims = getTupleShape().size();
+
+    std::vector<uint64> lowerBounds(tupleDims);
+    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
+    return lowerBounds;
+  }
+
+  /**
+   * @brief Returns the largest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return std::vector<uint64>
+   */
+  virtual std::vector<uint64> getChunkUpperBounds(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+
+    std::vector<uint64> upperBounds(getTupleShape());
+    for(auto& value : upperBounds)
+    {
+      value -= 1;
+    }
+    return upperBounds;
+  }
+
+  /**
+   * @brief Returns the tuple shape for the specified chunk.
+   * Returns an empty vector if the chunk is out of bounds.
+   * @param flatChunkIndex
+   * @return std::vector<uint64> chunk tuple shape
+   */
+  virtual std::vector<uint64> getChunkTupleShape(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+    auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
+    auto upperBounds = getChunkUpperBounds(flatChunkIndex);
+
+    const uint64 tupleCount = lowerBounds.size();
+    std::vector<uint64> chunkTupleShape(tupleCount);
+    for(usize i = 0; i < tupleCount; i++)
+    {
+      chunkTupleShape[i] = upperBounds[i] - lowerBounds[i] + 1;
+    }
+    return chunkTupleShape;
+  }
+
+  /**
+   * @brief Returns a vector containing the tuple extents for a specified chunk.
+   * The returned values are formatted as [min, max] in the order of the tuple
+   * dimensions. For instance, a single chunk with tuple dimensions {X, Y, Z} will
+   * will result in an extent of [0, X-1, 0, Y-1, 0, Z-1].
+   * Returns an empty vector if the chunk requested is beyond the scope of the
+   * available chunks.
+   * @param flatChunkIndex
+   * @return std::vector<uint64> extents
+   */
+  virtual std::vector<uint64> getChunkExtents(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+
+    usize tupleDims = getTupleShape().size();
+    std::vector<uint64> extents(tupleDims * 2);
+
+    auto upperBounds = getChunkUpperBounds(flatChunkIndex);
+    auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
+
+    for(usize i = 0; i < tupleDims; i++)
+    {
+      extents[i * 2] = lowerBounds[i];
+      extents[i * 2 + 1] = lowerBounds[i];
+    }
+
+    return extents;
+  }
+
+  /**
    * @brief Makes sure the target chunk is loaded in memory.
    * This method does nothing for in-memory DataStores.
    * @param flatChunkIndex
@@ -1002,6 +1098,13 @@ public:
   virtual void loadChunk(uint64 flatChunkIndex)
   {
   }
+
+  /**
+   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
+   * from the specified chunk.
+   * @param flatChunkIndex
+   */
+  virtual std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const = 0;
 
   /**
    * @brief Flushes the data store to its respective target.

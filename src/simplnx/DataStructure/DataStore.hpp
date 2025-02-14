@@ -9,8 +9,6 @@
 #include <xtensor/xfunction.hpp>
 #include <xtensor/xstrides.hpp>
 
-//#include <xtensor-io/xhighfive.hpp>
-
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
 
@@ -422,10 +420,10 @@ public:
       }
 
       auto data = std::shared_ptr<XArrayType>(new XArrayType(shape));
-      #if 1
+#if 1
       nonstd::span<T> span(data->data(), data->size());
       dataset.readIntoSpan(span);
-      #else
+#else
       if(dimsMatch)
       {
         *data.get() = xt::load<XArrayType>(file, dataPath);
@@ -435,10 +433,10 @@ public:
         nonstd::span<T> span(data->data(), data->size());
         dataset.readIntoSpan(span);
         // xtensor will fail to load into an array of different dimensions, so create a new array and copy the data.
-        //auto mismatchedData = xt::load<XArrayType>(file, dataPath);
-        //std::copy(mismatchedData.begin(), mismatchedData.end(), data->begin());
+        // auto mismatchedData = xt::load<XArrayType>(file, dataPath);
+        // std::copy(mismatchedData.begin(), mismatchedData.end(), data->begin());
       }
-      #endif
+#endif
       m_Array = data;
       return {};
     } catch(const std::exception& e)
@@ -458,7 +456,7 @@ public:
     dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     nonstd::span<const T> span(m_Array->data(), m_Array->size());
     return dataset.writeSpan(dims, span);
-    #if 0
+#if 0
     try
     {
       auto file = dataset.h5File().value();
@@ -473,7 +471,30 @@ public:
     {
       return MakeErrorResult(-97643, fmt::format("Failed to write dataset '{}' to path '{}'. Error: '{}'", dataset.getName(), datasetPath, e.what()));
     }
-    #endif
+#endif
+  }
+
+  /**
+   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
+   * from the specified chunk.
+   * @param flatChunkIndex
+   */
+  std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= this->getNumberOfChunks())
+    {
+      return nullptr;
+    }
+
+    auto chunkTupleShape = this->getChunkTupleShape(flatChunkIndex);
+    auto componentShape = getComponentShape();
+    usize size = this->getSize();
+
+    auto dataPtr = new value_type[size];
+    std::copy(this->begin(), this->end(), dataPtr);
+    std::unique_ptr<value_type[]> dataWrapper(dataPtr);
+
+    return std::make_unique<DataStore<T>>(std::move(dataWrapper), this->getTupleShape(), this->getComponentShape());
   }
 
 private:
