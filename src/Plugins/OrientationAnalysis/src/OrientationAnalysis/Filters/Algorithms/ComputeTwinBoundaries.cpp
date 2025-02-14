@@ -16,6 +16,136 @@ using namespace nx::core;
 
 namespace
 {
+template <typename T>
+bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<LaueOps::Pointer>& orientationOps, uint32 targetPhaseIndex, float32 angTolerance,
+                    float32 axisTolerance)
+{
+  T real = std::numeric_limits<T>::max();
+  T axisdiff111;
+  T angdiff60;
+  T xVal;
+  T yVal;
+  T zVal;
+
+  Eigen::Quaternion<T> misq;
+  Eigen::Quaternion<T> sym_q;
+  Eigen::Quaternion<T> s1_misq;
+  Eigen::Quaternion<T> s2_misq;
+
+  const int32 nsym = orientationOps[targetPhaseIndex]->getNumSymOps();
+  const Eigen::Quaternion<T> q2 = quat2.conjugate();
+  misq = quat1 * q2;
+
+  for(int32 j = 0; j < nsym; j++)
+  {
+    Quaternion<T> jQuat = orientationOps[targetPhaseIndex]->getQuatSymOp(j);
+    sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+
+    // calculate crystal direction parallel to normal
+    s1_misq = misq * sym_q;
+
+    for(int32 k = j + 1; k < nsym; k++)
+    {
+      // calculate the symmetric misorienation
+      Quaternion<T> kQuat = orientationOps[targetPhaseIndex]->getQuatSymOp(k);
+      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      sym_q = sym_q.conjugate();
+      s2_misq = sym_q * s1_misq;
+
+      OrientationTransformation::qu2ax<Eigen::Vector4<T>, Orientation<T>>(s2_misq.coeffs(), Quaternion<T>::Order::VectorScalar).toAxisAngle(xVal, yVal, zVal, real);
+
+      real = real * 180.0f / nx::core::Constants::k_PiD;
+      axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
+      angdiff60 = std::abs(real - 60.0f);
+      if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
+      {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+template <typename T>
+std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2,
+                                             const std::vector<LaueOps::Pointer>& orientationOps, uint32 targetPhaseIndex, float32 angTolerance, float32 axisTolerance)
+{
+  T real = std::numeric_limits<T>::max();
+  T axisdiff111;
+  T angdiff60;
+  T xVal;
+  T yVal;
+  T zVal;
+  T minIncoherence = std::numeric_limits<T>::max();
+
+  Eigen::Quaternion<T> misq;
+  Eigen::Quaternion<T> j_sym_q;
+  Eigen::Quaternion<T> sym_q;
+  Eigen::Quaternion<T> s1_misq;
+  Eigen::Quaternion<T> s2_misq;
+
+  const int32 nsym = orientationOps[targetPhaseIndex]->getNumSymOps();
+  const Eigen::Quaternion<T> q2 = quat2.conjugate();
+  misq = quat1 * q2;
+
+  bool valid = false;
+  for(int32 j = 0; j < nsym; j++)
+  {
+    Quaternion<T> jQuat = orientationOps[targetPhaseIndex]->getQuatSymOp(j);
+    j_sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+
+    // calculate crystal direction parallel to normal
+    s1_misq = misq * j_sym_q;
+
+    for(int32 k = j + 1; k < nsym; k++)
+    {
+      // calculate the symmetric misorienation
+      Quaternion<T> kQuat = orientationOps[targetPhaseIndex]->getQuatSymOp(k);
+      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      sym_q = sym_q.conjugate();
+      s2_misq = sym_q * s1_misq;
+
+      OrientationTransformation::qu2ax<Eigen::Vector4<T>, Orientation<T>>(s2_misq.coeffs(), Quaternion<T>::Order::VectorScalar).toAxisAngle(xVal, yVal, zVal, real);
+
+      real = real * 180.0f / nx::core::Constants::k_PiD;
+      axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
+      angdiff60 = std::abs(real - 60.0f);
+      if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
+      {
+        const Eigen::Vector3d axVec{xVal, yVal, zVal};
+        const float64 norm1 = axVec.norm();
+        const Eigen::Vector3d s_xstl_norm = j_sym_q._transformVector(xstl_norm);
+        const float64 norm2 = j_sym_q._transformVector(xstl_norm).norm();
+
+        float64 cosTheta = 1.0;
+        if(norm1 != 0 && norm2 != 0)
+        {
+          cosTheta = axVec.dot(s_xstl_norm) / (norm1 * norm2);
+        }
+
+        T incoherence = 180.0 * std::acos(cosTheta) / nx::core::Constants::k_PiD;
+        if(incoherence > 90.0)
+        {
+          incoherence = 180.0 - incoherence;
+        }
+        if(incoherence < minIncoherence)
+        {
+          minIncoherence = incoherence;
+          valid = true;
+        }
+      }
+    }
+  }
+
+  if(valid)
+  {
+    return {minIncoherence};
+  }
+
+  return {};
+}
+
 /**
  * @brief The CalculateTwinBoundaryImpl class implements a threaded algorithm that determines whether a boundary is twin related and calculates
  * the respective incoherence. The calculations are performed on a surface mesh.
@@ -44,29 +174,6 @@ public:
 
   void generate(usize start, usize end) const
   {
-    int32 feature1 = 0;
-    int32 feature2 = 0;
-    Matrix3x3 orientationMatrix = {};
-    float64 w = 0.0;
-    uint32 phase1 = 0;
-    uint32 phase2 = 0;
-
-    float64 axisdiff111 = 0.0;
-    float64 angdiff60 = 0.0;
-    Eigen::Vector3d n = {0.0, 0.0, 0.0};
-    float64 incoherence = 0.0;
-    float64 n1 = 0.0;
-    float64 n2 = 0.0;
-    float64 n3 = 0.0;
-
-    Eigen::Quaterniond misq;
-    Eigen::Quaterniond sym_q;
-    Eigen::Quaterniond s1_misq;
-    Eigen::Quaterniond s2_misq;
-
-    Eigen::Vector3d xstl_norm = {0.0, 0.0, 0.0};
-    Eigen::Vector3d s_xstl_norm = {0.0, 0.0, 0.0};
-
     for(usize i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -74,77 +181,27 @@ public:
         return;
       }
 
-      feature1 = m_FaceLabels[2 * i];
-      feature2 = m_FaceLabels[(2 * i) + 1];
-
+      const int32 feature1 = m_FaceLabels[2 * i];
+      const int32 feature2 = m_FaceLabels[(2 * i) + 1];
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
-        w = std::numeric_limits<float32>::max();
-        // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
-        const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
-        Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);       // W X Y Z
-
-        phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
-        phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
+        const uint32 phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
+        const uint32 phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
         if(phase1 == phase2)
         {
-          const int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
-          q2 = q2.conjugate();
-          misq = q1 * q2;
-          orientationMatrix = Matrix3x3{OrientationTransformation::qu2om<Eigen::Vector4d, std::vector<float64>>(q1.coeffs(), QuatD::Order::VectorScalar).data()};
+          // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
+          const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
+          Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);       // W X Y Z
 
-          xstl_norm = Eigen::Vector3d{m_FaceNormals[3 * i], m_FaceNormals[(3 * i) + 1], m_FaceNormals[(3 * i) + 2]}.transpose() * orientationMatrix;
+          Matrix3x3 orientationMatrix = Matrix3x3{OrientationTransformation::qu2om<Eigen::Vector4d, std::vector<float64>>(q1.coeffs(), QuatD::Order::VectorScalar).data()};
+          Eigen::Vector3d xstl_norm = Eigen::Vector3d{m_FaceNormals[3 * i], m_FaceNormals[(3 * i) + 1], m_FaceNormals[(3 * i) + 2]}.transpose() * orientationMatrix;
 
-          for(int32 j = 0; j < nsym; j++)
+          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, phase1, m_AngTol, m_AxisTol);
+
+          if(minIncoherence.has_value())
           {
-            QuatD jQuat = m_OrientationOps[phase1]->getQuatSymOp(j);
-            sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
-
-            // calculate crystal direction parallel to normal
-            s1_misq = misq * sym_q;
-            s_xstl_norm = sym_q._transformVector(xstl_norm);
-
-            for(int32 k = j + 1; k < nsym; k++)
-            {
-              // calculate the symmetric misorienation
-              QuatD kQuat = m_OrientationOps[phase1]->getQuatSymOp(k);
-              sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-              sym_q = sym_q.conjugate();
-              s2_misq = sym_q * s1_misq;
-
-              OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq.coeffs(), QuatD::Order::VectorScalar).toAxisAngle(n1, n2, n3, w);
-
-              w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float64>));
-              angdiff60 = std::abs(w - 60.0f);
-              if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
-              {
-                n[0] = n1;
-                n[1] = n2;
-                n[2] = n3;
-                m_TwinBoundaries->setValue(i, true);
-
-                float64 cosTheta = 1.0;
-
-                const float64 norm1 = n.norm();
-                const float64 norm2 = s_xstl_norm.norm();
-
-                if(norm1 != 0 && norm2 != 0)
-                {
-                  cosTheta = n.dot(s_xstl_norm) / (norm1 * norm2);
-                }
-
-                incoherence = 180.0 * std::acos(cosTheta) / nx::core::Constants::k_PiD;
-                if(incoherence > 90.0)
-                {
-                  incoherence = 180.0 - incoherence;
-                }
-                if(incoherence < m_TwinBoundaryIncoherence[i])
-                {
-                  m_TwinBoundaryIncoherence[i] = static_cast<float32>(incoherence);
-                }
-              }
-            }
+            m_TwinBoundaries->setValue(i, true);
+            m_TwinBoundaryIncoherence[i] = static_cast<float32>(minIncoherence.value());
           }
         }
       }
@@ -193,24 +250,6 @@ public:
 
   void generate(usize start, usize end) const
   {
-    int32 feature1 = 0;
-    int32 feature2 = 0;
-    float64 w = 0.0;
-    uint32 phase1 = 0;
-    uint32 phase2 = 0;
-
-    float64 axisdiff111 = 0.0;
-    float64 angdiff60 = 0.0;
-    Eigen::Vector3d n = {0.0, 0.0, 0.0};
-    float64 n1 = 0.0;
-    float64 n2 = 0.0;
-    float64 n3 = 0.0;
-
-    Eigen::Quaterniond misq;
-    Eigen::Quaterniond sym_q;
-    Eigen::Quaterniond s1_misq;
-    Eigen::Quaterniond s2_misq;
-
     for(usize i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -218,54 +257,19 @@ public:
         return;
       }
 
-      feature1 = m_FaceLabels[2 * i];
-      feature2 = m_FaceLabels[(2 * i) + 1];
+      int32 feature1 = m_FaceLabels[2 * i];
+      int32 feature2 = m_FaceLabels[(2 * i) + 1];
 
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
-        w = std::numeric_limits<float32>::max();
-        // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
-        const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
-        Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);       // W X Y Z
-
-        phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
-        phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
+        uint32 phase1 = m_CrystalStructures[m_FeaturePhases[feature1]];
+        uint32 phase2 = m_CrystalStructures[m_FeaturePhases[feature2]];
         if(phase1 == phase2)
         {
-          const int32 nsym = m_OrientationOps[phase1]->getNumSymOps();
-          q2 = q2.conjugate();
-          misq = q1 * q2;
-
-          for(int32 j = 0; j < nsym; j++)
-          {
-            QuatD jQuat = m_OrientationOps[phase1]->getQuatSymOp(j);
-            sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
-
-            // calculate crystal direction parallel to normal
-            s1_misq = misq * sym_q;
-
-            for(int32 k = j + 1; k < nsym; k++)
-            {
-              // calculate the symmetric misorienation
-              QuatD kQuat = m_OrientationOps[phase1]->getQuatSymOp(k);
-              sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-              sym_q = sym_q.conjugate();
-              s2_misq = sym_q * s1_misq;
-
-              OrientationTransformation::qu2ax<Eigen::Vector4d, OrientationD>(s2_misq.coeffs(), QuatD::Order::VectorScalar).toAxisAngle(n1, n2, n3, w);
-
-              w = w * 180.0f / nx::core::Constants::k_PiD;
-              axisdiff111 = acos((std::abs(n1) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n2) * std::numbers::inv_sqrt3_v<float64>)+(std::abs(n3) * std::numbers::inv_sqrt3_v<float64>));
-              angdiff60 = std::abs(w - 60.0f);
-              if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
-              {
-                n[0] = n1;
-                n[1] = n2;
-                n[2] = n3;
-                m_TwinBoundaries->setValue(i, true);
-              }
-            }
-          }
+          // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
+          const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
+          const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]); // W X Y Z
+          m_TwinBoundaries->setValue(i, IsTwinBoundary(q1, q2, m_OrientationOps, phase1, m_AngTol, m_AxisTol));
         }
       }
     }
