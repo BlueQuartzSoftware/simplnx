@@ -1019,14 +1019,14 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64>
    */
-  virtual std::vector<uint64> getChunkUpperBounds(uint64 flatChunkIndex) const
+  virtual std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return std::vector<uint64>();
+      return std::vector<usize>();
     }
 
-    std::vector<uint64> upperBounds(getTupleShape());
+    std::vector<usize> upperBounds(getTupleShape());
     for(auto& value : upperBounds)
     {
       value -= 1;
@@ -1040,17 +1040,17 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64> chunk tuple shape
    */
-  virtual std::vector<uint64> getChunkTupleShape(uint64 flatChunkIndex) const
+  virtual std::vector<usize> getChunkTupleShape(uint64 flatChunkIndex) const
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return std::vector<uint64>();
+      return std::vector<usize>();
     }
     auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
     auto upperBounds = getChunkUpperBounds(flatChunkIndex);
 
-    const uint64 tupleCount = lowerBounds.size();
-    std::vector<uint64> chunkTupleShape(tupleCount);
+    const usize tupleCount = lowerBounds.size();
+    std::vector<usize> chunkTupleShape(tupleCount);
     for(usize i = 0; i < tupleCount; i++)
     {
       chunkTupleShape[i] = upperBounds[i] - lowerBounds[i] + 1;
