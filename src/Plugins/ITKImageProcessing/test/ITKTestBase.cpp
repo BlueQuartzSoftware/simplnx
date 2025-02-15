@@ -39,14 +39,14 @@ std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
   else
   {
     std::vector<T> dataVec(arraySize);
-    for (usize i = 0; i < arraySize; i++)
+    for(usize i = 0; i < arraySize; i++)
     {
       dataVec[i] = dataArray[i];
     }
     const T* dataPtr = dataVec.data();
     md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
   }
-  
+
   md5.finalize();
   return md5.hexdigest();
 }
@@ -183,10 +183,10 @@ std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputD
 {
   const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
   DataType outputDataType = outputDataArray.getDataType();
-  //if(!outputDataArray.getDataFormat().empty())
+  // if(!outputDataArray.getDataFormat().empty())
   //{
-  //  return "";
-  //}
+  //   return "";
+  // }
 
   switch(outputDataType)
   {

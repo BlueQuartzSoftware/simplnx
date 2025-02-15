@@ -27,7 +27,7 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
   }
 
   hid_t fileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  if (fileId > 0)
+  if(fileId > 0)
   {
     return FileIO(filepath, fileId);
   }

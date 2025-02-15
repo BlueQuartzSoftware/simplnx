@@ -48,8 +48,8 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalClosingImageFilter(Grays
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // md5 hash only works on in-memory DataStore<T>
-  //if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  // md5 hash only works on in-memory DataStore<T>
+  // if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
   {
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "103130cc4caf40d9fb252fbabc531e15");

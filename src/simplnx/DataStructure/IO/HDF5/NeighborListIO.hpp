@@ -38,7 +38,7 @@ public:
     {
       std::string numNeighborsName;
       auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
-      if (numNeighborsNameResult.invalid())
+      if(numNeighborsNameResult.invalid())
       {
         return {};
       }

@@ -22,7 +22,7 @@ const DataPath k_CellFeatureArrayPath({k_FeatureDataArrayName + k_CellTempArrayS
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", "[Core][CopyFeatureArrayToElementArrayFilter]")
 {
   UnitTest::LoadPlugins();
-  
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArrayFilter filter;
   DataStructure dataStructure;

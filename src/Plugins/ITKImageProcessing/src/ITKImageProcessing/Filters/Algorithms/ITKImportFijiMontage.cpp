@@ -199,8 +199,8 @@ private:
       }
 
       // Ensure that we are dealing with in-core memory ONLY
-      //const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
-      //if(inputArrayPtr->getDataFormat() != "")
+      // const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
+      // if(inputArrayPtr->getDataFormat() != "")
       //{
       //  return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
       //}

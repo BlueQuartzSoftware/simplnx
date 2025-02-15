@@ -460,7 +460,7 @@ std::vector<T> DatasetIO::readAsVector() const
     return {};
   }
 
-   std::vector<T> output(numElements);
+  std::vector<T> output(numElements);
   for(usize i = 0; i < numElements; i++)
   {
     output[i] = data[i];

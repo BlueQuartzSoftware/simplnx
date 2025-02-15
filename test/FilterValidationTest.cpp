@@ -231,7 +231,7 @@ TEST_CASE("nx::core::Test Filter Parameter Help Text", "[simplnx][Filter]")
 TEST_CASE("nx::core::Test Filter Name", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
-  
+
   GenerateParameterList();
 
   auto* filterListPtr = Application::Instance()->getFilterList();

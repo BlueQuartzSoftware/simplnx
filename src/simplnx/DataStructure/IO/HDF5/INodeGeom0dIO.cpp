@@ -19,7 +19,7 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
-  
+
   geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
 
@@ -34,7 +34,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
   }
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
-  
+
   DataObject::OptionalId vertexListId = geometry.getVertexListId();
 
   result = WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag);
@@ -47,7 +47,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
   {
     usize numVerts = geometry.getNumberOfVertices();
     auto datasetWriter = groupWriter.createDataset("_VertexIndices");
-    
+
     std::vector<int64> indices(numVerts);
     for(usize i = 0; i < numVerts; i++)
     {

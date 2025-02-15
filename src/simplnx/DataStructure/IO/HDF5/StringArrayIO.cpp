@@ -34,7 +34,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 
   // Check ability to import the data
   auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
-  if (importableResult.invalid())
+  if(importableResult.invalid())
   {
     return ConvertResult(std::move(importableResult));
   }
@@ -44,7 +44,6 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     return {};
   }
 
-  
   auto numValuesResult = datasetReader.readScalarAttribute<uint64>(k_TupleDimsAttrName);
   if(numValuesResult.invalid())
   {
@@ -66,7 +65,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
 Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& dataArray, group_writer_type& parentGroup, bool importable) const
 {
   auto datasetWriter = parentGroup.createDataset(dataArray.getName());
-  
+
   // writeVectorOfStrings may resize the collection
   data_type::collection_type strings = dataArray.values();
   auto result = datasetWriter.writeVectorOfStrings(strings);

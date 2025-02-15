@@ -19,7 +19,7 @@ Result<> BaseGroupIO::ReadBaseGroupData(DataStructureReader& dataStructureReader
 Result<> BaseGroupIO::WriteBaseGroupData(DataStructureWriter& dataStructureWriter, const BaseGroup& baseGroup, group_writer_type& parentGroupWriter, bool importable)
 {
   auto groupWriter = parentGroupWriter.createGroup(baseGroup.getName());
-  
+
   Result<> result = WriteObjectAttributes(dataStructureWriter, baseGroup, groupWriter, importable);
   if(result.invalid())
   {

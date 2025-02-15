@@ -17,9 +17,9 @@ DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader
   {
     return {};
   }
-  
+
   auto result = groupReader.readScalarAttribute<DataObject::IdType>(tag);
-  if (result.invalid())
+  if(result.invalid())
   {
     return {};
   }

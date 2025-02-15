@@ -207,7 +207,7 @@ public:
       m_Index = rhs.m_Index;
       return *this;
     }
-    
+
     ConstIterator& operator=(ConstIterator&& rhs) noexcept
     {
       m_DataVector = rhs.m_DataVector;

@@ -116,8 +116,7 @@ void AtomicFile::removeTempFile() const
   try
   {
     fs::remove_all(m_TempFilePath.parent_path());
-  }
-  catch (std::exception& e)
+  } catch(std::exception& e)
   {
     std::cout << "AtomicFile::removeTempFile error: " << e.what() << std::endl;
   }

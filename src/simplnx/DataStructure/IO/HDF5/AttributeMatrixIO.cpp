@@ -26,10 +26,10 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 {
 
   auto groupReader = parentGroup.openGroup(objectName);
-  
+
   std::vector<usize> tupleShape;
   auto tupleShapeResult = groupReader.readVectorAttribute<usize>(IOConstants::k_TupleDims);
-  if (tupleShapeResult.invalid())
+  if(tupleShapeResult.invalid())
   {
     return ConvertResult(std::move(tupleShapeResult));
   }

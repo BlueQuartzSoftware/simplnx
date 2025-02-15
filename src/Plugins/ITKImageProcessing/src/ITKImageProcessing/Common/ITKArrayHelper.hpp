@@ -375,15 +375,15 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDa
 
     typename ImageType::PixelContainer* pixelContainer = image->GetPixelContainer();
     auto* rawBufferPtr = reinterpret_cast<UnderlyingType_t<PixelT>*>(pixelContainer->GetBufferPointer());
-    #if 0
+#if 0
     const usize size = dataStore.size();
     for(usize i = 0; i < size; i++)
     {
       dataStore[i] = rawBufferPtr[i];
     }
-    #else
+#else
     std::copy(dataStore.begin(), dataStore.end(), rawBufferPtr);
-    #endif
+#endif
 
     image->UpdateOutputData();
     return image;

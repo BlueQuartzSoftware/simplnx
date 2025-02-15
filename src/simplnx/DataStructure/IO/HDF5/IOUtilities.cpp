@@ -54,7 +54,7 @@ Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& da
 Result<> HDF5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core::HDF5::GroupIO& parentGroupIO, const BaseGroup* baseGroup, bool importable)
 {
   auto groupWriter = parentGroupIO.createGroup(baseGroup->getName());
-  
+
   Result<> error = WriteObjectAttributes(dataStructureWriter, groupWriter, baseGroup, importable);
   if(error.invalid())
   {

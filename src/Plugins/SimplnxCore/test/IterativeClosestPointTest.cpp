@@ -15,7 +15,7 @@ using namespace nx::core::Constants;
 TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
   UnitTest::LoadPlugins();
-  
+
   IterativeClosestPointFilter filter;
   DataStructure dataStructure;
   Arguments args;

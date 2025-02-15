@@ -106,7 +106,7 @@ DataPath DataPath::createChildPath(std::string name) const
   auto subpath = childDataPath.m_Path;
 
   std::vector<std::string> path = m_Path;
-  //path.insert(path.end(), subpath.begin(), subpath.end());
+  // path.insert(path.end(), subpath.begin(), subpath.end());
   path.push_back(std::move(subpath.back()));
   return {(std::move(path))};
 }

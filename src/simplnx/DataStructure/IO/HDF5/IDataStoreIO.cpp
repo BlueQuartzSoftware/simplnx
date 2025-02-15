@@ -14,7 +14,7 @@ typename nx::core::IDataStore::ShapeType nx::core::HDF5::IDataStoreIO::ReadTuple
 {
   std::vector<usize> tupleShape;
   auto tupleShapeResult = datasetReader.readVectorAttribute<usize>(IOConstants::k_TupleShapeTag);
-  if (tupleShapeResult.valid())
+  if(tupleShapeResult.valid())
   {
     tupleShape = std::move(tupleShapeResult.value());
   }

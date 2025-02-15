@@ -168,11 +168,11 @@ void CopyTupleTyped(const IDataStore& currentData, IDataStore& sliceData, usize 
   const auto& currentDataTyped = dynamic_cast<const AbstractDataStore<T>&>(currentData);
   auto& sliceDataTyped = dynamic_cast<AbstractDataStore<T>&>(sliceData);
 
-  #if 0
+#if 0
   const T* sourcePtr = currentDataTyped.data() + (nComp * index);
   T* destPtr = sliceDataTyped.data() + (nComp * indexNew);
   std::memcpy(destPtr, sourcePtr, currentData.getTypeSize() * nComp);
-  #endif
+#endif
 
   sliceDataTyped.copyFrom(indexNew, currentDataTyped, index, 1);
 }
@@ -369,10 +369,10 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   usize nComp = imageArray.getNumberOfComponents();
   const IDataStore& currentData = imageArray.getIDataStoreRef();
 
-  //if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
+  // if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
   //{
-  //  return {MakeErrorResult(-1, "DataArray must be in memory")};
-  //}
+  //   return {MakeErrorResult(-1, "DataArray must be in memory")};
+  // }
 
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
 
