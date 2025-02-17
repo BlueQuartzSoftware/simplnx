@@ -497,6 +497,50 @@ public:
     return std::make_unique<DataStore<T>>(std::move(dataWrapper), this->getTupleShape(), this->getComponentShape());
   }
 
+  uint64 getNumberOfChunks() const override
+  {
+    return 1;
+  }
+  /**
+   * @brief Returns the Smallest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return std::vector<uint64>
+   */
+  std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+    usize tupleDims = getTupleShape().size();
+
+    std::vector<uint64> lowerBounds(tupleDims);
+    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
+    return lowerBounds;
+  }
+
+  /**
+   * @brief Returns the largest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return std::vector<uint64>
+   */
+  std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<usize>();
+    }
+
+    std::vector<usize> upperBounds(getTupleShape());
+    for(auto& value : upperBounds)
+    {
+      value -= 1;
+    }
+    return upperBounds;
+  }
+
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;

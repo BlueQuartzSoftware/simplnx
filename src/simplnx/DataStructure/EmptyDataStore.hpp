@@ -239,6 +239,18 @@ public:
     return nullptr;
   }
 
+  std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const override
+  {
+    return {};
+  }
+  std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const override
+  {
+    return {};
+  }
+  uint64 getNumberOfChunks() const override
+  {
+    return 0;
+  }
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;

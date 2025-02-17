@@ -975,10 +975,10 @@ public:
    * @brief Returns the number of chunks used to store the data.
    * @return uint64
    */
-  virtual uint64 getNumberOfChunks() const
-  {
-    return 1;
-  }
+  virtual uint64 getNumberOfChunks() const = 0;
+//  {
+//    return 1;
+//  }
 
   /**
    * @brief Returns the number of elements in the specified chunk index.
@@ -1000,18 +1000,18 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64>
    */
-  virtual std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const
-  {
-    if(flatChunkIndex >= getNumberOfChunks())
-    {
-      return std::vector<uint64>();
-    }
-    usize tupleDims = getTupleShape().size();
-
-    std::vector<uint64> lowerBounds(tupleDims);
-    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
-    return lowerBounds;
-  }
+  virtual std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const = 0;
+//  {
+//    if(flatChunkIndex >= getNumberOfChunks())
+//    {
+//      return std::vector<uint64>();
+//    }
+//    usize tupleDims = getTupleShape().size();
+//
+//    std::vector<uint64> lowerBounds(tupleDims);
+//    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
+//    return lowerBounds;
+//  }
 
   /**
    * @brief Returns the largest N-Dimensional tuple position included in the
@@ -1019,20 +1019,20 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64>
    */
-  virtual std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const
-  {
-    if(flatChunkIndex >= getNumberOfChunks())
-    {
-      return std::vector<usize>();
-    }
-
-    std::vector<usize> upperBounds(getTupleShape());
-    for(auto& value : upperBounds)
-    {
-      value -= 1;
-    }
-    return upperBounds;
-  }
+  virtual std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const = 0;
+//  {
+//    if(flatChunkIndex >= getNumberOfChunks())
+//    {
+//      return std::vector<usize>();
+//    }
+//
+//    std::vector<usize> upperBounds(getTupleShape());
+//    for(auto& value : upperBounds)
+//    {
+//      value -= 1;
+//    }
+//    return upperBounds;
+//  }
 
   /**
    * @brief Returns the tuple shape for the specified chunk.
