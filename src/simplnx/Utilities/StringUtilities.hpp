@@ -40,6 +40,8 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -509,4 +511,31 @@ inline std::vector<BestMatchType> FindBestMatches(const std::vector<std::string>
   // return bestPairs;
   return bestMatches;
 }
+
+/**
+ * @brief Creates a '0' padded string from a number based on maxIndex which dictates how many zeros there will be.
+ * @param index The index in the string
+ * @param maxIndex The max Index which determines the number of padding digits.
+ * @return String
+ */
+inline std::string GenerateIndexString(int32 index, int32 maxIndex)
+{
+  std::string numStr = fmt::format("{}", index);
+
+  if(maxIndex >= 10)
+  {
+    int mag = 0;
+    int max = maxIndex;
+    while(max > 0)
+    {
+      mag++;
+      max = max / 10;
+    }
+    std::stringstream ss; // Create a QTextStream to set up the padding
+    ss << std::setw(mag) << std::setfill('0') << index;
+    numStr = ss.str();
+  }
+  return numStr;
+}
+
 } // namespace nx::core::StringUtilities
