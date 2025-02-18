@@ -20,21 +20,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-struct CreateAndInitArrayFunctor
-{
-  template <class T>
-  void operator()(IDataArray* iDataArray, const std::string& initValue)
-  {
-    Result<T> result = ConvertTo<T>::convert(initValue);
-
-    auto* dataStore = iDataArray->template getIDataStoreAs<AbstractDataStore<T>>();
-    dataStore->fill(result.value());
-  }
-};
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
