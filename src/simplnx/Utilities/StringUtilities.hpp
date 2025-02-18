@@ -531,7 +531,7 @@ inline std::string GenerateIndexString(int32 index, int32 maxIndex)
       mag++;
       max = max / 10;
     }
-    std::stringstream ss; // Create a QTextStream to set up the padding
+    std::stringstream ss; // Create a stringstream to set up the padding
     ss << std::setw(mag) << std::setfill('0') << index;
     numStr = ss.str();
   }
