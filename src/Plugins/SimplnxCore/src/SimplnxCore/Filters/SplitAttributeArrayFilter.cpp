@@ -38,7 +38,7 @@ Uuid SplitAttributeArrayFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string SplitAttributeArrayFilter::humanName() const
 {
-  return "Split Multicomponent Attribute Array";
+  return "Split Multi component Attribute Array";
 }
 
 //------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
             -65402, fmt::format("Selected component '{}' is not a valid component. Input array at path '{}' only has {} components, please choose a component number between 0 and {} to extract.",
                                 comp, pInputArrayPath.toString(), numComponents, numComponents - 1)}})};
       }
-      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(compIndex);
+      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
@@ -128,7 +128,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
   {
     for(usize i = 0; i < numComponents; i++)
     {
-      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(i);
+      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(i, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
