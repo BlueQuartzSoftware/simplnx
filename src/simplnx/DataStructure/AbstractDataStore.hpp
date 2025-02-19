@@ -1068,7 +1068,7 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64> extents
    */
-  virtual std::vector<uint64> getChunkExtents(uint64 flatChunkIndex) const
+  std::vector<uint64> getChunkExtents(uint64 flatChunkIndex) const
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
@@ -1084,7 +1084,7 @@ public:
     for(usize i = 0; i < tupleDims; i++)
     {
       extents[i * 2] = lowerBounds[i];
-      extents[i * 2 + 1] = lowerBounds[i];
+      extents[i * 2 + 1] = upperBounds[i];
     }
 
     return extents;
