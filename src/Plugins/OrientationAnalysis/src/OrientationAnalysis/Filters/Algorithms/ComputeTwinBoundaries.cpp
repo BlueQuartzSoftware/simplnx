@@ -4,6 +4,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Math/GeometryMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -11,11 +12,161 @@
 
 #include <Eigen/Dense>
 #include <numbers>
+#include <simplnx/Utilities/Math/MatrixMath.hpp>
 
 using namespace nx::core;
 
 namespace
 {
+class SIMPLTwinBoundaryImpl
+{
+  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
+
+public:
+  SIMPLTwinBoundaryImpl(float32 angtol, float32 axistol, const Int32AbstractDataStore& faceLabels, const Float64AbstractDataStore& faceNormals, const Float32AbstractDataStore& avgQuats,
+                        const Int32AbstractDataStore& featurePhases, const UInt32AbstractDataStore& crystalStructures, std::unique_ptr<MaskCompare>& twinBoundaries,
+                        Float32AbstractDataStore& twinBoundaryIncoherence, const std::atomic_bool& shouldCancel, bool findCoherence)
+  : m_AxisTol(axistol)
+  , m_AngTol(angtol)
+  , m_Labels(faceLabels)
+  , m_Normals(faceNormals)
+  , m_Phases(featurePhases)
+  , m_AvgQuats(avgQuats)
+  , m_TwinBoundaries(twinBoundaries)
+  , m_TwinBoundaryIncoherence(twinBoundaryIncoherence)
+  , m_CrystalStructures(crystalStructures)
+  , m_ShouldCancel(shouldCancel)
+  , m_FindCoherence(findCoherence)
+  , m_OrientationOps(LaueOps::GetAllOrientationOps())
+  {
+  }
+  void generate(size_t start, size_t end) const
+  {
+    int32_t feature1 = 0, feature2 = 0;
+    double normal[3] = {0.0, 0.0, 0.0};
+    double g1[3][3] = {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}};
+    double w = 0.0;
+    uint32_t phase1 = 0, phase2 = 0;
+
+    double axisdiff111 = 0.0, angdiff60 = 0.0;
+    double n[3] = {0.0, 0.0, 0.0};
+    double incoherence = 0.0;
+    double n1 = 0.0, n2 = 0.0, n3 = 0.0;
+
+    QuatD misq;
+    QuatD sym_q;
+    QuatD s1_misq;
+    QuatD s2_misq;
+
+    // QuatF* quats = reinterpret_cast<QuatF*>(m_Quats);
+
+    std::array<double, 3> xstl_norm = {0.0, 0.0, 0.0};
+    std::array<double, 3> s_xstl_norm = {0.0, 0.0, 0.0};
+
+    for(size_t i = start; i < end; i++)
+    {
+      feature1 = m_Labels[2 * i];
+      feature2 = m_Labels[2 * i + 1];
+      if(m_FindCoherence)
+      {
+        normal[0] = m_Normals[3 * i];
+        normal[1] = m_Normals[3 * i + 1];
+        normal[2] = m_Normals[3 * i + 2];
+      }
+      if(feature1 > 0 && feature2 > 0 && m_Phases[feature1] == m_Phases[feature2])
+      {
+        w = std::numeric_limits<float>::max();
+        QuatD q1(m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2], m_AvgQuats[(feature1 * 4) + 3]); // W X Y Z
+        QuatD q2(m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2], m_AvgQuats[(feature2 * 4) + 3]); // W X Y Z
+
+        phase1 = m_CrystalStructures[m_Phases[feature1]];
+        phase2 = m_CrystalStructures[m_Phases[feature2]];
+        if(phase1 == phase2)
+        {
+          int32_t nsym = m_OrientationOps[phase1]->getNumSymOps();
+          q2 = q2.conjugate();
+          misq = q1 * q2;
+          OrientationTransformation::qu2om<QuatD, OrientationD>(q1).toGMatrix(g1);
+
+          if(m_FindCoherence)
+          {
+            MatrixMath::Multiply3x3with3x1(g1, normal, xstl_norm.data());
+          }
+
+          if(1835749 == i)
+          {
+            std::cout << "check";
+          }
+
+          for(int32_t j = 0; j < nsym; j++)
+          {
+            sym_q = m_OrientationOps[phase1]->getQuatSymOp(j);
+            // calculate crystal direction parallel to normal
+            s1_misq = misq * sym_q;
+
+            if(m_FindCoherence)
+            {
+              s_xstl_norm = sym_q.multiplyByVector(xstl_norm.data());
+            }
+
+            for(int32_t k = 0; k < nsym; k++)
+            {
+              // calculate the symmetric misorienation
+              sym_q = m_OrientationOps[phase1]->getQuatSymOp(k);
+              sym_q = sym_q.conjugate();
+              s2_misq = sym_q * s1_misq;
+
+              OrientationTransformation::qu2ax<QuatD, OrientationD>(s2_misq).toAxisAngle(n1, n2, n3, w);
+
+              w = w * 180.0f / nx::core::Constants::k_PiD;
+              axisdiff111 = acos(std::fabs(n1) * 0.57735f + std::fabs(n2) * 0.57735f + std::fabs(n3) * 0.57735f);
+              angdiff60 = std::fabs(w - 60.0f);
+              if(axisdiff111 < m_AxisTol && angdiff60 < m_AngTol)
+              {
+                n[0] = n1;
+                n[1] = n2;
+                n[2] = n3;
+                m_TwinBoundaries->setValue(i,true);
+                if(m_FindCoherence)
+                {
+                  incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(Point3Dd{n}, Point3Dd{s_xstl_norm.data()})) / nx::core::Constants::k_PiD;
+                  if(incoherence > 90.0)
+                  {
+                    incoherence = 180.0 - incoherence;
+                  }
+                  if(incoherence < m_TwinBoundaryIncoherence[i])
+                  {
+                    m_TwinBoundaryIncoherence[i] = incoherence;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void operator()(const nx::core::Range& range) const
+  {
+    generate(range.min(), range.max());
+  }
+
+private:
+  float32 m_AxisTol;
+  float32 m_AngTol;
+  const Int32AbstractDataStore& m_Labels;
+  const Float64AbstractDataStore& m_Normals;
+  const Float32AbstractDataStore& m_AvgQuats;
+  const Int32AbstractDataStore& m_Phases;
+  const UInt32AbstractDataStore& m_CrystalStructures;
+  std::unique_ptr<MaskCompare>& m_TwinBoundaries;
+  Float32AbstractDataStore& m_TwinBoundaryIncoherence;
+  const std::atomic_bool& m_ShouldCancel;
+  bool m_FindCoherence;
+  std::vector<LaueOps::Pointer> m_OrientationOps;
+};
+
 template <typename T>
 bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<LaueOps::Pointer>& orientationOps, uint32 crystalStructure, float32 angTolerance,
                     float32 axisTolerance)
@@ -77,7 +228,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   T xVal;
   T yVal;
   T zVal;
-  T minIncoherence = std::numeric_limits<T>::max();
+  T minIncoherence = 180.0;
 
   Eigen::Quaternion<T> misq;
   Eigen::Quaternion<T> j_sym_q;
@@ -114,17 +265,9 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
       {
         const Eigen::Vector3d axVec{xVal, yVal, zVal};
-        const float64 norm1 = axVec.norm();
-        const Eigen::Vector3d s_xstl_norm = j_sym_q._transformVector(xstl_norm);
-        const float64 norm2 = j_sym_q._transformVector(xstl_norm).norm();
+        const Eigen::Vector3d s_xstl_norm = j_sym_q.conjugate()._transformVector(xstl_norm); // conjugate for active rotate
 
-        float64 cosTheta = 1.0;
-        if(norm1 != 0 && norm2 != 0)
-        {
-          cosTheta = axVec.dot(s_xstl_norm) / (norm1 * norm2);
-        }
-
-        T incoherence = 180.0 * std::acos(cosTheta) / nx::core::Constants::k_PiD;
+        T incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(axVec, s_xstl_norm)) / nx::core::Constants::k_PiD;
         if(incoherence > 90.0)
         {
           incoherence = 180.0 - incoherence;
@@ -192,14 +335,30 @@ public:
         const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
         const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]); // W X Y Z
 
-        const Matrix3x3 orientationMatrix = Matrix3x3{OrientationTransformation::qu2om<Eigen::Vector4d, std::vector<float64>>(q1.coeffs(), QuatD::Order::VectorScalar).data()};
-        const Eigen::Vector3d xstl_norm = Eigen::Vector3d{m_FaceNormals[3 * i], m_FaceNormals[(3 * i) + 1], m_FaceNormals[(3 * i) + 2]}.transpose() * orientationMatrix;
+        const Matrix3x3 orientationMatrix = q1.matrix().transpose();
+        const Eigen::Vector3d normals{m_FaceNormals[3 * i], m_FaceNormals[(3 * i) + 1], m_FaceNormals[(3 * i) + 2]};
+        const Eigen::Vector3d xstl_norm = normals.transpose() * orientationMatrix;
+
+        if(normals.hasNaN())
+        {
+          continue;
+        }
+
+        if(1835749 == i)
+        {
+          std::cout << "check";
+        }
 
         std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
 
         if(minIncoherence.has_value())
         {
           m_TwinBoundaries->setValue(i, true);
+          if(m_TwinBoundaryIncoherence[i] != minIncoherence.value())
+          {
+            std::cout << "Index of Discrepancy: " << i << " | Original Value: " << m_TwinBoundaryIncoherence[i] << " | New Value: " << minIncoherence.value() << std::endl;
+          }
+
           m_TwinBoundaryIncoherence[i] = static_cast<float32>(minIncoherence.value());
         }
       }
@@ -335,6 +494,9 @@ Result<> ComputeTwinBoundaries::operator()()
   {
     const auto& faceNormals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->FaceNormalsArrayPath)->getDataStoreRef();
     auto& twinBoundaryIncoherence = m_DataStructure.getDataAs<Float32Array>(m_InputValues->TwinBoundaryIncoherenceArrayPath)->getDataStoreRef();
+    twinBoundaryIncoherence.fill(180.0f); // For backwards compatibility
+    dataAlg.execute(
+        SIMPLTwinBoundaryImpl(angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundaries, twinBoundaryIncoherence, m_ShouldCancel, m_InputValues->FindCoherence));
     dataAlg.execute(
         CalculateTwinBoundaryWithIncoherenceImpl(angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundaries, twinBoundaryIncoherence, m_ShouldCancel));
   }

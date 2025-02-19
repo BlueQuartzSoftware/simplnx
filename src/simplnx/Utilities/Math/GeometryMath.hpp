@@ -83,6 +83,25 @@ inline T CosThetaBetweenVectors(const nx::core::Point3D<T>& a, const nx::core::P
 }
 
 /**
+ * @brief Returns the cosine between two angles defined by a point along each
+ * vector. The vectors are assumed to cross at (0,0,0).
+ * @param a
+ * @param b
+ * @return T
+ */
+template <typename T>
+inline T CosThetaBetweenVectors(const Eigen::Vector3<T>& a, const Eigen::Vector3<T>& b)
+{
+  T norm1 = a.norm();
+  T norm2 = b.norm();
+  if(norm1 == 0 || norm2 == 0)
+  {
+    return 1.0;
+  }
+  return (a.dot(b)) / (norm1 * norm2);
+}
+
+/**
  * @brief Returns the angle between two vectors that are defined by a ZXZEuler.
  * @param a
  * @param b
