@@ -250,6 +250,8 @@ TEST_CASE("VertexGeomTest")
   DataStructure dataStructure;
   auto geom = createGeom<VertexGeom>(dataStructure);
 
+  VertexGeom& geomRef = *geom;
+
   testAbstractGeometry(geom);
 
   SECTION("type as string")

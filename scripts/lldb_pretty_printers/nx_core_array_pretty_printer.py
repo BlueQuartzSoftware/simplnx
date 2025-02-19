@@ -1,31 +1,10 @@
 import lldb
 
+import simplnx_pretty_printer_utils as utils
+
 def array_summary(valobj, internal_dict):
-    """
-    Custom summary function for nx::core::Array<T, Dimensions>.
-    Shows the elements of the private std::array<T, Dimensions> m_Array.
-    """
+    return utils.array_summary(valobj, internal_dict)
 
-    # 1) Retrieve the m_Array child.
-    std_array_elements = valobj.GetChildMemberWithName("m_Array").GetChildMemberWithName("__elems_")
-
-    # 2) For an std::array<T, N>, LLDB usually shows each element as a child.
-    #    We'll iterate through them and collect their values/summaries.
-    count = std_array_elements.GetNumChildren()
-
-    elements = []
-    for i in range(count):
-        elem = std_array_elements.GetChildAtIndex(i)
-        # Prefer GetValue() if it's a scalar; otherwise, fallback to GetSummary().
-        elem_value = elem.GetValue()
-        if elem_value is None:
-            elem_value = elem.GetSummary()
-        if elem_value is None:
-            elem_value = "<unavailable>"
-        elements.append(elem_value)
-
-    # 4) Return a concise summary.
-    return f"{', '.join(elements)}"
 
 def __lldb_init_module(debugger, internal_dict):
     """
@@ -40,7 +19,7 @@ def __lldb_init_module(debugger, internal_dict):
         type summary add -x 'nx::core::Array<.*>' -F nx_core_array_pretty_printer.array_summary
     """
     debugger.HandleCommand(
-       'type summary add -F nx_core_array_pretty_printer.array_summary "nx::core::Array<*,*>"'
+       'type summary add -F nx_core_array_pretty_printer.array_summary -x "nx::core::Array<.*,.*>"'
        # 'type summary add -x nx::core::Array<.*> -F nx_core_array_pretty_printer.array_summary'
     )
     debugger.HandleCommand(
