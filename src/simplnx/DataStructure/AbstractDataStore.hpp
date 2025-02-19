@@ -1001,17 +1001,6 @@ public:
    * @return std::vector<uint64>
    */
   virtual std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const = 0;
-//  {
-//    if(flatChunkIndex >= getNumberOfChunks())
-//    {
-//      return std::vector<uint64>();
-//    }
-//    usize tupleDims = getTupleShape().size();
-//
-//    std::vector<uint64> lowerBounds(tupleDims);
-//    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
-//    return lowerBounds;
-//  }
 
   /**
    * @brief Returns the largest N-Dimensional tuple position included in the
@@ -1020,19 +1009,6 @@ public:
    * @return std::vector<uint64>
    */
   virtual std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const = 0;
-//  {
-//    if(flatChunkIndex >= getNumberOfChunks())
-//    {
-//      return std::vector<usize>();
-//    }
-//
-//    std::vector<usize> upperBounds(getTupleShape());
-//    for(auto& value : upperBounds)
-//    {
-//      value -= 1;
-//    }
-//    return upperBounds;
-//  }
 
   /**
    * @brief Returns the tuple shape for the specified chunk.
@@ -1040,7 +1016,7 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64> chunk tuple shape
    */
-  virtual std::vector<usize> getChunkTupleShape(uint64 flatChunkIndex) const
+  std::vector<usize> getChunkTupleShape(uint64 flatChunkIndex) const
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
