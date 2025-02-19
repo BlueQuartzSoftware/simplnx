@@ -20,21 +20,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-struct CreateAndInitArrayFunctor
-{
-  template <class T>
-  void operator()(IDataArray* iDataArray, const std::string& initValue)
-  {
-    Result<T> result = ConvertTo<T>::convert(initValue);
-
-    auto* dataStore = iDataArray->template getIDataStoreAs<AbstractDataStore<T>>();
-    dataStore->fill(result.value());
-  }
-};
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -314,9 +299,6 @@ Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure
                                                     const std::atomic_bool& shouldCancel) const
 {
   auto path = filterArgs.value<DataPath>(k_DataPath_Key);
-
-  ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(filterArgs.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), "0");
-
   auto initType = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
 
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
