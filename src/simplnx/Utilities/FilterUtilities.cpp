@@ -53,7 +53,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
 
   // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
   std::string ss =
-      fmt::format("This filter WILL remove all arrays of type NeighborList from the feature Attribute Matrix '{}'.  These arrays are:\n", featureIdsPath.toString(), featureGroupDataPath.toString());
+      fmt::format("This filter will REMOVE all arrays of type NeighborList from the feature Attribute Matrix '{}'.  These arrays are:\n", featureIdsPath.toString(), featureGroupDataPath.toString());
 
   auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
   if(!result.has_value())

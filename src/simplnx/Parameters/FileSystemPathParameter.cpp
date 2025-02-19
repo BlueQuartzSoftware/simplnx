@@ -80,9 +80,9 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
     {
       return result;
     }
-    if(!fs::exists(path))
+    if(fs::exists(path))
     {
-      return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
+      return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' already exists. It will be OVERWRITTEN during execution.", path.string()));
     }
   } catch(const fs::filesystem_error& exception)
   {
@@ -104,7 +104,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
     }
     if(!fs::exists(path))
     {
-      return MakeWarningVoidResult(-7, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
+      return MakeWarningVoidResult(-17, fmt::format("File System Directory Path '{}' does not exist. It will be created during execution.", path.string()));
     }
   } catch(const fs::filesystem_error& exception)
   {

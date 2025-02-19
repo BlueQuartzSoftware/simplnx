@@ -120,9 +120,14 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
     REQUIRE(executeResult.result.errors()[0].code == expectedErrorCondition);
   }
 
-  if(expectedWarningCondition != CalculatorItem::WarningCode::None)
+  if(executeResult.result.warnings().size() != 0)
   {
+    REQUIRE(expectedWarningCondition != CalculatorItem::WarningCode::None);
     REQUIRE(executeResult.result.warnings()[0].code == static_cast<int32>(expectedWarningCondition));
+  }
+  else
+  {
+    REQUIRE(expectedWarningCondition == CalculatorItem::WarningCode::None);
   }
 
   Float64Array* arrayPtr = dataStructure.getDataAs<Float64Array>(targetArrayPath);
@@ -288,22 +293,22 @@ void SingleComponentArrayCalculatorTest1()
   {
     int numTuple = 1;
     double value = -3;
-    runTest("-3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     numTuple = 1;
     value = 14;
-    runTest("14", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("14", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     numTuple = 1;
     value = 0.345;
-    runTest(".345", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest(".345", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Mismatched Parentheses Tests")
   {
     int numTuple = 1;
     double value = 12;
-    runTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
     runTest("(3*4", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::MismatchedParentheses), CalculatorItem::WarningCode::None);
     runTest("3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::MismatchedParentheses), CalculatorItem::WarningCode::None);
   }
@@ -312,7 +317,7 @@ void SingleComponentArrayCalculatorTest1()
   {
     int numTuple = 1;
     double value = sin(pow(fabs(cos(fabs(static_cast<double>(3)) / 4) + 7), 2));
-    runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Single Array Tests (Force Incorrect Tuple Counts)")
@@ -322,7 +327,7 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 10;
     double value = 18;
-    runTest("12 + 6", k_AttributeArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("12 + 6", k_AttributeArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Unrecognized Item Tests")
@@ -342,11 +347,11 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 18;
-    runTest("12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -6;
-    runTest("-12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
-    runTest("6 + -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-12 + 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("6 + -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Subtraction Operator")
@@ -355,13 +360,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 43;
-    runTest("97 - 54", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("97 - 54", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -34;
-    runTest("-32 - 2", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-32 - 2", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 19;
-    runTest("7 - -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("7 - -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Multiplication Operator")
@@ -387,13 +392,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 2;
-    runTest("12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -2;
-    runTest("-12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-12 / 6", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -0.5;
-    runTest("6 / -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("6 / -12", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Pow Operator")
@@ -404,13 +409,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 125;
-    runTest("5 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("5 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -8;
-    runTest("-2 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-2 ^ 3", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 0.25;
-    runTest("2 ^ -2", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("2 ^ -2", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Abs Operator")
@@ -422,13 +427,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 2;
-    runTest("abs(2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("abs(2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4.3;
-    runTest("abs(-4.3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("abs(-4.3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 6.7;
-    runTest("abs(abs(6.7))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("abs(abs(6.7))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Sin Operator")
@@ -440,18 +445,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 1;
-    runTest("sin(90)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("sin(90)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0;
-    runTest("sin(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("sin(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0.5;
-    runTest("sin(" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("sin(" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = 1;
-    runTest("sin(" + k_Pi_Str + "/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("sin(" + k_Pi_Str + "/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("Cos Operator")
@@ -463,17 +466,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 0;
-    runTest("cos(90)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("cos(90)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = -1;
-    runTest("cos(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("cos(-180)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 0.5;
-    runTest("cos(" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("cos(" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = -0.5;
-    runTest("cos(2*" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
+    runTest("cos(2*" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
@@ -486,17 +488,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 1;
-    runTest("tan(45)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("tan(45)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = sqrt(3);
-    runTest("tan(60)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("tan(60)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 1;
-    runTest("tan(" + k_Pi_Str + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("tan(" + k_Pi_Str + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = -sqrt(static_cast<double>(1) / static_cast<double>(3));
-    runTest("tan(5*" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
+    runTest("tan(5*" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
@@ -509,18 +510,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 30;
-    runTest("asin(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("asin(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 45;
-    runTest("asin(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Degrees);
+    runTest("asin(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 3;
-    runTest("asin(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("asin(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = numbers::pi / 2;
-    runTest("asin(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Radians);
+    runTest("asin(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("ACos Operator")
@@ -532,18 +531,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 60;
-    runTest("acos(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("acos(0.5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 45;
-    runTest("acos(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Degrees);
+    runTest("acos(sqrt(2)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 6;
-    runTest("acos(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("acos(sqrt(3)/2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = 0;
-    runTest("acos(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Radians);
+    runTest("acos(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("ATan Operator")
@@ -555,19 +552,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = -45;
-    runTest("atan(-1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value, CalculatorParameter::Degrees);
+    runTest("atan(-1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = -60;
-    runTest("atan(-sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Degrees);
+    runTest("atan(-sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = numbers::pi / 6;
-    runTest("atan(1/sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("atan(1/sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = numbers::pi / 3;
-    runTest("atan(sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value,
-            CalculatorParameter::Radians);
+    runTest("atan(sqrt(3))", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
   }
 
   SECTION("Sqrt Operator")
@@ -580,13 +574,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 3;
-    runTest("sqrt(9)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("sqrt(9)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 3;
-    runTest("sqrt(3^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("sqrt(3^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Root Operator")
@@ -600,16 +594,16 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 3;
-    runTest("root(9, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("root(9, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("root(64, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("root(64, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Log10 Operator")
@@ -623,10 +617,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = log10(10);
-    runTest("log10(10)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("log10(10)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = log10(40);
-    runTest("log10(40)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("log10(40)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Log Operator")
@@ -640,10 +634,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = log(5) / log(2);
-    runTest("log(2, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("log(2, 5)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 2;
-    runTest("log(10, 100)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("log(10, 100)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Exp Operator")
@@ -657,10 +651,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 2.7182818284590452354; // M_E
-    runTest("exp(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("exp(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 1;
-    runTest("exp(0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("exp(0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Ln Operator")
@@ -674,10 +668,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = log(1);
-    runTest("ln(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("ln(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = log(7);
-    runTest("ln(7)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("ln(7)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Floor Operator")
@@ -691,10 +685,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 12;
-    runTest("floor(12.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("floor(12.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -83;
-    runTest("floor(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("floor(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Ceil Operator")
@@ -708,10 +702,10 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = 1;
-    runTest("ceil(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("ceil(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -82;
-    runTest("ceil(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("ceil(-82.789367)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 
   SECTION("Negative Operator")
@@ -726,13 +720,13 @@ void SingleComponentArrayCalculatorTest1()
 
     int numTuple = 1;
     double value = -9;
-    runTest("- 9", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("- 9", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = -0.4564;
-    runTest("-(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 1;
-    runTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::NumericValueWarning, &numTuple, &value);
+    runTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 }
 
