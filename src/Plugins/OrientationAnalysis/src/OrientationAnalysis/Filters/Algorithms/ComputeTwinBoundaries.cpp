@@ -46,7 +46,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
     // calculate crystal direction parallel to normal
     s1_misq = misq * sym_q;
 
-    for(int32 k = j + 1; k < nsym; k++)
+    for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
       Quaternion<T> kQuat = orientationOps[crystalStructure]->getQuatSymOp(k);
@@ -100,7 +100,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
     // calculate crystal direction parallel to normal
     s1_misq = misq * j_sym_q;
 
-    for(int32 k = j + 1; k < nsym; k++)
+    for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
       Quaternion<T> kQuat = orientationOps[crystalStructure]->getQuatSymOp(k);
