@@ -505,17 +505,17 @@ public:
    * @brief Returns the Smallest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return std::vector<uint64>
+   * @return IDataStore::ShapeType
    */
-  std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const override
+  IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return std::vector<uint64>();
+      return IDataStore::ShapeType();
     }
     usize tupleDims = getTupleShape().size();
 
-    std::vector<uint64> lowerBounds(tupleDims);
+    IDataStore::ShapeType lowerBounds(tupleDims);
     std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
     return lowerBounds;
   }
@@ -524,16 +524,16 @@ public:
    * @brief Returns the largest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return std::vector<uint64>
+   * @return IDataStore::ShapeType
    */
-  std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const override
+  IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return std::vector<usize>();
+      return IDataStore::ShapeType();
     }
 
-    std::vector<usize> upperBounds(getTupleShape());
+    IDataStore::ShapeType upperBounds(getTupleShape());
     for(auto& value : upperBounds)
     {
       value -= 1;

@@ -976,9 +976,9 @@ public:
    * @return uint64
    */
   virtual uint64 getNumberOfChunks() const = 0;
-//  {
-//    return 1;
-//  }
+  //  {
+  //    return 1;
+  //  }
 
   /**
    * @brief Returns the number of elements in the specified chunk index.
@@ -998,17 +998,17 @@ public:
    * @brief Returns the Smallest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return std::vector<uint64>
+   * @return IDataStore::ShapeType
    */
-  virtual std::vector<uint64> getChunkLowerBounds(uint64 flatChunkIndex) const = 0;
+  virtual IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const = 0;
 
   /**
    * @brief Returns the largest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return std::vector<uint64>
+   * @return IDataStore::ShapeType
    */
-  virtual std::vector<usize> getChunkUpperBounds(uint64 flatChunkIndex) const = 0;
+  virtual IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const = 0;
 
   /**
    * @brief Returns the tuple shape for the specified chunk.
@@ -1016,17 +1016,17 @@ public:
    * @param flatChunkIndex
    * @return std::vector<uint64> chunk tuple shape
    */
-  std::vector<usize> getChunkTupleShape(uint64 flatChunkIndex) const
+  virtual IDataStore::ShapeType getChunkTupleShape(uint64 flatChunkIndex) const
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return std::vector<usize>();
+      return IDataStore::ShapeType();
     }
     auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
     auto upperBounds = getChunkUpperBounds(flatChunkIndex);
 
     const usize tupleCount = lowerBounds.size();
-    std::vector<usize> chunkTupleShape(tupleCount);
+    IDataStore::ShapeType chunkTupleShape(tupleCount);
     for(usize i = 0; i < tupleCount; i++)
     {
       chunkTupleShape[i] = upperBounds[i] - lowerBounds[i] + 1;
