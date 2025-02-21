@@ -95,7 +95,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
   }
 
   // Obtain the file size
-  const size_t fileSize = fs::file_size(absPath);
+  usize fileSize = fs::file_size(absPath);
 
   // Open the file
   std::ifstream in(absPath.c_str(), std::ios_base::binary);
@@ -104,7 +104,18 @@ Result<> ValidateCSVFile(const std::string& filePath)
     return MakeErrorResult(-301, fmt::format("Could not open file for reading: {}", absPath.string()));
   }
 
-  size_t actualSize = bufferSize;
+  auto isUtf8 = IsUtf8(absPath);
+  if(isUtf8.first)
+  {
+    // The file is UTF8 with a BOM marker, so read the first 3 bytes and dump them.
+    char a = '\0';
+    char b = '\0';
+    char c = '\0';
+    in >> a >> b >> c;
+    fileSize -= 3;
+  }
+
+  usize actualSize = bufferSize;
   if(fileSize <= bufferSize)
   {
     actualSize = fileSize;
@@ -229,5 +240,26 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
     return {};
   }
   return MakeErrorResult(-8, fmt::format("ValidateDirectoryWritePermission() Error: User does not have write permissions to path '{}'", path.string()));
+}
+
+std::pair<bool, int32> IsUtf8(const std::string& filePath)
+{
+  FILE* f = fopen(filePath.c_str(), "rb");
+  if(nullptr == f)
+  {
+    return {false, -1};
+  }
+  std::array<uint8, 3> buf = {0, 0, 0};
+  if(fread(buf.data(), 1, 3, f) != 3)
+  {
+    std::ignore = fclose(f);
+    return {false, -1};
+  }
+  std::ignore = fclose(f);
+  if(buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF)
+  {
+    return {true, 0};
+  }
+  return {false, 0};
 }
 } // namespace nx::core::FileUtilities
