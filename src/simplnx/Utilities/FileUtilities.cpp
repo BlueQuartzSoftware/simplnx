@@ -242,9 +242,9 @@ Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile)
   return MakeErrorResult(-8, fmt::format("ValidateDirectoryWritePermission() Error: User does not have write permissions to path '{}'", path.string()));
 }
 
-std::pair<bool, int32> IsUtf8(const std::string& filePath)
+std::pair<bool, int32> IsUtf8(const fs::path& filePath)
 {
-  FILE* f = fopen(filePath.c_str(), "rb");
+  FILE* f = fopen(filePath.string().c_str(), "rb");
   if(nullptr == f)
   {
     return {false, -1};
