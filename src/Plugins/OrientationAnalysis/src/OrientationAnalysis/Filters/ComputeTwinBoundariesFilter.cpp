@@ -57,7 +57,7 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)", "Degree of tolerance for angular distance from the [111] axis", 0.0f));
   params.insert(std::make_unique<Float32Parameter>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)", "Degree of tolerance for angular deviation from 60 degrees", 0.0f));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundariesArrayType_Key, "Output Type for Twin Boundaries Array",
-                                                   "The Twin Boundaries Array is essentially a mask; This allows for determining how the mask is stored", 0ULL,
+                                                   "The Twin Boundaries Array is essentially a mask; This allows for determining how the mask is stored; uint8 recommended.", 0ULL,
                                                    ChoicesParameter::Choices{"boolean", "uint8"}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
@@ -81,8 +81,11 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesName_Key, "Twin Boundaries Array name", "", "Twin Boundaries"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesIncoherenceName_Key, "Twin Boundaries Incoherence Array name", "", "Twin Boundaries Incoherence"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesName_Key, "Twin Boundaries Array name",
+                                                          "The name of the array that will act as a mask for which triangles do make up a twin boundary (true)", "Twin Boundaries"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_TwinBoundariesIncoherenceName_Key, "Twin Boundaries Incoherence Array name",
+      "The name of array that contains the crystal direction parallel to the Face normal determined relative to the misorientation; values are 180 by default", "Twin Boundaries Incoherence"));
 
   params.linkParameters(k_FindCoherence_Key, k_FaceNormalsArrayPath_Key, true);
   params.linkParameters(k_FindCoherence_Key, k_TwinBoundariesIncoherenceName_Key, true);

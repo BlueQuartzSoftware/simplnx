@@ -151,7 +151,8 @@ class CalculateTwinBoundaryWithIncoherenceImpl
 public:
   CalculateTwinBoundaryWithIncoherenceImpl(float32 angtol, float32 axistol, const Int32AbstractDataStore& faceLabels, const Float64AbstractDataStore& faceNormals,
                                            const Float32AbstractDataStore& avgQuats, const Int32AbstractDataStore& featurePhases, const UInt32AbstractDataStore& crystalStructures,
-                                           std::unique_ptr<MaskCompare>& twinBoundaries, Float32AbstractDataStore& twinBoundaryIncoherence, const std::atomic_bool& shouldCancel)
+                                           std::unique_ptr<MaskCompare>& twinBoundaries, Float32AbstractDataStore& twinBoundaryIncoherence, const std::atomic_bool& shouldCancel,
+                                           std::atomic_bool& hasNaN)
   : m_AxisTol(axistol)
   , m_AngTol(angtol)
   , m_FaceLabels(faceLabels)
@@ -162,6 +163,7 @@ public:
   , m_TwinBoundaryIncoherence(twinBoundaryIncoherence)
   , m_CrystalStructures(crystalStructures)
   , m_ShouldCancel(shouldCancel)
+  , m_HasNaN(hasNaN)
   , m_OrientationOps(LaueOps::GetAllOrientationOps())
   {
   }
@@ -192,6 +194,7 @@ public:
 
         if(normals.hasNaN())
         {
+          m_HasNaN.store(true);
           continue;
         }
 
@@ -222,6 +225,7 @@ private:
   std::unique_ptr<MaskCompare>& m_TwinBoundaries;
   Float32AbstractDataStore& m_TwinBoundaryIncoherence;
   const std::atomic_bool& m_ShouldCancel;
+  std::atomic_bool& m_HasNaN;
   std::vector<LaueOps::Pointer> m_OrientationOps;
 };
 
@@ -333,11 +337,17 @@ Result<> ComputeTwinBoundaries::operator()()
   dataAlg.setRange(0, faceLabels.getNumberOfTuples());
   if(m_InputValues->FindCoherence)
   {
+    std::atomic_bool hasNaN = false;
     const auto& faceNormals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->FaceNormalsArrayPath)->getDataStoreRef();
     auto& twinBoundaryIncoherence = m_DataStructure.getDataAs<Float32Array>(m_InputValues->TwinBoundaryIncoherenceArrayPath)->getDataStoreRef();
     twinBoundaryIncoherence.fill(180.0f); // For backwards compatibility
-    dataAlg.execute(
-        CalculateTwinBoundaryWithIncoherenceImpl(angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundaries, twinBoundaryIncoherence, m_ShouldCancel));
+    dataAlg.execute(CalculateTwinBoundaryWithIncoherenceImpl(angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundaries, twinBoundaryIncoherence,
+                                                             m_ShouldCancel, hasNaN));
+
+    if(hasNaN.load())
+    {
+      return MakeWarningVoidResult(-93210, fmt::format("NaNs were detected in the normals array ({}). These values were marked false.", m_InputValues->FaceNormalsArrayPath.toString()));
+    }
   }
   else
   {
