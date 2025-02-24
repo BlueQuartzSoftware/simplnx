@@ -450,6 +450,10 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   }
 
   auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
+  if(nullptr == store)
+  {
+    return MakeErrorResult(-267, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'", path.toString(), dataFormat));
+  }
   auto dataArray = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
   if(dataArray == nullptr)
   {
