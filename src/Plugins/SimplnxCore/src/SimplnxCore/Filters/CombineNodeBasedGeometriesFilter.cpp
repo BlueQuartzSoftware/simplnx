@@ -1,6 +1,7 @@
 #include "CombineNodeBasedGeometriesFilter.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -28,37 +29,7 @@ using namespace nx::core;
 
 namespace
 {
-// struct ElementCounts
-//{
-//   usize verticesCount;
-//   std::optional<usize> edgeCount;
-//   std::optional<usize> faceCount;
-//   std::optional<usize> polyhedraCount;
-// };
-//
-// template <class NodeGeom>
-// ElementCounts GetElementCounts(const NodeGeom& nodeGeom)
-//{
-//   std::optional<usize> edgeCount;
-//   std::optional<usize> faceCount;
-//   std::optional<usize> polyhedraCount;
-//   if constexpr(std::is_base_of_v<INodeGeometry3D, NodeGeom>)
-//   {
-//     polyhedraCount = nodeGeom.getNumberOfPolyhedra();
-//   }
-//   if constexpr(std::is_base_of_v<INodeGeometry2D, NodeGeom>)
-//   {
-//     faceCount = nodeGeom.getNumberOfFaces();
-//   }
-//   if constexpr(std::is_base_of_v<INodeGeometry1D, NodeGeom>)
-//   {
-//     edgeCount = nodeGeom.getNumberOfEdges();
-//   }
-//
-//   return CellCounts(nodeGeom.getNumberOfVertices(), edgeCount, faceCount, polyhedraCount);
-// }
-
-struct DataArraySpec
+struct GeometryArrayInfo
 {
   std::string name;
   std::vector<usize> compDims;
@@ -67,11 +38,11 @@ struct DataArraySpec
 };
 
 template <typename NodeGeomType, typename GetArrayFunc, typename GetAttrMatrixFunc>
-std::tuple<bool, bool, std::vector<DataArraySpec>> FindGeometryElements(const IGeometry* geom, GetArrayFunc getArray, GetAttrMatrixFunc getAttrMatrix)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(const IGeometry* geom, GetArrayFunc getArray, GetAttrMatrixFunc getAttrMatrix)
 {
   bool arrayExists = false;
   bool attrMatrixExists = false;
-  std::vector<DataArraySpec> dataArraySpecs;
+  std::vector<GeometryArrayInfo> geometryArraysInfo;
 
   // Perform dynamic_cast to the specific geometry type
   const auto* nodeGeomPtr = dynamic_cast<const NodeGeomType*>(geom);
@@ -89,47 +60,49 @@ std::tuple<bool, bool, std::vector<DataArraySpec>> FindGeometryElements(const IG
       for(const auto& item : *attrMatrix)
       {
         auto* iDataArray = dynamic_cast<IDataArray*>(item.second.get());
+        auto* iNeighborList = dynamic_cast<INeighborList*>(item.second.get());
         auto* iArray = dynamic_cast<IArray*>(item.second.get());
         if(iDataArray != nullptr)
         {
-          dataArraySpecs.push_back({iDataArray->getName(), iDataArray->getComponentShape(), iDataArray->getArrayType(), iDataArray->getDataType()});
+          geometryArraysInfo.push_back({iDataArray->getName(), iDataArray->getComponentShape(), iDataArray->getArrayType(), iDataArray->getDataType()});
+        }
+        else if(iNeighborList != nullptr)
+        {
+          geometryArraysInfo.push_back({iNeighborList->getName(), iNeighborList->getComponentShape(), iNeighborList->getArrayType(), iNeighborList->getDataType()});
         }
         else if(iArray != nullptr)
         {
-          if(iArray != nullptr)
-          {
-            dataArraySpecs.push_back({iArray->getName(), iArray->getComponentShape(), iArray->getArrayType(), {}});
-          }
+          geometryArraysInfo.push_back({iArray->getName(), iArray->getComponentShape(), iArray->getArrayType(), {}});
         }
       }
     }
   }
 
-  return std::make_tuple(arrayExists, attrMatrixExists, dataArraySpecs);
+  return std::make_tuple(arrayExists, attrMatrixExists, geometryArraysInfo);
 }
 
-std::tuple<bool, bool, std::vector<DataArraySpec>> FindVertexElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindVertexElements(const IGeometry* geom)
 {
   auto getVerticesArrayFunc = [](const INodeGeometry0D* ptr) -> auto { return ptr->getVertices(); };
   auto getVertexAttrMatrixFunc = [](const INodeGeometry0D* ptr) -> auto { return ptr->getVertexAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry0D>(geom, getVerticesArrayFunc, getVertexAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<DataArraySpec>> FindEdgeElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindEdgeElements(const IGeometry* geom)
 {
   auto getEdgesArrayFunc = [](const INodeGeometry1D* ptr) -> auto { return ptr->getEdges(); };
   auto getEdgeAttrMatrixFunc = [](const INodeGeometry1D* ptr) -> auto { return ptr->getEdgeAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry1D>(geom, getEdgesArrayFunc, getEdgeAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<DataArraySpec>> FindFaceElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindFaceElements(const IGeometry* geom)
 {
   auto getFacesArrayFunc = [](const INodeGeometry2D* ptr) -> auto { return ptr->getFaces(); };
   auto getFaceAttrMatrixFunc = [](const INodeGeometry2D* ptr) -> auto { return ptr->getFaceAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry2D>(geom, getFacesArrayFunc, getFaceAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<DataArraySpec>> FindPolyElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindPolyElements(const IGeometry* geom)
 {
   auto getPolyArrayFunc = [](const INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedra(); };
   auto getPolyAttrMatrixFunc = [](const INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedraAttributeMatrix(); };
@@ -138,7 +111,7 @@ std::tuple<bool, bool, std::vector<DataArraySpec>> FindPolyElements(const IGeome
 
 /**
  * Validates that the given geometry element exists across all input geometries.  Returns an error if the element exists in some geometries but not others.
- * @param elementsExist The vector of optional DataArraySpec instances.  If the optional does not have a value, then that data array does not exist for the input geometry at that index.
+ * @param elementsExist The vector of optional GeometryArrayInfo instances.  If the optional does not have a value, then that data array does not exist for the input geometry at that index.
  * @param inputGeometryPaths The paths to the input geometries (used for a more specific error message)
  * @return
  */
@@ -187,7 +160,7 @@ Result<bool> ValidateGeometryElementExists(const std::vector<bool>& elementsExis
   return MakeErrorResult<bool>(-1, oss.str());
 }
 
-Result<bool> ValidateGeometryElementExists(const std::vector<bool>& elementsExist, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
+Result<bool> DoesGeometryElementExist(const std::vector<bool>& elementsExist, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
 {
   auto result = ValidateGeometryElementExists(elementsExist, inputGeometryPaths);
   if(result.invalid())
@@ -201,102 +174,128 @@ Result<bool> ValidateGeometryElementExists(const std::vector<bool>& elementsExis
   return {result.value()};
 }
 
-Result<bool> ValidateGeometryElementExists(const std::vector<std::optional<DataArraySpec>>& elementsSpecs, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
+Result<bool> DoesGeometryElementExist(const std::vector<std::optional<GeometryArrayInfo>>& arraysInfo, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
 {
-  std::vector<bool> bools(elementsSpecs.size());
-  std::transform(elementsSpecs.begin(), elementsSpecs.end(), bools.begin(), [](const std::optional<DataArraySpec>& opt) -> bool { return opt.has_value(); });
-  return ValidateGeometryElementExists(bools, inputGeometryPaths, arrayDescription);
+  std::vector<bool> bools(arraysInfo.size());
+  std::transform(arraysInfo.begin(), arraysInfo.end(), bools.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> bool { return opt.has_value(); });
+  return DoesGeometryElementExist(bools, inputGeometryPaths, arrayDescription);
 }
 
-Result<bool> ValidateGeometryElementArrayTypes(const std::vector<std::optional<DataArraySpec>>& elementsSpecs, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
+template <typename Getter>
+auto FindInconsistentDataArrayProperty(const std::vector<GeometryArrayInfo>& arraysInfo, Getter getter)
 {
-  bool allSameArrayType = std::all_of(elementsSpecs.begin(), elementsSpecs.end(), [elementsSpecs](const std::optional<DataArraySpec>& spec) {
-    if(spec.has_value())
+  if(arraysInfo.empty())
+  {
+    return arraysInfo.end();
+  }
+
+  const auto& firstElementInfo = arraysInfo[0];
+  return std::find_if_not(arraysInfo.begin(), arraysInfo.end(), [&firstElementInfo, getter](const GeometryArrayInfo& arrayInfo) { return getter(arrayInfo) == getter(firstElementInfo); });
+}
+
+Result<> ValidateDataArrayTypes(const std::vector<GeometryArrayInfo>& arraysInfo)
+{
+  auto iter = FindInconsistentDataArrayProperty(arraysInfo, [](const GeometryArrayInfo& arrayInfo) { return arrayInfo.arrayType; });
+  if(iter != arraysInfo.end())
+  {
+    auto first = arraysInfo[0];
+    auto arrayInfo = *iter;
+    return MakeErrorResult(to_underlying(CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementArrayTypes),
+                           fmt::format("Object at path '{}' has array type '{}' and object at path '{}' has array type '{}'.  Both of these array types must be the same.", first.name,
+                                       DataObjectTypeToString(ConvertArrayTypeToDataObjectType(first.arrayType)), arrayInfo.name,
+                                       DataObjectTypeToString(ConvertArrayTypeToDataObjectType(arrayInfo.arrayType))));
+  }
+  return {};
+}
+
+Result<> ValidateDataArrayCompDimensions(const std::vector<GeometryArrayInfo>& arraysInfo)
+{
+  auto iter = FindInconsistentDataArrayProperty(arraysInfo, [](const GeometryArrayInfo& arrayInfo) { return arrayInfo.compDims; });
+  if(iter != arraysInfo.end())
+  {
+    auto first = arraysInfo[0];
+    auto arrayInfo = *iter;
+    return MakeErrorResult(to_underlying(CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementCompDims),
+                           fmt::format("Object at path '{}' has component dimensions '{}' and object at path '{}' has component dimensions '{}'.  Both of these component dimensions must be the same.",
+                                       first.name, fmt::join(first.compDims, "x"), arrayInfo.name, fmt::join(arrayInfo.compDims, "x")));
+  }
+  return {};
+}
+
+Result<> ValidateDataArrayDataTypes(const std::vector<GeometryArrayInfo>& arraysInfo)
+{
+  auto iter = FindInconsistentDataArrayProperty(arraysInfo, [](const GeometryArrayInfo& arrayInfo) { return arrayInfo.dataType; });
+  if(iter != arraysInfo.end())
+  {
+    auto first = arraysInfo[0];
+    auto arrayInfo = *iter;
+    std::string errMsg;
+    if(!first.dataType.has_value())
     {
-      return (spec.value().arrayType == elementsSpecs[0].value().arrayType);
+      errMsg = fmt::format("Object at path '{}' has no data type and object at path '{}' has data type '{}'.  Both of these data types must exist and be the same.", first.name, arrayInfo.name,
+                           DataTypeToString(arrayInfo.dataType.value()));
     }
-    return false;
-  });
-  return {allSameArrayType};
-}
-
-Result<bool> ValidateGeometryElementCompDimensions(const std::vector<std::optional<DataArraySpec>>& elementsSpecs, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
-{
-  bool allSameCompDims = std::all_of(elementsSpecs.begin(), elementsSpecs.end(), [elementsSpecs](const std::optional<DataArraySpec>& spec) {
-    if(spec.has_value())
+    else if(!arrayInfo.dataType.has_value())
     {
-      return (spec.value().compDims == elementsSpecs[0].value().compDims);
+      errMsg = fmt::format("Object at path '{}' has data type '{}' and object at path '{}' has no data type.  Both of these data types must exist and be the same.", first.name,
+                           DataTypeToString(first.dataType.value()), arrayInfo.name);
     }
-    return false;
-  });
-  return {allSameCompDims};
-}
-
-Result<bool> ValidateGeometryElementDataTypes(const std::vector<std::optional<DataArraySpec>>& elementsSpecs, const std::vector<DataPath>& inputGeometryPaths, const std::string& arrayDescription)
-{
-  bool allSameDataType = std::all_of(elementsSpecs.begin(), elementsSpecs.end(), [elementsSpecs](const std::optional<DataArraySpec>& spec) {
-    if(spec.has_value())
+    else
     {
-      return (spec.value().dataType == elementsSpecs[0].value().dataType);
+      errMsg = fmt::format("Object at path '{}' has data type '{}' and object at path '{}' has data type '{}'.  Both of these data types must be the same.", first.name,
+                           DataTypeToString(first.dataType.value()), arrayInfo.name, DataTypeToString(arrayInfo.dataType.value()));
     }
-    return false;
-  });
-  return {allSameDataType};
+
+    return MakeErrorResult(to_underlying(CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementDataTypes), errMsg);
+  }
+  return {};
 }
 
-Result<> AddSpecActions(const DataArraySpec& spec, const DataPath& outputGeomPath, const std::string attrMatrixName, OutputActions& actions)
+Result<> AddOutputArray(const GeometryArrayInfo& arrayInfo, const DataPath& outputGeomPath, const std::string& attrMatrixName, OutputActions& actions)
 {
-  switch(spec.arrayType)
+  switch(arrayInfo.arrayType)
   {
   case IArray::ArrayType::DataArray: {
-    actions.appendAction(std::make_unique<CreateArrayAction>(spec.dataType.value(), std::vector<usize>{1}, spec.compDims, outputGeomPath.createChildPath(attrMatrixName).createChildPath(spec.name)));
+    actions.appendAction(
+        std::make_unique<CreateArrayAction>(arrayInfo.dataType.value(), std::vector<usize>{1}, arrayInfo.compDims, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
   case IArray::ArrayType::StringArray: {
-    actions.appendAction(std::make_unique<CreateStringArrayAction>(std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(spec.name)));
+    actions.appendAction(std::make_unique<CreateStringArrayAction>(std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    actions.appendAction(std::make_unique<CreateNeighborListAction>(spec.dataType.value(), 1, outputGeomPath.createChildPath(attrMatrixName).createChildPath(spec.name)));
+    actions.appendAction(std::make_unique<CreateNeighborListAction>(arrayInfo.dataType.value(), 1, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
   case IArray::ArrayType::Any: {
-    return MakeErrorResult(
-        -56, fmt::format("Geometry at path '{}' has array with name '{}' that has array type 'Any'.  This should NEVER happen.  Please contact the developers.", spec.name, outputGeomPath.toString()));
+    return MakeErrorResult(-56, fmt::format("Geometry at path '{}' has array with name '{}' that has array type 'Any'.  This should NEVER happen.  Please contact the developers.", arrayInfo.name,
+                                            outputGeomPath.toString()));
   }
   }
 
   return {};
 }
 
-template <class NodeGeom>
-Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const std::vector<DataArraySpec>& vertexDataArraySpecs, bool edgesArrayExists, bool edgeAttrMatrixExists,
-                                          const std::vector<DataArraySpec>& edgeDataArraySpecs, bool facesArrayExists, bool faceAttrMatrixExists, const std::vector<DataArraySpec>& faceDataArraySpecs,
-                                          const std::vector<DataArraySpec>& polyDataArraySpecs, OutputActions& actions)
+Result<> CreateINodeGeometry0DObjects(const DataPath& outputGeomPath, const std::vector<GeometryArrayInfo>& vertexDataArraysInfo, OutputActions& actions)
 {
-  if constexpr(std::is_base_of_v<INodeGeometry0D, NodeGeom>)
+  for(const auto& vertexDataArrayInfo : vertexDataArraysInfo)
   {
-    for(const auto& vertexDataArraySpec : vertexDataArraySpecs)
+    auto result = AddOutputArray(vertexDataArrayInfo, outputGeomPath, INodeGeometry0D::k_VertexAttributeMatrixName, actions);
+    if(result.invalid())
     {
-      auto result = AddSpecActions(vertexDataArraySpec, outputGeomPath, INodeGeometry0D::k_VertexAttributeMatrixName, actions);
-      if(result.invalid())
-      {
-        return result;
-      }
+      return result;
     }
   }
-  if constexpr(std::is_base_of_v<INodeGeometry1D, NodeGeom>)
-  {
-    for(const auto& edgeDataArraySpec : edgeDataArraySpecs)
-    {
-      auto result = AddSpecActions(edgeDataArraySpec, outputGeomPath, INodeGeometry1D::k_EdgeAttributeMatrixName, actions);
-      if(result.invalid())
-      {
-        return result;
-      }
-    }
-  }
-  if constexpr(std::is_base_of_v<INodeGeometry2D, NodeGeom>)
+
+  return {};
+}
+
+template <class INodeGeom>
+Result<> CreateINodeGeometry1DObjects(const DataPath& outputGeomPath, bool edgesArrayExists, bool edgeAttrMatrixExists, const std::vector<GeometryArrayInfo>& edgeDataArraysInfo,
+                                      OutputActions& actions)
+{
+  if constexpr(!std::is_same_v<INodeGeometry1D, INodeGeom>)
   {
     // Create Edge Attribute Matrix and Edges Array
     if(edgeAttrMatrixExists)
@@ -307,17 +306,25 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
     {
       actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{2}, outputGeomPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName)));
     }
+  }
 
-    for(const auto& faceDataArraySpec : faceDataArraySpecs)
+  for(const auto& edgeDataArrayInfo : edgeDataArraysInfo)
+  {
+    auto result = AddOutputArray(edgeDataArrayInfo, outputGeomPath, INodeGeometry1D::k_EdgeAttributeMatrixName, actions);
+    if(result.invalid())
     {
-      auto result = AddSpecActions(faceDataArraySpec, outputGeomPath, INodeGeometry2D::k_FaceAttributeMatrixName, actions);
-      if(result.invalid())
-      {
-        return result;
-      }
+      return result;
     }
   }
-  if constexpr(std::is_base_of_v<INodeGeometry3D, NodeGeom>)
+
+  return {};
+}
+
+template <class NodeGeom, class INodeGeom>
+Result<> CreateINodeGeometry2DObjects(const DataPath& outputGeomPath, bool facesArrayExists, bool faceAttrMatrixExists, const std::vector<GeometryArrayInfo>& faceDataArraysInfo,
+                                      OutputActions& actions)
+{
+  if constexpr(!std::is_same_v<INodeGeometry2D, INodeGeom>)
   {
     // Create Face Attribute Matrix and Faces Array
     if(faceAttrMatrixExists)
@@ -337,18 +344,100 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
                                                                  outputGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName)));
       }
     }
+  }
 
-    for(const auto& polyDataArraySpec : polyDataArraySpecs)
+  for(const auto& faceDataArrayInfo : faceDataArraysInfo)
+  {
+    auto result = AddOutputArray(faceDataArrayInfo, outputGeomPath, INodeGeometry2D::k_FaceAttributeMatrixName, actions);
+    if(result.invalid())
     {
-      auto result = AddSpecActions(polyDataArraySpec, outputGeomPath, INodeGeometry3D::k_PolyhedronDataName, actions);
-      if(result.invalid())
-      {
-        return result;
-      }
+      return result;
     }
   }
 
   return {};
+}
+
+Result<> CreateINodeGeometry3DObjects(const DataPath& outputGeomPath, const std::vector<GeometryArrayInfo>& polyDataArraysInfo, OutputActions& actions)
+{
+  for(const auto& polyDataArrayInfo : polyDataArraysInfo)
+  {
+    auto result = AddOutputArray(polyDataArrayInfo, outputGeomPath, INodeGeometry3D::k_PolyhedronDataName, actions);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  return {};
+}
+
+template <class NodeGeom, class INodeGeom>
+Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const std::vector<GeometryArrayInfo>& vertexDataArraysInfo, bool edgesArrayExists, bool edgeAttrMatrixExists,
+                                          const std::vector<GeometryArrayInfo>& edgeDataArraysInfo, bool facesArrayExists, bool faceAttrMatrixExists,
+                                          const std::vector<GeometryArrayInfo>& faceDataArraysInfo, const std::vector<GeometryArrayInfo>& polyDataArraysInfo, OutputActions& actions)
+{
+  if constexpr(std::is_base_of_v<INodeGeometry3D, NodeGeom>)
+  {
+    auto result = CreateINodeGeometry3DObjects(outputGeomPath, polyDataArraysInfo, actions);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  if constexpr(std::is_base_of_v<INodeGeometry2D, NodeGeom>)
+  {
+    auto result = CreateINodeGeometry2DObjects<NodeGeom, INodeGeom>(outputGeomPath, facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, actions);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  if constexpr(std::is_base_of_v<INodeGeometry1D, NodeGeom>)
+  {
+    auto result = CreateINodeGeometry1DObjects<INodeGeom>(outputGeomPath, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo, actions);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  if constexpr(std::is_base_of_v<INodeGeometry0D, NodeGeom>)
+  {
+    auto result = CreateINodeGeometry0DObjects(outputGeomPath, vertexDataArraysInfo, actions);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+
+  return {};
+}
+
+template <typename FindFunc>
+void RecordElementPresence(FindFunc findFunc, const IGeometry* geom, usize i, usize totalCount, std::vector<bool>& arraysExist, std::vector<bool>& attrMatricesExist,
+                           std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>>& dataArraysExistMap)
+{
+  // Call the provided find function, which returns a tuple.
+  auto [arrayExists, attrMatrixExists, dataArraysInfo] = findFunc(geom);
+
+  // Update the boolean arrays.
+  arraysExist[i] = arrayExists;
+  attrMatricesExist[i] = attrMatrixExists;
+
+  // Update the map entries for each data array info.
+  for(const auto& arrayInfo : dataArraysInfo)
+  {
+    const std::string& arrayName = arrayInfo.name;
+    auto& arraysInfo = dataArraysExistMap[arrayName];
+    if(arraysInfo.empty())
+    {
+      arraysInfo.resize(totalCount);
+    }
+    arraysInfo[i] = arrayInfo;
+  }
 }
 } // namespace
 
@@ -434,16 +523,16 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   std::optional<IGeometry::Type> geometryTypeOpt;
   std::vector<bool> vertexArraysExist(inputGeometryPaths.size());
   std::vector<bool> vertexAttrMatricesExist(inputGeometryPaths.size());
-  std::map<std::string, std::vector<std::optional<DataArraySpec>>> vertexDataArraysExistMap;
+  std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> vertexDataArraysExistMap;
   std::vector<bool> edgeArraysExist(inputGeometryPaths.size());
   std::vector<bool> edgeAttrMatricesExist(inputGeometryPaths.size());
-  std::map<std::string, std::vector<std::optional<DataArraySpec>>> edgeDataArraysExistMap;
+  std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> edgeDataArraysExistMap;
   std::vector<bool> faceArraysExist(inputGeometryPaths.size());
   std::vector<bool> faceAttrMatricesExist(inputGeometryPaths.size());
-  std::map<std::string, std::vector<std::optional<DataArraySpec>>> faceDataArraysExistMap;
+  std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> faceDataArraysExistMap;
   std::vector<bool> polyArraysExist(inputGeometryPaths.size());
   std::vector<bool> polyAttrMatricesExist(inputGeometryPaths.size());
-  std::map<std::string, std::vector<std::optional<DataArraySpec>>> polyDataArraysExistMap;
+  std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> polyDataArraysExistMap;
   for(usize i = 0; i < inputGeometryPaths.size(); ++i)
   {
     const auto& inputGeometryPath = inputGeometryPaths[i];
@@ -454,6 +543,22 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
           to_underlying(CombineNodeBasedGeometries::ErrorCodes::ObjectNotAGeometry),
           fmt::format("The data object at data path '{}' is not a geometry.  All data objects MUST be geometries with the same geometry type.", inputGeometryPath.toString()))};
     }
+    const auto* iNodeGeomPtr = dataStructure.getDataAs<INodeGeometry0D>(inputGeometryPath);
+    if(iNodeGeomPtr == nullptr)
+    {
+      return {
+          MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::ObjectNotANodeGeometry),
+                                         fmt::format("The data object at data path '{}' is not a node geometry.  Only node geometries are supported by this filter.", inputGeometryPath.toString()))};
+    }
+
+    auto* verticesArray = iNodeGeomPtr->getVertices();
+    if(verticesArray == nullptr)
+    {
+      // There are no vertices, this is an error
+      return {MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoVertices),
+                                             fmt::format("The chosen node geometries do not have a shared vertex array.  All node geometries MUST have a shared vertex array."))};
+    }
+
     auto& iGeom = *iGeomPtr;
 
     if(!geometryTypeOpt.has_value())
@@ -469,223 +574,202 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
                       inputGeometryPath.toString(), GeometryTypeToString(iGeom.getGeomType()), GeometryTypeToString(geometryTypeOpt.value())))};
     }
 
-    auto [vertexArrayExists, vertexAttrMatrixExists, vertexDataArraysSpec] = FindVertexElements(iGeomPtr);
-    vertexArraysExist[i] = vertexArrayExists;
-    vertexAttrMatricesExist[i] = vertexAttrMatrixExists;
-    for(const auto& daSpec : vertexDataArraysSpec)
-    {
-      const std::string vertexDataArrayName = daSpec.name;
-      auto& specs = vertexDataArraysExistMap[vertexDataArrayName];
-      if(specs.empty())
-      {
-        specs.resize(inputGeometryPaths.size());
-      }
-      specs[i] = daSpec;
-    }
+    // Determine if the vertex data array and attribute matrix exist or not for this geometry, and update the boolean vectors to record that.  Also update the std::map
+    // to record which vertex data arrays are found.  This allows us to keep track of what vertex data exists in which geometries and later check for inconsistencies.
+    RecordElementPresence(FindVertexElements, iGeomPtr, i, inputGeometryPaths.size(), vertexArraysExist, vertexAttrMatricesExist, vertexDataArraysExistMap);
 
-    auto [edgeArrayExists, edgeAttrMatrixExists, edgeDataArraysSpec] = FindEdgeElements(iGeomPtr);
-    edgeArraysExist[i] = edgeArrayExists;
-    edgeAttrMatricesExist[i] = edgeAttrMatrixExists;
-    for(const auto& daSpec : edgeDataArraysSpec)
-    {
-      const std::string edgeDataArrayName = daSpec.name;
-      auto& specs = edgeDataArraysExistMap[edgeDataArrayName];
-      if(specs.empty())
-      {
-        specs.resize(inputGeometryPaths.size());
-      }
-      specs[i] = daSpec;
-    }
+    // Determine if the edge data array and attribute matrix exist or not for this geometry, and update the boolean vectors to record that.  Also update the std::map
+    // to record which edge data arrays are found.  This allows us to keep track of what edge data exists in which geometries and later check for inconsistencies.
+    RecordElementPresence(FindEdgeElements, iGeomPtr, i, inputGeometryPaths.size(), edgeArraysExist, edgeAttrMatricesExist, edgeDataArraysExistMap);
 
-    auto [faceArrayExists, faceAttrMatrixExists, faceDataArraysSpec] = FindFaceElements(iGeomPtr);
-    faceArraysExist[i] = faceArrayExists;
-    faceAttrMatricesExist[i] = faceAttrMatrixExists;
-    for(const auto& daSpec : faceDataArraysSpec)
-    {
-      const std::string faceDataArrayName = daSpec.name;
-      auto& specs = faceDataArraysExistMap[faceDataArrayName];
-      if(specs.empty())
-      {
-        specs.resize(inputGeometryPaths.size());
-      }
-      specs[i] = daSpec;
-    }
+    // Determine if the face data array and attribute matrix exist or not for this geometry, and update the boolean vectors to record that.  Also update the std::map
+    // to record which face data arrays are found.  This allows us to keep track of what face data exists in which geometries and later check for inconsistencies.
+    RecordElementPresence(FindFaceElements, iGeomPtr, i, inputGeometryPaths.size(), faceArraysExist, faceAttrMatricesExist, faceDataArraysExistMap);
 
-    auto [polyArrayExists, polyAttrMatrixExists, polyDataArraysSpec] = FindPolyElements(iGeomPtr);
-    polyArraysExist[i] = polyArrayExists;
-    polyAttrMatricesExist[i] = polyAttrMatrixExists;
-    for(const auto& daSpec : polyDataArraysSpec)
-    {
-      const std::string polyDataArrayName = daSpec.name;
-      auto& specs = polyDataArraysExistMap[polyDataArrayName];
-      if(specs.empty())
-      {
-        specs.resize(inputGeometryPaths.size());
-      }
-      specs[i] = daSpec;
-    }
+    // Determine if the polyhedron data array and attribute matrix exist or not for this geometry, and update the boolean vectors to record that.  Also update the std::map
+    // to record which polyhedron data arrays are found.  This allows us to keep track of what polyhedron data exists in which geometries and later check for inconsistencies.
+    RecordElementPresence(FindPolyElements, iGeomPtr, i, inputGeometryPaths.size(), polyArraysExist, polyAttrMatricesExist, polyDataArraysExistMap);
   }
 
-  auto result = ValidateGeometryElementExists(vertexArraysExist, inputGeometryPaths, "a vertices array");
-  if(result.invalid())
+  auto boolResult = DoesGeometryElementExist(vertexArraysExist, inputGeometryPaths, "a vertices array");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool vertexArrayExists = result.value();
 
-  result = ValidateGeometryElementExists(vertexAttrMatricesExist, inputGeometryPaths, "a vertex attribute matrix");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(vertexAttrMatricesExist, inputGeometryPaths, "a vertex attribute matrix");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool vertexAttrMatrixExists = result.value();
 
-  std::vector<DataArraySpec> vertexDataArraySpecs;
-  for(const auto& [arrayName, arrayExists] : vertexDataArraysExistMap)
+  std::vector<GeometryArrayInfo> vertexDataArraysInfo;
+  for(const auto& [arrayName, arrayInfoOpts] : vertexDataArraysExistMap)
   {
     std::string arrayDesc = fmt::format("vertex data array '{}'", arrayName);
-    result = ValidateGeometryElementExists(arrayExists, inputGeometryPaths, arrayDesc);
+    boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
+    if(boolResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    }
+
+    if(!boolResult.value())
+    {
+      continue;
+    }
+
+    std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
+    std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
+
+    auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementArrayTypes(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementCompDimensions(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementDataTypes(arrayExists, inputGeometryPaths, arrayDesc);
-    if(result.invalid())
-    {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
-    }
-    vertexDataArraySpecs.push_back(arrayExists[0].value());
+    vertexDataArraysInfo.push_back(arrayInfos[0]);
   }
 
-  result = ValidateGeometryElementExists(edgeArraysExist, inputGeometryPaths, "an edges array");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(edgeArraysExist, inputGeometryPaths, "an edges array");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool edgesArrayExists = result.value();
+  bool edgesArrayExists = boolResult.value();
 
-  result = ValidateGeometryElementExists(edgeAttrMatricesExist, inputGeometryPaths, "an edge attribute matrix");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(edgeAttrMatricesExist, inputGeometryPaths, "an edge attribute matrix");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool edgeAttrMatrixExists = result.value();
+  bool edgeAttrMatrixExists = boolResult.value();
 
-  std::vector<DataArraySpec> edgeDataArraySpecs;
-  for(const auto& [arrayName, arrayExists] : edgeDataArraysExistMap)
+  std::vector<GeometryArrayInfo> edgeDataArraysInfo;
+  for(const auto& [arrayName, arrayInfoOpts] : edgeDataArraysExistMap)
   {
     std::string arrayDesc = fmt::format("edge data array '{}'", arrayName);
-    result = ValidateGeometryElementExists(arrayExists, inputGeometryPaths, arrayDesc);
+    boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
+    if(boolResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    }
+
+    std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
+    std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
+
+    auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementArrayTypes(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementCompDimensions(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementDataTypes(arrayExists, inputGeometryPaths, arrayDesc);
-    if(result.invalid())
-    {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
-    }
-    edgeDataArraySpecs.push_back(arrayExists[0].value());
+    edgeDataArraysInfo.push_back(arrayInfos[0]);
   }
 
-  result = ValidateGeometryElementExists(faceArraysExist, inputGeometryPaths, "a faces array");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(faceArraysExist, inputGeometryPaths, "a faces array");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool facesArrayExists = result.value();
+  bool facesArrayExists = boolResult.value();
 
-  result = ValidateGeometryElementExists(faceAttrMatricesExist, inputGeometryPaths, "a face attribute matrix");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(faceAttrMatricesExist, inputGeometryPaths, "a face attribute matrix");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
-  bool faceAttrMatrixExists = result.value();
+  bool faceAttrMatrixExists = boolResult.value();
 
-  std::vector<DataArraySpec> faceDataArraySpecs;
-  for(const auto& [arrayName, arrayExists] : faceDataArraysExistMap)
+  std::vector<GeometryArrayInfo> faceDataArraysInfo;
+  for(const auto& [arrayName, arrayInfoOpts] : faceDataArraysExistMap)
   {
     std::string arrayDesc = fmt::format("face data array '{}'", arrayName);
-    result = ValidateGeometryElementExists(arrayExists, inputGeometryPaths, arrayDesc);
+    boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
+    if(boolResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    }
+
+    std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
+    std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
+
+    auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementArrayTypes(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementCompDimensions(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementDataTypes(arrayExists, inputGeometryPaths, arrayDesc);
-    if(result.invalid())
-    {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
-    }
-    faceDataArraySpecs.push_back(arrayExists[0].value());
+    faceDataArraysInfo.push_back(arrayInfos[0]);
   }
 
-  result = ValidateGeometryElementExists(polyArraysExist, inputGeometryPaths, "a polyhedra array");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(polyArraysExist, inputGeometryPaths, "a polyhedra array");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
-  result = ValidateGeometryElementExists(polyAttrMatricesExist, inputGeometryPaths, "a polyhedra attribute matrix");
-  if(result.invalid())
+  boolResult = DoesGeometryElementExist(polyAttrMatricesExist, inputGeometryPaths, "a polyhedra attribute matrix");
+  if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
-  std::vector<DataArraySpec> polyDataArraySpecs;
-  for(const auto& [arrayName, arrayExists] : polyDataArraysExistMap)
+  std::vector<GeometryArrayInfo> polyDataArraysInfo;
+  for(const auto& [arrayName, arrayInfoOpts] : polyDataArraysExistMap)
   {
     std::string arrayDesc = fmt::format("polyhedra data array '{}'", arrayName);
-    result = ValidateGeometryElementExists(arrayExists, inputGeometryPaths, arrayDesc);
+    boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
+    if(boolResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    }
+
+    std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
+    std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
+
+    auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementArrayTypes(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementCompDimensions(arrayExists, inputGeometryPaths, arrayDesc);
+    result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
+      return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
-    result = ValidateGeometryElementDataTypes(arrayExists, inputGeometryPaths, arrayDesc);
-    if(result.invalid())
-    {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
-    }
-    polyDataArraySpecs.push_back(arrayExists[0].value());
+    polyDataArraysInfo.push_back(arrayInfos[0]);
   }
 
   OutputActions actions;
@@ -694,8 +778,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   {
   case IGeometry::Type::Vertex: {
     actions.appendAction(std::make_unique<CreateVertexGeometryAction>(outputGeometryPath, 1, VertexGeom::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<VertexGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                       faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<VertexGeom, INodeGeometry0D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                        facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -705,8 +789,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Edge: {
     actions.appendAction(std::make_unique<CreateEdgeGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, EdgeGeom::k_EdgeAttributeMatrixName,
                                                                     VertexGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<EdgeGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                     faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<EdgeGeom, INodeGeometry1D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                      facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -716,8 +800,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Triangle: {
     actions.appendAction(std::make_unique<CreateTriangleGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TriangleGeom::k_FaceAttributeMatrixName,
                                                                         VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<TriangleGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                         faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<TriangleGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                          facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -727,8 +811,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Quad: {
     actions.appendAction(std::make_unique<CreateQuadGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, QuadGeom::k_FaceAttributeMatrixName,
                                                                     VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<QuadGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                     faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<QuadGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                      facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -738,8 +822,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Tetrahedral: {
     actions.appendAction(std::make_unique<CreateTetrahedralGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TetrahedralGeom::k_PolyhedronDataName,
                                                                            VertexGeom::k_SharedVertexListName, TetrahedralGeom::k_SharedPolyhedronListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<TetrahedralGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                            faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<TetrahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                             facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -749,8 +833,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Hexahedral: {
     actions.appendAction(std::make_unique<CreateHexahedralGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, HexahedralGeom::k_PolyhedronDataName,
                                                                           VertexGeom::k_SharedVertexListName, HexahedralGeom::k_SharedPolyhedronListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<HexahedralGeom>(outputGeometryPath, vertexDataArraySpecs, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraySpecs, facesArrayExists,
-                                                                           faceAttrMatrixExists, faceDataArraySpecs, polyDataArraySpecs, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<HexahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                            facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};

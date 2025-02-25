@@ -43,7 +43,9 @@ public:
     NodeGeometryHasNoVertices = -458,
     DifferingGeometryTypes = -459,
     InconsistentGeometryElements = -460,
-    UnsupportedGeometryType = -461
+    InconsistentGeometryElementArrayTypes = -461,
+    InconsistentGeometryElementDataTypes = -462,
+    InconsistentGeometryElementCompDims = -463
   };
 
   Result<> operator()();
