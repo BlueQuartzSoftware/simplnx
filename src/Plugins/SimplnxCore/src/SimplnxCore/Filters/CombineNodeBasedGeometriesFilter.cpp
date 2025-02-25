@@ -520,7 +520,13 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
                                            fmt::format("Only one input geometry path has been chosen.  Please choose at least two input geometry paths."))};
   }
 
+  // Use an optional so that the first input geometry type sets the optional
+  // and subsequent input geometries' types are checked against the optional
   std::optional<IGeometry::Type> geometryTypeOpt;
+
+  // All of these structures are used to keep track of which attribute matrices
+  // and arrays exist in each input geometry.  These are then used later in preflight
+  // to check that all data is consistent across all the input geometries.
   std::vector<bool> vertexArraysExist(inputGeometryPaths.size());
   std::vector<bool> vertexAttrMatricesExist(inputGeometryPaths.size());
   std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> vertexDataArraysExistMap;
@@ -533,12 +539,16 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   std::vector<bool> polyArraysExist(inputGeometryPaths.size());
   std::vector<bool> polyAttrMatricesExist(inputGeometryPaths.size());
   std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>> polyDataArraysExistMap;
+
+  // Loop over all the input geometries, check that each one is a node geometry of the same type,
+  // and then record each geometry's vertex, edge, face, and polyhedra data in the various structures
   for(usize i = 0; i < inputGeometryPaths.size(); ++i)
   {
     const auto& inputGeometryPath = inputGeometryPaths[i];
     const auto* iGeomPtr = dataStructure.getDataAs<IGeometry>(inputGeometryPath);
     if(iGeomPtr == nullptr)
     {
+      // This is not a geometry
       return {MakeErrorResult<OutputActions>(
           to_underlying(CombineNodeBasedGeometries::ErrorCodes::ObjectNotAGeometry),
           fmt::format("The data object at data path '{}' is not a geometry.  All data objects MUST be geometries with the same geometry type.", inputGeometryPath.toString()))};
@@ -546,6 +556,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     const auto* iNodeGeomPtr = dataStructure.getDataAs<INodeGeometry0D>(inputGeometryPath);
     if(iNodeGeomPtr == nullptr)
     {
+      // This is not a node geometry
       return {
           MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::ObjectNotANodeGeometry),
                                          fmt::format("The data object at data path '{}' is not a node geometry.  Only node geometries are supported by this filter.", inputGeometryPath.toString()))};
@@ -554,20 +565,23 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     auto* verticesArray = iNodeGeomPtr->getVertices();
     if(verticesArray == nullptr)
     {
-      // There are no vertices, this is an error
+      // There are no vertices, which means this is not a valid node geometry
       return {MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoVertices),
                                              fmt::format("The chosen node geometries do not have a shared vertex array.  All node geometries MUST have a shared vertex array."))};
     }
 
     auto& iGeom = *iGeomPtr;
 
+    // If the optional has not been set yet, set it
     if(!geometryTypeOpt.has_value())
     {
       geometryTypeOpt = iGeom.getGeomType();
     }
 
+    // Compare the current geometry's type with the optional to verify the types are the same
     if(iGeom.getGeomType() != geometryTypeOpt.value())
     {
+      // This geometry's type is not the same as the other geometries' types
       return {MakeErrorResult<OutputActions>(
           to_underlying(CombineNodeBasedGeometries::ErrorCodes::DifferingGeometryTypes),
           fmt::format("The geometry at data path '{}' has geometry type '{}', which differs from other geometries that have geometry type '{}'.  All geometries MUST have the same geometry type.",
@@ -591,21 +605,25 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     RecordElementPresence(FindPolyElements, iGeomPtr, i, inputGeometryPaths.size(), polyArraysExist, polyAttrMatricesExist, polyDataArraysExistMap);
   }
 
+  // Determine whether the vertex array exists in all geometries
   auto boolResult = DoesGeometryElementExist(vertexArraysExist, inputGeometryPaths, "a vertices array");
   if(boolResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
+  // Determine whether the vertex attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(vertexAttrMatricesExist, inputGeometryPaths, "a vertex attribute matrix");
   if(boolResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
+  // Determine whether the vertex data arrays are consistent across all geometries
   std::vector<GeometryArrayInfo> vertexDataArraysInfo;
   for(const auto& [arrayName, arrayInfoOpts] : vertexDataArraysExistMap)
   {
+    // Check that the vertex data array exists across all geometries
     std::string arrayDesc = fmt::format("vertex data array '{}'", arrayName);
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
@@ -613,6 +631,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
       return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
     }
 
+    // If it does not exist, move on to validating the next vertex data array
     if(!boolResult.value())
     {
       continue;
@@ -621,16 +640,19 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
     std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
 
+    // Validate that the vertex data array has the same ArrayType across all geometries
     auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the vertex data array has the same component dimensions across all geometries
     result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the vertex data array has the same DataType across all geometries
     result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
@@ -639,6 +661,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     vertexDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Determine whether the edge array exists in all geometries
   boolResult = DoesGeometryElementExist(edgeArraysExist, inputGeometryPaths, "an edges array");
   if(boolResult.invalid())
   {
@@ -646,6 +669,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   bool edgesArrayExists = boolResult.value();
 
+  // Determine whether the edge attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(edgeAttrMatricesExist, inputGeometryPaths, "an edge attribute matrix");
   if(boolResult.invalid())
   {
@@ -653,9 +677,11 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   bool edgeAttrMatrixExists = boolResult.value();
 
+  // Determine whether the edge data arrays are consistent across all geometries
   std::vector<GeometryArrayInfo> edgeDataArraysInfo;
   for(const auto& [arrayName, arrayInfoOpts] : edgeDataArraysExistMap)
   {
+    // Check that the edge data array exists across all geometries
     std::string arrayDesc = fmt::format("edge data array '{}'", arrayName);
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
@@ -663,19 +689,28 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
       return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
     }
 
+    // If it does not exist, move on to validating the next edge data array
+    if(!boolResult.value())
+    {
+      continue;
+    }
+
     std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
     std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
 
+    // Validate that the edge data array has the same ArrayType across all geometries
     auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the edge data array has the same component dimensions across all geometries
     result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the edge data array has the same DataType across all geometries
     result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
@@ -684,6 +719,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     edgeDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Determine whether the face array exists in all geometries
   boolResult = DoesGeometryElementExist(faceArraysExist, inputGeometryPaths, "a faces array");
   if(boolResult.invalid())
   {
@@ -691,6 +727,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   bool facesArrayExists = boolResult.value();
 
+  // Determine whether the face attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(faceAttrMatricesExist, inputGeometryPaths, "a face attribute matrix");
   if(boolResult.invalid())
   {
@@ -698,9 +735,11 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   bool faceAttrMatrixExists = boolResult.value();
 
+  // Determine whether the face data arrays are consistent across all geometries
   std::vector<GeometryArrayInfo> faceDataArraysInfo;
   for(const auto& [arrayName, arrayInfoOpts] : faceDataArraysExistMap)
   {
+    // Check that the face data array exists across all geometries
     std::string arrayDesc = fmt::format("face data array '{}'", arrayName);
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
@@ -708,19 +747,28 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
       return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
     }
 
+    // If it does not exist, move on to validating the next face data array
+    if(!boolResult.value())
+    {
+      continue;
+    }
+
     std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
     std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
 
+    // Validate that the face data array has the same ArrayType across all geometries
     auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the face data array has the same component dimensions across all geometries
     result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the face data array has the same DataType across all geometries
     result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
@@ -729,21 +777,25 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     faceDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Determine whether the polyhedra array exists in all geometries
   boolResult = DoesGeometryElementExist(polyArraysExist, inputGeometryPaths, "a polyhedra array");
   if(boolResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
+  // Determine whether the polyhedra attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(polyAttrMatricesExist, inputGeometryPaths, "a polyhedra attribute matrix");
   if(boolResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
   }
 
+  // Determine whether the polyhedra data arrays are consistent across all geometries
   std::vector<GeometryArrayInfo> polyDataArraysInfo;
   for(const auto& [arrayName, arrayInfoOpts] : polyDataArraysExistMap)
   {
+    // Check that the polyhedra data array exists across all geometries
     std::string arrayDesc = fmt::format("polyhedra data array '{}'", arrayName);
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
@@ -751,19 +803,28 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
       return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
     }
 
+    // If it does not exist, move on to validating the next polyhedra data array
+    if(!boolResult.value())
+    {
+      continue;
+    }
+
     std::vector<GeometryArrayInfo> arrayInfos(arrayInfoOpts.size());
     std::transform(arrayInfoOpts.begin(), arrayInfoOpts.end(), arrayInfos.begin(), [](const std::optional<GeometryArrayInfo>& opt) -> GeometryArrayInfo { return opt.value(); });
 
+    // Validate that the polyhedra data array has the same ArrayType across all geometries
     auto result = ValidateDataArrayTypes(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the polyhedra data array has the same component dimensions across all geometries
     result = ValidateDataArrayCompDimensions(arrayInfos);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(std::move(result)), {})};
     }
+    // Validate that the polyhedra data array has the same DataType across all geometries
     result = ValidateDataArrayDataTypes(arrayInfos);
     if(result.invalid())
     {
@@ -772,6 +833,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     polyDataArraysInfo.push_back(arrayInfos[0]);
   }
 
+  // Create the output geometry with all its vertex, edge, face, and polyhedra attribute matrices and arrays
   OutputActions actions;
   IGeometry::Type geometryType = geometryTypeOpt.value();
   switch(geometryType)
