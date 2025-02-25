@@ -113,10 +113,28 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       }
     }
   }
-  else if(!dataObject->canRename(m_NewName))
+  else
   {
-    std::string ss = fmt::format("{}Could not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
-    return MakeErrorResult(-6603, ss);
+    DataPath parent = m_Path.getParent();
+    auto* parentContainerPtr = dataStructure.getDataAs<BaseGroup>(m_Path.getParent());
+    if(parentContainerPtr != nullptr)
+    {
+      std::vector<std::string> siblingNames = parentContainerPtr->GetChildrenNames();
+      for(const auto& siblingName : siblingNames)
+      {
+        if(m_NewName == siblingName)
+        {
+          std::string ss = fmt::format("{}The new name '{}' conflicts with existing array name. Change name or enable 'Allow Overwrite'.", prefix, m_NewName);
+          return MakeErrorResult(-6603, ss);
+        }
+      }
+    }
+
+    if(!dataObject->canRename(m_NewName))
+    {
+      std::string ss = fmt::format("{}Could not rename DataObject at '{}' to '{}'", prefix, m_Path.toString(), m_NewName);
+      return MakeErrorResult(-6604, ss);
+    }
   }
 
   dataObject->rename(m_NewName);
