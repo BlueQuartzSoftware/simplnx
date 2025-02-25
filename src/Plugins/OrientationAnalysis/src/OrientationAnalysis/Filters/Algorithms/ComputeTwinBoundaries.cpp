@@ -183,6 +183,10 @@ public:
       if(feature1 > 0 && feature2 > 0 && phase == m_FeaturePhases[feature2])
       {
         const uint32 crystalStructure = m_CrystalStructures[phase];
+        if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
+        {
+          continue;
+        }
 
         // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
         const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
@@ -265,6 +269,10 @@ public:
       if(feature1 > 0 && feature2 > 0 && phase == m_FeaturePhases[feature2])
       {
         const uint32 crystalStructure = m_CrystalStructures[phase];
+        if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
+        {
+          continue;
+        }
 
         // Avg Quats is stored Vector Scalar but the Quaternion Constructor is Scalar-Vector
         const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]); // W X Y Z
@@ -314,10 +322,32 @@ const std::atomic_bool& ComputeTwinBoundaries::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTwinBoundaries::operator()()
 {
+  const auto& crystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+
+  bool allPhasesCubic = true;
+  bool noPhasesCubic = true;
+  for(usize i = 1; i < crystalStructures.size(); ++i)
+  {
+    const auto crystalStructureType = crystalStructures[i];
+    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Cubic_High || crystalStructureType == EbsdLib::CrystalStructure::Cubic_Low;
+    allPhasesCubic = allPhasesCubic && isHex;
+    noPhasesCubic = noPhasesCubic && !isHex;
+  }
+
+  if(noPhasesCubic)
+  {
+    return MakeErrorResult(-93210, "Finding the twin boundaries requires at least one phase to be Cubic-Low m-3 or Cubic-High m-3m type crystal structures but none were found.");
+  }
+
+  Result<> result;
+  if(!allPhasesCubic)
+  {
+    result.warnings().push_back({-93211, "Finding the twin boundaries requires Cubic-Low m-3 or Cubic-High m-3m type crystal structures. Calculations for non Cubic phases will be skipped."});
+  }
+
   const auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
   const auto& avgQuats = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
   const auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
-  const auto& crystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
 
   std::unique_ptr<MaskCompare> twinBoundaries;
   try
@@ -327,7 +357,7 @@ Result<> ComputeTwinBoundaries::operator()()
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    return MakeErrorResult(-54300, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->TwinBoundariesArrayPath.toString()));
+    return MakeErrorResult(-93212, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->TwinBoundariesArrayPath.toString()));
   }
 
   const float32 angtol = m_InputValues->AngleTolerance;
@@ -346,7 +376,7 @@ Result<> ComputeTwinBoundaries::operator()()
 
     if(hasNaN.load())
     {
-      return MakeWarningVoidResult(-93210, fmt::format("NaNs were detected in the normals array ({}). These values were marked false.", m_InputValues->FaceNormalsArrayPath.toString()));
+      return MakeWarningVoidResult(-93213, fmt::format("NaNs were detected in the normals array ({}). These values were marked false.", m_InputValues->FaceNormalsArrayPath.toString()));
     }
   }
   else
