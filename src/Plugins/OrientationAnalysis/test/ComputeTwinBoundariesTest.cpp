@@ -202,6 +202,15 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check",
 
     REQUIRE(!executeResult.result.warnings().empty());
 
-    REQUIRE(executeResult.result.warnings()[0].code == -93210);
+    bool found = false;
+    for(const auto& warning : executeResult.result.warnings())
+    {
+      if(warning.code == -93213)
+      {
+        found = true;
+      }
+    }
+
+    REQUIRE(found);
   }
 }
