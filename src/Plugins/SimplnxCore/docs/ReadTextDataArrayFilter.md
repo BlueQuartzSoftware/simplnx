@@ -14,7 +14,7 @@ This **Filter** allows the user to import a plain text file containing the conte
     + colon
     + tab
 
-The filter does not care about how many values per line but only about reading the proper number of values from the file. If you are trying to read an array into DREAM.3D and there is no existing DataContainer or anything else to hold the data then the user will need to insert the following filters **BEFORE** using this filter:
+The filter does not care about how many values per line but only about reading the proper number of values from the file. If you are trying to read an array into DREAM3D-NX and there is no existing DataContainer or anything else to hold the data then the user will need to insert the following filters **BEFORE** using this filter:
 
     + Create DataContainer: Give the DataContainer a name
     + Create AttributeMatrix: Give the AttributeMatrix a name and set the tuple dimensions to match the number of values in the input file.

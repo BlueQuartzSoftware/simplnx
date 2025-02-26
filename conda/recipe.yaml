@@ -84,4 +84,4 @@ test:
 about:
   home: http://dream3d.bluequartz.net/
   license: BSD
-  summary: DREAM.3D consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
+  summary: DREAM3D-NX consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.

@@ -87,7 +87,7 @@ void WriteVtkRectilinearGrid::writeVtkHeader(FILE* outputFile) const
   const usize zPoints = geom.getNumZCells() + 1;
 
   fprintf(outputFile, "# vtk DataFile Version 2.0\n");
-  fprintf(outputFile, "Data set from DREAM.3D SimplnxCore version 7.0.0\n");
+  fprintf(outputFile, "Data set from DREAM3D-NX SimplnxCore version 7.0.0\n");
   if(m_InputValues->WriteBinaryFile)
   {
     fprintf(outputFile, "BINARY\n");

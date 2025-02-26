@@ -10,10 +10,10 @@ This filter will generate the transpose of a [1x4] *Quaternion* laid out in memo
 handy when the user wants to convert the orientation transformation to an opposite effect. The algorihtm will calculate
 the conjugate of each quaternion in the array of input quaternions
 
-**NOTES**: Internally DREAM.3D assumes that the internal reference transformation is a **Sample to Crystal**
+**NOTES**: Internally DREAM3D-NX assumes that the internal reference transformation is a **Sample to Crystal**
 transformation. If the incoming data was collected in such a way that the orientation representation that is stored (
 Quats, Eulers, Orientation Matrix, Rodrigues) was assumed to be a **Crystal to Sample** transformation then this filter
-can be applied to a quaternion to convert into a reference frame that DREAM.3D assumes.
+can be applied to a quaternion to convert into a reference frame that DREAM3D-NX assumes.
 
 % Auto generated parameter table will be inserted here
 

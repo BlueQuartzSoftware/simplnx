@@ -35,8 +35,8 @@ StatsGenerator can not load data from standard .ang or .ctf files. If you want t
 The file written is a simple text file that contains a short comment section and a single *Header* line of data. All comment lines should come **BEFORE** the actual header line. There is a single header line in the form of "Key:Value" and then the lines of data.
 
     # All lines starting with '#' are comments and should come before the header.
-    # DREAM.3D StatsGenerator Angles Input File
-    # DREAM.3D Version 6.1.107.0d8bad9
+    # DREAM3D-NX StatsGenerator Angles Input File
+    # DREAM3D-NX Version 6.1.107.0d8bad9
     # Angle Data is space delimited.
     # Euler0 Euler1 Euler2 Weight Sigma
     Angle Count:100

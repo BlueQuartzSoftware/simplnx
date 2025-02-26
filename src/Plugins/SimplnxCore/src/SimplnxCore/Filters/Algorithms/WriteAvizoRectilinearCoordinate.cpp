@@ -52,7 +52,7 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 
   fprintf(outputFile, "Parameters {\n");
   fprintf(outputFile, "     DREAM3DParams {\n");
-  fprintf(outputFile, "         Author \"DREAM.3D SimplnxCore Version 7.0.0\",\n");
+  fprintf(outputFile, "         Author \"DREAM3D-NX SimplnxCore Version 7.0.0\",\n");
   const std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   const std::string timeString = std::ctime(&currentTime);
   fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str()); // remove the \n character from the time string

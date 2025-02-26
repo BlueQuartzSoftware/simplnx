@@ -65,7 +65,7 @@ export PATH=$PATH:/Applications/
 
 ## Command Line 5D Parameter GBCD
 
-+ Generate the GMT .dat file from DREAM.3D
++ Generate the GMT .dat file from DREAM3D-NX
 + Make sure the GMT environment is setup completely
 + Execute the following:
 

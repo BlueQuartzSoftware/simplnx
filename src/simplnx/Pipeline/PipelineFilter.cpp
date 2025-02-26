@@ -657,7 +657,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     auto filterClassName = json.value(k_SIMPLFilterClassNameKey.view(), "NO NAME");
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
         -1, fmt::format("The pipeline file contained an entry for a SIMPL filter with name '{}', but the json that describes that filter did not include "
-                        "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM.3D version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
+                        "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM3D-NX version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
                         filterClassName, k_SIMPLFilterUuidKey.view()));
   }
 

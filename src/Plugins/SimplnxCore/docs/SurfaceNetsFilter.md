@@ -79,7 +79,7 @@ This filter should be used in place of the "QuickMesh Surface Filter".
 Boundaries, Journal of Computer Graphics Techniques (JCGT), vol. 11, no. 1, 34–54, 2022`
 [http://jcgt.org/published/0011/01/03](http://jcgt.org/published/0011/01/03)
 
-## DREAM.3D Mailing Lists
+## DREAM3D-NX Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on
-the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+the [DREAM3D-NX Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)

@@ -589,7 +589,7 @@ H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedCl
 } // namespace
 
 #if TEST_LEGACY
-TEST_CASE("Read Legacy DREAM.3D Data")
+TEST_CASE("Read Legacy DREAM3D-NX Data")
 {
   auto app = Application::GetOrCreateInstance();
   std::filesystem::path filepath = GetLegacyFilepath();

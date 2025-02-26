@@ -8,7 +8,7 @@ This is the style guide for the SIMPLNX library. When contributing sources to th
 
 ## Use of Tabs
 
-Spaces should be used instead of hard tabs. This helps file portability across different editors. DREAM.3D uses a standard whereby all indents  use two spaces.
+Spaces should be used instead of hard tabs. This helps file portability across different editors. DREAM3D-NX uses a standard whereby all indents  use two spaces.
 
 ## Always Use an Include Guard
 

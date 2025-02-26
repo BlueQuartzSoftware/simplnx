@@ -6,7 +6,7 @@ OrientationAnalysis (Processing)
 
 ## Description
 
-This *filter* will convert a 3 component Rodrigues vector into a 4 component vector that DREAM.3D expects in its
+This *filter* will convert a 3 component Rodrigues vector into a 4 component vector that DREAM3D-NX expects in its
 equations and algorithms. The algorithm is the following:
 
 + Find the length of the 3 component vector.

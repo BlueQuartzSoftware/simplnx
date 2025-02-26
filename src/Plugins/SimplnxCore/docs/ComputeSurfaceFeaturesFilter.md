@@ -21,7 +21,7 @@ If there are voxels within the volume that have **Feature ID=0** then any featur
 
 ### WARNING - Fixed bugs
 
-The version of this filter in legacy DREAM.3D (version 6.x) had two bugs: one that indexed into neighboring features incorrectly [DREAM.3D repo issue #988](https://github.com/BlueQuartzSoftware/DREAM3D/issues/988), and another that incorrectly labeled feature 0 as a surface feature when feature 0 exists in the feature ids array [DREAM.3D repo issue #989](https://github.com/BlueQuartzSoftware/DREAM3D/issues/989). Both of these bugs have been fixed in this new version.
+The version of this filter in legacy DREAM3D-NX (version 6.x) had two bugs: one that indexed into neighboring features incorrectly [DREAM3D-NX repo issue #988](https://github.com/BlueQuartzSoftware/DREAM3D/issues/988), and another that incorrectly labeled feature 0 as a surface feature when feature 0 exists in the feature ids array [DREAM3D-NX repo issue #989](https://github.com/BlueQuartzSoftware/DREAM3D/issues/989). Both of these bugs have been fixed in this new version.
 
 ### 2D Image Geometry
 

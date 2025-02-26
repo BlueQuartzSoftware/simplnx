@@ -57,7 +57,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::vector<size_t> linesToSkip{2};
+  std::vector<size_t> linesToSkip{1, 2}; // Skip the lines that have "DREAM3D" in them.
   std::ifstream computedFile1(computedOutput1Path);
   std::ifstream exemplarFile1(exemplarOutput1Path);
   UnitTest::CompareAsciiFiles(computedFile1, exemplarFile1, linesToSkip);

@@ -157,7 +157,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       return MakePreflightErrorResult(-20007, "Cannot import an empty dataset path");
     }
 
-    // Read dataset into DREAM.3D structure
+    // Read dataset into DREAM3D-NX structure
     nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
     std::vector<hsize_t> dims = datasetReader.getDimensions();
     std::string objectName = datasetReader.getName();
@@ -326,7 +326,7 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
     nx::core::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
     std::string objectName = datasetReader.getName();
 
-    // Read dataset into DREAM.3D structure
+    // Read dataset into DREAM3D-NX structure
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto type = datasetReader.getType();

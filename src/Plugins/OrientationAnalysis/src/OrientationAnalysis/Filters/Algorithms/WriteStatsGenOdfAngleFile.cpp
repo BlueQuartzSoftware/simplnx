@@ -123,8 +123,8 @@ Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const In
   const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
 
   out << "# All lines starting with '#' are comments and should come before the data.\n";
-  out << "# DREAM.3D StatsGenerator ODF Angles Input File\n";
-  out << "# DREAM.3D Version 7.0.0\n";
+  out << "# DREAM3D-NX StatsGenerator ODF Angles Input File\n";
+  out << "# DREAM3D-NX Version 7.0.0\n";
 
   const auto delimiter = k_Delimiters[m_InputValues->Delimiter];
 

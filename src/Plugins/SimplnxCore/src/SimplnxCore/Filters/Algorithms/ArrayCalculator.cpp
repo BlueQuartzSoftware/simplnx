@@ -202,7 +202,7 @@ Result<> ArrayCalculator::operator()()
   else
   {
     results.errors().push_back(Error{static_cast<int>(CalculatorItem::ErrorCode::UnexpectedOutput), "Unexpected output item from chosen infix expression; the output item must be an array\n"
-                                                                                                    "Please contact the DREAM.3D developers for more information"});
+                                                                                                    "Please contact the DREAM3D-NX developers for more information"});
     return results;
   }
 
