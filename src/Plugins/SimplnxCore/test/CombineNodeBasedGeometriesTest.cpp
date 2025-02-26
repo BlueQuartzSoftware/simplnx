@@ -481,14 +481,12 @@ void CombineNodeBasedGeometriesImpl(const DataPath& inputGeom1Path, const DataPa
 }
 
 template <typename NodeGeom>
-void InitializeNodeBasedGeometries(const std::string& inputFilePath, DataStructure& dataStructure)
+void InitializeNodeBasedGeometries(DataStructure& dataStructure)
 {
   // DO NOT test DataInitOption::None and DataInitOption::ElementsOnly for Vertex and Polyhedra because a vertex array & attr matrix will
   // be automatically created for any geometry, and a polyhedra array and attribute matrix will be automatically created for 3D geometries.
   GeometryInitOptions opts{GENERATE(DataInitOption::ElementsAndData, DataInitOption::ElementsAndNoData), GENERATE(from_range(std::begin(k_DataInitOptions), std::end(k_DataInitOptions))),
                            GENERATE(from_range(std::begin(k_DataInitOptions), std::end(k_DataInitOptions))), GENERATE(DataInitOption::ElementsAndData, DataInitOption::ElementsAndNoData)};
-
-  //  GeometryInitOptions opts{DataInitOption::ElementsAndData, DataInitOption::ElementsAndData, DataInitOption::ElementsAndData, DataInitOption::ElementsAndData};
 
   CAPTURE(opts);
 
@@ -544,10 +542,10 @@ void InitializeNodeBasedGeometries(const std::string& inputFilePath, DataStructu
 }
 
 template <typename NodeGeom>
-void LoadAndExecute0DNodeGeometriesTest(const std::string& inputFilePath)
+void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
 {
   DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
-  InitializeNodeBasedGeometries<NodeGeom>(inputFilePath, dataStructure);
+  InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   // Test two 0D node-based geometries
   CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry1Path, k_InputGeometry2Path, k_OutputGeometryPath4, dataStructure);
@@ -556,10 +554,10 @@ void LoadAndExecute0DNodeGeometriesTest(const std::string& inputFilePath)
 }
 
 template <typename NodeGeom>
-void LoadAndExecute1DNodeGeometriesTest(const std::string& inputFilePath)
+void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
 {
   DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
-  InitializeNodeBasedGeometries<NodeGeom>(inputFilePath, dataStructure);
+  InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Vertex")
   {
@@ -576,10 +574,10 @@ void LoadAndExecute1DNodeGeometriesTest(const std::string& inputFilePath)
 }
 
 template <typename NodeGeom>
-void LoadAndExecute2DNodeGeometriesTest(const std::string& inputFilePath)
+void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
 {
   DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
-  InitializeNodeBasedGeometries<NodeGeom>(inputFilePath, dataStructure);
+  InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Edge")
   {
@@ -601,10 +599,10 @@ void LoadAndExecute2DNodeGeometriesTest(const std::string& inputFilePath)
 }
 
 template <typename NodeGeom>
-void LoadAndExecute3DNodeGeometriesTest(const std::string& inputFilePath)
+void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
 {
   DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
-  InitializeNodeBasedGeometries<NodeGeom>(inputFilePath, dataStructure);
+  InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Face")
   {
