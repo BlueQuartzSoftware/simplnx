@@ -19,8 +19,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CombineAttributeArraysTest.cpp
   CombineNodeBasedGeometriesTest.cpp
   CombineStlFilesTest.cpp
-  ComputeArrayHistogramTest.cpp
   ComputeArrayHistogramByFeatureTest.cpp
+  ComputeArrayHistogramTest.cpp
   ComputeArrayStatisticsTest.cpp
   ComputeBiasedFeaturesTest.cpp
   ComputeBoundaryCellsTest.cpp
@@ -96,6 +96,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
+  MatrixCalculatorTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
@@ -151,6 +152,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteFeatureDataCSVTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
+  WriteSPParksSitesTest.cpp
   WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
