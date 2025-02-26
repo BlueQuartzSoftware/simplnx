@@ -59,8 +59,10 @@ struct SIMPLNXCORE_EXPORT ApplyTransformationToGeometryInputValues
   VectorFloat32Parameter::ValueType Scale;
 
   DataPath CellAttributeMatrixPath;
+  DataPath TransformMatrixPath;
   bool RemoveOriginalGeometry;
   bool TranslateGeometryToGlobalOrigin;
+  bool SaveTransformMatrix;
 };
 
 /**

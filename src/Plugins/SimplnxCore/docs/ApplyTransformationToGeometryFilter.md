@@ -47,6 +47,20 @@ The user may select from a variety of options for the type of transformation to 
 | 4          | Translation                        | Translation by the supplied (x, y, z) values                                         |
 | 5          | Scale                              | Scaling by the supplied (x, y, z) values                                             |
 
+## Saving the final transformation Matrix.
+
+There is an option to save the final transformation matrix into its own array. The format of the output DataArra is a
+flattened array 16 elements in size that represents a 4x4 matrix. The elements are encoded in a ROW MAJOR array, i.e., 
+
+    1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+
+represents the following 4x4 Matrix
+
+    1   2   3   4
+    5   6   7   8
+    9   10  11  12
+    13  14  15  16
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

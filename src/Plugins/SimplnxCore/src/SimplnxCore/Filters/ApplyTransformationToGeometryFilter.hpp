@@ -34,6 +34,8 @@ public:
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix_path";
   static inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
   static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SaveTransformMatrix_Key = "save_transform_matrix";
+  static inline constexpr StringLiteral k_TransformMatrixOutputPath_Key = "output_transform_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

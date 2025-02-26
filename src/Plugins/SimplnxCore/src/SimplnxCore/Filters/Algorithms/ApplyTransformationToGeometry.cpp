@@ -185,6 +185,21 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   }
 
+  // If asked to do so, save the transformation matrix as a flattened 1x16 array where we raster
+  // along the columns the fastest then the the rows (Same as an image with its origin in the upper left
+  if(m_InputValues->SaveTransformMatrix)
+  {
+    auto& transformMatrix = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->TransformMatrixPath);
+    usize index = 0;
+    for(usize row = 0; row < 4; row++)
+    {
+      for(usize col = 0; col < 4; col++)
+      {
+        transformMatrix[index++] = m_TransformationMatrix(row, col);
+      }
+    }
+  }
+
   // Apply geometry transformation
   auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
   if(imageGeometryPtr == nullptr)
