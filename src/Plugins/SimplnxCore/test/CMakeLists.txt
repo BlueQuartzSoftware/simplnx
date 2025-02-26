@@ -105,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadTextDataArrayTest.cpp
+  ReadStringDataArrayTest.cpp
   ReadVolumeGraphicsFileTest.cpp
   ReadVtkStructuredPointsTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
@@ -244,6 +245,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME vtk_rectilinear_grid_writer.tar.gz SHA512 9fef02b5269609503d03dd0126cc635cc1c1156894cff18b0184b334d705b850ca1a06ae0d1c66a352a32dd9ad9fb74f24255c7de1399b06bbec7d2e2b41941b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 7_0_SurfaceMesh_Test_Files.tar.gz SHA512 d6205401a7ed1b0b5e3d1af6310c828595c089d6788097526607d98d077285061e16271d19aa64318a4da7610eb73444560604d6093f2178798036933a28f408)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME combine_node_based_geometries.tar.gz SHA512 beb2186d3522f6ab20d57bb5a0809fea95a5a3ddb2f9a70e1fc049d1ee05b2aa6f3165fa82cc5b6b3ba2e41457d8b4b86c3987c6ee6f05efdb23760b922b4d18)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 7_ReadStringArray.tar.gz SHA512 594b9a4605db8de0f6682884b07385938284e5309a5c56514dce3206ede5cdbdb1cf8629eb5bd5b77cbe59ee650ee381988cfc9ac7aa12862ec944926db4b530)
 
 endif()
 

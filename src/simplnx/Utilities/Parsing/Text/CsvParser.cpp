@@ -77,8 +77,10 @@ char IndexToDelimiter(uint64_t index)
     return ':';
   case 4:
     return '\t';
+  case 5:
+    return '\n';
   default:
-    throw std::runtime_error("Invalid index");
+    throw std::runtime_error(fmt::format("CsvParser::IndexToDelimiter() - Invalid index '{}'", index));
   }
 }
 } // namespace CsvParser

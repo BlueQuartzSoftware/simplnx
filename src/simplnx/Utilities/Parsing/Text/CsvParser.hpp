@@ -110,7 +110,7 @@ Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);                                                // Splat Null Chars across the line
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
+    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1
     if(err < 0)
     {
       return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
@@ -204,7 +204,7 @@ Result<> ReadFile(const fs::path& filename, AbstractDataStore<T>& data, uint64_t
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);                                                // Splat Null Chars across the line
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
+    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1
     if(err < 0)
     {
       return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
