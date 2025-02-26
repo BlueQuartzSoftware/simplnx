@@ -18,6 +18,7 @@
               "DataContainer/Cell Ensemble Data",
               "DataContainer/Cell Ensemble Data/CrystalStructures",
               "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Ensemble Data/MaterialName",
               "DataContainer/Cell Data/Mask",
               "DataContainer/Cell Data/Quats",
               "DataContainer/Cell Feature Data",

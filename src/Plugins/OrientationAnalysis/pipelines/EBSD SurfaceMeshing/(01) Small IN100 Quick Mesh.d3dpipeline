@@ -10,6 +10,7 @@
               "DataContainer/Cell Ensemble Data",
               "DataContainer/Cell Ensemble Data/CrystalStructures",
               "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Ensemble Data/MaterialName",
               "DataContainer",
               "DataContainer/Cell Data",
               "DataContainer/Cell Data/Confidence Index",
