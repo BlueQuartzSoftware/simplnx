@@ -801,7 +801,7 @@ General Parameters
 
       import_data = nx.Dream3dImportParameter.ImportData()
       import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-      import_data.data_paths = None
+
       params.insert(nx.Dream3dImportParameter('import_file_path_key', "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
 
 .. _DynamicTableParameter:

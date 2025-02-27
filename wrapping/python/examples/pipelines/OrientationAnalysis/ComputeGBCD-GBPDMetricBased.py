@@ -13,7 +13,6 @@ data_structure = nx.DataStructure()
 # Instantiate Import Data
 import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = str(nxtest.get_data_directory() / "Output/SurfaceMesh/SmallIN100_MeshStats.dream3d")
-import_data.data_paths = None
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters

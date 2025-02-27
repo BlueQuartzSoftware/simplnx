@@ -112,7 +112,6 @@ class ExampleFilter1:
 
     import_data = nx.Dream3dImportParameter.ImportData()
     import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-    import_data.data_paths = None
     params.insert(nx.Dream3dImportParameter(ExampleFilter1.PARAM14_KEY, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
 
     ensemble_info = []

@@ -53,7 +53,6 @@ data_structure = nx.DataStructure()
 
 import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d"
-import_data.data_paths = None  # Use 'None' to import the entire file.
 
 print(f'{import_data.file_path}')
 
