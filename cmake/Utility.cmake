@@ -135,6 +135,17 @@ function(download_test_data)
   # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 
+  #----------------------------------------------------------------------------
+  # This section will sequentially number the downloads
+  #----------------------------------------------------------------------------
+  get_property(FETCH_FILE_INDEX GLOBAL PROPERTY FETCH_FILE_INDEX)
+  math(EXPR FETCH_FILE_INDEX "${FETCH_FILE_INDEX} + 1")
+  set_property(GLOBAL PROPERTY FETCH_FILE_INDEX ${FETCH_FILE_INDEX})
+
+  #----------------------------------------------------------------------------
+  # This section configures the bit of CMake code for the specific data file
+  # that is being downloaded
+  #----------------------------------------------------------------------------
   configure_file(${simplnx_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
                 ${fetch_data_file}
                 @ONLY
