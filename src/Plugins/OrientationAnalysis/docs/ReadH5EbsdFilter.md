@@ -17,7 +17,7 @@ This **Filter** reads from the .h5ebsd file that was generated with the *Import 
 
 ### Notes About Transformations
 
-The **user** is solely responsible for knowing any sample reference frame transformations, crystal reference frame transformations and how the Euler angles are represented in the file. DREAM.3D provides historically correct transformations from a few of the EBSD manufacturers under the assumption that the EBSD instrument has been setup according to their guidelines. The **user** is strongly encouraged to discuss these topics with the person(s) who were responsible for collecting the data. For example the  IPF images presented below were generated from an H5Ebsd file that was generated using a CTF file. The difference is that the **Incorrect** image did not correctly select the **Angle Representation** combo box on the filter's user interface. The Euler angles were actually in degrees but were treated as if the values were in radians. The correct image is on the right.
+The **user** is solely responsible for knowing any sample reference frame transformations, crystal reference frame transformations and how the Euler angles are represented in the file. DREAM3D-NX provides historically correct transformations from a few of the EBSD manufacturers under the assumption that the EBSD instrument has been setup according to their guidelines. The **user** is strongly encouraged to discuss these topics with the person(s) who were responsible for collecting the data. For example the  IPF images presented below were generated from an H5Ebsd file that was generated using a CTF file. The difference is that the **Incorrect** image did not correctly select the **Angle Representation** combo box on the filter's user interface. The Euler angles were actually in degrees but were treated as if the values were in radians. The correct image is on the right.
 
 If the user does not want the **Read H5Ebsd** filter to perform any transformations then the checkbox can be unchecked and the user can manually perform any desired transformations by inserting the appropriate filters into the pipeline. The suggested filters are:
 
@@ -42,7 +42,7 @@ An excellant reference for this is the following PDF file:
 + This is important because texture analysis can lead to an ambiguity as to the alignment of [2,-1,-1,0] versus [1,0,-1,0], with apparent **30** shifts in the data.
 + Caution: it appears that the axis alignment is a choice that must be made when installing TSL software so determination of which convention is in use must be made on a case-by-case basis. It is fixed to the y-convention in the HKL software.
 + The main clue that something is wrong in a conversion is that either the 2110 & 1010 pole figures are transposed, or that a peak in the inverse pole figure that should be present at 2110 has shifted over to 1010.
-+ DREAM.3D uses the TSL/EDAX convention.
++ DREAM3D-NX uses the TSL/EDAX convention.
 + **The result of this is that the filter will *AUTOMATICALLY* add 30   to phi2 when reading Oxford Instr (.ctf) files or .h5ebsd files denoted with the HKL manufacturer ID. There is no way to turn off this behavior.**
 
 ![Figure 1 showing TSL \& Oxford Instr. conventions.](Images/Hexagonal_Axis_Alignment.png)

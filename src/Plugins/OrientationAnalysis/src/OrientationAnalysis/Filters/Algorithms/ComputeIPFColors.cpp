@@ -182,7 +182,7 @@ Result<> ComputeIPFColors::operator()()
   if(m_PhaseWarningCount > 0)
   {
     std::string message = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
-This indicates a problem with the input cell phase data. DREAM.3D will give INCORRECT RESULTS.",
+This indicates a problem with the input cell phase data. DREAM3D-NX will give INCORRECT RESULTS.",
                                       (numPhases - 1), m_PhaseWarningCount, (numPhases - 1));
 
     return nx::core::MakeErrorResult(-48000, message);

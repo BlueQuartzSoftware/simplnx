@@ -38,7 +38,7 @@ Uuid ExtractPipelineToFileFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ExtractPipelineToFileFilter::humanName() const
 {
-  return "Extract DREAM.3D Pipeline To File";
+  return "Extract DREAM3D-NX Pipeline To File";
 }
 
 //------------------------------------------------------------------------------

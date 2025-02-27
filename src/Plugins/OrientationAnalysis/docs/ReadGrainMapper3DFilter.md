@@ -14,7 +14,7 @@ This filter will read Version 4 and Version 5 GrainMapper3D HDF5 files.
 
 ## Parameter Discussion
 
-GrainMapper3D orientation convention is the same as used by [MTEX](https://mtex-toolbox.github.io), and the inverse of that adapted by DREAM.3D.
+GrainMapper3D orientation convention is the same as used by [MTEX](https://mtex-toolbox.github.io), and the inverse of that adapted by DREAM3D-NX.
 This requires certain modifications to the orientation related data (Rodrigues and Quaternions) when being read from the
 file. These modifications ensure that when DREAM3D computes orientation related data, the correct results
 will be output.

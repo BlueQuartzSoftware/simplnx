@@ -208,7 +208,7 @@ void LaplacianSmoothing::writeVTKFile(const QString& outputVtkFile)
   Detail::ScopedFileMonitor vtkFileMonitor(vtkFile);
 
   fprintf(vtkFile, "# vtk DataFile Version 2.0\n");
-  fprintf(vtkFile, "Data set from DREAM.3D Surface Meshing Module\n");
+  fprintf(vtkFile, "Data set from DREAM3D-NX Surface Meshing Module\n");
   if (m_WriteBinaryFile)
   {
     fprintf(vtkFile, "BINARY\n");

@@ -44,6 +44,6 @@ The values of the principal directions can have their signs flipped. They are ca
 
 Please see the description file distributed with this**Plugin**
 
-## DREAM.3D Mailing Lists
+## DREAM3D-NX Mailing Lists
 
-If you need more help with a**Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
+If you need more help with a**Filter**, please consider asking your question on the [DREAM3D-NX Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)

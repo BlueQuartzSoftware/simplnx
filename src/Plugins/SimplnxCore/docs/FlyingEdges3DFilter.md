@@ -18,6 +18,6 @@ Here's what the results look like:
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Interaction
+## DREAM3D-NX Interaction
 
-If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Help Forum!](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)
+If you need more help with a **Filter**, please consider asking your question on the [DREAM3D-NX Help Forum!](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions)

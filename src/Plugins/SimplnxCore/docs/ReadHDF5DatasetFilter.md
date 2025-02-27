@@ -6,7 +6,7 @@ Core (IO/Read)
 
 ## Description
 
-This **Filter** allows the user to import datasets from an HDF5 file and store them as attribute arrays in DREAM.3D.  This filter supports importing datasets with any number of dimensions, as long as the created attribute array's total number of components and the tuple count of the destination attribute matrix multiply together to match the HDF5 dataset's total number of elements.
+This **Filter** allows the user to import datasets from an HDF5 file and store them as attribute arrays in DREAM3D-NX.  This filter supports importing datasets with any number of dimensions, as long as the created attribute array's total number of components and the tuple count of the destination attribute matrix multiply together to match the HDF5 dataset's total number of elements.
 
 The component dimensions are input as a comma-delimited list of dimensional values.  For example:
 

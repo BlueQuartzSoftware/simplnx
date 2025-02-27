@@ -12,7 +12,7 @@ namespace nx::core
 /**
  * @class ExtractPipelineToFileFilter
  * @brief The ExtractPipelineToFileFilter is an IFilter class designed to extract the pipeline data
- * from a target DREAM.3D file and export it out to it's own file.
+ * from a target DREAM3D-NX file and export it out to it's own file.
  */
 class SIMPLNXCORE_EXPORT ExtractPipelineToFileFilter : public IFilter
 {

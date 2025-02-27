@@ -24,7 +24,7 @@ In a practical sense, this means that the following information is available to 
 ### Algorithm Choice
 
 1: The pole figure algorithm uses a *modified Lambert square* to perform the interpolations onto the unit circle. This is an alternate type
-of interpolation that the EBSD OEMs do not perform which may make the output from DREAM.3D look slightly different than output
+of interpolation that the EBSD OEMs do not perform which may make the output from DREAM3D-NX look slightly different than output
 obtained from the OEM programs.
 
 **Only an advanced user with intimate knowledge of the modified Lambert projection should attempt to change the value for

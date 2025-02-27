@@ -316,7 +316,7 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
   if(warningCount > 0)
   {
     std::string errorMessage = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
-This indicates a problem with the input cell phase data. DREAM.3D may have given INCORRECT RESULTS.",
+This indicates a problem with the input cell phase data. DREAM3D-NX may have given INCORRECT RESULTS.",
                                            numPhases - 1, warningCount.load(), numPhases - 1);
 
     return {MakeErrorResult<>(-49008, errorMessage)};

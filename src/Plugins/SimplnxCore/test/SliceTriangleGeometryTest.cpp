@@ -28,7 +28,7 @@ const DataObjectNameParameter::ValueType k_RegionIdsName("Part Number");
 TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][SliceTriangleGeometryFilter]")
 {
   /// The test data set was reviewed manually by MAJ and found to be correct in output to the
-  /// the best of our abilities. This is needed because DREAM.3D did not have
+  /// the best of our abilities. This is needed because DREAM3D-NX did not have
   /// this functionality and so we have nothing to compare against.
 
   //  Read Exemplar DREAM3D File Filter

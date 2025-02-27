@@ -174,7 +174,7 @@ Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file,
 
   int64 slice = 0;
   int64 newXShift = 0, newYShift = 0;
-  // These are ignored from the input file since DREAM.3D wrote the file
+  // These are ignored from the input file since DREAM3D-NX wrote the file
   int64 slice2 = 0;
   float32 xShift = 0.0f;
   float32 yShift = 0.0f;

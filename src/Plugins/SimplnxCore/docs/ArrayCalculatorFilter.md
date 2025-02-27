@@ -54,7 +54,7 @@ There are several mathematical operators available for usage in an infix express
 
 #### Trigonometric Operators and Degrees/Radians
 
-The direct trigonometric operators (**sin**, **cos** and **tan**) can operate on either radians or degrees, which can be selected by the user from the **Filter** interface.  Similarly, the inverse trigonometric operators (**asin**, **acos** and **atan**) will return either radians or degrees depending on the selection in the **Filter** interface. Note that by default, DREAM.3D **Filters** generally assume angle values are in radians. The Convert Angles to Degrees or Radians can be used to convert arrays from radians to degrees and vice versa.
+The direct trigonometric operators (**sin**, **cos** and **tan**) can operate on either radians or degrees, which can be selected by the user from the **Filter** interface.  Similarly, the inverse trigonometric operators (**asin**, **acos** and **atan**) will return either radians or degrees depending on the selection in the **Filter** interface. Note that by default, DREAM3D-NX **Filters** generally assume angle values are in radians. The Convert Angles to Degrees or Radians can be used to convert arrays from radians to degrees and vice versa.
 
 #### Undefined Operations and Operators Out-Of-Range
 

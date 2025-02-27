@@ -6,7 +6,7 @@ IO (Input)
 
 ## Description
 
-This **Filter** reads in information about the crystal structure and phase types of all the **Features** that are contained in a **Cell** based volume. These values are needed to allow the calculation of statistics on the volume, if they have not already been provided by some other means.  The format of the input file is a simple ASCII text file with the extension .ini or .txt. The first group in the file is the name [EnsembleInfo] in square brackets with the key Number_Phases=*number of phases* that are contained in the volume. Subsequent groups in the file list the **Phase Number**, **Crystal Structure** and **Phase Type**. The proper values for the crystal structure and phase type come from internal constants within DREAM.3D and are listed here:
+This **Filter** reads in information about the crystal structure and phase types of all the **Features** that are contained in a **Cell** based volume. These values are needed to allow the calculation of statistics on the volume, if they have not already been provided by some other means.  The format of the input file is a simple ASCII text file with the extension .ini or .txt. The first group in the file is the name [EnsembleInfo] in square brackets with the key Number_Phases=*number of phases* that are contained in the volume. Subsequent groups in the file list the **Phase Number**, **Crystal Structure** and **Phase Type**. The proper values for the crystal structure and phase type come from internal constants within DREAM3D-NX and are listed here:
 
 **Crystal Structure**
 
@@ -38,7 +38,7 @@ This **Filter** reads in information about the crystal structure and phase types
 
 ## Example Input
 
-**Phase numbering starts at One (1). Phase Zero (0) is reserved for internal use in DREAM.3D**
+**Phase numbering starts at One (1). Phase Zero (0) is reserved for internal use in DREAM3D-NX**
 For example, if you have a structure that has 2 phases that consist of a Cubic Primary phase and a Hexagonal Matrix phase the file would be the following:
 
     [EnsembleInfo]

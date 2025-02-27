@@ -1,4 +1,4 @@
-# Read DREAM.3D File
+# Read DREAM3D-NX File
 
 ## Description
 

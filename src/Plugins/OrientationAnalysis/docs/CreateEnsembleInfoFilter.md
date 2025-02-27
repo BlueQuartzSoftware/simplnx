@@ -6,7 +6,7 @@ Processing (Generation)
 
 ## Description
 
-This **Filter** allows the user to enter basic crystallographic information about each phase. The Laue class, Phase Type, and Phase Name can all be entered by the user. The information is stored in an EnsembleAttributeMatrix. These values are needed to allow the calculation of certain kinds of crystallographic statistics on the volume, if they have not already been provided by some other means. Each row in the table lists the **Crystal Structure**, **Phase Type**, and **Phase Name**. The proper values for the crystal structure and phase type come from internal constants within DREAM.3D and are listed here:
+This **Filter** allows the user to enter basic crystallographic information about each phase. The Laue class, Phase Type, and Phase Name can all be entered by the user. The information is stored in an EnsembleAttributeMatrix. These values are needed to allow the calculation of certain kinds of crystallographic statistics on the volume, if they have not already been provided by some other means. Each row in the table lists the **Crystal Structure**, **Phase Type**, and **Phase Name**. The proper values for the crystal structure and phase type come from internal constants within DREAM3D-NX and are listed here:
 
 ### Crystal Structure
 

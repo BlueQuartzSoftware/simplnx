@@ -12,7 +12,7 @@ namespace nx::core
 /**
  * @class ReadDREAM3DFilter
  * @brief The ReadDREAM3DFilter is an IFilter class designed to import data
- * from a target DREAM.3D file.
+ * from a target DREAM3D-NX file.
  */
 class SIMPLNXCORE_EXPORT ReadDREAM3DFilter : public IFilter
 {
