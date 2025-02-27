@@ -13,6 +13,7 @@
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Filter/Actions/UpdateImageGeomAction.hpp"
+#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -115,6 +116,11 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix (Image Geometry Only)",
                                                                     "The path to the Cell level data that should be interpolated. Only applies when selecting an Image Geometry.", DataPath{}));
 
+  params.insertSeparator(Parameters::Separator{"Optional Output Transform Matrix"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveTransformMatrix_Key, "Save Transformation Matrix", "Save the generated transform matrix as a Data Array", false));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformMatrixOutputPath_Key, "Transform Matrix Output Path", "The output array that contains the transformation Matrix.",
+                                                         DataPath({"Transformation Matrix"})));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_TransformationType_Key, k_ComputedTransformationMatrix_Key, detail::k_PrecomputedTransformationMatrixIdx);
   params.linkParameters(k_TransformationType_Key, k_ManualTransformationMatrix_Key, detail::k_ManualTransformationMatrixIdx);
@@ -125,13 +131,15 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_NearestNeighborInterpolationIdx);
   params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, detail::k_LinearInterpolationIdx);
 
+  params.linkParameters(k_SaveTransformMatrix_Key, k_TransformMatrixOutputPath_Key, true);
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType ApplyTransformationToGeometryFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -150,6 +158,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
   auto pTranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
+
+  auto saveTransform = filterArgs.value<BoolParameter::ValueType>(k_SaveTransformMatrix_Key);
+  auto transformMatrixDataPath = filterArgs.value<DataPath>(k_TransformMatrixOutputPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -443,6 +454,15 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     }
   }
 
+  // Are we saving the transform matrix
+  if(saveTransform)
+  {
+    if(transformMatrixDataPath.empty())
+    {
+      return {MakeErrorResult<OutputActions>(-5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
+    }
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{16}, std::vector<usize>{1}, transformMatrixDataPath));
+  }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -464,7 +484,8 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
   inputValues.TranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
   inputValues.RemoveOriginalGeometry = true;
-
+  inputValues.SaveTransformMatrix = filterArgs.value<BoolParameter::ValueType>(k_SaveTransformMatrix_Key);
+  inputValues.TransformMatrixPath = filterArgs.value<DataPath>(k_TransformMatrixOutputPath_Key);
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
