@@ -29,6 +29,7 @@
               "DataContainer/Cell Ensemble Data",
               "DataContainer/Cell Ensemble Data/CrystalStructures",
               "DataContainer/Cell Ensemble Data/LatticeConstants",
+              "DataContainer/Cell Ensemble Data/MaterialName",
               "DataContainer/NewGrain Data",
               "DataContainer/NewGrain Data/Active",
               "DataContainer/Cell Feature Data/Active",
