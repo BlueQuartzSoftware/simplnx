@@ -22,12 +22,12 @@ void sortImportPaths(std::vector<DataPath>& importPaths)
   std::sort(importPaths.begin(), importPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
 }
 
-std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const std::optional<std::vector<DataPath>>& importPaths)
-{
-  std::vector<DataPath> paths = (importPaths.has_value() ? importPaths.value() : importStructure.getAllDataPaths());
-  sortImportPaths(paths);
-  return paths;
-}
+// std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const std::optional<std::vector<DataPath>>& importPaths)
+//{
+//   std::vector<DataPath> paths = (importPaths.has_value() ? importPaths.value() : importStructure.getAllDataPaths());
+//   sortImportPaths(paths);
+//   return paths;
+// }
 } // namespace
 
 namespace nx::core
@@ -37,10 +37,7 @@ ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const std::filesystem::path
 , m_H5FilePath(importFile)
 , m_Paths(paths)
 {
-  if(m_Paths.has_value())
-  {
-    sortImportPaths(*m_Paths);
-  }
+  sortImportPaths(m_Paths);
 }
 
 ImportH5ObjectPathsAction::~ImportH5ObjectPathsAction() noexcept = default;
@@ -61,9 +58,8 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   DataStructure importStructure = std::move(dataStructureResult.value());
   importStructure.resetIds(dataStructure.getNextId());
 
-  auto importPaths = getImportPaths(importStructure, m_Paths);
   std::stringstream errorMessages;
-  for(const auto& targetPath : importPaths)
+  for(const auto& targetPath : m_Paths)
   {
     if(!importStructure.containsData(targetPath))
     {
@@ -104,14 +100,7 @@ IDataAction::UniquePointer ImportH5ObjectPathsAction::clone() const
 
 std::vector<DataPath> ImportH5ObjectPathsAction::getAllCreatedPaths() const
 {
-  if(m_Paths.has_value())
-  {
-    return m_Paths.value();
-  }
-  else
-  {
-    return {};
-  }
+  return m_Paths;
 }
 
 } // namespace nx::core

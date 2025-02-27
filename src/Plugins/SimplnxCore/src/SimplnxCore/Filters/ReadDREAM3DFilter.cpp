@@ -4,6 +4,7 @@
 #include "simplnx/Filter/Actions/ImportH5ObjectPathsAction.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -14,6 +15,7 @@ namespace
 {
 constexpr nx::core::int32 k_NoImportPathError = -1;
 constexpr nx::core::int32 k_FailedOpenFileReaderError = -25;
+constexpr nx::core::int32 k_UnsupportedPathImportPolicyError = -51;
 } // namespace
 
 namespace nx::core
@@ -75,17 +77,45 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoImportPathError, "Import file path not provided."}})};
+    return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
   nx::core::HDF5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path."}})};
+    return {MakeErrorResult<OutputActions>(k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path.")};
   }
 
   OutputActions actions;
-  auto action = std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths);
-  actions.appendAction(std::move(action));
+
+  switch(importData.PathImportPolicy)
+  {
+  case Dream3dImportParameter::PathImportPolicy::Include: {
+    actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths));
+    break;
+  }
+  case Dream3dImportParameter::PathImportPolicy::Exclude: {
+    Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
+    if(dataStructureResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
+    }
+    auto importedDataStructure = dataStructureResult.value();
+    auto dataPaths = importedDataStructure.getAllDataPaths();
+
+    if(!importData.DataPaths.empty())
+    {
+      dataPaths.erase(std::remove_if(importData.DataPaths.begin(), importData.DataPaths.end(),
+                                     [&](const DataPath& dataPath) { return std::find(dataPaths.begin(), dataPaths.end(), dataPath) != dataPaths.end(); }),
+                      dataPaths.end());
+    }
+    actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
+    break;
+  }
+  default: {
+    return {MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.")};
+  }
+  }
+
   return {std::move(actions)};
 }
 

@@ -16,6 +16,7 @@ namespace
 {
 constexpr StringLiteral k_FilePathKey = "file_path";
 constexpr StringLiteral k_DataPathsKey = "data_paths";
+constexpr StringLiteral k_PathImportPolicyKey = "path_import_policy";
 } // namespace
 
 namespace nx::core
@@ -63,19 +64,14 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
   json[k_FilePathKey] = importData.FilePath.string();
 
   // DataPaths
-  if(importData.DataPaths.has_value())
+  nlohmann::json dataPathsJson = nlohmann::json::array();
+  for(const auto& dataPath : dataPathsJson)
   {
-    nlohmann::json dataPathsJson = nlohmann::json::array();
-    for(const auto& dataPath : importData.DataPaths.value())
-    {
-      dataPathsJson.push_back(dataPath.toString());
-    }
-    json[k_DataPathsKey] = std::move(dataPathsJson);
+    dataPathsJson.push_back(to_string(dataPath));
   }
-  else
-  {
-    json[k_DataPathsKey] = nullptr;
-  }
+  json[k_DataPathsKey] = std::move(dataPathsJson);
+
+  json[k_PathImportPolicyKey] = importData.PathImportPolicy;
 
   return json;
 }
@@ -108,11 +104,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
   importData.FilePath = jsonFilePath.get<std::string>();
 
   const auto& jsonDataPaths = json[k_DataPathsKey];
-  if(jsonDataPaths.is_null())
-  {
-    importData.DataPaths = std::nullopt;
-  }
-  else
+  if(!jsonDataPaths.is_null())
   {
     if(!jsonDataPaths.is_array())
     {
@@ -138,6 +130,20 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
     }
 
     importData.DataPaths = std::move(dataPaths);
+  }
+
+  if(json.contains(k_PathImportPolicyKey))
+  {
+    const auto& pathImportPolicy = json[k_PathImportPolicyKey];
+    if(!pathImportPolicy.is_number_unsigned())
+    {
+      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an unsigned integer", prefix, name(), k_PathImportPolicyKey));
+    }
+    importData.PathImportPolicy = PathImportPolicy(pathImportPolicy.get<uint8>());
+  }
+  else if(!importData.DataPaths.empty())
+  {
+    importData.PathImportPolicy = PathImportPolicy::Include;
   }
 
   return {{std::move(importData)}};
@@ -247,6 +253,10 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
   ParameterType::ValueType value;
   value.FilePath = std::filesystem::path(inputFilePath);
   value.DataPaths = std::move(dataPaths);
+  if(!value.DataPaths.empty())
+  {
+    value.PathImportPolicy = Dream3dImportParameter::PathImportPolicy::Include;
+  }
 
   return {std::move(value)};
 }
