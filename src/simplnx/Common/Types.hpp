@@ -2,7 +2,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <set>
 
 namespace nx::core
 {
