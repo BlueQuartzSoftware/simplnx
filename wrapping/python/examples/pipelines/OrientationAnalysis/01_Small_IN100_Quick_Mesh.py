@@ -13,6 +13,7 @@ data_structure = nx.DataStructure()
 # Instantiate Import Data Parameter
 import_data = nx.Dream3dImportParameter.ImportData()
 import_data.file_path = str(nxtest.get_data_directory() / "Output/Statistics/SmallIN100_CrystalStats.dream3d")
+import_data.path_import_policy = nx.Dream3dImportParameter.PathImportPolicy.All
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
 # Execute Filter with Parameters

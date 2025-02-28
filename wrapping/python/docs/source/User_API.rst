@@ -456,6 +456,7 @@ General Parameters
 
    import_data = nx.Dream3dImportParameter.ImportData()
    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
+   import_data.path_import_policy = nx.Dream3dImportParameter.PathImportPolicy.All
    result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
 
 .. _DynamicTableParameter:

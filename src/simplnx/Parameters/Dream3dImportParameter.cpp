@@ -141,9 +141,11 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
     }
     importData.PathImportPolicy = PathImportPolicy(pathImportPolicy.get<uint8>());
   }
-  else if(!importData.DataPaths.empty())
+  else
   {
-    importData.PathImportPolicy = PathImportPolicy::Include;
+    // If the path import policy does not exist, import specific DataPaths or import all data if DataPaths
+    // is empty.  This retains backwards compatibility with the original behavior of this parameter.
+    importData.PathImportPolicy = importData.DataPaths.empty() ? PathImportPolicy::All : PathImportPolicy::IncludeList;
   }
 
   return {{std::move(importData)}};
@@ -253,10 +255,7 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
   ParameterType::ValueType value;
   value.FilePath = std::filesystem::path(inputFilePath);
   value.DataPaths = std::move(dataPaths);
-  if(!value.DataPaths.empty())
-  {
-    value.PathImportPolicy = Dream3dImportParameter::PathImportPolicy::Include;
-  }
+  value.PathImportPolicy = value.DataPaths.empty() ? Dream3dImportParameter::PathImportPolicy::All : Dream3dImportParameter::PathImportPolicy::IncludeList;
 
   return {std::move(value)};
 }

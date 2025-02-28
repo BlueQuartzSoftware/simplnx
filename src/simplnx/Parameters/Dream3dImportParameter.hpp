@@ -21,8 +21,9 @@ class SIMPLNX_EXPORT Dream3dImportParameter : public ValueParameter
 public:
   enum class PathImportPolicy : uint8
   {
-    Exclude = 0,
-    Include = 1
+    IncludeList = 0,
+    ExcludeList = 1,
+    All = 2
   };
 
   struct ImportData
@@ -39,10 +40,11 @@ public:
 
     /**
      * @brief Determines the import policy, which governs how to use the DataPaths.
-     * Exclude -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
-     * Include -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty or missing, nothing will be imported.
+     * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty or missing, nothing will be imported.
+     * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
+     * All -> Imports all possible data and ignores the DataPaths list.
      */
-    PathImportPolicy PathImportPolicy = PathImportPolicy::Exclude;
+    PathImportPolicy PathImportPolicy = PathImportPolicy::IncludeList;
   };
 
   using ValueType = ImportData;

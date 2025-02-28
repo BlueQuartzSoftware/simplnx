@@ -188,7 +188,6 @@ Pipeline CreateImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetExportDataPath();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name}), DataPath({DataNames::k_ArrayName})};
-    importData.PathImportPolicy = Dream3dImportParameter::PathImportPolicy::Include;
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
@@ -245,7 +244,6 @@ Pipeline CreateMultiImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetMultiExportDataPath1();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name})};
-    importData.PathImportPolicy = Dream3dImportParameter::PathImportPolicy::Include;
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
@@ -254,7 +252,6 @@ Pipeline CreateMultiImportPipeline()
     Dream3dImportParameter::ImportData importData;
     importData.FilePath = GetMultiExportDataPath2();
     importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group2Name})};
-    importData.PathImportPolicy = Dream3dImportParameter::PathImportPolicy::Include;
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }

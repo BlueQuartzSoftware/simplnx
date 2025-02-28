@@ -87,13 +87,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
 
   OutputActions actions;
 
-  switch(importData.PathImportPolicy)
+  if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
-  case Dream3dImportParameter::PathImportPolicy::Include: {
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths));
-    break;
   }
-  case Dream3dImportParameter::PathImportPolicy::Exclude: {
+  else if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
+  {
     Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
     if(dataStructureResult.invalid())
     {
@@ -102,18 +101,17 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     auto importedDataStructure = dataStructureResult.value();
     auto dataPaths = importedDataStructure.getAllDataPaths();
 
-    if(!importData.DataPaths.empty())
+    if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList && !importData.DataPaths.empty())
     {
       dataPaths.erase(std::remove_if(importData.DataPaths.begin(), importData.DataPaths.end(),
                                      [&](const DataPath& dataPath) { return std::find(dataPaths.begin(), dataPaths.end(), dataPath) != dataPaths.end(); }),
                       dataPaths.end());
     }
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
-    break;
   }
-  default: {
+  else
+  {
     return {MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.")};
-  }
   }
 
   return {std::move(actions)};
