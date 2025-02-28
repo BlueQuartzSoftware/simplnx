@@ -21,14 +21,18 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMisorientationInputValues
   DataPath ImageGeometryPath;
   bool UseMask;
   DataPath MaskArrayPath;
-  bool writeAlignmentShifts;
-  FileSystemPathParameter::ValueType AlignmentShiftFileName;
 
   float32 misorientationTolerance;
   DataPath cellDataGroupPath;
   DataPath quatsArrayPath;
   DataPath cellPhasesArrayPath;
   DataPath crystalStructuresArrayPath;
+
+  bool StoreAlignmentShifts;
+  DataPath AlignmentAMPath;
+  DataPath AlignmentSlicesArrayPath;
+  DataPath AlignmentPositioningArrayPath;
+  DataPath AlignmentShiftsArrayPath;
 };
 
 /**

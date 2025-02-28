@@ -15,12 +15,17 @@ struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
   DataPath ImageGeometryPath;
   DataPath MaskArrayPath;
-  bool WriteAlignmentShifts;
-  FileSystemPathParameter::ValueType AlignmentShiftFileName;
 
   bool UseReferenceSlice;
   int32 ReferenceSlice;
   DataPath cellDataGroupPath;
+
+  bool StoreAlignmentShifts;
+  DataPath AlignmentAMPath;
+  DataPath AlignmentSlicesArrayPath;
+  DataPath AlignmentPositioningArrayPath;
+  DataPath AlignmentShiftsArrayPath;
+  DataPath AlignmentCentroidsArrayPath;
 };
 
 /**
