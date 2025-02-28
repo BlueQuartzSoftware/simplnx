@@ -1,5 +1,6 @@
 #include "Preferences.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 
@@ -77,6 +78,12 @@ void Preferences::setDefaultValues()
 
   m_DefaultValues[k_LargeDataSize_Key] = k_LargeDataSize;
   m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
+  
+  {
+    // Set a default value for out-of-core temp directory.
+    std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "simplnx";
+    m_DefaultValues[k_OoCTempDirectory_ID] = tempDir.string();
+  }
 
   updateMemoryDefaults();
 
@@ -297,5 +304,20 @@ void Preferences::updateMemoryDefaults()
 uint64 Preferences::largeDataStructureSize() const
 {
   return value(k_LargeDataStructureSize_Key).get<uint64>();
+}
+
+std::string Preferences::oocTempDirectory() const
+{
+  return value(k_OoCTempDirectory_ID).get<std::string>();
+}
+
+void Preferences::setOocTempDirectory(const std::string& path)
+{
+  setValue(k_OoCTempDirectory_ID, path);
+  auto plugins = Application::Instance()->getPluginList();
+  for (AbstractPlugin* plugin : plugins)
+  {
+    plugin->setOocTempDirectory(path);
+  }
 }
 } // namespace nx::core
