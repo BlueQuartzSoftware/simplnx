@@ -1,11 +1,11 @@
-
 #include "ImageRotationUtilities.hpp"
+
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <algorithm>
 
 namespace nx::core::ImageRotationUtilities
 {
-
 //------------------------------------------------------------------------------
 FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fR& transformationMatrix)
 {
@@ -67,7 +67,7 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix)
+RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix)
 {
   const SizeVec3 origDims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
@@ -101,7 +101,7 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
     zpNew = static_cast<IGeometry::MeshIndexType>(1);
   }
 
-  ImageRotationUtilities::RotateArgs params;
+  RotateArgs params;
 
   params.OriginalDims = imageGeom.getDimensions();
   params.OriginalSpacing = imageGeom.getSpacing();
@@ -132,9 +132,8 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transform)
+std::string GenerateTransformationMatrixDescription(const Matrix4fR& transform)
 {
-
   std::stringstream out;
 
   out << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(0, 0), transform(0, 1), transform(0, 2), transform(0, 3)) << "\n"
@@ -146,9 +145,9 @@ std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed)
+Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -162,9 +161,9 @@ ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const Ab
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
+Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -179,9 +178,9 @@ ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const Dynam
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
+Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   // Convert Degrees to Radians for the last element
@@ -221,9 +220,9 @@ ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const Vec
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
+Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix = ImageRotationUtilities::Matrix4fR::Identity();
+  Matrix4fR transformationMatrix = Matrix4fR::Identity();
   transformationMatrix(0, 3) = pTranslationValue[0];
   transformationMatrix(1, 3) = pTranslationValue[1];
   transformationMatrix(2, 3) = pTranslationValue[2];
@@ -231,9 +230,9 @@ ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const 
 }
 
 //------------------------------------------------------------------------------
-ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
+Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);
   transformationMatrix(0, 0) = pScaleValue[0];
   transformationMatrix(1, 1) = pScaleValue[1];
@@ -242,10 +241,21 @@ ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const Vector
   return transformationMatrix;
 }
 
-//------------------------------------------------------------------------------
+template <class T>
+constexpr T square(T value) noexcept
+{
+  return value * value;
+}
+
+/**
+ * @brief This function will figure out which octant that the interpolation values should be copied from.
+ * @param params
+ * @param centerPoint The center point of the target voxel
+ * @param coord The coordinate that will be interpolated.
+ * @return
+ */
 size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord)
 {
-
   const float xResHalf = params.xRes * 0.5F;
   const float yResHalf = params.yRes * 0.5F;
   const float zResHalf = params.zRes * 0.5F;
@@ -270,7 +280,7 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   size_t minIndex = 0;
   for(size_t i = 0; i < 8; i++)
   {
-    float const distance = unitSquareCoords[i][0] * coord[0] + unitSquareCoords[i][1] * coord[1] + unitSquareCoords[i][2] * coord[2];
+    float const distance = square(unitSquareCoords[i][0] - coord[0]) + square(unitSquareCoords[i][1] - coord[1]) + square(unitSquareCoords[i][2] - coord[2]);
 
     if(distance < minDistance)
     {
@@ -281,5 +291,4 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
 
   return minIndex;
 }
-
 } // namespace nx::core::ImageRotationUtilities
