@@ -47,16 +47,6 @@ protected:
   virtual std::vector<DataPath> getSelectedDataPaths() const = 0;
 
   /**
-   * @brief This will read in a shifts file written by another DREAM3D alignment filter and populate the shifts parameters with the values as int64 numbers.
-   * @param file The DREAM3D formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  static Result<> readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
-
-  /**
    * @brief This will read in a shifts file defined by the user and populate the shifts parameters with the values as int64 numbers.
    * @param file The user formatted alignment file to read
    * @param zDim The z dimension of the geometry being shifted

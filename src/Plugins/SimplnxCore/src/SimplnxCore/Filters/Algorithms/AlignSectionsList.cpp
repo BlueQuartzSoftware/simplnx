@@ -7,6 +7,19 @@
 
 using namespace nx::core;
 
+namespace
+{
+void CopyShifts(const UInt64AbstractDataStore& positioningStore, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
+{
+  const usize size = positioningStore.getNumberOfTuples();
+  for(usize i = 1; i < size; i++)
+  {
+    xShifts[i] = xShifts[i - 1] + positioningStore[i * 2];
+    yShifts[i] = yShifts[i - 1] + positioningStore[(i * 2) + 1];
+  }
+}
+} // namespace
+
 // -----------------------------------------------------------------------------
 AlignSectionsList::AlignSectionsList(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignSectionsListInputValues* inputValues)
 : AlignSections(dataStructure, shouldCancel, mesgHandler)
@@ -58,14 +71,14 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
   SizeVec3 udims = imageGeom.getDimensions();
   auto zDim = static_cast<int64>(udims[2]);
 
-  Result<> results = {};
-  if(m_InputValues->DREAM3DAlignmentFile)
+  if(m_InputValues->UseFile)
   {
-    results = readDream3dShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
+    return readUserShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
   }
-  else
-  {
-    results = readUserShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
-  }
-  return results;
+
+  // Size validated in preflight
+  const auto& positoningStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->PositioningArrayPath)->getDataStoreRef();
+  CopyShifts(positoningStore, xShifts, yShifts);
+
+  return {};
 }

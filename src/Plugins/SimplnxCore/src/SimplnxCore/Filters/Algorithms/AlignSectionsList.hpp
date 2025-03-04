@@ -16,8 +16,9 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT AlignSectionsListInputValues
 {
   FileSystemPathParameter::ValueType InputFile;
-  bool DREAM3DAlignmentFile;
+  bool UseFile;
   DataPath ImageGeometryPath;
+  DataPath PositioningArrayPath;
 };
 
 /**

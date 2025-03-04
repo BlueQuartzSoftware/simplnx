@@ -87,7 +87,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAlignmentShifts_Key, "Store Alignment Shifts",
                                                                  "Whether to store the shifts applied to each section to a collection of Arrays in a new Attribute Matrix", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentAMName_Key, "Alignment Attribute Matrix Name",
-                                                          "The output attribute matrix where the shifts applied to the section to be stored as DataArrays.", "Feature Centroid Alignment Shifts"));
+                                                          "The output attribute matrix where the shifts applied to the section to be stored as DataArrays.", "Alignment Shifts Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentSlicesArrayName_Key, "Alignment Slices Data Array Name",
                                                           "The output array name where the slice information related to shifts will be stored.", "Slice"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentPositioningArrayName_Key, "Alignment Positioning Data Array Name",
@@ -95,7 +95,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_AlignmentShiftsArrayName_Key, "Alignment Shifts Data Array Name", "The output array name where the shift information will be stored.", "Shifts"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentCentroidsArrayName_Key, "Alignment Centroids Data Array Name",
-                                                          "The output array name where the centroid information will be stored.", "Shifts"));
+                                                          "The output array name where the centroid information will be stored.", "Centroids"));
 
   params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentAMName_Key, true);
   params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentSlicesArrayName_Key, true);
