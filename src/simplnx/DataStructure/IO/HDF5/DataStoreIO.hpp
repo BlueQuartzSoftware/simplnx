@@ -2,8 +2,8 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
-
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "fmt/format.h"
 
@@ -49,22 +49,14 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
  * @return std::unique_ptr<DataStore<T>>
  */
 template <typename T>
-inline std::unique_ptr<DataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
+inline std::shared_ptr<AbstractDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
 {
   auto tupleShape = IDataStoreIO::ReadTupleShape(datasetReader);
   auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);
 
   // Create DataStore
-  auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+  auto dataStore = CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
   dataStore->readHdf5(datasetReader);
-  /*auto dataSpan = dataStore->createSpan();
-  Result<> result = datasetReader.readIntoSpan(dataSpan);
-  if(result.invalid())
-  {
-    throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {} called {}", datasetReader.getFilePath().string(),
-                                         datasetReader.getName()));
-  }*/
-
   return dataStore;
 }
 } // namespace DataStoreIO
