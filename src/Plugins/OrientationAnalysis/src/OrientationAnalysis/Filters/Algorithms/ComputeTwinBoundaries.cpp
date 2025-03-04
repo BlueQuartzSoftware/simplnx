@@ -179,10 +179,9 @@ public:
 
       const int32 feature1 = m_FaceLabels[2 * i];
       const int32 feature2 = m_FaceLabels[(2 * i) + 1];
-      const int32 phase = m_FeaturePhases[feature1]; // Feature1 was arbitrarily selected the feature phase index is identical
-      if(feature1 > 0 && feature2 > 0 && phase == m_FeaturePhases[feature2])
+      if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
-        const uint32 crystalStructure = m_CrystalStructures[phase];
+        const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]]; // Feature1 was arbitrarily selected the feature phase index is identical
         if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
         {
           continue;
@@ -265,10 +264,9 @@ public:
 
       const int32 feature1 = m_FaceLabels[2 * i];
       const int32 feature2 = m_FaceLabels[(2 * i) + 1];
-      const int32 phase = m_FeaturePhases[feature1]; // Feature1 was arbitrarily selected the feature phase index is identical
-      if(feature1 > 0 && feature2 > 0 && phase == m_FeaturePhases[feature2])
+      if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
-        const uint32 crystalStructure = m_CrystalStructures[phase];
+        const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]]; // Feature1 was arbitrarily selected the feature phase index is identical
         if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
         {
           continue;
