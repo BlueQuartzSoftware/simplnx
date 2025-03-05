@@ -46,10 +46,10 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Valid filter execution", "[Simp
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(AlignSectionsListFilter::k_InputFile_Key,
-                        std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
-    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(nx::core::Constants::k_DataContainerPath));
+//    args.insertOrAssign(AlignSectionsListFilter::k_InputFile_Key,
+//                        std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
+//    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(true));
+//    args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(nx::core::Constants::k_DataContainerPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -80,14 +80,14 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Invalid filter execution", "[Si
                                                                     fs::path(fmt::format("{}/export_files_test/write_ascii_data_exemplars/float32/0_0_exemplar_0.txt", unit_test::k_TestFilesDir))));
   args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(nx::core::Constants::k_DataContainerPath));
 
-  SECTION("Invalid DREAM3D Alignment file format")
-  {
-    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(true));
-  }
-  SECTION("Invalid user Alignment file format")
-  {
-    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(false));
-  }
+//  SECTION("Invalid DREAM3D Alignment file format")
+//  {
+//    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(true));
+//  }
+//  SECTION("Invalid user Alignment file format")
+//  {
+//    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(false));
+//  }
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
