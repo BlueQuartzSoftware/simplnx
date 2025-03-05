@@ -160,9 +160,9 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
 }
 
 //-----------------------------------------------------------------------------
-bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format)
+bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, const std::string& format)
 {
-  static const uint64 k_AvailableMemory = Memory::GetTotalMemory();
+  // static const uint64 k_AvailableMemory = Memory::GetTotalMemory();
 
   // Only check if format is set to in-memory
   if(!format.empty())
@@ -172,21 +172,16 @@ bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory,
 
   Preferences* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
 
-  const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
+  const uint64 currentMemoryUsage = dataStructure.memoryUsage() + requiredMemory;
   const uint64 largeDataStructureSize = preferencesPtr->largeDataStructureSize();
   std::string largeDataFormat = preferencesPtr->largeDataFormat();
 
-  if(memoryUsage >= largeDataStructureSize)
+  // If the current Memory usage goes above the user set large Data Structure Memory usage, then
+  // we MUST have Out-of-Core available.
+  if(currentMemoryUsage >= largeDataStructureSize && !largeDataFormat.empty() && largeDataFormat != "In-Memory")
   {
-    // Check if out-of-core is available / enabled
-    if(largeDataFormat.empty() && memoryUsage >= k_AvailableMemory)
-    {
-      return false;
-    }
-    // Use out-of-core
-    format = largeDataFormat;
+    return false;
   }
-
   return true;
 }
 

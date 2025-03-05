@@ -254,7 +254,7 @@ Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string
 /**
  * @brief Validates whether the string can be converted to the primitive type used in the DataObject.
  *
- * The validate will check overflow and underflow and that the string represents some sort of numeric value
+ * The validation will check overflow and underflow and that the string represents some sort of numeric value
  * @param value
  * @param inputDataArray
  * @return
@@ -265,8 +265,9 @@ SIMPLNX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  * @brief Replaces every value in an array based on a `mask` array.
  * @tparam T The primitive type used in the data array
  * @param inputArrayPtr InputArray that will have values replaced
- * @param condDataPtr The mask array as a boolean array
+ * @param condArrayPtr The mask array as a boolean array
  * @param replaceValue The value that will be used for every place the conditional array is TRUE
+ * @param invertMask
  */
 template <class T, typename ConditionalType>
 void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>* condArrayPtr, T replaceValue, bool invertMask = false)
@@ -388,16 +389,24 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
 }
 
-SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format);
+/**
+ * @brief Validates that if we are running out of memory, then Out-of-Core is available.
+ * @param dataStructure
+ * @param requiredMemory
+ * @param format
+ * @return
+ */
+SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, const std::string& format);
 
 /**
  * @brief Creates a DataArray with the given properties
  * @tparam T Primitive Type (int, float, ...)
  * @param dataStructure The DataStructure to use
  * @param tupleShape The Tuple Dimensions
- * @param nComp The number of components in the DataArray
+ * @param compShape The shape of components in the DataArray
  * @param path The DataPath to where the data will be stored.
  * @param mode The mode to assume: PREFLIGHT or EXECUTE. Preflight will NOT allocate any storage. EXECUTE will allocate the memory/storage
+ * @param dataFormat
  * @return
  */
 template <class T>
@@ -441,12 +450,15 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   const usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   uint64 requiredMemory = numTuples * numComponents * sizeof(T);
+
   if(!CheckMemoryRequirement(dataStructure, requiredMemory, dataFormat))
   {
     uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
     uint64 availableMemory = Memory::GetTotalMemory();
-    return MakeErrorResult(-267, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal reported memory: '{}' Bytes", name,
-                                             totalMemory, availableMemory));
+    return MakeErrorResult(
+        -267, fmt::format(
+                  "CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal reported memory: '{}' Bytes\n\t Out-Of-Core Feature would be required.",
+                  name, totalMemory, availableMemory));
   }
 
   auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
@@ -462,7 +474,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
     }
 
-    if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(parentObjectPtr != nullptr && parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));
@@ -472,10 +484,8 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
                                          "dimensions or the same total number of tuples.\n{}\n{}",
                                          name, dataStructure.getDataPathsForId(parentObjectPtr->getId()).front().toString(), amShape, arrayShape));
     }
-    else
-    {
-      return MakeErrorResult(-266, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
-    }
+
+    return MakeErrorResult(-266, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
   }
 
   return {};
@@ -807,7 +817,7 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
 
 /**
  * @brief This function resize the outermost vector of the NeighborList's underlying data to the NeighborList's set
- * number of tuples and initializes each item in the vector to a (non null) pointer to an empty vector
+ * number of tuples and initializes each item in the vector to a (non-null) pointer to an empty vector
  *
  * @param dataStructure
  * @param neighborListPath The path to the NeighborList to be initialized.
@@ -1045,7 +1055,7 @@ private:
 namespace CopyFromArray
 {
 /**
- * @brief Copies all of the data from the inputArray into the destination array using the given tuple offsets.
+ * @brief Copies all the data from the inputArray into the destination array using the given tuple offsets.
  */
 template <class K>
 Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize srcTupleOffset, usize totalSrcTuples)
@@ -1088,7 +1098,7 @@ enum class Direction
 };
 
 /**
- * @brief Shifts all of the existing data in the dataArray from its original, smaller location to its new, larger location in the X direction.
+ * @brief Shifts all of the existing data in the dataArray from its original, smaller location to it's new, larger location in the X direction.
  * This function prepares the dataArray so that additional data can be appended in the X direction, and DOES NOT do any bounds checking!
  */
 template <class K>
@@ -1122,7 +1132,7 @@ Result<> ShiftDataX(K& dataArray, const std::vector<usize>& originalDestDims, co
 }
 
 /**
- * @brief Shifts all of the existing data in the dataArray from its original, smaller location to its new, larger location in the Y direction.
+ * @brief Shifts all the existing data in the dataArray from its original, smaller location to its new, larger location in the Y direction.
  * This function prepares the dataArray so that additional data can be appended in the Y direction, and DOES NOT do any bounds checking!
  */
 template <class K>
@@ -1462,8 +1472,8 @@ public:
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArrays(inputCellArrays)
   , m_InputTupleShapes(inputTupleShapes)
-  , m_DestCellArray(&destCellArray)
   , m_NewDestDims(newDestDims)
+  , m_DestCellArray(&destCellArray)
   , m_Direction(direction)
   , m_Mirror(mirror)
   {
@@ -1604,7 +1614,7 @@ private:
   IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
   const IArray* m_InputCellArray = nullptr;
   IArray* m_DestCellArray = nullptr;
-  nonstd::span<const int64> m_NewToOldIndices;
+  nonstd::span<const int64> m_NewToOldIndices = {};
 };
 
 /**
@@ -1746,14 +1756,14 @@ private:
   IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
   const IArray* m_InputCellArray = nullptr;
   IArray* m_DestCellArray = nullptr;
-  const FloatVec3 m_Origin;
-  const SizeVec3 m_ImageGeomDims;
-  const std::vector<float32> m_ImageGeomSpacing;
-  const SizeVec3 m_RectGridDims;
+  const FloatVec3 m_Origin = {0.0f, 0.0f, 0.0f};
+  const SizeVec3 m_ImageGeomDims = {0, 0, 0};
+  const std::vector<float32> m_ImageGeomSpacing = {0.0f, 0.0f, 0.0f};
+  const SizeVec3 m_RectGridDims = {0, 0, 0};
   const Float32Array* m_XGridValues = nullptr;
   const Float32Array* m_YGridValues = nullptr;
   const Float32Array* m_ZGridValues = nullptr;
-  const FloatVec3 m_HalfSpacing;
+  const FloatVec3 m_HalfSpacing = {0.0f, 0.0f, 0.0f};
 };
 
 /**
