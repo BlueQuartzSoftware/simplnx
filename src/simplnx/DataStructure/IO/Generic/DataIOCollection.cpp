@@ -56,7 +56,8 @@ std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string&
     }
   }
 
-  return nullptr;
+  nx::core::Generic::CoreDataIOManager coreManager;
+  return coreManager.dataStoreCreationFnc(coreManager.formatName())(dataType, tupleShape, componentShape, {});
 }
 
 void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const
