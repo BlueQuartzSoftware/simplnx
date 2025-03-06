@@ -8,7 +8,7 @@ on:
 
 jobs:
   clang_format_pr:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v2
@@ -20,11 +20,11 @@ jobs:
         id: check_format
         continue-on-error: true
         run: |
-          python3 scripts/clang_format.py --format-version 10 --commits HEAD^ HEAD
+          python3 scripts/clang_format.py --format-version 13 --commits HEAD^ HEAD
       - name: Apply Formatting
         if: steps.check_format.outcome != 'success'
         run: |
-          python3 scripts/clang_format.py --format-version 10 --modify --commits HEAD^ HEAD
+          python3 scripts/clang_format.py --format-version 13 --modify --commits HEAD^ HEAD
       - name: Add Suggestions
         if: steps.check_format.outcome != 'success'
         uses: reviewdog/action-suggester@v1
