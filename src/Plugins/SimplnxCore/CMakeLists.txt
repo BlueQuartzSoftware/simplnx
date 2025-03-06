@@ -104,6 +104,7 @@ set(FilterList
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadTextDataArrayFilter
+  ReadStringDataArrayFilter
   ReadVolumeGraphicsFileFilter
   ReadVtkStructuredPointsFilter
   RegularGridSampleSurfaceMeshFilter
@@ -207,6 +208,7 @@ set(AlgorithmList
   ReadDeformKeyFileV12
   ReadRawBinary
   ReadStlFile
+  ReadStringDataArray
   ReadVolumeGraphicsFile
   ReadVtkStructuredPoints
   RegularGridSampleSurfaceMesh

@@ -32,7 +32,7 @@ if("${status}" STREQUAL "No error")
     file(APPEND "${LOG_FILE}" "[@FETCH_FILE_INDEX@] @ARGS_ARCHIVE_NAME@ Download Complete\n")
   endif()
 endif()
-# message(STATUS "status: '${status}'")
+# message(STATUS "   status: '${status}'")
 
 # --------------------------------------------------------------------------------------------------
 # Oddly, if the status comes back as "No Error", that actually means that something got downloaded
