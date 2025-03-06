@@ -116,7 +116,7 @@ Result<> ReadStringDataArray::operator()()
     // Copy the data into the array
     for(const auto& value : tokens)
     {
-      data[tupleIndex++] = static_cast<std::string>(value);
+      data[tupleIndex++] = value;
     }
 
     lineNum++;
