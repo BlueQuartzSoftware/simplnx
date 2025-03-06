@@ -105,7 +105,7 @@ Result<> ReadStringDataArray::operator()()
     std::string line;
     std::getline(in, line);
     line = StringUtilities::replace(line, "\r", "");
-    StringVector tokens = StringUtilities::split(line, ConvertDelimiterIndexToString(m_InputValues->delimiterIndex), false);
+    std::vector<std::string> tokens = StringUtilities::split(line, ConvertDelimiterIndexToString(m_InputValues->delimiterIndex), false);
     if(tokens.empty())
     {
       // This is an empty line in the middle of the CSV file, which just shouldn't happen
