@@ -28,6 +28,23 @@ public:
 
   struct ImportData
   {
+    /**
+     * @brief Constructs an ImportData instance.
+     *
+     * This constructor initializes an ImportData object with the specified file path,
+     * path import policy, and vector of DataPaths.
+     *
+     * NOTE: If the path import policy is set to 'All', the vector of DataPaths will be ignored.
+     *
+     * @param filePath The path to the .dream3d file to import.
+     * @param policy The import policy that governs how the DataPaths will be processed.
+     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+                     All -> Imports all possible data and ignores the DataPaths list.
+     *               Defaults to PathImportPolicy::All.
+     * @param dataPaths A vector of DataPaths of objects to include/exclude during the import process. Defaults to an empty vector.
+     *                  If the path import policy is set to 'All', this parameter is ignored.
+     */
     explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
     : FilePath(std::move(filePath))
     , DataPaths(std::move(dataPaths))

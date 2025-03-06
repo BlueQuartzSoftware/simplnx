@@ -450,11 +450,37 @@ General Parameters
       The ImportData object has 2 member variables that can be set.
 
    :ivar file_path: Path to the .dream3d file on the file system
-   :ivar data_paths: List of :ref:`DataPath <DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
+   :ivar path_import_policy: The import policy that governs how the DataPaths will be processed.
+     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+                     All -> Imports all possible data and ignores the DataPaths list.
+     *               Defaults to PathImportPolicy.All.
+   :ivar data_paths: List of :ref:`DataPath <DataPath>`s of objects to include/exclude during the import process. Defaults to an empty vector.
+     *                  If the path import policy is set to 'All', this parameter is ignored.
 
 .. code:: python
 
+   # Imports all objects
    import_data = nx.Dream3dImportParameter.ImportData(file_path="/private/tmp/basic_ebsd.dream3d")
+   result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
+
+.. code-block:: python
+
+   import simplnx as nx
+
+   # Imports the DataContainer, CellData, Fit, and Image Quality objects.  DataContainer and CellData objects
+   # are automatically imported because they are parents of the Fit and Image Quality objects
+   data_paths = [nx.DataPath(["DataContainer", "CellData", "Fit"]), nx.DataPath(["DataContainer", "CellData", "Image Quality"])]
+   import_data = nx.Dream3dImportParameter.ImportData(file_path="/private/tmp/SmallIN100.dream3d", path_import_policy=nx.Dream3dImportParameter.PathImportPolicy.IncludeList, data_paths=data_paths)
+   result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
+
+.. code-block:: python
+
+   import simplnx as nx
+
+   # Imports everything EXCEPT the Fit and Image Quality objects.
+   data_paths = [nx.DataPath(["DataContainer", "CellData", "Fit"]), nx.DataPath(["DataContainer", "CellData", "Image Quality"])]
+   import_data = nx.Dream3dImportParameter.ImportData(file_path="/private/tmp/SmallIN100.dream3d", path_import_policy=nx.Dream3dImportParameter.PathImportPolicy.ExcludeList, data_paths=data_paths)
    result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
 
 .. _DynamicTableParameter:

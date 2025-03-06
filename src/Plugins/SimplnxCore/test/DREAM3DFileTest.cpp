@@ -410,3 +410,32 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 }
+
+TEST_CASE("DREAM3DFileTest: Other Path Import Policy Tests")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
+  auto filePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure;
+  ReadDREAM3DFilter filter;
+  Arguments args;
+
+  SECTION("Include List")
+  {
+    Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, {DataPath({"DataContainer", "CellData", "Confidence Index"})});
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
+  }
+  SECTION("Exclude List")
+  {
+    Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::ExcludeList, {DataPath({"DataContainer", "CellData"})});
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+    REQUIRE(!dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
+  }
+}
