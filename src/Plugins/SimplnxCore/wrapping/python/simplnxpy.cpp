@@ -1222,10 +1222,11 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<Dream3dImportParameter::ImportData> dream3dImportData(dream3dImportParameter, "ImportData");
   auto pathImportPolicy = py::enum_<Dream3dImportParameter::PathImportPolicy>(dream3dImportParameter, "PathImportPolicy");
+  pathImportPolicy.value("All", Dream3dImportParameter::PathImportPolicy::All);
   pathImportPolicy.value("IncludeList", Dream3dImportParameter::PathImportPolicy::IncludeList);
   pathImportPolicy.value("ExcludeList", Dream3dImportParameter::PathImportPolicy::ExcludeList);
-  pathImportPolicy.value("All", Dream3dImportParameter::PathImportPolicy::All);
-  dream3dImportData.def(py::init<>());
+  dream3dImportData.def(py::init<std::filesystem::path, Dream3dImportParameter::PathImportPolicy, std::vector<nx::core::DataPath>>(), py::arg("file_path"),
+                        py::arg("policy") = Dream3dImportParameter::PathImportPolicy::All, py::arg("data_paths") = std::vector<nx::core::DataPath>());
   dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
   dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
   dream3dImportData.def_readwrite("path_import_policy", &Dream3dImportParameter::ImportData::PathImportPolicy);

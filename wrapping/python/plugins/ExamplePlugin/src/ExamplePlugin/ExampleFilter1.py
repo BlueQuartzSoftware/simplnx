@@ -110,9 +110,7 @@ class ExampleFilter1:
     params.insert(nx.DataTypeParameter(ExampleFilter1.PARAM13_KEY, "Data Type", "Example data type help text", nx.DataType.float64))
     params.insert(nx.DataStoreFormatParameter(ExampleFilter1.PARAM12_KEY, 'Data Store Format', 'This value will specify which data format is used by the array\'s data store. An empty string results in in-memory data store.', ""))
 
-    import_data = nx.Dream3dImportParameter.ImportData()
-    import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-    import_data.path_import_policy = nx.Dream3dImportParameter.PathImportPolicy.All
+    import_data = nx.Dream3dImportParameter.ImportData(file_path="/private/tmp/basic_ebsd.dream3d")
     params.insert(nx.Dream3dImportParameter(ExampleFilter1.PARAM14_KEY, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
 
     ensemble_info = []

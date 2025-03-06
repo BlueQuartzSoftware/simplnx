@@ -67,8 +67,8 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     auto filter = filterList->createFilter(k_ReadDREAM3DFilterHandle);
     REQUIRE(nullptr != filter);
 
-    Dream3dImportParameter::ImportData parameter;
-    parameter.FilePath = fs::path(fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_TestFilesDir));
+    auto filePath = fs::path(fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_TestFilesDir));
+    Dream3dImportParameter::ImportData parameter(filePath);
 
     Arguments args;
     args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));

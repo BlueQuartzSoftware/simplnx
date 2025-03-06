@@ -185,9 +185,9 @@ Pipeline CreateImportPipeline()
   Pipeline pipeline("Import DREAM3D Pipeline");
   {
     Arguments args;
-    Dream3dImportParameter::ImportData importData;
-    importData.FilePath = GetExportDataPath();
-    importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name}), DataPath({DataNames::k_ArrayName})};
+    auto filePath = GetExportDataPath();
+    std::vector<DataPath> dataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name}), DataPath({DataNames::k_ArrayName})};
+    Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, dataPaths);
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
@@ -241,17 +241,13 @@ Pipeline CreateMultiImportPipeline()
   Pipeline pipeline("Import DREAM3D Pipeline");
   {
     Arguments args;
-    Dream3dImportParameter::ImportData importData;
-    importData.FilePath = GetMultiExportDataPath1();
-    importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group1Name})};
+    Dream3dImportParameter::ImportData importData(GetMultiExportDataPath1(), Dream3dImportParameter::PathImportPolicy::IncludeList, std::vector<DataPath>{DataPath({DataNames::k_Group1Name})});
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
   {
     Arguments args;
-    Dream3dImportParameter::ImportData importData;
-    importData.FilePath = GetMultiExportDataPath2();
-    importData.DataPaths = std::vector<DataPath>{DataPath({DataNames::k_Group2Name})};
+    Dream3dImportParameter::ImportData importData(GetMultiExportDataPath2(), Dream3dImportParameter::PathImportPolicy::IncludeList, std::vector<DataPath>{DataPath({DataNames::k_Group2Name})});
     args.insert("import_data_object", importData);
     pipeline.push_back(k_ImportD3DHandle, args);
   }
@@ -408,8 +404,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
 
     ReadDREAM3DFilter filter;
     Arguments args;
-    Dream3dImportParameter::ImportData importData;
-    importData.FilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+    Dream3dImportParameter::ImportData importData(fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir)));
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
     auto executeResult = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);

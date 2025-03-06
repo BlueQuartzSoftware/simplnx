@@ -21,13 +21,20 @@ class SIMPLNX_EXPORT Dream3dImportParameter : public ValueParameter
 public:
   enum class PathImportPolicy : uint8
   {
-    IncludeList = 0,
-    ExcludeList = 1,
-    All = 2
+    All = 0,
+    IncludeList = 1,
+    ExcludeList = 2
   };
 
   struct ImportData
   {
+    explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
+    : FilePath(std::move(filePath))
+    , DataPaths(std::move(dataPaths))
+    , PathImportPolicy(policy)
+    {
+    }
+
     /**
      * @brief The path to the .dream3d file to import.
      */
@@ -44,7 +51,7 @@ public:
      * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
      * All -> Imports all possible data and ignores the DataPaths list.
      */
-    PathImportPolicy PathImportPolicy = PathImportPolicy::IncludeList;
+    PathImportPolicy PathImportPolicy = PathImportPolicy::All;
   };
 
   using ValueType = ImportData;

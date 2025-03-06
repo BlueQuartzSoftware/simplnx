@@ -51,9 +51,8 @@ nxtest.print_all_paths()
 # Create the DataStructure object
 data_structure = nx.DataStructure()
 
-import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d"
-import_data.path_import_policy = nx.Dream3dImportParameter.PathImportPolicy.All
+file_path = nxtest.get_test_temp_directory() / "basic_ebsd_example.dream3d"
+import_data = nx.Dream3dImportParameter.ImportData(file_path=file_path)
 
 print(f'{import_data.file_path}')
 

@@ -55,7 +55,8 @@ Parameters ReadDREAM3DFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
+  params.insert(
+      std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData({})));
   return params;
 }
 
@@ -85,10 +86,17 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path.")};
   }
 
-  OutputActions actions;
+  Result<OutputActions> result;
+  OutputActions& actions = result.value();
 
   if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
+    if(importData.DataPaths.empty())
+    {
+      result.warnings().push_back(
+          Warning(-10, "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"));
+    }
+
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths));
   }
   else if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
@@ -101,11 +109,25 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     auto importedDataStructure = dataStructureResult.value();
     auto dataPaths = importedDataStructure.getAllDataPaths();
 
-    if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList && !importData.DataPaths.empty())
+    if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
     {
-      dataPaths.erase(std::remove_if(importData.DataPaths.begin(), importData.DataPaths.end(),
-                                     [&](const DataPath& dataPath) { return std::find(dataPaths.begin(), dataPaths.end(), dataPath) != dataPaths.end(); }),
-                      dataPaths.end());
+      if(importData.DataPaths.empty())
+      {
+        result.warnings().push_back(Warning(-11,
+                                            "The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
+                                            "result by setting the import policy to 'All'."));
+      }
+      else
+      {
+        for(const auto& dataPath : importData.DataPaths)
+        {
+          auto iter = std::find(dataPaths.begin(), dataPaths.end(), dataPath);
+          if(iter != dataPaths.end())
+          {
+            dataPaths.erase(iter);
+          }
+        }
+      }
     }
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
   }
@@ -114,7 +136,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.")};
   }
 
-  return {std::move(actions)};
+  return {result};
 }
 
 Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

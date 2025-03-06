@@ -171,12 +171,7 @@ In order to import a .dream3d file, we need to tell **simplnx** which data to im
 
     # Create the DataStructure object    data_structure = nx.DataStructure()
     # Create a nx.Dream3dImportParameter.ImportData object and set its values
-    import_data = nx.Dream3dImportParameter.ImportData()
-    # Set the path to the file on the file system
-    import_data.file_path = "/tmp/basic_ebsd.dream3d"
-    # Set the import_data.path_import_policy value to 'All' which signals to the filter to
-    # import EVERY piece of data from the file.
-    import_data.path_import_policy = nx.Dream3dImportParameter.PathImportPolicy.All
+    import_data = nx.Dream3dImportParameter.ImportData(file_path="/tmp/basic_ebsd.dream3d")
 
     # Instantiate and execute the filter immediately.
     result = nx.ReadDREAM3DFilter.execute(data_structure=data_structure, import_data_object=import_data)
