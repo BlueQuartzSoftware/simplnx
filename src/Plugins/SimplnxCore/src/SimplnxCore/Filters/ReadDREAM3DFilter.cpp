@@ -91,13 +91,28 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
 
   if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
-    if(importData.DataPaths.empty())
+    // Build the dataPaths list by figuring out all the parent data paths for each item in importData.DataPaths
+    std::vector<DataPath> dataPaths;
+    for(const auto& dataPath : importData.DataPaths)
+    {
+      auto pathVector = dataPath.getPathVector();
+      for(usize i = 1; i <= dataPath.getLength(); ++i)
+      {
+        auto dataPathPart = DataPath(std::vector<std::string>(pathVector.begin(), pathVector.begin() + i));
+        if(std::find(dataPaths.begin(), dataPaths.end(), dataPathPart) == dataPaths.end())
+        {
+          dataPaths.push_back(dataPathPart);
+        }
+      }
+    }
+
+    if(dataPaths.empty())
     {
       result.warnings().push_back(
           Warning(-10, "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"));
     }
 
-    actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths));
+    actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
   }
   else if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
   {
@@ -111,7 +126,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
 
     if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
     {
-      if(importData.DataPaths.empty())
+      if(dataPaths.empty())
       {
         result.warnings().push_back(Warning(-11,
                                             "The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
@@ -119,7 +134,34 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
       }
       else
       {
+        // Build the selectedDataPaths list by getting all the child DataPaths for each item in importData.DataPaths
+        auto selectedDataPaths = importData.DataPaths;
         for(const auto& dataPath : importData.DataPaths)
+        {
+          for(const auto& candidateDataPath : dataPaths)
+          {
+            if(candidateDataPath.getLength() <= dataPath.getLength())
+            {
+              continue;
+            }
+
+            bool isEqual = true;
+            for(usize i = 0; i < dataPath.getPathVector().size(); ++i)
+            {
+              if(dataPath.getPathVector()[i] != candidateDataPath.getPathVector()[i])
+              {
+                isEqual = false;
+              }
+            }
+            if(isEqual)
+            {
+              selectedDataPaths.push_back(candidateDataPath);
+            }
+          }
+        }
+
+        // Erase the selectedDataPaths from the total data paths
+        for(const auto& dataPath : selectedDataPaths)
         {
           auto iter = std::find(dataPaths.begin(), dataPaths.end(), dataPath);
           if(iter != dataPaths.end())
@@ -129,6 +171,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
         }
       }
     }
+
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
   }
   else
