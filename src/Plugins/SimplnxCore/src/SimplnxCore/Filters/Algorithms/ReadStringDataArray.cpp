@@ -61,7 +61,7 @@ ReadStringDataArray::~ReadStringDataArray() noexcept = default;
 
 Result<> ReadStringDataArray::operator()()
 {
-  auto data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
+  auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
   char delimiter = nx::core::CsvParser::IndexToDelimiter(m_InputValues->delimiterIndex);
 
   if(!fs::exists(m_InputValues->inputFileValue))
