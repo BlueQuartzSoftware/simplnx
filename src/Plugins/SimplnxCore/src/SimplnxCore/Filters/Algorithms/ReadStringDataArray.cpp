@@ -94,7 +94,6 @@ Result<> ReadStringDataArray::operator()()
 
   usize totalSize = numTuples * scalarNumComp;
   usize lineNum = m_InputValues->skipLineCount;
-  using StringVector = std::vector<std::string>;
   usize tupleIndex = 0;
   for(size_t i = 0; i < totalSize; ++i)
   {
