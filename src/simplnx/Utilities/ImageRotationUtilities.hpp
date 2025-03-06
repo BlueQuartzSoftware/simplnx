@@ -8,7 +8,6 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <Eigen/Dense>
@@ -32,7 +31,6 @@ using Vector3i64 = Eigen::Array<int64_t, 1, 3>;
 
 struct RotateArgs
 {
-
   USizeVec3 OriginalDims;
   FloatVec3 OriginalSpacing;
   FloatVec3 OriginalOrigin;
@@ -91,6 +89,7 @@ SIMPLNX_EXPORT Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat3
  * @return
  */
 SIMPLNX_EXPORT Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue);
+
 /**
  * @brief
  * @param pScaleValue
@@ -196,15 +195,17 @@ T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, cons
 }
 
 /**
- * @brief FindOctant
+ * @brief
  * @param params
- * @param index
+ * @param centerPoint
  * @param coord
  * @return
  */
 SIMPLNX_EXPORT size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord);
 
 using OctantOffsetArrayType = std::array<Vector3i64, 8>;
+
+//clang-format off
 
 static const OctantOffsetArrayType k_IndexOffset0 = {Vector3i64{-1, -1, -1}, Vector3i64{0, -1, -1}, Vector3i64{0, 0, -1}, Vector3i64{-1, 0, -1},
                                                      Vector3i64{-1, -1, 0},  Vector3i64{0, -1, 0},  Vector3i64{0, 0, 0},  Vector3i64{-1, 0, 0}};
@@ -224,20 +225,26 @@ static const OctantOffsetArrayType k_IndexOffset7 = {Vector3i64{-1, 0, 0}, Vecto
                                                      Vector3i64{-1, 0, 1}, Vector3i64{0, 0, 1}, Vector3i64{0, 1, 1}, Vector3i64{-1, -1, 1}};
 static const std::array<OctantOffsetArrayType, 8> k_AllOctantOffsets{k_IndexOffset0, k_IndexOffset1, k_IndexOffset2, k_IndexOffset3, k_IndexOffset4, k_IndexOffset5, k_IndexOffset6, k_IndexOffset7};
 
+//clang-format on
+
+template <class T>
+using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, float64, int64>;
+
 /**
  * @brief FindInterpolationValues
+ * @tparam T
  * @param params
- * @param index
  * @param octant
  * @param oldIndicesU
  * @param oldCoords
  * @param sourceArray
  * @param pValues
  * @param uvw
+ * @param hitVoxelCenterPoint
  */
 template <typename T>
-inline void FindInterpolationValues(const RotateArgs& params, size_t octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray, std::vector<T>& pValues,
-                                    Eigen::Vector3f& uvw)
+inline void FindInterpolationValues(const RotateArgs& params, size_t octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
+                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df& hitVoxelCenterPoint)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
 
@@ -261,9 +268,23 @@ inline void FindInterpolationValues(const RotateArgs& params, size_t octant, Siz
                  static_cast<float32>(pIndices[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
     }
   }
-  uvw[0] = oldCoords[0] - p1Coord[0];
-  uvw[1] = oldCoords[1] - p1Coord[1];
-  uvw[2] = oldCoords[2] - p1Coord[2];
+
+  // NEED TO CALCULATE NEW UVW VALUES BASED ON coordsOld (which is the actual xyz point coord that we need to interpolate).
+  auto c000_Index = oldIndices + indexOffset[0];
+  auto c111_Index = oldIndices + indexOffset[6];
+  Eigen::Vector3f c000_Coord = {static_cast<float32>(c000_Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
+                                static_cast<float32>(c000_Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                                static_cast<float32>(c000_Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+  Eigen::Vector3f c111_Coord = {static_cast<float32>(c111_Index[0]) * params.xRes + (0.5F * params.xRes) + params.OriginalOrigin[0],
+                                static_cast<float32>(c111_Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
+                                static_cast<float32>(c111_Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
+
+  for(size_t i = 0; i < 3; i++)
+  {
+    uvw[i] = (oldCoords[i] - c000_Coord[i]) / (c111_Coord[i] - c000_Coord[i]);
+    uvw[i] = uvw[i] < 0.0 ? 0.0 : uvw[i];
+    uvw[i] = uvw[i] > 1.0 ? 1.0 : uvw[i];
+  }
 }
 
 /**
@@ -303,7 +324,7 @@ public:
     }
   }
 
-  const std::atomic_bool& getCancel()
+  const std::atomic_bool& getCancel() const
   {
     return m_ShouldCancel;
   }
@@ -332,16 +353,21 @@ public:
   , m_FilterCallback(filterCallback)
   {
   }
+
   ~RotateImageGeometryWithTrilinearInterpolation() = default;
 
   RotateImageGeometryWithTrilinearInterpolation(const RotateImageGeometryWithTrilinearInterpolation&) = default;
+
   RotateImageGeometryWithTrilinearInterpolation(RotateImageGeometryWithTrilinearInterpolation&&) noexcept = default;
+
   RotateImageGeometryWithTrilinearInterpolation& operator=(const RotateImageGeometryWithTrilinearInterpolation&) = delete;
+
   RotateImageGeometryWithTrilinearInterpolation& operator=(RotateImageGeometryWithTrilinearInterpolation&&) noexcept = delete;
+
   /**
    * @brief calculateInterpolatedValue
    *
-   * This comes from https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36.
+   * This comes from https://en.wikipedia.org/wiki/Trilinear_interpolation
    *
    * Note in the codes below the equations have been changed to do all of the additions first, then
    * the subtractions. This should hopefully alleviate issue with trying to subtract unsigned integers
@@ -353,7 +379,7 @@ public:
    * @param indices
    * @return
    */
-  T calculateInterpolatedValue(std::vector<T>& pValues, Eigen::Vector3f& uvw, size_t numComps, size_t compIndex) const
+  T calculateInterpolatedValue(const std::vector<AccumulationValueType<T>>& pValues, const Eigen::Vector3f& uvw, size_t numComps, size_t compIndex) const
   {
     constexpr size_t P1 = 0;
     constexpr size_t P2 = 1;
@@ -364,30 +390,31 @@ public:
     constexpr size_t P7 = 6;
     constexpr size_t P8 = 7;
 
-    const float u = uvw[0];
-    const float v = uvw[1];
-    const float w = uvw[2];
-
-    T value = pValues[0];
-    // clang-format off
-    value += u * (pValues[P2 * numComps + compIndex] - pValues[P1 * numComps + compIndex]);
-    value += v * (pValues[P4 * numComps + compIndex] - pValues[P1 * numComps + compIndex]);
-    value += w * (pValues[P5 * numComps + compIndex] - pValues[P1 * numComps + compIndex]);
-    value += u * v * (pValues[P1 * numComps + compIndex] + pValues[P3 * numComps + compIndex] - pValues[P2 * numComps + compIndex] - pValues[P4 * numComps + compIndex]);
-    value += u * w * (pValues[P1 * numComps + compIndex] + pValues[P6 * numComps + compIndex] - pValues[P2 * numComps + compIndex] - pValues[P5 * numComps + compIndex]);
-    value += v * w * (pValues[P1 * numComps + compIndex] + pValues[P8 * numComps + compIndex] - pValues[P4 * numComps + compIndex] - pValues[P5 * numComps + compIndex]);
-    value += u * v * w *
-             ( pValues[P4 * numComps + compIndex]
-              + pValues[P2 * numComps + compIndex]
-              + pValues[P8 * numComps + compIndex]
-              + pValues[P6 * numComps + compIndex]
-              - pValues[P1 * numComps + compIndex]
-              - pValues[P3 * numComps + compIndex]
-              - pValues[P5 * numComps + compIndex]
-              - pValues[P7 * numComps + compIndex] );
-
     // clang-format on
-    return value;
+    const AccumulationValueType<T> c000 = pValues[P1 * numComps + compIndex];
+    const AccumulationValueType<T> c100 = pValues[P2 * numComps + compIndex];
+    const AccumulationValueType<T> c110 = pValues[P3 * numComps + compIndex];
+    const AccumulationValueType<T> c010 = pValues[P4 * numComps + compIndex];
+    const AccumulationValueType<T> c001 = pValues[P5 * numComps + compIndex];
+    const AccumulationValueType<T> c101 = pValues[P6 * numComps + compIndex];
+    const AccumulationValueType<T> c111 = pValues[P7 * numComps + compIndex];
+    const AccumulationValueType<T> c011 = pValues[P8 * numComps + compIndex];
+
+    const float Xd = uvw[0];
+    const float Yd = uvw[1];
+    const float Zd = uvw[2];
+
+    const AccumulationValueType<T> c00 = c000 * (1 - Xd) + c100 * Xd;
+    const AccumulationValueType<T> c01 = c001 * (1 - Xd) + c101 * Xd;
+    const AccumulationValueType<T> c10 = c010 * (1 - Xd) + c110 * Xd;
+    const AccumulationValueType<T> c11 = c011 * (1 - Xd) + c111 * Xd;
+
+    const AccumulationValueType<T> c0 = c00 * (1 - Yd) + c10 * Yd;
+    const AccumulationValueType<T> c1 = c01 * (1 - Yd) + c11 * Yd;
+
+    const AccumulationValueType<T> c = c0 * (1 - Zd) + c1 * Zd;
+
+    return c;
   }
 
   /**
@@ -399,7 +426,7 @@ public:
   {
     using DataArrayType = DataArray<T>;
 
-    const DataArrayType& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
+    const auto& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
     const size_t numComps = sourceArray.getNumberOfComponents();
     if(numComps == 0)
     {
@@ -422,11 +449,7 @@ public:
     destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
     destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
 
-    // Tri linearInterpolationData<T> interpolationValues;
-    // SizeVec3 oldGeomIndices = {std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
-
-    std::vector<T> pValues(8 * numComps);
-    Eigen::Vector3f uvw;
+    std::vector<AccumulationValueType<T>> pValues(8 * numComps);
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
 
@@ -444,11 +467,10 @@ public:
         int64_t jtot = (m_Params.xpNew) * j;
         for(int64_t i = 0; i < m_Params.xpNew; i++)
         {
-          int64_t newIndex = ktot + jtot + i;
-
-          Point3Df point = destImageGeomPtr->getCoordsf(newIndex);
+          int64_t destIndex = ktot + jtot + i;
+          Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
           // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
-          Eigen::Vector4f coordsNew(point.getX(), point.getY(), point.getZ(), 1.0f);
+          Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
           // Transform back to the old coordinate
           Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
@@ -459,21 +481,24 @@ public:
           // Now we know what voxel the new cell center maps back to in the original geometry.
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
-            size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * m_Params.OriginalDims[1]) + oldGeomIndices[0];
-            auto centerPoint = origImageGeomPtr->getCoordsf(oldIndex);
+            size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
 
-            int octant = FindOctant(m_Params, centerPoint, coordsOld);
+            auto oldVoxelCenterPoint = origImageGeomPtr->getCoordsf(oldIndex);
 
-            FindInterpolationValues(m_Params, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw);
+            int octant = FindOctant(m_Params, oldVoxelCenterPoint, coordsOld);
+
+            Eigen::Vector3f uvw;
+            FindInterpolationValues(m_Params, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw, oldVoxelCenterPoint);
+
             for(size_t compIndex = 0; compIndex < numComps; compIndex++)
             {
               T value = calculateInterpolatedValue(pValues, uvw, numComps, compIndex);
-              newDataStore.setComponent(newIndex, compIndex, value);
+              newDataStore.setComponent(destIndex, compIndex, value);
             }
           }
           else
           {
-            newDataStore.fillTuple(newIndex, static_cast<T>(0));
+            newDataStore.fillTuple(destIndex, static_cast<T>(0));
           }
         }
       }
@@ -504,16 +529,19 @@ public:
   , m_FilterCallback(filterCallback)
   {
   }
+
   ~RotateImageGeometryWithNearestNeighbor() = default;
 
   RotateImageGeometryWithNearestNeighbor(const RotateImageGeometryWithNearestNeighbor&) = default;
+
   RotateImageGeometryWithNearestNeighbor(RotateImageGeometryWithNearestNeighbor&&) noexcept = default;
+
   RotateImageGeometryWithNearestNeighbor& operator=(const RotateImageGeometryWithNearestNeighbor&) = delete;
+
   RotateImageGeometryWithNearestNeighbor& operator=(RotateImageGeometryWithNearestNeighbor&&) noexcept = delete;
 
   void convert() const
   {
-
     DataStructure tempDataStructure;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(tempDataStructure, "source image geom");
     srcImageGeomPtr->setDimensions(m_Params.OriginalDims);
@@ -543,10 +571,10 @@ public:
         int64 jtot = (m_Params.xpNew) * j;
         for(int64 i = 0; i < m_Params.xpNew; i++)
         {
-          int64 const newIndex = ktot + jtot + i;
-          Point3Df point = destImageGeomPtr->getCoordsf(newIndex);
+          const int64 destIndex = ktot + jtot + i;
+          Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
           // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
-          Eigen::Vector4f coordsNew(point.getX(), point.getY(), point.getZ(), 1.0f);
+          Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
           // Transform back to the old coordinate
           Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
@@ -563,17 +591,17 @@ public:
             }
             size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
 
-            if(newDataStore.copyFrom(newIndex, oldDataStore, oldIndex, 1).invalid())
+            if(newDataStore.copyFrom(destIndex, oldDataStore, oldIndex, 1).invalid())
             {
               std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_SourceArray->getName(), oldIndex,
-                                       m_SourceArray->getName(), newIndex)
+                                       m_SourceArray->getName(), destIndex)
                         << std::endl;
               break;
             }
           }
           else
           {
-            newDataStore.fillTuple(newIndex, 0);
+            newDataStore.fillTuple(destIndex, 0);
           }
         }
       }
@@ -600,7 +628,6 @@ private:
  */
 class ApplyTransformationToNodeGeometry
 {
-
 public:
   ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
   : m_TransformationMatrix(transformationMatrix)
@@ -650,5 +677,4 @@ private:
   IGeometry::SharedVertexList& m_Vertices;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };
-
 } // namespace nx::core::ImageRotationUtilities

@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
