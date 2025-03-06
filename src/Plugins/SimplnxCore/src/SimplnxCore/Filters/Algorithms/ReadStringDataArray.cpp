@@ -77,8 +77,6 @@ Result<> ReadStringDataArray::operator()()
 
   in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
 
-  //  std::array<char, k_BufferSize> buf = {};
-  //  char* buffer = buf.data();
   std::string headerLine;
   // Skip some header line by just reading those bytes into the pointer knowing that the next
   // thing we are going to do it over write those bytes with the real data that we are after.
