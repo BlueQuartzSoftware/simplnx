@@ -89,7 +89,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   Result<OutputActions> result;
   OutputActions& actions = result.value();
 
-  if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
+  if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
     // Build the dataPaths list by figuring out all the parent data paths for each item in importData.DataPaths
     std::vector<DataPath> dataPaths;
@@ -109,12 +109,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     if(dataPaths.empty())
     {
       result.warnings().push_back(
-          Warning(-10, "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"));
+          Warning{-10, "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"});
     }
 
     actions.appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, dataPaths));
   }
-  else if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
+  else if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
   {
     Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
     if(dataStructureResult.invalid())
@@ -124,13 +124,13 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
     auto importedDataStructure = dataStructureResult.value();
     auto dataPaths = importedDataStructure.getAllDataPaths();
 
-    if(importData.PathImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
+    if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
     {
       if(dataPaths.empty())
       {
-        result.warnings().push_back(Warning(-11,
+        result.warnings().push_back(Warning{-11,
                                             "The import policy is set to 'Exclude List' and the file paths list is empty.  This will result in all data being imported.  You can accomplish the same "
-                                            "result by setting the import policy to 'All'."));
+                                            "result by setting the import policy to 'All'."});
       }
       else
       {

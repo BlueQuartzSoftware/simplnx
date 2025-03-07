@@ -48,7 +48,7 @@ public:
     explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
     : FilePath(std::move(filePath))
     , DataPaths(std::move(dataPaths))
-    , PathImportPolicy(policy)
+    , ImportPolicy(policy)
     {
     }
 
@@ -68,7 +68,7 @@ public:
      * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
      * All -> Imports all possible data and ignores the DataPaths list.
      */
-    PathImportPolicy PathImportPolicy = PathImportPolicy::All;
+    PathImportPolicy ImportPolicy = PathImportPolicy::All;
   };
 
   using ValueType = ImportData;

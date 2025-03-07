@@ -71,7 +71,7 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
   }
   json[k_DataPathsKey] = std::move(dataPathsJson);
 
-  json[k_PathImportPolicyKey] = importData.PathImportPolicy;
+  json[k_PathImportPolicyKey] = importData.ImportPolicy;
 
   return json;
 }
