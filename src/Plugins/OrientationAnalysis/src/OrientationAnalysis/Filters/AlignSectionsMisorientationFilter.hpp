@@ -36,9 +36,9 @@ public:
 
   static inline constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
   static inline constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
-  static inline constexpr StringLiteral k_AlignmentSlicesArrayName_Key = "alignment_slices_array_name";
-  static inline constexpr StringLiteral k_AlignmentPositioningArrayName_Key = "alignment_positioning_array_name";
-  static inline constexpr StringLiteral k_AlignmentShiftsArrayName_Key = "alignment_shifts_array_name";
+  static inline constexpr StringLiteral k_SlicesArrayName_Key = "slices_array_name";
+  static inline constexpr StringLiteral k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
+  static inline constexpr StringLiteral k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -166,39 +166,3 @@ Result<> AlignSections::execute(const SizeVec3& udims)
 
   return {};
 }
-
-// -----------------------------------------------------------------------------
-Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
-{
-  int64 slice = 0;
-  int64 newXShift = 0, newYShift = 0;
-
-  std::ifstream inFile;
-  inFile.open(file);
-  for(int64 iter = 1; iter < zDim; iter++)
-  {
-    std::string line;
-    std::getline(inFile, line);
-    std::istringstream iss(line);
-    std::vector<std::string> tokens;
-    std::string token;
-    while(iss >> token)
-    {
-      tokens.push_back(token);
-    }
-    if(tokens.size() < 3)
-    {
-      std::string message = fmt::format("Error reading line {} of Input Shifts File with file path '{}'. 3 columns in the format <Slice_Number,X Shift,Y Shift> are required but only {} were found",
-                                        iter, file.string(), tokens.size());
-      inFile.close();
-      return MakeErrorResult(-84750, message);
-    }
-    std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning, so we can read in the formatted tokens
-    inFile >> slice >> newXShift >> newYShift;
-    xShifts[iter] = xShifts[iter - 1] + newXShift;
-    yShifts[iter] = yShifts[iter - 1] + newYShift;
-  }
-  inFile.close();
-  return {};
-}

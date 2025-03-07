@@ -24,7 +24,7 @@ The user choses the level of *misorientation tolerance* by which to align **Cell
 
 The approach used in this **Filter** is to group neighboring **Cells** on a slice that have a *misorientation* below the tolerance the user entered. *Misorientation* here means the minimum rotation angle of one **Cell's** crystal axis needed to coincide with another **Cell's** crystal axis. When the **Features** in the slices are defined, they are moved until *disks* in neighboring slices align with each other.
 
-If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.    
+If the user elects to use a mask array, the **Cells** flagged as *false* in the mask array will not be considered during the alignment process.
 
 ## Optional Output Data
 
@@ -36,16 +36,16 @@ The structure for which looks like this
 |-- Image Geometry
   |-- Alignment Shifts Data
     |-- Slices
-    |-- Positioning
-    |-- Shifts
+    |-- Relative Shifts
+    |-- Cumulative Shifts
 ```
 
 In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
-- Slices (DataArray | 2 component) - The slice indices (stored as uint64s)
-- Positioning (DataArray | 2 component) - The indices to shifts from the previous slice (stored as uint64s) [*previously known as `newxshift` and `newyshift`*]
-- Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
+- Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
+- Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
+- Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 

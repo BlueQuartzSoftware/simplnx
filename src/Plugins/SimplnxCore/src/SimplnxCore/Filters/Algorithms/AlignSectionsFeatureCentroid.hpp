@@ -22,10 +22,10 @@ struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 
   bool StoreAlignmentShifts;
   DataPath AlignmentAMPath;
-  DataPath AlignmentSlicesArrayPath;
-  DataPath AlignmentPositioningArrayPath;
-  DataPath AlignmentShiftsArrayPath;
-  DataPath AlignmentCentroidsArrayPath;
+  DataPath SlicesArrayPath;
+  DataPath RelativeShiftsArrayPath;
+  DataPath CumulativeShiftsArrayPath;
+  DataPath CentroidsArrayPath;
 };
 
 /**

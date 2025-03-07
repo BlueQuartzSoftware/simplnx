@@ -75,9 +75,6 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
 
   int32_t progInt = 0;
 
-  size_t newxshift = 0;
-  size_t newyshift = 0;
-
   size_t slice = 0;
   size_t point = 0;
   nx::core::FloatVec3 spacing = gridGeom->getSpacing();
@@ -129,23 +126,33 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   bool yWarning = false;
   if(m_InputValues->StoreAlignmentShifts)
   {
-    auto& slicesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentSlicesArrayPath)->getDataStoreRef();
-    auto& positioningStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentPositioningArrayPath)->getDataStoreRef();
-    auto& shiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->AlignmentShiftsArrayPath)->getDataStoreRef();
-    auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AlignmentCentroidsArrayPath)->getDataStoreRef();
+    size_t relativexshift = 0;
+    size_t relativeyshift = 0;
+
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
+    auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+
     // Calculate the X&Y shifts based on the centroid. Note the shifts are in real units
     for(size_t iter = 1; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
       if(m_InputValues->UseReferenceSlice)
       {
-        xShifts[iter] = static_cast<int64_t>((xCentroid[iter] - xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[0]);
-        yShifts[iter] = static_cast<int64_t>((yCentroid[iter] - yCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+        // Cumulative and Relative are identical
+        relativexshift = static_cast<int64_t>((xCentroid[iter] - xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[0]);
+        relativeyshift = static_cast<int64_t>((yCentroid[iter] - yCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+        xShifts[iter] = relativexshift;
+        yShifts[iter] = relativeyshift;
       }
       else
       {
-        xShifts[iter] = xShifts[iter - 1] + static_cast<int64_t>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-        yShifts[iter] = yShifts[iter - 1] + static_cast<int64_t>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+        // Cumulative and Relative are different
+        relativexshift = static_cast<int64>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
+        relativeyshift = static_cast<int64>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+        xShifts[iter] = xShifts[iter - 1] + relativexshift;
+        yShifts[iter] = yShifts[iter - 1] + relativeyshift;
       }
 
       if((xShifts[iter] < -sdims[0] || xShifts[iter] > sdims[0]) && !xWarning)
@@ -153,7 +160,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the X dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  X Dim={}  X Shift={}  sDims[0]={}",
                                           iter, dims[0], xShifts[iter], sdims[0]);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         xWarning = true;
       }
       if((yShifts[iter] < -sdims[1] || yShifts[iter] > sdims[1]) && !yWarning)
@@ -161,19 +168,19 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the Y dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  Y Dim={}  Y Shift={}  sDims[1]={}",
                                           iter, dims[1], yShifts[iter], sdims[1]);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         yWarning = true;
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
         std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
         std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         yWarning = true;
       }
 
@@ -181,10 +188,10 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
       slicesStore[yIndex] = slice + 1;
-      positioningStore[xIndex] = newxshift;
-      positioningStore[yIndex] = newyshift;
-      shiftsStore[xIndex] = xShifts[iter];
-      shiftsStore[yIndex] = yShifts[iter];
+      relativeShiftsStore[xIndex] = relativexshift;
+      relativeShiftsStore[yIndex] = relativeyshift;
+      cumulativeShiftsStore[xIndex] = xShifts[iter];
+      cumulativeShiftsStore[yIndex] = yShifts[iter];
       centroidsStore[xIndex] = xCentroid[iter];
       centroidsStore[yIndex] = yCentroid[iter];
     }
@@ -210,7 +217,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the X dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  X Dim={}  X Shift={}  sDims[0]={}",
                                           iter, dims[0], xShifts[iter], sdims[0]);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         xWarning = true;
       }
       if((yShifts[iter] < -sdims[1] || yShifts[iter] > sdims[1]) && !yWarning)
@@ -218,19 +225,19 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
         std::string message = fmt::format("A shift was greater than the Y dimension of the Image Geometry. "
                                           "All subsequent slices are probably wrong. Slice={}  Y Dim={}  Y Shift={}  sDims[1]={}",
                                           iter, dims[1], yShifts[iter], sdims[1]);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         yWarning = true;
       }
       if(std::isnan(xCentroid[iter]) && !xWarning)
       {
         std::string message = fmt::format("The X Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         xWarning = true;
       }
       if(std::isnan(yCentroid[iter]) && !yWarning)
       {
         std::string message = fmt::format("The Y Centroid was NaN. All subsequent slices are probably wrong. Slice=", iter);
-        m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
         yWarning = true;
       }
     }

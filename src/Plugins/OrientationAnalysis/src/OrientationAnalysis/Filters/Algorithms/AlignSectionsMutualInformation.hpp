@@ -26,9 +26,9 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
 
   bool StoreAlignmentShifts;
   DataPath AlignmentAMPath;
-  DataPath AlignmentSlicesArrayPath;
-  DataPath AlignmentPositioningArrayPath;
-  DataPath AlignmentShiftsArrayPath;
+  DataPath SlicesArrayPath;
+  DataPath RelativeShiftsArrayPath;
+  DataPath CumulativeShiftsArrayPath;
 };
 
 /**

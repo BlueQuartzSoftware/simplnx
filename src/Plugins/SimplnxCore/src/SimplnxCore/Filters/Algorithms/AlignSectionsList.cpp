@@ -7,19 +7,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-void CopyShifts(const UInt64AbstractDataStore& positioningStore, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
-{
-  const usize size = positioningStore.getNumberOfTuples();
-  for(usize i = 1; i < size; i++)
-  {
-    xShifts[i] = xShifts[i - 1] + positioningStore[i * 2];
-    yShifts[i] = yShifts[i - 1] + positioningStore[(i * 2) + 1];
-  }
-}
-} // namespace
-
 // -----------------------------------------------------------------------------
 AlignSectionsList::AlignSectionsList(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignSectionsListInputValues* inputValues)
 : AlignSections(dataStructure, shouldCancel, mesgHandler)
@@ -66,19 +53,30 @@ std::vector<DataPath> AlignSectionsList::getSelectedDataPaths() const
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  auto alignSectionsType = m_InputValues->AlignSectionsType;
 
-  SizeVec3 udims = imageGeom.getDimensions();
-  auto zDim = static_cast<int64>(udims[2]);
-
-  if(m_InputValues->UseFile)
+  if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::RelativeShifts)))
   {
-    return readUserShiftsFile(m_InputValues->InputFile, zDim, xShifts, yShifts);
+    // Size validated in preflight
+    const auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
+    const usize numTup = relativeShiftsStore.getNumberOfTuples();
+    for(usize i = 1; i < numTup; i++)
+    {
+      xShifts[i] = xShifts[i - 1] + relativeShiftsStore[i * 2];
+      yShifts[i] = yShifts[i - 1] + relativeShiftsStore[(i * 2) + 1];
+    }
   }
-
-  // Size validated in preflight
-  const auto& positoningStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->PositioningArrayPath)->getDataStoreRef();
-  CopyShifts(positoningStore, xShifts, yShifts);
+  else if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::CumulativeShifts)))
+  {
+    // Size validated in preflight
+    const auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
+    const usize numTup = cumulativeShiftsStore.getNumberOfTuples();
+    for(usize i = 1; i < numTup; i++)
+    {
+      xShifts[i] = cumulativeShiftsStore[i * 2];
+      yShifts[i] = cumulativeShiftsStore[(i * 2) + 1];
+    }
+  }
 
   return {};
 }

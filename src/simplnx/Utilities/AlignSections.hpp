@@ -46,16 +46,6 @@ protected:
 
   virtual std::vector<DataPath> getSelectedDataPaths() const = 0;
 
-  /**
-   * @brief This will read in a shifts file defined by the user and populate the shifts parameters with the values as int64 numbers.
-   * @param file The user formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  static Result<> readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
-
 private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;

@@ -98,9 +98,9 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
 
   if(m_InputValues->StoreAlignmentShifts)
   {
-    auto& slicesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentSlicesArrayPath)->getDataStoreRef();
-    auto& positioningStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentPositioningArrayPath)->getDataStoreRef();
-    auto& shiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->AlignmentShiftsArrayPath)->getDataStoreRef();
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
@@ -215,10 +215,10 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
       slicesStore[yIndex] = slice + 1;
-      positioningStore[xIndex] = newXShift;
-      positioningStore[yIndex] = newYShift;
-      shiftsStore[xIndex] = xShifts[iter];
-      shiftsStore[yIndex] = yShifts[iter];
+      relativeShiftsStore[xIndex] = newXShift;
+      relativeShiftsStore[yIndex] = newYShift;
+      cumulativeShiftsStore[xIndex] = xShifts[iter];
+      cumulativeShiftsStore[yIndex] = yShifts[iter];
     }
   }
   else

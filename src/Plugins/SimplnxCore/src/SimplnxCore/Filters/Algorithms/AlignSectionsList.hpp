@@ -5,20 +5,23 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/AlignSections.hpp"
 
 namespace nx::core
 {
+enum AlignSectionsInputType : uint8
+{
+  RelativeShifts,
+  CumulativeShifts
+};
 
 struct SIMPLNXCORE_EXPORT AlignSectionsListInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  bool UseFile;
+  ChoicesParameter::ValueType AlignSectionsType;
+
   DataPath ImageGeometryPath;
-  DataPath PositioningArrayPath;
+  DataPath ShiftsArrayPath;
 };
 
 /**

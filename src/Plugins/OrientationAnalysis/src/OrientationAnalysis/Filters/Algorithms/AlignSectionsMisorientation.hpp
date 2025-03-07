@@ -30,9 +30,9 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMisorientationInputValues
 
   bool StoreAlignmentShifts;
   DataPath AlignmentAMPath;
-  DataPath AlignmentSlicesArrayPath;
-  DataPath AlignmentPositioningArrayPath;
-  DataPath AlignmentShiftsArrayPath;
+  DataPath SlicesArrayPath;
+  DataPath RelativeShiftsArrayPath;
+  DataPath CumulativeShiftsArrayPath;
 };
 
 /**

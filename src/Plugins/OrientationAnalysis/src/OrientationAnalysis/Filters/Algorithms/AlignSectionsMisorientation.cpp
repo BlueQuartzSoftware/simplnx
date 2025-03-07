@@ -95,9 +95,9 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   auto start = std::chrono::steady_clock::now();
   if(m_InputValues->StoreAlignmentShifts)
   {
-    auto& slicesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentSlicesArrayPath)->getDataStoreRef();
-    auto& positioningStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->AlignmentPositioningArrayPath)->getDataStoreRef();
-    auto& shiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->AlignmentShiftsArrayPath)->getDataStoreRef();
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
@@ -206,10 +206,10 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
       slicesStore[yIndex] = slice + 1;
-      positioningStore[xIndex] = newxshift;
-      positioningStore[yIndex] = newyshift;
-      shiftsStore[xIndex] = xShifts[iter];
-      shiftsStore[yIndex] = yShifts[iter];
+      relativeShiftsStore[xIndex] = newxshift;
+      relativeShiftsStore[yIndex] = newyshift;
+      cumulativeShiftsStore[xIndex] = xShifts[iter];
+      cumulativeShiftsStore[yIndex] = yShifts[iter];
     }
   }
   else

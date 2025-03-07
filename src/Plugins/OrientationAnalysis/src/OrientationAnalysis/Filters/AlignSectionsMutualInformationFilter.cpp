@@ -88,17 +88,17 @@ Parameters AlignSectionsMutualInformationFilter::parameters() const
                                                                  "Whether to store the shifts applied to each section to a collection of Arrays in a new Attribute Matrix", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentAMName_Key, "Alignment Attribute Matrix Name",
                                                           "The output attribute matrix where the shifts applied to the section to be stored as DataArrays.", "Alignment Shifts Data"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentSlicesArrayName_Key, "Alignment Slices Data Array Name",
-                                                          "The output array name where the slice information related to shifts will be stored.", "Slice"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentPositioningArrayName_Key, "Alignment Positioning Data Array Name",
-                                                          "The output array name where the new positioning information will be stored.", "Positioning"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SlicesArrayName_Key, "Alignment Slices Data Array Name",
+                                                          "The output array name where the slice information related to shifts will be stored.", "Slice Indices"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_RelativeShiftsArrayName_Key, "Alignment Relative Shifts Data Array Name",
+                                                          "The output array name where the new shifts relative to previous slice information will be stored.", "Relative Shifts"));
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_AlignmentShiftsArrayName_Key, "Alignment Shifts Data Array Name", "The output array name where the shift information will be stored.", "Shifts"));
+      std::make_unique<DataObjectNameParameter>(k_CumulativeShiftsArrayName_Key, "Alignment Cumulative Shifts Data Array Name", "The output array name where the accumulated shift information will be stored.", "Cumulative Shifts"));
 
   params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentAMName_Key, true);
-  params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentSlicesArrayName_Key, true);
-  params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentPositioningArrayName_Key, true);
-  params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentShiftsArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_SlicesArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_RelativeShiftsArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_CumulativeShiftsArrayName_Key, true);
 
   return params;
 }
@@ -175,16 +175,16 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(amPath, AttributeMatrix::ShapeType{dims}));
 
     // Create slices Array
-    auto pAlignmentSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentSlicesArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pAlignmentSlicesName)));
+    auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName)));
 
     // Create positioning Array
-    auto pAlignmentPositioningName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentPositioningArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pAlignmentPositioningName)));
+    auto pRelativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName)));
 
     // Create shifts Array
-    auto pAlignmentShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentShiftsArrayName_Key);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pAlignmentShiftsName)));
+    auto pCumulativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName)));
   }
 
   // Inform users that the following arrays are going to be modified in place
@@ -210,9 +210,9 @@ Result<> AlignSectionsMutualInformationFilter::executeImpl(DataStructure& dataSt
 
   inputValues.StoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
   inputValues.AlignmentAMPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key));
-  inputValues.AlignmentSlicesArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentSlicesArrayName_Key));
-  inputValues.AlignmentPositioningArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentPositioningArrayName_Key));
-  inputValues.AlignmentShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentShiftsArrayName_Key));
+  inputValues.SlicesArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key));
+  inputValues.RelativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key));
+  inputValues.CumulativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key));
 
   return AlignSectionsMutualInformation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -31,16 +31,16 @@ The structure for which looks like this
 |-- Image Geometry
   |-- Alignment Shifts Data
     |-- Slices
-    |-- Positioning
-    |-- Shifts
+    |-- Relative Shifts
+    |-- Cumulative Shifts
 ```
 
 In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
-- Slices (DataArray | 2 component) - The slice indices (stored as uint64s)
-- Positioning (DataArray | 2 component) - The indices to shifts from the previous slice (stored as uint64s) [*previously known as `newxshift` and `newyshift`*]
-- Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
+- Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
+- Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
+- Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
