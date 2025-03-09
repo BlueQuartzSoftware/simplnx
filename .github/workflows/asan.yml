@@ -26,12 +26,17 @@ jobs:
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@0.2.0
-      - name: Install Dependencies - 2
+      - name: Install Dependencies
         run: |
           sudo apt-get -y install ninja-build
-      - name: Install Sphinx
+      - name: Install mono
+        shell: bash
         run: |
-          sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
+          sudo apt-get -y install ca-certificates gnupg
+          sudo gpg --homedir /tmp --no-default-keyring --keyring /usr/share/keyrings/mono-official-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          echo "deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          sudo apt-get -y update
+          sudo apt-get -y install mono-complete
       - name: Setup NuGet Credentials
         shell: bash
         run: |
