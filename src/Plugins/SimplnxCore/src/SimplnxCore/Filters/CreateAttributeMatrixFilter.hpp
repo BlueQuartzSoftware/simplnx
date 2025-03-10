@@ -52,7 +52,7 @@ public:
   Uuid uuid() const override;
 
   /**
-   * @brief Returns the human readable name of the filter.
+   * @brief Returns the human-readable name of the filter.
    * @return
    */
   std::string humanName() const override;
@@ -92,7 +92,7 @@ protected:
    * @param messageHandler
    * @return Result<OutputActions>
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
