@@ -242,7 +242,6 @@ Result<> SurfaceNets::operator()()
   std::array<VertexData, 4> vData{};
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
-
     // Back-bottom edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
@@ -417,6 +416,15 @@ Result<> SurfaceNets::operator()()
         tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
       }
       faceIndex++;
+    }
+  }
+
+  // Now run through the FaceLabels to make them consistent with Quick Surface Mesh
+  for(usize tIdx = 0; tIdx < triangleCount * 2; tIdx++)
+  {
+    if(faceLabels[tIdx] == 0)
+    {
+      faceLabels[tIdx] = -1;
     }
   }
 

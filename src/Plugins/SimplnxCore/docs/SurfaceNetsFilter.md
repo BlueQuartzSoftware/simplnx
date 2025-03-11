@@ -58,6 +58,12 @@ Nodes that appear on the exterior of a volume have Node Type values starting at 
 
 ![Exterior Node Types](Images/SurfaceNets_NodeType_Exterior.png)
 
+### Exterior or Boundary Triangles
+
+Each triangle that is created will have an 2 component attribute called `Face Labels` that represent the Feature ID on either
+side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
+have a value of -1.
+
 ## Notes
 
 This filter should be used in place of the "QuickMesh Surface Filter".
