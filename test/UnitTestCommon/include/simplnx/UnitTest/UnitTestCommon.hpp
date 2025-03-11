@@ -136,6 +136,10 @@ inline constexpr StringLiteral k_NormalsLabels("Normals");
 inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
 inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
 inline constexpr StringLiteral k_NodeType("NodeType");
+inline constexpr StringLiteral k_AlignmentAMName("Alignment Shifts Data");
+inline constexpr StringLiteral k_SlicesArrayName("Slice Indices");
+inline constexpr StringLiteral k_RelativeShiftsArrayName("Relative Shifts");
+inline constexpr StringLiteral k_CumulativeShiftsArrayName("Cumulative Shifts");
 
 inline constexpr StringLiteral k_LevelZero("ZERO");
 inline constexpr StringLiteral k_LevelOne("ONE");
