@@ -74,7 +74,7 @@ public:
   Uuid uuid() const override;
 
   /**
-   * @brief Returns the human readable name of the filter.
+   * @brief Returns the human-readable name of the filter.
    * @return
    */
   std::string humanName() const override;

@@ -57,7 +57,7 @@ public:
   Uuid uuid() const override;
 
   /**
-   * @brief Returns the human readable name of the filter.
+   * @brief Returns the human-readable name of the filter.
    * @return
    */
   std::string humanName() const override;
@@ -96,6 +96,7 @@ protected:
    * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
