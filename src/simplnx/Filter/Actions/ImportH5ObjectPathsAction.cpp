@@ -21,13 +21,6 @@ void sortImportPaths(std::vector<DataPath>& importPaths)
 {
   std::sort(importPaths.begin(), importPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
 }
-
-// std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const std::optional<std::vector<DataPath>>& importPaths)
-//{
-//   std::vector<DataPath> paths = (importPaths.has_value() ? importPaths.value() : importStructure.getAllDataPaths());
-//   sortImportPaths(paths);
-//   return paths;
-// }
 } // namespace
 
 namespace nx::core
