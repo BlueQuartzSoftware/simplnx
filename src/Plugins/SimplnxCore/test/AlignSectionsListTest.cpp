@@ -118,6 +118,9 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
   auto& exemplarShifts = exemplarDataStructure.getDataRefAs<Int64Array>(k_AlignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName));
   UnitTest::CreateTestDataArray<int64>(dataStructure, Constants::k_CumulativeShiftsArrayName, exemplarShifts.getTupleShape(), exemplarShifts.getComponentShape());
 
+  auto& newShifts = dataStructure.getDataRefAs<Int64Array>(newShiftsPath);
+  CopyFromArray::CopyData(exemplarShifts, newShifts, 0ULL, 0ULL, exemplarShifts.getNumberOfTuples());
+
   // MultiThreshold Objects Filter (From SimplnxCore Plugins)
   SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
 
@@ -128,7 +131,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(AlignSectionsListFilter::k_InputArrayType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
+    args.insertOrAssign(AlignSectionsListFilter::k_InputArrayType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
 
     args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(nx::core::Constants::k_DataContainerPath));
     args.insertOrAssign(AlignSectionsListFilter::k_ShiftsArrayPath_Key, std::make_any<DataPath>(newShiftsPath));
