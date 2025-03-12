@@ -23,7 +23,6 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMisorientationInputValues
   DataPath MaskArrayPath;
 
   float32 misorientationTolerance;
-  // DataPath cellDataGroupPath;
   DataPath quatsArrayPath;
   DataPath cellPhasesArrayPath;
   DataPath crystalStructuresArrayPath;
