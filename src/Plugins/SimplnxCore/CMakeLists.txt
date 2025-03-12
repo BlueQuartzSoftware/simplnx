@@ -504,6 +504,13 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   # )
   # set_target_properties(Copy_${PLUGIN_NAME}_STL_Models PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+    ARCHIVE_NAME align_sections_input.tar.gz
+    SHA512 3c12c306fc8bba6fcf31a4c2c0c1771a5320267e02d12d7c74897852b73b7b6d74c5414aad9a90f64090e6b9baa6968925ea322ea0c3cb10fbb6022326c74e0b
+    INSTALL
+    COPY_DATA
+  )
+
 endif()
 
 # -----------------------------------------------------------------------
