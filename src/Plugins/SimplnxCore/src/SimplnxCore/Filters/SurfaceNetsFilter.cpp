@@ -137,7 +137,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   {
     return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
   }
-  auto numElements = gridGeom->getNumberOfCells();
+  constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays
   const auto* featureIdsArrayPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
