@@ -18,7 +18,6 @@ struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 
   bool UseReferenceSlice;
   int32 ReferenceSlice;
-  //  DataPath cellDataGroupPath;
 
   bool StoreAlignmentShifts;
   DataPath AlignmentAMPath;
