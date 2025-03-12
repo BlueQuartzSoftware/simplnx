@@ -19,13 +19,13 @@ const DataPath k_AlignmentAMPath = Constants::k_DataContainerPath.createChildPat
 
 struct CompareArraysFunctor
 {
-  template<typename T>
+  template <typename T>
   void operator()(const IDataArray& computedArray, const IDataArray& exemplarArray)
   {
     UnitTest::CompareDataArrays<T>(computedArray, exemplarArray);
   }
 };
-}
+} // namespace
 
 TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[SimplnxCore][AlignSectionsListFilter]")
 {

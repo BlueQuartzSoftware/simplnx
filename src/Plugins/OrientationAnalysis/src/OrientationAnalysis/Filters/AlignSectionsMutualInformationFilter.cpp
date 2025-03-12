@@ -92,8 +92,8 @@ Parameters AlignSectionsMutualInformationFilter::parameters() const
                                                           "The output array name where the slice information related to shifts will be stored.", "Slice Indices"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_RelativeShiftsArrayName_Key, "Alignment Relative Shifts Data Array Name",
                                                           "The output array name where the new shifts relative to previous slice information will be stored.", "Relative Shifts"));
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_CumulativeShiftsArrayName_Key, "Alignment Cumulative Shifts Data Array Name", "The output array name where the accumulated shift information will be stored.", "Cumulative Shifts"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CumulativeShiftsArrayName_Key, "Alignment Cumulative Shifts Data Array Name",
+                                                          "The output array name where the accumulated shift information will be stored.", "Cumulative Shifts"));
 
   params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentAMName_Key, true);
   params.linkParameters(k_StoreAlignmentShifts_Key, k_SlicesArrayName_Key, true);
