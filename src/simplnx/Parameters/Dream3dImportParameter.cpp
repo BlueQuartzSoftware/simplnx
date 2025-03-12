@@ -133,9 +133,9 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
   if(json.contains(k_PathImportPolicyKey))
   {
     const auto& pathImportPolicyJson = json[k_PathImportPolicyKey];
-    if(!pathImportPolicyJson.is_number_unsigned())
+    if(!pathImportPolicyJson.is_number_integer())
     {
-      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an unsigned integer", prefix, name(), k_PathImportPolicyKey));
+      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an integer", prefix, name(), k_PathImportPolicyKey));
     }
     pathImportPolicy = PathImportPolicy(pathImportPolicyJson.get<uint8>());
   }
