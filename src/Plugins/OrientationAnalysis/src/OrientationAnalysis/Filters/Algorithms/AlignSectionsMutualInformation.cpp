@@ -33,23 +33,7 @@ Result<> AlignSectionsMutualInformation::operator()()
 {
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  return execute(gridGeom.getDimensions());
-}
-
-// -----------------------------------------------------------------------------
-std::vector<DataPath> AlignSectionsMutualInformation::getSelectedDataPaths() const
-{
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto cellDataGroupPath = m_InputValues->ImageGeometryPath.createChildPath(imageGeom.getCellData()->getName());
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
-  std::vector<DataPath> selectedCellArrays;
-
-  // Create the vector of selected cell DataPaths
-  for(const auto& child : cellDataGroup)
-  {
-    selectedCellArrays.push_back(cellDataGroupPath.createChildPath(child.second->getName()));
-  }
-  return selectedCellArrays;
+  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
 
 // -----------------------------------------------------------------------------
@@ -168,7 +152,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / float32(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {
@@ -290,7 +274,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / float32(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {
@@ -398,7 +382,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
       }
       if(seed >= 0)
       {
-        usize size = 0;
+        std::vector<int64_t>::size_type size = 0;
         miFeatureIds[seed] = featureCount;
         voxelList[size] = seed;
         size++;
@@ -447,7 +431,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
                 miFeatureIds[neighbor] = featureCount;
                 voxelList[size] = neighbor;
                 size++;
-                if(std::vector<int64_t>::size_type(size) >= voxelList.size())
+                if(size >= voxelList.size())
                 {
                   size = voxelList.size();
                   voxelList.resize(size + initialVoxelsListSize);

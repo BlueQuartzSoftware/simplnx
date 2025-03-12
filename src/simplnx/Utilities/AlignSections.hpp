@@ -29,7 +29,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(const SizeVec3& udims);
+  Result<> execute(const SizeVec3& udims, const DataPath& imageGeometryPath);
 
   const std::atomic_bool& getCancel();
 
@@ -37,14 +37,19 @@ public:
 
 protected:
   /**
-   * @brief This should be overridden in the subclass.
+   * @brief This method finds the slice to slice shifts and should be implemented by subclasses
    * @param xShifts
    * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
+   * @return Whether the x and y shifts were successfully found
    */
   virtual Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) = 0;
 
-  virtual std::vector<DataPath> getSelectedDataPaths() const = 0;
+  /**
+   * @brief Returns the list of every child in the ImageGeometry's Cell Attribute Matrix
+   * @param imageGeometryPath
+   * @return List of DataPaths for each member inside the Cell Attribute Matrix
+   */
+  virtual std::vector<DataPath> getSelectedDataPaths(const DataPath& imageGeometryPath) const;
 
 private:
   DataStructure& m_DataStructure;

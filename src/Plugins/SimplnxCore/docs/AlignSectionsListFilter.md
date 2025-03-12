@@ -8,9 +8,6 @@ Reconstruction (Alignment)
 
 This **Filter** will apply the precalculated cell shifts to each section of an Image Geometry. It allows for both *relative* or *cumulative* cell shifts. The difference between the two being the former is dependent on the previous slice's position. Under the covers, relative is translated to cumulative before applying shifts to the cells themselves. Previously, the only accepted input was utilizing relative shifts, so use those for backwards compatibility. See the **Handling User Created Shifts File** and **Example Pipelines** sections of this documentation for further hints.
 
-
-% Auto generated parameter table will be inserted here
-
 ## Handling User Created Shifts File
 
 In this section we will be covering how to get a user defined shift file into the algorithm. This has been included in the documentation for posterity, as the capability was removed in order to offer a less rigid file structuring and to centralize the I/O paradigm.
@@ -77,6 +74,8 @@ For alignment shifts files from the previous version, you **must** use the "Read
 ### Conclusion
 
 The imported data should be prepared and compatible with the Align Sections List input by now. If you have further questions see one of the example pipelines below.
+
+% Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 

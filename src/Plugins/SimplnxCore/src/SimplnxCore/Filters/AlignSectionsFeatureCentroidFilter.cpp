@@ -78,9 +78,8 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Attribute Matrix", "Cell Data Attribute Matrix", DataPath{}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the DataArray Mask", DataPath({"Mask"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Specifies if the Cell is to be counted in the algorithm.", DataPath({"Mask"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Alignment Output"});
@@ -141,7 +140,6 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   auto pReferenceSliceValue = filterArgs.value<int32>(k_ReferenceSlice_Key);
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   auto pStoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
 
@@ -198,7 +196,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataGroupPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pGoodVoxelsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions)};
@@ -214,7 +212,6 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
   inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   inputValues.StoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
   inputValues.AlignmentAMPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key));
@@ -246,7 +243,6 @@ Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohma
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ReferenceSliceKey, k_ReferenceSlice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_SelectedCellDataGroup_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

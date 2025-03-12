@@ -1,5 +1,7 @@
 #include "AlignSections.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -126,7 +128,7 @@ void AlignSections::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::execute(const SizeVec3& udims)
+Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeometryPath)
 {
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
   std::vector<int64_t> xShifts(dims[2], 0);
@@ -145,7 +147,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
   }
 
   // Now Adjust the actual DataArrays
-  const std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
+  const std::vector<DataPath> selectedCellArrays = getSelectedDataPaths(imageGeometryPath);
 
   ParallelTaskAlgorithm taskRunner;
 
@@ -163,6 +165,20 @@ Result<> AlignSections::execute(const SizeVec3& udims)
 
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
+
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+std::vector<DataPath> AlignSections::getSelectedDataPaths(const DataPath& imageGeometryPath) const
+{
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  auto cellDataGroupPath = imageGeometryPath.createChildPath(imageGeom.getCellData()->getName());
+  auto optionalResult = GetAllChildDataPaths(m_DataStructure, cellDataGroupPath);
+  if(optionalResult.has_value())
+  {
+    return optionalResult.value();
+  }
 
   return {};
 }

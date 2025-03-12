@@ -29,7 +29,6 @@ public:
   static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
   static inline constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
   static inline constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";

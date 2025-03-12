@@ -86,8 +86,8 @@ Parameters AlignSectionsMisorientationFilter::parameters() const
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
+                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath({"Quats"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Phases"}),
@@ -234,7 +234,6 @@ Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStruc
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputValues.ImageGeometryPath);
-  inputValues.cellDataGroupPath = inputGeom->getCellDataPath();
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.quatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);

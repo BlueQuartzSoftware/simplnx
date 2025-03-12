@@ -135,10 +135,6 @@
     },
     {
       "args": {
-        "alignment_shift_file_name": {
-          "value": "Data/Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
-          "version": 1
-        },
         "cell_phases_array_path": {
           "value": "DataContainer/Cell Data/Phases",
           "version": 1
@@ -159,16 +155,11 @@
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
         "quats_array_path": {
           "value": "DataContainer/Cell Data/Quats",
           "version": 1
         },
         "use_mask": {
-          "value": true,
-          "version": 1
-        },
-        "write_alignment_shifts": {
           "value": true,
           "version": 1
         }

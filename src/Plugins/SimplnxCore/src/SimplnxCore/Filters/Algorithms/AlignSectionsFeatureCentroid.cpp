@@ -29,23 +29,7 @@ Result<> AlignSectionsFeatureCentroid::operator()()
 {
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  return execute(gridGeom.getDimensions());
-}
-
-// -----------------------------------------------------------------------------
-std::vector<DataPath> AlignSectionsFeatureCentroid::getSelectedDataPaths() const
-{
-  auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
-  std::vector<DataPath> selectedCellArrays;
-
-  // Create the vector of selected cell DataPaths
-  for(const auto& child : cellDataGroup)
-  {
-    selectedCellArrays.push_back(m_InputValues->cellDataGroupPath.createChildPath(child.second->getName()));
-  }
-
-  return selectedCellArrays;
+  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
 
 // -----------------------------------------------------------------------------

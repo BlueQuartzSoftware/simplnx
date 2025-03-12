@@ -49,7 +49,6 @@ In this new structure, what follows is what the created structures represent:
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
-
 % Auto generated parameter table will be inserted here
 
 ## References

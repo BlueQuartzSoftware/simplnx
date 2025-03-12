@@ -25,7 +25,7 @@ Result<> AlignSectionsList::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  Result<> result = execute(imageGeom.getDimensions());
+  Result<> result = execute(imageGeom.getDimensions(), m_InputValues->ImageGeometryPath);
   if(result.invalid())
   {
     return result;
@@ -33,19 +33,6 @@ Result<> AlignSectionsList::operator()()
   if(m_Result.invalid())
   {
     return m_Result;
-  }
-  return {};
-}
-
-// -----------------------------------------------------------------------------
-std::vector<DataPath> AlignSectionsList::getSelectedDataPaths() const
-{
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& cellAttributeMatrix = imageGeom.getCellData();
-  std::optional<std::vector<DataPath>> selectedCellArrays = GetAllChildDataPaths(m_DataStructure, m_InputValues->ImageGeometryPath.createChildPath(cellAttributeMatrix->getName()));
-  if(selectedCellArrays.has_value())
-  {
-    return selectedCellArrays.value();
   }
   return {};
 }
