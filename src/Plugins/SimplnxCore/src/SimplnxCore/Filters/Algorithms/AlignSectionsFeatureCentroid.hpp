@@ -15,12 +15,16 @@ struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
   DataPath ImageGeometryPath;
   DataPath MaskArrayPath;
-  bool WriteAlignmentShifts;
-  FileSystemPathParameter::ValueType AlignmentShiftFileName;
 
   bool UseReferenceSlice;
   int32 ReferenceSlice;
-  DataPath cellDataGroupPath;
+
+  bool StoreAlignmentShifts;
+  DataPath AlignmentAMPath;
+  DataPath SlicesArrayPath;
+  DataPath RelativeShiftsArrayPath;
+  DataPath CumulativeShiftsArrayPath;
+  DataPath CentroidsArrayPath;
 };
 
 /**
@@ -40,9 +44,13 @@ public:
   Result<> operator()();
 
 protected:
+  /**
+   * @brief This method finds the slice to slice shifts and should be implemented by subclasses
+   * @param xShifts
+   * @param yShifts
+   * @return Whether the x and y shifts were successfully found
+   */
   Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) override;
-
-  std::vector<DataPath> getSelectedDataPaths() const override;
 
 private:
   DataStructure& m_DataStructure;

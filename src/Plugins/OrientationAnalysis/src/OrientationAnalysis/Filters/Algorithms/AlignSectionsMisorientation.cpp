@@ -31,22 +31,7 @@ Result<> AlignSectionsMisorientation::operator()()
 {
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
-  return execute(gridGeom.getDimensions());
-}
-
-// -----------------------------------------------------------------------------
-std::vector<DataPath> AlignSectionsMisorientation::getSelectedDataPaths() const
-{
-  auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
-  std::vector<DataPath> selectedCellArrays;
-
-  // Create the vector of selected cell DataPaths
-  for(const auto& child : cellDataGroup)
-  {
-    selectedCellArrays.push_back(m_InputValues->cellDataGroupPath.createChildPath(child.second->getName()));
-  }
-  return selectedCellArrays;
+  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
 
 // -----------------------------------------------------------------------------
@@ -64,24 +49,6 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
       return MakeErrorResult(-53900, message);
-    }
-  }
-
-  std::ofstream outFile;
-  if(m_InputValues->writeAlignmentShifts)
-  {
-    // Make sure any directory path is also available as the user may have just typed
-    // in a path without actually creating the full path
-    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->AlignmentShiftFileName.parent_path());
-    if(createDirectoriesResult.invalid())
-    {
-      return createDirectoriesResult;
-    }
-    outFile.open(m_InputValues->AlignmentShiftFileName, std::ios_base::out);
-    if(!outFile.is_open())
-    {
-      std::string message = fmt::format("Error creating output shifts file with file path {}", m_InputValues->AlignmentShiftFileName.string());
-      return MakeErrorResult(-53801, message);
     }
   }
 
@@ -111,118 +78,232 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
 
   double deg2Rad = (nx::core::numbers::pi / 180.0);
   auto start = std::chrono::steady_clock::now();
-  // Loop over the Z Direction
-  for(int64_t iter = 1; iter < dims[2]; iter++)
+  if(m_InputValues->StoreAlignmentShifts)
   {
-    progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
+    // Loop over the Z Direction
+    for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
-      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-      start = std::chrono::steady_clock::now();
-    }
-    if(getCancel())
-    {
-      return {};
-    }
-    float minDisorientation = std::numeric_limits<float>::max();
-    // Work from the largest Slice Value to the lowest Slice Value.
-    int64_t slice = (dims[2] - 1) - iter;
-    int64_t oldxshift = -1;
-    int64_t oldyshift = -1;
-    int64_t newxshift = 0;
-    int64_t newyshift = 0;
-
-    // Initialize everything to false
-    std::fill(misorients.begin(), misorients.end(), false);
-
-    float misorientationTolerance = static_cast<float>(m_InputValues->misorientationTolerance * deg2Rad);
-
-    while(newxshift != oldxshift || newyshift != oldyshift)
-    {
-      oldxshift = newxshift;
-      oldyshift = newyshift;
-      for(int32_t j = -3; j < 4; j++)
+      progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
       {
-        for(int32_t k = -3; k < 4; k++)
+        std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
+        m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
+        start = std::chrono::steady_clock::now();
+      }
+      if(getCancel())
+      {
+        return {};
+      }
+      float minDisorientation = std::numeric_limits<float>::max();
+      // Work from the largest Slice Value to the lowest Slice Value.
+      int64_t slice = (dims[2] - 1) - iter;
+      int64_t oldxshift = -1;
+      int64_t oldyshift = -1;
+      int64_t newxshift = 0;
+      int64_t newyshift = 0;
+
+      // Initialize everything to false
+      std::fill(misorients.begin(), misorients.end(), false);
+
+      float misorientationTolerance = static_cast<float>(m_InputValues->misorientationTolerance * deg2Rad);
+
+      while(newxshift != oldxshift || newyshift != oldyshift)
+      {
+        oldxshift = newxshift;
+        oldyshift = newyshift;
+        for(int32_t j = -3; j < 4; j++)
         {
-          float disorientation = 0.0f;
-          float count = 0.0f;
-          int64_t xIdx = k + oldxshift + halfDim0;
-          int64_t yIdx = j + oldyshift + halfDim1;
-          int64_t idx = (dims[0] * yIdx) + xIdx;
-          if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)
+          for(int32_t k = -3; k < 4; k++)
           {
-            for(int64_t l = 0; l < dims[1]; l = l + 4)
+            float disorientation = 0.0f;
+            float count = 0.0f;
+            int64_t xIdx = k + oldxshift + halfDim0;
+            int64_t yIdx = j + oldyshift + halfDim1;
+            int64_t idx = (dims[0] * yIdx) + xIdx;
+            if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)
             {
-              for(int64_t n = 0; n < dims[0]; n = n + 4)
+              for(int64_t l = 0; l < dims[1]; l = l + 4)
               {
-                if((l + j + oldyshift) >= 0 && (l + j + oldyshift) < dims[1] && (n + k + oldxshift) >= 0 && (n + k + oldxshift) < dims[0])
+                for(int64_t n = 0; n < dims[0]; n = n + 4)
                 {
-                  count++;
-                  int64_t refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
-                  int64_t curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
-                  if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
+                  if((l + j + oldyshift) >= 0 && (l + j + oldyshift) < dims[1] && (n + k + oldxshift) >= 0 && (n + k + oldxshift) < dims[0])
                   {
-                    float angle = std::numeric_limits<float>::max();
-                    if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
+                    count++;
+                    int64_t refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
+                    int64_t curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
+                    if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
                     {
-                      QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                      auto phase1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
-                      QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                      auto phase2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
-                      if(phase1 == phase2 && phase1 < static_cast<uint32_t>(orientationOps.size()))
+                      float angle = std::numeric_limits<float>::max();
+                      if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
                       {
-                        OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
-                        angle = axisAngle[3];
+                        QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        auto phase1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
+                        QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        auto phase2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
+                        if(phase1 == phase2 && phase1 < static_cast<uint32_t>(orientationOps.size()))
+                        {
+                          OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                          angle = axisAngle[3];
+                        }
+                      }
+                      if(angle > misorientationTolerance)
+                      {
+                        disorientation++;
                       }
                     }
-                    if(angle > misorientationTolerance)
+                    if(m_InputValues->UseMask)
                     {
-                      disorientation++;
-                    }
-                  }
-                  if(m_InputValues->UseMask)
-                  {
-                    if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
-                    {
-                      disorientation++;
-                    }
-                    if(!maskCompare->isTrue(refposition) && maskCompare->isTrue(curposition))
-                    {
-                      disorientation++;
+                      if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
+                      {
+                        disorientation++;
+                      }
+                      if(!maskCompare->isTrue(refposition) && maskCompare->isTrue(curposition))
+                      {
+                        disorientation++;
+                      }
                     }
                   }
                 }
               }
-            }
-            disorientation = disorientation / count;
-            xIdx = k + oldxshift + halfDim0;
-            yIdx = j + oldyshift + halfDim1;
-            idx = (dims[0] * yIdx) + xIdx;
-            misorients[idx] = true;
-            if(disorientation < minDisorientation || (disorientation == minDisorientation && ((llabs(k + oldxshift) < llabs(newxshift)) || (llabs(j + oldyshift) < llabs(newyshift)))))
-            {
-              newxshift = k + oldxshift;
-              newyshift = j + oldyshift;
-              minDisorientation = disorientation;
+              disorientation = disorientation / count;
+              xIdx = k + oldxshift + halfDim0;
+              yIdx = j + oldyshift + halfDim1;
+              idx = (dims[0] * yIdx) + xIdx;
+              misorients[idx] = true;
+              if(disorientation < minDisorientation || (disorientation == minDisorientation && ((llabs(k + oldxshift) < llabs(newxshift)) || (llabs(j + oldyshift) < llabs(newyshift)))))
+              {
+                newxshift = k + oldxshift;
+                newyshift = j + oldyshift;
+                minDisorientation = disorientation;
+              }
             }
           }
         }
       }
-    }
-    xShifts[iter] = xShifts[iter - 1] + newxshift;
-    yShifts[iter] = yShifts[iter - 1] + newyshift;
-    if(m_InputValues->writeAlignmentShifts)
-    {
-      outFile << slice << "\t" << slice + 1 << "\t" << newxshift << "\t" << newyshift << "\t" << xShifts[iter] << "\t" << yShifts[iter] << "\n";
+      xShifts[iter] = xShifts[iter - 1] + newxshift;
+      yShifts[iter] = yShifts[iter - 1] + newyshift;
+      usize xIndex = iter * 2;
+      usize yIndex = (iter * 2) + 1;
+      slicesStore[xIndex] = slice;
+      slicesStore[yIndex] = slice + 1;
+      relativeShiftsStore[xIndex] = newxshift;
+      relativeShiftsStore[yIndex] = newyshift;
+      cumulativeShiftsStore[xIndex] = xShifts[iter];
+      cumulativeShiftsStore[yIndex] = yShifts[iter];
     }
   }
-  if(m_InputValues->writeAlignmentShifts)
+  else
   {
-    outFile.close();
+    // Loop over the Z Direction
+    for(int64_t iter = 1; iter < dims[2]; iter++)
+    {
+      progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+      {
+        std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
+        m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
+        start = std::chrono::steady_clock::now();
+      }
+      if(getCancel())
+      {
+        return {};
+      }
+      float minDisorientation = std::numeric_limits<float>::max();
+      // Work from the largest Slice Value to the lowest Slice Value.
+      int64_t slice = (dims[2] - 1) - iter;
+      int64_t oldxshift = -1;
+      int64_t oldyshift = -1;
+      int64_t newxshift = 0;
+      int64_t newyshift = 0;
+
+      // Initialize everything to false
+      std::fill(misorients.begin(), misorients.end(), false);
+
+      float misorientationTolerance = static_cast<float>(m_InputValues->misorientationTolerance * deg2Rad);
+
+      while(newxshift != oldxshift || newyshift != oldyshift)
+      {
+        oldxshift = newxshift;
+        oldyshift = newyshift;
+        for(int32_t j = -3; j < 4; j++)
+        {
+          for(int32_t k = -3; k < 4; k++)
+          {
+            float disorientation = 0.0f;
+            float count = 0.0f;
+            int64_t xIdx = k + oldxshift + halfDim0;
+            int64_t yIdx = j + oldyshift + halfDim1;
+            int64_t idx = (dims[0] * yIdx) + xIdx;
+            if(!misorients[idx] && llabs(k + oldxshift) < halfDim0 && llabs(j + oldyshift) < halfDim1)
+            {
+              for(int64_t l = 0; l < dims[1]; l = l + 4)
+              {
+                for(int64_t n = 0; n < dims[0]; n = n + 4)
+                {
+                  if((l + j + oldyshift) >= 0 && (l + j + oldyshift) < dims[1] && (n + k + oldxshift) >= 0 && (n + k + oldxshift) < dims[0])
+                  {
+                    count++;
+                    int64_t refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
+                    int64_t curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
+                    if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
+                    {
+                      float angle = std::numeric_limits<float>::max();
+                      if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
+                      {
+                        QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        auto phase1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
+                        QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        auto phase2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
+                        if(phase1 == phase2 && phase1 < static_cast<uint32_t>(orientationOps.size()))
+                        {
+                          OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                          angle = axisAngle[3];
+                        }
+                      }
+                      if(angle > misorientationTolerance)
+                      {
+                        disorientation++;
+                      }
+                    }
+                    if(m_InputValues->UseMask)
+                    {
+                      if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
+                      {
+                        disorientation++;
+                      }
+                      if(!maskCompare->isTrue(refposition) && maskCompare->isTrue(curposition))
+                      {
+                        disorientation++;
+                      }
+                    }
+                  }
+                }
+              }
+              disorientation = disorientation / count;
+              xIdx = k + oldxshift + halfDim0;
+              yIdx = j + oldyshift + halfDim1;
+              idx = (dims[0] * yIdx) + xIdx;
+              misorients[idx] = true;
+              if(disorientation < minDisorientation || (disorientation == minDisorientation && ((llabs(k + oldxshift) < llabs(newxshift)) || (llabs(j + oldyshift) < llabs(newyshift)))))
+              {
+                newxshift = k + oldxshift;
+                newyshift = j + oldyshift;
+                minDisorientation = disorientation;
+              }
+            }
+          }
+        }
+      }
+      xShifts[iter] = xShifts[iter - 1] + newxshift;
+      yShifts[iter] = yShifts[iter - 1] + newyshift;
+    }
   }
 
   return {};

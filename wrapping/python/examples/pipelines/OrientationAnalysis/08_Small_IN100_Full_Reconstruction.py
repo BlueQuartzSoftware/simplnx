@@ -84,9 +84,7 @@ result = nx_filter.execute(
     misorientation_tolerance=5.0,
     quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
-    use_mask=True,
-    write_alignment_shifts=False
-    # alignment_shift_file_name: PathLike = ...,  # Not currently part of the code
+    use_mask=True
 )
 nxtest.check_filter_result(nx_filter, result)
 
@@ -110,11 +108,8 @@ result = nx_filter.execute(
     data_structure=data_structure,
     mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     reference_slice=0,
-    selected_cell_data_path=nx.DataPath("DataContainer/Cell Data"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
-    use_reference_slice=True,
-    write_alignment_shifts=False
-    # alignment_shift_file_name: PathLike = ...,  # Not currently part of the code
+    use_reference_slice=True
 )
 nxtest.check_filter_result(nx_filter, result)
 

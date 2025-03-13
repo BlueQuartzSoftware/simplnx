@@ -3,14 +3,16 @@
 #include "SimplnxCore/Filters/Algorithms/AlignSectionsFeatureCentroid.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
@@ -76,17 +78,29 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Attribute Matrix", "Cell Data Attribute Matrix", DataPath{}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the DataArray Mask", DataPath({"Mask"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Specifies if the Cell is to be counted in the algorithm.", DataPath({"Mask"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Optional File Output"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteAlignmentShifts_Key, "Write Alignment Shift File", "Whether to write the shifts applied to each section to a file", false));
-  params.insert(std::make_unique<FileSystemPathParameter>(
-      k_AlignmentShiftFileName_Key, "Alignment File Path", "The output file path where the user would like the shifts applied to the section to be written.",
-      fs::path("Data/Output/Alignment_By_Feature_Centroid_Shifts.txt"), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.linkParameters(k_WriteAlignmentShifts_Key, k_AlignmentShiftFileName_Key, true);
+  params.insertSeparator(Parameters::Separator{"Optional Alignment Output"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAlignmentShifts_Key, "Store Alignment Shifts",
+                                                                 "Whether to store the shifts applied to each section to a collection of Arrays in a new Attribute Matrix", false));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AlignmentAMName_Key, "Alignment Attribute Matrix Name",
+                                                          "The output attribute matrix where the shifts applied to the section to be stored as DataArrays.", "Alignment Shifts Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SlicesArrayName_Key, "Alignment Slices Data Array Name",
+                                                          "The output array name where the slice information related to shifts will be stored.", "Slice Indices"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_RelativeShiftsArrayName_Key, "Alignment Relative Shifts Data Array Name",
+                                                          "The output array name where the new shifts relative to previous slice information will be stored.", "Relative Shifts"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CumulativeShiftsArrayName_Key, "Alignment Cumulative Shifts Data Array Name",
+                                                          "The output array name where the accumulated shift information will be stored.", "Cumulative Shifts"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Alignment Centroids Data Array Name", "The output array name where the centroid information will be stored.", "Centroids"));
+
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_AlignmentAMName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_SlicesArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_RelativeShiftsArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_CumulativeShiftsArrayName_Key, true);
+  params.linkParameters(k_StoreAlignmentShifts_Key, k_CentroidsArrayName_Key, true);
 
   return params;
 }
@@ -94,7 +108,23 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType AlignSectionsFeatureCentroidFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Description:
+  // Swapped Writing Shifts to a file to storing them in Data Arrays
+  //
+  // Change 1:
+  // Replaced - k_WriteAlignmentShifts_Key = "write_alignment_shifts" -> k_StoreAlignmentShifts_Key = "store_alignment_shifts";
+  // Solution - `k_StoreAlignmentShifts_Key Value` = `k_WriteAlignmentShifts_Key Value`;
+  //
+  // Change 2:
+  // Replaced - k_AlignmentShiftFileName_Key = "alignment_shift_file_name" -> k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
+  // Solution: (For backwards pipeline conversion, else just use default)
+  // Steps:
+  //  1. Read File Name
+  //  2. Strip extension
+  //  3. `k_AlignmentShiftArrayName_Key Value` = cleaned up file name
 }
 
 //------------------------------------------------------------------------------
@@ -107,22 +137,17 @@ IFilter::UniquePointer AlignSectionsFeatureCentroidFilter::clone() const
 IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                            const std::atomic_bool& shouldCancel) const
 {
-  auto pWriteAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
-  auto pAlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   auto pReferenceSliceValue = filterArgs.value<int32>(k_ReferenceSlice_Key);
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
-  PreflightResult preflightResult;
+  auto pStoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   if(pReferenceSliceValue < 0)
   {
-    return {MakeErrorResult<OutputActions>(k_OutOfRangeReferenceSliceValue, "Reference Slice value must be ZERO or greater.")};
+    return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, "Reference Slice value must be ZERO or greater.");
   }
 
   std::vector<DataPath> dataPaths;
@@ -132,22 +157,49 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  // Ensure the file path is not blank if they user wants to write the alignment shifts.
-  if(pWriteAlignmentShifts && pAlignmentShiftFileName.empty())
+  // Handle Array Creation
+  if(pStoreAlignmentShifts)
   {
-    return {MakeErrorResult<OutputActions>(-3425, "Write Alignment Shifts is TRUE but the output file path is empty. Please ensure the file path is set for the alignment file.")};
+    const auto* gridGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+
+    if(gridGeom == nullptr)
+    {
+      return MakePreflightErrorResult(-68070, fmt::format("Store Alignment Shifts was selected, but an invalid image geometry was provided. Input Geometry Path :{}", inputImageGeometry.toString()));
+    }
+
+    const usize dims = gridGeom->getDimensions().getZ();
+    auto pAlignmentAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key);
+    const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
+
+    // Create Parent AM
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(amPath, AttributeMatrix::ShapeType{dims}));
+
+    // Create slices Array
+    auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pSlicesName)));
+
+    // Create positioning Array
+    auto pRelativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pRelativeShiftsName)));
+
+    // Create shifts Array
+    auto pCumulativeShiftsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int64, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCumulativeShiftsName)));
+
+    // Create centroids Array
+    auto pCentroidsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims}, std::vector<usize>{2}, amPath.createChildPath(pCentroidsName)));
   }
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataGroupPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pGoodVoxelsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -156,13 +208,17 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
 {
   AlignSectionsFeatureCentroidInputValues inputValues;
 
-  inputValues.WriteAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
-  inputValues.AlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   inputValues.UseReferenceSlice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
   inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
+
+  inputValues.StoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
+  inputValues.AlignmentAMPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key));
+  inputValues.SlicesArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key));
+  inputValues.RelativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key));
+  inputValues.CumulativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key));
+  inputValues.CentroidsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key));
 
   return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -172,7 +228,6 @@ namespace
 namespace SIMPL
 {
 constexpr StringLiteral k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
-constexpr StringLiteral k_AlignmentShiftFileNameKey = "AlignmentShiftFileName";
 constexpr StringLiteral k_UseReferenceSliceKey = "UseReferenceSlice";
 constexpr StringLiteral k_ReferenceSliceKey = "ReferenceSlice";
 constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
@@ -185,11 +240,9 @@ Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohma
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_WriteAlignmentShiftsKey, k_WriteAlignmentShifts_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_AlignmentShiftFileNameKey, k_AlignmentShiftFileName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_ReferenceSliceKey, k_ReferenceSlice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_SelectedCellDataGroup_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

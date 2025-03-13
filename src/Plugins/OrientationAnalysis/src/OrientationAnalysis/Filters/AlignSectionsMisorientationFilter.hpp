@@ -24,9 +24,6 @@ public:
   AlignSectionsMisorientationFilter& operator=(AlignSectionsMisorientationFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
-  static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
-
   static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
 
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
@@ -36,6 +33,12 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+
+  static inline constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
+  static inline constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
+  static inline constexpr StringLiteral k_SlicesArrayName_Key = "slices_array_name";
+  static inline constexpr StringLiteral k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
+  static inline constexpr StringLiteral k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

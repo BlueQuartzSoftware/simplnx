@@ -29,7 +29,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(const SizeVec3& udims);
+  Result<> execute(const SizeVec3& udims, const DataPath& imageGeometryPath);
 
   const std::atomic_bool& getCancel();
 
@@ -37,34 +37,19 @@ public:
 
 protected:
   /**
-   * @brief This should be overridden in the subclass.
+   * @brief This method finds the slice to slice shifts and should be implemented by subclasses
    * @param xShifts
    * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
+   * @return Whether the x and y shifts were successfully found
    */
   virtual Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) = 0;
 
-  virtual std::vector<DataPath> getSelectedDataPaths() const = 0;
-
   /**
-   * @brief This will read in a shifts file written by another DREAM3D alignment filter and populate the shifts parameters with the values as int64 numbers.
-   * @param file The DREAM3D formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
+   * @brief Returns the list of every child in the ImageGeometry's Cell Attribute Matrix
+   * @param imageGeometryPath
+   * @return List of DataPaths for each member inside the Cell Attribute Matrix
    */
-  static Result<> readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
-
-  /**
-   * @brief This will read in a shifts file defined by the user and populate the shifts parameters with the values as int64 numbers.
-   * @param file The user formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  static Result<> readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
+  virtual std::vector<DataPath> getSelectedDataPaths(const DataPath& imageGeometryPath) const;
 
 private:
   DataStructure& m_DataStructure;

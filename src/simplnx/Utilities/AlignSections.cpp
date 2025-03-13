@@ -1,5 +1,7 @@
 #include "AlignSections.hpp"
 
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -126,7 +128,7 @@ void AlignSections::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::execute(const SizeVec3& udims)
+Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeometryPath)
 {
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
   std::vector<int64_t> xShifts(dims[2], 0);
@@ -145,7 +147,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
   }
 
   // Now Adjust the actual DataArrays
-  std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
+  const std::vector<DataPath> selectedCellArrays = getSelectedDataPaths(imageGeometryPath);
 
   ParallelTaskAlgorithm taskRunner;
 
@@ -160,6 +162,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }
+
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
 
@@ -167,79 +170,15 @@ Result<> AlignSections::execute(const SizeVec3& udims)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
+std::vector<DataPath> AlignSections::getSelectedDataPaths(const DataPath& imageGeometryPath) const
 {
-  std::ifstream inFile;
-  inFile.open(file);
-
-  int64 slice = 0;
-  int64 newXShift = 0, newYShift = 0;
-  // These are ignored from the input file since DREAM3D-NX wrote the file
-  int64 slice2 = 0;
-  float32 xShift = 0.0f;
-  float32 yShift = 0.0f;
-
-  for(int64 iter = 1; iter < zDim; iter++)
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
+  auto cellDataGroupPath = imageGeometryPath.createChildPath(imageGeom.getCellData()->getName());
+  auto optionalResult = GetAllChildDataPaths(m_DataStructure, cellDataGroupPath);
+  if(optionalResult.has_value())
   {
-    std::string line;
-    std::getline(inFile, line);
-    std::istringstream iss(line);
-    std::vector<std::string> tokens;
-    std::string token;
-    while(iss >> token)
-    {
-      tokens.push_back(token);
-    }
-    if(tokens.size() < 6)
-    {
-      std::string message = fmt::format(
-          "Error reading line {} of Input Shifts File with file path '{}'. 6 columns in the format <Slice_A,Slice_B,New X Shift,New Y Shift,X Shift, Y Shift> are required but only {} were found",
-          iter, file.string(), tokens.size());
-      inFile.close();
-      return MakeErrorResult(-84750, message);
-    }
-    std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning, so we can read in the formatted tokens
-    iss >> slice >> slice2 >> newXShift >> newYShift >> xShift >> yShift;
-    xShifts[iter] = xShifts[iter - 1] + newXShift;
-    yShifts[iter] = yShifts[iter - 1] + newYShift;
+    return optionalResult.value();
   }
-  inFile.close();
-  return {};
-}
 
-// -----------------------------------------------------------------------------
-Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
-{
-  int64 slice = 0;
-  int64 newXShift = 0, newYShift = 0;
-
-  std::ifstream inFile;
-  inFile.open(file);
-  for(int64 iter = 1; iter < zDim; iter++)
-  {
-    std::string line;
-    std::getline(inFile, line);
-    std::istringstream iss(line);
-    std::vector<std::string> tokens;
-    std::string token;
-    while(iss >> token)
-    {
-      tokens.push_back(token);
-    }
-    if(tokens.size() < 3)
-    {
-      std::string message = fmt::format("Error reading line {} of Input Shifts File with file path '{}'. 3 columns in the format <Slice_Number,X Shift,Y Shift> are required but only {} were found",
-                                        iter, file.string(), tokens.size());
-      inFile.close();
-      return MakeErrorResult(-84750, message);
-    }
-    std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning, so we can read in the formatted tokens
-    inFile >> slice >> newXShift >> newYShift;
-    xShifts[iter] = xShifts[iter - 1] + newXShift;
-    yShifts[iter] = yShifts[iter - 1] + newYShift;
-  }
-  inFile.close();
   return {};
 }

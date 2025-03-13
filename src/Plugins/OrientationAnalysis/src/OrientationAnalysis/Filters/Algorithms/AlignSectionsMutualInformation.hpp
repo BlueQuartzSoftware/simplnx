@@ -18,13 +18,17 @@ struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
   DataPath ImageGeometryPath;
   bool UseMask;
   DataPath MaskArrayPath;
-  bool WriteAlignmentShifts;
-  FileSystemPathParameter::ValueType AlignmentShiftFileName;
 
   float32 MisorientationTolerance;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
+
+  bool StoreAlignmentShifts;
+  DataPath AlignmentAMPath;
+  DataPath SlicesArrayPath;
+  DataPath RelativeShiftsArrayPath;
+  DataPath CumulativeShiftsArrayPath;
 };
 
 /**
@@ -46,8 +50,6 @@ public:
 
 protected:
   Result<> findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts) override;
-
-  std::vector<DataPath> getSelectedDataPaths() const override;
 
   void formFeaturesSections(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts);
 

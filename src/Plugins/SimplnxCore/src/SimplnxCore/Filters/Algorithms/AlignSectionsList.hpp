@@ -5,19 +5,23 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/AlignSections.hpp"
 
 namespace nx::core
 {
+enum AlignSectionsInputType : uint8
+{
+  RelativeShifts,
+  CumulativeShifts
+};
 
 struct SIMPLNXCORE_EXPORT AlignSectionsListInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  bool DREAM3DAlignmentFile;
+  ChoicesParameter::ValueType AlignSectionsType;
+
   DataPath ImageGeometryPath;
+  DataPath ShiftsArrayPath;
 };
 
 /**
@@ -37,9 +41,13 @@ public:
   Result<> operator()();
 
 protected:
+  /**
+   * @brief This method finds the slice to slice shifts and should be implemented by subclasses
+   * @param xShifts
+   * @param yShifts
+   * @return Whether the x and y shifts were successfully found
+   */
   Result<> findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts) override;
-
-  std::vector<DataPath> getSelectedDataPaths() const override;
 
 private:
   DataStructure& m_DataStructure;

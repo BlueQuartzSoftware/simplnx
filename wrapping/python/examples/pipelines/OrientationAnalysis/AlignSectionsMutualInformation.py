@@ -78,15 +78,13 @@ nx_filter = cxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    alignment_shift_file_name=nxtest.get_data_directory() / "Output/OrientationAnalysis/Alignment_By_Mutual_Information_Shifts.txt",
     cell_phases_array_path=nx.DataPath("DataContainer/Cell Data/Phases"),
     crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     misorientation_tolerance=5.0,
     quats_array_path=nx.DataPath("DataContainer/Cell Data/Quats"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
-    use_mask=True,
-    write_alignment_shifts=True
+    use_mask=True
 )
 nxtest.check_filter_result(nx_filter, result)
 
