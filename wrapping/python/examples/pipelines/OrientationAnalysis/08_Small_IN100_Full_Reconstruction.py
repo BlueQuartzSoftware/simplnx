@@ -108,7 +108,6 @@ result = nx_filter.execute(
     data_structure=data_structure,
     mask_array_path=nx.DataPath("DataContainer/Cell Data/Mask"),
     reference_slice=0,
-    selected_cell_data_path=nx.DataPath("DataContainer/Cell Data"),
     input_image_geometry_path=nx.DataPath("DataContainer"),
     use_reference_slice=True
 )
