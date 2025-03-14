@@ -31,6 +31,10 @@ struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
   DataPath FeaturePhasesPath;
   DataPath TriangleGeomPath;
   DataPath PartNumberPath;
+
+  // !!! DO NOT USE !!! - This is exclusively for testing purposes
+  // The intention of this hidden parameter is to lower it for testing
+  usize HIDDEN_MaxTrianglesPerFile = std::numeric_limits<int32>::max();
 };
 
 /**

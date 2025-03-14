@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/Algorithms/WriteStlFile.hpp"
 #include "SimplnxCore/Filters/CombineStlFilesFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
@@ -157,8 +158,6 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     WriteStlFileFilter filter;
-    // auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-    // DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
     Arguments args;
 
     // Create default Parameters for the filter.
@@ -188,4 +187,24 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
   fileContents = readIn(writtenFilePath);
   md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "d45a0d99495df506384fdbbb46a79f5c");
+}
+
+TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  WriteStlFileInputValues inputValues;
+
+  inputValues.GroupingType = static_cast<ChoicesParameter::ValueType>(2);
+  inputValues.OutputStlFile = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/Generated.stl");
+  inputValues.TriangleGeomPath = DataPath({"TriangleDataContainer"});
+
+  inputValues.HIDDEN_MaxTrianglesPerFile = static_cast<usize>(10);
+
+  REQUIRE(WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)().valid());
+
+  // Add validation check here
 }
