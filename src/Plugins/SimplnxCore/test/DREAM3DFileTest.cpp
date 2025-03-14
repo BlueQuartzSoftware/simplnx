@@ -411,7 +411,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
   }
 }
 
-TEST_CASE("DREAM3DFileTest: Other Path Import Policy Tests")
+TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   auto filePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
@@ -419,7 +419,50 @@ TEST_CASE("DREAM3DFileTest: Other Path Import Policy Tests")
   ReadDREAM3DFilter filter;
   Arguments args;
 
-  SECTION("Include List")
+  SECTION("All")
+  {
+    Dream3dImportParameter::ImportData importData(filePath);
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "EulerAngles"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Fit"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Image Quality"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Phases"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "SEM Signal"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "LatticeConstants"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "MaterialName"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Confidence Index"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "EulerAngles"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Fit"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Image Quality"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Phases"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "SEM Signal"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Confidence Index"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "EulerAngles"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Fit"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Image Quality"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Phases"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "SEM Signal"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Confidence Index"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "EulerAngles"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Fit"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Image Quality"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Phases"})));
+    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "SEM Signal"})));
+  }
+  SECTION("Include List - Leaf Node")
   {
     Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, {DataPath({"DataContainer", "CellData", "Confidence Index"})});
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
@@ -428,8 +471,20 @@ TEST_CASE("DREAM3DFileTest: Other Path Import Policy Tests")
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
+    REQUIRE(!dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
   }
-  SECTION("Exclude List")
+  SECTION("Include List - Parent Node")
+  {
+    Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, {DataPath({"DataContainer", "CellData"})});
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
+    REQUIRE(!dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
+  }
+  SECTION("Exclude List - Parent Node")
   {
     Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::ExcludeList, {DataPath({"DataContainer", "CellData"})});
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
@@ -437,5 +492,19 @@ TEST_CASE("DREAM3DFileTest: Other Path Import Policy Tests")
     REQUIRE(executeResult.result.valid());
     REQUIRE(!dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+  }
+
+  SECTION("Exclude List - Leaf Node")
+  {
+    Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::ExcludeList, {DataPath({"DataContainer", "CellData", "Confidence Index"})});
+    args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
+    REQUIRE(!dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Fit"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
+    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
   }
 }
