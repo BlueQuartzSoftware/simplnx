@@ -159,7 +159,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
     return false;
   }
 
-  IFilter::PreflightResult result = m_Filter->preflight(dataStructure, getArguments(), messageHandler, shouldCancel);
+  IFilter::PreflightResult result = m_Filter->preflight(dataStructure, getArguments(), messageHandler, shouldCancel, getPipelineExecutionContext());
   m_Warnings = std::move(result.outputActions.warnings());
   setHasWarnings(!m_Warnings.empty());
   m_PreflightValues = std::move(result.outputValues);
@@ -254,7 +254,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   IFilter::ExecuteResult result;
   if(m_Filter != nullptr)
   {
-    result = m_Filter->execute(dataStructure, getArguments(), this, messageHandler, shouldCancel);
+    result = m_Filter->execute(dataStructure, getArguments(), this, messageHandler, shouldCancel, getPipelineExecutionContext());
     m_Warnings = result.result.warnings();
     m_PreflightValues = std::move(result.outputValues);
     if(result.result.invalid())

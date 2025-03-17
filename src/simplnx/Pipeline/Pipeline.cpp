@@ -59,10 +59,16 @@ nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterAr
 }
 } // namespace
 
-Pipeline::Pipeline(const std::string& name, FilterList* filterList)
+Pipeline::Pipeline(ExecutionContext executionContext, const std::string& name, FilterList* filterList)
 : AbstractPipelineNode()
 , m_Name(name)
 , m_FilterList(filterList)
+, m_ExecutionContext(std::move(executionContext))
+{
+}
+
+Pipeline::Pipeline(const std::string& name, FilterList* filterList)
+: Pipeline(Application::Instance()->getCurrentDir(), name, filterList)
 {
 }
 
@@ -71,6 +77,7 @@ Pipeline::Pipeline(const Pipeline& other)
 , m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
 , m_FilterList(other.m_FilterList)
+, m_ExecutionContext(other.m_ExecutionContext)
 {
   resetCollectionParent();
 }
@@ -80,6 +87,7 @@ Pipeline::Pipeline(Pipeline&& other) noexcept
 , m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
 , m_FilterList(std::move(other.m_FilterList))
+, m_ExecutionContext(std::move(other.m_ExecutionContext))
 {
   resetCollectionParent();
 }
@@ -950,4 +958,14 @@ uint64 Pipeline::checkMemoryRequired()
 {
   preflight();
   return m_MemoryRequired;
+}
+
+void Pipeline::setExecutionContext(ExecutionContext executionContext)
+{
+  m_ExecutionContext = std::move(executionContext);
+}
+
+ExecutionContext Pipeline::getExecutionContext() const
+{
+  return m_ExecutionContext;
 }

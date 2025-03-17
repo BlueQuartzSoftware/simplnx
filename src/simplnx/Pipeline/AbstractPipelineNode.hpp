@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/ExecutionContext.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <nlohmann/json_fwd.hpp>
@@ -245,6 +246,12 @@ public:
    * @return std::unique_ptr<Pipeline>
    */
   std::unique_ptr<Pipeline> getPrecedingPipeline() const;
+
+  /**
+   * @brief Gets the executionContext for the pipeline.
+   * @return
+   */
+  ExecutionContext getPipelineExecutionContext() const;
 
 protected:
   /**

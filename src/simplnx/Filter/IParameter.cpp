@@ -13,7 +13,7 @@ constexpr StringLiteral k_ValueKey = "value";
 constexpr StringLiteral k_VersionKey = "version";
 } // namespace
 
-std::any IParameter::construct(const Arguments& args) const
+std::any IParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   return args.at(name());
 }

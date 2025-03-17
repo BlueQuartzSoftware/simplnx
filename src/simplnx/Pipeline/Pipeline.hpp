@@ -99,7 +99,17 @@ public:
   /**
    * @brief Constructs a pipeline with the specified name. If no name is
    * provided, a default name of "Unnamed Pipeline" will be used.
+   * @param executionContext
+   * @param name
+   * @param filterList
+   */
+  Pipeline(ExecutionContext executionContext, const std::string& name = "Untitled Pipeline", FilterList* filterList = nullptr);
+
+  /**
+   * @brief Constructs a pipeline with the specified name. If no name is
+   * provided, a default name of "Unnamed Pipeline" will be used.
    * @param name = "Unnamed Pipeline"
+   * @param filterList
    */
   Pipeline(const std::string& name = "Untitled Pipeline", FilterList* filterList = nullptr);
 
@@ -606,6 +616,18 @@ public:
    */
   uint64 checkMemoryRequired();
 
+  /**
+   * @brief Sets the ExecutionContext for the pipeline.
+   * @param executionContext
+   */
+  void setExecutionContext(ExecutionContext executionContext);
+
+  /**
+   * @brief Gets the ExecutionContext for the pipeline.
+   * @return
+   */
+  ExecutionContext getExecutionContext() const;
+
 protected:
   /**
    * @brief Returns implementation-specific json value for the node.
@@ -657,5 +679,6 @@ private:
   collection_type m_Collection;
   FilterList* m_FilterList = nullptr;
   uint64 m_MemoryRequired = 0;
+  ExecutionContext m_ExecutionContext;
 };
 } // namespace nx::core

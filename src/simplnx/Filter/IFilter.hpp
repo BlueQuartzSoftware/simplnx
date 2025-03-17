@@ -168,7 +168,8 @@ public:
    * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}, const std::atomic_bool& shouldCancel = false) const;
+  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}, const std::atomic_bool& shouldCancel = false,
+                            const ExecutionContext& executionContext = ExecutionContext()) const;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -181,7 +182,7 @@ public:
    * @return ExecuteResult
    */
   ExecuteResult execute(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
-                        const std::atomic_bool& shouldCancel = false) const;
+                        const std::atomic_bool& shouldCancel = false, const ExecutionContext& executionContext = ExecutionContext()) const;
 
   /**
    * @brief Converts the given arguments to a JSON representation using the filter's parameters.
@@ -215,7 +216,8 @@ protected:
    * @param shouldCancel
    * @return PreflightResult
    */
-  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
+  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                        const ExecutionContext& executionContext) const = 0;
 
   /**
    * @brief Classes that implement IFilter must provide this function for execute.
@@ -227,8 +229,8 @@ protected:
    * @param shouldCancel
    * @return Result<>
    */
-  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                               const std::atomic_bool& shouldCancel) const = 0;
+  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                               const ExecutionContext& executionContext) const = 0;
 };
 
 using FilterCreationFunc = std::function<IFilter::UniquePointer()>;
