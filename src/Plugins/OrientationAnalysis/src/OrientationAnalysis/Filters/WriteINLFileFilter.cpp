@@ -95,8 +95,8 @@ IFilter::UniquePointer WriteINLFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                           const ExecutionContext& executionContext) const
 {
   auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
 
@@ -116,7 +116,7 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> WriteINLFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())

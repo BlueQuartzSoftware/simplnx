@@ -333,7 +333,7 @@ IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFindHistogramValue = filterArgs.value<bool>(k_FindHistogram_Key);
   auto pNumBinsValue = filterArgs.value<int32>(k_NumBins_Key);
@@ -456,7 +456,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeArrayStatisticsInputValues inputValues;
 

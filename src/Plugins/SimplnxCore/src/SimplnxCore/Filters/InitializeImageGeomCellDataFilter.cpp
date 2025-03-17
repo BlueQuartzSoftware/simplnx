@@ -231,7 +231,7 @@ IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel) const
+                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
@@ -327,7 +327,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
 //------------------------------------------------------------------------------
 Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);

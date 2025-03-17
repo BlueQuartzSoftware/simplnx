@@ -375,7 +375,7 @@ IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
@@ -437,7 +437,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
   auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);

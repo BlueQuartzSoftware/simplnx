@@ -92,7 +92,7 @@ IFilter::UniquePointer ErodeDilateBadDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pOperationValue = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -124,7 +124,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ErodeDilateBadDataInputValues inputValues;
 

@@ -98,7 +98,7 @@ IFilter::UniquePointer ReadH5OinaDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
@@ -201,7 +201,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> ReadH5OinaDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadH5DataInputValues inputValues;
 

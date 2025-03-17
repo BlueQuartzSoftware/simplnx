@@ -78,8 +78,8 @@ IFilter::UniquePointer ConvertDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                          const ExecutionContext& executionContext) const
 {
   auto pScalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
@@ -115,7 +115,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
 
 //------------------------------------------------------------------------------
 Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel) const
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ConvertDataInputValues inputValues;
   auto scalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);

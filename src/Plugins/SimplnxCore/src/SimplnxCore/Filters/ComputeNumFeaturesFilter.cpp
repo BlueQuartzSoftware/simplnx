@@ -79,7 +79,7 @@ IFilter::UniquePointer ComputeNumFeaturesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);

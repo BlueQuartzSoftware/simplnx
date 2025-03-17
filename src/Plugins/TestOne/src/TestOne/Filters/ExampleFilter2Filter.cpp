@@ -124,14 +124,14 @@ IFilter::UniquePointer ExampleFilter2Filter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ExampleFilter2Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> ExampleFilter2Filter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

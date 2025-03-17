@@ -102,7 +102,7 @@ IFilter::UniquePointer ReadHDF5DatasetFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
@@ -304,7 +304,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;

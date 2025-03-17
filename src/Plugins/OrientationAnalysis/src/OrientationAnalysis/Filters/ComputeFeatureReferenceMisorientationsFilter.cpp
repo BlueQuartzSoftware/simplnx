@@ -115,7 +115,7 @@ IFilter::UniquePointer ComputeFeatureReferenceMisorientationsFilter::clone() con
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                     const std::atomic_bool& shouldCancel) const
+                                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pReferenceOrientationValue = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceOrientation_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -184,7 +184,7 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeatureReferenceMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeFeatureReferenceMisorientationsInputValues inputValues;
 

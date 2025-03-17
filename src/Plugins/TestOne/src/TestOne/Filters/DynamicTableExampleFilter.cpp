@@ -101,14 +101,14 @@ IFilter::UniquePointer DynamicTableExampleFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult DynamicTableExampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> DynamicTableExampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

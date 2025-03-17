@@ -129,7 +129,7 @@ IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
@@ -162,7 +162,7 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);

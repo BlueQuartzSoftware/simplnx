@@ -89,7 +89,7 @@ IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
@@ -114,7 +114,7 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
   auto numberOfEmptyNeighbors = args.value<uint64>(k_MinEmptyNeighbors_Key);

@@ -230,7 +230,7 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                                 const std::atomic_bool& shouldCancel) const
+                                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
@@ -344,7 +344,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
 //------------------------------------------------------------------------------
 Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);

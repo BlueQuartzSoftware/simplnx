@@ -95,8 +95,8 @@ IFilter::UniquePointer ITKAtanImageFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKAtanImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ITKAtanImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                           const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -110,7 +110,7 @@ IFilter::PreflightResult ITKAtanImageFilter::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> ITKAtanImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

@@ -94,7 +94,7 @@ IFilter::UniquePointer ComputeBoundaryStrengthsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeBoundaryStrengthsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel) const
+                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pSurfaceMeshF1sArrayNameValue = filterArgs.value<std::string>(k_SurfaceMeshF1sArrayName_Key);
@@ -134,7 +134,7 @@ IFilter::PreflightResult ComputeBoundaryStrengthsFilter::preflightImpl(const Dat
 
 //------------------------------------------------------------------------------
 Result<> ComputeBoundaryStrengthsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel) const
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeBoundaryStrengthsInputValues inputValues;
 

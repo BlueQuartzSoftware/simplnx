@@ -83,7 +83,7 @@ IFilter::UniquePointer ComputeFeatureCentroidsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
@@ -119,7 +119,7 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeatureCentroidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeFeatureCentroidsInputValues inputValues;
 

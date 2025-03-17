@@ -91,7 +91,7 @@ IFilter::UniquePointer AppendImageGeometryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputGeometriesPathsValue = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
@@ -310,7 +310,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   AppendImageGeometryInputValues inputValues;
 

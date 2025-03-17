@@ -105,7 +105,7 @@ IFilter::UniquePointer IlluminationCorrection::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -177,7 +177,7 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> IlluminationCorrection::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

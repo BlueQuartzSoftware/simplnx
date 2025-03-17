@@ -101,7 +101,7 @@ IFilter::UniquePointer RegularGridSampleSurfaceMeshFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel) const
+                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
@@ -190,7 +190,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
 //------------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   RegularGridSampleSurfaceMeshInputValues inputValues;
 

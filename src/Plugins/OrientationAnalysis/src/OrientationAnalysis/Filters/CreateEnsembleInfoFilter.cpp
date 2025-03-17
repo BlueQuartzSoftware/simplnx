@@ -81,7 +81,7 @@ IFilter::UniquePointer CreateEnsembleInfoFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pEnsembleValue = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
@@ -112,7 +112,7 @@ IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   CreateEnsembleInfoInputValues inputValues;
   inputValues.Ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);

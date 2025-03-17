@@ -167,7 +167,7 @@ IFilter::UniquePointer WritePoleFigureFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
 
   auto pTitleValue = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
@@ -277,7 +277,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
 
   WritePoleFigureInputValues inputValues;

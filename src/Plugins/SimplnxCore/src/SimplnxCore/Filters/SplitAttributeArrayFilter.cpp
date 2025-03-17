@@ -82,7 +82,7 @@ IFilter::UniquePointer SplitAttributeArrayFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   auto pPostfix = filterArgs.value<std::string>(k_Postfix_Key);
@@ -144,7 +144,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> SplitAttributeArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   SplitAttributeArrayInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);

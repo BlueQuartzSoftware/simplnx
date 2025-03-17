@@ -590,7 +590,8 @@ public:
   }
 
 protected:
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override
   {
     try
     {
@@ -611,8 +612,8 @@ protected:
     }
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                       const std::atomic_bool& shouldCancel) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override
   {
     try
     {

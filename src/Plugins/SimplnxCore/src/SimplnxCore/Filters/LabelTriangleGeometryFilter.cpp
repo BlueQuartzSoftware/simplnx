@@ -83,7 +83,7 @@ IFilter::UniquePointer LabelTriangleGeometryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pTriangleGeomPathValue = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto pRegionIdsNameValue = filterArgs.value<DataPath>(k_CreatedRegionIdsPath_Key);
@@ -123,7 +123,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> LabelTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   LabelTriangleGeometryInputValues inputValues;
 

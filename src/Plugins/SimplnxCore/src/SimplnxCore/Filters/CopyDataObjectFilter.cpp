@@ -78,8 +78,8 @@ IFilter::UniquePointer CopyDataObjectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                             const ExecutionContext& executionContext) const
 {
   auto dataArrayPaths = args.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
   auto useNewParent = args.value<bool>(k_UseNewParent_Key);
@@ -145,7 +145,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> CopyDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

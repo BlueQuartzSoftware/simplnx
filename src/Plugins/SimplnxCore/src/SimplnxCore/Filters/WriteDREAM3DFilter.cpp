@@ -75,7 +75,8 @@ IFilter::UniquePointer WriteDREAM3DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                           const ExecutionContext& executionContext) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
@@ -87,7 +88,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 
 //------------------------------------------------------------------------------
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel) const
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto atomicFileResult = AtomicFile::Create(args.value<FileSystemPathParameter::ValueType>(k_ExportFilePath));
   if(atomicFileResult.invalid())

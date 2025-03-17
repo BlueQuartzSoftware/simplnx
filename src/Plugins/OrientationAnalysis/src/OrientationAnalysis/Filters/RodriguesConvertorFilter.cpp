@@ -84,7 +84,7 @@ IFilter::UniquePointer RodriguesConvertorFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pRodriguesDataArrayPathValue = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
   auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
@@ -117,7 +117,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   RodriguesConvertorInputValues inputValues;
 

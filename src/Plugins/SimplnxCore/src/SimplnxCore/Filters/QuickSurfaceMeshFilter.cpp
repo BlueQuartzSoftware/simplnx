@@ -108,7 +108,7 @@ IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -180,7 +180,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   nx::core::QuickSurfaceMeshInputValues inputValues;
 

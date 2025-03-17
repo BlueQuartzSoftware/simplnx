@@ -109,7 +109,7 @@ IFilter::UniquePointer ComputeGBPDMetricBasedFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
   auto pNumSamplePtsValue = filterArgs.value<int32>(k_NumSamplPts_Key);
@@ -160,7 +160,7 @@ IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeGBPDMetricBasedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeGBPDMetricBasedInputValues inputValues;
 

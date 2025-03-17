@@ -89,7 +89,7 @@ IFilter::UniquePointer ComputeMomentInvariants2DFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -142,7 +142,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeMomentInvariants2DInputValues inputValues;
 

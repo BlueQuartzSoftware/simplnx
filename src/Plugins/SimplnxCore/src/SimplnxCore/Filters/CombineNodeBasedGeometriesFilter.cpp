@@ -83,53 +83,29 @@ std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(cons
 
 std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindVertexElements(const IGeometry* geom)
 {
-  auto getVerticesArrayFunc = [](const INodeGeometry0D* ptr) -> auto
-  {
-    return ptr->getVertices();
-  };
-  auto getVertexAttrMatrixFunc = [](const INodeGeometry0D* ptr) -> auto
-  {
-    return ptr->getVertexAttributeMatrix();
-  };
+  auto getVerticesArrayFunc = [](const INodeGeometry0D* ptr) -> auto { return ptr->getVertices(); };
+  auto getVertexAttrMatrixFunc = [](const INodeGeometry0D* ptr) -> auto { return ptr->getVertexAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry0D>(geom, getVerticesArrayFunc, getVertexAttrMatrixFunc);
 }
 
 std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindEdgeElements(const IGeometry* geom)
 {
-  auto getEdgesArrayFunc = [](const INodeGeometry1D* ptr) -> auto
-  {
-    return ptr->getEdges();
-  };
-  auto getEdgeAttrMatrixFunc = [](const INodeGeometry1D* ptr) -> auto
-  {
-    return ptr->getEdgeAttributeMatrix();
-  };
+  auto getEdgesArrayFunc = [](const INodeGeometry1D* ptr) -> auto { return ptr->getEdges(); };
+  auto getEdgeAttrMatrixFunc = [](const INodeGeometry1D* ptr) -> auto { return ptr->getEdgeAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry1D>(geom, getEdgesArrayFunc, getEdgeAttrMatrixFunc);
 }
 
 std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindFaceElements(const IGeometry* geom)
 {
-  auto getFacesArrayFunc = [](const INodeGeometry2D* ptr) -> auto
-  {
-    return ptr->getFaces();
-  };
-  auto getFaceAttrMatrixFunc = [](const INodeGeometry2D* ptr) -> auto
-  {
-    return ptr->getFaceAttributeMatrix();
-  };
+  auto getFacesArrayFunc = [](const INodeGeometry2D* ptr) -> auto { return ptr->getFaces(); };
+  auto getFaceAttrMatrixFunc = [](const INodeGeometry2D* ptr) -> auto { return ptr->getFaceAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry2D>(geom, getFacesArrayFunc, getFaceAttrMatrixFunc);
 }
 
 std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindPolyElements(const IGeometry* geom)
 {
-  auto getPolyArrayFunc = [](const INodeGeometry3D* ptr) -> auto
-  {
-    return ptr->getPolyhedra();
-  };
-  auto getPolyAttrMatrixFunc = [](const INodeGeometry3D* ptr) -> auto
-  {
-    return ptr->getPolyhedraAttributeMatrix();
-  };
+  auto getPolyArrayFunc = [](const INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedra(); };
+  auto getPolyAttrMatrixFunc = [](const INodeGeometry3D* ptr) -> auto { return ptr->getPolyhedraAttributeMatrix(); };
   return FindGeometryElements<INodeGeometry3D>(geom, getPolyArrayFunc, getPolyAttrMatrixFunc);
 }
 
@@ -527,7 +503,7 @@ IFilter::UniquePointer CombineNodeBasedGeometriesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel) const
+                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputGeometryPaths = args.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
   auto outputGeometryPath = args.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
@@ -946,7 +922,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 
 //------------------------------------------------------------------------------
 Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   CombineNodeBasedGeometriesInputValues inputValues;
 

@@ -114,7 +114,7 @@ IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
 }
 
 IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -213,7 +213,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 }
 
 Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);

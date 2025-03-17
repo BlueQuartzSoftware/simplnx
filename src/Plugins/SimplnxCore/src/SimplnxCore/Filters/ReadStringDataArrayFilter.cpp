@@ -91,8 +91,8 @@ IFilter::UniquePointer ReadStringDataArrayFilter::clone() const
   return std::make_unique<ReadStringDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                                  const ExecutionContext& executionContext) const
 {
   auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
 
@@ -147,7 +147,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
 }
 
 Result<> ReadStringDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadStringDataArrayInputValues inputValues;
 

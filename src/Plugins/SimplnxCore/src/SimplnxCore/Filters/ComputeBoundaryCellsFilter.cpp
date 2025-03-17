@@ -85,7 +85,7 @@ IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -116,7 +116,7 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeBoundaryCellsInputValues inputValues;
 

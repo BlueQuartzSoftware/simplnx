@@ -81,9 +81,10 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  PreflightResult preflightImpl(const nx::core::DataStructure& data, const nx::core::Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const nx::core::DataStructure& data, const nx::core::Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override;
   nx::core::Result<> executeImpl(nx::core::DataStructure& data, const nx::core::Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                 const std::atomic_bool& shouldCancel) const override;
+                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const override;
 };
 } // namespace nx::core
 

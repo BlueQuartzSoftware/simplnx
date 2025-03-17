@@ -74,7 +74,7 @@ IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
   auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);
@@ -112,7 +112,7 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
   auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);

@@ -96,8 +96,8 @@ IFilter::UniquePointer AddBadDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                         const ExecutionContext& executionContext) const
 {
   auto pPoissonNoiseValue = filterArgs.value<bool>(k_PoissonNoise_Key);
   auto pPoissonVolFractionValue = filterArgs.value<float32>(k_PoissonVolFraction_Key);
@@ -144,7 +144,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
 
 //------------------------------------------------------------------------------
 Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel) const
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto seed = filterArgs.value<uint64>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

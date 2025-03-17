@@ -154,7 +154,7 @@ IFilter::UniquePointer CreateDataArrayAdvancedFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
@@ -296,7 +296,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
 //------------------------------------------------------------------------------
 Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto path = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initType = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));

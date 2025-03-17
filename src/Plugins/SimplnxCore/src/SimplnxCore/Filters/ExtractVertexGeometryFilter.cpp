@@ -106,7 +106,7 @@ IFilter::UniquePointer ExtractVertexGeometryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pArrayHandlingValue = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -195,7 +195,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ExtractVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ExtractVertexGeometryInputValues inputValues;
   inputValues.ArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);

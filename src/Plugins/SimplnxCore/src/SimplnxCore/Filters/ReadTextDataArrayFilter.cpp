@@ -106,8 +106,8 @@ IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
   return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                                const ExecutionContext& executionContext) const
 {
   auto numericType = args.value<NumericType>(k_ScalarType_Key);
   auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
@@ -164,7 +164,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 }
 
 Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputFilePath = args.value<fs::path>(k_InputFile_Key);
   auto skipLines = args.value<uint64>(k_NSkipLines_Key);

@@ -62,7 +62,7 @@ IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
 }
 
 IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto dataObjectPath = args.value<DataPath>(k_DataObjectPath);
   auto tableData = args.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
@@ -84,7 +84,7 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
 }
 
 Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

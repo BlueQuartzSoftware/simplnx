@@ -107,7 +107,7 @@ IFilter::UniquePointer WriteASCIIDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
 
@@ -132,7 +132,7 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto includes = static_cast<WriteASCIIDataFilter::Includes>(filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key));
   bool includeHeaders;
