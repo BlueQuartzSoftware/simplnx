@@ -11,6 +11,8 @@
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <filesystem>
 
 namespace fs = std::filesystem;

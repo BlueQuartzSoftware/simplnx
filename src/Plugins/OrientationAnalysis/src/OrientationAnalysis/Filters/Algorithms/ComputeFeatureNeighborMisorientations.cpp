@@ -82,7 +82,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       {
         if(m_InputValues->ComputeAvgMisors)
         {
-          tempMisoList--;
+          tempMisoList > 0 ? tempMisoList-- : tempMisoList = 0;
         }
         tempMisorientationLists[i][j] = NAN;
       }

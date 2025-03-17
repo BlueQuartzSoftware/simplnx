@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeIPFColorsTest.cpp
   ComputeKernelAvgMisorientationsTest.cpp
   ComputeFeatureNeighborMisorientationsTest.cpp
+  ComputeMisorientationsTest.cpp
   ComputeQuaternionConjugateTest.cpp
   ComputeSchmidsTest.cpp
   ComputeShapesFilterTest.cpp
@@ -149,6 +150,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME compute_twin_boundaries_test.tar.gz SHA512 a1bfbe929f07deb03bff68a7a04faf7dbd47e35bdad1178f0c8d3b185e5349b6ff466596c7d49bebba4eecc433c8ca39c27240e0188cb2b85298b2e923ffb572)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME align_sections_mutual_information.tar.gz SHA512 0c3b917a6f3b5ed587a4629fc0fa35c0108d927c9d0596854a95e7d792d29f6edd42f3129307e613fea0dd5665fdfbad8b3896e6f307c546b90076a4b83b1d6d)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME align_sections_misorientation.tar.gz SHA512 8a186b2e96dd94a8583eacaec768c252885d89c8f5734b6511d573235beae075971e6e81b42bb517b7cd617fc478ed394abf8ea4fe3188f50d340f90573013f4)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME compute_misorientations.tar.gz SHA512 31e649921eebf1e5dd1882279d0ec4d640e2c377a9edbb24d7b81eba74ec3656bd6236b1d1c038aa2123aa5959b529c144915f885b8e08fe1a90eee60f52e766)
 
 endif()
 

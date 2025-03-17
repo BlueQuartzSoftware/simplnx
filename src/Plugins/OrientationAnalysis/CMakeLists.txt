@@ -48,6 +48,7 @@ set(FilterList
   ComputeIPFColorsFilter
   ComputeKernelAvgMisorientationsFilter
   ComputeFeatureNeighborMisorientationsFilter
+  ComputeMisorientationsFilter
   ComputeQuaternionConjugateFilter
   ComputeSchmidsFilter
   ComputeShapesFilter
@@ -183,6 +184,7 @@ set(filter_algorithms
   ComputeIPFColors
   ComputeKernelAvgMisorientations
   ComputeFeatureNeighborMisorientations
+  ComputeMisorientations
   ComputeQuaternionConjugate
   ComputeSchmids
   ComputeShapes
