@@ -1,4 +1,4 @@
-#include "ComputeMisorientations.hpp"
+#include "ComputeFeatureNeighborMisorientations.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -10,8 +10,8 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ComputeMisorientationsInputValues* inputValues)
+ComputeFeatureNeighborMisorientations::ComputeFeatureNeighborMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                                             ComputeFeatureNeighborMisorientationsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -20,16 +20,16 @@ ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ComputeMisorientations::~ComputeMisorientations() noexcept = default;
+ComputeFeatureNeighborMisorientations::~ComputeFeatureNeighborMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeMisorientations::getCancel()
+const std::atomic_bool& ComputeFeatureNeighborMisorientations::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeMisorientations::operator()()
+Result<> ComputeFeatureNeighborMisorientations::operator()()
 {
 
   std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();

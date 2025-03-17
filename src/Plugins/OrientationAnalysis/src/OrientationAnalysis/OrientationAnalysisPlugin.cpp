@@ -31,7 +31,7 @@ std::map<nx::core::Uuid, nx::core::Uuid> k_SimplToComplexFilterMapping = {
     {Uuid::FromString("{d67e9f28-2fe5-5188-b0f8-323a7e603de6}").value(), Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value()}, /* ComputeGBCDMetricBased */
     {Uuid::FromString("{00d20627-5b88-56ba-ac7a-fc2a4b337903}").value(), Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value()}, /* ComputeGBPDMetricBased */
     {Uuid::FromString("{88d332c1-cf6c-52d3-a38d-22f6eae19fa6}").value(), Uuid::FromString("88d332c1-cf6c-52d3-a38d-22f6eae19fa6").value()}, /* ComputeKernelAvgMisorientations */
-    {Uuid::FromString("{286dd493-4fea-54f4-b59e-459dd13bbe57}").value(), Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value()}, /* ComputeMisorientations */
+    {Uuid::FromString("{286dd493-4fea-54f4-b59e-459dd13bbe57}").value(), Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value()}, /* ComputeFeatureNeighborMisorientations */
     {Uuid::FromString("{e67ca06a-176f-58fc-a676-d6ee5553511a}").value(), Uuid::FromString("e67ca06a-176f-58fc-a676-d6ee5553511a").value()}, /* ComputeSchmids */
     {Uuid::FromString("{97523038-5fb2-5e82-9177-ed3e8b24b4bd}").value(), Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value()}, /* ComputeSlipTransmissionMetrics */
     {Uuid::FromString("{a10124f3-05d0-5f49-93a0-e93926f5b48b}").value(), Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value()}, /* FindTwinBoundaries */

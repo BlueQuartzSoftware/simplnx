@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class ComputeMisorientationsFilter
+ * @class ComputeFeatureNeighborMisorientationsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientationsFilter : public IFilter
 {
 public:
-  ComputeMisorientationsFilter() = default;
-  ~ComputeMisorientationsFilter() noexcept override = default;
+  ComputeFeatureNeighborMisorientationsFilter() = default;
+  ~ComputeFeatureNeighborMisorientationsFilter() noexcept override = default;
 
-  ComputeMisorientationsFilter(const ComputeMisorientationsFilter&) = delete;
-  ComputeMisorientationsFilter(ComputeMisorientationsFilter&&) noexcept = delete;
+  ComputeFeatureNeighborMisorientationsFilter(const ComputeFeatureNeighborMisorientationsFilter&) = delete;
+  ComputeFeatureNeighborMisorientationsFilter(ComputeFeatureNeighborMisorientationsFilter&&) noexcept = delete;
 
-  ComputeMisorientationsFilter& operator=(const ComputeMisorientationsFilter&) = delete;
-  ComputeMisorientationsFilter& operator=(ComputeMisorientationsFilter&&) noexcept = delete;
+  ComputeFeatureNeighborMisorientationsFilter& operator=(const ComputeFeatureNeighborMisorientationsFilter&) = delete;
+  ComputeFeatureNeighborMisorientationsFilter& operator=(ComputeFeatureNeighborMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ComputeAvgMisors_Key = "compute_avg_misors";
@@ -118,4 +118,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeMisorientationsFilter, "0b68fe25-b5ef-4805-ae32-20acb8d4e823");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeFeatureNeighborMisorientationsFilter, "0b68fe25-b5ef-4805-ae32-20acb8d4e823");

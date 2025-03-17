@@ -1,4 +1,4 @@
-#include "OrientationAnalysis/Filters/ComputeMisorientationsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeFeatureNeighborMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -21,7 +21,7 @@ const std::string k_MisorientationListArrayName("CalculatedMisorientationList");
 const std::string k_NeighborListArrayName("NeighborList");
 } // namespace
 
-TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter", "[OrientationAnalysis][ComputeMisorientationsFilter]")
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -39,18 +39,18 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter", "[OrientationAnal
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    ComputeMisorientationsFilter filter;
+    ComputeFeatureNeighborMisorientationsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeMisorientationsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborLstDataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesDataPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(ComputeMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<std::string>(k_MisorientationListArrayName));
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborLstDataPath));
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesDataPath));
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<std::string>(k_MisorientationListArrayName));
 
-    args.insertOrAssign(ComputeMisorientationsFilter::k_ComputeAvgMisors_Key, std::make_any<bool>(false));
-    // args.insertOrAssign(ComputeMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<std::string>("")); //use default value
+    args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_ComputeAvgMisors_Key, std::make_any<bool>(false));
+    // args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<std::string>("")); //use default value
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -75,6 +75,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter", "[OrientationAnal
 }
 
 // TODO: needs to be implemented. This will need the input .dream3d file to be regenerated with the missing data generated using DREAM3D 6.6
-TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter: Misorientation Per Feature", "[OrientationAnalysis][ComputeMisorientations][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Misorientation Per Feature", "[OrientationAnalysis][ComputeFeatureNeighborMisorientations][.][UNIMPLEMENTED][!mayfail]")
 {
 }

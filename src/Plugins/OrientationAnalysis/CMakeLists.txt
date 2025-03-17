@@ -47,7 +47,7 @@ set(FilterList
   ComputeGBPDMetricBasedFilter
   ComputeIPFColorsFilter
   ComputeKernelAvgMisorientationsFilter
-  ComputeMisorientationsFilter
+  ComputeFeatureNeighborMisorientationsFilter
   ComputeQuaternionConjugateFilter
   ComputeSchmidsFilter
   ComputeShapesFilter
@@ -86,7 +86,7 @@ set(STUB_FILTERS
   ComputeBoundaryStrengths
   FindDistsToCharactGBs
   ComputeKernelAvgMisorientations
-  ComputeMisorientations
+  ComputeFeatureNeighborMisorientations
   ComputeSchmids
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
@@ -182,7 +182,7 @@ set(filter_algorithms
   ComputeGBPDMetricBased
   ComputeIPFColors
   ComputeKernelAvgMisorientations
-  ComputeMisorientations
+  ComputeFeatureNeighborMisorientations
   ComputeQuaternionConjugate
   ComputeSchmids
   ComputeShapes

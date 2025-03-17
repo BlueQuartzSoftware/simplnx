@@ -1,5 +1,5 @@
-#include "ComputeMisorientationsFilter.hpp"
-#include "OrientationAnalysis/Filters/Algorithms/ComputeMisorientations.hpp"
+#include "ComputeFeatureNeighborMisorientationsFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeFeatureNeighborMisorientations.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -19,37 +19,37 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ComputeMisorientationsFilter::name() const
+std::string ComputeFeatureNeighborMisorientationsFilter::name() const
 {
-  return FilterTraits<ComputeMisorientationsFilter>::name.str();
+  return FilterTraits<ComputeFeatureNeighborMisorientationsFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeMisorientationsFilter::className() const
+std::string ComputeFeatureNeighborMisorientationsFilter::className() const
 {
-  return FilterTraits<ComputeMisorientationsFilter>::className;
+  return FilterTraits<ComputeFeatureNeighborMisorientationsFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ComputeMisorientationsFilter::uuid() const
+Uuid ComputeFeatureNeighborMisorientationsFilter::uuid() const
 {
-  return FilterTraits<ComputeMisorientationsFilter>::uuid;
+  return FilterTraits<ComputeFeatureNeighborMisorientationsFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeMisorientationsFilter::humanName() const
+std::string ComputeFeatureNeighborMisorientationsFilter::humanName() const
 {
   return "Compute Feature Neighbor Misorientations";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ComputeMisorientationsFilter::defaultTags() const
+std::vector<std::string> ComputeFeatureNeighborMisorientationsFilter::defaultTags() const
 {
   return {className(), "Statistics", "Crystallography", "Misorientation"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ComputeMisorientationsFilter::parameters() const
+Parameters ComputeFeatureNeighborMisorientationsFilter::parameters() const
 {
   Parameters params;
 
@@ -86,20 +86,20 @@ Parameters ComputeMisorientationsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType ComputeMisorientationsFilter::parametersVersion() const
+IFilter::VersionType ComputeFeatureNeighborMisorientationsFilter::parametersVersion() const
 {
   return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
+IFilter::UniquePointer ComputeFeatureNeighborMisorientationsFilter::clone() const
 {
-  return std::make_unique<ComputeMisorientationsFilter>();
+  return std::make_unique<ComputeFeatureNeighborMisorientationsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                                    const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -161,10 +161,10 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFeatureNeighborMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel) const
 {
-  ComputeMisorientationsInputValues inputValues;
+  ComputeFeatureNeighborMisorientationsInputValues inputValues;
 
   inputValues.ComputeAvgMisors = filterArgs.value<bool>(k_ComputeAvgMisors_Key);
   inputValues.NeighborListArrayPath = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
@@ -175,7 +175,7 @@ Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.MisorientationListArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
   inputValues.AvgMisorientationsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
 
-  return ComputeMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeFeatureNeighborMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -192,9 +192,9 @@ constexpr StringLiteral k_AvgMisorientationsArrayNameKey = "AvgMisorientationsAr
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> ComputeMisorientationsFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ComputeFeatureNeighborMisorientationsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = ComputeMisorientationsFilter().getDefaultArguments();
+  Arguments args = ComputeFeatureNeighborMisorientationsFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 
