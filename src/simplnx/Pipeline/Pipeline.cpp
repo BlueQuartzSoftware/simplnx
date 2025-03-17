@@ -68,7 +68,7 @@ Pipeline::Pipeline(ExecutionContext executionContext, const std::string& name, F
 }
 
 Pipeline::Pipeline(const std::string& name, FilterList* filterList)
-: Pipeline(Application::Instance()->getCurrentDir(), name, filterList)
+: Pipeline(ExecutionContext(), name, filterList)
 {
 }
 
