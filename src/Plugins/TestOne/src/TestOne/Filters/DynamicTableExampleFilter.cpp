@@ -100,8 +100,8 @@ IFilter::UniquePointer DynamicTableExampleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult DynamicTableExampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult DynamicTableExampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                                  const ExecutionContext& executionContext) const
 {
   return {};
 }

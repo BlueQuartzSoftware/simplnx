@@ -67,7 +67,7 @@ IFilter::UniquePointer ImportVectorImageStack::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ImportVectorImageStack::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -124,7 +124,7 @@ IFilter::PreflightResult ImportVectorImageStack::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> ImportVectorImageStack::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

@@ -94,7 +94,7 @@ IFilter::UniquePointer ITKBoundedReciprocalImageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKBoundedReciprocalImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -109,7 +109,7 @@ IFilter::PreflightResult ITKBoundedReciprocalImageFilter::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> ITKBoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

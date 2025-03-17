@@ -82,7 +82,7 @@ IFilter::UniquePointer ImportAxioVisionV4Montage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ImportAxioVisionV4Montage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
