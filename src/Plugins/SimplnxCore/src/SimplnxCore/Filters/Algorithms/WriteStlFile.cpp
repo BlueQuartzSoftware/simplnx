@@ -33,8 +33,7 @@ public:
 
   Result<usize> createOverflowFile()
   {
-    const fs::path newPath =
-        fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
+    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
     auto atomicFileResult = AtomicFile::Create(newPath);
     if(atomicFileResult.invalid())
     {
@@ -74,7 +73,7 @@ struct LimitBoundAtomicFileFactory
 };
 
 Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
-                           const IGeometry::MeshIndexType startValue = 0)
+                           const std::atomic_bool& shouldCancel, const IGeometry::MeshIndexType startValue = 0)
 {
   Result<> result;
 
@@ -129,6 +128,14 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
   // Loop over all the triangles for this spin
   for(IGeometry::MeshIndexType triangle = startValue; triangle < endValue; ++triangle)
   {
+    if(shouldCancel)
+    {
+      fseek(filePtr, 80L, SEEK_SET);
+      fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+      fclose(filePtr);
+      return result;
+    }
+
     // Get the true indices of the 3 nodes
     IGeometry::MeshIndexType nId0 = triangles[triangle * 3];
     IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
@@ -179,7 +186,7 @@ class SingleOutWrapper
 {
 public:
   SingleOutWrapper(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
-                   const IGeometry::MeshIndexType startValue)
+                   const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Path(path)
   , m_EndValue(endValue)
@@ -187,13 +194,14 @@ public:
   , m_Triangles(triangles)
   , m_Vertices(vertices)
   , m_StartValue(startValue)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   ~SingleOutWrapper() = default;
 
   void operator()() const
   {
-    SingleWriteOutStl(m_Filter, m_Path, m_EndValue, m_Header, m_Triangles, m_Vertices, m_StartValue);
+    SingleWriteOutStl(m_Filter, m_Path, m_EndValue, m_Header, m_Triangles, m_Vertices, m_ShouldCancel, m_StartValue);
   }
 
 private:
@@ -204,6 +212,7 @@ private:
   const TriStore& m_Triangles;
   const VertexStore& m_Vertices;
   const IGeometry::MeshIndexType m_StartValue;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 /**
@@ -213,7 +222,7 @@ class MultiWriteStlFileImpl
 {
 public:
   MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const IGeometry::MeshIndexType endValue, const std::string header, const TriStore& triangles,
-                        const VertexStore& vertices, const Int32AbstractDataStore& featureIds, const int32 featureId, const usize maxTriangles)
+                        const VertexStore& vertices, const Int32AbstractDataStore& featureIds, const int32 featureId, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)
   , m_EndValue(endValue)
@@ -223,6 +232,7 @@ public:
   , m_FeatureIds(featureIds)
   , m_FeatureId(featureId)
   , m_MaxTriangles(maxTriangles)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   ~MultiWriteStlFileImpl() = default;
@@ -289,6 +299,14 @@ public:
     // Loop over all the triangles for this spin
     for(IGeometry::MeshIndexType triangle = startValue; triangle < m_EndValue; triangle++)
     {
+      if(m_ShouldCancel)
+      {
+        fseek(filePtr, 80L, SEEK_SET);
+        fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+        fclose(filePtr);
+        return;
+      }
+
       // recursive case check
       if(triCount == m_MaxTriangles)
       {
@@ -382,10 +400,11 @@ private:
   const Int32AbstractDataStore& m_FeatureIds;
   const int32 m_FeatureId;
   const usize m_MaxTriangles;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStore& triangles,
-                                   const VertexStore& vertices, const usize maxTriangles)
+                                   const VertexStore& vertices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
 {
   const usize count = nTriangles / maxTriangles;
 
@@ -417,10 +436,15 @@ Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIn
     {
       endValue = nTriangles;
     }
-    taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue));
+    taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
   }
 
   taskRunner.wait();
+
+  if(shouldCancel)
+  {
+    return {};
+  }
 
   Result<> endResult = {};
   for(auto& atomicFile : limitedFile.m_AtomicFilesList)
@@ -476,7 +500,7 @@ Result<> WriteStlFile::operator()()
 
     if(triangleGeom.getNumberOfFaces() > m_InputValues->HIDDEN_MaxTrianglesPerFile)
     {
-      return ::ExecuteSingleFileOverflow(this, nTriangles, header, m_InputValues->OutputStlFile, triangles, vertices, m_InputValues->HIDDEN_MaxTrianglesPerFile);
+      return ::ExecuteSingleFileOverflow(this, nTriangles, header, m_InputValues->OutputStlFile, triangles, vertices, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel);
     }
 
     auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputStlFile);
@@ -486,10 +510,14 @@ Result<> WriteStlFile::operator()()
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
     { // Scoped to ensure file lock is released
-      auto result = ::SingleWriteOutStl(this, atomicFile.tempFilePath(), nTriangles, header, triangles, vertices);
+      auto result = ::SingleWriteOutStl(this, atomicFile.tempFilePath(), nTriangles, header, triangles, vertices, m_ShouldCancel);
       if(result.invalid())
       {
         return result;
+      }
+      if(m_ShouldCancel)
+      {
+        return {};
       }
     }
 
@@ -542,7 +570,7 @@ Result<> WriteStlFile::operator()()
 
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds,
-                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile));
+                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -581,7 +609,7 @@ Result<> WriteStlFile::operator()()
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles,
                                                {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds,
-                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile));
+                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -615,7 +643,7 @@ Result<> WriteStlFile::operator()()
 
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
       taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices,
-                                               partNumbers, currentPartNumber, m_InputValues->HIDDEN_MaxTrianglesPerFile));
+                                               partNumbers, currentPartNumber, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -623,6 +651,11 @@ Result<> WriteStlFile::operator()()
       }
     }
     taskRunner.wait();
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
   }
 
   // Commit all the temp files
