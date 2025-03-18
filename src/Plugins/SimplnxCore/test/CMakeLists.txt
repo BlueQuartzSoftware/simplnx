@@ -142,6 +142,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteNodesAndElementsFilesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
+  WriteSPParksSitesTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -247,6 +248,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME combine_node_based_geometries.tar.gz SHA512 beb2186d3522f6ab20d57bb5a0809fea95a5a3ddb2f9a70e1fc049d1ee05b2aa6f3165fa82cc5b6b3ba2e41457d8b4b86c3987c6ee6f05efdb23760b922b4d18)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 7_ReadStringArray.tar.gz SHA512 594b9a4605db8de0f6682884b07385938284e5309a5c56514dce3206ede5cdbdb1cf8629eb5bd5b77cbe59ee650ee381988cfc9ac7aa12862ec944926db4b530)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME align_sections_feature_centroids.tar.gz SHA512 06a4f576108e96fff49241ed39bdcaa90b96ba9b6fa91f420bde9d797a21fc58880b52f4d070c0efbf5b193e7c9f0c0383c140db404c5e74c3ff8ce3b4c3ca9b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_spparks_sites_writer.tar.gz SHA512 c2429fbe9efea07eada95c670266542a18c74670dff7c80f657a17fa84684c4852180dc36527f9138b27eeea5cba2f1dfe21e0dd15e5837596865484ebf3450a)
 
 endif()
 
