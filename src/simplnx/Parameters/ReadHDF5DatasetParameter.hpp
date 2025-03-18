@@ -111,6 +111,16 @@ public:
   VersionType getVersion() const override;
 
   /**
+   * @brief Constructs an input value from the given arguments.
+   * By default, accesses a singular value by key and returns that.
+   * May be overriden by subclasses that depend on other parameters.
+   * @param args
+   * @param executionContext
+   * @return
+   */
+  std::any construct(const Arguments& args, const ExecutionContext& executionContext) const override;
+
+  /**
    * @brief Validates the given value. Returns warnings/errors.
    * @param value
    * @return Result<>
