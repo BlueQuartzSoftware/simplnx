@@ -125,6 +125,7 @@
 #include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/SliceTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
+#include "SimplnxCore/Filters/WriteSPParksSitesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace nx::core
@@ -255,6 +256,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), {nx::core::FilterTraits<WriteVtkStructuredPointsFilter>::uuid, &WriteVtkStructuredPointsFilter::FromSIMPLJson}}, // WriteVtkStructuredPointsFilter
     {nx::core::Uuid::FromString("222307a4-67fd-5cb5-a12e-d80f9fb970ae").value(), {nx::core::FilterTraits<SliceTriangleGeometryFilter>::uuid, &SliceTriangleGeometryFilter::FromSIMPLJson}}, // SliceTriangleGeometryFilter
     {nx::core::Uuid::FromString("08de1ffb-6cb1-5896-8133-a30d2dd0f937").value(), {nx::core::FilterTraits<CreateAMScanPathsFilter>::uuid, &CreateAMScanPathsFilter::FromSIMPLJson}}, // CreateAMScanPathsFilter
+    {nx::core::Uuid::FromString("bcf2f246-610f-5575-a434-241d04114b9f").value(), {nx::core::FilterTraits<WriteSPParksSitesFilter>::uuid, &WriteSPParksSitesFilter::FromSIMPLJson}}, // WriteSPParksSitesFilter
 
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
