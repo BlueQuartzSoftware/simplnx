@@ -77,7 +77,6 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
     }
     outfile << k + 1 << " " << featureIds[k] << "\n";
   }
-  // outfile.close();
 
   return {};
 }
