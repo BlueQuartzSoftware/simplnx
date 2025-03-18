@@ -148,6 +148,15 @@ std::any GeneratedFileListParameter::defaultValue() const
 }
 
 //-----------------------------------------------------------------------------
+std::any GeneratedFileListParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  auto value = args.value<ValueType>(name());
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputPath);
+  value.inputPath = absolutePath.string();
+  return value;
+}
+
+//-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
   try

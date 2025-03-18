@@ -85,6 +85,15 @@ std::any ReadCSVFileParameter::defaultValue() const
   return m_DefaultValue;
 }
 
+//-----------------------------------------------------------------------------
+std::any ReadCSVFileParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  auto value = args.value<ValueType>(name());
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFilePath);
+  value.inputFilePath = absolutePath.string();
+  return value;
+}
+
 // -----------------------------------------------------------------------------
 Result<> ReadCSVFileParameter::validate(const std::any& value) const
 {

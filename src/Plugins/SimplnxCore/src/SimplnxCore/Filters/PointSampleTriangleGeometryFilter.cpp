@@ -110,7 +110,7 @@ IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel) const
+                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pUseMask = filterArgs.value<bool>(k_UseMask_Key);
   auto pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
@@ -176,7 +176,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
 
 //------------------------------------------------------------------------------
 Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_UseSeed_Key))

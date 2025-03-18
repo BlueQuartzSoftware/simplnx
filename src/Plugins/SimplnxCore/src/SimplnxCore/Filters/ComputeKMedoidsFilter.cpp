@@ -111,7 +111,7 @@ IFilter::UniquePointer ComputeKMedoidsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInitClustersValue = filterArgs.value<uint64>(k_InitClusters_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -169,7 +169,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   if(!filterArgs.value<bool>(k_UseMask_Key))

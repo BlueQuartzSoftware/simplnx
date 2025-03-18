@@ -94,14 +94,14 @@ IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   nx::core::LaplacianSmoothingInputValues inputValues;
 

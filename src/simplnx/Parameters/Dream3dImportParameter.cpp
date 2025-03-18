@@ -46,6 +46,15 @@ IParameter::VersionType Dream3dImportParameter::getVersion() const
 }
 
 //-----------------------------------------------------------------------------
+std::any Dream3dImportParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  auto value = args.value<ValueType>(name());
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.FilePath);
+  value.FilePath = absolutePath;
+  return value;
+}
+
+//-----------------------------------------------------------------------------
 nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
 {
   const auto& importData = GetAnyRef<ValueType>(value);

@@ -98,7 +98,7 @@ IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                              const std::atomic_bool& shouldCancel) const
+                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pNumberOfNeighborsValue = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
@@ -204,7 +204,7 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
 
 //------------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   BadDataNeighborOrientationCheckInputValues inputValues;
 

@@ -82,14 +82,14 @@ IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ErodeDilateMaskInputValues inputValues;
 

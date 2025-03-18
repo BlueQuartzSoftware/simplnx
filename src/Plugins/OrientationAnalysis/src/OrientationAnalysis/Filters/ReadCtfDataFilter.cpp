@@ -94,8 +94,8 @@ IFilter::UniquePointer ReadCtfDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                          const ExecutionContext& executionContext) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -214,7 +214,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
 
 //------------------------------------------------------------------------------
 Result<> ReadCtfDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel) const
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadCtfDataInputValues inputValues;
 

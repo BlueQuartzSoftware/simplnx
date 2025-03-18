@@ -87,7 +87,7 @@ IFilter::UniquePointer ResampleRectGridToImageGeomFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel) const
+                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pRectilinearGridPathValue = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -201,7 +201,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
 
 //------------------------------------------------------------------------------
 Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel) const
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ResampleRectGridToImageGeomInputValues inputValues;
 

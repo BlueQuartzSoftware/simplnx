@@ -104,7 +104,7 @@ IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
 }
 
 IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel) const
+                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
@@ -150,7 +150,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
 }
 
 Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel) const
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);

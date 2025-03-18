@@ -150,7 +150,7 @@ IFilter::UniquePointer ApplyTransformationToGeometryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                            const std::atomic_bool& shouldCancel) const
+                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pTransformationMatrixTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
@@ -469,7 +469,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
 //------------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ApplyTransformationToGeometryInputValues inputValues;
 

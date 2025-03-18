@@ -90,7 +90,8 @@ protected:
    * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override;
 
   /**
    * @brief
@@ -101,8 +102,8 @@ protected:
    * @param shouldCancel
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                       const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override;
 
 private:
   int32 m_InstanceId;

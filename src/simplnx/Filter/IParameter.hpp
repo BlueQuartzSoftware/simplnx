@@ -5,6 +5,7 @@
 #include "simplnx/Common/Uuid.hpp"
 #include "simplnx/Filter/AnyCloneable.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/ExecutionContext.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <nlohmann/json_fwd.hpp>
@@ -143,9 +144,11 @@ public:
    * @brief Constructs an input value from the given arguments.
    * By default, accesses a singular value by key and returns that.
    * May be overriden by subclasses that depend on other parameters.
+   * @param args
+   * @param executionContext
    * @return
    */
-  virtual std::any construct(const Arguments& args) const;
+  virtual std::any construct(const Arguments& args, const ExecutionContext& executionContext) const;
 
 protected:
   IParameter() = default;

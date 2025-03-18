@@ -82,7 +82,7 @@ IFilter::UniquePointer ComputeFeaturePhasesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);

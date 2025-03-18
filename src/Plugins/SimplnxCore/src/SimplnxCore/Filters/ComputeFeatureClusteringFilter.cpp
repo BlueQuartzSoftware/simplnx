@@ -108,7 +108,7 @@ IFilter::UniquePointer ComputeFeatureClusteringFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel) const
+                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
@@ -166,7 +166,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel) const
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto seed = filterArgs.value<uint64>(k_SeedValue_Key);
   if(!filterArgs.value<bool>(k_SetRandomSeed_Key))

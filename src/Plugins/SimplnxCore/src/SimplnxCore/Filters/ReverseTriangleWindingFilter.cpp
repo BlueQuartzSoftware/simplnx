@@ -110,14 +110,14 @@ IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(filterArgs.value<DataPath>(k_TriGeomPath_Key));
 

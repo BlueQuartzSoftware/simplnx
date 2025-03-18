@@ -118,6 +118,15 @@ IParameter::VersionType ReadHDF5DatasetParameter::getVersion() const
   return 1;
 }
 
+//-----------------------------------------------------------------------------
+std::any ReadHDF5DatasetParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  auto value = args.value<ValueType>(name());
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFile);
+  value.inputFile = absolutePath.string();
+  return value;
+}
+
 // -----------------------------------------------------------------------------
 nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 {

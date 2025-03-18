@@ -91,7 +91,8 @@ public:
   }
 
 protected:
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override
   {
     OutputActions outputActions;
     outputActions.appendAction(std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{10}, std::vector<usize>{1}, k_DeferredActionPath));
@@ -99,8 +100,8 @@ protected:
     return {std::move(outputActions)};
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                       const std::atomic_bool& shouldCancel) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override
   {
     // object should exist because the delete should happen after execute
     if(dataStructure.getData(k_DeferredActionPath) == nullptr)

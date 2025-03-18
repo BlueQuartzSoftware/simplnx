@@ -89,7 +89,7 @@ IFilter::UniquePointer ConvertQuaternionFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pQuaternionDataArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   auto pOutputDataArrayPathValue = pQuaternionDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
@@ -122,7 +122,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> ConvertQuaternionFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ConvertQuaternionInputValues inputValues;
 

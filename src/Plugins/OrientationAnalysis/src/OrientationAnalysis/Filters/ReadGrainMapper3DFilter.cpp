@@ -112,7 +112,7 @@ IFilter::VersionType ReadGrainMapper3DFilter::parametersVersion() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pConvertPhaseData = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
@@ -238,7 +238,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> ReadGrainMapper3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadGrainMapper3DInputValues inputValues;
 

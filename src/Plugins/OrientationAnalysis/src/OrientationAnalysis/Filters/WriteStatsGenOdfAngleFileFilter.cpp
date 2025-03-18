@@ -97,7 +97,7 @@ IFilter::UniquePointer WriteStatsGenOdfAngleFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWeightValue = filterArgs.value<float32>(k_Weight_Key);
@@ -139,7 +139,7 @@ IFilter::PreflightResult WriteStatsGenOdfAngleFileFilter::preflightImpl(const Da
 
 //------------------------------------------------------------------------------
 Result<> WriteStatsGenOdfAngleFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel) const
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   WriteStatsGenOdfAngleFileInputValues inputValues;
 

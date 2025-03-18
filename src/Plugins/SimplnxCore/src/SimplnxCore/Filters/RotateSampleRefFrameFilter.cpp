@@ -359,7 +359,8 @@ IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
+IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
 
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -491,7 +492,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 }
 
 Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);

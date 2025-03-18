@@ -92,7 +92,7 @@ IFilter::UniquePointer ErrorWarningFilter::clone() const
 
 //------------------------------------------------------------------------------
 nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto preflightWarning = args.value<bool>(k_PreflightWarning_Key);
   auto preflightError = args.value<bool>(k_PreflightError_Key);
@@ -118,7 +118,7 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto executeWarning = args.value<bool>(k_ExecuteWarning_Key);
   auto executeError = args.value<bool>(k_ExecuteError_Key);

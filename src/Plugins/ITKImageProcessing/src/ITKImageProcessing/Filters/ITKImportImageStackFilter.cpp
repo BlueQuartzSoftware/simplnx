@@ -431,7 +431,7 @@ IFilter::UniquePointer ITKImportImageStackFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
@@ -582,7 +582,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);

@@ -76,7 +76,7 @@ IFilter::UniquePointer ExecuteProcessFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pArgumentsValue = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
 
@@ -91,7 +91,7 @@ IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ExecuteProcessInputValues inputValues;
 

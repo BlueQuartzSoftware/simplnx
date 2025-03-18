@@ -364,7 +364,7 @@ IFilter::UniquePointer ConvertOrientationsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
@@ -413,7 +413,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

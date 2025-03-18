@@ -101,8 +101,8 @@ IFilter::UniquePointer CropVertexGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                                 const ExecutionContext& executionContext) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -201,7 +201,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);

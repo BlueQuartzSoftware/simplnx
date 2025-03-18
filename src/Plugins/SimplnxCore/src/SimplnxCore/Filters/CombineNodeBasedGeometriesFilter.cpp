@@ -527,7 +527,7 @@ IFilter::UniquePointer CombineNodeBasedGeometriesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel) const
+                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputGeometryPaths = args.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
   auto outputGeometryPath = args.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
@@ -946,7 +946,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 
 //------------------------------------------------------------------------------
 Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   CombineNodeBasedGeometriesInputValues inputValues;
 

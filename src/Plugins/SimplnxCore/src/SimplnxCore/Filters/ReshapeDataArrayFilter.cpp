@@ -81,7 +81,7 @@ IFilter::UniquePointer ReshapeDataArrayFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputArrayPath = filterArgs.value<DataPath>(k_Input_Array_Key);
   auto tupleDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
@@ -192,7 +192,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> ReshapeDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReshapeDataArrayInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<DataPath>(k_Input_Array_Key);

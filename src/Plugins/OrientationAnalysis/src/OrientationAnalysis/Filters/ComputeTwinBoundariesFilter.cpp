@@ -107,7 +107,7 @@ IFilter::UniquePointer ComputeTwinBoundariesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFindCoherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
   auto pBoundariesArrayTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_BoundariesArrayType_Key);
@@ -153,7 +153,7 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeTwinBoundariesInputValues inputValues;
 

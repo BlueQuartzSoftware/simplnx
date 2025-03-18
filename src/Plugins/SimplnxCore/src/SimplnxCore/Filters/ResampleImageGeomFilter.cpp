@@ -134,7 +134,8 @@ IFilter::UniquePointer ResampleImageGeomFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& msgHandler, const std::atomic_bool&) const
+IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pResamplingModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
@@ -349,7 +350,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ResampleImageGeomInputValues inputValues;
 

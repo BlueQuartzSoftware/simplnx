@@ -48,6 +48,15 @@ IParameter::VersionType OEMEbsdScanSelectionParameter::getVersion() const
 }
 
 //-----------------------------------------------------------------------------
+std::any OEMEbsdScanSelectionParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  auto value = args.value<ValueType>(name());
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFilePath);
+  value.inputFilePath = absolutePath.string();
+  return value;
+}
+
+//-----------------------------------------------------------------------------
 nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) const
 {
   const auto& data = GetAnyRef<ValueType>(value);

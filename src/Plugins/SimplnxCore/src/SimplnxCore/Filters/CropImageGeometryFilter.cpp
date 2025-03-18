@@ -236,7 +236,7 @@ IFilter::UniquePointer CropImageGeometryFilter::clone() const
 }
 
 IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -563,7 +563,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 }
 
 Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);

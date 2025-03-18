@@ -262,7 +262,7 @@ IFilter::UniquePointer ComputeSurfaceFeaturesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
@@ -293,7 +293,7 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
   const auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);

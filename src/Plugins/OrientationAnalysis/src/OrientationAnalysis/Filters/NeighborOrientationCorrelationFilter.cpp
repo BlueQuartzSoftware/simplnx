@@ -98,7 +98,7 @@ IFilter::UniquePointer NeighborOrientationCorrelationFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                             const std::atomic_bool& shouldCancel) const
+                                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pImageGeomPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pMinConfidenceValue = filterArgs.value<float32>(k_MinConfidence_Key);
@@ -239,7 +239,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
 
 //------------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel) const
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   NeighborOrientationCorrelationInputValues inputValues;
 

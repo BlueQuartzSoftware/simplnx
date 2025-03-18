@@ -88,7 +88,7 @@ IFilter::UniquePointer ConvertColorToGrayScaleFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pConversionAlgorithmValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionAlgorithm_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
@@ -155,7 +155,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
 
 //------------------------------------------------------------------------------
 Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ConvertColorToGrayScaleInputValues inputValues;
 

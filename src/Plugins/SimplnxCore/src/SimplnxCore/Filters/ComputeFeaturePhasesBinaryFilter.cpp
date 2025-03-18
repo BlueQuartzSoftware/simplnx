@@ -83,7 +83,7 @@ IFilter::UniquePointer ComputeFeaturePhasesBinaryFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel) const
+                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCellDataAMPathValue = filterArgs.value<DataPath>(k_CellDataAMPath_Key);
   auto pFeaturePhasesArrayNameValue = filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key);
@@ -104,7 +104,7 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto& featureIdsArray = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key))->getDataStoreRef();
   auto& featurePhasesArray =

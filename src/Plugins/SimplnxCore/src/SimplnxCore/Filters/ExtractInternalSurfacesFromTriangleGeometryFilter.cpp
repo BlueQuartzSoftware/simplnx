@@ -166,7 +166,7 @@ IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometryFilter::clone(
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                          const std::atomic_bool& shouldCancel) const
+                                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto internalTrianglesGeomPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -262,7 +262,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 
 //------------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel) const
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
   auto triangleGeomPath = args.value<DataPath>(k_SelectedTriangleGeometryPath_Key);

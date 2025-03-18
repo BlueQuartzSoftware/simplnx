@@ -79,7 +79,7 @@ IFilter::UniquePointer ComputeTriangleGeomVolumesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel) const
+                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
   auto pFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
 
 //------------------------------------------------------------------------------
 Result<> ComputeTriangleGeomVolumesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeTriangleGeomVolumesInputValues inputValues;
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);

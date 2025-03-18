@@ -71,15 +71,15 @@ nx::core::IFilter::UniquePointer Test2Filter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+nx::core::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                              const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 nx::core::Result<> Test2Filter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

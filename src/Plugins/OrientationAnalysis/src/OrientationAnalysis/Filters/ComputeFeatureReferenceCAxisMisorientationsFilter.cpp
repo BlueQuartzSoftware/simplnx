@@ -94,7 +94,7 @@ IFilter::UniquePointer ComputeFeatureReferenceCAxisMisorientationsFilter::clone(
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                          const std::atomic_bool& shouldCancel) const
+                                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -140,7 +140,7 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
 
 //------------------------------------------------------------------------------
 Result<> ComputeFeatureReferenceCAxisMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeFeatureReferenceCAxisMisorientationsInputValues inputValues;
 

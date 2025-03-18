@@ -329,3 +329,12 @@ bool AbstractPipelineNode::ReadDisabledState(const nlohmann::json& json)
   }
   return json[k_IsDisabledKey].get<bool>();
 }
+
+ExecutionContext AbstractPipelineNode::getPipelineExecutionContext() const
+{
+  if(m_Parent == nullptr)
+  {
+    throw std::runtime_error("Called AbstractPipelineNode::getPipelineExecutionContext() when parent is null");
+  }
+  return m_Parent->getExecutionContext();
+}

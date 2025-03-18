@@ -76,7 +76,7 @@ IFilter::UniquePointer ArrayCalculatorFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
   auto pScalarTypeValue = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
@@ -180,7 +180,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
 
   ArrayCalculatorInputValues inputValues;

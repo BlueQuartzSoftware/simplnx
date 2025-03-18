@@ -99,7 +99,7 @@ IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -162,7 +162,7 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeMisorientationsInputValues inputValues;
 

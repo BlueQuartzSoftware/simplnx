@@ -87,7 +87,7 @@ IFilter::UniquePointer ComputeBiasedFeaturesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCalcByPhaseValue = filterArgs.value<bool>(k_CalcByPhase_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -121,7 +121,7 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> ComputeBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeBiasedFeaturesInputValues inputValues;
 

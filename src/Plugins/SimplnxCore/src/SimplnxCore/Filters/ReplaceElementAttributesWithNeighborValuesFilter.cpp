@@ -81,7 +81,7 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                         const std::atomic_bool& shouldCancel) const
+                                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pComparisonDataPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
@@ -96,7 +96,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
 //------------------------------------------------------------------------------
 Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReplaceElementAttributesWithNeighborValuesInputValues inputValues;
 

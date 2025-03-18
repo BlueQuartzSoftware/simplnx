@@ -88,8 +88,8 @@ IFilter::UniquePointer FillBadDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                          const ExecutionContext& executionContext) const
 {
   auto pMinAllowedDefectSizeValue = filterArgs.value<int32>(k_MinAllowedDefectSize_Key);
   auto cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -121,7 +121,7 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
 //------------------------------------------------------------------------------
 Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel) const
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   FillBadDataInputValues inputValues;
 

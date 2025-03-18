@@ -100,8 +100,8 @@ IFilter::UniquePointer ComputeGBCDFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                          const ExecutionContext& executionContext) const
 {
   auto pGBCDResValue = filterArgs.value<float32>(k_GBCDRes_Key);
   auto pTriangleGeometryPathValue = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
@@ -175,7 +175,7 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
 
 //------------------------------------------------------------------------------
 Result<> ComputeGBCDFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel) const
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeGBCDInputValues inputValues;
   inputValues.GBCDRes = filterArgs.value<float32>(k_GBCDRes_Key);

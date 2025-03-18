@@ -387,7 +387,7 @@ IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel) const
+                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
   auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
@@ -456,7 +456,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 
 //------------------------------------------------------------------------------
 Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel) const
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   // Get the target image as a pointer
   const auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);

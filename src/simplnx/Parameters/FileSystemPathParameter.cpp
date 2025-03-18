@@ -197,6 +197,12 @@ IParameter::UniquePointer FileSystemPathParameter::clone() const
 }
 
 //-----------------------------------------------------------------------------
+std::any FileSystemPathParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
+{
+  return executionContext.getAbsolutePath(args.valueRef<ValueType>(name()));
+}
+
+//-----------------------------------------------------------------------------
 std::any FileSystemPathParameter::defaultValue() const
 {
   return defaultPath();

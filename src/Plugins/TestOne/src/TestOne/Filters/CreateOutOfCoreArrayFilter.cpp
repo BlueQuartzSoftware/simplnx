@@ -74,7 +74,7 @@ IFilter::UniquePointer CreateOutOfCoreArray::clone() const
 }
 
 IFilter::PreflightResult CreateOutOfCoreArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
   auto numComponents = filterArgs.value<uint64>(k_NumComps_Key);
@@ -116,7 +116,7 @@ IFilter::PreflightResult CreateOutOfCoreArray::preflightImpl(const DataStructure
 }
 
 Result<> CreateOutOfCoreArray::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);
   auto path = args.value<DataPath>(k_DataPath_Key);

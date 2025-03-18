@@ -130,7 +130,7 @@ IFilter::UniquePointer InitializeDataFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto seedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
   auto initializeTypeValue = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
@@ -264,7 +264,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> InitializeDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto initType = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
 

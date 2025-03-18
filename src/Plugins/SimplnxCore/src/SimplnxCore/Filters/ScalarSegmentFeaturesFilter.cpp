@@ -100,7 +100,7 @@ IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
 }
 
 IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   auto featureIdsName = args.value<std::string>(k_FeatureIdsName_Key);
@@ -182,7 +182,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ScalarSegmentFeaturesInputValues inputValues;
 

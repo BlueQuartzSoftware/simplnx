@@ -103,7 +103,7 @@ IFilter::UniquePointer RemoveFlaggedTrianglesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel) const
+                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInitialGeometryPathValue = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto pReducedGeometryPathValue = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -210,7 +210,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
 
 //------------------------------------------------------------------------------
 Result<> RemoveFlaggedTrianglesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel) const
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   RemoveFlaggedTrianglesInputValues inputValues;
 

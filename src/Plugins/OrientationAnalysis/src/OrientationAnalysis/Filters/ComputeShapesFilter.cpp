@@ -89,8 +89,8 @@ IFilter::UniquePointer ComputeShapesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                            const ExecutionContext& executionContext) const
 {
   auto pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
@@ -159,7 +159,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
 
 //------------------------------------------------------------------------------
 Result<> ComputeShapesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel) const
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeShapesInputValues inputValues;
 

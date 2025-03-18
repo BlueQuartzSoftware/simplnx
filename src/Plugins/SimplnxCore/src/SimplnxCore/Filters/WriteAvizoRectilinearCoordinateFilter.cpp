@@ -83,14 +83,14 @@ IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteAvizoRectilinearCoordinateFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                              const std::atomic_bool& shouldCancel) const
+                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinateFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                            const std::atomic_bool& shouldCancel) const
+                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   AvizoWriterInputValues inputValues;
 

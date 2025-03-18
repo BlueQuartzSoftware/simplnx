@@ -119,7 +119,7 @@ IFilter::UniquePointer ITKImportFijiMontageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pDataGroupNameValue = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);
@@ -231,7 +231,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ITKImportFijiMontageInputValues inputValues;
 

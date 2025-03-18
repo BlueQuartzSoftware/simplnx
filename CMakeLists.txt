@@ -466,6 +466,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/DataParameter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/ExecutionContext.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/FilterTraits.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IParameter.hpp

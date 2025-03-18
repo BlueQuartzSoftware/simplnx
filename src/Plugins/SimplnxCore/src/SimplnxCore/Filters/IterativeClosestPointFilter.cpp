@@ -130,7 +130,7 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
   auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);
@@ -165,7 +165,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
 
 //------------------------------------------------------------------------------
 Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
   auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);

@@ -108,7 +108,7 @@ IFilter::UniquePointer ReadVtkStructuredPointsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pVertexGeometryPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -143,7 +143,7 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
 
 //------------------------------------------------------------------------------
 Result<> ReadVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadVtkStructuredPointsInputValues inputValues;
 

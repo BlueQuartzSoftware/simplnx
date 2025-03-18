@@ -80,7 +80,7 @@ IFilter::UniquePointer ITKImportFijiMontage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportFijiMontage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -146,7 +146,7 @@ IFilter::PreflightResult ITKImportFijiMontage::preflightImpl(const DataStructure
 
 //------------------------------------------------------------------------------
 Result<> ITKImportFijiMontage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object

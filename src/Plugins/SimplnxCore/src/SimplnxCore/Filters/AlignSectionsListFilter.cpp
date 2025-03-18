@@ -95,7 +95,7 @@ IFilter::UniquePointer AlignSectionsListFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pUseFileValue = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
   auto pSelectedImageGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
@@ -138,7 +138,7 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   AlignSectionsListInputValues inputValues;
 

@@ -81,7 +81,7 @@ IFilter::UniquePointer RenameDataObjectFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto allowOverwrite = filterArgs.value<bool>(k_AllowOverwrite_Key);
   auto dataGroupPath = filterArgs.value<DataPath>(k_SourceDataObjectPath_Key);
@@ -96,7 +96,7 @@ IFilter::PreflightResult RenameDataObjectFilter::preflightImpl(const DataStructu
 
 //------------------------------------------------------------------------------
 Result<> RenameDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
 }

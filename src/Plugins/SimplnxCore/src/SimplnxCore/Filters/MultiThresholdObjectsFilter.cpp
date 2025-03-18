@@ -349,7 +349,7 @@ IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 
 // -----------------------------------------------------------------------------
 IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel) const
+                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
   auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);
@@ -441,7 +441,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 
 // -----------------------------------------------------------------------------
 Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel) const
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
   auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);

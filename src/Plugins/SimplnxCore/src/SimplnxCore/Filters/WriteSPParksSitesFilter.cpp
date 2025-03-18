@@ -81,7 +81,7 @@ IFilter::UniquePointer WriteSPParksSitesFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel) const
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
@@ -92,7 +92,7 @@ IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStruct
 
 //------------------------------------------------------------------------------
 Result<> WriteSPParksSitesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel) const
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())
