@@ -290,7 +290,7 @@ public:
     for(IGeometry::MeshIndexType triangle = startValue; triangle < m_EndValue; triangle++)
     {
       // recursive case check
-      if(triCount > m_MaxTriangles)
+      if(triCount == m_MaxTriangles)
       {
         fseek(filePtr, 80L, SEEK_SET);
         fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);

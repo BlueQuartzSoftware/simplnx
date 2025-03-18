@@ -66,6 +66,49 @@ void CompareSingleResult() // compare hash of both file strings
   REQUIRE(fs::exists(exemplarFilePath));
   REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
 }
+
+void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& computedDirPath)
+{
+  REQUIRE(fs::directory_iterator(exemplarDirPath)->exists());
+  REQUIRE(fs::directory_iterator(computedDirPath)->exists());
+
+  usize exemplarEntryCount = 0;
+  for(const auto& exemplarDirectoryEntry : fs::directory_iterator(exemplarDirPath))
+  {
+    exemplarEntryCount++;
+
+    bool found = false;
+    const fs::path targetPath = exemplarDirectoryEntry.path();
+    auto exemplarFileContents = readIn(targetPath);
+    std::string exemplarMD5Hash = nx::core::UnitTest::ComputeMD5Hash(exemplarFileContents);
+
+    for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
+    {
+      fs::path currentPath = computedDirectoryEntry.path();
+      if(currentPath.filename() == targetPath.filename())
+      {
+        found = true;
+
+        auto computedFileContents = readIn(currentPath);
+        std::string computedMD5Hash = nx::core::UnitTest::ComputeMD5Hash(computedFileContents);
+
+        REQUIRE(computedMD5Hash == exemplarMD5Hash);
+
+        break;
+      }
+    }
+
+    REQUIRE(found);
+  }
+
+  usize computedEntryCount = 0;
+  for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
+  {
+    computedEntryCount++;
+  }
+
+  REQUIRE(computedEntryCount == exemplarEntryCount);
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
@@ -194,17 +237,58 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Single File Valid", "[Simpl
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  auto dataFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(dataFilePath);
+
+  const fs::path firstFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/single/Generated.stl");
+  const fs::path computedDirPath = firstFilePath.parent_path();
+
   WriteStlFileInputValues inputValues;
 
   inputValues.GroupingType = static_cast<ChoicesParameter::ValueType>(2);
-  inputValues.OutputStlFile = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/Generated.stl");
+  inputValues.OutputStlFile = firstFilePath;
   inputValues.TriangleGeomPath = DataPath({"TriangleDataContainer"});
 
   inputValues.HIDDEN_MaxTrianglesPerFile = static_cast<usize>(10);
 
   REQUIRE(WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)().valid());
 
-  // Add validation check here
+  // validation check
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz",
+                                                               "write_stl_overflow_test");
+
+  const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/single");
+
+  ::CompareDirectories(exemplarDirPath, computedDirPath);
+}
+
+TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+
+  // Instantiate a DataStructure object and an Arguments Object
+  auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  const fs::path computedDirPath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/multiple");
+
+  WriteStlFileInputValues inputValues;
+
+  inputValues.GroupingType = static_cast<ChoicesParameter::ValueType>(0);
+  inputValues.OutputStlDirectory = computedDirPath;
+  inputValues.OutputStlPrefix = "Triangle";
+  inputValues.TriangleGeomPath = DataPath({"TriangleDataContainer"});
+  inputValues.FeatureIdsPath = DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"});
+
+  inputValues.HIDDEN_MaxTrianglesPerFile = static_cast<usize>(10);
+
+  REQUIRE(WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)().valid());
+
+  // validation check
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz",
+                                                               "write_stl_overflow_test");
+
+  const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/multiple");
+
+  ::CompareDirectories(exemplarDirPath, computedDirPath);
 }
