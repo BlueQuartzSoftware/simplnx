@@ -472,3 +472,22 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   return warningResults;
 }
 } // namespace nx::core
+
+namespace
+{
+namespace SIMPL
+{
+
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = CreateGeometryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+}

@@ -8,6 +8,7 @@
 #include <string>
 
 // clang-format off
+#include "SimplnxCore/Filters/CreateGeometryFilter.hpp"
 #include "SimplnxCore/Filters/AlignGeometriesFilter.hpp"
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 #include "SimplnxCore/Filters/AlignSectionsListFilter.hpp"
@@ -133,6 +134,7 @@ namespace nx::core
   static const AbstractPlugin::SIMPLMapType k_SIMPL_to_SimplnxCore
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID, {}}}, // dream3d-class-name
+    {nx::core::Uuid::FromString("9ac220b9-14f9-581a-9bac-5714467589cc").value(), {nx::core::FilterTraits<CreateGeometryFilter>::uuid, &CreateGeometryFilter::FromSIMPLJson}}, // CreateGeometryFilter
     {nx::core::Uuid::FromString("886f8b46-51b6-5682-a289-6febd10b7ef0").value(), {nx::core::FilterTraits<AlignSectionsFeatureCentroidFilter>::uuid, &AlignSectionsFeatureCentroidFilter::FromSIMPLJson}}, // AlignSectionsFeatureCentroid
     {nx::core::Uuid::FromString("ce1ee404-0336-536c-8aad-f9641c9458be").value(), {nx::core::FilterTraits<AlignGeometriesFilter>::uuid, &AlignGeometriesFilter::FromSIMPLJson}}, // AlignGeometriesFilter
     {nx::core::Uuid::FromString("accf8f6c-0551-5da3-9a3d-e4be41c3985c").value(), {nx::core::FilterTraits<AlignSectionsListFilter>::uuid, &AlignSectionsListFilter::FromSIMPLJson}}, // AlignSectionsListFilter
