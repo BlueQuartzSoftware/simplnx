@@ -56,10 +56,6 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
 
   auto start = std::chrono::steady_clock::now();
 
-  // Buffer the output with 4096 Bytes which is typically the size of a "Block" on a
-  // modern Hard Drive. This should speed up the writes considerably
-  // char buffer[4096];
-  // outfile.rdbuf()->pubsetbuf(buffer, 4096);
   for(size_t k = 0; k < totalpoints; k++)
   {
     auto now = std::chrono::steady_clock::now();
