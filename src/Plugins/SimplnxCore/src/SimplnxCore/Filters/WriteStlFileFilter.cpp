@@ -141,9 +141,8 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
     }
     else
     {
-      std::string ss =
-          fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. This MAY cause some groups to generate overflow files.",
-                      triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
+      std::string ss = fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. This MAY cause some groups to generate overflow files.",
+                                   triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
       resultOutputActions.warnings().emplace_back(Warning{-27875, ss});
     }
   }
