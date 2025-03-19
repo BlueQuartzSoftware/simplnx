@@ -22,7 +22,58 @@ namespace
 using TriStore = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
 using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType numTriangles, const std::string&& header, const TriStore& triangles, const VertexStore& vertices)
+struct LimitBoundAtomicFileFactory;
+
+struct LimitBoundAtomicFile
+{
+  friend LimitBoundAtomicFileFactory;
+
+public:
+  LimitBoundAtomicFile() = delete;
+
+  Result<usize> createOverflowFile()
+  {
+    const fs::path newPath = fs::path(fmt::format("{}/{}_overflow_{}{}", m_InputPath.parent_path().string(), m_InputPath.stem().string(), m_AtomicFilesList.size(), m_InputPath.extension().string()));
+    auto atomicFileResult = AtomicFile::Create(newPath);
+    if(atomicFileResult.invalid())
+    {
+      return {{nonstd::make_unexpected(atomicFileResult.errors())}};
+    }
+    m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+
+    return {m_AtomicFilesList.size() - 1};
+  }
+
+  std::vector<AtomicFile> m_AtomicFilesList = {};
+
+private:
+  fs::path m_InputPath;
+
+  LimitBoundAtomicFile(const fs::path& inputPath)
+  : m_InputPath(inputPath)
+  {
+  }
+};
+
+struct LimitBoundAtomicFileFactory
+{
+  static Result<LimitBoundAtomicFile> Create(const fs::path& inputPath)
+  {
+    LimitBoundAtomicFile outClass(inputPath);
+
+    auto atomicFileResult = AtomicFile::Create(inputPath);
+    if(atomicFileResult.invalid())
+    {
+      return {{nonstd::make_unexpected(atomicFileResult.errors())}};
+    }
+    outClass.m_AtomicFilesList.emplace_back(std::move(atomicFileResult.value()));
+
+    return {std::move(outClass)};
+  }
+};
+
+Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+                           const std::atomic_bool& shouldCancel, const IGeometry::MeshIndexType startValue = 0)
 {
   Result<> result;
 
@@ -75,8 +126,16 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   attrByteCountPtr[0] = 0;
 
   // Loop over all the triangles for this spin
-  for(IGeometry::MeshIndexType triangle = 0; triangle < numTriangles; ++triangle)
+  for(IGeometry::MeshIndexType triangle = startValue; triangle < endValue; ++triangle)
   {
+    if(shouldCancel)
+    {
+      fseek(filePtr, 80L, SEEK_SET);
+      fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+      fclose(filePtr);
+      return result;
+    }
+
     // Get the true indices of the 3 nodes
     IGeometry::MeshIndexType nId0 = triangles[triangle * 3];
     IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
@@ -110,8 +169,9 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
     if(totalWritten != 50)
     {
       fclose(filePtr);
-      return {MakeWarningVoidResult(
-          -27883, fmt::format("Error Writing STL File '{}'. Not enough elements written for Triangle {}. Wrote {} of 50. No file written.", path.filename().string(), triangle, totalWritten))};
+      filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(
+          -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount, totalWritten))});
+      break;
     }
     triCount++;
   }
@@ -122,36 +182,77 @@ Result<> SingleWriteOutStl(const fs::path& path, const IGeometry::MeshIndexType 
   return result;
 }
 
+class SingleOutWrapper
+{
+public:
+  SingleOutWrapper(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+                   const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
+  : m_Filter(filter)
+  , m_Path(path)
+  , m_EndValue(endValue)
+  , m_Header(header)
+  , m_Triangles(triangles)
+  , m_Vertices(vertices)
+  , m_StartValue(startValue)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+  ~SingleOutWrapper() = default;
+
+  void operator()() const
+  {
+    SingleWriteOutStl(m_Filter, m_Path, m_EndValue, m_Header, m_Triangles, m_Vertices, m_ShouldCancel, m_StartValue);
+  }
+
+private:
+  WriteStlFile* m_Filter = nullptr;
+  const fs::path m_Path;
+  const IGeometry::MeshIndexType m_EndValue;
+  std::string m_Header;
+  const TriStore& m_Triangles;
+  const VertexStore& m_Vertices;
+  const IGeometry::MeshIndexType m_StartValue;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
 /**
  * @brief This class provides an interface to write the STL Files in parallel
  */
 class MultiWriteStlFileImpl
 {
 public:
-  MultiWriteStlFileImpl(WriteStlFile* filter, const fs::path path, const IGeometry::MeshIndexType numTriangles, const std::string header, const TriStore& triangles, const VertexStore& vertices,
-                        const Int32AbstractDataStore& featureIds, const int32 featureId)
+  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const IGeometry::MeshIndexType endValue, const std::string header, const TriStore& triangles,
+                        const VertexStore& vertices, const Int32AbstractDataStore& featureIds, const int32 featureId, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
-  , m_Path(path)
-  , m_NumTriangles(numTriangles)
+  , m_LimitBoundAtomicFile(limitBoundAtomicFile)
+  , m_EndValue(endValue)
   , m_Header(header)
   , m_Triangles(triangles)
   , m_Vertices(vertices)
   , m_FeatureIds(featureIds)
   , m_FeatureId(featureId)
+  , m_MaxTriangles(maxTriangles)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   ~MultiWriteStlFileImpl() = default;
 
   void operator()() const
   {
+    // Potentially recursive call - LimitBoundAtomicFile guarantees the first file to exist and be valid (see Factory struct for validation)
+    write(m_LimitBoundAtomicFile.m_AtomicFilesList[0].tempFilePath(), 0);
+  }
+
+  void write(const fs::path& activePath, usize startValue) const
+  {
     // Create output file writer in binary write out mode to ensure cross-compatibility
-    FILE* filePtr = fopen(m_Path.string().c_str(), "wb");
+    FILE* filePtr = fopen(activePath.string().c_str(), "wb");
 
     if(filePtr == nullptr)
     {
       fclose(filePtr);
       m_Filter->sendThreadSafeProgressMessage(
-          {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", m_Path.string(), m_Path.filename().string()))});
+          {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", activePath.string(), activePath.filename().string()))});
       return;
     }
 
@@ -162,7 +263,7 @@ public:
       {
         m_Filter->sendThreadSafeProgressMessage(MakeWarningVoidResult(
             -27874, fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
-                                m_Path.filename().string(), m_Header.length())));
+                                activePath.filename().string(), m_Header.length())));
       }
 
       std::array<char, 80> stlFileHeader = {};
@@ -196,8 +297,38 @@ public:
 
     const usize numComps = m_FeatureIds.getNumberOfComponents();
     // Loop over all the triangles for this spin
-    for(IGeometry::MeshIndexType triangle = 0; triangle < m_NumTriangles; ++triangle)
+    for(IGeometry::MeshIndexType triangle = startValue; triangle < m_EndValue; triangle++)
     {
+      if(m_ShouldCancel)
+      {
+        fseek(filePtr, 80L, SEEK_SET);
+        fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+        fclose(filePtr);
+        return;
+      }
+
+      // recursive case check
+      if(triCount == m_MaxTriangles)
+      {
+        fseek(filePtr, 80L, SEEK_SET);
+        fwrite(reinterpret_cast<char*>(&triCount), 1, 4, filePtr);
+        fclose(filePtr);
+
+        auto overflowFileResult = m_LimitBoundAtomicFile.createOverflowFile();
+        if(overflowFileResult.invalid())
+        {
+          if(overflowFileResult.errors().empty())
+          {
+            m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(-27878, "Issue creating overflow file")});
+            return;
+          }
+          m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(overflowFileResult.errors()[0].code, overflowFileResult.errors()[0].message)});
+          return;
+        }
+        write(m_LimitBoundAtomicFile.m_AtomicFilesList[overflowFileResult.value()].tempFilePath(), triangle);
+        return;
+      }
+
       // Get the true indices of the 3 nodes
       IGeometry::MeshIndexType nId0 = m_Triangles[triangle * 3];
       IGeometry::MeshIndexType nId1 = m_Triangles[triangle * 3 + 1];
@@ -248,7 +379,7 @@ public:
       {
         fclose(filePtr);
         m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(
-            -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", m_Path.filename().string(), triCount, totalWritten))});
+            -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", activePath.filename().string(), triCount, totalWritten))});
         break;
       }
       triCount++;
@@ -261,14 +392,72 @@ public:
 
 private:
   WriteStlFile* m_Filter = nullptr;
-  const fs::path m_Path;
-  const IGeometry::MeshIndexType m_NumTriangles;
+  LimitBoundAtomicFile& m_LimitBoundAtomicFile;
+  const IGeometry::MeshIndexType m_EndValue;
   const std::string m_Header;
   const TriStore& m_Triangles;
   const VertexStore& m_Vertices;
   const Int32AbstractDataStore& m_FeatureIds;
   const int32 m_FeatureId;
+  const usize m_MaxTriangles;
+  const std::atomic_bool& m_ShouldCancel;
 };
+
+Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStore& triangles,
+                                   const VertexStore& vertices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
+{
+  const usize count = nTriangles / maxTriangles;
+
+  auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
+  if(atomicFileResult.invalid())
+  {
+    return ConvertResult(std::move(atomicFileResult));
+  }
+  LimitBoundAtomicFile limitedFile(std::move(atomicFileResult.value()));
+
+  for(usize i = 1; i < count + 1; i++)
+  {
+    auto overflowFileResult = limitedFile.createOverflowFile();
+    if(overflowFileResult.invalid())
+    {
+      return ConvertResult(std::move(overflowFileResult));
+    }
+  }
+
+  // The writing of the files can happen in parallel as much as the Operating System will allow
+  ParallelTaskAlgorithm taskRunner;
+  taskRunner.setParallelizationEnabled(true);
+
+  for(usize i = 0; i < limitedFile.m_AtomicFilesList.size(); i++)
+  {
+    const usize startValue = i * maxTriangles;
+    usize endValue = (i + 1) * maxTriangles;
+    if(endValue > nTriangles)
+    {
+      endValue = nTriangles;
+    }
+    taskRunner.execute(SingleOutWrapper(filter, limitedFile.m_AtomicFilesList[i].tempFilePath(), endValue, header, triangles, vertices, startValue, shouldCancel));
+  }
+
+  taskRunner.wait();
+
+  if(shouldCancel)
+  {
+    return {};
+  }
+
+  Result<> endResult = {};
+  for(auto& atomicFile : limitedFile.m_AtomicFilesList)
+  {
+    Result<> commitResult = atomicFile.commit();
+    if(commitResult.invalid())
+    {
+      endResult = MergeResults(endResult, commitResult);
+    }
+  }
+
+  return {};
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -301,26 +490,34 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::SingleFile)
   {
+    std::string header = "DREAM3D Generated For Triangle Geom"; // Char count: 35
+
+    // validate name is less than 40 characters
+    if(triangleGeom.getName().size() < 41)
+    {
+      header += " " + triangleGeom.getName();
+    }
+
+    if(triangleGeom.getNumberOfFaces() > m_InputValues->HIDDEN_MaxTrianglesPerFile)
+    {
+      return ::ExecuteSingleFileOverflow(this, nTriangles, header, m_InputValues->OutputStlFile, triangles, vertices, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel);
+    }
+
     auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputStlFile);
     if(atomicFileResult.invalid())
     {
       return ConvertResult(std::move(atomicFileResult));
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
-
-    {                                                             // Scoped to ensure file lock is released and header string is untouched since it is invalid after move
-      std::string header = "DREAM3D Generated For Triangle Geom"; // Char count: 35
-
-      // validate name is less than 40 characters
-      if(triangleGeom.getName().size() < 41)
-      {
-        header += " " + triangleGeom.getName();
-      }
-
-      auto result = ::SingleWriteOutStl(atomicFile.tempFilePath(), nTriangles, std::move(header), triangles, vertices);
+    { // Scoped to ensure file lock is released
+      auto result = ::SingleWriteOutStl(this, atomicFile.tempFilePath(), nTriangles, header, triangles, vertices, m_ShouldCancel);
       if(result.invalid())
       {
         return result;
+      }
+      if(m_ShouldCancel)
+      {
+        return {};
       }
     }
 
@@ -348,7 +545,7 @@ Result<> WriteStlFile::operator()()
   taskRunner.setParallelizationEnabled(true);
 
   // Store a list of Atomic Files, so we can clean up or finish depending on the outcome of all the writes
-  std::vector<Result<AtomicFile>> fileList;
+  std::vector<LimitBoundAtomicFile> fileList;
 
   if(groupingType == GroupingType::Features)
   {
@@ -363,14 +560,17 @@ Result<> WriteStlFile::operator()()
     for(const auto featureId : uniqueGrainIds)
     {
       // Generate the output file
-      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId)));
-      if(fileList[fileIndex].invalid())
+      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId);
+      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
+      if(atomicFileResult.invalid())
       {
-        return ConvertResult(std::move(fileList[fileIndex]));
+        return ConvertResult(std::move(atomicFileResult));
       }
+      fileList.emplace_back(std::move(atomicFileResult.value()));
+
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles,
-                                               vertices, featureIds, featureId));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles, {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds,
+                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -398,16 +598,18 @@ Result<> WriteStlFile::operator()()
     for(const auto& [featureId, value] : uniqueGrainIdToPhase)
     {
       // Generate the output file
-      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId)));
-
-      if(fileList[fileIndex].invalid())
+      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId);
+      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
+      if(atomicFileResult.invalid())
       {
-        return ConvertResult(std::move(fileList[fileIndex]));
+        return ConvertResult(std::move(atomicFileResult));
       }
+      fileList.emplace_back(std::move(atomicFileResult.value()));
+
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles,
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles,
                                                {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)}, triangles, vertices, featureIds,
-                                               featureId));
+                                               featureId, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -431,14 +633,17 @@ Result<> WriteStlFile::operator()()
     for(const auto currentPartNumber : uniquePartNumbers)
     {
       // Generate the output file
-      fileList.push_back(AtomicFile::Create(m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber)));
-      if(fileList[fileIndex].invalid())
+      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber);
+      auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
+      if(atomicFileResult.invalid())
       {
-        return ConvertResult(std::move(fileList[fileIndex]));
+        return ConvertResult(std::move(atomicFileResult));
       }
+      fileList.emplace_back(std::move(atomicFileResult.value()));
+
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex].value().tempFilePath(), nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)},
-                                               triangles, vertices, partNumbers, currentPartNumber));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], nTriangles, {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices,
+                                               partNumbers, currentPartNumber, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors)
       {
@@ -448,13 +653,21 @@ Result<> WriteStlFile::operator()()
     taskRunner.wait();
   }
 
-  // Commit all the temp files
-  for(auto& atomicFile : fileList)
+  if(m_ShouldCancel)
   {
-    Result<> commitResult = atomicFile.value().commit();
-    if(commitResult.invalid())
+    return {};
+  }
+
+  // Commit all the temp files
+  for(auto& limitedAtomicFile : fileList)
+  {
+    for(auto& atomicFile : limitedAtomicFile.m_AtomicFilesList)
     {
-      m_Result = MergeResults(m_Result, commitResult);
+      Result<> commitResult = atomicFile.commit();
+      if(commitResult.invalid())
+      {
+        m_Result = MergeResults(m_Result, commitResult);
+      }
     }
   }
 

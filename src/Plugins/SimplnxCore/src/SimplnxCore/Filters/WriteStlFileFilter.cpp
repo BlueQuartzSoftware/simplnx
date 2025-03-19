@@ -132,8 +132,19 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(triangleGeom->getNumberOfFaces() > std::numeric_limits<int32>::max())
   {
-    return MakePreflightErrorResult(
-        -27871, fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}", triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max()));
+    if(pGroupingTypeValue == GroupingType::SingleFile)
+    {
+      std::string ss =
+          fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. Since single file was selected this means overflow files WILL be generated.",
+                      triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
+      resultOutputActions.warnings().emplace_back(Warning{-27871, ss});
+    }
+    else
+    {
+      std::string ss = fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. This MAY cause some groups to generate overflow files.",
+                                   triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
+      resultOutputActions.warnings().emplace_back(Warning{-27875, ss});
+    }
   }
 
   if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
