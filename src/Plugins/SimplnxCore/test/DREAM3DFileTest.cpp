@@ -278,7 +278,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
   {
     auto fileData = CreateFileData();
     Result<HDF5::FileWriter> result = HDF5::FileWriter::CreateFile(GetIODataPath());
-    REQUIRE(result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
 
     auto writeResult = DREAM3D::WriteFile(result.value(), fileData);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);

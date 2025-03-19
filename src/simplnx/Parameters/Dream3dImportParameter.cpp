@@ -43,7 +43,7 @@ IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
 //------------------------------------------------------------------------------
 IParameter::VersionType Dream3dImportParameter::getVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +130,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
   }
 
   PathImportPolicy pathImportPolicy = PathImportPolicy::All;
-  if(json.contains(k_PathImportPolicyKey))
+  if(version == 2)
   {
     const auto& pathImportPolicyJson = json[k_PathImportPolicyKey];
     if(!pathImportPolicyJson.is_number_integer())
