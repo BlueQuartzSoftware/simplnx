@@ -424,7 +424,7 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
     Dream3dImportParameter::ImportData importData(filePath);
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
