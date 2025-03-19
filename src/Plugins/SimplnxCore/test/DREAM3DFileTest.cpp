@@ -378,7 +378,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     args.insert(CreateImageGeometryFilter::k_Origin_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0, 0, 0}));
     args.insert(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.5, 0.5, 0.12}));
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
@@ -389,7 +389,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 1"})));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
@@ -400,7 +400,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"New Geometry", "Cell Data", "Array 2"})));
     args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>("0"));
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
@@ -412,6 +412,6 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     importData.FilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 }

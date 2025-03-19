@@ -51,10 +51,10 @@ TEST_CASE("SimplnxCore::ReadVolumeGraphicsFileFilter - Valid filter execution", 
   {
     args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_VgiDestFile));
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     DataPath dap = DataPath({"VolumeGraphics"});
     const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(dap);

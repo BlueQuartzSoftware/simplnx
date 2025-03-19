@@ -55,11 +55,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath), dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX));
@@ -92,11 +92,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPath), dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX));
@@ -130,11 +130,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[S
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   const auto& clusterIdsDataStore = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX).getDataStoreRef();
@@ -169,11 +169,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[Si
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   const auto& clusterIdsDataStore = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX).getDataStoreRef();
@@ -208,11 +208,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   const auto& clusterIdsDataStore = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX).getDataStoreRef();

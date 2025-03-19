@@ -42,11 +42,11 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   DataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
   REQUIRE(removedDataArray == nullptr);
@@ -76,11 +76,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
@@ -129,11 +129,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
-//   REQUIRE(preflightResult.outputActions.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //   // Execute the filter and check the result
 //   auto executeResult = filter.execute(dataStructure, args);
-//   REQUIRE(executeResult.result.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //   // Verify edges are wiped
 //   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
@@ -184,11 +184,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
-//   REQUIRE(preflightResult.outputActions.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //   // Execute the filter and check the result
 //   auto executeResult = filter.execute(dataStructure, args);
-//   REQUIRE(executeResult.result.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths(); // This queries the parent lists implicitly
 //   for(const auto& path : alteredPaths)
@@ -235,11 +235,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
-//     REQUIRE(preflightResult.outputActions.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //     // Execute the filter and check the result
 //     auto executeResult = filter.execute(dataStructure, args);
-//     REQUIRE(executeResult.result.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //     // Verify edges are wiped
 //     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
@@ -302,11 +302,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
-//     REQUIRE(preflightResult.outputActions.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //     // Execute the filter and check the result
 //     auto executeResult = filter.execute(dataStructure, args);
-//     REQUIRE(executeResult.result.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //     // Verify edges are wiped
 //     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
@@ -370,11 +370,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //   // Preflight the filter and check result
 //   auto preflightResult = filter.preflight(dataStructure, args);
-//   REQUIRE(preflightResult.outputActions.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //   // Execute the filter and check the result
 //   auto executeResult = filter.execute(dataStructure, args);
-//   REQUIRE(executeResult.result.valid());
+//   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //
@@ -436,11 +436,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
-//     REQUIRE(preflightResult.outputActions.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //     // Execute the filter and check the result
 //     auto executeResult = filter.execute(dataStructure, args);
-//     REQUIRE(executeResult.result.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //     // Verify deleted down to level Three
 //     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
@@ -488,11 +488,11 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Preflight the filter and check result
 //     auto preflightResult = filter.preflight(dataStructure, args);
-//     REQUIRE(preflightResult.outputActions.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 //
 //     // Execute the filter and check the result
 //     auto executeResult = filter.execute(dataStructure, args);
-//     REQUIRE(executeResult.result.valid());
+//     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 //
 //     // Verify deleted down to level Three
 //     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
