@@ -31,7 +31,7 @@ void testFilterList()
     auto filter = filterList->createFilter(filterHandle);
     if(filter == nullptr)
     {
-      throw std::runtime_error("");
+      throw std::runtime_error("AppTest::testFilterList() Filter Pointer was null. Filter could not be created from filterHandle");
     }
     std::cout << "  " << filter->getName() << "\n";
   }
@@ -46,7 +46,7 @@ void testDeletingApp()
   delete Application::Instance();
   if(Application::Instance() != nullptr)
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("AppTest::testDeletingApp() Application was not nullptr and it should have been.");
   }
   std::cout << "  Application::Instance() deleted" << std::endl;
 

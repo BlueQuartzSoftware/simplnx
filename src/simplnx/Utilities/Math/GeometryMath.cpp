@@ -173,5 +173,5 @@ BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfFaces(const nx::core::Tr
 
 BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfRotatedFace(TriangleGeom& faces, int32 faceId, float32 g[3][3])
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("nx::core::GeometryMath::FindBoundingBoxOfRotatedFace is not implemented");
 }

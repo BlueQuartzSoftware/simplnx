@@ -323,7 +323,7 @@ public:
   {
     if(index >= this->getSize())
     {
-      throw std::runtime_error("");
+      throw std::out_of_range(fmt::format("DataStore::at({}) is out of bounds. Size={}", index, this->getSize()));
     }
     return m_Data.get()[index];
   }

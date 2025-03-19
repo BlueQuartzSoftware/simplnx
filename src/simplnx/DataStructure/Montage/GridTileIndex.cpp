@@ -63,7 +63,7 @@ const IGeometry* GridTileIndex::getGeometry() const
 
 TooltipGenerator GridTileIndex::getToolTipGenerator() const
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("GridTileIndex::getToolTipGenerator() is not implemented");
 }
 
 bool GridTileIndex::isValid() const

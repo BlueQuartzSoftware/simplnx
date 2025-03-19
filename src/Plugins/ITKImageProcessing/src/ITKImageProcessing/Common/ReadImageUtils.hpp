@@ -180,7 +180,7 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
       return ReadImageByDimension<float64, FunctorT>(*imageIO, args...);
     }
     default: {
-      throw std::runtime_error("");
+      throw std::runtime_error(fmt::format("ReadImageExecute::Unknown Numeric Type:'{}'", to_underlying(*numericType)));
     }
     }
   } catch(const itk::ExceptionObject& err)

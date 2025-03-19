@@ -135,7 +135,7 @@ public:
    */
   void resizeTuples(const ShapeType& tupleShape) override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::resizeTuples() is not implemented");
   }
 
   /**
@@ -146,7 +146,7 @@ public:
    */
   value_type getValue(usize index) const override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::getValue() is not implemented");
   }
 
   /**
@@ -157,7 +157,7 @@ public:
    */
   void setValue(usize index, value_type value) override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::setValue() is not implemented");
   }
 
   /**
@@ -168,7 +168,7 @@ public:
    */
   const_reference at(usize index) const override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::at() is not implemented");
   }
 
   /**
@@ -179,7 +179,7 @@ public:
    */
   const_reference operator[](usize index) const override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::operator[]() is not implemented");
   }
 
   /**
@@ -190,7 +190,7 @@ public:
    */
   reference operator[](usize index) override
   {
-    throw std::runtime_error("");
+    throw std::runtime_error("EmptyDataStore::operator[]() is not implemented");
   }
 
   /**
