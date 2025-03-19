@@ -90,11 +90,11 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternions", "[OrientationAnalysis][Co
       std::cout << error.code << ": " << error.message << std::endl;
     }
   }
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Compare Results
   auto generatedFZQuats = dataStructure.getDataRefAs<Float32Array>(scanDataPath.createChildPath(k_FZQuats));

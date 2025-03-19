@@ -60,6 +60,6 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeD
   {
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 }

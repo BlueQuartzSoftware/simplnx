@@ -83,11 +83,11 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN1
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group

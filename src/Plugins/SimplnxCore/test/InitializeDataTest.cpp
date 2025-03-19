@@ -74,11 +74,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initializa
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -102,11 +102,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fil
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -130,11 +130,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -160,11 +160,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Add
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -190,11 +190,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Inc
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -220,11 +220,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incr
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -250,11 +250,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Sub
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -280,11 +280,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Inc
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -310,11 +310,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incr
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -343,11 +343,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Ra
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {2.62f, 6666.66f});
@@ -376,11 +376,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value St
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
@@ -409,11 +409,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value No
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
@@ -442,11 +442,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
@@ -470,11 +470,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -500,11 +500,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Increme
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -530,11 +530,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Increme
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
@@ -563,11 +563,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standar
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<BoolArray>(::k_BaselinePath), {false, true, false, false, false, true});
@@ -594,11 +594,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initial
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<uint8, false>(dataStructure.getDataRefAs<UInt8Array>(::k_BaselinePath), {std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()});
@@ -625,11 +625,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32Array>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(),
@@ -657,11 +657,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardize
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath),
@@ -687,11 +687,11 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill I
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);

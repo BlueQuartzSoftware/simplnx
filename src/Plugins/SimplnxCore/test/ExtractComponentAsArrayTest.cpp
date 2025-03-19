@@ -44,11 +44,11 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(alteredDs, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(alteredDs, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Load a clean copy of the datastructure prior to resize because original array is terminated after execution
   DataStructure unalteredDs = UnitTest::LoadDataStructure(k_BaseDataFilePath);

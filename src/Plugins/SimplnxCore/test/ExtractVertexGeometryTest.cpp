@@ -137,11 +137,11 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
   DataPath vertexDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
@@ -167,11 +167,11 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
   DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
@@ -212,11 +212,11 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
   DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();
@@ -245,11 +245,11 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(k_VertexDataContainerPath);
   DataPath vertexAttrMatDataPath = vertexGeom.getVertexAttributeMatrixDataPath();

@@ -39,11 +39,11 @@ TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Exec
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarBCFPath, k_GeneratedBCFPath);
