@@ -216,7 +216,9 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
 
     UnitTest::CompareArrays<float32>(dataStructure, k_EulersDataPath.replaceName(computedArrayName), k_EulersDataPath.replaceName(k_OutputArrayName));
   }
-  // WriteTestDataStructure(dataStructure, fs::path(fmt::format("/tmp/ComputeMisorientationsFilter_Ref.dream3d")));
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_reference_orientation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }
 
 TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Reconstruction][ComputeMisorientationsFilter]")
