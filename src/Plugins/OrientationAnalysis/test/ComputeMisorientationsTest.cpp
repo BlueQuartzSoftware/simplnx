@@ -260,5 +260,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
     UnitTest::CompareArrays<float32>(dataStructure, k_EulersDataPath.replaceName(computedArrayName), k_EulersDataPath.replaceName(k_OutputArrayName));
   }
 
-  // WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir)));
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }
