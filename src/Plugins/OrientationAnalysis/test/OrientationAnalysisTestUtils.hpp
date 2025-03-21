@@ -22,7 +22,6 @@
 
 namespace fs = std::filesystem;
 
-
 namespace AlignSectionsFeatureCentroidFilter
 {
 // Parameter Keys
