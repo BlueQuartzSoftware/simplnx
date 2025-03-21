@@ -15,300 +15,49 @@ using namespace nx::core;
 
 namespace
 {
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-class Mesh
+Result<> RepairWindings
+
+
+Result<usize> FindValidSeed(const int32 targetFeatureId, const TriangleGeom::SharedFaceList::store_type& triangles, const TriangleGeom::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels, std::vector<bool>& reversalVote)
 {
-public:
-  using Self = Mesh;
-  using Pointer = std::shared_ptr<Self>;
-  using ConstPointer = std::shared_ptr<const Self>;
-  using WeakPointer = std::weak_ptr<Self>;
-  using ConstWeakPointer = std::weak_ptr<const Self>;
+  usize seedFaceIdx = 0;
+  float32 xMax = std::numeric_limits<float32>::min();
+  float32 avgX = 0.0f;
 
-  static Pointer NullPointer()
+  // walk the nodes within targetFeature
+  const usize triComp = triangles.getNumberOfComponents();
+  for(usize i = 0; i++ < faceLabels.getNumberOfTuples(); i++)
   {
-    return Pointer(static_cast<Self*>(nullptr));
-  }
-
-  static Pointer New();
-
-  virtual ~Mesh()
-  {
-  }
-  int getMaxLabel()
-  {
-    return -1;
-  }
-  int getMinLabel()
-  {
-    return -1;
-  }
-  void setMaxLabel(int32 l)
-  {
-    m_MaxLabel = l;
-  }
-  void setMinLabel(int32 l)
-  {
-    m_MinLabel = l;
-  }
-  void incrementMaxLabel()
-  {
-    m_MaxLabel++;
-  }
-
-protected:
-  Mesh()
-  {
-  }
-
-private:
-  int32 m_MinLabel;
-  int32 m_MaxLabel;
-
-  Mesh(const Mesh&);           // Copy Constructor Not Implemented
-  void operator=(const Mesh&); // Operator '=' Not Implemented
-};
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-class LabelVisitorInfo
-{
-public:
-  //   typedef Mesh<int32>::Pointer                MeshPtrType;
-  typedef TriangleGeom::SharedFaceList::value_type FaceType;
-  typedef std::vector<int32> FaceListType;
-
-  using Self = LabelVisitorInfo;
-  using Pointer = std::shared_ptr<Self>;
-  using ConstPointer = std::shared_ptr<const Self>;
-  using WeakPointer = std::weak_ptr<Self>;
-  using ConstWeakPointer = std::weak_ptr<const Self>;
-
-  static Pointer NullPointer()
-  {
-    return Pointer(static_cast<Self*>(nullptr));
-  }
-
-  static Pointer New(int32 label, usize tIndex)
-  {
-    Pointer sharedPtr(new LabelVisitorInfo(label, tIndex));
-    return sharedPtr;
-  }
-
-  virtual ~LabelVisitorInfo() = default;
-
-private:
-  int32 m_Label;
-
-public:
-  int32 getLabel()
-  {
-    if(m_Relabeled)
+    if(faceLabels[(i * 2) + 0] == targetFeatureId || faceLabels[(i * 2) + 1] == targetFeatureId)
     {
-      return m_NewLabel;
-    }
-    return m_Label;
-  }
-
-  // -----------------------------------------------------------------------------
-  void setStartIndex(const usize& value)
-  {
-    m_StartIndex = value;
-  }
-
-  // -----------------------------------------------------------------------------
-  usize getStartIndex() const
-  {
-    return m_StartIndex;
-  }
-
-  // -----------------------------------------------------------------------------
-  void setPrimed(bool value)
-  {
-    m_Primed = value;
-  }
-
-  // -----------------------------------------------------------------------------
-  bool getPrimed() const
-  {
-    return m_Primed;
-  }
-
-  // -----------------------------------------------------------------------------
-  void setNewLabel(int32 value)
-  {
-    m_NewLabel = value;
-  }
-
-  // -----------------------------------------------------------------------------
-  int32 getNewLabel() const
-  {
-    return m_NewLabel;
-  }
-
-  // -----------------------------------------------------------------------------
-  void setRelabeled(bool value)
-  {
-    m_Relabeled = value;
-  }
-
-  // -----------------------------------------------------------------------------
-  bool getRelabeled() const
-  {
-    return m_Relabeled;
-  }
-
-  /**
-   *
-   * @param mesh
-   * @param masterVisited
-   * @return
-   */
-  Pointer relabelFaces(Mesh::Pointer mesh, Int32AbstractDataStore& masterFaceList, const std::vector<bool>& masterVisited)
-  {
-    const usize triangleIndex = *m_Faces.begin();
-    const int32 newLabel = mesh->getMaxLabel() + 1;
-    mesh->incrementMaxLabel();
-    LabelVisitorInfo::Pointer p = LabelVisitorInfo::New(m_Label, triangleIndex);
-
-    p->setPrimed(false);
-    p->setNewLabel(newLabel);
-    p->setRelabeled(true);
-    p->m_Faces = m_Faces;            // This will make a copy of the current set of triangles
-    p->m_OriginalFaceList = m_Faces; // Make a copy that does NOT get updated
-    bool seedIsSet = false;
-    for(auto face : m_Faces)
-    {
-      if(masterFaceList[face * 2] == m_Label)
+      avgX = static_cast<float32>(verts[triangles[i * triComp]] + verts[triangles[(i * triComp) + 1]] + verts[triangles[(i * triComp) + 2]]) / 3.0; // Get X value of all vertices
+      if(avgX > xMax)
       {
-        masterFaceList[face * 2] = newLabel;
-      }
-      if(masterFaceList[face * 2 + 1] == m_Label)
-      {
-        masterFaceList[face * 2 + 1] = newLabel;
-      }
-      if(masterVisited[face])
-      {
-        p->setStartIndex(face);
-        seedIsSet = true;
+        xMax = avgX;
+        seedFaceIdx = i;
       }
     }
-    if(seedIsSet)
-    {
-      p->setPrimed(true);
-    }
-
-    return p;
   }
+  // Now we have the "right most" triangle based on x component of the centroid of the triangles for this label.
 
-  /**
-   *
-   * @param mesh
-   */
-  void revertFaceLabels(Int32AbstractDataStore& masterFaceList)
+  // Let's now figure out if the normal points generally in the positive or negative X direction.
+  Eigen::Vector3f normal;
+  const usize vertexIndex = triangles[seedFaceIdx * 3];
+  if(faceLabels[(seedFaceIdx * 2) + 0] == targetFeatureId)
   {
-
-    if(m_Relabeled)
-    {
-      //  qDebug() << "    Reverting Label " << m_NewLabel << " To " << m_Label << "\n";
-      for(auto face : m_OriginalFaceList)
-      {
-        if(masterFaceList[face * 2] == m_NewLabel)
-        {
-          masterFaceList[face * 2] = m_Label;
-        }
-        if(masterFaceList[face * 2 + 1] == m_NewLabel)
-        {
-          masterFaceList[face * 2 + 1] = m_Label;
-        }
-      }
-      m_Relabeled = false;
-      m_NewLabel = m_Label;
-      m_Primed = false;
-    }
+    normal = Eigen::Vector3f(verts[vertexIndex + 0], verts[vertexIndex + 1], verts[vertexIndex + 2]).normalized();
   }
-
-  std::set<int32> m_Faces;
-  std::set<int32> m_OriginalFaceList;
-
-protected:
-  LabelVisitorInfo(int32 label, usize tIndex)
-  : m_Label(label)
-  , m_StartIndex(tIndex)
-  , m_Primed(false)
-  , m_NewLabel(label)
-  , m_Relabeled(false)
+  else
   {
+    normal = Eigen::Vector3f(verts[vertexIndex + 2], verts[vertexIndex + 1], verts[vertexIndex + 0]).normalized();
   }
 
-private:
-  usize m_StartIndex = {};
-  bool m_Primed = {};
-  int32 m_NewLabel = {};
-  bool m_Relabeled = {};
-
-  LabelVisitorInfo(const LabelVisitorInfo&); // Copy Constructor Not Implemented
-  void operator=(const LabelVisitorInfo&);   // Operator '=' Not Implemented
-};
-
-typedef std::map<int32, std::set<int>> LabelFaceMap_t;
-typedef std::vector<int32> FaceList_t;
-
-// -----------------------------------------------------------------------------
-// Groups the triangles according to which Feature they are a part of
-// -----------------------------------------------------------------------------
-void GetLabelTriangleMap(LabelFaceMap_t& trianglesToLabelMap, const Int32AbstractDataStore& faceLabels, const usize numTraingles)
-{
-  // Loop over all the triangles and group them according to which feature/region they are a part of
-  for(usize i = 0; i < numTraingles; i++)
+  if(normal[0] < 0.0f) // X value of normal
   {
-    usize index = i * 2;
-    trianglesToLabelMap[faceLabels[index + 0]].insert(i);
-    trianglesToLabelMap[faceLabels[index + 1]].insert(i);
-  }
-}
-
-Result<> GenerateFaceConnectivity(const DataPath& geomPath, const DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
-{
-  // We take the path and get the geometry directly here since we are making modifications to arrays and don't want to invalidate refs
-  auto* nodeGeometry2DPtr = dataStructure.getDataAs<INodeGeometry2D>(geomPath);
-  if(nodeGeometry2DPtr == nullptr)
-  {
-    return MakeErrorResult(-808, fmt::format("Object at path {} is not a valid 2D geometry.", geomPath.toString()));
+    reversalVote[targetFeatureId] = true;
   }
 
-  const INodeGeometry2D::SharedFaceList* facesPtr = nodeGeometry2DPtr->getFaces();
-  if(nodeGeometry2DPtr == nullptr)
-  {
-    return MakeErrorResult(-809, fmt::format("Geometry {} does not have a valid SharedFaceList.", nodeGeometry2DPtr->getName()));
-  }
-
-  // Make sure the Face Connectivity is created because the FindNRing algorithm needs this and will
-  // assert if the data is NOT in the SurfaceMesh Data Container
-  if(nullptr == facesPtr->getFacesContainingVert())
-  {
-    facesPtr->findFacesContainingVert();
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(nullptr == facesPtr->getFaceNeighbors())
-  {
-    facesPtr->findFaceNeighbors();
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  if(facesPtr->getUniqueEdges() == nullptr)
-  {
-    facesPtr->generateUniqueEdgeIds();
-  }
-  return {};
+  return {seedFaceIdx};
 }
 } // namespace
 
@@ -331,131 +80,50 @@ const std::atomic_bool& VerifyTriangleWinding::getCancel()
 // -----------------------------------------------------------------------------
 Result<> VerifyTriangleWinding::operator()()
 {
-  // Make sure the Face Connectivity is created because the FindNRing algorithm needs this and will
-  // assert if the data is NOT in the SurfaceMesh Data Container
-  m_MessageHandler("Generating Face List for each Node");
-  const Result<> connResult = ::GenerateFaceConnectivity(m_InputValues->TargetGeometryPath, m_DataStructure, m_ShouldCancel);
-  if(connResult.invalid() || m_ShouldCancel)
-  {
-    return connResult;
-  }
-
-  // Execute the actual verification step.
-  m_MessageHandler("Generating Connectivity Complete. Starting Analysis");
-  // -----------------------------------------------------------------------------
-  // Previously ValidateTriangleWindingFunction
-  // -----------------------------------------------------------------------------
+  // Load container, node list, and node data respectively
   const auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
-  const TriangleGeom::SharedVertexList::store_type& verts = triGeom.getVertices()->getDataStoreRef();
   const TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
+  const TriangleGeom::SharedVertexList::store_type& verts = triGeom.getVertices()->getDataStoreRef();
 
+  // Load double-sided mesh grouping
   const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
 
-  const usize numFaces = triangles.getNumberOfTuples();
-
-  const Mesh::Pointer mesh = Mesh::New();
-  int32 min = std::numeric_limits<int32>::max();
-  int32 max = std::numeric_limits<int32>::min();
-  // Set the min and Max labels in the Mesh class;
-  for(usize i = 0; i < numFaces; ++i)
+  // Get max group (feature id != 0)
+  int32 maxFeature = 0;
+  for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
   {
-    int32 firstLabel = faceLabelsStore[i * 2];
-    if(firstLabel < min)
+    if(faceLabelsStore[i] > maxFeature)
     {
-      min = firstLabel;
-    }
-    if(firstLabel > max)
-    {
-      max = firstLabel;
-    }
-    int32 secondLabel = faceLabelsStore[i * 2 + 1];
-    if(secondLabel < min)
-    {
-      min = secondLabel;
-    }
-    if(secondLabel > max)
-    {
-      max = secondLabel;
-    }
-  }
-  mesh->setMaxLabel(max);
-  mesh->setMinLabel(min);
-
-  // Get a grouping of triangles by feature ID
-  LabelFaceMap_t trianglesToLabelMap = {};
-  ::GetLabelTriangleMap(trianglesToLabelMap, faceLabelsStore, numFaces);
-
-  int32 currentLabel = 0;
-
-  // Find the first non-zero Feature ID (Label). This is going to be our starting feature.
-  for(const auto& [key, value] : trianglesToLabelMap)
-  {
-    if(key > 0)
-    {
-      currentLabel = key;
-      break;
+      maxFeature = faceLabelsStore[i];
     }
   }
 
-  std::deque<LabelVisitorInfo::Pointer> labelObjectsToVisit;
+  // TODO:
+  //  - Revisit reversal system to see if its worth going cluster by cluster rather than overall
+  //  - Assess viability of implementing an internal voting system within the cluster
+  // Define a voting system for full reversal
+  std::vector<bool> reversalVote(maxFeature + 1, false);
 
-  // Keeps a list of all the triangles that have been visited.
-  std::vector<bool> masterVisited(masterFaceList->getNumberOfTuples(), false);
-
-  STDEXT::hash_set<int32> labelsVisitedSet;
-  STDEXT::hash_set<int32> labelsToVisitSet;
-  int32 triIndex = 0;
-
-  bool firstLabel = false;
-
-  // Get the first triangle in the list
-
-  // Now that we have the starting Feature, lets try and get a seed triangle that is oriented in the proper direction.
-  /* Make sure the winding is correct on the first triangle of the first label that will be checked. */
-  // -----------------------------------------------------------------------------
-  // Previously GetSeedTriangle function
-  // -----------------------------------------------------------------------------
-  float32 xMax = std::numeric_limits<float32>::min();
-  float32 avgX = 0.0f;
-  int32 seedFaceIdx = 0;
-
-  const usize triComp = triangles.getNumberOfComponents();
-  for(auto i : trianglesToLabelMap[currentLabel])
+  // Walk the features repairing the graph group by group
+  for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
-    avgX = static_cast<float32>(verts[triangles[i * triComp]] + verts[triangles[(i * triComp) + 1]] + verts[triangles[(i * triComp) + 2]]) / 3.0; // Get X value of all vertices
-    if(avgX > xMax)
+    // Find baseline/seed node (correct winding)
+    Result<usize> seedResult = ::FindValidSeed(feature, triangles, verts, faceLabelsStore, reversalVote);
+    if(seedResult.invalid())
     {
-      xMax = avgX;
-      seedFaceIdx = i;
+      return ConvertResult(std::move(seedResult));
     }
-  }
-  // Now we have the "right most" triangle based on x component of the centroid of the triangles for this label.
 
-  // Let's now figure out if the normal points generally in the positive or negative X direction.
-  Eigen::Vector3f normal;
-  const usize vertexIndex = triangles[seedFaceIdx * 3];
-  if(faceLabelsStore[(seedFaceIdx * 2) + 0] == currentLabel)
-  {
-    normal = Eigen::Vector3f(verts[vertexIndex + 0], verts[vertexIndex + 1], verts[vertexIndex + 2]).normalized();
-  }
-  else
-  {
-    normal = Eigen::Vector3f(verts[vertexIndex + 2], verts[vertexIndex + 1], verts[vertexIndex + 0]).normalized();
+
   }
 
-  if(normal[0] < 0.0f) // X value of normal
-  {
+  // Define a capturing lambda to execute filter without passing member variables to free functions
+  const std::function<Result<>(const DataPath&)> f_ExecuteReverseTriangleWinding = [this](const DataPath& triGeomPath) -> Result<> {
     const ReverseTriangleWindingFilter filter;
 
     Arguments args;
 
-    const std::vector<DataPath> pathsToGeom = triGeom.getDataPaths();
-    if(pathsToGeom.empty())
-    {
-      return MakeErrorResult<>(-807, fmt::format("Unable to get paths for geometry: {}", triGeom.getName()));
-    }
-
-    args.insertOrAssign(ReverseTriangleWindingFilter::k_TriGeomPath_Key, std::make_any<DataPath>(triGeom.getDataPaths()[0]));
+    args.insertOrAssign(ReverseTriangleWindingFilter::k_TriGeomPath_Key, std::make_any<DataPath>(triGeomPath));
 
     auto preflightResult = filter.preflight(m_DataStructure, args, m_MessageHandler, m_ShouldCancel);
     if(preflightResult.outputActions.invalid())
@@ -469,22 +137,8 @@ Result<> VerifyTriangleWinding::operator()()
       return executeResult.result;
     }
 
-    if(faceLabelsStore[(seedFaceIdx * 2) + 0] == currentLabel)
-    {
-      normal = Eigen::Vector3f(verts[vertexIndex + 0], verts[vertexIndex + 1], verts[vertexIndex + 2]).normalized();
-    }
-    else
-    {
-      normal = Eigen::Vector3f(verts[vertexIndex + 2], verts[vertexIndex + 1], verts[vertexIndex + 0]).normalized();
-    }
-    if(normal[0] < 0.0f) // X value of normal
-    {
-      seedFaceIdx = -1;
-      return MakeErrorResult<>(-802, "Error After attempted triangle winding reversal. Face normal is still oriented in wrong direction.");
-    }
-  }
-
-  triIndex = seedFaceIdx;
+    return {};
+  };
 
   LabelVisitorInfo::Pointer ldo = LabelVisitorInfo::New(currentLabel, triIndex);
   labelObjectsToVisit.push_back(ldo);
