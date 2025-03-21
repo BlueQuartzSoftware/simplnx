@@ -5,23 +5,41 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/AlignSections.hpp"
+
+#include <vector>
 
 namespace nx::core
 {
 
+namespace compute_misorientations_constants
+{
+
+const ChoicesParameter::Choices k_ComputationTypeStrings = {"Use Arrays", "Use Reference Axis Angle"};
+constexpr ChoicesParameter::ValueType k_UseArraysIndex = 0;
+constexpr ChoicesParameter::ValueType k_UseReferenceAxesIndex = 1;
+
+} // namespace compute_misorientations_constants
+
+/**
+ * @brief
+ */
 struct ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsInputValues
 {
-  bool ComputeAvgMisors;
-  DataPath NeighborListArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath MisorientationListArrayName;
-  DataPath AvgMisorientationsArrayName;
+  DataPath InputOrientationPath1;
+  DataPath InputOrientationPath2;
+  VectorFloat32Parameter::ValueType ReferenceOrientation;
+  ChoicesParameter::ValueType ComputationType;
+  DataPath InputPhasesArrayPath;
+  DataPath OutputMisorientationsPath;
+  DataPath InputCrystalStructuresArrayPath;
 };
 
 /**
- * @class
+ * @brief
  */
 class ORIENTATIONANALYSIS_EXPORT ComputeMisorientations
 {
@@ -36,13 +54,10 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
 private:
   DataStructure& m_DataStructure;
   const ComputeMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace nx::core

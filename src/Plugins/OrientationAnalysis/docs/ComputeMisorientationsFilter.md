@@ -1,24 +1,32 @@
-# Compute Feature Neighbor Misorientations
+# Compute Misorientations
 
 ## Group (Subgroup)
 
-Statistics (Crystallographic)
+Tools (Orientations)
 
 ## Description
 
-This **Filter** determines, for each **Feature**, the misorientations with each of the **Features** that are in contact with it.  The misorientations are stored as a list (for each **Feature**) of angles (in degrees).  The axis of the misorientation is not stored by this **Filter**.
+This filter will compute the misorientation as an Axis-Angle representation between a pair of
+Euler Angles or an Euler Angle and a Reference Axis-Angle.
 
-The user can also calculate the average misorientation between the feature and all contacting features.
+Use the Orientation Utility to compute an input Axis-Angle if you only have another representation.
 
-### Notes
+## Compute by Arrays
 
-**NOTE:** Only features with identical crystal structures will be calculated. If two features have different crystal structures then a value of NaN is set for the misorientation.
+If 2 Euler Arrays are used then the output is an array with the same number of Tuples as the input
+Euler Arrays and represents the misorientation between the each Euler Angle in the same index in each 
+of the input Euler Angle arrays.
+
+## Compute by Reference Orientation
+
+In this mode the user will supply a reference orientation in the form of an Axis-Angle, where the angle portion is in degrees.
+Then, for every Euler Angle in the input array, the misorientation with the reference orientation will be computed.
+
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
 
-+ (05) SmallIN100 Crystallographic Statistics
 
 ## License & Copyright
 

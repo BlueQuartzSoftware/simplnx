@@ -1,13 +1,113 @@
 #include "ComputeMisorientations.hpp"
 
-#include "simplnx/Common/Constants.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
+#include "simplnx/Common/Constants.hpp"
+
+#include <EbsdLib/Core/OrientationRepresentation.h>
+#include <EbsdLib/Core/OrientationTransformation.hpp>
 
 using namespace nx::core;
+
+namespace
+{
+
+inline void ComputeMisorientation(const QuatD& q1, const QuatD& q2, Float32Array& outputMisorientations, size_t laueClass, const std::vector<LaueOps::Pointer>& m_OrientationOps, size_t tupleIdx)
+{
+  OrientationD axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
+
+  outputMisorientations[tupleIdx * 4 + 0] = axisAngle[0];
+  outputMisorientations[tupleIdx * 4 + 1] = axisAngle[1];
+  outputMisorientations[tupleIdx * 4 + 2] = axisAngle[2];
+  outputMisorientations[tupleIdx * 4 + 3] = axisAngle[3] * Constants::k_180OverPiD; // Convert the output Angle to Degrees.
+}
+
+Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues)
+{
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(inputValues->InputPhasesArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(inputValues->InputCrystalStructuresArrayPath);
+
+  const auto& inputOrientations1 = m_DataStructure.getDataRefAs<Float32Array>(inputValues->InputOrientationPath1).getDataStoreRef();
+  const auto& inputOrientations2 = m_DataStructure.getDataRefAs<Float32Array>(inputValues->InputOrientationPath2).getDataStoreRef();
+
+  auto& outputMisorientations = m_DataStructure.getDataRefAs<Float32Array>(inputValues->OutputMisorientationsPath);
+
+  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+
+  size_t totalPoints = inputOrientations1.getNumberOfTuples();
+
+  for(int64_t tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
+  {
+    if(cellPhases[tupleIdx] > 0) // We must have a valid phase index.
+    {
+      size_t laueClass = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
+
+      // Convert to a Quaternion
+      OrientationType orientation1(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]);
+      const QuatD q1 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation1);
+      OrientationType orientation2(inputOrientations2[tupleIdx * 3], inputOrientations2[tupleIdx * 3 + 1], inputOrientations2[tupleIdx * 3 + 2]);
+      const QuatD q2 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation2);
+
+      ComputeMisorientation(q1, q2, outputMisorientations, laueClass, m_OrientationOps, tupleIdx);
+    }
+    else
+    {
+      outputMisorientations[tupleIdx * 4 + 0] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 1] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 2] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 3] = 0.0f;
+    }
+  }
+
+  return {};
+}
+
+Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues)
+{
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(inputValues->InputPhasesArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(inputValues->InputCrystalStructuresArrayPath);
+
+  const auto& inputOrientations1 = m_DataStructure.getDataRefAs<Float32Array>(inputValues->InputOrientationPath1).getDataStoreRef();
+
+  auto& outputMisorientations = m_DataStructure.getDataRefAs<Float32Array>(inputValues->OutputMisorientationsPath);
+
+  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+
+  size_t totalPoints = inputOrientations1.getNumberOfTuples();
+
+  using OrientationType = Orientation<float64>;
+  Eigen::Vector3d axis(inputValues->ReferenceOrientation[0], inputValues->ReferenceOrientation[1], inputValues->ReferenceOrientation[2]);
+  axis.normalize();
+  const OrientationType referenceOrientation(axis[0], axis[1], axis[2], inputValues->ReferenceOrientation[3] * Constants::k_PiOver180D);
+
+  const QuatD q2 = OrientationTransformation::ax2qu<OrientationType, QuatD>(referenceOrientation);
+
+  for(int64_t tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
+  {
+    if(cellPhases[tupleIdx] > 0) // We must have a valid phase index.
+    {
+      size_t phase1 = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
+
+      // Convert to a Quaternion
+      OrientationType orientation1(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]);
+      QuatD q1 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation1);
+
+      ComputeMisorientation(q1, q2, outputMisorientations, phase1, m_OrientationOps, tupleIdx);
+    }
+    else
+    {
+      outputMisorientations[tupleIdx * 4 + 0] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 1] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 2] = 0.0f;
+      outputMisorientations[tupleIdx * 4 + 3] = 0.0f;
+    }
+  }
+
+  return {};
+}
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -23,93 +123,18 @@ ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, con
 ComputeMisorientations::~ComputeMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeMisorientations::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeMisorientations::operator()()
 {
+  Result<> result;
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
-
-  // Input Arrays
-  const auto& inFeaturePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& inAvgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto& inXtalStruct = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto& inNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
-
-  // The output misorientations is going to be used as a vector because the output array is optional and might
-  // not exist in the DataStructure. We cannot get it by reference.
-  auto* avgMisorientations = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgMisorientationsArrayName);
-
-  size_t tempMisoList = 0;
-
-  size_t totalFeatures = inFeaturePhases.getNumberOfTuples();
-
-  std::vector<std::vector<float>> tempMisorientationLists(totalFeatures);
-  usize quatIndex = 0;
-  for(size_t i = 1; i < totalFeatures; i++)
+  if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseArraysIndex)
   {
-    quatIndex = i * 4;
-
-    QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
-    uint32_t xtalType1 = inXtalStruct[inFeaturePhases[i]];
-
-    const NeighborList<int32_t>::VectorType& featureNeighborList = inNeighborList.getListReference(static_cast<int32_t>(i));
-
-    tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
-
-    for(size_t j = 0; j < featureNeighborList.size(); j++)
-    {
-      int32_t neighborFeatureId = featureNeighborList[j];
-      quatIndex = neighborFeatureId * 4;
-      QuatF q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
-      uint32_t xtalType2 = inXtalStruct[inFeaturePhases[neighborFeatureId]];
-      tempMisoList = featureNeighborList.size();
-      if(xtalType1 == xtalType2 && static_cast<int64_t>(xtalType1) < static_cast<int64_t>(orientationOps.size()))
-      {
-        OrientationD axisAngle = orientationOps[xtalType1]->calculateMisorientation(q1, q2);
-
-        tempMisorientationLists[i][j] = static_cast<float>(axisAngle[3] * nx::core::Constants::k_180OverPiF);
-        if(m_InputValues->ComputeAvgMisors)
-        {
-          (*avgMisorientations)[i] += tempMisorientationLists[i][j];
-        }
-      }
-      else
-      {
-        if(m_InputValues->ComputeAvgMisors)
-        {
-          tempMisoList--;
-        }
-        tempMisorientationLists[i][j] = NAN;
-      }
-    }
-    if(m_InputValues->ComputeAvgMisors)
-    {
-      if(tempMisoList != 0)
-      {
-        (*avgMisorientations)[i] /= static_cast<float>(tempMisoList);
-      }
-      else
-      {
-        (*avgMisorientations)[i] = NAN;
-      }
-      tempMisoList = 0;
-    }
+    result = ComputeUsingArrays(m_DataStructure, m_InputValues);
+  }
+  else if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseReferenceAxesIndex)
+  {
+    result = ComputeUsingReferenceOrientation(m_DataStructure, m_InputValues);
   }
 
-  // Output Variables
-  auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
-  // Set the vector for each list into the NeighborList Object
-  for(size_t i = 1; i < totalFeatures; i++)
-  {
-    // Construct a shared vector<float> through the std::vector<> copy constructor.
-    NeighborList<float>::SharedVectorType sharedMisorientationList(new std::vector<float>(tempMisorientationLists[i]));
-    outMisorientationList.setList(static_cast<int32_t>(i), sharedMisorientationList);
-  }
-
-  return {};
+  return result;
 }

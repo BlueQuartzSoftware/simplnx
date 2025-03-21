@@ -8,37 +8,29 @@
 namespace nx::core
 {
 /**
- * @class ComputeMisorientationsFilter
+ * @class ComputeFeatureNeighborMisorientationsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientationsFilter : public IFilter
 {
 public:
-  ComputeMisorientationsFilter() = default;
-  ~ComputeMisorientationsFilter() noexcept override = default;
+  ComputeFeatureNeighborMisorientationsFilter() = default;
+  ~ComputeFeatureNeighborMisorientationsFilter() noexcept override = default;
 
-  ComputeMisorientationsFilter(const ComputeMisorientationsFilter&) = delete;
-  ComputeMisorientationsFilter(ComputeMisorientationsFilter&&) noexcept = delete;
+  ComputeFeatureNeighborMisorientationsFilter(const ComputeFeatureNeighborMisorientationsFilter&) = delete;
+  ComputeFeatureNeighborMisorientationsFilter(ComputeFeatureNeighborMisorientationsFilter&&) noexcept = delete;
 
-  ComputeMisorientationsFilter& operator=(const ComputeMisorientationsFilter&) = delete;
-  ComputeMisorientationsFilter& operator=(ComputeMisorientationsFilter&&) noexcept = delete;
+  ComputeFeatureNeighborMisorientationsFilter& operator=(const ComputeFeatureNeighborMisorientationsFilter&) = delete;
+  ComputeFeatureNeighborMisorientationsFilter& operator=(ComputeFeatureNeighborMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-
-  static inline constexpr StringLiteral k_ComputationType_Key = "computation_type_index";
-
-  static inline constexpr StringLiteral k_InputOrientationArrayPath1_Key = "input_orientation_1_array_path";
-  static inline constexpr StringLiteral k_InputOrientationArrayPath2_Key = "input_orientation_2_array_path";
-
-  static inline constexpr StringLiteral k_PhasesArrayPath_Key = "input_phases_array_path";
+  static inline constexpr StringLiteral k_ComputeAvgMisors_Key = "compute_avg_misors";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-
-  static inline constexpr StringLiteral k_ReferenceOrientation_Key = "reference_orientation";
-
-  static inline constexpr StringLiteral k_OutputMisorientationArrayName_Key = "output_orientation_array_name";
-
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_MisorientationListArrayName_Key = "misorientation_list_array_name";
+  static inline constexpr StringLiteral k_AvgMisorientationsArrayName_Key = "avg_misorientations_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -126,4 +118,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeMisorientationsFilter, "FFf2AA5c-CC79-4DD4-9EE6-4f3c028a5ced");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, ComputeFeatureNeighborMisorientationsFilter, "0b68fe25-b5ef-4805-ae32-20acb8d4e823");

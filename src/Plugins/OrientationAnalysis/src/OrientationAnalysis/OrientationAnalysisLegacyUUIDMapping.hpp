@@ -47,7 +47,7 @@
 #include "OrientationAnalysis/Filters/ComputeFeatureReferenceMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBCDFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeKernelAvgMisorientationsFilter.hpp"
-#include "OrientationAnalysis/Filters/ComputeMisorientationsFilter.hpp"
+#include "OrientationAnalysis/Filters/ComputeFeatureNeighborMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeSchmidsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeShapesFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeFaceIPFColoringFilter.hpp"
@@ -85,7 +85,7 @@ namespace nx::core
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID, {}}}, // dream3d-class-name
     {nx::core::Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value(), {nx::core::FilterTraits<ComputeFaceIPFColoringFilter>::uuid, &ComputeFaceIPFColoringFilter::FromSIMPLJson}}, // ComputeFaceIPFColoring
     {nx::core::Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value(), {nx::core::FilterTraits<ComputeFeatureReferenceCAxisMisorientationsFilter>::uuid, &ComputeFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJson}}, // ComputeFeatureReferenceCAxisMisorientations
-    {nx::core::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), {nx::core::FilterTraits<ComputeMisorientationsFilter>::uuid, &ComputeMisorientationsFilter::FromSIMPLJson}}, // ComputeMisorientations
+    {nx::core::Uuid::FromString("286dd493-4fea-54f4-b59e-459dd13bbe57").value(), {nx::core::FilterTraits<ComputeFeatureNeighborMisorientationsFilter>::uuid, &ComputeFeatureNeighborMisorientationsFilter::FromSIMPLJson}}, // ComputeFeatureNeighborMisorientations
     {nx::core::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), {nx::core::FilterTraits<CreateEnsembleInfoFilter>::uuid, &CreateEnsembleInfoFilter::FromSIMPLJson}}, // CreateEnsembleInfoFilter
     {nx::core::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), {nx::core::FilterTraits<ReadEnsembleInfoFilter>::uuid, &ReadEnsembleInfoFilter::FromSIMPLJson}}, // EnsembleInfoReader
     {nx::core::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), {nx::core::FilterTraits<ComputeShapesFilter>::uuid, &ComputeShapesFilter::FromSIMPLJson}}, // ComputeShapes

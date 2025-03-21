@@ -245,29 +245,39 @@ public:
    * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
    * that only a single file or single directory are part of the archive. In the case of a directory, the
    * directory itself can have as many subdirectories as needed.
+   * @param decompressFiles Decompress the archive
+   * @param removeTemp delete files that were decompressed
    */
-  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput)
+  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles = true, bool removeTemp = true)
   : m_CMakeExecutable(std::move(cmakeExecutable))
   , m_TestFilesDir(std::move(testFilesDir))
   , m_InputArchiveName(std::move(inputArchiveName))
   , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
+  , m_Decompress(decompressFiles)
+  , m_RemoveTemp(removeTemp)
   {
-    const auto errorCode = decompress();
-    if(errorCode)
+    if(m_Decompress)
     {
-      std::cout << "std::error_code.value(): " << errorCode.value() << std::endl;
-      std::cout << "std::error_code.message(): " << errorCode.message() << std::endl;
-      REQUIRE(errorCode.value() == 0);
+      const auto errorCode = decompress();
+      if(errorCode)
+      {
+        std::cout << "std::error_code.value(): " << errorCode.value() << std::endl;
+        std::cout << "std::error_code.message(): " << errorCode.message() << std::endl;
+        REQUIRE(errorCode.value() == 0);
+      }
     }
   }
 
   ~TestFileSentinel()
   {
-    std::error_code errorCode;
-    std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
-    if(errorCode)
+    if(m_RemoveTemp)
     {
-      std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
+      std::error_code errorCode;
+      std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
+      if(errorCode)
+      {
+        std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
+      }
     }
   }
 
@@ -299,6 +309,8 @@ private:
   std::string m_TestFilesDir;
   std::string m_InputArchiveName;
   std::string m_ExpectedTopLevelOutput;
+  bool m_Decompress;
+  bool m_RemoveTemp;
 };
 
 /**
