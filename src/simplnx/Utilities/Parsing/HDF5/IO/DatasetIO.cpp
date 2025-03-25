@@ -1026,9 +1026,18 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
         /* Write the attribute data. */
         void* data = static_cast<void*>(values.data());
         auto properties = CreateH5DatasetChunkProperties(chunkShape);
-        // error = H5Dwrite_chunk(h5Id, properties, offset.data(), H5P_DEFAULT, data);
+
+        // Select hyperslab
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
-        error = H5Dread_chunk(h5Id, H5P_DEFAULT, offsetVec.data(), H5P_DEFAULT, data);
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShape.data(), NULL);
+
+        // Create memory dataspace for the hyperslab
+        hid_t memspace_id = H5Screate_simple(rank, chunkShape.data(), NULL);
+
+        // Read hyperslab from the dataset
+        error = H5Dread(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
+
+        H5Sclose(memspace_id);
         if(error < 0)
         {
           returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");
@@ -1105,17 +1114,19 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
         /* Write the attribute data. */
         const void* data = static_cast<const void*>(values.data());
 
-// debug
-#if 0
-        hid_t dspace = H5Dget_space(h5Id);
-        const int ndimsDebug = H5Sget_simple_extent_ndims(dspace);
-        std::vector<hsize_t> dimsDebug(ndimsDebug);
-        H5Sget_simple_extent_dims(dspace, dimsDebug.data(), NULL);
-#endif
-        // end debug
-
+        // Select hyperslab
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
-        error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offsetVec.data(), values.size() * sizeof(T), data);
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShape.data(), NULL);
+
+        // Create memory dataspace for the hyperslab
+        hid_t memspace_id = H5Screate_simple(rank, chunkShape.data(), NULL);
+
+        // Read hyperslab from the dataset
+        error = H5Dwrite(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
+
+        H5Sclose(memspace_id);
+
+        //error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offsetVec.data(), values.size() * sizeof(T), data);
         if(error < 0)
         {
           returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");
