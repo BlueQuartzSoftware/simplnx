@@ -790,7 +790,13 @@ General Parameters
       - **Type**: `Dream3dImportParameter.ImportData`
       - **Internal Data**:
          - **file_path**: Path to the .dream3d file on the file system
-         - **data_paths**: List of :ref:`DataPath <DataPath>` objects. Use the python 'None' value to indicate that you want to read **ALL** the data from file.
+         - **path_import_policy**: The import policy that governs how the DataPaths will be processed.
+     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+                     All -> Imports all possible data and ignores the DataPaths list.
+     *               Defaults to PathImportPolicy::All.
+         - **data_paths**: List of :ref:`DataPath <DataPath>`s of objects to include/exclude during the import process. Defaults to an empty vector.
+     *                  If the path import policy is set to 'All', this parameter is ignored.
 
    Usage
    ~~~~~~
@@ -799,9 +805,7 @@ General Parameters
 
       import simplnx as nx
 
-      import_data = nx.Dream3dImportParameter.ImportData()
-      import_data.file_path = "/private/tmp/basic_ebsd.dream3d"
-      import_data.data_paths = None
+      import_data = nx.Dream3dImportParameter.ImportData(file_path="/private/tmp/basic_ebsd.dream3d")
       params.insert(nx.Dream3dImportParameter('import_file_path_key', "Import File Path", "The HDF5 file path the DataStructure should be imported from.", import_data))
 
 .. _DynamicTableParameter:

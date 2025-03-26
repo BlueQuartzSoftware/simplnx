@@ -16,6 +16,7 @@ namespace
 {
 constexpr StringLiteral k_FilePathKey = "file_path";
 constexpr StringLiteral k_DataPathsKey = "data_paths";
+constexpr StringLiteral k_PathImportPolicyKey = "path_import_policy";
 } // namespace
 
 namespace nx::core
@@ -42,7 +43,7 @@ IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
 //------------------------------------------------------------------------------
 IParameter::VersionType Dream3dImportParameter::getVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //-----------------------------------------------------------------------------
@@ -63,19 +64,14 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
   json[k_FilePathKey] = importData.FilePath.string();
 
   // DataPaths
-  if(importData.DataPaths.has_value())
+  nlohmann::json dataPathsJson = nlohmann::json::array();
+  for(const auto& dataPath : importData.DataPaths)
   {
-    nlohmann::json dataPathsJson = nlohmann::json::array();
-    for(const auto& dataPath : importData.DataPaths.value())
-    {
-      dataPathsJson.push_back(dataPath.toString());
-    }
-    json[k_DataPathsKey] = std::move(dataPathsJson);
+    dataPathsJson.push_back(dataPath.toString());
   }
-  else
-  {
-    json[k_DataPathsKey] = nullptr;
-  }
+  json[k_DataPathsKey] = std::move(dataPathsJson);
+
+  json[k_PathImportPolicyKey] = importData.ImportPolicy;
 
   return json;
 }
@@ -99,27 +95,22 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
     return MakeErrorResult<std::any>(-4, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
   }
 
-  ImportData importData;
   const auto& jsonFilePath = json[k_FilePathKey];
   if(!jsonFilePath.is_string())
   {
     return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an string", prefix, name(), k_FilePathKey));
   }
-  importData.FilePath = jsonFilePath.get<std::string>();
+  auto filePath = fs::path(jsonFilePath.get<std::string>());
 
   const auto& jsonDataPaths = json[k_DataPathsKey];
-  if(jsonDataPaths.is_null())
-  {
-    importData.DataPaths = std::nullopt;
-  }
-  else
+  std::vector<DataPath> dataPaths;
+  if(!jsonDataPaths.is_null())
   {
     if(!jsonDataPaths.is_array())
     {
       return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
-    std::vector<DataPath> dataPaths;
     std::vector<Error> errors;
     for(const auto& dataPathString : dataPathStrings)
     {
@@ -136,10 +127,24 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
     {
       return {{nonstd::make_unexpected(std::move(errors))}};
     }
-
-    importData.DataPaths = std::move(dataPaths);
   }
 
+  PathImportPolicy pathImportPolicy = PathImportPolicy::All;
+  if(version == 2)
+  {
+    const auto& pathImportPolicyJson = json[k_PathImportPolicyKey];
+    if(!pathImportPolicyJson.is_number_integer())
+    {
+      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an integer", prefix, name(), k_PathImportPolicyKey));
+    }
+    pathImportPolicy = PathImportPolicy(pathImportPolicyJson.get<uint8>());
+  }
+  else if(!dataPaths.empty())
+  {
+    pathImportPolicy = PathImportPolicy::IncludeList;
+  }
+
+  ImportData importData(filePath, pathImportPolicy, dataPaths);
   return {{std::move(importData)}};
 }
 
@@ -244,10 +249,9 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
     dataPaths.push_back(std::move(dcPath));
   }
 
-  ParameterType::ValueType value;
-  value.FilePath = std::filesystem::path(inputFilePath);
-  value.DataPaths = std::move(dataPaths);
-
+  auto filePath = std::filesystem::path(inputFilePath);
+  auto pathImportPolicy = dataPaths.empty() ? Dream3dImportParameter::PathImportPolicy::All : Dream3dImportParameter::PathImportPolicy::IncludeList;
+  ParameterType::ValueType value(filePath, pathImportPolicy, dataPaths);
   return {std::move(value)};
 }
 } // namespace SIMPLConversion

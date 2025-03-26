@@ -19,19 +19,56 @@ namespace nx::core
 class SIMPLNX_EXPORT Dream3dImportParameter : public ValueParameter
 {
 public:
+  enum class PathImportPolicy : uint8
+  {
+    All = 0,
+    IncludeList = 1,
+    ExcludeList = 2
+  };
+
   struct ImportData
   {
+    /**
+     * @brief Constructs an ImportData instance.
+     *
+     * This constructor initializes an ImportData object with the specified file path,
+     * path import policy, and vector of DataPaths.
+     *
+     * NOTE: If the path import policy is set to 'All', the vector of DataPaths will be ignored.
+     *
+     * @param filePath The path to the .dream3d file to import.
+     * @param policy The import policy that governs how the DataPaths will be processed.
+     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+                     All -> Imports all possible data and ignores the DataPaths list.
+     *               Defaults to PathImportPolicy::All.
+     * @param dataPaths A vector of DataPaths of objects to include/exclude during the import process. Defaults to an empty vector.
+     *                  If the path import policy is set to 'All', this parameter is ignored.
+     */
+    explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
+    : FilePath(std::move(filePath))
+    , DataPaths(std::move(dataPaths))
+    , ImportPolicy(policy)
+    {
+    }
+
     /**
      * @brief The path to the .dream3d file to import.
      */
     std::filesystem::path FilePath;
 
     /**
-     * @brief Holds an optional vector of the DataPaths to import. If this
-     * value is missing, all available DataPaths will be imported. Otherwise,
-     * only the paths provided will be imported.
+     * @brief Holds a vector of DataPaths that will be either imported or NOT imported, depending on the PathImportPolicy
      */
-    std::optional<std::vector<nx::core::DataPath>> DataPaths = std::nullopt;
+    std::vector<nx::core::DataPath> DataPaths;
+
+    /**
+     * @brief Determines the import policy, which governs how to use the DataPaths.
+     * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty or missing, nothing will be imported.
+     * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
+     * All -> Imports all possible data and ignores the DataPaths list.
+     */
+    PathImportPolicy ImportPolicy = PathImportPolicy::All;
   };
 
   using ValueType = ImportData;

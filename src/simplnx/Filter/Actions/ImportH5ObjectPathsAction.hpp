@@ -14,7 +14,7 @@ namespace nx::core
 class SIMPLNX_EXPORT ImportH5ObjectPathsAction : public IDataCreationAction
 {
 public:
-  using PathsType = std::optional<std::vector<DataPath>>;
+  using PathsType = std::vector<DataPath>;
 
   ImportH5ObjectPathsAction() = delete;
 

@@ -164,7 +164,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
     {
       const ReadDREAM3DFilter importD3DFilter;
       Arguments importD3DArgs;
-      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(filePaths[index]));
       // Preflight the filter and check result
       auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -267,7 +267,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
     {
       const ReadDREAM3DFilter importD3DFilter;
       Arguments importD3DArgs;
-      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(filePaths[index]));
       // Execute the filter and check result
       auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -362,7 +362,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
     {
       const ReadDREAM3DFilter importD3DFilter;
       Arguments importD3DArgs;
-      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(filePaths[index]));
       // Execute the filter and check result
       auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -420,7 +420,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_ImageGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_ImageGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Rect Grid Geometry")
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_RectGridGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_RectGridGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Triangle Geometry")
@@ -440,7 +440,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_TriangleGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Edge Geometry")
@@ -450,7 +450,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_EdgeGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Vertex Geometry")
@@ -460,7 +460,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_VertexGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Quad Geometry")
@@ -470,7 +470,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_QuadGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Tetrahedral Geometry")
@@ -480,7 +480,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_TetrahedralGeomTestFilePath));
   }
 
   SECTION("Test Existing Partitioning Scheme Hexahedral Geometry")
@@ -490,7 +490,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_HexahedralGeomTestFilePath));
   }
 
   const ReadDREAM3DFilter importD3DFilter;
@@ -541,7 +541,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
     expectedErrorCode = -3042;
 
     partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_PlanalXYNodeGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_PlanalXYNodeGeomTestFilePath));
   }
   SECTION("Test Planal XZ Node Geometry")
   {
@@ -551,7 +551,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
     expectedErrorCode = -3041;
 
     partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_PlanalXZNodeGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_PlanalXZNodeGeomTestFilePath));
   }
   SECTION("Test Planal YZ Node Geometry")
   {
@@ -561,7 +561,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
     expectedErrorCode = -3040;
 
     partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_PlanalYZNodeGeomTestFilePath});
+    importD3DArgs.insert(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(k_PlanalYZNodeGeomTestFilePath));
   }
 
   const ReadDREAM3DFilter importD3DFilter;

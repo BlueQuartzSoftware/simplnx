@@ -10,10 +10,8 @@ import numpy as np
 data_structure = nx.DataStructure()
 
 # Filter 1
-
-import_data = nx.Dream3dImportParameter.ImportData()
-import_data.file_path = str(nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d")
-import_data.data_paths = None
+file_path = str(nxtest.get_data_directory() / "Output/Reconstruction/SmallIN100_Final.dream3d")
+import_data = nx.Dream3dImportParameter.ImportData(file_path=file_path)
 
 # Instantiate Filter
 nx_filter = nx.ReadDREAM3DFilter()
