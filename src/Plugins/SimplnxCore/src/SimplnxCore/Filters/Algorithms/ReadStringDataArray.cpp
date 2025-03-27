@@ -1,7 +1,5 @@
 #include "ReadStringDataArray.hpp"
 
-#include "SimplnxCore/utils/CSVDataParser.hpp"
-
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
