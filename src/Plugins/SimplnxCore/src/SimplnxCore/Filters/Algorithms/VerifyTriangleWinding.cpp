@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
 
 #include "Eigen/Core"
 
@@ -15,10 +15,7 @@ using namespace nx::core;
 
 namespace
 {
-Result<> RepairWindings
-
-
-Result<usize> FindValidSeed(const int32 targetFeatureId, const TriangleGeom::SharedFaceList::store_type& triangles, const TriangleGeom::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels, std::vector<bool>& reversalVote)
+std::pair<usize, bool> FindValidSeed(const int32 targetFeatureId, const TriangleGeom::SharedFaceList::store_type& triangles, const TriangleGeom::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels)
 {
   usize seedFaceIdx = 0;
   float32 xMax = std::numeric_limits<float32>::min();
@@ -52,12 +49,17 @@ Result<usize> FindValidSeed(const int32 targetFeatureId, const TriangleGeom::Sha
     normal = Eigen::Vector3f(verts[vertexIndex + 2], verts[vertexIndex + 1], verts[vertexIndex + 0]).normalized();
   }
 
-  if(normal[0] < 0.0f) // X value of normal
+  return std::make_pair(seedFaceIdx, normal[0] < 0.0f); // X value of normal
+}
+
+Result<> ImplementReversal(const std::vector<bool> reversalVotes, const DataPath& geomPath, const std::function<Result<>(const DataPath&)>& reversalFunction)
+{
+  if(std::count(reversalVotes.begin(), reversalVotes.end(), true) >= (reversalVotes.size() / 2))
   {
-    reversalVote[targetFeatureId] = true;
+    return reversalFunction(geomPath);
   }
 
-  return {seedFaceIdx};
+  return{};
 }
 } // namespace
 
@@ -80,13 +82,30 @@ const std::atomic_bool& VerifyTriangleWinding::getCancel()
 // -----------------------------------------------------------------------------
 Result<> VerifyTriangleWinding::operator()()
 {
-  // Load container, node list, and node data respectively
-  const auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
-  const TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
+  {
+    // Sort Vertices For Merging
+    MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath));
+    auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
+    if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
+    {
+      // Remove duplicates
+      MeshingUtilities::RemoveDuplicateVertices(triGeom, sortedVerticesList);
+    }
+    else
+    {
+      // Sorting here to make ordering implicit rather than maintaining a mapping, feature parity with duplicate removal
+      MeshingUtilities::SortVertices(triGeom, sortedVerticesList);
+    }
+  }
+
+  // Load container, node list, and node data respectively;
+  auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
+
+  TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
   const TriangleGeom::SharedVertexList::store_type& verts = triGeom.getVertices()->getDataStoreRef();
 
   // Load double-sided mesh grouping
-  const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
+  Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
 
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
@@ -101,21 +120,182 @@ Result<> VerifyTriangleWinding::operator()()
   // TODO:
   //  - Revisit reversal system to see if its worth going cluster by cluster rather than overall
   //  - Assess viability of implementing an internal voting system within the cluster
+
   // Define a voting system for full reversal
-  std::vector<bool> reversalVote(maxFeature + 1, false);
+  std::vector<bool> reversalVote(maxFeature + 1);
+
+  /**
+   * This works by making a map of the edges since a properly wound mesh
+   * should have unique edges. The KEY assumption here is that there are NO
+   * DUPLICATE VERTICES IN THE MESH, hence the earlier cleanup.
+   *
+   * This assumption breaks down if more than two triangles share an edge,
+   * so we will be going feature by feature to avoid running into "corner-edges"
+   * (where three or more features meet).
+   *
+   * NOTE: no duplicate vertices, means no duplicate edges
+   */
+
+  // TODO:
+  //  - Add a hint function to `FindValidSeed`, since we may already walk across a valid triangle for the next feature label
 
   // Walk the features repairing the graph group by group
+  usize count = 0;
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
-    // Find baseline/seed node (correct winding)
-    Result<usize> seedResult = ::FindValidSeed(feature, triangles, verts, faceLabelsStore, reversalVote);
-    if(seedResult.invalid())
+    std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>> edgeList = {};
+    for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
     {
-      return ConvertResult(std::move(seedResult));
+      if(faceLabelsStore[i * 2] == feature)
+      {
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
+
+        if(edgeList.find(edge1) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 0]);
+
+          continue;
+        }
+        if(edgeList.find(edge2) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 0]);
+          continue;
+        }
+        if(edgeList.find(edge3) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 0]);
+          continue;
+        }
+
+        edgeList.emplace(std::move(edge1));
+        edgeList.emplace(std::move(edge2));
+        edgeList.emplace(std::move(edge3));
+
+        continue;
+      }
+      if(faceLabelsStore[(i * 2) + 1] == feature)
+      {
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 2]);
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 1]);
+        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 0]);
+        if(edgeList.find(edge1) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
+          continue;
+        }
+        if(edgeList.find(edge2) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
+          continue;
+        }
+        if(edgeList.find(edge3) != edgeList.end())
+        {
+          if(faceLabelsStore[(i * 2) + 1] < feature) // already visited
+          {
+            count++;
+            continue;
+          }
+
+          // Flip it
+          int32 tempValue = faceLabelsStore[i * 2];
+          faceLabelsStore[i * 2] = faceLabelsStore[(i * 2) + 1];
+          faceLabelsStore[(i * 2) + 1] = tempValue;
+
+          // Edges are now unique by definition
+          edgeList.emplace(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
+          edgeList.emplace(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
+          edgeList.emplace(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
+          continue;
+        }
+
+        edgeList.emplace(std::move(edge1));
+        edgeList.emplace(std::move(edge2));
+        edgeList.emplace(std::move(edge3));
+
+        continue;
+      }
     }
 
+    // Find baseline/seed node (correct winding)
+   std::pair<usize, bool> seedResult = ::FindValidSeed(feature, triangles, verts, faceLabelsStore);
 
+    reversalVote[feature] = seedResult.second;
   }
+
+  // TODO:
+  //  - Add a warning for count here
 
   // Define a capturing lambda to execute filter without passing member variables to free functions
   const std::function<Result<>(const DataPath&)> f_ExecuteReverseTriangleWinding = [this](const DataPath& triGeomPath) -> Result<> {
@@ -140,173 +320,10 @@ Result<> VerifyTriangleWinding::operator()()
     return {};
   };
 
-  LabelVisitorInfo::Pointer ldo = LabelVisitorInfo::New(currentLabel, triIndex);
-  labelObjectsToVisit.push_back(ldo);
-  LabelVisitorInfo::Pointer curLdo = LabelVisitorInfo::NullPointer();
-  labelsToVisitSet.insert(currentLabel);
-
-  const float32 total = static_cast<float32>(trianglesToLabelMap.size());
-  float32 curPercent = 0.0;
-  int32 progressIndex = 0;
-
-  // Start looping on all the Face Labels (Feature Ids) values
-  while(labelObjectsToVisit.empty() == false)
+  Result<> result = ::ImplementReversal(reversalVote, m_InputValues->TargetGeometryPath, f_ExecuteReverseTriangleWinding);
+  if(result.invalid())
   {
-    if(getCancel())
-    {
-      return {};
-    }
-    if((progressIndex / total * 100.0f) > (curPercent))
-    {
-      m_MessageHandler(fmt::format("{}% Complete", static_cast<int32>(progressIndex / total * 100.0f)));
-      curPercent += 5.0f;
-    }
-    ++progressIndex;
-
-    std::map<int32, int32> neighborlabels;
-
-    curLdo = labelObjectsToVisit.front();
-    labelObjectsToVisit.pop_front();
-    currentLabel = curLdo->getLabel();
-    labelsToVisitSet.erase(currentLabel);
-    labelsVisitedSet.insert(currentLabel);
-    if(!curLdo->getPrimed() && !curLdo->getRelabeled())
-    {
-      curLdo->m_Faces = trianglesToLabelMap[currentLabel];
-      curLdo->setPrimed(true);
-    }
-    else if(!curLdo->getPrimed() && curLdo->getRelabeled())
-    {
-      curLdo->setStartIndex(*(curLdo->m_Faces.begin()));
-      curLdo->setPrimed(true);
-    }
-
-    if(firstLabel)
-    {
-      triIndex = 0;
-      firstLabel = false;
-    }
-    else
-    {
-      triIndex = curLdo->getStartIndex();
-    }
-    // Get the number of triangles remaining to be visited for the current label
-    usize nLabelTriStart = curLdo->m_Faces.size();
-
-    STDEXT::hash_set<int> localVisited;
-    std::deque<int> triangleDeque;
-    // FaceArray::Face_t& triangle = triangles[triIndex];
-    triangleDeque.push_back(triIndex);
-
-    while(triangleDeque.empty() == false)
-    {
-      int32 triangleIndex = triangleDeque.front();
-      FaceArray::Face_t& triangle = triangles[triangleIndex];
-      int32* faceLabel = m_SurfaceMeshFaceLabels + (triangleIndex * 2); // Here we are getting a new pointer offset from the start of the labels array
-
-      //   qDebug() << " $ tIndex: " << triangleIndex << "\n";
-      FaceArray::Pointer facesPtr = sm->getFaces();
-      if(facesPtr == nullptr)
-      {
-        break;
-      }
-      // FaceArray::Face_t* faces = facesPtr->getPointer(0);
-
-      std::vector<int32> adjTris = TriangleOps::findAdjacentTriangles(facesPtr, triangleIndex, m_SurfaceMeshFaceLabelsPtr.lock(), currentLabel);
-
-      for(FaceList_t::iterator adjTri = adjTris.begin(); adjTri != adjTris.end(); ++adjTri)
-      {
-        if(masterVisited[*adjTri] == false)
-        {
-          //          if(TriangleOps::verifyWinding(triangle, triangles[*adjTri], faceLabel, m_SurfaceMeshFaceLabels + (*adjTri * 2), currentLabel) == true)
-          //          {
-          //            // Face Winding Flipped
-          //          }
-        }
-
-        if(localVisited.find(*adjTri) == localVisited.end() && find(triangleDeque.begin(), triangleDeque.end(), *adjTri) == triangleDeque.end())
-        {
-          triangleDeque.push_back(*adjTri);
-          localVisited.insert(*adjTri);
-          masterVisited[*adjTri] = true;
-        }
-      }
-
-      // Just add the neighbor label to a set so we end up with a list of unique
-      // labels that are neighbors to the current label
-      if(currentLabel != faceLabel[0])
-      {
-        neighborlabels.insert(faceLabel[0], triangleIndex);
-      }
-      if(currentLabel != faceLabel[1])
-      {
-        neighborlabels.insert(faceLabel[1], triangleIndex);
-      }
-
-      localVisited.insert(triangleIndex);
-      masterVisited[triangleIndex] = true;
-      curLdo->m_Faces.remove(triangleIndex);
-      triangleDeque.pop_front();
-    } // End of loop to visit all triangles in the 'currentLabel'
-
-    // Find the Next label to push onto the end of the labels List, but ONLY if it is NOT
-    // currently on the list and NOT currently on the label visited list.
-    for(auto label : neighborlabels)
-    {
-      int32 triangleIndex = label;
-      int32* triangleLabel = m_SurfaceMeshFaceLabels + triangleIndex * 2;
-
-      if(labelsToVisitSet.find(triangleLabel[0]) == labelsToVisitSet.end() && (labelsVisitedSet.find(triangleLabel[0]) == labelsVisitedSet.end()))
-      {
-        // Push the int32 value into the "set"
-        labelsToVisitSet.insert(triangleLabel[0]);
-        LabelVisitorInfo::Pointer l = LabelVisitorInfo::New(triangleLabel[0], triangleIndex);
-        labelObjectsToVisit.push_back(l);
-      }
-      if(labelsToVisitSet.find(triangleLabel[1]) == labelsToVisitSet.end() && (labelsVisitedSet.find(triangleLabel[1]) == labelsVisitedSet.end()))
-      {
-        // Push the int32 value into the "set"
-        labelsToVisitSet.insert(triangleLabel[1]);
-        LabelVisitorInfo::Pointer l = LabelVisitorInfo::New(triangleLabel[1], triangleIndex);
-        labelObjectsToVisit.push_back(l);
-      }
-    }
-
-    usize nLabelTriEnd = curLdo->m_Faces.size();
-    if(nLabelTriStart == nLabelTriEnd)
-    {
-      // !--!++! No new triangles visited for int32 " << currentLabel << "\n";
-    }
-    else if(nLabelTriEnd == 0)
-    {
-      //  No Faces remain to be visited for label
-      // If this currentLabel was the result of a "relabeling" then revert back to the original
-      // label for those triangles.
-      curLdo->revertFaceLabels(m_SurfaceMeshFaceLabelsPtr.lock());
-    }
-    else
-    {
-      // Relabel Triangles not yet visited
-      LabelVisitorInfo::Pointer p = curLdo->relabelFaces(mesh, m_SurfaceMeshFaceLabelsPtr.lock(), masterVisited);
-      labelObjectsToVisit.push_back(p);
-      labelsToVisitSet.insert(p->getLabel());
-      // Revert the current labelVisitorObject to its original label
-      curLdo->revertFaceLabels(m_SurfaceMeshFaceLabelsPtr.lock());
-    }
-  } // End of Loop over each int32
-
-  if(labelsToVisitSet.size() != 0)
-  {
-    for(STDEXT::hash_set<int32>::iterator iter = labelsToVisitSet.begin(); iter != labelsToVisitSet.end(); ++iter)
-    {
-      // Handle label not yet visited
-    }
-  }
-
-  std::set<int32> thelabels = TriangleOps::generateUniqueLabels(m_SurfaceMeshFaceLabelsPtr.lock());
-  for(STDEXT::hash_set<int32>::iterator iter = labelsVisitedSet.begin(); iter != labelsVisitedSet.end(); ++iter)
-  {
-    thelabels.remove(*iter);
+    return result;
   }
 
   // TODO:

@@ -566,6 +566,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.hpp
+
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
@@ -752,6 +754,8 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.cpp
+
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
