@@ -1,7 +1,5 @@
 #include "ReadCSVFileFilter.hpp"
 
-#include "SimplnxCore/utils/CSVDataParser.hpp"
-
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
@@ -24,10 +22,6 @@
 
 using namespace nx::core;
 
-using ParsersVector = std::vector<std::unique_ptr<AbstractDataParser>>;
-using StringVector = std::vector<std::string>;
-using CharVector = std::vector<char>;
-using DataTypeVector = std::vector<DataType>;
 using Dimensions = std::vector<usize>;
 namespace fs = std::filesystem;
 
@@ -50,9 +44,7 @@ enum class IssueCodes
   EMPTY_FILE = -100,
   EMPTY_NEW_DG = -102,
   EMPTY_EXISTING_DG = -103,
-  INCONSISTENT_COLS = -104,
   DUPLICATE_NAMES = -105,
-  INVALID_ARRAY_TYPE = -106,
   ILLEGAL_NAMES = -107,
   FILE_NOT_OPEN = -108,
   INCORRECT_DATATYPE_COUNT = -109,
@@ -61,14 +53,13 @@ enum class IssueCodes
   NEW_DG_EXISTS = -114,
   CANNOT_SKIP_TO_LINE = -115,
   EMPTY_NAMES = -116,
-  EMPTY_LINE = -119,
   HEADER_LINE_OUT_OF_RANGE = -120,
   START_IMPORT_ROW_OUT_OF_RANGE = -121,
   EMPTY_HEADERS = -122,
   IGNORED_TUPLE_DIMS = -200
 };
 
-StringVector RemoveIllegalCharacters(StringVector& headers)
+std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& headers)
 {
   for(auto& headerName : headers)
   {
@@ -126,138 +117,6 @@ Result<OutputActions> validateNewGroup(const DataPath& groupPath, const DataStru
 }
 
 // -----------------------------------------------------------------------------
-Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
-                                    DataStructure& dataStructure)
-{
-  ParsersVector dataParsers(dataTypes.size());
-
-  for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
-  {
-    DataType dataType = dataTypes[i];
-    std::string name = headers[i];
-    bool skipped = skippedArrays[i];
-
-    if(skipped)
-    {
-      continue;
-    }
-
-    DataPath arrayPath = parentPath;
-    arrayPath = arrayPath.createChildPath(name);
-
-    switch(dataType)
-    {
-    case nx::core::DataType::int8: {
-      auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::uint8: {
-      auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::int16: {
-      auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::uint16: {
-      auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::int32: {
-      auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::uint32: {
-      auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::int64: {
-      auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::uint64: {
-      auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::float32: {
-      auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::float64: {
-      auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
-      break;
-    }
-    case nx::core::DataType::boolean: {
-      auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
-      dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
-      break;
-    }
-    default:
-      return {MakeErrorResult<ParsersVector>(to_underlying(IssueCodes::INVALID_ARRAY_TYPE),
-                                             fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
-    }
-  }
-
-  return {std::move(dataParsers)};
-}
-
-// -----------------------------------------------------------------------------
-Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, const StringVector& headers, const CharVector& delimiters, bool consecutiveDelimiters, usize lineNumber, usize beginIndex)
-{
-  std::string line;
-  std::getline(inStream, line);
-  line = StringUtilities::replace(line, "\r", "");
-  StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
-  if(tokens.empty())
-  {
-    // This is an empty line in the middle of the CSV file, which just shouldn't happen
-    return MakeErrorResult(to_underlying(IssueCodes::EMPTY_LINE), fmt::format("Line #{} is empty!  You should not have any empty lines in the file.", std::to_string(lineNumber)));
-  }
-
-  if(dataParsers.size() != tokens.size())
-  {
-    return MakeErrorResult(to_underlying(IssueCodes::INCONSISTENT_COLS),
-                           fmt::format("Expecting {} tokens but found {} tokens in the file at line #{}.\n\nInput line was:\n{}\n\nThis is because the data-"
-                                       "types/headers/skipped-array-mask all have a size of {} but the file data at line #{} has a column count of {}.",
-                                       std::to_string(dataParsers.size()), std::to_string(tokens.size()), std::to_string(lineNumber), line, std::to_string(dataParsers.size()),
-                                       std::to_string(lineNumber), std::to_string(tokens.size())));
-  }
-
-  for(int i = 0; i < dataParsers.size(); i++)
-  {
-    const auto& dataParser = dataParsers[i];
-    if(dataParser == nullptr)
-    {
-      continue;
-    }
-
-    usize index = dataParser->columnIndex();
-
-    Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex);
-    if(result.invalid())
-    {
-      for(Error& error : result.errors())
-      {
-        error.message = fmt::format("Array \"{}\", Line {}: ", headers[i], lineNumber) + error.message;
-      }
-      return result;
-    }
-  }
-
-  return {};
-}
-
-// -----------------------------------------------------------------------------
 void notifyProgress(const IFilter::MessageHandler& messageHandler, usize lineNumber, usize numberOfTuples, float32& threshold)
 {
   const float32 percentCompleted = (static_cast<float32>(lineNumber) / static_cast<float32>(numberOfTuples)) * 100.0f;
@@ -273,54 +132,17 @@ void notifyProgress(const IFilter::MessageHandler& messageHandler, usize lineNum
   }
 }
 
-// -----------------------------------------------------------------------------
-bool skipNumberOfLines(std::fstream& inStream, usize numberOfLines)
-{
-  for(usize i = 1; i < numberOfLines; i++)
-  {
-    if(inStream.eof())
-    {
-      return false;
-    }
-
-    std::string line;
-    std::getline(inStream, line);
-  }
-
-  return true;
-}
-
-std::string tupleDimsToString(const std::vector<usize>& tupleDims)
-{
-  std::string tupleDimsStr;
-  for(usize i = 0; i < tupleDims.size(); ++i)
-  {
-    tupleDimsStr += std::to_string(tupleDims[i]);
-    if(i != tupleDims.size() - 1)
-    {
-      tupleDimsStr += "x";
-    }
-  }
-  return tupleDimsStr;
-}
-
 //------------------------------------------------------------------------------
 IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize headersLineNum, ReadCSVFileFilterCache& headerCache)
 {
-  std::fstream in(inputFilePath.c_str(), std::ios_base::in);
-  if(!in.is_open())
+  auto result = FileUtilities::CSV::ReadHeaders(inputFilePath, headersLineNum);
+  if(result.invalid())
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::FILE_NOT_OPEN), fmt::format("Could not open file for reading: {}", inputFilePath)), {}};
-  }
-
-  // Skip to the headers line
-  if(!skipNumberOfLines(in, headersLineNum))
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the chosen header line ({}).", headersLineNum)), {}};
+    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(result))), {})};
   }
 
   // Read the headers line
-  std::getline(in, headerCache.Headers);
+  headerCache.Headers = result.value();
   headerCache.HeadersLine = headersLineNum;
   return {};
 }
@@ -480,7 +302,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(csvResult))), {}), {}};
   }
 
-  StringVector headers;
+  std::vector<std::string> headers;
   auto lastModifiedTime = fs::last_write_time(readCSVData.inputFilePath);
   if(readCSVData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath || lastModifiedTime > s_HeaderCache[s_InstanceId].LastModifiedTime)
   {
@@ -599,13 +421,13 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   usize tupleTotal = std::accumulate(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
   if(tupleTotal == 0)
   {
-    std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
+    std::string tupleDimsStr = FileUtilities::CSV::TupleDimsToString(readCSVData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has 0 total tuples.  At least 1 tuple is required.", tupleDimsStr, tupleTotal, totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
   }
   else if(tupleTotal > totalImportedLines && !useExistingGroupOrAM)
   {
-    std::string tupleDimsStr = tupleDimsToString(readCSVData.tupleDims);
+    std::string tupleDimsStr = FileUtilities::CSV::TupleDimsToString(readCSVData.tupleDims);
     std::string errMsg = fmt::format("Error: The current tuple dimensions ({}) has {} total tuples, but this is larger than the total number of available lines to import ({}).", tupleDimsStr,
                                      tupleTotal, totalImportedLines);
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES), errMsg), {}};
@@ -680,8 +502,8 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   auto createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
   std::string inputFilePath = readCSVData.inputFilePath;
-  StringVector headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, readCSVData.delimiters, readCSVData.consecutiveDelimiters);
-  DataTypeVector dataTypes = readCSVData.dataTypes;
+  std::vector<std::string> headers = StringUtilities::split(s_HeaderCache[s_InstanceId].Headers, readCSVData.delimiters, readCSVData.consecutiveDelimiters);
+  std::vector<DataType> dataTypes = readCSVData.dataTypes;
   std::vector<bool> skippedArrays = readCSVData.skippedArrayMask;
   bool consecutiveDelimiters = readCSVData.consecutiveDelimiters;
   usize startImportRow = readCSVData.startImportRow;
@@ -699,7 +521,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
     groupPath = selectedDataGroupOrAM;
   }
 
-  Result<ParsersVector> parsersResult = createParsers(dataTypes, skippedArrays, groupPath, headers, dataStructure);
+  auto parsersResult = FileUtilities::CSV::CreateParsers(dataTypes, skippedArrays, groupPath, headers, dataStructure);
   if(parsersResult.invalid())
   {
     return ConvertResult(std::move(parsersResult));
@@ -712,7 +534,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   }
 
   // Skip to the first data line
-  if(!skipNumberOfLines(in, startImportRow))
+  if(!FileUtilities::CSV::SkipNumberOfLines(in, startImportRow))
   {
     return MakeErrorResult(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the first line in the file to import ({}).", startImportRow));
   }
@@ -735,7 +557,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
       return {};
     }
 
-    Result<> parsingResult = parseLine(in, parsersResult.value(), headers, readCSVData.delimiters, consecutiveDelimiters, lineNum, startImportRow);
+    Result<> parsingResult = FileUtilities::CSV::ParseLine(in, parsersResult.value(), headers, readCSVData.delimiters, consecutiveDelimiters, lineNum, startImportRow);
     if(parsingResult.invalid())
     {
       return std::move(parsingResult);

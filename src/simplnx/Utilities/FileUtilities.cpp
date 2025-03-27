@@ -1,5 +1,7 @@
 #include "FileUtilities.hpp"
 
+#include "simplnx/Utilities/StringUtilities.hpp"
+
 #include <fmt/format.h>
 
 #include <array>
@@ -13,6 +15,9 @@
 #include <unistd.h>
 #define FSPP_ACCESS_FUNC_NAME access
 #endif
+
+
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -261,4 +266,214 @@ std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
   }
   return {false, 0};
 }
+
+namespace CSV
+{
+const int32 k_InconsistentCols = -104;
+const int32 k_InvalidArrayType = -106;
+const int32 k_FileNotOpen = -108;
+const int32 k_CannotSkipToLine = -115;
+const int32 k_EmptyLine = -119;
+
+AbstractDataParser::AbstractDataParser(IDataArray& array, const std::string& columnName, usize columnIndex)
+: m_DataArray(array)
+, m_ColumnName(columnName)
+, m_ColumnIndex(columnIndex)
+{
+}
+
+std::string AbstractDataParser::columnName() const
+{
+  return m_ColumnName;
+}
+
+usize AbstractDataParser::columnIndex() const
+{
+  return m_ColumnIndex;
+}
+
+const IDataArray& AbstractDataParser::dataArray() const
+{
+  return m_DataArray;
+}
+
+Result<ParsersVector> CreateParsers(const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+                                    DataStructure& dataStructure)
+{
+  ParsersVector dataParsers(dataTypes.size());
+
+  for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
+  {
+    DataType dataType = dataTypes[i];
+    std::string name = headers[i];
+    bool skipped = skippedArrays[i];
+
+    if(skipped)
+    {
+      continue;
+    }
+
+    DataPath arrayPath = parentPath;
+    arrayPath = arrayPath.createChildPath(name);
+
+    switch(dataType)
+    {
+    case nx::core::DataType::int8: {
+      auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::uint8: {
+      auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::int16: {
+      auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::uint16: {
+      auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::int32: {
+      auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::uint32: {
+      auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::int64: {
+      auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::uint64: {
+      auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::float32: {
+      auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::float64: {
+      auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
+      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
+      break;
+    }
+    case nx::core::DataType::boolean: {
+      auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
+      dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
+      break;
+    }
+    default:
+      return {MakeErrorResult<ParsersVector>(k_InvalidArrayType, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
+    }
+  }
+
+  return {std::move(dataParsers)};
+}
+
+Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
+                   usize beginIndex)
+{
+  std::string line;
+  std::getline(inStream, line);
+  line = StringUtilities::replace(line, "\r", "");
+  std::vector<std::string> tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
+  if(tokens.empty())
+  {
+    // This is an empty line in the middle of the CSV file, which just shouldn't happen
+    return MakeErrorResult(k_EmptyLine, fmt::format("Line #{} is empty!  You should not have any empty lines in the file.", std::to_string(lineNumber)));
+  }
+
+  if(dataParsers.size() != tokens.size())
+  {
+    return MakeErrorResult(k_InconsistentCols, fmt::format("Expecting {} tokens but found {} tokens in the file at line #{}.\n\nInput line was:\n{}\n\nThis is because the data-"
+                                                           "types/headers/skipped-array-mask all have a size of {} but the file data at line #{} has a column count of {}.",
+                                                           std::to_string(dataParsers.size()), std::to_string(tokens.size()), std::to_string(lineNumber), line, std::to_string(dataParsers.size()),
+                                                           std::to_string(lineNumber), std::to_string(tokens.size())));
+  }
+
+  for(int i = 0; i < dataParsers.size(); i++)
+  {
+    const auto& dataParser = dataParsers[i];
+    if(dataParser == nullptr)
+    {
+      continue;
+    }
+
+    usize index = dataParser->columnIndex();
+
+    Result<> result = dataParser->parse(tokens[index], lineNumber - beginIndex);
+    if(result.invalid())
+    {
+      for(Error& error : result.errors())
+      {
+        error.message = fmt::format("Array \"{}\", Line {}: ", headers[i], lineNumber) + error.message;
+      }
+      return result;
+    }
+  }
+
+  return {};
+}
+
+std::string TupleDimsToString(const std::vector<usize>& tupleDims)
+{
+  std::string tupleDimsStr;
+  for(usize i = 0; i < tupleDims.size(); ++i)
+  {
+    tupleDimsStr += std::to_string(tupleDims[i]);
+    if(i != tupleDims.size() - 1)
+    {
+      tupleDimsStr += "x";
+    }
+  }
+  return tupleDimsStr;
+}
+
+bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLines)
+{
+  for(usize i = 1; i < numberOfLines; i++)
+  {
+    if(inStream.eof())
+    {
+      return false;
+    }
+
+    std::string line;
+    std::getline(inStream, line);
+  }
+
+  return true;
+}
+
+Result<std::string> ReadHeaders(const std::string& inputFilePath, usize headersLineNum)
+{
+  std::fstream in(inputFilePath.c_str(), std::ios_base::in);
+  if(!in.is_open())
+  {
+    return MakeErrorResult<std::string>(k_FileNotOpen, fmt::format("Could not open file for reading: {}", inputFilePath));
+  }
+
+  // Skip to the headers line
+  if(!SkipNumberOfLines(in, headersLineNum))
+  {
+    return MakeErrorResult<std::string>(k_CannotSkipToLine, fmt::format("Could not skip to the chosen header line ({}).", headersLineNum));
+  }
+
+  // Read the headers line
+  std::string headers;
+  std::getline(in, headers);
+  return {headers};
+}
+} // namespace CSV
 } // namespace nx::core::FileUtilities
