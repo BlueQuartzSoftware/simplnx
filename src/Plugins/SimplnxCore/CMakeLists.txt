@@ -206,6 +206,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
+  ReadCSVFile
   ReadDeformKeyFileV12
   ReadRawBinary
   ReadStlFile

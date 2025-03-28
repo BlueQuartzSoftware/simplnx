@@ -16,7 +16,6 @@
 #define FSPP_ACCESS_FUNC_NAME access
 #endif
 
-
 namespace fs = std::filesystem;
 
 namespace
@@ -440,6 +439,22 @@ std::string TupleDimsToString(const std::vector<usize>& tupleDims)
   return tupleDimsStr;
 }
 
+std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& headers)
+{
+  for(auto& headerName : headers)
+  {
+    // Replace all illegal characters with '_' character. The header names become array names which is the issue.
+    // This should have been taken care of in the GUI, but if someone is trying this from Python they will not have done that
+    // or if they are just reading it in through nxrunner.
+    headerName = StringUtilities::replace(headerName, "&", "_");
+    headerName = StringUtilities::replace(headerName, ":", "_");
+    headerName = StringUtilities::replace(headerName, "/", "_");
+    headerName = StringUtilities::replace(headerName, "\\", "_");
+    headerName = StringUtilities::replace(headerName, "\"", "");
+  }
+  return headers;
+}
+
 bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLines)
 {
   for(usize i = 1; i < numberOfLines; i++)
@@ -456,23 +471,24 @@ bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLines)
   return true;
 }
 
-Result<std::string> ReadHeaders(const std::string& inputFilePath, usize headersLineNum)
+Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, usize headersLineNum, const std::vector<char>& delimiters, bool consecutiveDelimiters)
 {
   std::fstream in(inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
   {
-    return MakeErrorResult<std::string>(k_FileNotOpen, fmt::format("Could not open file for reading: {}", inputFilePath));
+    return MakeErrorResult<std::vector<std::string>>(k_FileNotOpen, fmt::format("Could not open file for reading: {}", inputFilePath));
   }
 
   // Skip to the headers line
   if(!SkipNumberOfLines(in, headersLineNum))
   {
-    return MakeErrorResult<std::string>(k_CannotSkipToLine, fmt::format("Could not skip to the chosen header line ({}).", headersLineNum));
+    return MakeErrorResult<std::vector<std::string>>(k_CannotSkipToLine, fmt::format("Could not skip to the chosen header line ({}).", headersLineNum));
   }
 
   // Read the headers line
-  std::string headers;
-  std::getline(in, headers);
+  std::string headersLine;
+  std::getline(in, headersLine);
+  auto headers = StringUtilities::split(headersLine, delimiters, consecutiveDelimiters);
   return {headers};
 }
 } // namespace CSV
