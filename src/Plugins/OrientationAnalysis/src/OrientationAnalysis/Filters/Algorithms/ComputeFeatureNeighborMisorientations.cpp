@@ -57,7 +57,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
     uint32_t xtalType1 = inXtalStruct[inFeaturePhases[i]];
 
-    const NeighborList<int32_t>::VectorType& featureNeighborList = inNeighborList.getListReference(static_cast<int32_t>(i));
+    const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
     tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
 

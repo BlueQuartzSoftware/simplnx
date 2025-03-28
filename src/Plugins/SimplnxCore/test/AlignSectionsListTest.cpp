@@ -99,6 +99,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[S
 TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "[SimplnxCore][AlignSectionsListFilter]")
 {
   UnitTest::LoadPlugins();
+  auto* filterList = Application::GetOrCreateInstance()->getFilterList();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz",
                                                               "align_sections_misorientation");

@@ -12,7 +12,6 @@ using namespace nx::core;
 
 namespace
 {
-
 inline void ComputeMisorientation(const QuatD& q1, const QuatD& q2, Float32Array& outputMisorientations, size_t laueClass, const std::vector<LaueOps::Pointer>& m_OrientationOps, size_t tupleIdx)
 {
   OrientationD axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
@@ -104,11 +103,8 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
     }
   }
 
-  // Output Variables
-  auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
-  outMisorientationList.setLists(tempMisorientationLists);
-
   return {};
+}
 }
 
 // -----------------------------------------------------------------------------

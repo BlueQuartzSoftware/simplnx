@@ -71,6 +71,22 @@ public:
       return m_List.end();
     }
 
+    bool operator==(const ConstReferenceList& rhs) const
+    {
+      if(m_List.size() != rhs.m_List.size())
+      {
+        return false;
+      }
+      for(usize i = 0; i < m_List.size(); i++)
+      {
+        if(m_List[i] != rhs.m_List[i])
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+
   private:
     vector_type m_List;
     usize m_Index = 0;
@@ -90,11 +106,11 @@ public:
     , m_Index(tupleIndex)
     {
     }
-    ReferenceList(ReferenceList&& other)
+    ReferenceList(ReferenceList&& other) noexcept
     : m_ListStore(std::move(other.m_ListStore))
     , m_List(std::move(other.m_List))
-    , m_Index(std::move(other.m_Index))
-    , m_Edited(std::move(m_Edited))
+    , m_Index(other.m_Index)
+    , m_Edited(other.m_Edited)
     {
     }
     ~ReferenceList()
@@ -149,9 +165,13 @@ public:
       m_Edited = true;
       rhs.m_Edited = true;
 
-      std::swap(m_Edited, rhs.m_Edited);
       std::swap(m_List, rhs.m_List);
       std::swap(m_Index, rhs.m_Index);
+    }
+
+    friend void swap(ReferenceList lhs, ReferenceList rhs) noexcept
+    {
+      lhs.swap(rhs);
     }
 
     usize size() const
@@ -313,7 +333,9 @@ public:
 
     constexpr void swap(iterator& rhs) noexcept
     {
-      std::swap(m_Index, rhs.m_Index);
+      ReferenceList first(*m_DataStore, m_Index);
+      ReferenceList second(*rhs.m_DataStore, rhs.m_Index);
+      first.swap(second);
     }
 
     inline reference operator*() const

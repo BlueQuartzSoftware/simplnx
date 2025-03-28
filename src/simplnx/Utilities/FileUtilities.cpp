@@ -94,7 +94,7 @@ Result<> ValidateCSVFile(const std::string& filePath)
   }
 
   // Obtain the file size
-  const usize fileSize = std::filesystem::file_size(absPath);
+  usize fileSize = std::filesystem::file_size(absPath);
 
   // Open the file
   std::ifstream in(absPath.c_str(), std::ios_base::binary);
@@ -241,7 +241,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
   return MakeErrorResult(-8, fmt::format("ValidateDirectoryWritePermission() Error: User does not have write permissions to path '{}'", path.string()));
 }
 
-std::pair<bool, int32> IsUtf8(const fs::path& filePath)
+std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
 {
   FILE* f = fopen(filePath.string().c_str(), "rb");
   if(nullptr == f)

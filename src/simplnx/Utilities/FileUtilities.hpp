@@ -72,5 +72,5 @@ SIMPLNX_EXPORT Result<> ValidateDirectoryWritePermission(const std::filesystem::
  * @param filePath
  * @return
  */
-SIMPLNX_EXPORT std::pair<bool, int32> IsUtf8(const fs::path& filePath);
+SIMPLNX_EXPORT std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath);
 } // namespace nx::core::FileUtilities
