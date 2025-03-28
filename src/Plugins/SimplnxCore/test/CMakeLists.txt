@@ -6,8 +6,6 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  CreateAMScanPathsTest.cpp
-  SliceTriangleGeometryTest.cpp
   # ReadDeformKeyFileV12Test.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
@@ -17,13 +15,15 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApplyTransformationToGeometryTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
-  CombineNodeBasedGeometriesTest.cpp
-  ComputeArrayHistogramTest.cpp
-  ComputeFeatureSizesTest.cpp
-  ComputeTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
+  CombineNodeBasedGeometriesTest.cpp
   CombineStlFilesTest.cpp
+  ComputeArrayHistogramTest.cpp
+  ComputeArrayStatisticsTest.cpp
+  ComputeBiasedFeaturesTest.cpp
+  ComputeBoundaryCellsTest.cpp
+  ComputeBoundaryElementFractionsTest.cpp
   ComputeDifferencesMapTest.cpp
   ComputeEuclideanDistMapTest.cpp
   ComputeFeatureCentroidsTest.cpp
@@ -32,6 +32,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeFeaturePhasesBinaryTest.cpp
   ComputeFeaturePhasesFilterTest.cpp
   ComputeFeatureRectTest.cpp
+  ComputeFeatureSizesTest.cpp
   ComputeKMeansTest.cpp
   ComputeKMedoidsTest.cpp
   ComputeLargestCrossSectionsTest.cpp
@@ -41,7 +42,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeNumFeaturesTest.cpp
   ComputeSurfaceAreaToVolumeTest.cpp
   ComputeSurfaceFeaturesTest.cpp
+  ComputeTriangleAreasFilterTest.cpp
   ComputeTriangleGeomCentroidsTest.cpp
+  ComputeTriangleGeomVolumesTest.cpp
   ComputeVectorColorsTest.cpp
   ComputeVertexToTriangleDistancesTest.cpp
   ComputeVolumeFractionsTest.cpp
@@ -52,9 +55,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CopyDataObjectTest.cpp
   CopyFeatureArrayToElementArrayTest.cpp
   CoreFilterTest.cpp
+  CreateAMScanPathsTest.cpp
   CreateAttributeMatrixTest.cpp
-  CreateDataArrayTest.cpp
+  CreateColorMapTest.cpp
   CreateDataArrayAdvancedTest.cpp
+  CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
   CreateGeometryTest.cpp
   CreateImageGeometryTest.cpp
@@ -75,13 +80,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExtractVertexGeometryTest.cpp
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
-  ComputeArrayStatisticsTest.cpp
-  ComputeBiasedFeaturesTest.cpp
-  ComputeBoundaryCellsTest.cpp
-  ComputeBoundaryElementFractionsTest.cpp
-  ComputeTriangleGeomVolumesTest.cpp
   FlyingEdges3DTest.cpp
-  CreateColorMapTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp
@@ -91,10 +90,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
-  RequireMinNumNeighborsTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp
+  PadImageGeometryTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
@@ -104,18 +103,19 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadHDF5DatasetTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
-  ReadTextDataArrayTest.cpp
   ReadStringDataArrayTest.cpp
+  ReadTextDataArrayTest.cpp
   ReadVolumeGraphicsFileTest.cpp
   ReadVtkStructuredPointsTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
+  RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
-  RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedVerticesTest.cpp
-  RequireMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
+  RequireMinimumSizeFeaturesTest.cpp
+  RequireMinNumNeighborsTest.cpp
   ResampleImageGeomTest.cpp
   ResampleRectGridToImageGeomTest.cpp
   ReshapeDataArrayTest.cpp
@@ -126,6 +126,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
   SilhouetteTest.cpp
+  SliceTriangleGeometryTest.cpp
   SplitAttributeArrayTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
@@ -140,9 +141,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteFeatureDataCSVTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
+  WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
-  WriteSPParksSitesTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -250,6 +251,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME align_sections_feature_centroids.tar.gz SHA512 06a4f576108e96fff49241ed39bdcaa90b96ba9b6fa91f420bde9d797a21fc58880b52f4d070c0efbf5b193e7c9f0c0383c140db404c5e74c3ff8ce3b4c3ca9b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_spparks_sites_writer.tar.gz SHA512 c2429fbe9efea07eada95c670266542a18c74670dff7c80f657a17fa84684c4852180dc36527f9138b27eeea5cba2f1dfe21e0dd15e5837596865484ebf3450a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_overflow_test.tar.gz SHA512 d8f8eac901479100ffb5813b3ac72c86da496d3620d406f8691adc0d95eb4670bf4e887f57ccc702bac7e6eeaffdf61db9b4c06157423845dd198722870b0c0b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 7_2_PadImageGeometry.tar.gz SHA512 75b168ef53d7336f024648199856fe3c2b4a74df40b0a6c0cb4e7c6eb1181c3476dde12de8a0c7c4d40b4c5c7d0d4ba6b5ffd2c9204a8da2ac3688d92aa6650d)
 
 endif()
 
