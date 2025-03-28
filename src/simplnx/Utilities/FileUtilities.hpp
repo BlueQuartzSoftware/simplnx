@@ -194,6 +194,13 @@ SIMPLNX_EXPORT std::string TupleDimsToString(const std::vector<usize>& tupleDims
 
 /**
  *
+ * @param headers
+ * @return
+ */
+SIMPLNX_EXPORT std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& headers);
+
+/**
+ *
  * @param inStream
  * @param numberOfLines
  * @return
@@ -206,6 +213,6 @@ SIMPLNX_EXPORT bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLine
  * @param headersLineNum
  * @return
  */
-SIMPLNX_EXPORT Result<std::string> ReadHeaders(const std::string& inputFilePath, usize headersLineNum);
+SIMPLNX_EXPORT Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, usize headersLineNum, const std::vector<char>& delimiters, bool consecutiveDelimiters);
 } // namespace CSV
 } // namespace nx::core::FileUtilities
