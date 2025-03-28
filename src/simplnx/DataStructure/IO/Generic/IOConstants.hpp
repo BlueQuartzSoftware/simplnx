@@ -18,6 +18,7 @@ inline constexpr StringLiteral k_DepthCountTag = "Depth Count";
 
 // IGeometry
 inline constexpr StringLiteral k_ElementSizesTag = "Element Sizes ID";
+inline constexpr StringLiteral k_H5_UNITS = "Units";
 
 // INodeGeometry0D
 inline constexpr StringLiteral k_VertexListTag = "Vertex List ID";

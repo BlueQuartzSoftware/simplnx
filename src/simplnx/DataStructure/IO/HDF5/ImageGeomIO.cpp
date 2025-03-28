@@ -56,6 +56,12 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
       return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
     }
 
+    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+    {
+      auto value = unitsAttr.value();
+      imageGeom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+    }
+
     auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
     if(volDimsVectorResult.invalid())
     {
@@ -108,18 +114,25 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
   result = groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, geometry.getDimensions().toContainer<std::vector<size_t>>());
   if(result.invalid())
   {
-    return result;
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry dimensions");
   }
   result = groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, geometry.getOrigin().toContainer<std::vector<float32>>());
   if(result.invalid())
   {
-    return result;
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry origin");
   }
   result = groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, geometry.getSpacing().toContainer<std::vector<float32>>());
   if(result.invalid())
   {
-    return result;
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry spacing");
   }
+
+  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  if(result.invalid())
+  {
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry units");
+  }
+
   return {};
 }
 

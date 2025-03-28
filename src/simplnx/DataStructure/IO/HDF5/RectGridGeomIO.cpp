@@ -37,6 +37,12 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   auto groupReader = parentGroup.openGroup(objectName);
 
+  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+  {
+    auto value = unitsAttr.value();
+    geometry->setUnits(static_cast<IGeometry::LengthUnit>(value));
+  }
+
   // Read Dimensions
   auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
   if(volumeDimensionsResult.invalid())
@@ -95,6 +101,12 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   if(result.invalid())
   {
     return result;
+  }
+
+  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  if(result.invalid())
+  {
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry units");
   }
 
   return {};
