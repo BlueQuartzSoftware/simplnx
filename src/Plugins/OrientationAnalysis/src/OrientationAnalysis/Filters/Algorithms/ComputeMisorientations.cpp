@@ -105,7 +105,7 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
 
   return {};
 }
-}
+} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

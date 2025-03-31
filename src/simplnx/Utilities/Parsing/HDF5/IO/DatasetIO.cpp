@@ -1029,10 +1029,11 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
 
         // Select hyperslab
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
-        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShape.data(), NULL);
+        std::vector<hsize_t> chunkShapeVec(chunkShape.begin(), chunkShape.end());
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShapeVec.data(), NULL);
 
         // Create memory dataspace for the hyperslab
-        hid_t memspace_id = H5Screate_simple(rank, chunkShape.data(), NULL);
+        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
 
         // Read hyperslab from the dataset
         error = H5Dread(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
@@ -1116,17 +1117,18 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
 
         // Select hyperslab
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
-        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShape.data(), NULL);
+        std::vector<hsize_t> chunkShapeVec(chunkShape.begin(), chunkShape.end());
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShapeVec.data(), NULL);
 
         // Create memory dataspace for the hyperslab
-        hid_t memspace_id = H5Screate_simple(rank, chunkShape.data(), NULL);
+        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
 
         // Read hyperslab from the dataset
         error = H5Dwrite(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
 
         H5Sclose(memspace_id);
 
-        //error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offsetVec.data(), values.size() * sizeof(T), data);
+        // error = H5Dwrite_chunk(h5Id, chunkInfo.transferProp, H5P_DEFAULT, offsetVec.data(), values.size() * sizeof(T), data);
         if(error < 0)
         {
           returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");

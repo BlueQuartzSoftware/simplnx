@@ -78,7 +78,7 @@ void Preferences::setDefaultValues()
 
   m_DefaultValues[k_LargeDataSize_Key] = k_LargeDataSize;
   m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
-  
+
   {
     // Set a default value for out-of-core temp directory.
     std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "simplnx";
@@ -315,7 +315,7 @@ void Preferences::setOocTempDirectory(const std::string& path)
 {
   setValue(k_OoCTempDirectory_ID, path);
   auto plugins = Application::Instance()->getPluginList();
-  for (AbstractPlugin* plugin : plugins)
+  for(AbstractPlugin* plugin : plugins)
   {
     plugin->setOocTempDirectory(path);
   }
