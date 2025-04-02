@@ -49,9 +49,9 @@ namespace nx::core
 ReadStringDataArray::ReadStringDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                          const ReadStringDataArrayInputValues* inputValues)
 : m_DataStructure(dataStructure)
-, m_MessageHandler(mesgHandler)
-, m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
 {
 }
 

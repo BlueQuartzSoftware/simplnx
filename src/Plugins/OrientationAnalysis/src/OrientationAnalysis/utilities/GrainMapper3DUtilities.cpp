@@ -75,9 +75,9 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
 }
 
 GrainMapperReader::GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData)
-: m_FileName(filePath)
-, m_ReadDctData(readDctData)
+: m_ReadDctData(readDctData)
 , m_ReadAbsorptionData(readAbsorptionData)
+, m_FileName(filePath)
 {
 }
 

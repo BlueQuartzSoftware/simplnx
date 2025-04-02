@@ -71,8 +71,8 @@ private:
 // -----------------------------------------------------------------------------
 RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues)
 : m_DataStructure(dataStructure)
-, m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)
 {
 }

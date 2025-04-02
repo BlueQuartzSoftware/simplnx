@@ -283,12 +283,12 @@ public:
 };
 
 SizeGBCD::SizeGBCD(usize faceChunkSize, usize numMisoReps, float32 gbcdRes)
-: m_FaceChunkSize(faceChunkSize)
-, m_NumMisoReps(numMisoReps)
-, m_GbcdDeltas(std::vector<float32>(5, 0))
+: m_GbcdDeltas(std::vector<float32>(5, 0))
 , m_GbcdLimits(std::vector<float32>(10, 0))
 , m_GbcdSizes(std::vector<int32>(5, 0))
 , m_GbcdHemiCheck(std::vector<bool>(faceChunkSize * numMisoReps, false))
+, m_FaceChunkSize(faceChunkSize)
+, m_NumMisoReps(numMisoReps)
 {
   initializeBinsWithValue(0);
 

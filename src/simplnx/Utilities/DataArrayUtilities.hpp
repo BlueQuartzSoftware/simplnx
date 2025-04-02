@@ -1444,8 +1444,8 @@ public:
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArrays(inputCellArrays)
   , m_InputTupleShapes(inputTupleShapes)
-  , m_DestCellArray(&destCellArray)
   , m_NewDestDims(newDestDims)
+  , m_DestCellArray(&destCellArray)
   , m_Direction(direction)
   , m_Mirror(mirror)
   {

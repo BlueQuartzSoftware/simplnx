@@ -284,9 +284,9 @@ public:
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
                         const int32 numBins, AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
-  : m_InputStore(inputStore)
-  , m_ShouldCancel(shouldCancel)
+  : m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
+  , m_InputStore(inputStore)
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
   , m_Overflow(overflow)
@@ -306,9 +306,9 @@ public:
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
                         AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
-  : m_InputStore(inputStore)
-  , m_ShouldCancel(shouldCancel)
+  : m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
+  , m_InputStore(inputStore)
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
   , m_Overflow(overflow)

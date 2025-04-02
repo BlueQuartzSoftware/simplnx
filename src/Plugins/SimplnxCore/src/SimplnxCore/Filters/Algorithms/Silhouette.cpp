@@ -30,9 +30,9 @@ public:
                      const Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric distMetric)
   : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
   , m_OutputData(outputDataArray)
+  , m_FeatureIds(featureIds)
   , m_Mask(maskDataArray)
   , m_NumClusters(numClusters)
-  , m_FeatureIds(featureIds)
   , m_DistMetric(distMetric)
   {
   }

@@ -31,8 +31,8 @@ public:
   : m_Labels(labels)
   , m_Phases(phases)
   , m_Quats(quats)
-  , m_Colors(colors)
   , m_CrystalStructures(crystalStructures)
+  , m_Colors(colors)
   {
     m_OrientationOps = LaueOps::GetAllOrientationOps();
   }
