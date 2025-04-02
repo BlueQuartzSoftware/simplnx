@@ -247,8 +247,8 @@ target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
 target_compile_options(simplnx
   PUBLIC
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
-)
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off -Wall -Wno-missing-braces -Wno-unused-function -Wno-unused-const-variable>
+  )
 
 if(SIMPLNX_ENABLE_MULTICORE)
   target_compile_definitions(simplnx PUBLIC "SIMPLNX_ENABLE_MULTICORE")
