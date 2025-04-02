@@ -26,7 +26,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
     return;
   }
   int32_t currentFilterIndex = 0;
-  for(const auto cxFilter : *pipeline)
+  for(const auto& cxFilter : *pipeline)
   {
     m_SignalConnections.push_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, const std::string& message) {
       std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << message << std::endl;

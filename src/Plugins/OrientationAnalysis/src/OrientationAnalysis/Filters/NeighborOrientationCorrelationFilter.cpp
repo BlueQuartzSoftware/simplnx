@@ -197,7 +197,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   DataPath parentPath = pConfidenceIndexArrayPathValue.getParent();
   const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
   auto childArrays = parent.findAllChildrenOfType<IDataArray>();
-  for(const auto childArray : childArrays)
+  for(const auto& childArray : childArrays)
   {
     bool ignore = false;
     DataPath childArrayPath;

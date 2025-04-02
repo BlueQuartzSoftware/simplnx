@@ -395,7 +395,7 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
     loadPipelineResult = nx::core::Pipeline::FromFile(pipelinePath, true);
     saveConverted = false;
 
-    for(const auto warning : loadPipelineResult.warnings())
+    for(const auto& warning : loadPipelineResult.warnings())
     {
       cliOut << fmt::format("Warning ({}): {}\n", warning.code, warning.message);
     }
