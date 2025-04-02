@@ -1,11 +1,20 @@
 {
   "isDisabled": false,
   "name": "CreateScanVectors.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -154,24 +163,12 @@
           "version": 1
         },
         "parameters_version": 1,
-        "power": {
-          "value": 100.0,
-          "version": 1
-        },
-        "powers_array_name": {
-          "value": "Powers",
-          "version": 1
-        },
         "region_ids_array_name": {
           "value": "RegionIds",
           "version": 1
         },
-        "speed": {
-          "value": 1000.0,
-          "version": 1
-        },
-        "time_array_name": {
-          "value": "Times",
+        "rotation_angle": {
+          "value": 67.0,
           "version": 1
         },
         "vertex_attribute_matrix_name": {
@@ -206,5 +203,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

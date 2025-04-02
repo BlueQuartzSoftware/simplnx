@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "AVTR12_Analysis",
   "pipeline": [
     {
       "args": {

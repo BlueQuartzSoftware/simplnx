@@ -54,7 +54,7 @@
               "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
               "DataContainer/Cell Data/KernelAverageMisorientations"
             ],
-            "file_path": "/Users/mjackson/DREAM3DNXData/Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
           },
           "version": 1
         },
@@ -380,7 +380,7 @@
     {
       "args": {
         "export_file_path": {
-          "value": "/Users/mjackson/DREAM3DNXData/Small IN100 Face Curvature.dream3d",
+          "value": "Small IN100 Face Curvature.dream3d",
           "version": 1
         },
         "parameters_version": 1,

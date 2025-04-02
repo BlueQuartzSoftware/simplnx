@@ -1,11 +1,20 @@
 {
   "isDisabled": false,
   "name": "Import_STL_Model.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -104,5 +113,6 @@
       "isDisabled": true
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

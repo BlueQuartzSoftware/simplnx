@@ -1,11 +1,20 @@
 {
   "isDisabled": false,
   "name": "remove_flagged_triangles_example.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -77,6 +86,7 @@
               {
                 "array_path": "TriangleGeometry/Face Data/Region Ids",
                 "comparison": 1,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -86,7 +96,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 1,
@@ -192,5 +202,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

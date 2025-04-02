@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
-  "name": "Untitled.d3dpipeline",
+  "name": "Resample Porosity Images",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -22,6 +23,13 @@
         },
         "convert_to_gray_scale": {
           "value": false,
+          "version": 1
+        },
+        "exact_xy_dimensions": {
+          "value": [
+            100,
+            100
+          ],
           "version": 1
         },
         "image_data_array_name": {
@@ -62,9 +70,9 @@
           "value": "Porosity_Image",
           "version": 1
         },
-        "parameters_version": 1,
-        "scale_images": {
-          "value": false,
+        "parameters_version": 2,
+        "resample_images_index": {
+          "value": 0,
           "version": 1
         },
         "scaling": {
@@ -296,5 +304,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

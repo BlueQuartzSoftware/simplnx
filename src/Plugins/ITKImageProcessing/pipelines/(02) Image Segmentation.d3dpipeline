@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(02) Image Segmentation.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -22,6 +23,13 @@
         },
         "convert_to_gray_scale": {
           "value": false,
+          "version": 1
+        },
+        "exact_xy_dimensions": {
+          "value": [
+            100,
+            100
+          ],
           "version": 1
         },
         "image_data_array_name": {
@@ -62,9 +70,9 @@
           "value": "ImageDataContainer",
           "version": 1
         },
-        "parameters_version": 1,
-        "scale_images": {
-          "value": false,
+        "parameters_version": 2,
+        "resample_images_index": {
+          "value": 0,
           "version": 1
         },
         "scaling": {
@@ -96,6 +104,7 @@
               {
                 "array_path": "ImageDataContainer/Cell Data/ImageData",
                 "comparison": 2,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -105,7 +114,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -428,5 +437,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

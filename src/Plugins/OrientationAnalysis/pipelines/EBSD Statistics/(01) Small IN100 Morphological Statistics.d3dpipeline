@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "(01) Small IN100 Morphological Statistics.d3dpipeline",
   "pipeline": [
     {
       "args": {

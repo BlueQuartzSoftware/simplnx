@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "ReadCTF.d3dpipeine",
   "pipeline": [
     {
       "args": {
