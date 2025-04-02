@@ -91,24 +91,31 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param data
-   * @param filterArgs
-   * @param messageHandler
-   * @return Result<OutputActions>
+   * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
+   * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
+   * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                 const ExecutionContext& executionContext) const override;
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param args
-   * @param pipelineNode
-   * @param messageHandler
-   * @return Result<>
+   * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
+   * On failure, there is no guarantee that the DataStructure is in a correct state.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param pipelineNode The node in the pipeline that is being executed
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                        const ExecutionContext& executionContext) const override;
 };
 } // namespace nx::core

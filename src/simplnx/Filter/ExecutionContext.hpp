@@ -7,6 +7,10 @@
 
 namespace nx::core
 {
+/**
+ * @brief This class holds can help filters determine the correct absolute file path
+ * to a file or folder on disk.
+ */
 class ExecutionContext
 {
 public:
