@@ -276,7 +276,7 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
         Result<std::vector<usize>> result = ReadVoxels(tokens, headerFilePath, lineCount);
         if(result.invalid())
         {
-          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(std::move(ConvertResult(std::move(result))), {});
+          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(ConvertResult(std::move(result)), {});
         }
         voxels = result.value();
       }
@@ -285,7 +285,7 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
         auto result = ReadLocation(inHeaderStream, headerFilePath, lineCount);
         if(result.invalid())
         {
-          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(std::move(ConvertResult(std::move(result))), {});
+          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(ConvertResult(std::move(result)), {});
         }
         minLocation = result.value().first;
         maxLocation = result.value().second;
@@ -295,7 +295,7 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
         auto result = ReadFileList(inHeaderStream, headerFilePath, lineCount);
         if(result.invalid())
         {
-          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(std::move(ConvertResult(std::move(result))), {});
+          return ConvertResultTo<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(ConvertResult(std::move(result)), {});
         }
         dataFiles = result.value();
       }

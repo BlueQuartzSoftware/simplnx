@@ -139,5 +139,5 @@ nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure,
     throw std::runtime_error("Intentional execute runtime excption generated");
   }
 
-  return std::move(resultActions);
+  return resultActions;
 }

@@ -443,7 +443,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(psInfo.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(psInfo))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;

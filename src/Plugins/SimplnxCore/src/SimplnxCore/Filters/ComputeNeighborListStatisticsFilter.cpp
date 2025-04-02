@@ -79,7 +79,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     actions.appendAction(std::move(action));
   }
 
-  return std::move(actions);
+  return actions;
 }
 } // namespace
 
@@ -194,7 +194,7 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   dataArrayPaths.push_back(inputArrayPath);
 
-  return {std::move(CreateCompatibleArrays(dataStructure, args))};
+  return {CreateCompatibleArrays(dataStructure, args)};
 }
 
 //------------------------------------------------------------------------------

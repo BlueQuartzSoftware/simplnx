@@ -102,7 +102,7 @@ Result<> ExtractVertexGeometry::operator()()
     std::unique_ptr<MaskCompare> maskArrayPtr = nullptr;
     try
     {
-      maskArrayPtr = std::move(InstantiateMaskCompare(m_DataStructure, maskArrayPath));
+      maskArrayPtr = InstantiateMaskCompare(m_DataStructure, maskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

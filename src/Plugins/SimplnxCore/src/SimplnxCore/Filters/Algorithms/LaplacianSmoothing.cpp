@@ -182,7 +182,7 @@ std::vector<float> LaplacianSmoothing::generateLambdaArray()
     }
   }
 
-  return std::move(lambdas);
+  return lambdas;
 }
 
 // -----------------------------------------------------------------------------

@@ -37,7 +37,7 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
   nlohmann::json json = nlohmann::json::array();
   for(const auto& path : paths)
   {
-    json.push_back(std::move(path.toString()));
+    json.push_back(path.toString());
   }
   return json;
 }

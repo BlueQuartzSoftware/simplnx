@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
+  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -125,7 +125,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Exe
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
+  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -161,7 +161,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
+  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -218,7 +218,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
+  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -275,7 +275,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", 
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
-  DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
+  DataStructure dataStructure(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing));
 
   dataStructure.getDataAs<ImageGeom>(sampleImageGeomPath)->setSpacing(0, 0, 0);
 

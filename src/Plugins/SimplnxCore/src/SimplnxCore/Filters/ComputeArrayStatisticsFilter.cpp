@@ -178,7 +178,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     actions.appendAction(std::move(action));
   }
 
-  return std::move(actions);
+  return actions;
 }
 
 } // namespace
