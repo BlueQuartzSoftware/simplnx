@@ -207,10 +207,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - Shrink", "[SimplnxCore][ConcatenateDataArraysFilter]", bool, int8, int16, int32, int64, uint8, uint16, uint32, uint64,
                    float32, float64)
 {
-  using T = TestType;
-
   UnitTest::LoadPlugins();
-
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -243,10 +240,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - S
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - Expand", "[SimplnxCore][ConcatenateDataArraysFilter]", bool, int8, int16, int32, int64, uint8, uint16, uint32, uint64,
                    float32, float64)
 {
-  using T = TestType;
-
   UnitTest::LoadPlugins();
-
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -365,10 +359,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - Expand", "[SimplnxCore][ConcatenateDataArraysFilter]", int8, int16, int32, int64, uint8, uint16, uint32, uint64,
                    float32, float64)
 {
-  using T = TestType;
-
   UnitTest::LoadPlugins();
-
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;

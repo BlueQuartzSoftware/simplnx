@@ -264,7 +264,6 @@ struct WriteVtkDataFunctor
   Result<> operator()(std::ofstream& outStrm, IDataArray& iDataArray, bool binary, const nx::core::IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     using DataArrayType = DataArray<T>;
-    using DataStoreType = typename DataArrayType::store_type;
 
     auto& dataArrayRef = dynamic_cast<DataArrayType&>(iDataArray);
     const auto& dataStoreRef = dataArrayRef.getDataStoreRef();

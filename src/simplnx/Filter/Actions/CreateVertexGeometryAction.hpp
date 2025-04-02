@@ -111,7 +111,6 @@ public:
     // Create the VertexGeom
     VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
 
-    using MeshIndexType = IGeometry::MeshIndexType;
     std::vector<usize> tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
 
     // Create the Vertex Array with a component size of 3
