@@ -391,7 +391,6 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   int32 progress;
   int64 z = m_InputValues->InputFileListInfo.startIndex;
 
-  usize index = 0;
   auto result = Result<>{};
   ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
   for(const auto& filepath : fileList)
@@ -403,8 +402,6 @@ Result<> ConvertHexGridToSquareGrid::operator()()
     {
       return result;
     }
-
-    index++;
 
     {
       z++;

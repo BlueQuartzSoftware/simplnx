@@ -231,7 +231,6 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
   sendPipelineRunStateMessage(RunState::Preflighting);
   setHasWarnings(hasWarningsBeforeIndex(index));
   setHasErrors(false);
-  size_t currentIndex = 0;
   bool returnValue = true;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
@@ -269,7 +268,6 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
       returnValue = false;
       break;
     }
-    currentIndex++;
   }
   sendPipelineFaultMessage(m_FaultState);
   sendPipelineRunStateMessage(RunState::Idle);

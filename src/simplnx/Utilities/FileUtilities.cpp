@@ -35,7 +35,6 @@ int64 LinesInFile(const std::string& filepath)
 {
   const usize BUFFER_SIZE = 16384;
   usize lines = 0;
-  usize bytes = 0;
 
   FILE* fd = fopen(filepath.c_str(), "rb");
   if(nullptr == fd)
@@ -68,7 +67,6 @@ int64 LinesInFile(const std::string& filepath)
       break;
     }
 
-    bytes += bytes_read;
     char* end = buf + bytes_read;
     usize buflines = 0;
 

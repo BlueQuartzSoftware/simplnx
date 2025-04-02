@@ -115,7 +115,7 @@ public:
     // filter->notifyStatusMessage(QString("Starting Interpolation...."));
     nx::core::IGeometry::SharedFaceList& delTriangles = delaunayGeom->getFacesRef();
     size_t numTriangles = delaunayGeom->getNumberOfFaces();
-    int percent = 0;
+    // int percent = 0;
     int counter = xPositionsPtr.size() / 100;
     RTreeType m_RTree;
     // Populate the RTree
@@ -141,7 +141,7 @@ public:
         {
           //          QString ss = QObject::tr("Interpolating || %1% Complete").arg(percent);
           //          filter->notifyStatusMessage(ss);
-          percent += 1;
+          // percent += 1;
         }
       }
 

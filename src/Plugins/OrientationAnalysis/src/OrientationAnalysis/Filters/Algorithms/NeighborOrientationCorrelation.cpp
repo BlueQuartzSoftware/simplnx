@@ -114,7 +114,6 @@ Result<> NeighborOrientationCorrelation::operator()()
       static_cast<int64_t>(udims[2]),
   };
 
-  size_t count = 1;
   int32_t best = 0;
   bool good = true;
   bool good2 = true;
@@ -160,7 +159,6 @@ Result<> NeighborOrientationCorrelation::operator()()
 
       if(confidenceIndex[i] < m_InputValues->MinConfidence)
       {
-        count = 0;
         column = static_cast<int64_t>(i % dims[0]);
         row = (i / dims[0]) % dims[1];
         plane = i / (dims[0] * dims[1]);
