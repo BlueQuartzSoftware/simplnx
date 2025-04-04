@@ -10,13 +10,13 @@ ObjectIO::ObjectIO() = default;
 
 ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
 : m_ParentId(parentId)
-, m_ObjectName(objectName)
+, m_ObjectName(nx::core::HDF5::GetNameFromBuffer(objectName))
 {
 }
 
 ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
 : m_FilePath(filepath)
-, m_ObjectName(objectName)
+, m_ObjectName(nx::core::HDF5::GetNameFromBuffer(objectName))
 {
 }
 
@@ -212,6 +212,8 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   auto isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
   if(isVariableString == 1)
   {
+    H5Aclose(attribId);
+
     data.clear();
     std::string ss = fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName);
     return MakeErrorResult<std::string>(-440, ss);
