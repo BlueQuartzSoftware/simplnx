@@ -1,13 +1,12 @@
 #include "TriangleNormalFilter.hpp"
 
-#include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -15,59 +14,7 @@ using namespace nx::core;
 
 namespace
 {
-
 constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -75969;
-
-/**
- * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
- * triangle for a set of triangles
- */
-class CalculateNormalsImpl
-{
-public:
-  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
-  : m_TriangleGeom(triangleGeom)
-  , m_Normals(normals)
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-  virtual ~CalculateNormalsImpl() = default;
-
-  void generate(size_t start, size_t end) const
-  {
-    std::array<float32, 3> normal = {0.0f, 0.0f, 0.0f};
-    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
-    {
-
-      if(m_ShouldCancel)
-      {
-        break;
-      }
-      std::array<Point3Df, 3> vertCoords;
-      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
-
-      auto vecA = (vertCoords[1] - vertCoords[0]).toArray();
-      auto vecB = (vertCoords[2] - vertCoords[0]).toArray();
-
-      MatrixMath::CrossProduct(vecA.data(), vecB.data(), normal.data());
-      MatrixMath::Normalize3x1(normal.data());
-
-      m_Normals[triangleIndex * 3] = static_cast<float64>(normal[0]);
-      m_Normals[triangleIndex * 3 + 1] = static_cast<float64>(normal[1]);
-      m_Normals[triangleIndex * 3 + 2] = static_cast<float64>(normal[2]);
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    generate(range.min(), range.max());
-  }
-
-private:
-  const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_Normals;
-  const std::atomic_bool& m_ShouldCancel;
-};
 } // namespace
 
 namespace nx::core
@@ -144,8 +91,8 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{
-        Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString())}})};
+    return MakePreflightErrorResult(k_MissingFeatureAttributeMatrix,
+                                    fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()));
   }
   // Instantiate and move the action that will create the output array
   {
@@ -172,10 +119,10 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
   DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
   auto& normals = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
 
-  // Parallel algorithm to find duplicate nodes
+  // Parallel algorithm to calculate normals
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel));
+  dataAlg.execute(MeshingUtilities::CalculateNormalsImpl(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel));
 
   return {};
 }

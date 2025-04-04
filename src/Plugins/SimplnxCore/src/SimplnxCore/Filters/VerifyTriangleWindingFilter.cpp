@@ -4,7 +4,11 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -28,6 +32,8 @@ Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& d
 
   return FindParentGeometry(parentPath, dataStructure);
 }
+
+constexpr StringLiteral k_TempName = "__INTERNAL_!_TEMP_!_PATH__";
 } // namespace
 
 namespace nx::core
@@ -73,6 +79,14 @@ Parameters VerifyTriangleWindingFilter::parameters() const
                                                           "The path to the face labels array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
+  params.insertSeparator(Parameters::Separator{"Optional"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If true we will recalculate normals after execution, disable if no normals exist", true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array",
+                                                          "The path to the triangle normals array", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+
+  params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
+
   return params;
 }
 
@@ -99,6 +113,37 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
         -25741, fmt::format("Error trying to locate parent TriangleGeometry on path {}", filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsPath_Key).toString()));
   }
 
+  if(filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key))
+  {
+    nx::core::Result<OutputActions> resultOutputActions;
+
+    auto pNormalsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
+
+    const auto* triangleGeom = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
+
+    const auto* existingNormalsPtr = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath);
+    if(existingNormalsPtr != nullptr)
+    {
+      if(existingNormalsPtr->getNumberOfTuples() != triangleGeom->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
+      {
+        resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
+        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+        resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
+      }
+
+      resultOutputActions.value().appendDataObjectModificationNotification(pNormalsArrayPath, DataObjectModification::ModifiedType::Modified);
+      return {std::move(resultOutputActions)};
+    }
+    const auto* existingObjectPtr = dataStructure.getDataAs<DataObject>(pNormalsArrayPath);
+    if(existingObjectPtr != nullptr)
+    {
+      resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+      resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
+      return {std::move(resultOutputActions)};
+    }
+  }
+
   return {};
 }
 
@@ -116,6 +161,8 @@ Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, 
     return ConvertResult(std::move(targetGeomResult));
   }
   inputValues.TargetGeometryPath = targetGeomResult.value();
+  inputValues.RepairNormals = filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key);
+  inputValues.TriangleNormalsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
 
   return VerifyTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

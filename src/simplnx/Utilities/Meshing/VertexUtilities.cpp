@@ -4,63 +4,51 @@ using namespace nx::core;
 
 namespace
 {
-template <bool UseX, bool UseY, bool UseZ>
-struct OrderAxis
+// Uses Hoare's method for speed
+IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end,
+                                        const INodeGeometry2D::SharedVertexList::store_type& vertices, IGeometry::MeshIndexType offset)
 {
-  static constexpr bool UsingX = UseX;
-  static constexpr bool UsingY = UseY;
-  static constexpr bool UsingZ = UseZ;
-};
+  const INodeGeometry2D::SharedVertexList::value_type threshold = vertices[(sorted[begin] * 3) + offset];
+
+  IGeometry::MeshIndexType front = begin;
+  IGeometry::MeshIndexType back = end;
+
+  const IGeometry::MeshIndexType max = sorted.size();
+  while(true)
+  {
+    while(front < max && vertices[(sorted[front] * 3) + offset] < threshold)
+    {
+      front++;
+    }
+
+    while(back > 0 && vertices[(sorted[back] * 3) + offset] > threshold)
+    {
+      back--;
+    }
+
+    if(front >= back)
+    {
+      return back;
+    }
+
+    std::swap(sorted[front], sorted[back]);
+  }
+}
 
 void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry2D::SharedVertexList::store_type& vertices,
                        IGeometry::MeshIndexType offset)
 {
-  if(begin < end)
+  if(begin >= end)
   {
-    using T = INodeGeometry2D::SharedVertexList::value_type;
-
-    const T threshold = vertices[(sorted[end] * 3) + offset];
-
-    IGeometry::MeshIndexType next = begin;
-
-    for(IGeometry::MeshIndexType prev = begin - 1; prev < end; prev++)
-    {
-      if(vertices[(sorted[prev] * 3) + offset] < threshold)
-      {
-        std::swap(sorted[next], sorted[prev]);
-        next++;
-      }
-    }
-    std::swap(sorted[next + 1], sorted[end]);
-
-    // Recurse
-    QuickSortVertices(sorted, begin, next, vertices, offset);
-    QuickSortVertices(sorted, next + 1, end, vertices, offset);
+    return;
   }
+
+  IGeometry::MeshIndexType next = ProcessSection(sorted, begin, end, vertices, offset);
+
+  // Recurse
+  QuickSortVertices(sorted, begin, next, vertices, offset);
+  QuickSortVertices(sorted, next + 1, end, vertices, offset);
 }
-
-template <typename OrderAxis>
-std::vector<IGeometry::MeshIndexType> SortVertices(const INodeGeometry2D::SharedVertexList::store_type& vertexList)
-{
-  std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
-  std::iota(sorted.begin(), sorted.end(), 1);
-
-  if constexpr(OrderAxis::UsingX)
-  {
-    QuickSortVertices(sorted, 1, sorted.size() - 1, vertexList, 0);
-  }
-  if constexpr(OrderAxis::UsingY)
-  {
-    QuickSortVertices(sorted, 1, sorted.size() - 1, vertexList, 1);
-  }
-  if constexpr(OrderAxis::UsingZ)
-  {
-    QuickSortVertices(sorted, 1, sorted.size() - 1, vertexList, 2);
-  }
-
-  return sorted;
-}
-
 } // namespace
 
 MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry2D& geom)
@@ -72,23 +60,20 @@ MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const
   // Inverse of to_underlying
   const AxialAlignment axis = static_cast<AxialAlignment>(std::distance(diff.begin(), std::max_element(diff.begin(), diff.end())));
 
-  return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, geom))};
+  // Getting the verts list by ref here for the validation in the ref function
+  const INodeGeometry2D::SharedVertexList::store_type& vertexListStore = geom.getVerticesRef().getDataStoreRef();
+
+  return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore))};
 }
 
-std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const nx::core::INodeGeometry2D& geom)
+std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList)
 {
-  const INodeGeometry2D::SharedVertexList::store_type& vertexListStore = geom.getVertices()->getDataStoreRef();
-  switch(axis)
-  {
-  case AxialAlignment::X:
-    return SortVertices<OrderAxis<true, false, false>>(vertexListStore);
-  case AxialAlignment::Y:
-    return SortVertices<OrderAxis<false, true, false>>(vertexListStore);
-  case AxialAlignment::Z:
-    return SortVertices<OrderAxis<false, false, true>>(vertexListStore);
-  }
+  std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
+  std::iota(sorted.begin(), sorted.end(), 0);
 
-  return {};
+  QuickSortVertices(sorted, 0, sorted.size() - 1, vertexList, to_underlying(axis));
+
+  return sorted;
 }
 
 bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
@@ -242,7 +227,7 @@ Result<> MeshingUtilities::RemoveDuplicateVertices(nx::core::INodeGeometry2D& ge
   // Walk all the triangles and remap
   IGeometry::SharedFaceList::store_type& triangles = geom.getFaces()->getDataStoreRef();
   const usize triangleComp = triangles.getNumberOfComponents();
-  for(usize i = 0; i < triangles.size(); i ++)
+  for(usize i = 0; i < triangles.size(); i++)
   {
     const IGeometry::SharedFaceList::value_type old = triangles[i] / triangleComp;
     triangles[i] = oldVertexToNewIndexMapping[old];
@@ -260,7 +245,7 @@ Result<> MeshingUtilities::RemoveDuplicateVertices(nx::core::INodeGeometry2D& ge
   return {};
 }
 
-Result<> MeshingUtilities::SortVertices(nx::core::INodeGeometry2D& geom, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
+Result<> MeshingUtilities::SortGeomVertices(nx::core::INodeGeometry2D& geom, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
 {
   IGeometry::SharedVertexList::store_type& verts = geom.getVertices()->getDataStoreRef();
 
@@ -280,7 +265,7 @@ Result<> MeshingUtilities::SortVertices(nx::core::INodeGeometry2D& geom, const n
   // Walk all the triangles and remap
   IGeometry::SharedFaceList::store_type& triangles = geom.getFaces()->getDataStoreRef();
   const usize triangleComp = triangles.getNumberOfComponents();
-  for(usize i = 0; i < triangles.size(); i ++)
+  for(usize i = 0; i < triangles.size(); i++)
   {
     const IGeometry::SharedFaceList::value_type old = triangles[i] / triangleComp;
     triangles[i] = inverseSortMapping[old];

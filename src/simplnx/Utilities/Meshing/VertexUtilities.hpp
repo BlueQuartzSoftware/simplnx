@@ -32,7 +32,7 @@ SortedVerticesList OrderSharedVertices(const INodeGeometry2D& geom);
  * @param geom The input mesh
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
-std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(AxialAlignment axis, const INodeGeometry2D& geom);
+std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList);
 
 /**
  * @brief This function attempts to find duplicate vertices. Vertices are all unique if `false`
@@ -56,5 +56,5 @@ Result<> RemoveDuplicateVertices(INodeGeometry2D& geom, const SortedVerticesList
  * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
  * @returns Result<>
  */
-Result<> SortVertices(INodeGeometry2D& geom, const SortedVerticesList& sortedVertices);
+Result<> SortGeomVertices(INodeGeometry2D& geom, const SortedVerticesList& sortedVertices);
 } // namespace nx::core::MeshingUtilities
