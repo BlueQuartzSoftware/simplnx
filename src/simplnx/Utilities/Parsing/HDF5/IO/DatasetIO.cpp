@@ -924,18 +924,19 @@ nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& 
     return MakeErrorResult<ChunkedDataInfo>(-100, "DataType was unkown");
   }
 
-  dataInfo.chunkProp = CreateH5DatasetChunkProperties(chunkDims);
-  dataInfo.datasetId = createOrOpenDataset(dataInfo.dataType, dataInfo.dataspaceId, dataInfo.chunkProp);
+  //dataInfo.chunkProp = CreateH5DatasetChunkProperties(chunkDims);
+  //dataInfo.datasetId = createOrOpenDataset(dataInfo.dataType, dataInfo.dataspaceId, dataInfo.chunkProp);
+  dataInfo.datasetId = createOrOpenDataset(dataInfo.dataType, dataInfo.dataspaceId);
   if(dataInfo.datasetId < 0)
   {
     return MakeErrorResult<ChunkedDataInfo>(-110, "Failed to open HDF5 Dataset");
   }
 
-  dataInfo.transferProp = H5Pcreate(H5P_DATASET_XFER);
-  if(dataInfo.transferProp < 0)
-  {
-    return MakeErrorResult<ChunkedDataInfo>(-130, "Failed to create HDF5 transfer properties");
-  }
+  //dataInfo.transferProp = H5Pcreate(H5P_DATASET_XFER);
+  //if(dataInfo.transferProp < 0)
+  //{
+  //  return MakeErrorResult<ChunkedDataInfo>(-130, "Failed to create HDF5 transfer properties");
+  //}
 
   setId(dataInfo.datasetId);
   return {dataInfo};
@@ -956,12 +957,12 @@ hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
 
 nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const
 {
-  herr_t error = H5Pclose(datasetInfo.transferProp);
-  if(error < 0)
-  {
-    return MakeErrorResult(error, "Error Closing Transfer Property");
-  }
-  /*error = H5Dclose(datasetInfo.datasetId);
+  //herr_t error = H5Pclose(datasetInfo.transferProp);
+  //if(error < 0)
+  //{
+  //  return MakeErrorResult(error, "Error Closing Transfer Property");
+  //}
+  /*herr_t error = H5Dclose(datasetInfo.datasetId);
   if(error < 0)
   {
     return MakeErrorResult(error, "Error Closing DataSet");
@@ -971,12 +972,12 @@ nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& dataset
   //   setId(-1);
   // }
 
-  error = H5Pclose(datasetInfo.chunkProp);
+  /*error = H5Pclose(datasetInfo.chunkProp);
   if(error < 0)
   {
     return MakeErrorResult(error, "Error Closing Chunk Property");
-  }
-  error = H5Sclose(datasetInfo.dataspaceId);
+  }*/
+  herr_t error = H5Sclose(datasetInfo.dataspaceId);
   if(error < 0)
   {
     return MakeErrorResult(error, "Error Closing Dataspace");
