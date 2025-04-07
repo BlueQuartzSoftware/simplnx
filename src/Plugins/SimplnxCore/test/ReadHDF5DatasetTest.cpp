@@ -154,21 +154,21 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
 
   // Check empty file path error
   auto results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check incorrect extension error
   val = {levelZeroPath, "foo.txt", {}};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check non-existent file error
   val = {levelZeroPath, "foo.h5", {}};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Put in the correct file path
   val = {levelZeroPath, m_FilePath, {}};
@@ -176,7 +176,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
 
   // Check no datasets checked error
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check empty dataset path error
   std::list<ReadHDF5DatasetParameter::DatasetImportInfo> importInfoList;
@@ -189,7 +189,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check incorrect dataset path error
   importInfoList.clear();
@@ -199,7 +199,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Fill in Dataset Path with a valid path so that we can continue our error checks
   importInfoList.clear();
@@ -211,7 +211,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
 
   // Check empty component dimensions
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check incorrect component dimensions
   importInfoList.clear();
@@ -221,7 +221,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check empty tuple dimensions
   importInfoList.clear();
@@ -230,7 +230,7 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
   val = {levelZeroPath, m_FilePath, importInfoList};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check incorrect tuple dimensions
   importInfoList.clear();
@@ -240,22 +240,23 @@ void testFilterPreflight(ReadHDF5DatasetFilter& filter)
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
 
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check empty parent attribute matrix/data group
   val = {std::optional<DataPath>{}, m_FilePath, importInfoList};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
-  REQUIRE(!results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(results.outputActions)
 
   // Check correct Attribute Matrix parent / dimensions
   importInfoList.clear();
   importInfo.componentDimensions = "1";
+  importInfo.tupleDimensions = "2880";
   importInfoList.push_back(importInfo);
   val = {DataPath::FromString(levelZeroAMName), m_FilePath, importInfoList};
   args.insertOrAssign(ReadHDF5DatasetFilter::k_ImportHDF5File_Key.str(), std::make_any<ReadHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
-  REQUIRE(results.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_VALID(results.outputActions)
 }
 
 // -----------------------------------------------------------------------------
