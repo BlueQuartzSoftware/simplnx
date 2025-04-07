@@ -10,13 +10,13 @@ ObjectIO::ObjectIO() = default;
 
 ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
 : m_ParentId(parentId)
-, m_ObjectName(nx::core::HDF5::GetNameFromBuffer(objectName))
+, m_ObjectName(objectName)
 {
 }
 
 ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
 : m_FilePath(filepath)
-, m_ObjectName(nx::core::HDF5::GetNameFromBuffer(objectName))
+, m_ObjectName(objectName)
 {
 }
 
@@ -47,6 +47,11 @@ bool ObjectIO::isValid() const
 }
 
 std::string ObjectIO::getName() const
+{
+  return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
+}
+
+std::string ObjectIO::getNamePath() const
 {
   return m_ObjectName;
 }

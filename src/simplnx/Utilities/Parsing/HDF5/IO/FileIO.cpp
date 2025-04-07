@@ -75,6 +75,11 @@ std::string FileIO::getName() const
   return getFilePath().filename().string();
 }
 
+std::string FileIO::getNamePath() const
+{
+  return "";
+}
+
 std::string FileIO::getObjectPath() const
 {
   return "";

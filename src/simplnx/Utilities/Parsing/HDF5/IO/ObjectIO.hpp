@@ -76,6 +76,14 @@ public:
   virtual std::string getName() const;
 
   /**
+   * @brief Returns the HDF5 object path name from the parent ID.
+   * Returns an empty string if the file.
+   * is invalid.
+   * @return std::string
+   */
+  virtual std::string getNamePath() const;
+
+  /**
    * Returns the HDF5 object path.
    * @return std::string
    */

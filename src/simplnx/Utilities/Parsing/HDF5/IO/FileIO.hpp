@@ -45,6 +45,13 @@ public:
   std::string getName() const override;
 
   /**
+   * @brief Overrides ObjectIO name path to return an empty string.
+   * is invalid.
+   * @return std::string
+   */
+  std::string getNamePath() const override;
+
+  /**
    * Returns the HDF5 object path.
    * @return std::string
    */

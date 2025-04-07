@@ -86,7 +86,7 @@ hid_t DatasetIO::open() const
   {
     return getId();
   }
-  hid_t id = H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT);
+  hid_t id = H5Dopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
   setId(id);
   return id;
 }
@@ -99,11 +99,11 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
   }
 
   HDF_ERROR_HANDLER_OFF
-  setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
+  setId(H5Dopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT));
   HDF_ERROR_HANDLER_ON
   if(!isOpen()) // dataset does not exist so create it
   {
-    setId(H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, propertiesId, H5P_DEFAULT));
+    setId(H5Dcreate(getParentId(), getNamePath().c_str(), typeId, dataspaceId, H5P_DEFAULT, propertiesId, H5P_DEFAULT));
   }
 
   return getId();
@@ -112,7 +112,7 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
 // template <typename T>
 // HighFive::DataSet createOrOpenDataset(DatasetIO& datasetIO, const HighFive::DataSpace& dims, HighFive::DataType& dataType)
 //{
-//   std::string name = datasetIO.getName();
+//   std::string name = datasetIO.getNamePath();
 //   std::string datapath = datasetIO.getObjectPath();
 //   try
 //   {
@@ -134,7 +134,7 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
 // template <>
 // HighFive::DataSet createOrOpenDataset<bool>(DatasetIO& datasetIO, const HighFive::DataSpace& dims)
 //{
-//   std::string name = datasetIO.getName();
+//   std::string name = datasetIO.getNamePath();
 //   std::string datapath = datasetIO.getObjectPath();
 //   try
 //   {
@@ -163,15 +163,15 @@ DatasetIO& DatasetIO::operator=(DatasetIO&& rhs) noexcept
 Result<> DatasetIO::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
-  //int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
+  //int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getNamePath().c_str()));
 
   /* The attribute already exists, delete it */
   if(hasAttribute())
   {
-    herr_t error = H5Adelete(getId(), getName().c_str());
+    herr_t error = H5Adelete(getId(), getNamePath().c_str());
     if(error < 0)
     {
-      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getNamePath(), getParentName());
       return MakeErrorResult(error, ss);
     }
   }
@@ -415,7 +415,7 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
       H5Sclose(dataspaceID);
       H5Tclose(typeID);
       H5Tclose(memtype);
-      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
+      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getNamePath() << ")" << std::endl;
       return {};
     }
     /*
@@ -475,7 +475,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
   hid_t datasetId = open();
   if(datasetId <= 0)
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getNamePath()));
   }
 
   hid_t dataType = HdfTypeForPrimitive<T>();
@@ -515,7 +515,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
   {
     H5Sclose(memSpaceId);
     H5Sclose(fileSpaceId);
-    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getNamePath()));
   }
 
   H5Sclose(memSpaceId);
@@ -529,7 +529,7 @@ nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data) const
 {
   if(!isValid())
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getNamePath()));
   }
 
   std::vector<H5_BOOL_TYPE> data2(data.begin(), data.end());
@@ -544,7 +544,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data, const std::optional<std:
 {
   if(!isValid())
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} / {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} / {}", getFilePath().string(), getNamePath()));
   }
 
   hid_t dataType = HdfTypeForPrimitive<T>();
@@ -646,7 +646,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data, const std::optional<std:
   {
     H5Sclose(memSpaceId);
     H5Sclose(fileSpaceId);
-    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getNamePath()));
   }
 
   H5Sclose(memSpaceId);
@@ -660,11 +660,12 @@ Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data, const std::opti
 {
   if(!isValid())
   {
-    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+    return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getNamePath()));
   }
   if(start->size() != count->size())
   {
-    return MakeErrorResult(-506, fmt::format("Cannot read HDF5 data at {} called {}. Requested dimensions do not match: '{}', '{}'", getFilePath().string(), getName(), start->size(), count->size()));
+    return MakeErrorResult(-506,
+                           fmt::format("Cannot read HDF5 data at {} called {}. Requested dimensions do not match: '{}', '{}'", getFilePath().string(), getNamePath(), start->size(), count->size()));
   }
 
   std::vector<H5_BOOL_TYPE> data2(data.begin(), data.end());
@@ -757,7 +758,7 @@ Result<> DatasetIO::readChunkIntoSpan(nonstd::span<T> data, nonstd::span<const u
   {
     H5Sclose(memSpaceId);
     H5Sclose(fileSpaceId);
-    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getName()));
+    return MakeErrorResult(-1008, fmt::format("DatasetReader error: Unable to read dataset '{}'", getNamePath()));
   }
 
   H5Sclose(memSpaceId);
@@ -772,7 +773,7 @@ Result<> DatasetIO::readChunkIntoSpan(nonstd::span<T> data, nonstd::span<const u
 //{
 //   if(!isValid())
 //   {
-//     return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getName()));
+//     return MakeErrorResult(-505, fmt::format("Cannot open HDF5 data at {} called {}", getFilePath().string(), getNamePath()));
 //   }
 //
 //   // DataSet does not support bool data.
@@ -1186,7 +1187,7 @@ nx::core::Result<> DatasetIO::writeString(const std::string& text)
         if((dataspaceId = H5Screate(H5S_SCALAR)) >= 0)
         {
           /* Create or open the dataset. */
-          hid_t id = H5Dcreate(getParentId(), getName().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+          hid_t id = H5Dcreate(getParentId(), getNamePath().c_str(), typeId, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
           if(id >= 0)
           {
             if(!text.empty())
@@ -1242,7 +1243,7 @@ nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string
       datatype = H5Tcopy(H5T_C_S1);
       H5Tset_size(datatype, H5T_VARIABLE);
 
-      auto datasetId = H5Dcreate(parentId, getName().c_str(), datatype, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      auto datasetId = H5Dcreate(parentId, getNamePath().c_str(), datatype, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       setId(datasetId);
       if(datasetId >= 0)
       {
@@ -1317,15 +1318,15 @@ Result<> DatasetIO::deleteH5Attribute(const std::string& name)
 {
   auto parentId = parentGroupRef().getId();
   hsize_t attributeNum = 0;
-  int32_t hasAttribute = H5Aiterate(parentId, H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
+  int32_t hasAttribute = H5Aiterate(parentId, H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getNamePath().c_str()));
 
   /* The attribute already exists, delete it */
   if(hasAttribute == 1)
   {
-    herr_t error = H5Adelete(parentId, getName().c_str());
+    herr_t error = H5Adelete(parentId, getNamePath().c_str());
     if(error < 0)
     {
-      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getNamePath(), getParentName());
       return MakeErrorResult(error, ss);
     }
   }

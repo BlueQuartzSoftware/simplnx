@@ -48,7 +48,7 @@ hid_t GroupIO::open() const
   {
     return getId();
   }
-  hid_t id = H5Gopen(getParentId(), getName().c_str(), H5P_DEFAULT);
+  hid_t id = H5Gopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
   setId(id);
   return id;
 }
