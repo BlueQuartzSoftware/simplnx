@@ -87,7 +87,7 @@ public:
       const usize chunkHeight = m_ChunkSize->getYRange()[1];
       const usize chunkDepth = m_ChunkSize->getZRange()[1];
 
-      // Check which chunkShape to operate over
+      // Check which chunks to operate over
       const auto rangeX = m_Range.getXRange();
       const auto rangeY = m_Range.getYRange();
       const auto rangeZ = m_Range.getZRange();
