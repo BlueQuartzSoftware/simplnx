@@ -236,6 +236,24 @@ std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName)
   return std::make_shared<DatasetIO>(getId(), childName);
 }
 
+std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
+{
+  if(!isGroup(name))
+  {
+    std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
+    std::cout << ss << std::endl;
+    return nullptr;
+  }
+  hid_t groupId = H5Gopen(getId(), name.c_str(), H5P_DEFAULT);
+  if(groupId <= 0)
+  {
+    std::string ss = fmt::format("Failed to open Group '{}'.", name);
+    std::cout << ss << std::endl;
+    return nullptr;
+  }
+  return std::shared_ptr<GroupIO>(new GroupIO(getId(), name, groupId));
+}
+
 DatasetIO GroupIO::createDataset(const std::string& childName)
 {
   if(!isValid())

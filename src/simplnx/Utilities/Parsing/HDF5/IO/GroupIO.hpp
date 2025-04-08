@@ -81,7 +81,14 @@ public:
    * @param childName
    * @return std::shared_ptr<DatasetIO>
    */
-  std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& childName);
+  std::shared_ptr<DatasetIO> openDatasetPtr(const std::string& childName) const;
+
+  /**
+   * @brief Opens a GroupIO for writing to a child group with the target name.
+   * @param childName The name of the child to open
+   * @return Returns a nullptr on failure to open
+   */
+  std::shared_ptr<GroupIO> openGroupPtr(const std::string& childName) const;
 
   /**
    * @brief Creates a DatasetIO for writing to a child group with the
