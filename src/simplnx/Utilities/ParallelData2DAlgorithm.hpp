@@ -84,7 +84,7 @@ public:
     }
     else
     {
-      // Execute over pre-existing chunkShape
+      // Execute over pre-existing chunks
 
       // Get chunk size
       const usize chunkWidth = m_ChunkSize->maxCol() - m_ChunkSize->minCol();
