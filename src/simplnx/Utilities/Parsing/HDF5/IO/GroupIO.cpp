@@ -211,18 +211,18 @@ DatasetIO GroupIO::openDataset(const std::string& childName)
     std::cout << ss << std::endl;
     return {};
   }
-  hid_t dataId = -1;
+
   if(isDataset(childName) || !exists(childName))
   {
     return DatasetIO(getId(), childName);
   }
 
-  std::string ss = fmt::format("Failed to create HDF5 dataset '{}' at path: ", childName, getObjectPath());
+  std::string ss = fmt::format("Failed to open Dataset '{}' at path: ", childName, getObjectPath());
   std::cout << ss << std::endl;
   return {};
 }
 
-std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName)
+std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName) const
 {
   if(!isValid())
   {

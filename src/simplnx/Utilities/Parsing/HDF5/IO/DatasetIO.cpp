@@ -253,8 +253,17 @@ Result<nx::core::HDF5::Type> DatasetIO::getDataType() const
 Result<nx::core::DataType> DatasetIO::getDataType() const
 {
   auto datasetId = open();
+  if(datasetId < 0)
+  {
+    return MakeErrorResult<nx::core::DataType>(-20013, fmt::format("The selected data set '{}' could not be opened.", getNamePath()));
+  }
   hid_t typeId = H5Dget_type(datasetId);
   auto type = getTypeFromId(typeId);
+  if(type == Type::unknown)
+  {
+    return MakeErrorResult<nx::core::DataType>(-20014, fmt::format("The selected data set '{}' typeid is unknown.", getNamePath()));
+  }
+
   Result<DataType> result;
   switch(type)
   {
@@ -289,11 +298,14 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
     result = {DataType::uint64};
     break;
   default:
-    result = {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datatset is not a supported type for "
+    result = {nonstd::make_unexpected(std::vector<Error>{Error{-20012, "The selected datat set is not a supported type for "
                                                                        "importing. Please select a different data set"}})};
     break;
   }
-  H5Tclose(typeId);
+  if(typeId > 0)
+  {
+    H5Tclose(typeId);
+  }
   return result;
 }
 #endif
