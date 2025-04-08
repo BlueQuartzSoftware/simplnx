@@ -773,7 +773,7 @@ DREAM3D::PipelineVersionType DREAM3D::GetPipelineVersion(const nx::core::HDF5::F
   {
     return k_InvalidPipelineVersion;
   }
-  return std::move(valueResult.value());
+  return valueResult.value();
 }
 
 Result<DataStructure> ImportDataStructureV8(const nx::core::HDF5::FileIO& fileReader, bool preflight)

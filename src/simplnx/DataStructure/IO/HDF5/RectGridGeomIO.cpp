@@ -38,9 +38,12 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   auto groupReader = parentGroup.openGroup(objectName);
 
   // Read Dimensions
-  std::vector<size_t> volumeDimensions(3);
   auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
-  volumeDimensions = std::move(volumeDimensionsResult.value());
+  if(volumeDimensionsResult.invalid())
+  {
+    return ConvertInvalidResult<void>(std::move(volumeDimensionsResult));
+  }
+  const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
 
   geometry->setDimensions(volumeDimensions);
 
