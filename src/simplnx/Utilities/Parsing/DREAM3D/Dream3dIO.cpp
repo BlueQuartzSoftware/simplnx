@@ -757,21 +757,12 @@ DREAM3D::FileVersionType DREAM3D::GetFileVersion(const std::filesystem::path& pa
 
 DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileIO& fileReader)
 {
-  // auto mystring = H5Easy::loadAttribute<std::string>(fileReader.h5File().value(), "/", k_FileVersionTag);
-  // return mystring;
-
-  // std::string str = "          ";
-  // auto& chars = *str.data();
-  // std::vector<std::string> dataStr(1);
-  // HighFive::FixedLenStringArray<8> value;
-  std::string version;
   auto versionResult = fileReader.readStringAttribute(k_FileVersionTag.str());
   if(versionResult.invalid())
   {
     return versionResult.errors()[0].message;
   }
-  version = std::move(versionResult.value());
-  return version;
+  return std::move(versionResult.value());
 }
 
 DREAM3D::PipelineVersionType DREAM3D::GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader)
