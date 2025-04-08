@@ -70,8 +70,11 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     dimsVector[i] = dimensions[i];
   }
 
-  groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector);
-
+  result = groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector);
+  if(result.invalid())
+  {
+    return result;
+  }
   // Write DataObject IDs
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);
   if(result.invalid())

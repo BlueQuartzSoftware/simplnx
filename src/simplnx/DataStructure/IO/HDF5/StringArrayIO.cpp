@@ -76,8 +76,12 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
 
   // Write the number of values as an attribute for quicker preflight times
   {
-    uint64 value = dataArray.size();
-    datasetWriter.writeScalarAttribute(k_TupleDimsAttrName, value);
+    const uint64 value = dataArray.size();
+    result = datasetWriter.writeScalarAttribute(k_TupleDimsAttrName, value);
+    if(result.invalid())
+    {
+      return result;
+    }
   }
 
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
