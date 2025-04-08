@@ -57,12 +57,24 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
     }
 
     auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
+    if(volDimsVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingDimensionsError_Code, k_ReadingDimensionsError_Message);
+    }
     volDimsVector = std::move(volDimsVectorResult.value());
 
     auto originVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
+    if(originVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingOriginError_Code, k_ReadingOriginError_Message);
+    }
     originVector = std::move(originVectorResult.value());
 
     auto spacingVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
+    if(spacingVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingSpacingError_Code, k_ReadingSpacingError_Message);
+    }
     spacingVector = std::move(spacingVectorResult.value());
   }
 
