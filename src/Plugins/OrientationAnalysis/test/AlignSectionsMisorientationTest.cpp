@@ -34,11 +34,6 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
   const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
 
-  // We are just going to generate a big number so that we can use that in the output
-  // file path. This tests the creation of intermediate directories that the filter
-  // would be responsible to create.
-  const uint64_t millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter

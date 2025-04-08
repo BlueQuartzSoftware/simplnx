@@ -9,7 +9,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKMhaFileReaderTest.cpp
   ITKRescaleIntensityImageTest.cpp
 )
-
 if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
     ITKBinaryContourImageTest.cpp
