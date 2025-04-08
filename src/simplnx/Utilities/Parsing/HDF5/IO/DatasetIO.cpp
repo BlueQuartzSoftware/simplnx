@@ -86,7 +86,9 @@ hid_t DatasetIO::open() const
   {
     return getId();
   }
-  hid_t id = H5Dopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
+  HDF_ERROR_HANDLER_OFF /* Does not matter what the 'id' is, we are accepting that value. */
+      hid_t id = H5Dopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
   setId(id);
   return id;
 }

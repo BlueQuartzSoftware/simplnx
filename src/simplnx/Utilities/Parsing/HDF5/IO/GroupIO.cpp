@@ -151,8 +151,9 @@ ObjectIO::ObjectType GroupIO::getObjectType(const std::string& childName) const
 
   herr_t error = 1;
   H5O_info2_t objectInfo{};
-
+  HDF_ERROR_HANDLER_OFF
   error = H5Oget_info_by_name3(getId(), childName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
   if(error < 0)
   {
     return ObjectType::Unknown;
