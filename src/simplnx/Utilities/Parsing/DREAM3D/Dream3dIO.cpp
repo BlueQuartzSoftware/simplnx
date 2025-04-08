@@ -1056,18 +1056,22 @@ Result<> readLegacyNeighborList(DataStructure& dataStructure, const nx::core::HD
 
 bool isLegacyNeighborList(const nx::core::HDF5::DatasetIO& arrayReader)
 {
-  std::string objectType;
   auto objectTypeResult = arrayReader.readStringAttribute("ObjectType");
-  objectType = std::move(objectTypeResult.value());
-  return objectType == "NeighborList<T>";
+  if(objectTypeResult.invalid())
+  {
+    return false;
+  }
+  return objectTypeResult.value() == "NeighborList<T>";
 }
 
 bool isLegacyStringArray(const nx::core::HDF5::DatasetIO& arrayReader)
 {
-  std::string objectType;
   auto objectTypeResult = arrayReader.readStringAttribute("ObjectType");
-  objectType = std::move(objectTypeResult.value());
-  return objectType == "StringDataArray";
+  if(objectTypeResult.invalid())
+  {
+    return false;
+  }
+  return objectTypeResult.value() == "StringDataArray";
 }
 
 Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& amGroupReader, DataObject& parent, bool preflight = false)
@@ -1075,9 +1079,12 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
 
-  std::vector<uint64> tDims;
   auto tDimsResult = amGroupReader.readVectorAttribute<uint64>("TupleDimensions");
-  tDims = std::move(tDimsResult.value());
+  if(tDimsResult.invalid())
+  {
+    return ConvertResult(std::move(tDimsResult));
+  }
+  std::vector<uint64> tDims = std::move(tDimsResult.value());
   auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
 
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, reversedTDims, parentId);
@@ -1114,7 +1121,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
 
   uint32 amType;
   auto amTypeResult = amGroupReader.readScalarAttribute<uint32>("AttributeMatrixType");
-  if (amTypeResult.invalid())
+  if(amTypeResult.invalid())
   {
     return ConvertResult(std::move(amTypeResult));
   }
@@ -1337,7 +1344,7 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   {
     std::string geomName;
     auto geomNameResult = geomGroup.readStringAttribute(Legacy::GeometryTypeNameTag);
-    if (geomNameResult.invalid())
+    if(geomNameResult.invalid())
     {
       return ConvertResult(std::move(geomNameResult));
     }
@@ -1549,11 +1556,11 @@ Result<> WritePipeline(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipel
   }
 
   auto pipelineGroupWriter = fileWriter.createGroup(k_PipelineJsonTag);
-  if (Result<> result = pipelineGroupWriter.writeScalarAttribute(k_PipelineVersionTag, static_cast<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion)); result.invalid())
+  if(Result<> result = pipelineGroupWriter.writeScalarAttribute(k_PipelineVersionTag, static_cast<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion)); result.invalid())
   {
     return result;
   }
-  if (Result<> result = pipelineGroupWriter.writeStringAttribute(k_PipelineNameTag, pipeline.getName()); result.invalid())
+  if(Result<> result = pipelineGroupWriter.writeStringAttribute(k_PipelineNameTag, pipeline.getName()); result.invalid())
   {
     return result;
   }
