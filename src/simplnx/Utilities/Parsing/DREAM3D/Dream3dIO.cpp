@@ -139,7 +139,7 @@ void WriteGeomXdmf(std::ostream& out, const ImageGeom& imageGeom, std::string_vi
       << "\n";
   out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
       << "\n";
-  out << "    <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
+  out << R"(    <Topology TopologyType="3DCoRectMesh" Dimensions=")" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
       << "\n";
   out << "    <Geometry Type=\"ORIGIN_DXDYDZ\">"
       << "\n";
@@ -838,12 +838,21 @@ Result<IDataArray*> createLegacyDataArray(DataStructure& dataStructure, DataObje
  */
 Result<> readLegacyDataArrayDims(const nx::core::HDF5::DatasetIO& dataArrayReader, std::vector<usize>& tDims, std::vector<usize>& cDims)
 {
-  auto cDimsResult = dataArrayReader.readVectorAttribute<usize>(Legacy::CompDims);
+  Result<std::vector<usize>> cDimsResult = dataArrayReader.readVectorAttribute<usize>(Legacy::CompDims);
+  if(cDimsResult.invalid())
+  {
+    return ConvertResult<std::vector<usize>>(std::move(cDimsResult));
+  }
   cDims = std::move(cDimsResult.value());
+
   auto tDimsResult = dataArrayReader.readVectorAttribute<usize>(Legacy::TupleDims);
+  if(tDimsResult.invalid())
+  {
+    return ConvertResult<std::vector<usize>>(std::move(tDimsResult));
+  }
   tDims = std::move(tDimsResult.value());
 
-  std::reverse(tDims.begin(), tDims.end()); // SIMPL writes the Tuple Dimensions in reverse order to this attribute
+  std::ranges::reverse(tDims); // SIMPL writes the Tuple Dimensions in reverse order to this attribute
 
   return {};
 }
@@ -920,6 +929,10 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
   case DataType::uint8: {
     std::string typeTag;
     auto typeTagResult = dataArrayReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(typeTagResult.invalid())
+    {
+      return ConvertInvalidResult<IDataArray*, std::string>(std::move(typeTagResult));
+    }
     typeTag = std::move(typeTagResult.value());
     if(typeTag == "DataArray<bool>")
     {
