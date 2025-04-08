@@ -767,11 +767,13 @@ DREAM3D::FileVersionType DREAM3D::GetFileVersion(const nx::core::HDF5::FileIO& f
 
 DREAM3D::PipelineVersionType DREAM3D::GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader)
 {
-  PipelineVersionType value;
   auto pipelineGroup = fileReader.openGroup(k_PipelineJsonTag);
   auto valueResult = pipelineGroup.readScalarAttribute<int32>(k_PipelineVersionTag);
-  value = std::move(valueResult.value());
-  return value;
+  if(valueResult.invalid())
+  {
+    return k_InvalidPipelineVersion;
+  }
+  return std::move(valueResult.value());
 }
 
 Result<DataStructure> ImportDataStructureV8(const nx::core::HDF5::FileIO& fileReader, bool preflight)
