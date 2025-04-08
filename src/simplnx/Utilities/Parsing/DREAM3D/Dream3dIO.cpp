@@ -1101,6 +1101,10 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
 
   uint32 amType;
   auto amTypeResult = amGroupReader.readScalarAttribute<uint32>("AttributeMatrixType");
+  if (amTypeResult.invalid())
+  {
+    return ConvertResult(std::move(amTypeResult));
+  }
   amType = std::move(amTypeResult.value());
   switch(amType)
   {
@@ -1143,13 +1147,17 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
 // Begin legacy geometry import methods
 void readGenericGeomDims(IGeometry* geom, const nx::core::HDF5::GroupIO& geomGroup)
 {
-  int32 sDims;
-  auto sDimsResult = geomGroup.readScalarAttribute<int32>("SpatialDimensionality");
-  sDims = std::move(sDimsResult.value());
+  int32 sDims = 0;
+  if(auto sDimsResult = geomGroup.readScalarAttribute<int32>("SpatialDimensionality"); sDimsResult.valid())
+  {
+    sDims = std::move(sDimsResult.value());
+  }
 
-  int32 uDims;
-  auto uDimsResult = geomGroup.readScalarAttribute<int32>("UnitDimensionality");
-  uDims = std::move(uDimsResult.value());
+  int32 uDims = 0;
+  if(auto uDimsResult = geomGroup.readScalarAttribute<int32>("UnitDimensionality"); uDimsResult.valid())
+  {
+    uDims = std::move(uDimsResult.value());
+  }
 
   geom->setSpatialDimensionality(sDims);
   geom->setUnitDimensionality(uDims);
@@ -1316,6 +1324,10 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   {
     std::string geomName;
     auto geomNameResult = geomGroup.readStringAttribute(Legacy::GeometryTypeNameTag);
+    if (geomNameResult.invalid())
+    {
+      return ConvertResult(std::move(geomNameResult));
+    }
     geomName = std::move(geomNameResult.value());
     if(geomName == Legacy::Type::ImageGeom)
     {
@@ -1524,8 +1536,14 @@ Result<> WritePipeline(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipel
   }
 
   auto pipelineGroupWriter = fileWriter.createGroup(k_PipelineJsonTag);
-  pipelineGroupWriter.writeScalarAttribute(k_PipelineVersionTag, static_cast<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion));
-  pipelineGroupWriter.writeStringAttribute(k_PipelineNameTag, pipeline.getName());
+  if (Result<> result = pipelineGroupWriter.writeScalarAttribute(k_PipelineVersionTag, static_cast<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion)); result.invalid())
+  {
+    return result;
+  }
+  if (Result<> result = pipelineGroupWriter.writeStringAttribute(k_PipelineNameTag, pipeline.getName()); result.invalid())
+  {
+    return result;
+  }
 
   auto pipelineDatasetWriter = pipelineGroupWriter.createDataset(k_PipelineJsonTag);
   std::string pipelineString = pipeline.toJson().dump();
@@ -1539,8 +1557,7 @@ Result<> WriteDataStructure(nx::core::HDF5::FileIO& fileWriter, const DataStruct
 
 Result<> WriteFileVersion(nx::core::HDF5::FileIO& fileWriter)
 {
-  fileWriter.writeStringAttribute(k_FileVersionTag, DREAM3D::k_CurrentFileVersion.str());
-  return {};
+  return fileWriter.writeStringAttribute(k_FileVersionTag, DREAM3D::k_CurrentFileVersion.str());
 }
 
 Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const FileData& fileData)
