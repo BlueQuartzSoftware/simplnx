@@ -3,7 +3,6 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-// #include <highfive/H5DataType.hpp>
 #include <H5Tpublic.h>
 
 #include <cstdint>
