@@ -1604,7 +1604,7 @@ Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& 
 Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
 {
   auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
-  if(fileWriter.isValid() == false)
+  if(!fileWriter.isValid())
   {
     return MakeErrorResult(-9045, fmt::format("Failed to create DREAM3D file at path {}", path.string()));
   }

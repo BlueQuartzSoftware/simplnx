@@ -101,7 +101,7 @@
 #include "SimplnxCore/Filters/ComputeLargestCrossSectionsFilter.hpp"
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
-//#include "SimplnxCore/Filters/AppendImageGeometryFilter.hpp"
+#include "SimplnxCore/Filters/AppendImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ComputeFeatureClusteringFilter.hpp"
 #include "SimplnxCore/Filters/WriteAbaqusHexahedronFilter.hpp"
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"

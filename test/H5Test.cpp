@@ -879,7 +879,6 @@ TEST_CASE("H5 Utilities")
   REQUIRE(objectName == "Data");
 }
 
-#if 0
 TEST_CASE("HDF5ImplicitCopyReaderTest")
 {
   STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileIO>);
@@ -959,4 +958,4 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
   HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
 }
-#endif
+
