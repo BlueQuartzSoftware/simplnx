@@ -958,4 +958,3 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
   HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
 }
-
