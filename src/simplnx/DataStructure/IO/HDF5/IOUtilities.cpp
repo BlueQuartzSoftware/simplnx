@@ -20,9 +20,21 @@ Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, n
   dataStructureWriter.addWriter(objectWriter, dataObject->getId());
 
   int32 importablei32 = (importable ? 1 : 0);
-  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
-  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject->getId());
-  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, importablei32);
+  Result<> result = objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject->getId());
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = objectWriter.writeScalarAttribute(Constants::k_ImportableTag, importablei32);
+  if(result.invalid())
+  {
+    return result;
+  }
 
   return {};
 }
