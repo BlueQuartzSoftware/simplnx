@@ -105,23 +105,21 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  SizeVec3 volDims = geometry.getDimensions();
-  FloatVec3 spacing = geometry.getSpacing();
-  FloatVec3 origin = geometry.getOrigin();
-  std::vector<size_t> volDimsVector(3);
-  std::vector<float> spacingVector(3);
-  std::vector<float> originVector(3);
-  for(size_t i = 0; i < 3; i++)
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, geometry.getDimensions().toContainer<std::vector<size_t>>());
+  if(result.invalid())
   {
-    volDimsVector[i] = volDims[i];
-    spacingVector[i] = spacing[i];
-    originVector[i] = origin[i];
+    return result;
   }
-
-  groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, volDimsVector);
-  groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, originVector);
-  groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, spacingVector);
-
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, geometry.getOrigin().toContainer<std::vector<float32>>());
+  if(result.invalid())
+  {
+    return result;
+  }
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, geometry.getSpacing().toContainer<std::vector<float32>>());
+  if(result.invalid())
+  {
+    return result;
+  }
   return {};
 }
 

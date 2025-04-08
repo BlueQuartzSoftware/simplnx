@@ -156,12 +156,16 @@ public:
 
     // Write flattened array to HDF5 as a separate array
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
-    Result<> flattenedResult = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
-    if(flattenedResult.invalid())
+    result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
+    if(result.invalid())
     {
-      return flattenedResult;
+      return result;
     }
-    datasetWriter.writeStringAttribute("Linked NumNeighbors Dataset", neighborList.getNumNeighborsArrayName());
+    result = datasetWriter.writeStringAttribute("Linked NumNeighbors Dataset", neighborList.getNumNeighborsArrayName());
+    if(result.invalid())
+    {
+      return result;
+    }
     return WriteObjectAttributes(dataStructureWriter, neighborList, datasetWriter, importable);
   }
 
