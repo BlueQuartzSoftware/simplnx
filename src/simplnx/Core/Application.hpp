@@ -1,7 +1,5 @@
 #pragma once
 
-#define NOMINMAX
-
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/Filter/FilterList.hpp"
