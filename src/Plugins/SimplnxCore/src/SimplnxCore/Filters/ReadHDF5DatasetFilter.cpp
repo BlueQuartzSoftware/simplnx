@@ -44,59 +44,6 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 
   return cDims;
 }
-
-template <typename T>
-Result<> fillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
-{
-  using StoreType = DataStore<T>;
-  StoreType& dataStore = dataArray.template getIDataStoreRefAs<StoreType>();
-  if(!datasetReader.readIntoSpan<T>(dataStore.createSpan()))
-  {
-    return {MakeErrorResult(-21002, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
-                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                                dataArray.getNumberOfComponents()))};
-  }
-
-  return {};
-}
-
-template <typename T>
-Result<> fillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
-{
-  uint64 installedMemory = Memory::GetTotalMemory();
-  if(installedMemory <= dataArray.getSize() * sizeof(T))
-  {
-    return MakeErrorResult(-21004, fmt::format("Error reading dataset '{}' with '{}' total elements. Not enough memory to import data. Installed memory is {} bytes", dataArray.getName(),
-                                               datasetReader.getNumElements(), installedMemory));
-  }
-
-  auto& absDataStore = dataArray.getDataStoreRef();
-  std::vector<T> data(absDataStore.getSize());
-  nonstd::span<T> span{data.data(), data.size()};
-  if(!datasetReader.readIntoSpan<T>(span))
-  {
-    return {MakeErrorResult(-21003, fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components)",
-                                                dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                                dataArray.getNumberOfComponents()))};
-  }
-  std::copy(data.begin(), data.end(), absDataStore.begin());
-
-  return {};
-}
-
-template <typename T>
-Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader)
-{
-  auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
-  if(dataArray.getDataFormat().empty())
-  {
-    return fillDataStore(dataArray, dataArrayPath, datasetReader);
-  }
-  else
-  {
-    return fillOocDataStore(dataArray, dataArrayPath, datasetReader);
-  }
-}
 } // namespace
 
 namespace nx::core
