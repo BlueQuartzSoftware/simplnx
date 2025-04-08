@@ -747,7 +747,7 @@ public:
     free_all();
   }
 
-  /** Frees all allocated memory chunkShape */
+  /** Frees all allocated memory chunks */
   void free_all()
   {
     while(base != NULL)
