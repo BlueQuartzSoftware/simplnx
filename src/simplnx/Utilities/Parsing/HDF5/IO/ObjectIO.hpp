@@ -169,7 +169,9 @@ public:
       return MakeErrorResult<std::vector<T>>(-1, fmt::format("Cannot Read Attribute '{}' within Invalid Object '{}'", attributeName, getName()));
     }
 
+    HDF_ERROR_HANDLER_OFF
     hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
+    HDF_ERROR_HANDLER_ON
     if(attribId < 0)
     {
       return MakeErrorResult<std::vector<T>>(attribId, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
