@@ -118,7 +118,7 @@ public:
    * @param data
    */
   template <class T>
-  nx::core::Result<> readIntoSpan(nonstd::span<T>& data) const;
+  nx::core::Result<> readIntoSpan(nonstd::span<T> data) const;
 
   /**
    * @brief Reads the dataset into the given span. Requires the span to be the
@@ -128,7 +128,7 @@ public:
    * @param data
    */
   template <class T>
-  nx::core::Result<> readIntoSpan(nonstd::span<T>& data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const;
+  nx::core::Result<> readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const;
 
 #if 0
   /**
@@ -509,32 +509,32 @@ extern template std::vector<double> DatasetIO::readAsVector() const;
 extern template std::vector<bool> DatasetIO::readAsVector() const;
 #endif
 
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>) const;
 #ifdef _WIN32
-extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>) const;
 #endif
 
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #ifdef _WIN32
-extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+extern template nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #endif
 
 #if 0

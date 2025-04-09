@@ -484,7 +484,7 @@ std::vector<T> DatasetIO::readAsVector() const
 }
 
 template <class T>
-nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
+nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
 {
   hid_t datasetId = open();
   if(datasetId <= 0)
@@ -539,7 +539,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data) const
 }
 
 template <>
-nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data) const
+nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> data) const
 {
   if(!isValid())
   {
@@ -554,7 +554,7 @@ nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data) const
 }
 
 template <class T>
-Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const
+Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const
 {
   if(!isValid())
   {
@@ -670,7 +670,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T>& data, const std::optional<std:
 }
 
 template <>
-Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>& data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const
+Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> data, const std::optional<std::vector<uint64>>& start, const std::optional<std::vector<uint64>>& count) const
 {
   if(!isValid())
   {
@@ -1402,37 +1402,37 @@ template SIMPLNX_EXPORT std::vector<double> DatasetIO::readAsVector<double>() co
 template SIMPLNX_EXPORT std::vector<bool> DatasetIO::readAsVector<bool>() const;
 #endif
 
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>) const;
 #ifdef __APPLE__
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<size_t>(nonstd::span<size_t>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<size_t>(nonstd::span<size_t>) const;
 #else
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>) const;
 #endif
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>) const;
 
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int64_t>(nonstd::span<int64_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint8_t>(nonstd::span<uint8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint16_t>(nonstd::span<uint16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint32_t>(nonstd::span<uint32_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::span<uint64_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #ifdef __APPLE__
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<size_t>(nonstd::span<size_t>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<size_t>(nonstd::span<size_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #endif
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #ifdef _WIN32
-template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>&, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 #endif
 
 #if 0
