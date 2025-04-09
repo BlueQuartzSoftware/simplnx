@@ -901,7 +901,7 @@ TEST_CASE("HDF5ImplicitCopyReaderTest")
   REQUIRE(groupReaderIntermediate.isValid());
 
   HDF5::DatasetIO datasetReader = groupReaderIntermediate.openDataset("DataArray");
-  datasetReader.getId();
+  REQUIRE(datasetReader.getId() > 0);
   TestH5ImplicitCopy(std::move(datasetReader), "HDF5::DatasetIO");
 }
 
