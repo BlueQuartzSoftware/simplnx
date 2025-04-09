@@ -26,6 +26,7 @@ ObjectIO::ObjectIO(ObjectIO&& other) noexcept
 , m_ParentId(std::move(other.m_ParentId))
 , m_Id(std::move(other.m_Id))
 {
+  other.m_Id = -1;
 }
 
 ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
@@ -34,6 +35,8 @@ ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
   m_FilePath = std::move(other.m_FilePath);
   m_ObjectName = std::move(other.m_ObjectName);
   m_ParentId = std::move(other.m_ParentId);
+
+  other.m_Id = -1;
   return *this;
 }
 

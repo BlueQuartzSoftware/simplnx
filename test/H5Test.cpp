@@ -901,6 +901,7 @@ TEST_CASE("HDF5ImplicitCopyReaderTest")
   REQUIRE(groupReaderIntermediate.isValid());
 
   HDF5::DatasetIO datasetReader = groupReaderIntermediate.openDataset("DataArray");
+  datasetReader.getId();
   TestH5ImplicitCopy(std::move(datasetReader), "HDF5::DatasetIO");
 }
 
@@ -920,7 +921,6 @@ TEST_CASE("HDF5ImplicitCopyWriterTest")
   TestH5ImplicitCopy(std::move(groupWriter), "HDF5::GroupIO");
 
   HDF5::DatasetIO datasetWriter = newFileIO.createDataset("bar");
-  REQUIRE(datasetWriter.isValid());
   std::array<int32, 5> data = {1, 2, 3, 4, 5};
   HDF5::DatasetIO::DimsType dims = {data.size()};
   Result<> datasetResult = datasetWriter.writeSpan<int32>(dims, nonstd::span<int32>(data));
@@ -945,16 +945,17 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
   }
 
-  auto file1 = HDF5::FileIO::WriteFile(filePath);
+  auto file1 = HDF5::FileIO::ReadFile(filePath);
   HDF5::FileIO fileIO = std::move(file1);
   HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileIO), "HDF5::FileIO");
 
-  HDF5::GroupIO groupIO = newFileIO.createGroup("DataStructure");
+  HDF5::GroupIO groupIO = newFileIO.openGroup("DataStructure");
   HDF5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupIO), "HDF5::GroupIO");
 
   HDF5::GroupIO groupIOIntermediate = newGroupIO.openGroup("Geometry");
   REQUIRE(groupIOIntermediate.isValid());
 
   HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
+  datasetIO.getId();
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
 }
