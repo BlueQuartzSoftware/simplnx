@@ -19,7 +19,7 @@ public:
   {
   public:
     using iterator_category = std::random_access_iterator_tag;
-    using value_type = value_type;
+    using value_type = AbstractStringStore::value_type;
     using difference_type = int64;
     using pointer = value_type*;
     using reference = value_type&;
@@ -169,7 +169,7 @@ public:
   {
   public:
     using iterator_category = std::random_access_iterator_tag;
-    using value_type = value_type;
+    using value_type = AbstractStringStore::value_type;
     using difference_type = int64;
     using pointer = const value_type*;
     using reference = const value_type&;
