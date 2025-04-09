@@ -188,8 +188,6 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
-find_package(xtl CONFIG REQUIRED)
-find_package(xtensor CONFIG REQUIRED)
 
 # -----------------------------------------------------------------------
 # Find HDF5 and get the path to the DLL libraries and put that into a
@@ -257,8 +255,6 @@ if(SIMPLNX_ENABLE_MULTICORE)
   target_link_libraries(simplnx PUBLIC TBB::tbb)
 endif()
 
-find_package(ghc_filesystem CONFIG REQUIRED)
-
 # find_package(HighFive CONFIG REQUIRED)
 target_link_libraries(simplnx
   PUBLIC
@@ -270,9 +266,6 @@ target_link_libraries(simplnx
     HDF5::HDF5
     Boost::mp11
     nod::nod
-    xtl
-    xtensor
-    ghcFilesystem::ghc_filesystem
 )
 
 if(UNIX)

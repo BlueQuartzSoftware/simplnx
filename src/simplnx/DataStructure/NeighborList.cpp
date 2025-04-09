@@ -10,7 +10,7 @@ namespace nx::core
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
 : INeighborList(dataStructure, name, numTuples)
-, m_Store(std::make_shared<ListStore<T>>(std::vector<usize>{numTuples}))
+, m_Store(std::make_shared<ListStore<T>>(numTuples))
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -64,7 +64,7 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
     return *this;
   }
 
-  m_Store->copy(*rhs.m_Store.get());
+  m_Store = rhs.m_Store->deepCopy();
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
 
@@ -98,7 +98,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
-  copy->m_Store->copy(*m_Store.get());
+  copy->m_Store = m_Store->deepCopy();
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
@@ -246,8 +246,6 @@ void NeighborList<T>::resizeTuples(usize numTuples)
 template <typename T>
 void NeighborList<T>::addEntry(int32 grainId, value_type value)
 {
-  std::lock_guard<std::mutex> guard(this->m_Mutex);
-
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
@@ -273,8 +271,6 @@ void NeighborList<T>::clearAllLists()
 template <typename T>
 void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborList)
 {
-  std::lock_guard<std::mutex> guard(this->m_Mutex);
-
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
@@ -287,8 +283,6 @@ void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborLis
 template <typename T>
 void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
 {
-  std::lock_guard<std::mutex> guard(this->m_Mutex);
-
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
@@ -301,28 +295,7 @@ void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
 template <typename T>
 void NeighborList<T>::setLists(const std::vector<std::vector<T>>& neighborLists)
 {
-  usize totalFeatures = neighborLists.size();
-  usize reserveSize = 0;
-  for(size_t i = 1; i < totalFeatures; i++)
-  {
-    reserveSize = std::max(reserveSize, neighborLists[i].size());
-  }
-  reserveListSize(reserveSize);
-  resizeTuples(totalFeatures);
-
-  for(size_t i = 1; i < totalFeatures; i++)
-  {
-    // Set the vector for each list into the NeighborList Object
-    SharedVectorType list(new std::vector<T>);
-    list->assign(neighborLists[i].begin(), neighborLists[i].end());
-    setList(static_cast<int32_t>(i), list);
-  }
-}
-
-template <typename T>
-void NeighborList<T>::reserveListSize(uint64 size)
-{
-  m_Store->setXtensorListSize(size);
+  m_Store->setData(neighborLists);
 }
 
 template <typename T>
@@ -517,12 +490,6 @@ template <>
 DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
-}
-
-template <typename T>
-void NeighborList<T>::write(std::ostream& out) const
-{
-  m_Store->write(out);
 }
 
 template class SIMPLNX_TEMPLATE_EXPORT NeighborList<int8>;

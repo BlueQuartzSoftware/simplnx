@@ -416,9 +416,8 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
 
   if(dataStore.getDataFormat().empty())
   {
-    DataStore<T> newDataStore(std::move(newData), std::move(tDims), std::move(cDims));
     auto& outputDataStore = dynamic_cast<DataStore<UnderlyingType_t<PixelT>>&>(dataStore);
-    outputDataStore = std::move(newDataStore);
+    outputDataStore = DataStore<T>(std::move(newData), std::move(tDims), std::move(cDims));
   }
   else
   {

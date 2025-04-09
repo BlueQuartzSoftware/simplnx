@@ -2,67 +2,34 @@
 
 namespace nx::core
 {
-usize AbstractStringStore::size() const
-{
-  return xarray().size();
-}
-
-bool AbstractStringStore::empty() const
-{
-  return xarray().size() == 0;
-}
-
-AbstractStringStore::reference AbstractStringStore::operator[](usize index)
-{
-  return xarray().flat(index);
-}
-AbstractStringStore::const_reference AbstractStringStore::operator[](usize index) const
-{
-  return xarray().flat(index);
-}
-AbstractStringStore::const_reference AbstractStringStore::at(usize index) const
-{
-  return getValue(index);
-}
-
-AbstractStringStore::const_reference AbstractStringStore::getValue(usize index) const
-{
-  return xarray().flat(index);
-}
-
-void AbstractStringStore::setValue(usize index, const value_type& value)
-{
-  xarray().flat(index) = value;
-}
-
 AbstractStringStore::iterator AbstractStringStore::begin()
 {
-  return xarray().begin();
+  return Iterator(*this, 0);
 }
 
 AbstractStringStore::iterator AbstractStringStore::end()
 {
-  return xarray().end();
+  return Iterator(*this, size());
 }
 
 AbstractStringStore::const_iterator AbstractStringStore::begin() const
 {
-  return xarray().begin();
+  return ConstIterator(*this, 0);
 }
 
 AbstractStringStore::const_iterator AbstractStringStore::end() const
 {
-  return xarray().end();
+  return ConstIterator(*this, size());
 }
 
 AbstractStringStore::const_iterator AbstractStringStore::cbegin() const
 {
-  return xarray().begin();
+  return ConstIterator(*this, 0);
 }
 
 AbstractStringStore::const_iterator AbstractStringStore::cend() const
 {
-  return xarray().end();
+  return ConstIterator(*this, size());
 }
 
 bool AbstractStringStore::operator==(const std::vector<std::string>& values) const

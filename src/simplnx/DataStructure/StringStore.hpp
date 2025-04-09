@@ -2,6 +2,9 @@
 
 #include "AbstractStringStore.hpp"
 
+#include <string>
+#include <vector>
+
 namespace nx::core
 {
 class StringStore : public AbstractStringStore
@@ -11,16 +14,22 @@ public:
   StringStore(const std::vector<std::string>& strings);
   ~StringStore();
 
-  xarray_type& xarray() override;
-  const xarray_type& xarray() const override;
+  std::unique_ptr<AbstractStringStore> deepCopy() const override;
 
+  usize size() const override;
+  bool empty() const override;
   void resize(usize count) override;
 
-  std::unique_ptr<AbstractStringStore> deepCopy() const override;
+  reference operator[](usize index) override;
+  const_reference operator[](usize index) const override;
+  const_reference at(usize index) const override;
+
+  const_reference getValue(usize index) const override;
+  void setValue(usize index, const value_type& value) override;
 
   AbstractStringStore& operator=(const std::vector<std::string>& values) override;
 
 private:
-  xarray_type m_xarray;
+  std::vector<std::string> m_Data;
 };
 } // namespace nx::core

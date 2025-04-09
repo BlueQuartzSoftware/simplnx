@@ -1,13 +1,6 @@
 #pragma once
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
-
-#define NOMINMAX
-
-#include <xtensor/xarray.hpp>
-#include <xtensor/xfunction.hpp>
-#include <xtensor/xstrides.hpp>
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
@@ -17,7 +10,6 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <numeric>
 #include <optional>
 #include <stdexcept>
@@ -40,8 +32,6 @@ public:
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
-  using XArrayType = typename xt::xarray<T>;
-  using XArrayShapeType = typename XArrayType::shape_type;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
@@ -72,14 +62,10 @@ public:
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_InitValue(initValue)
   {
-    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
-    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
-    m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
-
     resizeTuples(m_TupleShape);
     if(m_InitValue.has_value())
     {
-      m_Array->fill(*initValue);
+      std::fill_n(data(), this->getSize(), *m_InitValue);
     }
   }
 
@@ -93,21 +79,12 @@ public:
   : parent_type()
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
+  , m_Data(std::move(buffer))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
-    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
-    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
-    m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
-    if(buffer != nullptr)
-    {
-      auto count = m_Array->size();
-      auto* bufferPtr = buffer.get();
-      for(uint64 i = 0; i < count; i++)
-      {
-        setValue(i, bufferPtr[i]);
-      }
-    }
+    // Because no init value is passed into the constructor, we will use a "mudflap" style value that is easy to debug.
+    m_InitValue = GetMudflap<T>();
   }
 
   /**
@@ -120,8 +97,12 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
-  , m_Array(other.m_Array)
+  , m_InitValue(other.m_InitValue)
   {
+    const usize count = other.getSize();
+    auto* data = new value_type[count];
+    std::memcpy(data, other.m_Data.get(), count * sizeof(T));
+    m_Data.reset(data);
   }
 
   /**
@@ -132,7 +113,7 @@ public:
   : parent_type()
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
-  , m_Array(std::move(other.m_Array))
+  , m_Data(std::move(other.m_Data))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
   , m_InitValue(other.m_InitValue)
@@ -155,10 +136,10 @@ public:
   {
     m_ComponentShape = std::move(rhs.m_ComponentShape);
     m_TupleShape = std::move(rhs.m_TupleShape);
-    m_Array = std::move(rhs.m_Array);
-    m_NumComponents = std::move(rhs.m_NumComponents);
-    m_NumTuples = std::move(rhs.m_NumTuples);
-
+    m_Data = std::move(rhs.m_Data);
+    m_NumComponents = rhs.m_NumComponents;
+    m_NumTuples = rhs.m_NumTuples;
+    m_InitValue = std::move(rhs.m_InitValue);
     return *this;
   }
 
@@ -179,7 +160,7 @@ public:
    */
   const T* data() const
   {
-    return m_Array->data();
+    return m_Data.get();
   }
 
   /**
@@ -188,17 +169,7 @@ public:
    */
   T* data()
   {
-    return m_Array->data();
-  }
-
-  XArrayType& xarray()
-  {
-    return *m_Array.get();
-  }
-
-  const XArrayType& xarray() const
-  {
-    return *m_Array.get();
+    return m_Data.get();
   }
 
   /**
@@ -265,26 +236,38 @@ public:
 
     usize newSize = getNumberOfComponents() * m_NumTuples;
 
-    XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
-    shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
-
-    if(m_Array.get() == nullptr) // Data was never allocated
+    if(m_Data.get() == nullptr) // Data was never allocated
     {
-      m_Array = std::shared_ptr<XArrayType>(new XArrayType(shape));
+      auto data = new value_type[newSize];
+      m_Data.reset(data);
       return;
     }
 
-    auto data = std::shared_ptr<XArrayType>(new XArrayType(shape));
+    // The caller is reshaping the array without actually effecting its overall number
+    // of elements. Old was 100 x 3 and the new was 300. Both with a {1} comp dim.
+    if(newSize == oldSize)
+    {
+      return;
+    }
 
     // We have now figured out that the old array and the new array are different sizes so
     // copy the old data into the newly allocated data array or as much or as little
     // as possible
-
+    auto data = new value_type[newSize];
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
-      data->flat(i) = m_Array->flat(i);
+      data[i] = m_Data.get()[i];
     }
-    m_Array = data;
+
+    // If we are sizing to a larger number of tuples, initialize the leftover array with the init
+    // value that was passed in during construction.
+    T initValue = m_InitValue.has_value() ? *m_InitValue : GetMudflap<T>();
+    for(usize i = oldSize; i < newSize; i++)
+    {
+      data[i] = initValue;
+    }
+
+    m_Data.reset(data);
   }
 
   /**
@@ -295,7 +278,7 @@ public:
    */
   value_type getValue(usize index) const override
   {
-    return m_Array->flat(index);
+    return m_Data.get()[index];
   }
 
   /**
@@ -305,9 +288,7 @@ public:
    */
   void setValue(usize index, value_type value) override
   {
-    std::lock_guard<std::mutex> guard(this->m_Mutex);
-
-    m_Array->flat(index) = value;
+    m_Data.get()[index] = value;
   }
 
   /**
@@ -318,7 +299,7 @@ public:
    */
   const_reference operator[](usize index) const override
   {
-    return m_Array->flat(index);
+    return m_Data.get()[index];
   }
 
   /**
@@ -329,7 +310,7 @@ public:
    */
   reference operator[](usize index) override
   {
-    return m_Array->flat(index);
+    return m_Data.get()[index];
   }
 
   /**
@@ -340,9 +321,11 @@ public:
    */
   const_reference at(usize index) const override
   {
-    std::lock_guard<std::mutex> guard(this->m_Mutex);
-
-    return m_Array->flat(index);
+    if(index >= this->getSize())
+    {
+      throw std::runtime_error("");
+    }
+    return m_Data.get()[index];
   }
 
   /**
@@ -375,8 +358,6 @@ public:
 
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
-    std::lock_guard<std::mutex> guard(this->m_Mutex);
-
     std::ofstream outStrm(absoluteFilePath, std::ios_base::out | std::ios_base::binary);
     if(!outStrm.is_open())
     {
@@ -389,7 +370,8 @@ public:
   std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
   {
     usize totalElements = getNumberOfComponents() * getNumberOfTuples();
-    outputStream.write(reinterpret_cast<char*>(m_Array->data()), sizeof(T) * totalElements);
+
+    outputStream.write(reinterpret_cast<char*>(m_Data.get()), sizeof(T) * totalElements);
 
     if(outputStream.bad())
     {
@@ -401,77 +383,15 @@ public:
 
   Result<> readHdf5(const HDF5::DatasetIO& dataset) override
   {
-    std::string filepath = dataset.getFilePath().string();
-    std::string dataPath = dataset.getObjectPath();
-
-    try
-    {
-      XArrayShapeType shape(m_TupleShape.begin(), m_TupleShape.end());
-      shape.insert(shape.end(), m_ComponentShape.begin(), m_ComponentShape.end());
-
-      auto datasetDims = dataset.getDimensions();
-      bool dimsMatch = shape.size() == datasetDims.size();
-      if(dimsMatch)
-      {
-        for(usize i = 0; i < shape.size() && dimsMatch; i++)
-        {
-          dimsMatch = (shape[i] == datasetDims[i]);
-        }
-      }
-
-      auto data = std::shared_ptr<XArrayType>(new XArrayType(shape));
-#if 1
-      nonstd::span<T> span(data->data(), data->size());
-      dataset.readIntoSpan(span);
-#else
-      if(dimsMatch)
-      {
-        *data.get() = xt::load<XArrayType>(file, dataPath);
-      }
-      else
-      {
-        nonstd::span<T> span(data->data(), data->size());
-        dataset.readIntoSpan(span);
-        // xtensor will fail to load into an array of different dimensions, so create a new array and copy the data.
-        // auto mismatchedData = xt::load<XArrayType>(file, dataPath);
-        // std::copy(mismatchedData.begin(), mismatchedData.end(), data->begin());
-      }
-#endif
-      m_Array = data;
-      return {};
-    } catch(const std::exception& e)
-    {
-      return MakeErrorResult(-97645, fmt::format("Failed to read dataset '{}' to path '{}'. Error: '{}'", dataset.getName(), dataset.getObjectPath(), e.what()));
-    }
+    return dataset.readIntoSpan(createSpan());
   }
 
   Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
   {
-    if(m_Array == nullptr)
-    {
-      return MakeErrorResult(-97642, fmt::format("Cannot write non-existant dataset at path '{}'", dataset.getObjectPath()));
-    }
-
-    typename HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
+    HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
     dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
-    nonstd::span<const T> span(m_Array->data(), m_Array->size());
+    nonstd::span<const T> span = createSpan();
     return dataset.writeSpan(dims, span);
-#if 0
-    try
-    {
-      auto file = dataset.h5File().value();
-      auto dumpMode = xt::dump_mode::create;
-      if(dataset.exists())
-      {
-        dumpMode = xt::dump_mode::overwrite;
-      }
-      xt::dump(file, datasetPath, *m_Array.get(), dumpMode);
-      return {};
-    } catch(const std::exception& e)
-    {
-      return MakeErrorResult(-97643, fmt::format("Failed to write dataset '{}' to path '{}'. Error: '{}'", dataset.getName(), datasetPath, e.what()));
-    }
-#endif
   }
 
   /**
@@ -486,13 +406,8 @@ public:
       return nullptr;
     }
 
-    auto chunkTupleShape = this->getChunkTupleShape(flatChunkIndex);
-    auto componentShape = getComponentShape();
-    usize size = this->getSize();
-
-    auto dataPtr = new value_type[size];
-    std::copy(this->begin(), this->end(), dataPtr);
-    std::unique_ptr<value_type[]> dataWrapper(dataPtr);
+    std::unique_ptr<value_type[]> dataWrapper = std::make_unique_for_overwrite<value_type[]>(this->getSize());
+    std::copy(this->begin(), this->end(), dataWrapper.get());
 
     return std::make_unique<DataStore<T>>(std::move(dataWrapper), this->getTupleShape(), this->getComponentShape());
   }
@@ -501,6 +416,7 @@ public:
   {
     return 1;
   }
+
   /**
    * @brief Returns the Smallest N-Dimensional tuple position included in the
    * specified chunk.
@@ -534,7 +450,7 @@ public:
     }
 
     IDataStore::ShapeType upperBounds(getTupleShape());
-    for(auto& value : upperBounds)
+    for(auto value : upperBounds)
     {
       value -= 1;
     }
@@ -544,7 +460,7 @@ public:
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
-  std::shared_ptr<XArrayType> m_Array = nullptr;
+  std::unique_ptr<value_type[]> m_Data = nullptr;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
   std::optional<T> m_InitValue;

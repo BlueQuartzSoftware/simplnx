@@ -125,6 +125,5 @@ protected:
 
 private:
   std::shared_ptr<AbstractStringStore> m_Strings = nullptr;
-  mutable std::mutex m_Mutex;
 };
 } // namespace nx::core

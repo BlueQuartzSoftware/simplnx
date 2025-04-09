@@ -2,13 +2,11 @@
 
 #include "simplnx/Common/Types.hpp"
 
-#include <xtensor/xarray.hpp>
-#include <xtensor/xlayout.hpp>
-
-#include <mutex>
-#include <ostream>
+#include <memory>
+#include <numeric>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace nx::core
 {
@@ -537,25 +535,10 @@ public:
   using shared_vector_type = typename std::shared_ptr<vector_type>;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using xarray_type = typename xt::xarray<value_type>;
 
   virtual ~AbstractListStore() = default;
 
-  virtual xarray_type& xarray() = 0;
-  virtual const xarray_type& xarray() const = 0;
-
   virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
-
-  /**
-   * @brief resizeTotalElements
-   * @param size
-   * @return int32
-   */
-  virtual int32 resizeTotalElements(usize size)
-  {
-    resize({size}, xtensorListSize());
-    return 1;
-  }
 
   /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
@@ -576,114 +559,49 @@ public:
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  virtual void resizeTuples(usize tupleCount)
-  {
-    resize({tupleCount}, xtensorListSize());
-  }
+  virtual void resizeTuples(usize tupleCount) = 0;
 
   /**
    * @brief addEntry
    * @param grainId
    * @param value
    */
-  virtual void addEntry(int32 grainId, value_type value)
-  {
-    usize listSize = getListSize(grainId);
-    usize interalListSize = xtensorListSize();
-    if(listSize + 1 >= interalListSize)
-    {
-      interalListSize = listSize + 2;
-      setXtensorListSize(interalListSize);
-    }
-
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    uint64 offset = (grainId * interalListSize); // First element is list size
-    listSize++;
-
-    auto& xarr = xarray();
-    xarr.flat(offset) = listSize;
-    xarr.flat(offset + listSize) = value;
-  }
+  virtual void addEntry(int32 grainId, value_type value) = 0;
 
   /**
    * @brief Clear All Lists
    */
-  virtual void clearAllLists()
-  {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-
-    uint64 count = xtensorListSize();
-    uint64 numLists = getNumberOfLists();
-    auto& xarr = xarray();
-    for(uint64 i = 0; i < numLists; i++)
-    {
-      uint64 offset = i * (count + 1); // First element is list size
-      xarr.flat(offset) = 0;
-    }
-  }
+  virtual void clearAllLists() = 0;
 
   /**
    * @brief setList
    * @param grainId
    * @param neighborList
    */
-  virtual void setList(int32 grainId, const shared_vector_type& neighborList)
-  {
-    setList(grainId, *neighborList.get());
-  }
+  virtual void setList(int32 grainId, const shared_vector_type& neighborList) = 0;
 
   /**
    * @brief setList
    * @param grainId
    * @param neighborList
    */
-  virtual void setList(int32 grainId, const vector_type& neighborList)
-  {
-    uint64 count = xtensorListSize();
-    uint64 neighborListSize = neighborList.size();
-
-    if(count < neighborListSize + 1)
-    {
-      count = neighborListSize + 1;
-      setXtensorListSize(count);
-    }
-
-    uint64 offset = grainId * xtensorListSize() + 1; // First element is list size
-    auto& xarr = xarray();
-    setListSize(grainId, neighborListSize);
-
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    for(uint64 i = 0; i < neighborListSize; i++)
-    {
-      xarr.flat(offset + i) = neighborList[i];
-    }
-  }
+  virtual void setList(int32 grainId, const vector_type& neighborList) = 0;
 
   /**
    * @brief getList
    * @param grainId
    * @return shared_vector_type
    */
-  virtual vector_type getList(int32 grainId) const
-  {
-    return copyOfList(grainId);
-  }
+  virtual vector_type getList(int32 grainId) const = 0;
 
-  usize getListSize(usize grainId) const
-  {
-    auto offset = grainId * xtensorListSize();
-    return xarray().flat(offset);
-  }
+  virtual usize getListSize(usize grainId) const = 0;
 
   /**
    * @brief copyOfList
    * @param grainId
    * @return vector_type
    */
-  virtual vector_type copyOfList(int32 grainId) const
-  {
-    return at(grainId);
-  }
+  virtual vector_type copyOfList(int32 grainId) const = 0;
 
   /**
    * @brief getValue
@@ -692,47 +610,17 @@ public:
    * @param ok
    * @return T
    */
-  virtual T getValue(int32 grainId, int32 index, bool& ok) const
-  {
-    if(grainId >= getNumberOfLists() || grainId < 0 || index < 0)
-    {
-      ok = false;
-      return {};
-    }
+  virtual T getValue(int32 grainId, int32 index, bool& ok) const = 0;
 
-    auto list = at(grainId);
-    if(index > list.size())
-    {
-      ok = false;
-      return {};
-    }
-
-    ok = true;
-    return list[index];
-  }
-
-  virtual void setValue(int32 grainId, usize index, T value)
-  {
-    if(grainId >= getNumberOfLists())
-    {
-      return;
-    }
-
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    uint64 offset = (grainId * xtensorListSize()) + 1; // First element is list size
-    xarray().flat(offset + index) = value;
-  }
+  virtual void setValue(int32 grainId, usize index, T value) = 0;
 
   /**
    * @brief getNumberOfLists
    * @return int32
    */
-  virtual uint64 getNumberOfLists() const
-  {
-    return std::accumulate(m_TupleShape.begin(), m_TupleShape.end(), static_cast<usize>(1), std::multiplies<usize>());
-  }
+  virtual uint64 getNumberOfLists() const = 0;
 
-  virtual uint64 size() const
+  uint64 size() const
   {
     return getNumberOfLists();
   }
@@ -742,209 +630,90 @@ public:
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](int32 grainId) const
-  {
-    uint64 count = getListSize(grainId);
-    vector_type output(count);
-    uint64 offset = (grainId * xtensorListSize()) + 1; // First element is list size
-    for(uint64 i = 0; i < count; i++)
-    {
-      output[i] = xarray().flat(i + offset);
-    }
-    return output;
-  }
+  virtual vector_type operator[](int32 grainId) const = 0;
 
   /**
    * @brief operator []
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](usize grainId) const
-  {
-    uint64 count = getListSize(grainId);
-    vector_type output(count);
-    uint64 offset = (grainId * xtensorListSize()) + 1; // First element is list size
-    for(uint64 i = 0; i < count; i++)
-    {
-      output[i] = xarray().flat(i + offset);
-    }
-    return output;
-  }
+  virtual vector_type operator[](usize grainId) const = 0;
 
   /**
    * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */
-  virtual vector_type at(int32 grainId) const
-  {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    return this->operator[](grainId);
-  }
+  virtual vector_type at(int32 grainId) const = 0;
 
   /**
    * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */
-  virtual vector_type at(usize grainId) const
-  {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    return this->operator[](grainId);
-  }
-
-  virtual void resizeTuples(std::vector<usize> tupleShape)
-  {
-    resize(tupleShape, xtensorListSize());
-  }
+  virtual vector_type at(usize grainId) const = 0;
 
   iterator begin()
   {
     return iterator(*this, 0);
   }
+
   iterator end()
   {
     return iterator(*this, size());
   }
+
   const_iterator begin() const
   {
     return const_iterator(*this, 0);
   }
+
   const_iterator end() const
   {
     return const_iterator(*this, size());
   }
+
   const_iterator cbegin() const
   {
     return const_iterator(*this, 0);
   }
+
   const_iterator cend() const
   {
     return const_iterator(*this, size());
   }
 
-  virtual void setData(const std::vector<shared_vector_type>& lists)
-  {
-    usize count = lists.size();
-    usize maxSize = 0;
-    for(const auto& list : lists)
-    {
-      maxSize = std::max(maxSize, list->size());
-    }
-    setSize({count}, maxSize);
-    for(usize i = 0; i < count; i++)
-    {
-      setList(i, lists[i]);
-    }
-  }
-
-  virtual void setData(const std::vector<vector_type>& lists)
-  {
-    usize count = lists.size();
-    usize maxSize = 0;
-    for(const auto& list : lists)
-    {
-      maxSize = std::max(maxSize, list.size());
-    }
-    setSize({count}, maxSize);
-    for(usize i = 0; i < count; i++)
-    {
-      setList(i, lists[i]);
-    }
-  }
-
-  AbstractListStore& operator=(const std::vector<shared_vector_type>& lists)
-  {
-    setData(lists);
-    return *this;
-  }
-
-  AbstractListStore& operator=(const std::vector<vector_type>& lists)
-  {
-    setData(lists);
-    return *this;
-  }
-
   /**
-   * @brief Sets the internal xtensor list dimension and resizes the xtensor array.
-   * @param size
+   * @brief Clears the array.
    */
-  virtual void setXtensorListSize(usize size)
-  {
-    resize(m_TupleShape, size);
-  }
+  virtual void clear() = 0;
 
-  /**
-   * @brief Clears the xtensor array.
-   */
-  virtual void clear()
-  {
-    setXtensorListSize(0);
-  }
+  virtual void setData(const std::vector<shared_vector_type>& lists) = 0;
 
-  void copy(const AbstractListStore& other)
-  {
-    setSize(other.m_TupleShape, other.xtensorListSize());
-    const usize count = getNumberOfLists() * xtensorListSize();
-    auto& xarr = xarray();
-    auto& xarr2 = other.xarray();
-    for(usize i = 0; i < count; ++i)
-    {
-      auto value = xarr2.flat(i);
-      xarr.flat(i) = value;
-    }
-  }
-
-  /**
-   * @brief Write to stream
-   * @param out
-   */
-  virtual void write(std::ostream& out) const = 0;
+  virtual void setData(const std::vector<vector_type>& lists) = 0;
 
 protected:
-  std::vector<usize> m_TupleShape;
-  mutable std::mutex m_Mutex;
-
   AbstractListStore() = default;
-  AbstractListStore(const AbstractListStore& rhs)
-  : m_TupleShape(rhs.m_TupleShape)
-  {
-  }
-  AbstractListStore(AbstractListStore&& rhs)
-  : m_TupleShape(std::move(rhs.m_TupleShape))
-  {
-  }
 
-  virtual usize xtensorListSize() const = 0;
-  virtual void resize(std::vector<usize> tupleShape, usize internalSize) = 0;
-  virtual void setSize(std::vector<usize> tupleShape, usize internalSize) = 0;
-  void setListSize(uint64 grainId, uint64 size)
-  {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-
-    uint64 internalCount = xtensorListSize();
-    uint64 offset = grainId * (internalCount); // First element is list size
-    xarray().flat(offset) = static_cast<T>(size);
-  }
-
-private:
+  AbstractListStore(const AbstractListStore& rhs) = default;
+  AbstractListStore(AbstractListStore&& rhs) = default;
 };
 
 } // namespace nx::core
 
 template <typename T>
-constexpr void swap(typename nx::core::AbstractListStore<T>::ReferenceList& first, typename nx::core::AbstractListStore<T>::ReferenceList& second) noexcept
+void swap(typename nx::core::AbstractListStore<T>::ReferenceList& first, typename nx::core::AbstractListStore<T>::ReferenceList& second) noexcept
 {
   first.swap(second);
 }
 template <typename T>
-constexpr void swap(typename nx::core::AbstractListStore<T>::ReferenceList first, typename nx::core::AbstractListStore<T>::ReferenceList second) noexcept
+void swap(typename nx::core::AbstractListStore<T>::ReferenceList first, typename nx::core::AbstractListStore<T>::ReferenceList second) noexcept
 {
   first.swap(second);
 }
 
 template <typename T>
-constexpr void swap(typename nx::core::AbstractListStore<T>::iterator& first, typename nx::core::AbstractListStore<T>::iterator& second) noexcept
+void swap(typename nx::core::AbstractListStore<T>::iterator& first, typename nx::core::AbstractListStore<T>::iterator& second) noexcept
 {
   first.swap(second);
 }

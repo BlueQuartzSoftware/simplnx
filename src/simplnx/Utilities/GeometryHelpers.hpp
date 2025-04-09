@@ -11,8 +11,6 @@
 
 #include <unordered_set>
 
-#include <xtensor/xio.hpp>
-
 namespace nx::core
 {
 namespace GeometryHelpers

@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 
-#include <mutex>
-
 namespace nx::core
 {
 namespace NeighborListConstants
@@ -195,12 +193,6 @@ public:
   void setLists(const std::vector<std::vector<T>>& neighborLists);
 
   /**
-   * @brief Specifies the length of the longest list.
-   * @param size
-   */
-  void reserveListSize(uint64 size);
-
-  /**
    * @brief getValue
    * @param grainId
    * @param index
@@ -379,12 +371,6 @@ public:
   NeighborList& operator=(const NeighborList& rhs);
   NeighborList& operator=(NeighborList&& rhs);
 
-  /**
-   * @brief Write to stream
-   * @param out
-   */
-  void write(std::ostream& out) const;
-
 protected:
   /**
    * @brief NeighborList
@@ -398,7 +384,6 @@ protected:
 
 private:
   std::shared_ptr<store_type> m_Store;
-  mutable std::mutex m_Mutex;
   bool m_IsAllocated;
   value_type m_InitValue;
 };

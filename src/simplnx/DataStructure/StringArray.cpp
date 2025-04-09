@@ -129,7 +129,6 @@ StringArray::const_reference StringArray::operator[](usize index) const
 
 void StringArray::setValue(usize index, const std::string& value)
 {
-  std::lock_guard<std::mutex> guard(m_Mutex);
   (*m_Strings)[index] = value;
 }
 
@@ -154,21 +153,21 @@ StringArray::iterator StringArray::end()
 
 StringArray::const_iterator StringArray::begin() const
 {
-  return m_Strings->begin();
+  return m_Strings->cbegin();
 }
 
 StringArray::const_iterator StringArray::end() const
 {
-  return m_Strings->end();
+  return m_Strings->cend();
 }
 StringArray::const_iterator StringArray::cbegin() const
 {
-  return m_Strings->begin();
+  return m_Strings->cbegin();
 }
 
 StringArray::const_iterator StringArray::cend() const
 {
-  return m_Strings->end();
+  return m_Strings->cend();
 }
 
 StringArray& StringArray::operator=(const StringArray& rhs)

@@ -4,64 +4,64 @@ namespace nx::core
 {
 StringStore::StringStore(uint64 size)
 : AbstractStringStore()
+, m_Data(size)
 {
-  m_xarray.resize({size});
 }
 
 StringStore::StringStore(const std::vector<std::string>& strings)
 : AbstractStringStore()
+, m_Data(strings)
 {
-  usize count = strings.size();
-  m_xarray.resize({count});
-  for(usize i = 0; i < count; i++)
-  {
-    m_xarray.flat(i) = strings[i];
-  }
 }
 
 StringStore::~StringStore() = default;
 
-StringStore::xarray_type& StringStore::xarray()
+usize StringStore::size() const
 {
-  return m_xarray;
+  return m_Data.size();
 }
 
-const StringStore::xarray_type& StringStore::xarray() const
+bool StringStore::empty() const
 {
-  return m_xarray;
+  return m_Data.size() == 0;
+}
+
+StringStore::reference StringStore::operator[](usize index)
+{
+  return m_Data[index];
+}
+StringStore::const_reference StringStore::operator[](usize index) const
+{
+  return m_Data[index];
+}
+StringStore::const_reference StringStore::at(usize index) const
+{
+  return getValue(index);
+}
+
+StringStore::const_reference StringStore::getValue(usize index) const
+{
+  return m_Data.at(index);
+}
+
+void StringStore::setValue(usize index, const value_type& value)
+{
+  m_Data.at(index) = value;
 }
 
 void StringStore::resize(usize count)
 {
-  usize oldSize = size();
-  auto data = xt::xarray<std::string>::from_shape({count});
-  for(usize i = 0; i < count && i < oldSize; i++)
-  {
-    data.flat(i) = m_xarray.flat(i);
-  }
-  m_xarray.resize({count});
-  m_xarray = std::move(data);
+  m_Data.resize(count);
 }
 
 std::unique_ptr<AbstractStringStore> StringStore::deepCopy() const
 {
-  uint64 count = size();
-  auto newStore = std::make_unique<StringStore>(count);
-  for(uint64 i = 0; i < count; i++)
-  {
-    newStore->setValue(i, getValue(i));
-  }
-  return newStore;
+  return std::make_unique<StringStore>(m_Data);
 }
 
 AbstractStringStore& StringStore::operator=(const std::vector<std::string>& values)
 {
-  usize count = values.size();
-  m_xarray = xt::xarray<std::string>::from_shape({count});
-  for(usize i = 0; i < count; i++)
-  {
-    m_xarray.flat(i) = values[i];
-  }
+  m_Data = values;
   return *this;
 }
 } // namespace nx::core

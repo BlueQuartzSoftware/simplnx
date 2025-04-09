@@ -33,15 +33,6 @@
     },
     {
       "name": "reproc"
-    },
-    {
-      "name": "ghc-filesystem"
-    },
-    {
-      "name": "xtensor"
-    },
-    {
-      "name": "xtensor-io"
     }
   ],
   "features": {
