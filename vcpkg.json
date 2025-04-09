@@ -83,6 +83,15 @@
       "dependencies": [
         {
           "name": "blosc"
+        },
+        {
+          "name": "ghc-filesystem"
+        },
+        {
+          "name": "xtensor"
+        },
+        {
+          "name": "xtensor-io"
         }
       ]
     },
