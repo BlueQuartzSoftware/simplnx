@@ -801,6 +801,8 @@ list(APPEND SIMPLNX_GENERATED_HEADERS
 
 # set(SIMPLNX_GENERATED_VERSION_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.h)
 # configure_file(${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.h.in ${SIMPLNX_GENERATED_VERSION_HEADER})
+
+
 set(CMP_VERSION_HDR_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.hpp)
 set(CMP_VERSION_SRC_TEMPLATE_FILE ${simplnx_SOURCE_DIR}/cmake/SIMPLNXVersion.cpp.in)
 set(VERSION_GEN_HEADER_FILE_NAME "SIMPLNXVersion.hpp")
@@ -915,7 +917,6 @@ set(SIMPLNX_PACKAGE_NAMESPACE "simplnx::")
 # Install the appropriate example pipelines based on which plugins are loaded
 #------------------------------------------------------------------------------
 get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-
 if(is_multi_config)
   set(CX_CONFIG_DIR "$<CONFIG>")
 else()
@@ -993,13 +994,13 @@ if(SIMPLNX_ENABLE_INSTALL)
     COMPONENT develop
     BASE_DIR ${SIMPLNX_SOURCE_DIR}
   )
-  
+
   install_with_directory(FILES ${SIMPLNX_GENERATED_HEADERS}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/simplnx
     COMPONENT develop
     BASE_DIR ${SIMPLNX_GENERATED_HEADER_DIR}
   )
-
+  
   include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 endif()
 
