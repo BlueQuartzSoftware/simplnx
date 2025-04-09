@@ -27,7 +27,7 @@ if(NOT SIMPLNX_CONDA_BUILD AND NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKValuedRegionalMaximaImageTest.cpp
     ITKValuedRegionalMinimaImageTest.cpp
   )
-endif()
+  endif()
 
 if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
@@ -100,8 +100,8 @@ create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 
 target_sources(${PLUGIN_NAME}UnitTest
   PRIVATE
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.cpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.cpp
 )
 
 # -----------------------------------------------------------------------------
@@ -109,9 +109,8 @@ target_sources(${PLUGIN_NAME}UnitTest
 # -----------------------------------------------------------------------------
 include(${simplnx_SOURCE_DIR}/cmake/Utility.cmake)
 
-# These should be relative to the
+# These should be relative to the 
 set(PREBUILT_PIPELINE_NAMES
-
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
@@ -128,13 +127,13 @@ set(PREBUILT_PIPELINE_NAMES
 # the table and then upload your compressed file.
 # Save the release so that the repo is updated
 # -----------------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES) 
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()
-
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME fiji_montage.tar.gz SHA512 70139babc838ce3ab1f5adddfddc86dcc51996e614c6c2d757bcb2e59e8ebdc744dac269233494b1ef8d09397aecb4ccca3384f0a91bb017f2cf6309c4ac40fa)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME image_flip_test_images.tar.gz SHA512 4e282a270251133004bf4b979d0d064631b618fc82f503184c602c40d388b725f81faf8e77654d285852acc3217d51534c9a71240be4a87a91dc46da7871e7d2)
+
 endif()
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
