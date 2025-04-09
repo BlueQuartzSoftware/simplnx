@@ -127,10 +127,6 @@
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
 #include "SimplnxCore/Filters/WriteSPParksSitesFilter.hpp"
 #include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
-#include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
-#include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
-#include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
-#include "SimplnxCore/Filters/PadImageGeometryFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace nx::core
@@ -263,10 +259,6 @@ namespace nx::core
     {nx::core::Uuid::FromString("08de1ffb-6cb1-5896-8133-a30d2dd0f937").value(), {nx::core::FilterTraits<CreateAMScanPathsFilter>::uuid, &CreateAMScanPathsFilter::FromSIMPLJson}}, // CreateAMScanPathsFilter
     {nx::core::Uuid::FromString("bcf2f246-610f-5575-a434-241d04114b9f").value(), {nx::core::FilterTraits<WriteSPParksSitesFilter>::uuid, &WriteSPParksSitesFilter::FromSIMPLJson}}, // WriteSPParksSitesFilter
 
-    {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
-    {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
-    {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
-    {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
     {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };

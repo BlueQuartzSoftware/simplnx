@@ -125,7 +125,6 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   auto pXMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_XMinMax_Key);
   auto pYMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_YMinMax_Key);
   auto pZMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ZMinMax_Key);
-  // auto pDefaultFillValue = filterArgs.value<int32>(k_DefaultFillValue_Key);
   auto pUpdateOriginValue = filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto pAttributeMatrixPathValue = filterArgs.value<DataPath>(k_AttributeMatrixPath_Key);
   auto pPerformInPlace = filterArgs.value<bool>(k_PerformInPlace_Key);
@@ -137,8 +136,6 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   {
     return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!")};
   }
-
-  PreflightResult preflightResult;
 
   Result<OutputActions> resultOutputActions;
 
@@ -229,7 +226,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& object : *selectedCellData | std::views::values)
+    for(const auto& [identifier, object] : *selectedCellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
