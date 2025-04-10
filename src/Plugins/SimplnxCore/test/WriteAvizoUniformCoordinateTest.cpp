@@ -17,6 +17,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoUniformCoordinateFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel);

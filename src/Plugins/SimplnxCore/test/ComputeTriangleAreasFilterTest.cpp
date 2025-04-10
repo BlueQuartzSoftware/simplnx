@@ -7,7 +7,7 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -20,6 +20,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTriangleAreasFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";

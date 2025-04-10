@@ -3,7 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {

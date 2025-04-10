@@ -19,7 +19,6 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
-
   geometry.setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
   geometry.setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
   geometry.setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
@@ -36,7 +35,7 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  nx::core::HDF5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
   result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
   if(result.invalid())
   {

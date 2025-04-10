@@ -93,6 +93,8 @@ float64 GetOutOfBoundsMaximumValue()
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][MultiThresholdObjects]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = CreateTestDataStructure();
 
   SECTION("Float Array Threshold")
@@ -181,6 +183,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom Values", "[SimplnxCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32,
                    float64)
 {
+  UnitTest::LoadPlugins();
+
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
@@ -230,6 +234,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore][MultiThresholdObjects]")
 {
+  UnitTest::LoadPlugins();
+
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
@@ -306,6 +312,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64, float32)
 {
+  UnitTest::LoadPlugins();
+
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
@@ -366,6 +374,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out 
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custom Values", "[SimplnxCore][MultiThresholdObjects]")
 {
+  UnitTest::LoadPlugins();
+
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
   Arguments args;
@@ -426,6 +436,8 @@ void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresho
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[SimplnxCore][MultiThresholdObjects]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure = CreateTestDataStructure();
 
   // Signed

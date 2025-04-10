@@ -220,6 +220,8 @@ void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize sta
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 1): Valid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
 
@@ -259,6 +261,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 1): Valid filter execution")
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Skipped Array")
 {
+  UnitTest::LoadPlugins();
+
   std::string newGroupName = "New Group";
 
   std::string arrayName = "Array";
@@ -287,6 +291,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Ski
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 3): Invalid filter execution - Out of Bounds")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
 
@@ -363,6 +369,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 3): Invalid filter execution - O
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 4): Invalid filter execution - Invalid arguments")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
 
@@ -405,6 +413,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 4): Invalid filter execution - I
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - Invalid ReadCSVData values")
 {
+  UnitTest::LoadPlugins();
+
   std::vector<std::string> v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
   fs::create_directories(k_TestInput.parent_path());
   CreateTestDataFile(k_TestInput, v, {"Array"});
@@ -496,6 +506,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 6): Invalid filter execution - Blank Lines")
 {
+  UnitTest::LoadPlugins();
+
   // Create the parent directory path
   fs::create_directories(k_TestInput.parent_path());
 

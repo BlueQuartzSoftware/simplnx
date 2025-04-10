@@ -1,161 +1,162 @@
 #include "ObjectIO.hpp"
 
+#include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
-
-#include <H5Apublic.h>
 
 namespace nx::core::HDF5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(IdType parentId)
+ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
 : m_ParentId(parentId)
+, m_ObjectName(objectName)
 {
 }
 
-ObjectIO::ObjectIO(IdType parentId, IdType objectId)
-: m_ParentId(parentId)
-, m_Id(objectId)
+ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
+: m_FilePath(filepath)
+, m_ObjectName(objectName)
 {
-}
-
-ObjectIO::ObjectIO(IdType parentId, const std::string& targetName)
-: m_ParentId(parentId)
-{
-  m_Id = H5Oopen(parentId, targetName.c_str(), H5P_DEFAULT);
 }
 
 ObjectIO::ObjectIO(ObjectIO&& other) noexcept
+: m_FilePath(std::move(other.m_FilePath))
+, m_ObjectName(std::move(other.m_ObjectName))
+, m_ParentId(std::move(other.m_ParentId))
+, m_Id(std::move(other.m_Id))
 {
-  m_Id = std::exchange(other.m_Id, 0);
-  m_ParentId = std::exchange(other.m_ParentId, 0);
-  m_SharedParentPtr = std::move(other.m_SharedParentPtr);
+  other.m_Id = -1;
 }
 
 ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
 {
-  m_Id = std::exchange(other.m_Id, 0);
-  m_ParentId = std::exchange(other.m_ParentId, 0);
-  m_SharedParentPtr = std::move(other.m_SharedParentPtr);
+  m_Id = std::move(other.m_Id);
+  m_FilePath = std::move(other.m_FilePath);
+  m_ObjectName = std::move(other.m_ObjectName);
+  m_ParentId = std::move(other.m_ParentId);
+
+  other.m_Id = -1;
   return *this;
 }
 
 ObjectIO::~ObjectIO() noexcept
 {
-  closeHdf5();
-}
-
-void ObjectIO::closeHdf5()
-{
-  if(isValid())
-  {
-    H5Oclose(m_Id);
-    m_Id = 0;
-  }
-}
-
-void ObjectIO::clear()
-{
-  m_Id = 0;
-  m_ParentId = 0;
 }
 
 bool ObjectIO::isValid() const
 {
-  return getId() > 0;
-}
-
-IdType ObjectIO::getFileId() const
-{
-  if(!isValid())
-  {
-    return 0;
-  }
-
-  return H5Iget_file_id(getParentId());
-}
-
-IdType ObjectIO::getParentId() const
-{
-  return m_ParentId;
-}
-
-void ObjectIO::setParentId(IdType parentId)
-{
-  m_ParentId = parentId;
-  m_SharedParentPtr = nullptr;
-}
-
-void ObjectIO::setSharedParent(std::shared_ptr<GroupIO> sharedParent)
-{
-  if(sharedParent == nullptr)
-  {
-    setParentId(0);
-  }
-  else
-  {
-    setParentId(sharedParent->getId());
-    m_SharedParentPtr = sharedParent;
-  }
-}
-
-haddr_t ObjectIO::getObjectId() const
-{
-  if(!isValid())
-  {
-    return 0;
-  }
-
-  H5O_info1_t info;
-  H5Oget_info(m_Id, &info);
-  return info.addr;
-}
-
-IdType ObjectIO::getId() const
-{
-  return m_Id;
-}
-
-void ObjectIO::setId(IdType identifier)
-{
-  m_Id = identifier;
+  return m_Id > 0;
 }
 
 std::string ObjectIO::getName() const
 {
-  if(!isValid())
-  {
-    return "";
-  }
-
-  std::string path = GetNameFromId(getId());
-  return path;
+  return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
 }
 
-std::string ObjectIO::getParentName() const
+std::string ObjectIO::getNamePath() const
 {
-  if(!isValid())
-  {
-    return "";
-  }
-
-  std::string path = GetNameFromId(getParentId());
-
-  return path;
+  return m_ObjectName;
 }
 
 std::string ObjectIO::getObjectPath() const
 {
   if(!isValid())
   {
-    return "";
+    return getName();
   }
-
-  return Support::GetObjectPath(getId());
+  std::string path = "/";
+  path += Support::GetObjectPath(getId());
+  return path;
 }
 
-size_t ObjectIO::getNumAttributes() const
+std::string ObjectIO::getParentName() const
+{
+  return "";
+}
+
+void ObjectIO::setFilePath(const std::filesystem::path& filepath)
+{
+  m_FilePath = filepath;
+}
+
+void ObjectIO::setName(const std::string& name)
+{
+  m_ObjectName = name;
+}
+
+bool ObjectIO::isOpen() const
+{
+  return m_Id > 0;
+}
+
+hid_t ObjectIO::getId() const
+{
+  if(m_Id <= 0)
+  {
+    return open();
+  }
+  return m_Id;
+}
+
+void ObjectIO::setId(hid_t id) const
+{
+  m_Id = id;
+}
+
+void ObjectIO::setParentId(hid_t parentId)
+{
+  m_ParentId = parentId;
+}
+
+hid_t ObjectIO::getParentId() const
+{
+  return m_ParentId;
+}
+
+ObjectIO::ObjectType ObjectIO::getObjectType() const
+{
+  if(!isValid())
+  {
+    return ObjectType::Unknown;
+  }
+
+  herr_t error = 1;
+  H5O_info2_t objectInfo{};
+
+  error = H5Oget_info_by_name3(getParentId(), getName().c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+  if(error < 0)
+  {
+    return ObjectType::Unknown;
+  }
+
+  int32 objectType = objectInfo.type;
+  switch(objectType)
+  {
+  case H5O_TYPE_GROUP:
+    return ObjectType::Group;
+    break;
+  case H5O_TYPE_DATASET:
+    return ObjectType::Dataset;
+    break;
+  case H5O_TYPE_NAMED_DATATYPE:
+    break;
+  default:
+    break;
+  }
+
+  return ObjectType::Unknown;
+}
+
+void ObjectIO::moveObj(ObjectIO&& rhs) noexcept
+{
+  m_FilePath = std::move(rhs.m_FilePath);
+  m_ObjectName = std::move(rhs.m_ObjectName);
+  m_ParentId = std::move(rhs.m_ParentId);
+  m_Id = std::move(rhs.m_Id);
+}
+
+usize ObjectIO::getNumAttributes() const
 {
   if(!isValid())
   {
@@ -167,43 +168,170 @@ size_t ObjectIO::getNumAttributes() const
 
 std::vector<std::string> ObjectIO::getAttributeNames() const
 {
-  auto numAttributes = getNumAttributes();
-  std::vector<std::string> attributeNames(numAttributes);
-  for(size_t i = 0; i < numAttributes; i++)
+  auto numAttrib = getNumAttributes();
+  std::vector<std::string> names(numAttrib);
+  for(usize i = 0; i < numAttrib; i++)
   {
-    attributeNames[i] = getAttributeByIdx(i).getName();
+    names[i] = getAttributeNameByIndex(i);
   }
-
-  return attributeNames;
+  return names;
 }
 
-AttributeIO ObjectIO::getAttribute(const std::string& name) const
+std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
 {
-  if(!isValid())
-  {
-    return AttributeIO();
-  }
-
-  return AttributeIO(getId(), name);
+  hid_t attrId = H5Aopen_idx(getId(), idx);
+  const size_t size = 1024;
+  char buffer[size];
+  H5Aget_name(attrId, size, buffer);
+  H5Aclose(attrId);
+  return GetNameFromBuffer(buffer);
 }
 
-AttributeIO ObjectIO::getAttributeByIdx(size_t idx) const
+void ObjectIO::deleteAttribute(const std::string& name)
 {
-  if(!isValid())
+  if(H5Aexists(getId(), name.c_str()))
   {
-    return AttributeIO();
+    H5Adelete(getId(), name.c_str());
   }
-
-  return AttributeIO(getId(), idx);
 }
 
-AttributeIO ObjectIO::createAttribute(const std::string& name)
+void ObjectIO::deleteAttributes()
 {
-  if(!isValid())
+  auto attributeNames = getAttributeNames();
+  for(const auto& attributeName : attributeNames)
   {
-    return AttributeIO();
+    deleteAttribute(attributeName);
+  }
+}
+
+Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeName) const
+{
+  std::string data;
+  std::vector<char> attributeOutput;
+  Result<std::string> returnResult = {};
+
+  if(!hasAttribute(attributeName))
+  {
+    return MakeErrorResult<std::string>(-445, fmt::format("Attribute '{}' does not exist in Object '{}'", attributeName, getName()));
   }
 
-  return AttributeIO(getId(), name);
+  hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
+  hid_t attrTypeId = H5Aget_type(attribId);
+  auto isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
+  if(isVariableString == 1)
+  {
+    H5Aclose(attribId);
+
+    data.clear();
+    std::string ss = fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName);
+    return MakeErrorResult<std::string>(-440, ss);
+  }
+  if(attribId >= 0)
+  {
+    hsize_t size = H5Aget_storage_size(attribId);
+    attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
+    if(attrTypeId >= 0)
+    {
+      herr_t error = H5Aread(attribId, attrTypeId, attributeOutput.data());
+      if(error < 0)
+      {
+        std::string ss = fmt::format("Error reading attribute: '{}'", attributeName);
+        returnResult = MakeErrorResult<std::string>(-450, ss);
+        std::cout << "Error Reading Attribute." << std::endl;
+      }
+      else
+      {
+        if(attributeOutput[size - 1] == 0) // null Terminated string
+        {
+          size -= 1;
+        }
+        data.append(attributeOutput.data(),
+                    size); // Append the data to the passed in string
+        returnResult = {data};
+      }
+    }
+  }
+  H5Aclose(attribId);
+  return returnResult;
+}
+
+Result<> ObjectIO::writeStringAttribute(const std::string& attributeName, const std::string& text)
+{
+  Result<> returnError = {};
+  size_t size = text.size();
+
+  deleteAttribute(attributeName);
+
+  hid_t attributeType = H5Tcopy(H5T_C_S1);
+  H5Tset_size(attributeType, size);
+  H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
+  hid_t attributeSpaceID = H5Screate(H5S_SCALAR);
+  hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
+  if(attributeId < 0)
+  {
+    returnError = MakeErrorResult(attributeId, "Error Creating String Attribute");
+  }
+
+  herr_t error = H5Awrite(attributeId, attributeType, text.c_str());
+  if(error < 0)
+  {
+    returnError = MakeErrorResult(error, "Error Writing String Attribute");
+  }
+  H5Aclose(attributeId);
+  H5Sclose(attributeSpaceID);
+  H5Tclose(attributeType);
+
+  return returnError;
+}
+
+std::filesystem::path ObjectIO::getFilePath() const
+{
+  return m_FilePath;
+}
+
+FileIO* ObjectIO::parentFile() const
+{
+  return nullptr;
+}
+
+bool ObjectIO::hasAttribute(const std::string& attributeName) const
+{
+  return H5Aexists(getId(), attributeName.c_str()) > 0;
+}
+
+usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
+{
+  size_t typeSize = H5Tget_size(H5Aget_type(attribId));
+  std::vector<hsize_t> dims;
+  hid_t dataspaceId = H5Aget_space(attribId);
+  if(dataspaceId >= 0)
+  {
+    Type type = getTypeFromId(H5Aget_type(attribId));
+    if(type == Type::string)
+    {
+      size_t rank = 1;
+      dims.resize(rank);
+      dims[0] = typeSize;
+    }
+    else
+    {
+      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
+      std::vector<hsize_t> hdims(rank, 0);
+      /* Get dimensions */
+      herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+      if(error < 0)
+      {
+        std::cout << "Error Getting Attribute dims" << std::endl;
+        return 0;
+      }
+      // Copy the dimensions into the dims vector
+      dims.clear(); // Erase everything in the Vector
+      dims.resize(rank);
+      std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
+    }
+  }
+
+  hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
+  return numElements;
 }
 } // namespace nx::core::HDF5

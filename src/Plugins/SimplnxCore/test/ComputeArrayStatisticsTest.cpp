@@ -21,7 +21,7 @@ bool VectorContains(const std::vector<T>& vector, T value)
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -154,8 +154,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     auto maxVal = (*maxArray)[0];
     auto meanVal = (*meanArray)[0];
     auto medianVal = (*medianArray)[0];
-    auto modeVals = (*modeArray).getListReference(0);
-    auto modalBinRangesVals = (*modalBinRangesArray).getListReference(0);
+    auto modeVals = (*modeArray).getList(0);
+    auto modalBinRangesVals = (*modalBinRangesArray).getList(0);
     auto stdVal = (*stdArray)[0];
     stdVal = std::ceil(stdVal * 100.0f) / 100.0f; // round value to 2 decimal places
     auto sumVal = (*sumArray)[0];
@@ -208,7 +208,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][ComputeArrayStatisticsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
@@ -380,12 +380,12 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     auto medianVal1 = (*medianArray)[0];
     auto medianVal2 = (*medianArray)[1];
     auto medianVal3 = (*medianArray)[2];
-    auto modes0 = (*modeArray).getListReference(0);
-    auto modes1 = (*modeArray).getListReference(1);
-    auto modes2 = (*modeArray).getListReference(2);
-    auto modalBinRange0 = (*modalBinRangesArray).getListReference(0);
-    auto modalBinRange1 = (*modalBinRangesArray).getListReference(1);
-    auto modalBinRange2 = (*modalBinRangesArray).getListReference(2);
+    auto modes0 = (*modeArray).getList(0);
+    auto modes1 = (*modeArray).getList(1);
+    auto modes2 = (*modeArray).getList(2);
+    auto modalBinRange0 = (*modalBinRangesArray).getList(0);
+    auto modalBinRange1 = (*modalBinRangesArray).getList(1);
+    auto modalBinRange2 = (*modalBinRangesArray).getList(2);
     auto stdVal1 = (*stdArray)[0];
     auto stdVal2 = (*stdArray)[1];
     auto stdVal3 = (*stdArray)[2];

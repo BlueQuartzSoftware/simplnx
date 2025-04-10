@@ -12,11 +12,13 @@
 #include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Output.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <itkCastImageFilter.h>
 #include <itkImage.h>
 #include <itkImageIOBase.h>
 #include <itkImportImageFilter.h>
+#include <itkIntTypes.h>
 #include <itkNumericTraits.h>
 #include <itkVector.h>
 
@@ -310,7 +312,7 @@ std::vector<usize> GetComponentDimensions()
 }
 
 template <class PixelT, uint32 Dimensions>
-typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeomData& imageGeom)
+typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeomData& imageGeom)
 {
   using T = ITK::UnderlyingType_t<PixelT>;
 
@@ -345,31 +347,63 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
 
   typename FilterType::DirectionType imageDirection = FilterType::DirectionType::GetIdentity();
 
-  auto importFilter = FilterType::New();
-  importFilter->SetRegion(imageRegion);
-  importFilter->SetOrigin(imageOrigin);
-  importFilter->SetSpacing(imageSpacing);
-  importFilter->SetDirection(imageDirection);
-  importFilter->SetImportPointer(reinterpret_cast<PixelT*>(dataStore.data()), dataStore.getSize(), false);
-  importFilter->Update();
+  if(dataStore.getDataFormat().empty())
+  {
+    auto& inMemoryStore = dynamic_cast<DataStore<UnderlyingType_t<PixelT>>&>(dataStore);
+    auto importFilter = FilterType::New();
+    importFilter->SetRegion(imageRegion);
+    importFilter->SetOrigin(imageOrigin);
+    importFilter->SetSpacing(imageSpacing);
+    importFilter->SetDirection(imageDirection);
+    importFilter->SetImportPointer(reinterpret_cast<PixelT*>(inMemoryStore.data()), dataStore.getSize(), false);
+    importFilter->Update();
 
-  return importFilter->GetOutput();
+    return importFilter->GetOutput();
+  }
+  else
+  {
+    using ImageType = itk::Image<PixelT, Dimensions>;
+    const usize numComponents = dataStore.getNumberOfComponents();
+
+    auto image = ImageType::New();
+    image->SetOrigin(imageOrigin);
+    image->SetRegions(imageRegion);
+    image->SetSpacing(imageSpacing);
+    image->SetDirection(imageDirection);
+    image->SetNumberOfComponentsPerPixel(numComponents);
+    image->Allocate();
+
+    typename ImageType::PixelContainer* pixelContainer = image->GetPixelContainer();
+    auto* rawBufferPtr = reinterpret_cast<UnderlyingType_t<PixelT>*>(pixelContainer->GetBufferPointer());
+#if 0
+    const usize size = dataStore.size();
+    for(usize i = 0; i < size; i++)
+    {
+      dataStore[i] = rawBufferPtr[i];
+    }
+#else
+    std::copy(dataStore.begin(), dataStore.end(), rawBufferPtr);
+#endif
+
+    image->UpdateOutputData();
+    return image;
+  }
 }
 
 template <class PixelT, uint32 Dimensions>
-typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
+typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(AbstractDataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
 {
   return WrapDataStoreInImage<PixelT, Dimensions>(dataStore, ImageGeomData(imageGeom));
 }
 
 template <class PixelT, uint32 Dimension>
-DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image)
+void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataStore<UnderlyingType_t<PixelT>>& dataStore)
 {
   using ImageType = itk::Image<PixelT, Dimension>;
   using T = UnderlyingType_t<PixelT>;
   typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
-  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
-  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  typename DataStore<T>::ShapeType tDims(imageSize.rbegin(), imageSize.rend());
+  typename DataStore<T>::ShapeType cDims = GetComponentDimensions<PixelT>();
   if constexpr(Dimension == 2)
   {
     tDims.insert(tDims.begin(), 1);
@@ -379,8 +413,21 @@ DataStore<UnderlyingType_t<PixelT>> ConvertImageToDataStore(itk::Image<PixelT, D
   auto* bufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
   pixelContainer->ContainerManageMemoryOff();
   std::unique_ptr<T[]> newData(bufferPtr);
-  DataStore<T> dataStore(std::move(newData), std::move(tDims), std::move(cDims));
-  return dataStore;
+
+  if(dataStore.getDataFormat().empty())
+  {
+    auto& outputDataStore = dynamic_cast<DataStore<UnderlyingType_t<PixelT>>&>(dataStore);
+    outputDataStore = DataStore<T>(std::move(newData), std::move(tDims), std::move(cDims));
+  }
+  else
+  {
+    dataStore.resizeTuples(tDims);
+    usize count = dataStore.getSize();
+    for(usize i = 0; i < count; i++)
+    {
+      dataStore.setValue(i, bufferPtr[i]);
+    }
+  }
 }
 
 // clang-format off
@@ -694,7 +741,7 @@ struct ITKFilterFunctor
     using InputImageType = itk::Image<InputT, Dimension>;
     using OutputImageType = itk::Image<OutputT, Dimension>;
 
-    auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
+    auto& typedInputDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
     auto filter = filterCreationFunctor.template createFilter<InputImageType, OutputImageType, Dimension>();
     if(progressObserver != nullptr)
@@ -709,9 +756,8 @@ struct ITKFilterFunctor
     typename OutputImageType::Pointer outputImage = filter->GetOutput();
     outputImage->DisconnectPipeline();
 
-    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
-    auto imageDataStore = ITK::ConvertImageToDataStore(*outputImage);
-    typedOutputDataStore = std::move(imageDataStore);
+    auto& typedOutputDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
+    ITK::ConvertImageToDataStore(*outputImage, typedOutputDataStore);
 
     if constexpr(HasMeasurements_v<FilterCreationFunctorT>)
     {
@@ -733,7 +779,7 @@ struct ITKFilterFunctor
     using IntermediatePixelType = IntermediateType_t<FilterCreationFunctorT>;
     using IntermediateImageType = itk::Image<IntermediatePixelType, Dimension>;
 
-    auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
+    auto& typedInputDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
 
     using CastImageToIntermediateFilterType = itk::CastImageFilter<InputImageType, IntermediateImageType>;
@@ -757,9 +803,8 @@ struct ITKFilterFunctor
     typename OutputImageType::Pointer outputImage = castImageFromIntermediateFilter->GetOutput();
     outputImage->DisconnectPipeline();
 
-    auto& typedOutputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
-    auto imageDataStore = ITK::ConvertImageToDataStore(*outputImage);
-    typedOutputDataStore = std::move(imageDataStore);
+    auto& typedOutputDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<OutputT>>&>(outputDataStore);
+    ITK::ConvertImageToDataStore(*outputImage, typedOutputDataStore);
 
     if constexpr(HasMeasurements_v<FilterCreationFunctorT>)
     {
@@ -903,11 +948,6 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
   auto& outputDataStore = outputArray.getIDataStoreRef();
 
   using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
-
-  if(inputArray.getDataFormat() != "")
-  {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
-  }
 
   try
   {

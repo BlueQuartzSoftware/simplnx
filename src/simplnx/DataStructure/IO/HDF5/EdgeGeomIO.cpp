@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {
@@ -31,7 +31,7 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
     return result;
   }
 
-  const group_reader_type groupReader = parentGroup.openGroup(objectName);
+  auto groupReader = parentGroup.openGroup(objectName);
   geometry->setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
   geometry->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
@@ -44,8 +44,7 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
 }
 Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
-
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
   INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
 
   Result<> result = WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag);

@@ -35,6 +35,8 @@ const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameN
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", "[SimplnxCore][DBSCAN]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
 
@@ -72,6 +74,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "[SimplnxCore][DBSCAN]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
 
@@ -109,6 +113,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[SimplnxCore][DBSCAN]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
 
@@ -148,6 +154,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[S
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[SimplnxCore][DBSCAN]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
 
@@ -187,6 +195,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[Si
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)", "[SimplnxCore][DBSCAN]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "DBSCAN_tests.tar.gz", "DBSCAN_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/DBSCAN_tests/default/6_5_DBSCAN_Data.dream3d", unit_test::k_TestFilesDir)));
 

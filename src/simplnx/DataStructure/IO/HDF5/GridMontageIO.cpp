@@ -3,7 +3,7 @@
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core::HDF5
 {
@@ -28,7 +28,7 @@ Result<> GridMontageIO::readData(DataStructureReader& structureReader, const gro
 }
 Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) const
 {
-  auto groupWriter = parentGroup.createGroupWriter(montage.getName());
+  auto groupWriter = parentGroup.createGroup(montage.getName());
   return BaseGroupIO::WriteBaseGroupData(dataStructureWriter, montage, parentGroup, importable);
 }
 

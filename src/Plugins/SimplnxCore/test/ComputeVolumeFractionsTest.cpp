@@ -24,6 +24,8 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeVolumeFractionsFilter filter;
   Arguments args;
@@ -58,6 +60,8 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeVolumeFractionsFilter filter;
   Arguments args;

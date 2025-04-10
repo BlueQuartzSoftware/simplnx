@@ -33,6 +33,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Invalid Execution", "[O
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;
@@ -80,6 +82,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentationFilter filter;
   DataStructure dataStructure;

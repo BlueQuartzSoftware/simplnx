@@ -25,7 +25,7 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 
 TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis][ConvertQuaternionFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
 

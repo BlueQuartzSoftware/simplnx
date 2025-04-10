@@ -47,6 +47,8 @@ const DataPath k_GaussianKernalDistancesComputed = k_GaussianInterpolatedDataCom
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter Execution - Uniform Inpterpolation with Mask", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
                                                               "6_6_interpolate_point_cloud_to_regular_grid");
 
@@ -85,6 +87,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter Execution - Gaussian Inpterpolation", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
                                                               "6_6_interpolate_point_cloud_to_regular_grid");
 
@@ -123,6 +127,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter Execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
                                                               "6_6_interpolate_point_cloud_to_regular_grid");
 

@@ -19,6 +19,7 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
+
   geometry.setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
   geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
   geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
@@ -34,7 +35,8 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  nx::core::HDF5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
+
   result = WriteDataId(groupWriter, geometry.getFaceListId(), IOConstants::k_FaceListTag);
   if(result.invalid())
   {

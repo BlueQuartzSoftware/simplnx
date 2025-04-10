@@ -19,7 +19,7 @@ const std::string k_AvgCAxisMisalignmentsNameComputed = "NX_AvgCAxisMisalignment
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 
@@ -56,7 +56,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: InValid Filter Execution")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 

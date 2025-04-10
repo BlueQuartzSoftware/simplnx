@@ -192,7 +192,7 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
@@ -249,7 +249,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
                                                               "ResampleImageGeom_Exemplar.dream3d");
 

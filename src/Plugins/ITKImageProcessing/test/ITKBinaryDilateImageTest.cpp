@@ -83,6 +83,10 @@ TEST_CASE("ITKImageProcessing::ITKBinaryDilateImageFilter(BinaryDilateVectorRadi
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "99108c735fe9727bca09ca28a42827d3");
+  // md5 hash only works on in-memory DataStore<T>
+  // if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "99108c735fe9727bca09ca28a42827d3");
+  }
 }

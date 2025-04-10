@@ -804,6 +804,8 @@ void SingleComponentArrayCalculatorTest2()
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")
 {
+  UnitTest::LoadPlugins();
+
   std::cout << "#### ArrayCalculatorTest Starting ####" << std::endl;
 
   SingleComponentArrayCalculatorTest1();

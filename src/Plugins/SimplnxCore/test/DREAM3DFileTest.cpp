@@ -16,8 +16,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -269,24 +268,21 @@ DREAM3D::FileData CreateFileData()
 
 TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
 {
-  auto app = Application::GetOrCreateInstance();
-  fs::path pluginPath = nx::core::unit_test::k_BuildDir.str();
-  app->loadPlugins(pluginPath, false);
+  UnitTest::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
   // Write .dream3d file
   {
     auto fileData = CreateFileData();
-    Result<HDF5::FileWriter> result = HDF5::FileWriter::CreateFile(GetIODataPath());
-    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    auto fileWriter = HDF5::FileIO::WriteFile(GetIODataPath());
 
-    auto writeResult = DREAM3D::WriteFile(result.value(), fileData);
+    auto writeResult = DREAM3D::WriteFile(fileWriter, fileData);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   // Read .dream3d file
   {
-    HDF5::FileReader fileReader(GetIODataPath());
+    auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
     auto fileResult = DREAM3D::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 
@@ -310,9 +306,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
 
 TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
 {
-  auto app = Application::GetOrCreateInstance();
-  fs::path pluginPath = nx::core::unit_test::k_BuildDir.str();
-  app->loadPlugins(pluginPath, false);
+  UnitTest::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
 
@@ -328,7 +322,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
     REQUIRE(dataArray != nullptr);
-    REQUIRE(dataArray->template getIDataStoreAs<DataStore<int8>>() != nullptr);
+    REQUIRE(dataArray->getIDataStoreAs<AbstractDataStore<int8>>() != nullptr);
   }
   {
     auto importPipeline = CreateImportPipeline();
@@ -345,9 +339,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
 
 TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
 {
-  auto app = Application::GetOrCreateInstance();
-  fs::path pluginPath = nx::core::unit_test::k_BuildDir.str();
-  app->loadPlugins(pluginPath, false);
+  UnitTest::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(m_DataMutex);
 
@@ -364,6 +356,8 @@ TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
 
 TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure ds;
   {
     CreateImageGeometryFilter filter;

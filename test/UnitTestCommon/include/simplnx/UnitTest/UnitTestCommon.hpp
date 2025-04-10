@@ -21,7 +21,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -355,6 +355,14 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
 }
 
 /**
+ * @brief Loads all simplnx plugins
+ */
+inline void LoadPlugins()
+{
+  Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
+}
+
+/**
  * @brief Writes out a DataStructure to a .dream3d file at the given file path
  * @param dataStructure
  * @param filepath
@@ -606,17 +614,17 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
 
   for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
   {
-    const auto exemplary = exemplaryList.getList(i);
-    const auto computed = computedNeighborList.getList(i);
-    if(exemplary.get() != nullptr && computed.get() != nullptr)
+    auto exemplary = exemplaryList.getList(i);
+    auto computed = computedNeighborList.getList(i);
+    if(exemplary.size() != 0 && computed.size() != 0)
     {
-      REQUIRE(exemplary->size() == computed->size());
-      std::sort(exemplary->begin(), exemplary->end());
-      std::sort(computed->begin(), computed->end());
-      for(usize j = 0; j < exemplary->size(); ++j)
+      REQUIRE(exemplary.size() == computed.size());
+      std::sort(exemplary.begin(), exemplary.end());
+      std::sort(computed.begin(), computed.end());
+      for(usize j = 0; j < exemplary.size(); ++j)
       {
-        auto exemplaryVal = exemplary->at(j);
-        auto computedVal = computed->at(j);
+        auto exemplaryVal = exemplary.at(j);
+        auto computedVal = computed.at(j);
         if(!checkNans && (std::isnan(computedVal) || std::isnan(exemplaryVal)))
         {
           continue;
@@ -629,8 +637,8 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
         if(exemplaryVal != computedVal)
         {
           float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
-          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary->size(),
-                           computedPath.toString(), computed->size()));
+          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
+                           computedPath.toString(), computed.size()));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
 
           REQUIRE(diff < epsilon);
@@ -665,22 +673,22 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
 
     for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
     {
-      const auto exemplary = exemplaryList.getList(i);
-      const auto computed = computedList.getList(i);
-      if(exemplary.get() != nullptr && computed.get() != nullptr)
+      auto exemplary = exemplaryList.getList(i);
+      auto computed = computedList.getList(i);
+      if(exemplary.size() != 0 && computed.size() != 0)
       {
-        REQUIRE(exemplary->size() == computed->size());
-        std::sort(exemplary->begin(), exemplary->end());
-        std::sort(computed->begin(), computed->end());
-        for(usize j = 0; j < exemplary->size(); ++j)
+        REQUIRE(exemplary.size() == computed.size());
+        std::sort(exemplary.begin(), exemplary.end());
+        std::sort(computed.begin(), computed.end());
+        for(usize j = 0; j < exemplary.size(); ++j)
         {
-          auto exemplaryVal = exemplary->at(j);
-          auto computedVal = computed->at(j);
+          auto exemplaryVal = exemplary.at(j);
+          auto computedVal = computed.at(j);
           if(exemplaryVal != computedVal)
           {
             float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
             INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryList.getDataPaths()[0].toString(),
-                             exemplary->size(), computedList.getDataPaths()[0].toString(), computed->size()));
+                             exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
             INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
 
             REQUIRE(diff < EPSILON);
@@ -712,23 +720,23 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
 
   for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
   {
-    const auto exemplary = exemplaryList.getList(i);
-    const auto computed = computedNeighborList.getList(i);
-    if(exemplary.get() != nullptr && computed.get() != nullptr)
+    auto exemplary = exemplaryList.getList(i);
+    auto computed = computedNeighborList.getList(i);
+    if(exemplary.size() != 0 && computed.size() != 0)
     {
-      REQUIRE(exemplary->size() == computed->size());
-      std::sort(exemplary->begin(), exemplary->end());
-      std::sort(computed->begin(), computed->end());
-      for(usize j = 0; j < exemplary->size(); ++j)
+      REQUIRE(exemplary.size() == computed.size());
+      std::sort(exemplary.begin(), exemplary.end());
+      std::sort(computed.begin(), computed.end());
+      for(usize j = 0; j < exemplary.size(); ++j)
       {
-        auto exemplaryVal = exemplary->at(j);
-        auto computedVal = computed->at(j);
+        auto exemplaryVal = exemplary.at(j);
+        auto computedVal = computed.at(j);
         if(exemplaryVal != computedVal)
         {
           float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
-          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary->size(),
-                           computedPath.toString(), computed->size()));
-          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
+          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
+                           computedPath.toString(), computed.size()));
+          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
           REQUIRE(diff < EPSILON);
           break;

@@ -283,7 +283,7 @@ void MD5::update(const unsigned char input[], size_type length)
     memcpy(&buffer[index], input, firstpart);
     transform(buffer);
 
-    // transform chunks of blocksize (64 bytes)
+    // transform chunkShape of blocksize (64 bytes)
     for(i = firstpart; i + blocksize <= length; i += blocksize)
       transform(&input[i]);
 

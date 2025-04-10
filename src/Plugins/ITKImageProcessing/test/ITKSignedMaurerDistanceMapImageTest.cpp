@@ -19,6 +19,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKSignedMaurerDistanceMapImageFilter(default)", "[ITKImageProcessing][ITKSignedMaurerDistanceMapImage][default]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKSignedMaurerDistanceMapImageFilter filter;
 

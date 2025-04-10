@@ -1,11 +1,12 @@
 #include "GroupIO.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
-#include "fmt/format.h"
-
+#include <H5Dpublic.h>
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
+
+#include "fmt/format.h"
 
 #include <iostream>
 
@@ -30,24 +31,31 @@ IdType getGroupId(IdType parentId, const std::string& groupName)
 
 GroupIO::GroupIO() = default;
 
-GroupIO::GroupIO(IdType parentId, const std::string& groupName)
-: ObjectIO(parentId, getGroupId(parentId, groupName))
+GroupIO::GroupIO(hid_t parentId, const std::string& groupName, hid_t groupId)
+: ObjectIO(parentId, groupName)
 {
-}
-
-GroupIO::GroupIO(IdType parentId, IdType objectId)
-: ObjectIO(parentId, objectId)
-{
+  setId(groupId);
 }
 
 GroupIO::~GroupIO() noexcept
 {
-  closeHdf5();
+  close();
 }
 
-void GroupIO::closeHdf5()
+hid_t GroupIO::open() const
 {
-  if(isValid())
+  if(isOpen())
+  {
+    return getId();
+  }
+  hid_t id = H5Gopen(getParentId(), getNamePath().c_str(), H5P_DEFAULT);
+  setId(id);
+  return id;
+}
+
+void GroupIO::close()
+{
+  if(isOpen())
   {
     H5Gclose(getId());
     setId(0);
@@ -56,191 +64,172 @@ void GroupIO::closeHdf5()
 
 GroupIO GroupIO::openGroup(const std::string& name) const
 {
-  if(!isValid())
+  if(!isGroup(name))
   {
-    return GroupIO();
+    std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
+    std::cout << ss << std::endl;
+    return {};
   }
-
-  return GroupIO(getId(), name);
-}
-
-std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
-{
-  if(!isValid())
+  hid_t groupId = H5Gopen(getId(), name.c_str(), H5P_DEFAULT);
+  if(groupId <= 0)
   {
-    return nullptr;
+    std::string ss = fmt::format("Failed to open Group '{}'.", name);
+    std::cout << ss << std::endl;
+    return {};
   }
-
-  return std::make_shared<GroupIO>(getId(), name);
+  return GroupIO(getId(), name, groupId);
 }
 
 DatasetIO GroupIO::openDataset(const std::string& name) const
 {
-  if(!isValid())
+  if(!isDataset(name))
   {
-    return DatasetIO();
+    std::string ss = fmt::format("Could not open Dataset '{}'. Child object does not exist or object is not a Dataset", name);
+    std::cout << ss << std::endl;
+    return {};
   }
-
   return DatasetIO(getId(), name);
 }
 
-std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& name) const
-{
-  if(!isValid())
-  {
-    return nullptr;
-  }
-
-  return std::make_shared<DatasetIO>(getId(), name);
-}
-
-ObjectIO GroupIO::openObject(const std::string& name) const
-{
-  if(!isValid())
-  {
-    return ObjectIO();
-  }
-
-  return ObjectIO(getId(), name);
-}
-
-size_t GroupIO::getNumChildren() const
+usize GroupIO::getNumChildren() const
 {
   if(!isValid())
   {
     return 0;
   }
 
-  hsize_t numChildren;
-  auto err = H5Gget_num_objs(getId(), &numChildren);
-  if(err < 0)
-  {
-    return 0;
-  }
-  return static_cast<size_t>(numChildren);
+  hsize_t numChildren = 0;
+  H5Gget_num_objs(getId(), &numChildren);
+  return numChildren;
+}
+
+std::string GroupIO::getChildNameByIdx(hsize_t idx) const
+{
+  const size_t size = 1024;
+  char buffer[size];
+  H5Gget_objname_by_idx(getId(), idx, buffer, size);
+  return GetNameFromBuffer(buffer);
 }
 
 std::vector<std::string> GroupIO::getChildNames() const
 {
-  std::vector<std::string> childNames;
   if(!isValid())
   {
-    return childNames;
+    return {};
   }
 
-  constexpr size_t size = 1024;
-  char buffer[size];
-
-  const size_t numChildren = getNumChildren();
-  for(size_t i = 0; i < numChildren; i++)
+  usize numChildren = getNumChildren();
+  std::vector<std::string> names(numChildren);
+  for(usize i = 0; i < numChildren; i++)
   {
-    auto err = H5Gget_objname_by_idx(getId(), i, buffer, size);
-    if(err >= 0)
-    {
-      childNames.push_back(GetNameFromBuffer(buffer));
-    }
+    names[i] = getChildNameByIdx(i);
   }
-
-  return childNames;
+  return names;
 }
 
 bool GroupIO::isGroup(const std::string& childName) const
 {
-  if(!isValid())
-  {
-    return false;
-  }
-
-  bool isGroup = true;
-  H5O_info_t objectInfo{};
-  auto error = H5Oget_info_by_name(getId(), childName.c_str(), &objectInfo, H5P_DEFAULT);
-  if(error < 0)
-  {
-    std::cout << "Error in methd H5Gget_objinfo" << std::endl;
-    return false;
-  }
-  switch(objectInfo.type)
-  {
-  case H5O_TYPE_GROUP:
-    isGroup = true;
-    break;
-  case H5O_TYPE_DATASET:
-    isGroup = false;
-    break;
-  case H5O_TYPE_NAMED_DATATYPE:
-    isGroup = false;
-    break;
-  default:
-    isGroup = false;
-  }
-  return isGroup;
+  return getObjectType(childName) == ObjectType::Group;
 }
 
 bool GroupIO::isDataset(const std::string& childName) const
 {
+  return getObjectType(childName) == ObjectType::Dataset;
+}
+
+bool GroupIO::exists(const std::string& childName) const
+{
+  return getObjectType(childName) != ObjectType::Unknown;
+}
+
+ObjectIO::ObjectType GroupIO::getObjectType(const std::string& childName) const
+{
   if(!isValid())
   {
-    return false;
+    return ObjectType::Unknown;
   }
 
-  bool isDataset = true;
-  H5O_info_t objectInfo{};
-  auto error = H5Oget_info_by_name(getId(), childName.c_str(), &objectInfo, H5P_DEFAULT);
+  herr_t error = 1;
+  H5O_info2_t objectInfo{};
+  HDF_ERROR_HANDLER_OFF
+  error = H5Oget_info_by_name3(getId(), childName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
   if(error < 0)
   {
-    std::cout << "Error in methd H5Gget_objinfo" << std::endl;
-    return false;
+    return ObjectType::Unknown;
   }
-  switch(objectInfo.type)
+
+  int32 objectType = objectInfo.type;
+  switch(objectType)
   {
   case H5O_TYPE_GROUP:
-    isDataset = false;
+    return ObjectType::Group;
     break;
   case H5O_TYPE_DATASET:
-    isDataset = true;
+    return ObjectType::Dataset;
     break;
   case H5O_TYPE_NAMED_DATATYPE:
-    isDataset = false;
     break;
   default:
-    isDataset = false;
+    break;
   }
-  return isDataset;
+
+  return ObjectType::Unknown;
 }
 
 GroupIO GroupIO::createGroup(const std::string& childName)
 {
   if(!isValid())
   {
-    return GroupIO();
+    std::string ss = fmt::format("Cannot create Group '{}' as the current group is not valid", childName);
+    std::cout << ss << std::endl;
+    return {};
   }
-
-  return GroupIO(getId(), childName);
-}
-
-std::shared_ptr<GroupIO> GroupIO::createGroupPtr(const std::string& childName)
-{
-  if(!isValid())
+  hid_t groupId = -1;
+  if(isGroup(childName))
   {
-    return nullptr;
+    groupId = H5Gopen(getId(), childName.c_str(), H5P_DEFAULT);
+  }
+  else if(!exists(childName))
+  {
+    groupId = H5Gcreate(getId(), childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  }
+  if(groupId > 0)
+  {
+    return GroupIO(getId(), childName, groupId);
   }
 
-  return std::make_shared<GroupIO>(getId(), childName);
+  std::string ss = fmt::format("Failed to create HDF5 group '{}' at path: ", childName, getObjectPath());
+  std::cout << ss << std::endl;
+  return {};
 }
 
 DatasetIO GroupIO::openDataset(const std::string& childName)
 {
   if(!isValid())
   {
-    return DatasetIO();
+    std::string ss = fmt::format("Cannot open Dataset '{}'. Current object is not valid.", childName);
+    std::cout << ss << std::endl;
+    return {};
   }
 
-  return DatasetIO(getId(), childName);
+  if(isDataset(childName) || !exists(childName))
+  {
+    return DatasetIO(getId(), childName);
+  }
+
+  std::string ss = fmt::format("Failed to open Dataset '{}' at path: ", childName, getObjectPath());
+  std::cout << ss << std::endl;
+  return {};
 }
 
-std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName)
+std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName) const
 {
   if(!isValid())
+  {
+    return nullptr;
+  }
+  if(!isDataset(childName))
   {
     return nullptr;
   }
@@ -248,15 +237,34 @@ std::shared_ptr<DatasetIO> GroupIO::openDatasetPtr(const std::string& childName)
   return std::make_shared<DatasetIO>(getId(), childName);
 }
 
+std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
+{
+  if(!isGroup(name))
+  {
+    std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
+    std::cout << ss << std::endl;
+    return nullptr;
+  }
+  hid_t groupId = H5Gopen(getId(), name.c_str(), H5P_DEFAULT);
+  if(groupId <= 0)
+  {
+    std::string ss = fmt::format("Failed to open Group '{}'.", name);
+    std::cout << ss << std::endl;
+    return nullptr;
+  }
+  return std::shared_ptr<GroupIO>(new GroupIO(getId(), name, groupId));
+}
+
 DatasetIO GroupIO::createDataset(const std::string& childName)
 {
   if(!isValid())
   {
-    return DatasetIO();
+    std::string ss = fmt::format("Cannot create Dataset '{}' as the current Group is not valid.", childName);
+    std::cout << ss << std::endl;
+    return {};
   }
 
-  DatasetIO dataset(getId(), childName);
-  return dataset;
+  return DatasetIO(getId(), childName);
 }
 
 std::shared_ptr<DatasetIO> GroupIO::createDatasetPtr(const std::string& childName)
@@ -275,6 +283,7 @@ Result<> GroupIO::createLink(const std::string& objectPath)
   {
     return MakeErrorResult(-105, "Cannot create link with empty path");
   }
+
   size_t index = objectPath.find_last_of('/');
   if(index > 0)
   {
@@ -282,13 +291,12 @@ Result<> GroupIO::createLink(const std::string& objectPath)
   }
   std::string objectName = objectPath.substr(index);
 
-  herr_t errorCode = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  herr_t errorCode = H5Lcreate_hard(getParentId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
   if(errorCode < 0)
   {
-    return MakeErrorResult(errorCode, fmt::format("Failed to create link to path '{}'", objectPath));
+    return MakeErrorResult(errorCode, fmt::format("Error creating link to path: {}", objectPath));
   }
   return {};
 }
-
 // -----------------------------------------------------------------------------
 } // namespace nx::core::HDF5

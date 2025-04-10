@@ -245,6 +245,8 @@ void RunTest(char sep, int delimiter)
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
+  UnitTest::LoadPlugins();
+
   RunTest<int8_t>(',', 0);
   RunTest<uint8_t>(',', 0);
   RunTest<int16_t>(',', 0);
@@ -303,6 +305,8 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[Simp
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Reading alphabetical/special characters, and min/max overflow
   RunInvalidTest<int8>();
   RunInvalidTest<int16>();

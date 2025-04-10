@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -38,13 +38,13 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   auto groupReader = parentGroup.openGroup(objectName);
 
   // Read Dimensions
-  auto volumeAttribute = groupReader.getAttribute("Dimensions");
-  if(!volumeAttribute.isValid())
+  auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
+  if(volumeDimensionsResult.invalid())
   {
-    std::string ss = fmt::format("Failed to access Dimensions attribute");
-    return MakeErrorResult(-1, ss);
+    return ConvertInvalidResult<void>(std::move(volumeDimensionsResult));
   }
-  std::vector<size_t> volumeDimensions = volumeAttribute.readAsVector<size_t>();
+  const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
+
   geometry->setDimensions(volumeDimensions);
 
   // Read DataObject IDs
@@ -63,25 +63,21 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return result;
   }
 
-  auto groupWriter = parentGroup.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroup.createGroup(geometry.getName());
 
   // Write dimensions
   auto dimensions = geometry.getDimensions();
-  nx::core::HDF5::AttributeWriter::DimsVector dims = {3};
   std::vector<size_t> dimsVector(3);
   for(size_t i = 0; i < 3; i++)
   {
     dimsVector[i] = dimensions[i];
   }
 
-  auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_DimensionsTag);
-  auto writeResult = dimensionAttr.writeVector(dims, dimsVector);
-  if(writeResult.invalid())
+  result = groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector);
+  if(result.invalid())
   {
-    std::string ss = "Failed to write dimensions attribute";
-    return MakeErrorResult(writeResult.errors()[0].code, ss);
+    return result;
   }
-
   // Write DataObject IDs
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);
   if(result.invalid())

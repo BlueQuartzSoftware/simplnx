@@ -5,6 +5,9 @@
 
 #include "simplnx/Common/Result.hpp"
 
+// #include "highfive/H5File.hpp"
+#include <H5Fpublic.h>
+
 #include <filesystem>
 #include <string>
 
@@ -13,53 +16,10 @@ namespace nx::core::HDF5
 class SIMPLNX_EXPORT FileIO : public GroupIO
 {
 public:
-  /**
-   * @brief This static method will ensure that the complete path to the file
-   * exists and the file is created.
-   * @param filepath The file path to the HDF5 file that should be created
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<FileIO> CreateFile(const std::filesystem::path& filepath);
+  static FileIO ReadFile(const std::filesystem::path& filepath);
+  static FileIO WriteFile(const std::filesystem::path& filepath);
 
-  /**
-   * @brief This static method will ensure that the complete path to the file
-   * exists and the file is created.
-   * @param filepath The file path to the HDF5 file that should be created
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<std::shared_ptr<FileIO>> CreateSharedFile(const std::filesystem::path& filepath);
-
-  /**
-   * @brief This static method will wrap an existing HDF5 fileId value as long
-   * as the value is > 0. If the fileId is invalid the the Result object will be
-   * `invalid()`
-   * @param fileId The HDF5 File ID to wrap
-   * @return A standard Result object that wraps a std::unique_ptr<FileWriter>
-   * object on success.
-   */
-  static Result<FileIO> WrapHdf5FileId(IdType fileId);
-
-  /**
-   * @brief Constructs an invalid FileIO.
-   */
-  FileIO();
-
-  /**
-   * @brief Constructs a FileIO wrapping the HDF5 file at the target
-   * filepath. The constructed object will be invalid if the HDF5 file cannot
-   * be found or openned.
-   * @param filepath
-   */
-  FileIO(const std::filesystem::path& filepath);
-
-  /**
-   * @brief Constructs a FileIO wrapping the target HDF5 file ID. The
-   * constructed object will be invalid if the provided HDF5 file ID is 0.
-   * @param fileId
-   */
-  FileIO(IdType fileId);
+  FileIO() = default;
 
   FileIO(const FileIO& rhs) = delete;
 
@@ -84,10 +44,64 @@ public:
    */
   std::string getName() const override;
 
+  /**
+   * @brief Overrides ObjectIO name path to return an empty string.
+   * is invalid.
+   * @return std::string
+   */
+  std::string getNamePath() const override;
+
+  /**
+   * Returns the HDF5 object path.
+   * @return std::string
+   */
+  std::string getObjectPath() const override;
+
+#if 0
+  /**
+   * @brief Returns true if the target child is a group. Returns false
+   * otherwise.
+   *
+   * This will always return false if the GroupIO is invalid.
+   * @param childName
+   * @return bool
+   */
+  bool isGroup(const std::string& childName) const override;
+
+  /**
+   * @brief Returns true if the target child is a dataset. Returns false
+   * otherwise.
+   *
+   * This will always return false if the GroupIO is invalid.
+   * @param childName
+   * @return bool
+   */
+  bool isDataset(const std::string& childName) const override;
+#endif
+
+  /**
+   * @brief Creates or opens an HDF5 dataset with the given name, dimensions, and datatype.
+   *
+   * This method should only be called by simplnx HDF5 IO wrapper classes.
+   * @param name
+   * @param dims
+   * @param dataType
+   * @return HighFive::DataSet
+   */
+  // hid_t createOrOpenH5Dataset(const std::string& name, const DimsType& dims, DataType dataType) override;
+
 protected:
   /**
-   * @brief Closes the HDF5 ID and resets it to 0.
+   * @brief Constructs a FileIO wrapping the HDF5 file at the target
+   * filepath.
+   * @param filepath
+   * @param fileId
    */
-  void closeHdf5() override;
+  FileIO(const std::filesystem::path& filepath, hid_t fileId);
+
+  hid_t open() const override;
+  void close() override;
+
+private:
 };
 } // namespace nx::core::HDF5

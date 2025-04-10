@@ -8,8 +8,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
 
-#include "simplnx/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -47,33 +46,37 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
 {
   auto* imageGeom = ImageGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
-  auto groupReader = parentGroup.openGroup(objectName);
-  if(!groupReader.isValid())
+  std::vector<usize> volDimsVector(3);
+  std::vector<float32> originVector(3);
+  std::vector<float32> spacingVector(3);
   {
-    return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
-  }
+    auto groupReader = parentGroup.openGroup(objectName);
+    if(!groupReader.isValid())
+    {
+      return MakeErrorResult(k_ReadingGroupError_Code, k_ReadingGroupError_Message);
+    }
 
-  auto dimensionAttr = groupReader.getAttribute(IOConstants::k_H5_DIMENSIONS);
-  if(!dimensionAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingDimensionsError_Code, k_ReadingDimensionsError_Message);
-  }
+    auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
+    if(volDimsVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingDimensionsError_Code, k_ReadingDimensionsError_Message);
+    }
+    volDimsVector = std::move(volDimsVectorResult.value());
 
-  auto volDimsVector = dimensionAttr.readAsVector<usize>();
+    auto originVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
+    if(originVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingOriginError_Code, k_ReadingOriginError_Message);
+    }
+    originVector = std::move(originVectorResult.value());
 
-  auto originAttr = groupReader.getAttribute(IOConstants::k_H5_ORIGIN);
-  if(!originAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingOriginError_Code, k_ReadingOriginError_Message);
+    auto spacingVectorResult = groupReader.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
+    if(spacingVectorResult.invalid())
+    {
+      return MakeErrorResult(k_ReadingSpacingError_Code, k_ReadingSpacingError_Message);
+    }
+    spacingVector = std::move(spacingVectorResult.value());
   }
-  auto originVector = originAttr.readAsVector<float32>();
-
-  auto spacingAttr = groupReader.getAttribute(IOConstants::k_H5_SPACING);
-  if(!spacingAttr.isValid())
-  {
-    return MakeErrorResult(k_ReadingSpacingError_Code, k_ReadingSpacingError_Message);
-  }
-  auto spacingVector = spacingAttr.readAsVector<float32>();
 
   SizeVec3 volDims;
   FloatVec3 spacing;
@@ -100,43 +103,23 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
     return result;
   }
 
-  auto groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  SizeVec3 volDims = geometry.getDimensions();
-  FloatVec3 spacing = geometry.getSpacing();
-  FloatVec3 origin = geometry.getOrigin();
-  nx::core::HDF5::AttributeWriter::DimsVector dims = {3};
-  std::vector<size_t> volDimsVector(3);
-  std::vector<float> spacingVector(3);
-  std::vector<float> originVector(3);
-  for(size_t i = 0; i < 3; i++)
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_DIMENSIONS, geometry.getDimensions().toContainer<std::vector<size_t>>());
+  if(result.invalid())
   {
-    volDimsVector[i] = volDims[i];
-    spacingVector[i] = spacing[i];
-    originVector[i] = origin[i];
+    return result;
   }
-
-  auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_H5_DIMENSIONS);
-  auto writeResult = dimensionAttr.writeVector(dims, volDimsVector);
-  if(writeResult.invalid())
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_ORIGIN, geometry.getOrigin().toContainer<std::vector<float32>>());
+  if(result.invalid())
   {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume dimensions");
+    return result;
   }
-
-  auto originAttr = groupWriter.createAttribute(IOConstants::k_H5_ORIGIN);
-  writeResult = originAttr.writeVector(dims, originVector);
-  if(writeResult.invalid())
+  result = groupWriter.writeVectorAttribute(IOConstants::k_H5_SPACING, geometry.getSpacing().toContainer<std::vector<float32>>());
+  if(result.invalid())
   {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume origin");
+    return result;
   }
-
-  auto spacingAttr = groupWriter.createAttribute(IOConstants::k_H5_SPACING);
-  writeResult = spacingAttr.writeVector(dims, spacingVector);
-  if(writeResult.invalid())
-  {
-    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume spacing");
-  }
-
   return {};
 }
 

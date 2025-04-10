@@ -20,6 +20,8 @@ const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
   std::vector<usize> imageDims = {40, 60, 80};
@@ -55,6 +57,8 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
 
 TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][DeleteDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
   std::vector<usize> imageDims = {40, 60, 80};

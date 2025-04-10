@@ -16,7 +16,7 @@ const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 
@@ -50,7 +50,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Valid Filter Execution", 
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Invalid Filter Execution", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 

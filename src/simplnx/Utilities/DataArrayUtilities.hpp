@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -26,8 +27,6 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-
-namespace fs = std::filesystem;
 
 #if defined(_MSC_VER)
 #define FSEEK64 _fseeki64
@@ -614,7 +613,7 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
  * @return A Result<> type that contains any warnings or errors that occurred.
  */
 template <typename T>
-Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, AbstractDataStore<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
+Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataArray<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
 {
   FILE* inputFilePtr = std::fopen(binaryFilePath.string().c_str(), "rb");
   if(inputFilePtr == nullptr)
@@ -629,7 +628,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, AbstractDataStore<
   }
 
   const usize numElements = outputDataArray.getSize();
-  // Now start reading the data in chunks if needed.
+  // Now start reading the data in chunkShape if needed.
   usize chunkSize = std::min(numElements, defaultBufferSize);
   std::vector<T> buffer(chunkSize);
 
@@ -677,7 +676,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  if(!fs::exists(filename))
+  if(!std::filesystem::exists(filename))
   {
     std::cout << "File Does Not Exist:'" << filename << "'\n";
     return nullptr;
@@ -686,7 +685,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape, static_cast<T>(0)));
   ArrayType* dataArrayPtr = ArrayType::Create(dataStructure, name, dataStore, parentId);
 
-  const usize fileSize = fs::file_size(filename);
+  const usize fileSize = std::filesystem::file_size(filename);
   const usize numBytesToRead = dataArrayPtr->getSize() * sizeof(T);
   if(numBytesToRead != fileSize)
   {
@@ -694,7 +693,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArrayPtr->getDataStoreRef());
+  Result<> result = ImportFromBinaryFile(std::filesystem::path(filename), *dataArrayPtr);
   if(result.invalid())
   {
     return nullptr;
@@ -1044,6 +1043,19 @@ private:
  */
 namespace CopyFromArray
 {
+/**
+ * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+ */
+template <class K>
+void AppendData(const K& inputArray, K& destArray, usize offset)
+{
+  const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
+  for(usize i = 0; i < numElements; ++i)
+  {
+    destArray.setValue(offset + i, inputArray.at(i));
+  }
+}
+
 /**
  * @brief Copies all of the data from the inputArray into the destination array using the given tuple offsets.
  */
@@ -1406,8 +1418,9 @@ public:
     {
       using NeighborListType = NeighborList<T>;
       auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
-      if(destArrayPtr->getValues().empty() || destArrayPtr->getList(0) == nullptr)
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+
+      if(destArrayPtr->getNumberOfLists() == 0 || destArrayPtr->getList(0).size() == 0)
       {
         destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
@@ -1482,8 +1495,8 @@ public:
     {
       using NeighborListT = NeighborList<T>;
       auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
-      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
-      if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      if(destArray->getVectors().empty() || destArray->getList(0).empty())
       {
         destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
       }
@@ -1963,4 +1976,60 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
+
+namespace Indexing
+{
+/**
+ * @brief Flatten N-dimensional position to an array index.
+ * @param position N-dimensional position
+ * @param shape Shape of the array to index
+ * @return uint64
+ */
+inline uint64 Flatten(const std::vector<uint64_t>& position, const std::vector<uint64_t>& shape)
+{
+  using index_type = uint64;
+  const size_t dimensions = position.size();
+
+  if(shape.size() != dimensions)
+  {
+    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
+  }
+
+  index_type index = 0;
+  index_type mult = 1;
+  const bool usingColumnMajor = true;
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    index += position[offset] * mult;
+    mult *= shape[offset];
+  }
+
+  return index;
+}
+
+/**
+ * @brief Find N-dimensional position from an array index and shape.
+ * @param index Array index
+ * @param shape Shape of the array to index
+ * @return std::vector<uint64>
+ */
+inline std::vector<uint64> FindPosition(uint64_t index, const std::vector<uint64_t>& shape)
+{
+  using index_type = uint64;
+  using shape_type = std::vector<index_type>;
+
+  const bool usingColumnMajor = true;
+  const size_t dimensions = shape.size();
+  shape_type position(dimensions);
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    position[offset] = index % shape[offset];
+    index /= shape[offset];
+  }
+  return position;
+}
+} // namespace Indexing
+
 } // namespace nx::core

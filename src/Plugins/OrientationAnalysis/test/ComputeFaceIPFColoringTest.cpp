@@ -31,7 +31,7 @@ DataPath faceAreas = faceDataGroup.createChildPath(nx::core::Constants::k_FaceAr
 
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Valid filter execution", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
@@ -67,7 +67,7 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Valid filter execu
 
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter execution", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 

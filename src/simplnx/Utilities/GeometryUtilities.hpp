@@ -19,7 +19,7 @@ class SIMPLNX_EXPORT FindUniqueIdsImpl
 {
 public:
   using VertexStore = nx::core::AbstractDataStore<nx::core::IGeometry::SharedVertexList::value_type>;
-  FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds);
+  FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStore& uniqueIds);
 
   void convert(size_t start, size_t end) const;
   void operator()(const Range& range) const;
@@ -27,7 +27,7 @@ public:
 private:
   const VertexStore& m_VertexStore;
   const std::vector<std::vector<size_t>>& m_NodesInBin;
-  nx::core::Int64DataStore& m_UniqueIds;
+  nx::core::Int64AbstractDataStore& m_UniqueIds;
 };
 
 /**

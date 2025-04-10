@@ -37,6 +37,7 @@ std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
 #ifdef GENERATE_TEST_DATA
 Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
 {
+  UnitTest::LoadPlugins();
   std::vector<usize> compShape = {3};
   DataPath k_EulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
 

@@ -440,6 +440,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractListStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractStringStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataArray.hpp
@@ -458,8 +460,10 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/ListStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/ScalarData.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/StringStore.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/AnyCloneable.hpp
@@ -556,6 +560,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ClusteringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -565,24 +570,12 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStore.hpp
 
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.hpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.hpp
@@ -665,6 +658,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractStringStore.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataGroup.cpp
@@ -677,6 +671,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/StringStore.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.cpp
@@ -763,23 +758,10 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.cpp
-
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp

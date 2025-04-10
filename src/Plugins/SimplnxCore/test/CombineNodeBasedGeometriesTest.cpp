@@ -288,8 +288,8 @@ struct ValidateNeighborListsImpl
     auto& combinedNL = dataStructure.getDataRefAs<NeighborList<T>>(combinedArrayPath);
 
     REQUIRE(combinedNL.getNumberOfLists() == inputNL1.getNumberOfLists() + inputNL2.getNumberOfLists());
-    REQUIRE(std::equal(inputNL1.begin(), inputNL1.end(), combinedNL.begin(), [](auto& ptr1, auto& ptr2) { return *ptr1 == *ptr2; }));
-    REQUIRE(std::equal(inputNL2.begin(), inputNL2.end(), combinedNL.begin() + inputNL1.getNumberOfLists(), [](auto& ptr1, auto& ptr2) { return *ptr1 == *ptr2; }));
+    REQUIRE(std::equal(inputNL1.begin(), inputNL1.end(), combinedNL.begin(), [](auto& ptr1, auto& ptr2) { return ptr1 == ptr2; }));
+    REQUIRE(std::equal(inputNL2.begin(), inputNL2.end(), combinedNL.begin() + inputNL1.getNumberOfLists(), [](auto& ptr1, auto& ptr2) { return ptr1 == ptr2; }));
   }
 };
 

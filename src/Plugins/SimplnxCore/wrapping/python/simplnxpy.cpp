@@ -82,14 +82,16 @@
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
 #include <simplnx/Utilities/DataGroupUtilities.hpp>
-#include <simplnx/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp>
-#include <simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp>
 
 #include <fmt/ranges.h>
 
+#include <filesystem>
+
 using namespace nx::core;
 using namespace nx::core::CxPybind;
+
 namespace py = pybind11;
+namespace fs = std::filesystem;
 
 using namespace pybind11::literals;
 

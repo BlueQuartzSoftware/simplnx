@@ -11,7 +11,7 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfoFilter filter;
@@ -81,7 +81,7 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
                                                               "so3_cubic_high_ipf_001.dream3d");

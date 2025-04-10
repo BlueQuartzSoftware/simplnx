@@ -36,7 +36,7 @@ using namespace ComputeTriangleGeomShapesFilterTest;
 
 TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysis][ComputeTriangleGeomShapes]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 

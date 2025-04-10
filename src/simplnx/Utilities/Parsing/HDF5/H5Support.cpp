@@ -9,8 +9,8 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
 
   bool isGroup = true;
   herr_t error = -1;
-  H5O_info_t objectInfo{};
-  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  H5O_info2_t objectInfo{};
+  error = H5Oget_info_by_name3(nodeId, objectName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
   if(error < 0)
   {
     std::cout << "Error in method H5Oget_info_by_name()" << std::endl;

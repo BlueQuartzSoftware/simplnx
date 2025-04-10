@@ -220,6 +220,38 @@ public:
     return {-10175, fmt::format("EmptyDataStore cannot read or write files")};
   }
 
+  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  {
+    return MakeErrorResult(-42350, "Cannot read data into an EmptyDataStore");
+  }
+  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  {
+    return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
+  }
+
+  /**
+   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
+   * from the specified chunk.
+   * @param flatChunkIndex
+   */
+  std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const override
+  {
+    return nullptr;
+  }
+
+  IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
+  {
+    return {};
+  }
+  IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
+  {
+    return {};
+  }
+  uint64 getNumberOfChunks() const override
+  {
+    return 0;
+  }
+
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;

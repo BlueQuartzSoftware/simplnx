@@ -25,7 +25,7 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTes
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz",
                                                               "ComputeSurfaceFeaturesTest");
 
@@ -108,7 +108,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
@@ -155,15 +155,21 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }

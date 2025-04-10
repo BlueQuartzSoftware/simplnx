@@ -12,6 +12,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths", "[RobustAutomaticThresholdFilter]")
 {
+  UnitTest::LoadPlugins();
+
   RobustAutomaticThresholdFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
@@ -42,6 +44,8 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths"
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[RobustAutomaticThresholdFilter]")
 {
+  UnitTest::LoadPlugins();
+
   RobustAutomaticThresholdFilter filter;
   DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;

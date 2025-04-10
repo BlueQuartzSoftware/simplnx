@@ -4,6 +4,9 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -13,6 +16,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
@@ -63,7 +68,13 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     REQUIRE(numFeatures == 848);
   }
 
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
+  {
+    // Write out the DataStructure for later viewing/debugging
+    std::string filePath = fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir);
+    // std::cout << "Writing file to: " << filePath << std::endl;
+    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+  }
 }

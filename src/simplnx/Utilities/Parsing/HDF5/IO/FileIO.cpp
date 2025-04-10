@@ -4,137 +4,62 @@
 
 #include <fmt/format.h>
 
-#include <H5Apublic.h>
-
 namespace nx::core::HDF5
 {
-Result<FileIO> FileIO::CreateFile(const std::filesystem::path& filepath)
+FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 {
-  try
-  {
-    if(std::filesystem::exists(filepath))
-    {
-      FileIO file(filepath);
-      if(!file.isValid())
-      {
-        return MakeErrorResult<FileIO>(-303, fmt::format("Error opening HDF5 file at path '{}'.", filepath.string()));
-      }
-    }
-  } catch(std::filesystem::filesystem_error& fsError)
-  {
-    return MakeErrorResult<FileIO>(-300,
-                                   fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created. C++ error reported was\n'{}'", filepath.string(), fsError.what()));
-  }
-
-  auto parentPath = filepath.parent_path();
-  if(!std::filesystem::exists(parentPath))
-  {
-    if(!std::filesystem::create_directories(parentPath))
-    {
-      return MakeErrorResult<FileIO>(-300, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                       "Parent path could not be created.",
-                                                       filepath.string()));
-    }
-  }
-
-  try
-  {
-    FileIO file(filepath);
-    if(!file.isValid())
-    {
-      return MakeErrorResult<FileIO>(-301, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                       "Parent path could not be created.",
-                                                       filepath.string()));
-    }
-    return Result<FileIO>{std::move(file)};
-  } catch(const std::runtime_error& error)
-  {
-    return MakeErrorResult<FileIO>(-302, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                     "Parent path could not be created.",
-                                                     filepath.string()));
-  }
-  return {}; // Code should not get here. We return everywhere else.
+  hid_t fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  return FileIO(filepath, fileId);
 }
 
-Result<std::shared_ptr<FileIO>> FileIO::CreateSharedFile(const std::filesystem::path& filepath)
+FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
 {
   if(std::filesystem::exists(filepath))
   {
-    FileIO file(filepath);
-    if(!file.isValid())
+    try
     {
-      return MakeErrorResult<std::shared_ptr<FileIO>>(-303, fmt::format("Error opening HDF5 file at path '{}'.", filepath.string()));
+      std::filesystem::remove(filepath);
+    } catch(const std::exception& e)
+    {
+      std::string msg = fmt::format("Failed to remove file at path '{}'. Error: '{}'", filepath.string(), e.what());
+      std::cout << msg << std::endl;
     }
   }
 
-  auto parentPath = filepath.parent_path();
-  if(!std::filesystem::exists(parentPath))
+  hid_t fileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if(fileId > 0)
   {
-    if(!std::filesystem::create_directories(parentPath))
-    {
-      return MakeErrorResult<std::shared_ptr<FileIO>>(-300, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                                        "Parent path could not be created.",
-                                                                        filepath.string()));
-    }
+    return FileIO(filepath, fileId);
   }
-
-  try
-  {
-    auto file = std::make_shared<FileIO>(filepath);
-    if(!file->isValid())
-    {
-      return MakeErrorResult<std::shared_ptr<FileIO>>(-301, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                                        "Parent path could not be created.",
-                                                                        filepath.string()));
-    }
-    return Result<std::shared_ptr<FileIO>>{std::move(file)};
-  } catch(const std::runtime_error& error)
-  {
-    return MakeErrorResult<std::shared_ptr<FileIO>>(-302, fmt::format("Error creating HDF5 file at path '{}'. "
-                                                                      "Parent path could not be created.",
-                                                                      filepath.string()));
-  }
-  return {}; // Code should not get here. We return everywhere else.
+  return {};
 }
 
-Result<FileIO> FileIO::WrapHdf5FileId(IdType fileId)
+FileIO::FileIO(const std::filesystem::path& filepath, hid_t fileId)
+: GroupIO()
 {
-  if(fileId <= 0)
-  {
-    return MakeErrorResult<FileIO>(-302, fmt::format("Error wrapping existing HDF5 FileId with value '{}'.", fileId));
-  }
-  return {FileIO(fileId)};
-}
-
-hid_t createOrOpenFile(const std::filesystem::path& filepath)
-{
-  if(std::filesystem::exists(filepath))
-  {
-    return H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  }
-  return H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-}
-
-FileIO::FileIO() = default;
-
-FileIO::FileIO(const std::filesystem::path& filepath)
-: GroupIO(0, createOrOpenFile(filepath))
-{
-}
-
-FileIO::FileIO(IdType fileId)
-: GroupIO(0, fileId)
-{
+  setFilePath(filepath);
+  setId(fileId);
 }
 
 FileIO::~FileIO() noexcept
 {
-  closeHdf5();
+  close();
 }
 
-void FileIO::closeHdf5()
+hid_t FileIO::open() const
 {
-  if(isValid())
+  if(isOpen())
+  {
+    return getId();
+  }
+  hid_t id = H5Fopen(getFilePath().string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  setId(id);
+  return id;
+}
+
+void FileIO::close()
+{
+  if(isOpen())
   {
     H5Fclose(getId());
     setId(0);
@@ -147,11 +72,135 @@ std::string FileIO::getName() const
   {
     return "";
   }
-
-  constexpr size_t size = 1024;
-  char buffer[size];
-  H5Fget_name(getId(), buffer, size);
-
-  return GetNameFromBuffer(buffer);
+  return getFilePath().filename().string();
 }
+
+std::string FileIO::getNamePath() const
+{
+  return "";
+}
+
+std::string FileIO::getObjectPath() const
+{
+  return "";
+}
+
+#if 0
+usize FileIO::getNumAttributes() const
+{
+  auto file = HighFive::File(getFilePath().string(), HighFive::File::ReadOnly);
+  return file.getNumberAttributes();
+}
+
+std::vector<std::string> FileIO::getAttributeNames() const
+{
+  auto file = HighFive::File(getFilePath().string(), HighFive::File::ReadOnly);
+  return file.listAttributeNames();
+}
+
+void FileIO::deleteAttribute(const std::string& name)
+{
+  auto file = HighFive::File(getFilePath().string(), HighFive::File::ReadWrite);
+  file.deleteAttribute(name);
+}
+#endif
+
+#if 0
+bool FileIO::isGroup(const std::string& childName) const
+{
+  if(!isValid())
+  {
+    return false;
+  }
+
+  if(!m_File->exist(childName))
+  {
+    return false;
+  }
+  return m_File->getObjectType(childName) == ObjectType::Group;
+}
+
+bool FileIO::isDataset(const std::string& childName) const
+{
+  if(!isValid())
+  {
+    return false;
+  }
+
+  if(!m_File->exist(childName))
+  {
+    return false;
+  }
+  return m_File->getObjectType(childName) == ObjectType::Dataset;
+}
+#endif
+
+#if 0
+Result<GroupIO> FileIO::createGroup(const std::string& childName)
+{
+  if(!isValid())
+  {
+    std::string ss = fmt::format("Cannot create Group '{}' as the current HDF5 FileIO is not valid.", childName);
+    return MakeErrorResult<GroupIO>(-704, ss);
+  }
+  hid_t groupId = -1;
+  if(isGroup(childName))
+  {
+    groupId = H5Gopen(getId(), childName.c_str(), H5P_DEFAULT);
+  }
+  else if (!exists(childName))
+  {
+    groupId = H5Gcreate(getId(), childName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  }
+  if(groupId > 0)
+  {
+    return {GroupIO(*this, childName, groupId)};
+  }
+
+  std::string ss = fmt::format("Failed to create HDF5 group '{}' at path: ", childName, getObjectPath());
+  return MakeErrorResult<GroupIO>(-722, ss);
+}
+
+std::shared_ptr<GroupIO> FileIO::createGroupPtr(const std::string& childName)
+{
+  if(!isValid())
+  {
+    return nullptr;
+  }
+  auto childGroup = m_File->createGroup(childName);
+  return std::make_shared<GroupIO>(*this, std::move(childGroup), childName);
+}
+#endif
+
+#if 0
+Result<GroupIO> FileIO::openGroup(const std::string& name) const
+{
+  if(!isValid())
+  {
+    std::string ss = fmt::format("Cannot create Group '{}' as the current HDF5 FileIO is not valid.", name);
+    return MakeErrorResult<GroupIO>(-804, ss);
+  }
+  if(!m_File->exist(name))
+  {
+    std::string ss = fmt::format("Cannot create Group '{}' as a child of that name does not exist.", name);
+    return MakeErrorResult<GroupIO>(-805, ss);
+  }
+  if(m_File->exist(name) && !isGroup(name))
+  {
+    std::string ss = fmt::format("Cannot create Group '{}' as a child of that name already exists but is not the correct type.", name);
+    return MakeErrorResult<GroupIO>(-806, ss);
+  }
+
+  auto childGroup = m_File->getGroup(name);
+  return {GroupIO(const_cast<FileIO&>(*this), std::move(childGroup), name)};
+}
+#endif
+
+#if 0
+std::shared_ptr<GroupIO> FileIO::openGroupPtr(const std::string& name) const
+{
+  auto childGroup = m_File->getGroup(name);
+  return std::make_shared<GroupIO>(const_cast<FileIO&>(*this), std::move(childGroup), name);
+}
+#endif
 } // namespace nx::core::HDF5

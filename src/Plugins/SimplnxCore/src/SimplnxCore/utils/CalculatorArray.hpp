@@ -148,7 +148,7 @@ protected:
       else
       {
         auto* tempArray =
-            Float64Array::Create(dataStructure, dataArray->getName(), std::make_shared<Float64DataStore>(Float64DataStore(nullptr, dataArray->getTupleShape(), dataArray->getComponentShape())));
+            Float64Array::Create(dataStructure, dataArray->getName(), std::make_shared<Float64DataStore>(Float64DataStore(dataArray->getTupleShape(), dataArray->getComponentShape(), {})));
         m_ArrayId = std::optional{tempArray->getId()};
       }
     }

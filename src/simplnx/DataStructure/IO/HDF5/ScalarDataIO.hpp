@@ -29,11 +29,13 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
+
     std::array<T, 1> buffer{};
-    Result<> result = datasetReader.readIntoSpan<T>(nonstd::span<T>{buffer});
+    auto bufferSpan = nonstd::span<T>{buffer};
+    Result<> result = datasetReader.readIntoSpan<T>(bufferSpan);
     if(result.invalid())
     {
-      return MakeErrorResult(-458, fmt::format("Failed to read ScalarData: {}", result.errors()[0].message));
+      return MakeErrorResult(-458, fmt::format("Failed to read ScalarData: {}", scalarName));
     }
 
     ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
@@ -56,9 +58,9 @@ public:
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const ScalarData<T>& scalarData, group_writer_type& parentGroup, bool importable) const
   {
-    auto datasetWriter = parentGroup.createDatasetWriter(scalarData.getName());
+    auto datasetWriter = parentGroup.createDataset(scalarData.getName());
 
-    nx::core::HDF5::DatasetWriter::DimsType dims = {1};
+    nx::core::HDF5::DatasetIO::DimsType dims = {1};
     std::array<T, 1> dataVector = {scalarData.getValue()};
     Result<> h5Result = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
     if(h5Result.invalid())

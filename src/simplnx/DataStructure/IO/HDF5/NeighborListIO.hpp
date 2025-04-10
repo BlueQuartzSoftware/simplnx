@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DataStructureReader.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
@@ -31,38 +32,50 @@ public:
    * @param dataReader
    * @return Result<>
    */
-  static std::vector<shared_vector_type> ReadHdf5Data(const nx::core::HDF5::GroupReader& parentGroup, const nx::core::HDF5::DatasetReader& dataReader)
+  static std::vector<shared_vector_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader)
   {
-    auto numNeighborsAttributeName = dataReader.getAttribute("Linked NumNeighbors Dataset");
-    auto numNeighborsName = numNeighborsAttributeName.readAsString();
-
-    auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-
-    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
-    auto& numNeighborsStore = *numNeighborsPtr.get();
-
-    std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
-    if(flatDataStore.empty())
+    try
     {
-      throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", nx::core::HDF5::Support::GetObjectPath(dataReader.getParentId()), dataReader.getName()));
-    }
+      std::string numNeighborsName;
+      auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
+      if(numNeighborsNameResult.invalid())
+      {
+        return {};
+      }
+      numNeighborsName = std::move(numNeighborsNameResult.value());
 
-    std::vector<shared_vector_type> dataVector;
-    usize offset = 0;
-    const auto numTuples = numNeighborsStore.getNumberOfTuples();
-    for(usize i = 0; i < numTuples; i++)
+      auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
+      auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
+      auto& numNeighborsStore = *numNeighborsPtr.get();
+
+      std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
+      if(flatDataStore.empty())
+      {
+        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {} called {}", dataReader.getFilePath().string(), dataReader.getName()));
+      }
+
+      std::vector<shared_vector_type> dataVector;
+      usize offset = 0;
+      const auto numTuples = numNeighborsStore.getNumberOfTuples();
+      for(usize i = 0; i < numTuples; i++)
+      {
+        const auto numNeighbors = numNeighborsStore[i];
+        auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
+        std::vector<T>& vector = *sharedVector.get();
+
+        size_t neighborListStart = offset;
+        size_t neighborListEnd = offset + numNeighbors;
+        sharedVector->assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
+        offset += numNeighbors;
+        dataVector.push_back(sharedVector);
+      }
+
+      return dataVector;
+    } catch(const std::exception& e)
     {
-      const auto numNeighbors = numNeighborsStore[i];
-      auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
-
-      size_t neighborListStart = offset;
-      size_t neighborListEnd = offset + numNeighbors;
-      sharedVector->assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
-      offset += numNeighbors;
-      dataVector.push_back(sharedVector);
+      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << std::endl;
+      return {};
     }
-
-    return dataVector;
   }
 
   /**
@@ -103,14 +116,14 @@ public:
     DataStructure tmp;
 
     // Create NumNeighbors DataStore
-    const auto& neighborData = neighborList.getValues();
+    const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
     auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
     auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
     usize totalItems = 0;
     for(usize i = 0; i < arraySize; i++)
     {
-      const auto numNeighbors = neighborData[i]->size();
+      const auto numNeighbors = neighborData[i].size();
       numNeighborsStore[i] = static_cast<int32>(numNeighbors);
       totalItems += numNeighbors;
     }
@@ -128,12 +141,12 @@ public:
     usize offset = 0;
     for(const auto& segment : neighborData)
     {
-      usize numElements = segment->size();
+      usize numElements = segment.size();
       if(numElements == 0)
       {
         continue;
       }
-      T* start = segment->data();
+      const T* start = segment.data();
       for(usize i = 0; i < numElements; i++)
       {
         flattenedData[offset + i] = start[i];
@@ -142,18 +155,16 @@ public:
     }
 
     // Write flattened array to HDF5 as a separate array
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(neighborList.getName());
-    Result<> flattenedResult = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
-    if(flattenedResult.invalid())
-    {
-      return flattenedResult;
-    }
-    auto linkedDatasetAttribute = datasetWriter.createAttribute("Linked NumNeighbors Dataset");
-    result = linkedDatasetAttribute.writeString(neighborList.getNumNeighborsArrayName());
+    auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
+    result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
     if(result.invalid())
     {
-      std::string ss = "Failed to write NeighborList dataset data name";
-      return MakeErrorResult(result.errors()[0].code, ss);
+      return result;
+    }
+    result = datasetWriter.writeStringAttribute("Linked NumNeighbors Dataset", neighborList.getNumNeighborsArrayName());
+    if(result.invalid())
+    {
+      return result;
     }
     return WriteObjectAttributes(dataStructureWriter, neighborList, datasetWriter, importable);
   }

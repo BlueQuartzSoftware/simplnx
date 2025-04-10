@@ -36,8 +36,6 @@
 #include <filesystem>
 #include <string>
 
-namespace fs = std::filesystem;
-
 namespace nx::core::FileUtilities
 {
 
@@ -67,12 +65,12 @@ SIMPLNX_EXPORT bool HasWriteAccess(const std::string& path);
  * @param filePath
  * @return
  */
-SIMPLNX_EXPORT Result<> ValidateDirectoryWritePermission(const fs::path& path, bool isFile);
+SIMPLNX_EXPORT Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, bool isFile);
 
 /**
  * @brief
  * @param filePath
  * @return
  */
-SIMPLNX_EXPORT std::pair<bool, int32> IsUtf8(const fs::path& filePath);
+SIMPLNX_EXPORT std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath);
 } // namespace nx::core::FileUtilities

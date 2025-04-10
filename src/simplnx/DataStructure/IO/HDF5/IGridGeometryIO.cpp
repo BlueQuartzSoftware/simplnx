@@ -12,13 +12,13 @@ IGridGeometryIO::~IGridGeometryIO() noexcept = default;
 Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName,
                                                DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
-  auto groupReader = parentGroup.openGroup(objectName);
   Result<> result = IGeometryIO::ReadGeometryData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
   }
 
+  auto groupReader = parentGroup.openGroup(objectName);
   IGeometry::OptionalId cellDataId = ReadDataId(groupReader, IOConstants::k_CellDataTag);
 
   geometry.setCellData(cellDataId);
@@ -33,7 +33,7 @@ Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructu
     return result;
   }
 
-  nx::core::HDF5::GroupWriter groupWriter = parentGroup.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroup.createGroup(geometry.getName());
   Result<> writeResult = WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag);
   return writeResult;
 }

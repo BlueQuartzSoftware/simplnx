@@ -11,8 +11,7 @@
 
 namespace nx::core::HDF5
 {
-class FileReader;
-class FileWriter;
+class FileIO;
 } // namespace nx::core::HDF5
 
 namespace nx::core
@@ -43,14 +42,14 @@ SIMPLNX_EXPORT FileVersionType GetFileVersion(const std::filesystem::path& path)
  * @param fileReader
  * @return FileVersionType
  */
-SIMPLNX_EXPORT FileVersionType GetFileVersion(const nx::core::HDF5::FileReader& fileReader);
+SIMPLNX_EXPORT FileVersionType GetFileVersion(const nx::core::HDF5::FileIO& fileReader);
 
 /**
  * @brief Returns the DREAM3D pipeline version.
  * @param fileReader
  * @return PipelineVersionType
  */
-SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::FileReader& fileReader);
+SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader);
 
 /**
  * @brief Imports and returns the Pipeline / DataStructure pair from the target
@@ -62,7 +61,7 @@ SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::File
  * @param preflight = false
  * @return FileData
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::HDF5::FileReader& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
 
 /**
  * @brief Imports and returns the Pipeline / DataStructure pair from the target
@@ -81,7 +80,7 @@ SIMPLNX_EXPORT Result<FileData> ReadFile(const std::filesystem::path& path);
  * @param fileData
  * @return Result<>
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileWriter& fileWriter, const FileData& fileData);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const FileData& fileData);
 
 /**
  * @brief Writes a .dream3d file with the specified data.
@@ -89,7 +88,7 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileWriter& fileWriter, const 
  * @param fileData
  * @return Result<>
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
 
 /**
  * @brief Writes a .dream3d file with the specified data.
@@ -108,7 +107,7 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * @param preflight = false
  * @return DataStructure
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileReader& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
@@ -125,7 +124,7 @@ SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::file
  * @param fileReader
  * @return Pipeline
  */
-SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::FileReader& fileReader);
+SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::FileIO& fileReader);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
@@ -134,7 +133,7 @@ SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::Fil
  * @param fileReader
  * @return Pipeline
  */
-SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const nx::core::HDF5::FileReader& fileReader);
+SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const nx::core::HDF5::FileIO& fileReader);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.

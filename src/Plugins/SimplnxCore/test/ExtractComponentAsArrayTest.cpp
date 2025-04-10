@@ -22,7 +22,7 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_find_feature_ce
 
 TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", "[SimplnxCore][ExtractComponentAsArrayFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
@@ -95,7 +95,7 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
 
 TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution", "[SimplnxCore][ExtractComponentAsArrayFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
                                                               "6_6_find_feature_centroids.dream3d");

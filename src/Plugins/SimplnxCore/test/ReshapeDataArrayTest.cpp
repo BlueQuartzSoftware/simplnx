@@ -21,6 +21,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Sam
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -60,6 +62,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Shr
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -105,6 +109,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid DataArrays - Exp
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -139,14 +145,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 2);
-  typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
-  typename NeighborList<T>::SharedVectorType inputList2(new std::vector<T>({1, 0, 0}));
+  typename NeighborList<T>::VectorType inputList2({1, 0, 0});
   inputNeighborList->setList(1, inputList2);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
@@ -161,7 +169,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   REQUIRE(reshapedNeighborList.getTupleShape() == std::vector<usize>{1});
   auto reshapedList1 = reshapedNeighborList.getList(0);
 
-  REQUIRE(*reshapedList1 == *inputList);
+  REQUIRE(reshapedList1 == inputList);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - Expand", "[SimplnxCore][ConcatenateDataArraysFilter]", int8, int16, int32, int64, uint8, uint16, uint32, uint64,
@@ -169,12 +177,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
-  typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
@@ -190,14 +200,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   auto reshapedList1 = reshapedNeighborList.getList(0);
   auto reshapedList2 = reshapedNeighborList.getList(1);
 
-  REQUIRE(*reshapedList1 == *inputList);
-  REQUIRE((*reshapedList2).empty());
+  REQUIRE(reshapedList1 == inputList);
+  REQUIRE((reshapedList2).empty());
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - Shrink", "[SimplnxCore][ConcatenateDataArraysFilter]", bool, int8, int16, int32, int64, uint8, uint16, uint32, uint64,
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -233,6 +245,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - E
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -263,6 +277,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -285,7 +301,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
   SECTION("NeighborLists")
   {
     auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
-    typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>({0, 1, 0}));
+    typename NeighborList<T>::VectorType inputList({0, 1, 0});
     inputNeighborList->setList(0, inputList);
 
     args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
@@ -313,12 +329,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
-  typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
@@ -338,16 +356,18 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
   auto reshapedList3 = reshapedNeighborList.getList(2);
   auto reshapedList4 = reshapedNeighborList.getList(3);
 
-  REQUIRE(*reshapedList1 == *inputList);
-  REQUIRE((*reshapedList2).empty());
-  REQUIRE((*reshapedList3).empty());
-  REQUIRE((*reshapedList4).empty());
+  REQUIRE(reshapedList1 == inputList);
+  REQUIRE((reshapedList2).empty());
+  REQUIRE((reshapedList3).empty());
+  REQUIRE((reshapedList4).empty());
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - Expand", "[SimplnxCore][ConcatenateDataArraysFilter]", int8, int16, int32, int64, uint8, uint16, uint32, uint64,
                    float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
@@ -380,6 +400,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - 
 
 TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid Tuple Dimensions", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ReshapeDataArrayFilter filter;
   DataStructure dataStructure;
   Arguments args;

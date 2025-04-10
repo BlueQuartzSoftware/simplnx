@@ -15,6 +15,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "vtk_rectilinear_grid_writer.tar.gz",
@@ -71,6 +73,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_vtk_rectilinear_grid_writer.tar.gz",

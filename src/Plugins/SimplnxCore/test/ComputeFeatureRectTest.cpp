@@ -99,7 +99,7 @@ DataStructure CreateTestData()
 
 TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[SimplnxCore][ComputeFeatureRectFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeFeatureRectFilter filter;

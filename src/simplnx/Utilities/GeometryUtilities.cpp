@@ -16,7 +16,7 @@ const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_Parti
 
 } // namespace
 
-GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64DataStore& uniqueIds)
+GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStore& uniqueIds)
 : m_VertexStore(vertexStore)
 , m_NodesInBin(nodesInBin)
 , m_UniqueIds(uniqueIds)
@@ -26,20 +26,19 @@ GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore
 // -----------------------------------------------------------------------------
 void GeometryUtilities::FindUniqueIdsImpl::convert(size_t start, size_t end) const
 {
-  int64* uniqueIdsPtr = m_UniqueIds.data();
   for(size_t i = start; i < end; i++)
   {
     for(size_t j = 0; j < m_NodesInBin[i].size(); j++)
     {
       size_t node1 = m_NodesInBin[i][j];
-      if(uniqueIdsPtr[node1] == static_cast<int64_t>(node1))
+      if(m_UniqueIds[node1] == static_cast<int64_t>(node1))
       {
         for(size_t k = j + 1; k < m_NodesInBin[i].size(); k++)
         {
           size_t node2 = m_NodesInBin[i][k];
           if(m_VertexStore[node1 * 3] == m_VertexStore[node2 * 3] && m_VertexStore[node1 * 3 + 1] == m_VertexStore[node2 * 3 + 1] && m_VertexStore[node1 * 3 + 2] == m_VertexStore[node2 * 3 + 2])
           {
-            uniqueIdsPtr[node2] = node1;
+            m_UniqueIds[node2] = node1;
           }
         }
       }

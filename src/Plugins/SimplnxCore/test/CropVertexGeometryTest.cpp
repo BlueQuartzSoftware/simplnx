@@ -43,6 +43,8 @@ DataStructure createTestData()
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Instantiate)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 
@@ -63,6 +65,8 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Instantiate)", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Data)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
+  UnitTest::LoadPlugins();
+
   static const std::vector<float32> k_MinPos{0, 0, 0};
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 

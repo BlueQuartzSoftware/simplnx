@@ -7,8 +7,7 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -26,6 +25,8 @@ constexpr float64 k_max_difference = 0.0001;
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
   std::string normalsDataArrayName = "Face Normals";

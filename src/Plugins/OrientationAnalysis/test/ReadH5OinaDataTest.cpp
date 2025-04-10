@@ -25,7 +25,7 @@ const std::string k_ScanName = "1";
 
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "H5Oina_Test_Data.tar.gz", "H5Oina_Test_Data");
 
@@ -82,7 +82,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
 
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: InValid Filter Execution", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 

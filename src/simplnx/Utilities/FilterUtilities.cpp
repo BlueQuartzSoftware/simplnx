@@ -7,6 +7,8 @@
 
 #include <string>
 
+namespace fs = std::filesystem;
+
 namespace nx::core
 {
 

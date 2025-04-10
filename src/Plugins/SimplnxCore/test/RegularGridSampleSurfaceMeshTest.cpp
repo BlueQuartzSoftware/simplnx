@@ -25,7 +25,13 @@ const DataPath k_GeneratedFeatureIdsPath = k_GeneratedImageGeomPath.createChildP
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Execution", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
+
+  /**
+   * THe generated test case file for this was generated on a temporary modification of the 6.6 DREAM3D-SIMPL fork where the
+   * random generation was modified to use the same generator, engine, and distribution used in standard SIMPLNX random generation
+   * utilizing the standard library. It was seeded with the std::mt19937::default_seed.
+   */
 
   //  Read Exemplar DREAM3D File Filter
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",

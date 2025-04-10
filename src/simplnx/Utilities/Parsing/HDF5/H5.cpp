@@ -42,6 +42,10 @@ std::optional<nx::core::DataType> nx::core::HDF5::toCommonType(Type typeEnum)
 
 nx::core::HDF5::Type nx::core::HDF5::getTypeFromId(IdType typeId)
 {
+  if(typeId < 0)
+  {
+    return Type::unknown;
+  }
   if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
     return Type::int8;

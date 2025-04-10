@@ -34,7 +34,8 @@ Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  auto groupWriter = parentGroup.createGroupWriter(geom.getName());
+  auto groupWriter = parentGroup.createGroup(geom.getName());
+
   result = WriteDataId(groupWriter, geom.getPolyhedronListId(), IOConstants::k_PolyhedronListTag);
   if(result.invalid())
   {

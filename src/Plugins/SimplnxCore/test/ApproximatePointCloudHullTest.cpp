@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -37,6 +37,8 @@ static const std::vector<float> s_Vertices = {
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[ApproximatePointCloudHullFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "FaceData";
   std::string normalsDataArrayName = "FaceNormals";

@@ -57,6 +57,8 @@ bool CompareFiles(const std::string& p1, const std::string& p2)
 
 TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Valid Execution", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz",
                                                               k_HexToSqrTestFilesDir);
   fs::path k_OutPath = fs::path(fmt::format("{}/single", nx::core::unit_test::k_BinaryTestOutputDir));
@@ -97,6 +99,8 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Va
 
 TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File Valid Execution", "[OrientationAnalysis][ConvertHexGridToSquareGridFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "convert_hex_grid_to_square_grid_test.tar.gz",
                                                               k_HexToSqrTestFilesDir);
   fs::path k_OutPath = fs::path(fmt::format("{}/multi", nx::core::unit_test::k_BinaryTestOutputDir));

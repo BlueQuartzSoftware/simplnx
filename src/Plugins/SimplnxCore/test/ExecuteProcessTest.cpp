@@ -18,6 +18,8 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
   DataStructure ds;
@@ -58,6 +60,8 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
   DataStructure ds;

@@ -10,22 +10,24 @@
 
 using namespace nx::core;
 
-typename nx::core::IDataStore::ShapeType nx::core::HDF5::IDataStoreIO::ReadTupleShape(const nx::core::HDF5::DatasetReader& datasetReader)
+typename nx::core::IDataStore::ShapeType nx::core::HDF5::IDataStoreIO::ReadTupleShape(const nx::core::HDF5::DatasetIO& datasetReader)
 {
-  nx::core::HDF5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(IOConstants::k_TupleShapeTag);
-  if(!tupleShapeAttribute.isValid())
+  std::vector<usize> tupleShape;
+  auto tupleShapeResult = datasetReader.readVectorAttribute<usize>(IOConstants::k_TupleShapeTag);
+  if(tupleShapeResult.valid())
   {
-    throw std::runtime_error(fmt::format("Error reading Tuple Shape from HDF5 at {}/{}", nx::core::HDF5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    tupleShape = std::move(tupleShapeResult.value());
   }
-  return tupleShapeAttribute.readAsVector<usize>();
+  return tupleShape;
 }
 
-typename nx::core::IDataStore::ShapeType nx::core::HDF5::IDataStoreIO::ReadComponentShape(const nx::core::HDF5::DatasetReader& datasetReader)
+typename nx::core::IDataStore::ShapeType nx::core::HDF5::IDataStoreIO::ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader)
 {
-  nx::core::HDF5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(IOConstants::k_ComponentShapeTag);
-  if(!componentShapeAttribute.isValid())
+  std::vector<usize> compShape;
+  auto compShapeResult = datasetReader.readVectorAttribute<usize>(IOConstants::k_ComponentShapeTag);
+  if(compShapeResult.valid())
   {
-    throw std::runtime_error(fmt::format("Error reading Component Shape from HDF5 at {}/{}", nx::core::HDF5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    compShape = std::move(compShapeResult.value());
   }
-  return componentShapeAttribute.readAsVector<usize>();
+  return compShape;
 }

@@ -8,6 +8,7 @@
 #include "SimplnxCore/utils/VtkUtilities.hpp"
 
 using namespace nx::core;
+namespace fs = std::filesystem;
 
 // -----------------------------------------------------------------------------
 WriteVtkStructuredPoints::WriteVtkStructuredPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,

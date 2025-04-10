@@ -16,6 +16,8 @@ const DataPath k_TriangleGeomPath = DataPath({Constants::k_DataContainer});
 
 TEST_CASE("SimplnxCore::ReverseTriangleWindingFilter: Valid Filter Execution", "[SimplnxCore][ReverseTriangleWindingFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "reverse_triangle_winding.tar.gz",
                                                               "reverse_triangle_winding");
 

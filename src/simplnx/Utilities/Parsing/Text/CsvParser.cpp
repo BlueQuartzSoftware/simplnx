@@ -1,5 +1,7 @@
 #include "CsvParser.hpp"
 
+namespace fs = std::filesystem;
+
 namespace nx::core
 {
 namespace CsvParser

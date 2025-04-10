@@ -13,6 +13,7 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
                                        const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   auto groupReader = parentGroup.openGroup(objectName);
+
   Result<> result = BaseGroupIO::ReadBaseGroupData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
@@ -25,7 +26,8 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
 }
 Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter, const IGeometry& geometry, group_writer_type& parentGroup, bool importable)
 {
-  nx::core::HDF5::GroupWriter groupWriter = parentGroup.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroup.createGroup(geometry.getName());
+
   Result<> result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag);
   if(result.invalid())
   {

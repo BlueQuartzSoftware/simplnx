@@ -33,7 +33,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  nx::core::HDF5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
   DataObject::OptionalId vertexListId = geometry.getVertexListId();
 
@@ -46,13 +46,14 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
   if(vertexListId.has_value())
   {
     usize numVerts = geometry.getNumberOfVertices();
-    auto datasetWriter = groupWriter.createDatasetWriter("_VertexIndices");
+    auto datasetWriter = groupWriter.createDataset("_VertexIndices");
+
     std::vector<int64> indices(numVerts);
     for(usize i = 0; i < numVerts; i++)
     {
       indices[i] = i;
     }
-    result = datasetWriter.writeSpan(nx::core::HDF5::DatasetWriter::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
+    result = datasetWriter.writeSpan(nx::core::HDF5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
     if(result.invalid())
     {
       std::string ss = "Failed to write indices to dataset";

@@ -9,6 +9,8 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Instantiate)", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = false;
   bool k_ChangeResolution = false;
@@ -31,6 +33,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Instantiate)", "[Simplnx
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Valid Execution", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = true;
   bool k_ChangeResolution = true;
@@ -60,6 +64,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Valid Execution", "[Sim
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = true;
   bool k_ChangeResolution = true;
@@ -90,6 +96,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", 
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
 {
+  UnitTest::LoadPlugins();
+
   DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   bool k_ChangeOrigin = true;
   bool k_ChangeResolution = true;

@@ -132,7 +132,16 @@ public:
    * @param rhs
    * @return
    */
-  DataStore& operator=(DataStore&& rhs) = default;
+  DataStore& operator=(DataStore&& rhs)
+  {
+    m_ComponentShape = std::move(rhs.m_ComponentShape);
+    m_TupleShape = std::move(rhs.m_TupleShape);
+    m_Data = std::move(rhs.m_Data);
+    m_NumComponents = rhs.m_NumComponents;
+    m_NumTuples = rhs.m_NumTuples;
+    m_InitValue = std::move(rhs.m_InitValue);
+    return *this;
+  }
 
   ~DataStore() override = default;
 
@@ -370,6 +379,82 @@ public:
     }
 
     return {0, ""};
+  }
+
+  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  {
+    return dataset.readIntoSpan(createSpan());
+  }
+
+  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  {
+    HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
+    dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
+    nonstd::span<const T> span = createSpan();
+    return dataset.writeSpan(dims, span);
+  }
+
+  /**
+   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
+   * from the specified chunk.
+   * @param flatChunkIndex
+   */
+  std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= this->getNumberOfChunks())
+    {
+      return nullptr;
+    }
+
+    std::unique_ptr<value_type[]> dataWrapper = std::make_unique_for_overwrite<value_type[]>(this->getSize());
+    std::copy(this->begin(), this->end(), dataWrapper.get());
+
+    return std::make_unique<DataStore<T>>(std::move(dataWrapper), this->getTupleShape(), this->getComponentShape());
+  }
+
+  uint64 getNumberOfChunks() const override
+  {
+    return 1;
+  }
+
+  /**
+   * @brief Returns the Smallest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return IDataStore::ShapeType
+   */
+  IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return IDataStore::ShapeType();
+    }
+    usize tupleDims = getTupleShape().size();
+
+    IDataStore::ShapeType lowerBounds(tupleDims);
+    std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
+    return lowerBounds;
+  }
+
+  /**
+   * @brief Returns the largest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return IDataStore::ShapeType
+   */
+  IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return IDataStore::ShapeType();
+    }
+
+    IDataStore::ShapeType upperBounds(getTupleShape());
+    for(auto value : upperBounds)
+    {
+      value -= 1;
+    }
+    return upperBounds;
   }
 
 private:

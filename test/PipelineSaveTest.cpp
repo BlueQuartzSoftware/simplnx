@@ -101,7 +101,7 @@ public:
 TEST_CASE("Save Filters To Json")
 {
   auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
   auto* filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 
@@ -128,7 +128,7 @@ TEST_CASE("Save Filters To Json")
 TEST_CASE("Save Pipeline To Json")
 {
   auto app = Application::GetOrCreateInstance();
-  app->loadPlugins(unit_test::k_BuildDir.view());
+  UnitTest::LoadPlugins();
   auto* filterList = app->getFilterList();
   REQUIRE(filterList != nullptr);
 

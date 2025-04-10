@@ -123,6 +123,8 @@ const DataPath k_Omega2Path({k_ImageGeometry, k_FeatureData, k_Omega2});
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeMomentInvariants2DFilter filter;
   DataStructure ds = CreateTestData();
@@ -159,6 +161,8 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeMomentInvariants2DFilter filter;
   DataStructure ds = CreateInvalidTestData(); // create invalid data structure input with 3D Image geometry

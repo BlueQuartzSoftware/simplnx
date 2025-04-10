@@ -4,7 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -50,6 +50,8 @@ const std::vector<int32> k_NumberElements = {
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -131,7 +133,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   {
     // Write out the DataStructure for later viewing/debugging
-    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
+    Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
     nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
     auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
@@ -142,6 +144,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 #if 0
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Bad Phase Number", "[RequireMinNumNeighborsFilter]")
 {
+    UnitTest::LoadPlugins();
+
   RequireMinNumNeighborsFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;
@@ -175,6 +179,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Bad Phase Number", "[Requi
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Phase Array", "[RequireMinNumNeighborsFilter]")
 {
+    UnitTest::LoadPlugins();
+
   RequireMinNumNeighborsFilter filter;
   DataStructure dataStructure = createTestData();
   Arguments args;

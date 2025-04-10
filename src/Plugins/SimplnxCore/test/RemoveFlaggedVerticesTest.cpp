@@ -24,6 +24,8 @@ const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   RemoveFlaggedVerticesFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -39,6 +41,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Instantiate", "[SimplnxCore
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   RemoveFlaggedVerticesFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -118,14 +122,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/RemoveFlaggedVerticesFilter.dream3d", unit_test::k_BinaryTestOutputDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
-  Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileWriter::CreateFile(filePath);
-  nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
+  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedVerticesFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry

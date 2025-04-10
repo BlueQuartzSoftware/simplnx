@@ -28,7 +28,7 @@ public:
   ~DataArrayIO() noexcept override = default;
 
   /**
-   * @brief Creates and imports a DataArray based on the provided DatasetReader
+   * @brief Creates and imports a DataArray based on the provided DatasetIO
    * @param dataStructure
    * @param datasetReader
    * @param dataArrayName
@@ -38,11 +38,11 @@ public:
    * @param preflight
    */
   template <typename K>
-  static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetReader& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
+  static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
                               nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
-    std::unique_ptr<AbstractDataStore<K>> dataStore =
-        preflight ? std::unique_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : std::unique_ptr<AbstractDataStore<K>>(DataStoreIO::ReadDataStore<K>(datasetReader));
+    std::shared_ptr<AbstractDataStore<K>> dataStore =
+        preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader));
     DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
     err = (data == nullptr) ? -400 : 0;
   }
@@ -62,52 +62,49 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(dataArrayName);
-    if(!datasetReader.isValid())
-    {
-      std::string ss = fmt::format("Could not open data set '{}' which is a child of '{}'", dataArrayName, parentGroup.getName());
-      return MakeErrorResult(-900, ss);
-    }
 
-    nx::core::HDF5::Type type = datasetReader.getType();
-    if(type == nx::core::HDF5::Type::unknown)
-    {
-      std::string ss = fmt::format("Invalid Dataset data type for DataArray '{}' which is a child of '{}'", dataArrayName, parentGroup.getName());
-      return MakeErrorResult(-901, ss);
-    }
+    auto typeResult = datasetReader.getDataType();
+    const auto type = std::move(typeResult.value());
 
-    auto dataTypeAttribute = datasetReader.getAttribute(Constants::k_ObjectTypeTag);
-    const bool isBoolArray = (dataTypeAttribute.isValid() && dataTypeAttribute.readAsString().compare("DataArray<bool>") == 0);
+    std::string dataTypeStr;
+    auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    dataTypeStr = std::move(dataTypeStrResult.value());
+    const bool isBoolArray = (dataTypeStr.compare("DataArray<bool>") == 0);
 
     // Check ability to import the data
-    auto importableAttribute = datasetReader.getAttribute(Constants::k_ImportableTag);
-    if(importableAttribute.isValid() && importableAttribute.readAsValue<int32>() == 0)
+    int32 importable = 0;
+    auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+    if(importableResult.valid())
+    {
+      importable = std::move(importableResult.value());
+    }
+    if(importable == 0)
     {
       return {};
     }
 
-    nx::core::HDF5::ErrorType err = 0;
-
+    int32 err = 0;
     switch(type)
     {
-    case nx::core::HDF5::Type::float32:
+    case DataType::float32:
       importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::float64:
+    case DataType::float64:
       importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::int8:
+    case DataType::int8:
       importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::int16:
+    case DataType::int16:
       importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::int32:
+    case DataType::int32:
       importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::int64:
+    case DataType::int64:
       importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::uint8:
+    case DataType::uint8: {
       if(isBoolArray)
       {
         importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
@@ -116,19 +113,21 @@ public:
       {
         importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       }
-      break;
-    case nx::core::HDF5::Type::uint16:
+    }
+    break;
+    case DataType::uint16:
       importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::uint32:
+    case DataType::uint32:
       importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    case nx::core::HDF5::Type::uint64:
+    case DataType::uint64:
       importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
       break;
-    default:
+    default: {
       err = -777;
       break;
+    }
     }
 
     if(err < 0)
@@ -150,7 +149,7 @@ public:
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, group_writer_type& parentGroup, bool importable) const
   {
-    auto datasetWriter = parentGroup.createDatasetWriter(dataArray.getName());
+    auto datasetWriter = parentGroup.createDataset(dataArray.getName());
     Result<> result = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(result.invalid())
     {

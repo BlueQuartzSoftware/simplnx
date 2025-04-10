@@ -115,6 +115,8 @@ public:
    */
   virtual SIMPLMapType getSimplToSimplnxMap() const = 0;
 
+  virtual void setOocTempDirectory(const std::string& path);
+
 protected:
   /**
    * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,

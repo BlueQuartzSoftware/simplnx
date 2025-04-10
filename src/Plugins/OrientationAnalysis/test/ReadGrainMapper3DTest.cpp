@@ -21,8 +21,9 @@ const std::string k_AbsorptionCTGeometryName("AbsorptionCT");
 
 } // namespace
 
-TEST_CASE("SimplnxReview::ReadGrainMapper3D:Default_Parameters", "[SimplnxReview][ReadGrainMapper3D]")
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz",
                                                               "GrainMapper3D_Test_Files");
@@ -80,8 +81,9 @@ TEST_CASE("SimplnxReview::ReadGrainMapper3D:Default_Parameters", "[SimplnxReview
                                                      computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
 }
 
-TEST_CASE("SimplnxReview::ReadGrainMapper3D:NonCompatible_Parameters", "[SimplnxReview][ReadGrainMapper3D]")
+TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz",
                                                               "GrainMapper3D_Test_Files");

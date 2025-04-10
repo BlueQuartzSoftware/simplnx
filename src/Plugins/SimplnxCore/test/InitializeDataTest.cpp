@@ -58,6 +58,8 @@ void BoundsCheck(const DataArray<T>& dataArray, const std::vector<T>& compBounds
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_fill.dream3d", unit_test::k_TestFilesDir)));
@@ -86,6 +88,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initializa
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
@@ -114,6 +118,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fil
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_fill.dream3d", unit_test::k_TestFilesDir)));
@@ -142,6 +148,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_add.dream3d", unit_test::k_TestFilesDir)));
@@ -172,6 +180,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Add
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
@@ -202,6 +212,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Inc
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_add.dream3d", unit_test::k_TestFilesDir)));
@@ -232,6 +244,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incr
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_inc_sub.dream3d", unit_test::k_TestFilesDir)));
@@ -262,6 +276,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Sub
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
@@ -292,6 +308,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Inc
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_inc_sub.dream3d", unit_test::k_TestFilesDir)));
@@ -322,6 +340,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incr
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rwr.dream3d", unit_test::k_TestFilesDir)));
@@ -355,6 +375,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Ra
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
@@ -388,6 +410,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value St
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_single_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
@@ -421,6 +445,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value No
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_multi_val_non_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
@@ -454,6 +480,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_single_val_fill.dream3d", unit_test::k_TestFilesDir)));
@@ -482,6 +510,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_addition.dream3d", unit_test::k_TestFilesDir)));
@@ -512,6 +542,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Increme
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_inc_subtraction.dream3d", unit_test::k_TestFilesDir)));
@@ -542,6 +574,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Increme
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_bool_stand_rwr.dream3d", unit_test::k_TestFilesDir)));
@@ -575,6 +609,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standar
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_rand.dream3d", unit_test::k_TestFilesDir)));
@@ -606,6 +642,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initial
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_stand_rand.dream3d", unit_test::k_TestFilesDir)));
@@ -638,6 +676,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_multi_comp_non_stand_rand.dream3d", unit_test::k_TestFilesDir)));
@@ -671,6 +711,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardize
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "initialize_data_test_files.tar.gz",
                                                               "initialize_data_test_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/initialize_data_test_files/7_0_single_comp_bool_fill.dream3d", unit_test::k_TestFilesDir)));

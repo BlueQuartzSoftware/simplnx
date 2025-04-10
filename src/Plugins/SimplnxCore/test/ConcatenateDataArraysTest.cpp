@@ -23,6 +23,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -59,6 +61,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
                    uint64, float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -101,6 +105,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -137,6 +143,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
                    uint64, float32, float64)
 {
   using T = TestType;
+
+  UnitTest::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -179,15 +187,17 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 1);
-  typename NeighborList<T>::SharedVectorType inputList1(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
   auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 1);
-  typename NeighborList<T>::SharedVectorType inputList2(new std::vector<T>({1, 1, 1}));
+  typename NeighborList<T>::VectorType inputList2({1, 1, 1});
   inputNeighborList2->setList(0, inputList2);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
@@ -212,19 +222,21 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 2);
-  typename NeighborList<T>::SharedVectorType inputList1(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
-  typename NeighborList<T>::SharedVectorType inputList2(new std::vector<T>({1, 0, 0}));
+  typename NeighborList<T>::VectorType inputList2({1, 0, 0});
   inputNeighborList1->setList(1, inputList2);
   auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 2);
-  typename NeighborList<T>::SharedVectorType inputList3(new std::vector<T>({1, 1, 1}));
+  typename NeighborList<T>::VectorType inputList3({1, 1, 1});
   inputNeighborList2->setList(0, inputList3);
-  typename NeighborList<T>::SharedVectorType inputList4(new std::vector<T>({0, 0, 1}));
+  typename NeighborList<T>::VectorType inputList4({0, 0, 1});
   inputNeighborList2->setList(1, inputList4);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
@@ -253,23 +265,25 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 3);
-  typename NeighborList<T>::SharedVectorType inputList1(new std::vector<T>({0, 1, 0}));
+  typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
-  typename NeighborList<T>::SharedVectorType inputList2(new std::vector<T>({1, 0, 0}));
+  typename NeighborList<T>::VectorType inputList2({1, 0, 0});
   inputNeighborList1->setList(1, inputList2);
-  typename NeighborList<T>::SharedVectorType inputList3(new std::vector<T>({2, 2, 1}));
+  typename NeighborList<T>::VectorType inputList3({2, 2, 1});
   inputNeighborList1->setList(2, inputList3);
   auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 3);
-  typename NeighborList<T>::SharedVectorType inputList4(new std::vector<T>({1, 1, 1}));
+  typename NeighborList<T>::VectorType inputList4({1, 1, 1});
   inputNeighborList2->setList(0, inputList4);
-  typename NeighborList<T>::SharedVectorType inputList5(new std::vector<T>({0, 0, 1}));
+  typename NeighborList<T>::VectorType inputList5({0, 0, 1});
   inputNeighborList2->setList(1, inputList5);
-  typename NeighborList<T>::SharedVectorType inputList6(new std::vector<T>({4, 5, 6}));
+  typename NeighborList<T>::VectorType inputList6({4, 5, 6});
   inputNeighborList2->setList(2, inputList6);
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
@@ -299,6 +313,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -325,6 +341,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -355,6 +373,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -389,6 +409,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
+  UnitTest::LoadPlugins();
+
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
   Arguments args;

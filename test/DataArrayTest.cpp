@@ -3,6 +3,7 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -56,7 +57,7 @@ TEST_CASE("DataArrayCreation")
 
 TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const std::string k_DataArrayName("DataArray");
   const DataPath k_DataPath({k_DataArrayName});
@@ -80,7 +81,8 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   {
     for(usize componentIndex = 0; componentIndex < k_NumComponents; componentIndex++)
     {
-      REQUIRE(dataArray[tupleIndex * 3 + componentIndex] == static_cast<int32>(tupleIndex));
+      uint64 index = tupleIndex * 3 + componentIndex;
+      REQUIRE(dataArray[index] == static_cast<int32>(tupleIndex));
     }
   }
 

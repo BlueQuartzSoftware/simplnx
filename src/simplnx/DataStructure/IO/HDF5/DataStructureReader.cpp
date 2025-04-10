@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IOUtilities.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include "fmt/format.h"
 
@@ -19,17 +21,17 @@ DataStructureReader::~DataStructureReader() noexcept = default;
 
 Result<DataStructure> DataStructureReader::ReadFile(const std::filesystem::path& path, bool useEmptyDataStores)
 {
-  const nx::core::HDF5::FileReader fileReader(path);
+  const nx::core::HDF5::FileIO fileReader = HDF5::FileIO::ReadFile(path);
   return ReadFile(fileReader);
 }
-Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileReader& fileReader, bool useEmptyDataStores)
+Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores)
 {
   DataStructureReader dataStructureReader;
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
   return dataStructureReader.readGroup(groupReader, useEmptyDataStores);
 }
 
-Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupReader& groupReader, bool useEmptyDataStores)
+Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores)
 {
   clearDataStructure();
 
@@ -39,15 +41,15 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
     return MakeErrorResult<DataStructure>(-1, ss);
   }
 
-  auto idAttribute = groupReader.getAttribute(Constants::k_NextIdTag);
-  if(!idAttribute.isValid())
+  auto idResult = groupReader.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  if(idResult.invalid())
   {
-    std::string ss = fmt::format("Failed to access DataStructure {} attribute", Constants::k_NextIdTag);
-    return MakeErrorResult<DataStructure>(-2, ss);
+    return ConvertInvalidResult<DataStructure>(std::move(idResult));
   }
+  DataObject::IdType objectId = std::move(idResult.value());
 
   m_CurrentStructure = DataStructure();
-  m_CurrentStructure.setNextId(idAttribute.readAsValue<DataObject::IdType>());
+  m_CurrentStructure.setNextId(objectId);
   Result<> result = HDF5::ReadDataMap(*this, m_CurrentStructure.getRootGroup(), groupReader, {}, useEmptyDataStores);
   if(result.invalid())
   {
@@ -57,57 +59,103 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::Group
   return {m_CurrentStructure};
 }
 
-Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupReader& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId,
-                                                  bool useEmptyDataStores)
+Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStores)
 {
   std::shared_ptr<IDataIO> factory = nullptr;
   DataObject::IdType objectId = 0;
 
   // Get nx::core::HDF5::IDataFactory and check DataObject ID
   {
-    auto childObj = parentGroup.openObject(objectName);
+    bool isGroup = parentGroup.isGroup(objectName);
 
-    // Return 0 if object is marked as not importable.
-    auto importAttribute = childObj.getAttribute(Constants::k_ImportableTag);
-    if(importAttribute.isValid())
+    if(isGroup)
     {
-      const auto importable = importAttribute.readAsValue<int32>();
+      auto childObj = parentGroup.openGroup(objectName);
+
+      // Return 0 if object is marked as not importable.
+      int32 importable = 0;
+      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
+      if(importableResult.invalid())
+      {
+        return ConvertResult(std::move(importableResult));
+      }
+      importable = std::move(importableResult.value());
+
       if(importable == 0)
       {
         return {};
       }
-    }
 
-    // Check if data has already been read
-    auto idAttribute = childObj.getAttribute(Constants::k_ObjectIdTag);
-    if(!idAttribute.isValid())
-    {
-      // AttributeMatrix Data
-      return {};
-    }
-    objectId = idAttribute.readAsValue<DataObject::IdType>();
-    if(getDataStructure().containsData(objectId))
-    {
-      getDataStructure().setAdditionalParent(objectId, parentId.value());
-      return {};
-    }
+      // Check if data has already been read
+      auto idResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      if(idResult.invalid())
+      {
+        return ConvertResult(std::move(idResult));
+      }
+      objectId = std::move(idResult.value());
 
-    // Get DataObject type for factory
-    auto typeAttribute = childObj.getAttribute(Constants::k_ObjectTypeTag);
-    if(!typeAttribute.isValid())
-    {
-      std::string ss = "Could not read ObjectType attribute";
-      return MakeErrorResult<>(-1, ss);
-    }
-    const std::string typeName = typeAttribute.readAsString();
+      if(getDataStructure().containsData(objectId) && parentId.has_value())
+      {
+        getDataStructure().setAdditionalParent(objectId, parentId.value());
+        return {};
+      }
 
-    factory = getDataFactory(typeName);
+      // Get DataObject type for factory
+      auto attrResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      if(attrResult.invalid())
+      {
+        return ConvertResult(std::move(attrResult));
+      }
+      std::string typeName = std::move(attrResult.value());
+
+      factory = getDataFactory(typeName);
+    }
+    else
+    {
+      auto childObj = parentGroup.openDataset(objectName);
+
+      // Return 0 if object is marked as not importable.
+      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
+      int32 importable = 0;
+      if(importableResult.valid())
+      {
+        importable = std::move(importableResult.value());
+      }
+
+      if(importable == 0)
+      {
+        return {};
+      }
+
+      // Check if data has already been read
+      auto objectIdResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      if(objectIdResult.valid())
+      {
+        objectId = std::move(objectIdResult.value());
+      }
+
+      if(getDataStructure().containsData(objectId) && parentId.has_value())
+      {
+        getDataStructure().setAdditionalParent(objectId, parentId.value());
+        return {};
+      }
+
+      // Get DataObject type for factory
+      auto typeNameResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      if(typeNameResult.invalid())
+      {
+        return ConvertResult(std::move(typeNameResult));
+      }
+      std::string typeName = std::move(typeNameResult.value());
+
+      factory = getDataFactory(typeName);
+    }
   }
 
   // Return an error if the factory could not be found.
   if(factory == nullptr)
   {
-    std::string ss = fmt::format("Could not find the corresponding data factory");
+    std::string ss = fmt::format("Could not find the corresponding data factory for '{}' under parent path '{}'", objectName, parentGroup.getObjectPath());
     return MakeErrorResult<>(-3, ss);
   }
 

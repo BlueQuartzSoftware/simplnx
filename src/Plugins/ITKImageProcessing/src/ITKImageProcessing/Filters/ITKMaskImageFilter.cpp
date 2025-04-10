@@ -27,7 +27,7 @@ template <uint32 Dimension>
 using MaskImageT = itk::Image<uint32, Dimension>;
 
 template <uint32 Dimension, class T>
-typename MaskImageT<Dimension>::Pointer CastDataStoreToUInt32Image(DataStore<T>& dataStore, const ImageGeom& imageGeom)
+typename MaskImageT<Dimension>::Pointer CastDataStoreToUInt32Image(AbstractDataStore<T>& dataStore, const ImageGeom& imageGeom)
 {
   static_assert(std::is_same_v<T, uint8> || std::is_same_v<T, uint16> || std::is_same_v<T, uint32>);
 
@@ -52,15 +52,15 @@ typename MaskImageT<Dimension>::Pointer CastIDataStoreToUInt32Image(IDataStore& 
   switch(dataType)
   {
   case DataType::uint8: {
-    auto& typedDataStore = dynamic_cast<DataStore<uint8>&>(dataStore);
+    auto& typedDataStore = dynamic_cast<AbstractDataStore<uint8>&>(dataStore);
     return CastDataStoreToUInt32Image<Dimension>(typedDataStore, imageGeom);
   }
   case DataType::uint16: {
-    auto& typedDataStore = dynamic_cast<DataStore<uint16>&>(dataStore);
+    auto& typedDataStore = dynamic_cast<AbstractDataStore<uint16>&>(dataStore);
     return CastDataStoreToUInt32Image<Dimension>(typedDataStore, imageGeom);
   }
   case DataType::uint32: {
-    auto& typedDataStore = dynamic_cast<DataStore<uint32>&>(dataStore);
+    auto& typedDataStore = dynamic_cast<AbstractDataStore<uint32>&>(dataStore);
     return CastDataStoreToUInt32Image<Dimension>(typedDataStore, imageGeom);
   }
   default: {

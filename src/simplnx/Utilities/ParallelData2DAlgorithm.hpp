@@ -90,7 +90,7 @@ public:
       const usize chunkWidth = m_ChunkSize->maxCol() - m_ChunkSize->minCol();
       const usize chunkHeight = m_ChunkSize->maxRow() - m_ChunkSize->minRow();
 
-      // Check which chunks to operate over
+      // Check which chunks
       const usize minChunkCol = m_Range.minCol() / chunkWidth;
       const usize maxChunkCol = m_Range.maxCol() / chunkWidth;
       const usize minChunkRow = m_Range.minRow() / chunkHeight;

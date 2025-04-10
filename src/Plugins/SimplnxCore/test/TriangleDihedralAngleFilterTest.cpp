@@ -45,6 +45,8 @@ static const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const Da
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCore][TriangleDihedralAngleFilter]")
 {
+  UnitTest::LoadPlugins();
+
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
   std::string dihedralAnglesDataArrayName = "DihedralAngles";

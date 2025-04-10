@@ -125,7 +125,9 @@ void ValidateNewGeom(const Int32Array& featureIdsResult, const AttributeMatrix& 
 } // namespace
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
-{ // Instantiate the filter, a DataStructure object and an Arguments Object
+{
+  UnitTest::LoadPlugins();
+  // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);
@@ -154,7 +156,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
-{ // Instantiate the filter, a DataStructure object and an Arguments Object
+{
+  UnitTest::LoadPlugins();
+  // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);
@@ -191,7 +195,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
-{ // Instantiate the filter, a DataStructure object and an Arguments Object
+{
+  UnitTest::LoadPlugins();
+  // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
   FillDataStructure(dataStructure);

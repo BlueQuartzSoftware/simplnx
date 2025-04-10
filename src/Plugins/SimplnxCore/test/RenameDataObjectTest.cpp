@@ -9,6 +9,8 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDataAction]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr StringLiteral k_NewName = "Bar";
   const DataPath k_DataPath({Constants::k_SmallIN100});
 
@@ -25,6 +27,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
 
 TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][RenameDataAction]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr StringLiteral k_NewName = Constants::k_ConfidenceIndex;
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
@@ -44,6 +48,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
 
 TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][RenameDataAction]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr StringLiteral k_NewName = "Foo";
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
@@ -69,6 +75,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
 
 TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][RenameDataAction]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr StringLiteral k_NewName = Constants::k_GroupHName;
   static const DataPath k_DataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
@@ -123,6 +131,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
 
 TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][RenameDataAction]")
 {
+  UnitTest::LoadPlugins();
+
   static constexpr StringLiteral k_NewName = Constants::k_GroupDName;
   static const DataPath k_DataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 

@@ -15,6 +15,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
   const std::string k_SharedTriListName = "SharedTriList";
   const std::string k_SharedVertexListName = "SharedVertexList";

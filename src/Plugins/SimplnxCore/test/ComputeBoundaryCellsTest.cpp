@@ -19,6 +19,8 @@ const DataPath k_ComputedBoundaryCellsPath({k_ExemplarDataContainer, Constants::
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[ComputeBoundaryCellsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz",
                                                               "6_6_FindBoundaryCellsExemplar.dream3d");
 
@@ -50,6 +52,8 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[C
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "[ComputeBoundaryCellsFilter]")
 {
+  UnitTest::LoadPlugins();
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz",
                                                               "6_6_FindBoundaryCellsExemplar.dream3d");
   // Read Exemplar DREAM3D File Filter

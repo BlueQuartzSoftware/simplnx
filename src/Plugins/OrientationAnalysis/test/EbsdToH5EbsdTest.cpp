@@ -198,7 +198,7 @@ GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");

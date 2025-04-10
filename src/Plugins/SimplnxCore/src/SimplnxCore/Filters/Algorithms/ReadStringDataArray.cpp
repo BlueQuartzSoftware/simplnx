@@ -64,7 +64,7 @@ Result<> ReadStringDataArray::operator()()
   auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
   char delimiter = nx::core::CsvParser::IndexToDelimiter(m_InputValues->delimiterIndex);
 
-  if(!fs::exists(m_InputValues->inputFileValue))
+  if(!std::filesystem::exists(m_InputValues->inputFileValue))
   {
     return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", m_InputValues->inputFileValue.string()));
   }

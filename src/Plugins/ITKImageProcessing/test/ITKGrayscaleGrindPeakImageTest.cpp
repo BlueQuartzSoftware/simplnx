@@ -18,6 +18,8 @@ using namespace nx::core::UnitTest;
 
 TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPeak1)", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][GrayscaleGrindPeak1]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKGrayscaleGrindPeakImageFilter filter;
 
@@ -43,12 +45,18 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "084cdd1d64664ebfab26c2e0ed382e14");
+  // md5 hash only works on in-memory DataStore<T>
+  // if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "084cdd1d64664ebfab26c2e0ed382e14");
+  }
 }
 
 TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPeak2)", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][GrayscaleGrindPeak2]")
 {
+  UnitTest::LoadPlugins();
+
   DataStructure dataStructure;
   const ITKGrayscaleGrindPeakImageFilter filter;
 
@@ -74,6 +82,10 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
-  REQUIRE(md5Hash == "b18d75cccb9361c65b40bb5c0d3c6e0d");
+  // md5 hash only works on in-memory DataStore<T>
+  // if(ITKTestBase::IsArrayInMemory(dataStructure, cellDataPath.createChildPath(outputArrayName)))
+  {
+    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
+    REQUIRE(md5Hash == "b18d75cccb9361c65b40bb5c0d3c6e0d");
+  }
 }

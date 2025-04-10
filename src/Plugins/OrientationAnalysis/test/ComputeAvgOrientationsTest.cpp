@@ -77,7 +77,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
 
   const uint64 k_NumTuples = 480000;
   const uint64 k_FeatureNumTuples = 409;

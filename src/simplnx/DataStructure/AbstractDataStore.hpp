@@ -6,12 +6,14 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <mutex>
 #include <vector>
 
 namespace nx::core
@@ -35,7 +37,7 @@ public:
   using index_type = uint64;
 
   /////////////////////////////////
-  // Begin std::iterator support //
+  // Begin std::iterator support  //
   /////////////////////////////////
 #if defined(__linux__)
   class Iterator
@@ -734,16 +736,19 @@ public:
    */
   virtual void fill(value_type value)
   {
+    std::lock_guard<std::mutex> guard(m_Mutex);
+
     std::fill(begin(), end(), value);
   }
 
   virtual bool copy(const AbstractDataStore& other)
   {
+    std::lock_guard<std::mutex> guard(m_Mutex);
+
     if(getSize() != other.getSize())
     {
       return false;
     }
-
     std::copy(other.begin(), other.end(), begin());
     return true;
   }
@@ -798,6 +803,8 @@ public:
    */
   Result<> copyFrom(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
   {
+    std::lock_guard<std::mutex> guard(m_Mutex);
+
     if(destTupleOffset >= getNumberOfTuples())
     {
       return MakeErrorResult(-14600, fmt::format("The destination tuple offset ({}) is out of range of the number of available tuples in the data store ({}). Please ensure the destination tuple "
@@ -831,13 +838,17 @@ public:
 
   /**
    * @brief Sets all the components of tuple i to value.
-   * @param i
+   * @param tupleIndex
    * @param value
    */
-  void fillTuple(index_type i, T value)
+  void fillTuple(index_type tupleIndex, T value)
   {
     usize numComponents = getNumberOfComponents();
-    std::fill_n(begin() + (i * numComponents), numComponents, value);
+    index_type offset = tupleIndex * numComponents;
+    for(usize i = 0; i < numComponents; i++)
+    {
+      setValue(offset + i, value);
+    }
   }
 
   /**
@@ -886,7 +897,11 @@ public:
 
     index_type numComponents = getNumberOfComponents();
     index_type offset = tupleIndex * numComponents;
-    std::copy(values.begin(), values.end(), begin() + offset);
+    usize count = values.size();
+    for(usize i = 0; i < count; i++)
+    {
+      setValue(offset + i, values[i]);
+    }
   }
 
   /**
@@ -957,6 +972,117 @@ public:
   }
 
   /**
+   * @brief Returns the number of chunks used to store the data.
+   * @return uint64
+   */
+  virtual uint64 getNumberOfChunks() const = 0;
+  //  {
+  //    return 1;
+  //  }
+
+  /**
+   * @brief Returns the number of elements in the specified chunk index.
+   * @param flatChunkIndex
+   * @return
+   */
+  virtual uint64 getChunkSize(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return 0;
+    }
+    return size();
+  }
+
+  /**
+   * @brief Returns the Smallest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return IDataStore::ShapeType
+   */
+  virtual IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const = 0;
+
+  /**
+   * @brief Returns the largest N-Dimensional tuple position included in the
+   * specified chunk.
+   * @param flatChunkIndex
+   * @return IDataStore::ShapeType
+   */
+  virtual IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const = 0;
+
+  /**
+   * @brief Returns the tuple shape for the specified chunk.
+   * Returns an empty vector if the chunk is out of bounds.
+   * @param flatChunkIndex
+   * @return std::vector<uint64> chunk tuple shape
+   */
+  virtual IDataStore::ShapeType getChunkTupleShape(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return IDataStore::ShapeType();
+    }
+    auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
+    auto upperBounds = getChunkUpperBounds(flatChunkIndex);
+
+    const usize tupleCount = lowerBounds.size();
+    IDataStore::ShapeType chunkTupleShape(tupleCount);
+    for(usize i = 0; i < tupleCount; i++)
+    {
+      chunkTupleShape[i] = upperBounds[i] - lowerBounds[i] + 1;
+    }
+    return chunkTupleShape;
+  }
+
+  /**
+   * @brief Returns a vector containing the tuple extents for a specified chunk.
+   * The returned values are formatted as [min, max] in the order of the tuple
+   * dimensions. For instance, a single chunk with tuple dimensions {X, Y, Z} will
+   * will result in an extent of [0, X-1, 0, Y-1, 0, Z-1].
+   * Returns an empty vector if the chunk requested is beyond the scope of the
+   * available chunks.
+   * @param flatChunkIndex
+   * @return std::vector<uint64> extents
+   */
+  std::vector<uint64> getChunkExtents(uint64 flatChunkIndex) const
+  {
+    if(flatChunkIndex >= getNumberOfChunks())
+    {
+      return std::vector<uint64>();
+    }
+
+    usize tupleDims = getTupleShape().size();
+    std::vector<uint64> extents(tupleDims * 2);
+
+    auto upperBounds = getChunkUpperBounds(flatChunkIndex);
+    auto lowerBounds = getChunkLowerBounds(flatChunkIndex);
+
+    for(usize i = 0; i < tupleDims; i++)
+    {
+      extents[i * 2] = lowerBounds[i];
+      extents[i * 2 + 1] = upperBounds[i];
+    }
+
+    return extents;
+  }
+
+  /**
+   * @brief Makes sure the target chunk is loaded in memory.
+   * This method does nothing for in-memory DataStores.
+   * @param flatChunkIndex
+   */
+  virtual void loadChunk(uint64 flatChunkIndex)
+  {
+  }
+
+  /**
+   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
+   * from the specified chunk.
+   * @param flatChunkIndex
+   */
+  virtual std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const = 0;
+
+  /**
    * @brief Flushes the data store to its respective target.
    * In-memory DataStores are not affected.
    */
@@ -969,11 +1095,25 @@ public:
     return sizeof(T) * getSize();
   }
 
+  virtual Result<> readHdf5(const HDF5::DatasetIO& dataset) = 0;
+  virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
+
 protected:
   /**
    * @brief Default constructor
    */
   AbstractDataStore() = default;
+  AbstractDataStore(const AbstractDataStore& other)
+  : IDataStore(other)
+  {
+  }
+
+  AbstractDataStore(AbstractDataStore&& other)
+  : IDataStore(std::move(other))
+  {
+  }
+
+  mutable std::mutex m_Mutex;
 };
 
 using UInt8AbstractDataStore = AbstractDataStore<uint8>;

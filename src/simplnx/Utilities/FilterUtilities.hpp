@@ -13,8 +13,6 @@
 #include <filesystem>
 #include <stdexcept>
 
-namespace fs = std::filesystem;
-
 namespace nx::core
 {
 template <template <class> class ClassT, class ArrayTypeOptions = ArrayUseAllTypes, class... ArgsT>
@@ -193,7 +191,7 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
  * @param outputPath The path that gets created
  * @return
  */
-SIMPLNX_EXPORT Result<> CreateOutputDirectories(const fs::path& outputPath);
+SIMPLNX_EXPORT Result<> CreateOutputDirectories(const std::filesystem::path& outputPath);
 
 /**
  * @brief Creates a delimiters vector from the given delimiters booleans

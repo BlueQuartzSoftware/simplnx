@@ -24,6 +24,8 @@ fs::path k_NXOutputFile(k_OutputFileName.string() + Pipeline::k_Extension.str())
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
@@ -51,6 +53,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
@@ -79,6 +83,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missing output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
@@ -104,6 +110,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invalid input file format", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
+  UnitTest::LoadPlugins();
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
@@ -112,9 +120,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   auto testInvalidInputFile = fs::path(fmt::format("{}/TestDataStructureNoPipeline.dream3d", unit_test::k_BinaryTestOutputDir));
   {
     DataStructure testDataStructure = UnitTest::CreateDataStructure();
-    auto fileWriterResult = nx::core::HDF5::FileWriter::CreateFile(testInvalidInputFile);
-    REQUIRE(fileWriterResult.valid());
-    nx::core::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
+    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(testInvalidInputFile);
     auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     REQUIRE(writeResult.valid());
   }
