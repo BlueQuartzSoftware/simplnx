@@ -60,7 +60,7 @@ std::vector<int64> getNodeIds(usize x, usize y, usize z, const usize* pDims)
   return nodeId;
 }
 
-int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel)
+int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel, bool writeDummyNode)
 {
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   usize nodeIndex = 1;
@@ -115,8 +115,11 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
     }
   }
 
-  // Write the last node, which is a dummy node used for stress - strain curves.
-  fprintf(f, "%d, %f, %f, %f\n", 999999, 0.0f, 0.0f, 0.0f);
+  if(writeDummyNode)
+  {
+    // Write the last node, which is a dummy node used for stress - strain curves.
+    fprintf(f, "%d, %f, %f, %f\n", 999999, 0.0f, 0.0f, 0.0f);
+  }
   fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
 
   // Close the file
@@ -384,7 +387,7 @@ Result<> WriteAbaqusHexahedron::operator()()
     }
   }
 
-  int32 err = writeNodes(this, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel()); // Nodes file
+  int32 err = writeNodes(this, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode); // Nodes file
   if(err < 0)
   {
     return MakeErrorResult(-1113, fmt::format("Error writing output nodes file '{}'", fileList[0].value().tempFilePath().string()));
