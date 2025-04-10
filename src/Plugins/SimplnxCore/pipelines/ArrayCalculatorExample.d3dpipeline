@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "ArrayCalculatorExample.d3dpipeline",
   "pipeline": [
     {
       "args": {

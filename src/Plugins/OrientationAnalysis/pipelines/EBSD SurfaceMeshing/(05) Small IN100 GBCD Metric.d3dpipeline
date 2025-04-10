@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "(05) Small IN100 GBCD Metric.d3dpipeline",
   "pipeline": [
     {
       "args": {

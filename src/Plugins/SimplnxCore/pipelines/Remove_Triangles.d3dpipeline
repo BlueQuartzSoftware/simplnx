@@ -1,11 +1,20 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "Remove_Triangles.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -77,6 +86,7 @@
               {
                 "array_path": "TriangleDataContainer/Face Data/Region Ids",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -86,7 +96,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 1,
@@ -130,6 +140,7 @@
               {
                 "array_path": "TriangleDataContainer/Face Data/Region Ids",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -139,7 +150,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -222,5 +233,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

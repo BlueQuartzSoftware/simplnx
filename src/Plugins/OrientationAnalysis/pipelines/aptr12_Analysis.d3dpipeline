@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "aptr12_Analysis.d3dpipeline",
   "pipeline": [
     {
       "args": {

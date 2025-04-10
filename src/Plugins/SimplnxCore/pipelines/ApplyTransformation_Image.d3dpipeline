@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ApplyTransformation_Image.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -103,7 +104,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             0.0,
@@ -111,6 +116,10 @@
             0.0,
             180.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -219,7 +228,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             0.0,
@@ -227,6 +240,10 @@
             0.0,
             180.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -335,7 +352,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             0.0,
@@ -343,6 +364,10 @@
             1.0,
             90.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -451,7 +476,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             0.0,
@@ -459,6 +488,10 @@
             1.0,
             45.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -567,7 +600,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             0.0,
@@ -575,6 +612,10 @@
             1.0,
             45.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -629,5 +670,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

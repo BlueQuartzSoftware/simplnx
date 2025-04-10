@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "AppendImageGeometry.d3dpipeline",
   "pipeline": [
     {
       "args": {

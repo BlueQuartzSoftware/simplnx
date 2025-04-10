@@ -1,11 +1,20 @@
 {
   "isDisabled": false,
   "name": "ApplyTransformation_Node.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -43,8 +52,16 @@
     },
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -127,7 +144,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             1.0,
@@ -135,6 +156,10 @@
             0.0,
             180.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -171,8 +196,16 @@
     },
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -255,7 +288,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             1.0,
@@ -263,6 +300,10 @@
             1.0,
             45.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -299,8 +340,16 @@
     },
     {
       "args": {
+        "create_face_labels": {
+          "value": true,
+          "version": 1
+        },
         "face_attribute_matrix_name": {
           "value": "Face Data",
+          "version": 1
+        },
+        "face_labels_name": {
+          "value": "Face Labels",
           "version": 1
         },
         "face_normals_name": {
@@ -383,7 +432,11 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "output_transform_matrix_path": {
+          "value": "Transformation Matrix",
+          "version": 1
+        },
+        "parameters_version": 2,
         "rotation": {
           "value": [
             1.0,
@@ -391,6 +444,10 @@
             1.0,
             45.0
           ],
+          "version": 1
+        },
+        "save_transform_matrix": {
+          "value": false,
           "version": 1
         },
         "scale": {
@@ -445,5 +502,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

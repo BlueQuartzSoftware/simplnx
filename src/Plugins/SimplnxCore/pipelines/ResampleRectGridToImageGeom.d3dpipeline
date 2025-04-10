@@ -13,7 +13,11 @@
         "read_csv_data_object": {
           "value": {
             "Consecutive Delimiters": false,
-            "Custom Headers": null,
+            "Custom Headers": [
+              "x",
+              "y",
+              "z"
+            ],
             "Data Types": [
               8,
               8,
@@ -23,7 +27,7 @@
               ","
             ],
             "Header Line": 1,
-            "Header Mode": 0,
+            "Header Mode": 1,
             "Input File Path": "Data/ASCIIData/RectilinearGrid.csv",
             "Skipped Array Mask": [
               false,

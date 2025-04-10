@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "(08) Small IN100 Full Reconstruction.d3dpipeline",
   "pipeline": [
     {
       "args": {
@@ -135,10 +135,6 @@
     },
     {
       "args": {
-        "alignment_shift_file_name": {
-          "value": "Data/Output/Alignment_By_Misorientation_Shifts.txt",
-          "version": 1
-        },
         "cell_phases_array_path": {
           "value": "DataContainer/Cell Data/Phases",
           "version": 1
@@ -159,17 +155,12 @@
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
         "quats_array_path": {
           "value": "DataContainer/Cell Data/Quats",
           "version": 1
         },
         "use_mask": {
           "value": true,
-          "version": 1
-        },
-        "write_alignment_shifts": {
-          "value": false,
           "version": 1
         }
       },
@@ -193,8 +184,7 @@
         "mask_array_path": {
           "value": "DataContainer/Cell Data/Mask",
           "version": 1
-        },
-        "parameters_version": 1
+        }
       },
       "comments": "",
       "filter": {
@@ -205,8 +195,16 @@
     },
     {
       "args": {
-        "alignment_shift_file_name": {
-          "value": "Data/Output/Alignment_By_Feature_Centroid_Shifts.txt",
+        "alignment_attribute_matrix_name": {
+          "value": "Alignment Shifts Data",
+          "version": 1
+        },
+        "centroids_array_name": {
+          "value": "Centroids",
+          "version": 1
+        },
+        "cumulative_shifts_array_name": {
+          "value": "Cumulative Shifts",
           "version": 1
         },
         "input_image_geometry_path": {
@@ -217,21 +215,25 @@
           "value": "DataContainer/Cell Data/Mask",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_slice": {
           "value": 0,
           "version": 1
         },
-        "selected_cell_data_path": {
-          "value": "DataContainer/Cell Data",
+        "relative_shifts_array_name": {
+          "value": "Relative Shifts",
+          "version": 1
+        },
+        "slices_array_name": {
+          "value": "Slice Indices",
+          "version": 1
+        },
+        "store_alignment_shifts": {
+          "value": false,
           "version": 1
         },
         "use_reference_slice": {
           "value": true,
-          "version": 1
-        },
-        "write_alignment_shifts": {
-          "value": false,
           "version": 1
         }
       },

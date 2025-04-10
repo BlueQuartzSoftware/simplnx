@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "ExtractVertexGeometry.d3dpipeline",
   "pipeline": [
     {
       "args": {
