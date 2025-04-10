@@ -20,6 +20,12 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
 
   auto groupReader = parentGroup.openGroup(objectName);
 
+  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+  {
+    auto value = unitsAttr.value();
+    geometry.setUnits(static_cast<IGeometry::LengthUnit>(value));
+  }
+
   geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
 
@@ -61,10 +67,16 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     }
   }
 
+  result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
+  if(result.invalid())
+  {
+    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry units");
+  }
+
   result = WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag);
   if(result.invalid())
   {
-    return result;
+    return MakeErrorResult(result.errors()[0].code, "Failed to write vertex attribute matrix");
   }
 
   return {};
