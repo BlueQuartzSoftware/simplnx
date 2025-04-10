@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5EspritData.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -150,19 +151,11 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
-  const auto phases = reader->getPhaseVector();
-  if(!phases.empty())
-  {
-    preflightUpdatedValues.push_back({"Phase Information", ""});
-  }
-  auto laueOps = LaueOps::GetAllOrientationOps();
-  int phaseIndex = 1;
-  for(const auto& phaseInfo : phases)
-  {
-    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
-                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
-  }
 
+  EbsdReaderUtilities::GeneratePreflightScanInformation<H5EspritReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5EspritReader>(*reader, preflightUpdatedValues);
+
+  const auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

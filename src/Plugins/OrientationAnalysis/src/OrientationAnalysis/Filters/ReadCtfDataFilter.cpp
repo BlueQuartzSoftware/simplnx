@@ -1,6 +1,7 @@
 #include "ReadCtfDataFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadCtfData.hpp"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -104,6 +105,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
   PreflightResult preflightResult;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   CtfReader reader;
   reader.setFileName(pInputFileValue.string());
@@ -122,29 +124,9 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   // These variables should be updated with the latest data generated for each variable during preflight.
   // These will be returned through the preflightResult variable to the
   // user interface. You could make these member variables instead if needed.
-  std::stringstream ss;
-  std::array<float, 3> halfRes = {spacing[0] * 0.5F, spacing[1] * 0.5F, spacing[2] * 0.5F};
 
-  ss << "X Step: " << reader.getXStep() << "    Y Step: " << reader.getYStep() << "\n"
-     << "Num Cols: " << reader.getXCells() << "    "
-     << "Num Rows: " << reader.getYCells() << "\n"
-     << "Sample Physical Dimensions: " << (reader.getXStep() * reader.getXCells()) << " (W) x " << (reader.getYStep() * reader.getYCells()) << " (H) microns"
-     << "\n";
-  std::string fileInfo = ss.str();
-  std::vector<PreflightValue> preflightUpdatedValues = {{"Scan Information", fileInfo}};
-
-  auto phaseInfos = reader.getPhaseVector();
-  if(!phaseInfos.empty())
-  {
-    preflightUpdatedValues.push_back({"Phase Information", ""});
-  }
-  auto laueOps = LaueOps::GetAllOrientationOps();
-  int phaseIndex = 1;
-  for(const auto& phaseInfo : phaseInfos)
-  {
-    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
-                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
-  }
+  EbsdReaderUtilities::GeneratePreflightScanInformation<CtfReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<CtfReader>(reader, preflightUpdatedValues);
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

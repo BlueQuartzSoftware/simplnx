@@ -83,6 +83,26 @@ GrainMapperReader::GrainMapperReader(const std::string& filePath, bool readDctDa
 
 GrainMapperReader::~GrainMapperReader() = default;
 
+int GrainMapperReader::getNumColumns() const
+{
+  return m_LabDctDimensions[0];
+}
+
+int GrainMapperReader::getNumRows() const
+{
+  return m_LabDctDimensions[1];
+}
+
+float GrainMapperReader::getXStep() const
+{
+  return static_cast<float>(m_LabDctSpacing[0]);
+}
+
+float GrainMapperReader::getYStep() const
+{
+  return static_cast<float>(m_LabDctSpacing[1]);
+}
+
 std::vector<size_t> GrainMapperReader::getLabDCTDimensions() const
 {
   return m_LabDctDimensions;
@@ -128,7 +148,7 @@ std::vector<std::string> GrainMapperReader::getDctDatasetNames() const
   return m_AvailableDCTDatasets;
 }
 
-std::vector<GrainMapperReader::GrainMapperPhase> GrainMapperReader::getPhaseInformation() const
+std::vector<GrainMapperReader::GrainMapperPhase> GrainMapperReader::getPhaseVector() const
 {
   return m_PhaseInfos;
 }

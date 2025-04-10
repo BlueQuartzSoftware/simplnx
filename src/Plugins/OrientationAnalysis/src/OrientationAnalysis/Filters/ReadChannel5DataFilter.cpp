@@ -1,6 +1,7 @@
 #include "ReadChannel5DataFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadChannel5Data.hpp"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -107,6 +108,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   auto pCreateCompatibleTypes = filterArgs.value<bool>(k_CreateCompatibleArrays_Key);
 
   PreflightResult preflightResult;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   // First validate that the matching .crc file exists
   fs::path crcPath = pInputFileValue;
@@ -140,29 +142,9 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   // These variables should be updated with the latest data generated for each variable during preflight.
   // These will be returned through the preflightResult variable to the
   // user interface.
-  std::stringstream ss;
-  std::array<float, 3> halfRes = {spacing[0] * 0.5F, spacing[1] * 0.5F, spacing[2] * 0.5F};
 
-  ss << "X Step: " << reader.getXStep() << "    Y Step: " << reader.getYStep() << "\n"
-     << "Num Cols: " << reader.getXCells() << "    "
-     << "Num Rows: " << reader.getYCells() << "\n"
-     << "Sample Physical Dimensions: " << (reader.getXStep() * reader.getXCells()) << " (W) x " << (reader.getYStep() * reader.getYCells()) << " (H) microns"
-     << "\n";
-  std::string fileInfo = ss.str();
-  std::vector<PreflightValue> preflightUpdatedValues = {{"Cpr File Information", fileInfo}};
-
-  auto phaseInfos = reader.getPhaseVector();
-  if(!phaseInfos.empty())
-  {
-    preflightUpdatedValues.push_back({"Phase Information", ""});
-  }
-  auto laueOps = LaueOps::GetAllOrientationOps();
-  int phaseIndex = 1;
-  for(const auto& phaseInfo : phaseInfos)
-  {
-    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
-                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
-  }
+  EbsdReaderUtilities::GeneratePreflightScanInformation<CprReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<CprReader>(reader, preflightUpdatedValues);
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

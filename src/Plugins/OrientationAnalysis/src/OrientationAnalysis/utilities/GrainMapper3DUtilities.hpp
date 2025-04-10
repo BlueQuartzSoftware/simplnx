@@ -87,9 +87,15 @@ public:
   std::vector<std::string> getDctDatasetNames() const;
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
   std::map<std::string, size_t> getNameToCompDimMap() const;
-  std::vector<GrainMapperPhase> getPhaseInformation() const;
+  std::vector<GrainMapperPhase> getPhaseVector() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);
+
+  /* These methods are here for compatibility with the Ebsd Readers from EbsdLib */
+  int getNumColumns() const;
+  int getNumRows() const;
+  float getXStep() const;
+  float getYStep() const;
 
 private:
   bool m_ReadDctData = false;
