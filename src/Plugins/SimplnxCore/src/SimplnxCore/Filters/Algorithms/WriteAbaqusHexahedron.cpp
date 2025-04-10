@@ -118,7 +118,7 @@ int32 writeNodes(WriteAbaqusHexahedron* filter, const std::string& fileName, usi
   if(writeDummyNode)
   {
     // Write the last node, which is a dummy node used for stress - strain curves.
-    fprintf(f, "%d, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), 0.0f, 0.0f, 0.0f);
+    fprintf(f, "%llu, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), 0.0f, 0.0f, 0.0f);
   }
   fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
 
