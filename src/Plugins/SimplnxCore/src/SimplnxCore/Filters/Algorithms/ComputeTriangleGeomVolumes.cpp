@@ -5,37 +5,9 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 using namespace nx::core;
-
-namespace
-{
-constexpr usize k_00 = 0;
-constexpr usize k_01 = 1;
-constexpr usize k_02 = 2;
-constexpr usize k_10 = 3;
-constexpr usize k_11 = 4;
-constexpr usize k_12 = 5;
-constexpr usize k_20 = 6;
-constexpr usize k_21 = 7;
-constexpr usize k_22 = 8;
-
-// -----------------------------------------------------------------------------
-template <typename T>
-T FindTetrahedronVolume(const std::array<usize, 3>& vertIds, const AbstractDataStore<T>& vertexCoords)
-{
-  // This is a 3x3 matrix laid out in typical "C" order where the columns raster the fastest, then the rows
-  std::array<T, 9> volumeMatrix = {
-      vertexCoords[3 * vertIds[1] + 0] - vertexCoords[3 * vertIds[0] + 0], vertexCoords[3 * vertIds[2] + 0] - vertexCoords[3 * vertIds[0] + 0], 0.0f - vertexCoords[3 * vertIds[0] + 0],
-      vertexCoords[3 * vertIds[1] + 1] - vertexCoords[3 * vertIds[0] + 1], vertexCoords[3 * vertIds[2] + 1] - vertexCoords[3 * vertIds[0] + 1], 0.0f - vertexCoords[3 * vertIds[0] + 1],
-      vertexCoords[3 * vertIds[1] + 2] - vertexCoords[3 * vertIds[0] + 2], vertexCoords[3 * vertIds[2] + 2] - vertexCoords[3 * vertIds[0] + 2], 0.0f - vertexCoords[3 * vertIds[0] + 2]};
-
-  T determinant = (volumeMatrix[k_00] * (volumeMatrix[k_11] * volumeMatrix[k_22] - volumeMatrix[k_12] * volumeMatrix[k_21])) -
-                  (volumeMatrix[k_01] * (volumeMatrix[k_10] * volumeMatrix[k_22] - volumeMatrix[k_12] * volumeMatrix[k_20])) +
-                  (volumeMatrix[k_02] * (volumeMatrix[k_10] * volumeMatrix[k_21] - volumeMatrix[k_11] * volumeMatrix[k_20]));
-  return determinant / 6.0f;
-}
-} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeTriangleGeomVolumes::ComputeTriangleGeomVolumes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -87,33 +59,16 @@ Result<> ComputeTriangleGeomVolumes::operator()()
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
   volumes.fill(0.0f); // Initialize all volumes to ZERO
 
-  std::array<usize, 3> faceVertexIndices = {0, 0, 0};
-  for(MeshIndexType i = 0; i < numTriangles; i++)
+  auto result = MeshingUtilities::CalculateFeatureVolumes(triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getVertices()->getDataStoreRef(), faceLabels, volumes, m_ShouldCancel);
+  if(result.invalid())
   {
-    triangleGeom.getFacePointIds(i, faceVertexIndices);
-    int32 faceLabel0 = faceLabels[2 * i + 0];
-    int32 faceLabel1 = faceLabels[2 * i + 1];
-
-    if(faceLabel0 < 0 && faceLabel1 >= 0)
-    {
-      std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
-    }
-    else if(faceLabel1 < 0 && faceLabel0 >= 0)
-    {
-      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
-    }
-    else
-    {
-      volumes[faceLabel0] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
-      std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += FindTetrahedronVolume(faceVertexIndices, vertexCoords);
-    }
+    return result;
   }
 
-  for(size_t i = 0; i < tDims[0]; i++)
+  for(usize i = 0; i < tDims[0]; i++)
   {
     volumes[i] = std::abs(volumes[i]);
   }
+
   return {};
 }

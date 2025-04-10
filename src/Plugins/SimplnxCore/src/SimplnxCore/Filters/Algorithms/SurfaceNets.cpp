@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
 #include "SimplnxCore/SurfaceNets/MMCellFlag.h"
 #include "SimplnxCore/SurfaceNets/MMCellMap.h"
@@ -427,6 +428,8 @@ Result<> SurfaceNets::operator()()
       faceLabels[tIdx] = -1;
     }
   }
+
+  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel);
 
   return {};
 }

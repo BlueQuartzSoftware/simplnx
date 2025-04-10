@@ -80,6 +80,7 @@ set(FilterList
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FlyingEdges3DFilter
+  IdentifyDuplicateVerticesFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
@@ -199,6 +200,7 @@ set(AlgorithmList
   FillBadData
   FindNRingNeighbors
   FlyingEdges3D
+  IdentifyDuplicateVertices
   InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing

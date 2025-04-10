@@ -1,23 +1,32 @@
 #include "VerifyTriangleWinding.hpp"
 
 #include "SimplnxCore/Filters/ReverseTriangleWindingFilter.hpp"
-#include "SimplnxCore/Filters/TriangleNormalFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+#include "simplnx/Utilities/Meshing/VertexUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
 
 namespace
 {
-Result<> ImplementReversal(const std::vector<bool> reversalVotes, const DataPath& geomPath, const std::function<Result<>(const DataPath&)>& reversalFunction)
+Result<> ImplementReversal(const std::vector<IGeometry::SharedVertexList::value_type>& volumes, const DataPath& geomPath, const std::function<Result<>(const DataPath&)>& reversalFunction)
 {
-  if(std::count(reversalVotes.begin(), reversalVotes.end(), true) >= (reversalVotes.size() / 2))
+  usize count = 0;
+  for(auto volume : volumes)
+  {
+    if(std::signbit(volume))
+    {
+      // is negative
+      count++;
+    }
+  }
+
+  if(count >= (volumes.size() / 2))
   {
     return reversalFunction(geomPath);
   }
@@ -45,30 +54,21 @@ const std::atomic_bool& VerifyTriangleWinding::getCancel()
 // -----------------------------------------------------------------------------
 Result<> VerifyTriangleWinding::operator()()
 {
-  {
-    // Sort Vertices For Merging
-    Result<> result = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath).validate();
-    if(result.invalid())
-    {
-      return result;
-    }
 
-    MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath));
-    auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
-    if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
-    {
-      // Remove duplicates
-      MeshingUtilities::RemoveDuplicateVertices(triGeom, sortedVerticesList);
-    }
-    else
-    {
-      // Sorting here to make ordering implicit rather than maintaining a mapping, feature parity with duplicate removal
-      MeshingUtilities::SortGeomVertices(triGeom, sortedVerticesList);
-    }
+  // Sort Vertices For Merging
+  Result<> result = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath).validate();
+  if(result.invalid())
+  {
+    return result;
   }
 
-  // Load container, node list, and node data respectively;
+  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath));
   auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
+  if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
+  {
+    // Remove duplicates
+    return MakeErrorResult(-56320, "Duplicate vertices found in mesh, please use cleanup filters to flag and remove these before rerunning.");
+  }
 
   TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
 
@@ -82,15 +82,21 @@ Result<> VerifyTriangleWinding::operator()()
     return windingResult;
   }
 
-  // TODO:
-  //  - Revisit reversal system to see if its worth going cluster by cluster rather than overall
-  //  - Assess viability of implementing an internal voting system within the cluster
-
-  // Define a voting system for full reversal
-  //std::vector<bool> reversalVote(maxFeature + 1);
-
-  // TODO:
-  //  Do reversal voting based on feature volume calculation
+  // Get max group (feature id != 0)
+  int32 maxFeature = 0;
+  for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
+  {
+    if(faceLabelsStore[i] > maxFeature)
+    {
+      maxFeature = faceLabelsStore[i];
+    }
+  }
+  std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature);
+  auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), faceLabelsStore, volumes, m_ShouldCancel);
+  if(volumeResult.invalid())
+  {
+    return volumeResult;
+  }
 
   // Define a capturing lambda to execute filter without passing member variables to free functions
   const std::function<Result<>(const DataPath&)> f_ExecuteReverseTriangleWinding = [this](const DataPath& triGeomPath) -> Result<> {
@@ -115,11 +121,12 @@ Result<> VerifyTriangleWinding::operator()()
     return {};
   };
 
-//  Result<> result = ::ImplementReversal(reversalVote, m_InputValues->TargetGeometryPath, f_ExecuteReverseTriangleWinding);
-//  if(result.invalid())
-//  {
-//    return result;
-//  }
+  // Do reversal voting based on feature volume calculation
+  Result<> reversalResult = ::ImplementReversal(volumes, m_InputValues->TargetGeometryPath, f_ExecuteReverseTriangleWinding);
+  if(reversalResult.invalid())
+  {
+    return reversalResult;
+  }
 
   if(m_InputValues->RepairNormals)
   {

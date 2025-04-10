@@ -24,6 +24,28 @@ WindingType DetermineWinding(IGeometry::MeshIndexType triangle, int32 featureId,
 }
 } // namespace
 
+INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
+{
+  const usize vertAIndex = vertIndices[0] * 3;
+  const usize vertBIndex = vertIndices[1] * 3;
+  const usize vertCIndex = vertIndices[2] * 3;
+
+  // This is a 3x3 matrix laid out in typical "C" order where the columns raster the fastest, then the rows
+  std::array<INodeGeometry2D::SharedVertexList::value_type, 9> volumeMatrix = {
+      vertices[vertBIndex + 0] - vertices[vertAIndex + 0], vertices[vertCIndex + 0] - vertices[vertAIndex + 0], 0.0f - vertices[vertAIndex + 0],
+      vertices[vertBIndex + 1] - vertices[vertAIndex + 1], vertices[vertCIndex + 1] - vertices[vertAIndex + 1], 0.0f - vertices[vertAIndex + 1],
+      vertices[vertBIndex + 2] - vertices[vertAIndex + 2], vertices[vertCIndex + 2] - vertices[vertAIndex + 2], 0.0f - vertices[vertAIndex + 2]};
+
+  INodeGeometry2D::SharedVertexList::value_type determinant =
+      (volumeMatrix[MeshingUtilities::detail::k_00] *
+       (volumeMatrix[MeshingUtilities::detail::k_11] * volumeMatrix[MeshingUtilities::detail::k_22] - volumeMatrix[MeshingUtilities::detail::k_12] * volumeMatrix[MeshingUtilities::detail::k_21])) -
+      (volumeMatrix[MeshingUtilities::detail::k_01] *
+       (volumeMatrix[MeshingUtilities::detail::k_10] * volumeMatrix[MeshingUtilities::detail::k_22] - volumeMatrix[MeshingUtilities::detail::k_12] * volumeMatrix[MeshingUtilities::detail::k_20])) +
+      (volumeMatrix[MeshingUtilities::detail::k_02] *
+       (volumeMatrix[MeshingUtilities::detail::k_10] * volumeMatrix[MeshingUtilities::detail::k_21] - volumeMatrix[MeshingUtilities::detail::k_11] * volumeMatrix[MeshingUtilities::detail::k_20]));
+  return determinant / 6.0f;
+}
+
 Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel)
 {
   // Get max group (feature id != 0)
@@ -126,7 +148,8 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   return {};
 }
 
-MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, nx::core::Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
+MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+                                                             nx::core::Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
 : m_Triangles(triangles)
 , m_Vertices(verts)
 , m_Normals(normals)
@@ -151,7 +174,6 @@ void MeshingUtilities::CalculateNormalsImpl::generate(nx::core::types::usize sta
     const Eigen::Vector3d vertB = Eigen::Vector3d{m_Vertices[vertBIndex], m_Vertices[vertBIndex + 1], m_Vertices[vertBIndex + 2]};
     const usize vertCIndex = m_Triangles[triangleIndex + 2] * 3;
     const Eigen::Vector3d vertC = Eigen::Vector3d{m_Vertices[vertCIndex], m_Vertices[vertCIndex + 1], m_Vertices[vertCIndex + 2]};
-
 
     const Eigen::Vector3d vecA = vertB - vertA;
     const Eigen::Vector3d vecB = vertC - vertA;

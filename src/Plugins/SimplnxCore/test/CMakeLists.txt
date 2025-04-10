@@ -81,6 +81,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FlyingEdges3DTest.cpp
+  IdentifyDuplicateVerticesTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   InitializeDataTest.cpp

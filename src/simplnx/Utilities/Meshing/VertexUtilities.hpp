@@ -41,20 +41,4 @@ std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::Mes
  * @returns bool false means vertices are unique
  */
 bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
-
-/**
- * @brief This function modifies the geom to remove duplicates from the vertices AND SORTS the vertices
- * @param geom The input mesh
- * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
- * @returns Result<>
- */
-Result<> RemoveDuplicateVertices(INodeGeometry2D& geom, const SortedVerticesList& sortedVertices);
-
-/**
- * @brief This function modifies the geom to sort the vertices
- * @param geom The input mesh
- * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
- * @returns Result<>
- */
-Result<> SortGeomVertices(INodeGeometry2D& geom, const SortedVerticesList& sortedVertices);
 } // namespace nx::core::MeshingUtilities

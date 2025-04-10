@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <array>
@@ -369,6 +370,8 @@ Result<> QuickSurfaceMesh::operator()()
   }
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
+
+  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel);
 
 #ifdef QSM_CREATE_TRIPLE_LINES
   if(m_InputValues->pGenerateTripleLines)
