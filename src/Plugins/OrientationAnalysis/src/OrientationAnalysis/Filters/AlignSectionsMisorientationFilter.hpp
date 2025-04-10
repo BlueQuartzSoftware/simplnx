@@ -106,6 +106,7 @@ protected:
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
@@ -119,6 +120,7 @@ protected:
    * @param pipelineNode The node in the pipeline that is being executed
    * @param messageHandler The MessageHandler object
    * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
