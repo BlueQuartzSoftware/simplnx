@@ -16,8 +16,10 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -145,6 +147,18 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   const auto phases = reader.getPhaseVector();
+  if(!phases.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phases)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
+                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
+  }
+
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

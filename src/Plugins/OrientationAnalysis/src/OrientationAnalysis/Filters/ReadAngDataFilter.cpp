@@ -12,12 +12,12 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/AngPhase.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 
@@ -127,7 +127,20 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
      << "\n";
   std::string fileInfo = ss.str();
 
-  std::vector<PreflightValue> preflightUpdatedValues = {{"Ang File Information", fileInfo}};
+  std::vector<PreflightValue> preflightUpdatedValues = {{"Scan Information", fileInfo}};
+
+  auto phaseInfos = reader.getPhaseVector();
+  if(!phaseInfos.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phaseInfos)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
+                                                                                     phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
+  }
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

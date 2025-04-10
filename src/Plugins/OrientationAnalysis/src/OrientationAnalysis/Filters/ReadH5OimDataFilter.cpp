@@ -19,6 +19,7 @@
 
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -142,6 +143,18 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   const auto phases = reader->getPhaseVector();
+  if(!phases.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phases)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
+                                                                                     phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
+  }
+
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

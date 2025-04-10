@@ -16,8 +16,10 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/IO/HKL/CprReader.h"
+#include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/CtfPhase.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 
@@ -148,6 +150,19 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
      << "\n";
   std::string fileInfo = ss.str();
   std::vector<PreflightValue> preflightUpdatedValues = {{"Cpr File Information", fileInfo}};
+
+  auto phaseInfos = reader.getPhaseVector();
+  if(!phaseInfos.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phaseInfos)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
+                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
+  }
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

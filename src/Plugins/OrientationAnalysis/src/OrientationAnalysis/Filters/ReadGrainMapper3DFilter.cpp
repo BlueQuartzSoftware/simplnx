@@ -14,6 +14,8 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -189,6 +191,19 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     DataPath cellEnsembleAMPath = pLabDCTImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
 
     auto phases = reader.getPhaseInformation();
+    if(!phases.empty())
+    {
+      preflightUpdatedValues.push_back({"Phase Information", ""});
+    }
+    auto laueOps = LaueOps::GetAllOrientationOps();
+    int phaseIndex = 1;
+    for(const auto& phaseInfo : phases)
+    {
+      preflightUpdatedValues.push_back(
+          {fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Universal Hermann Mauguin: {}", phaseInfo.Name,
+                                                          laueOps[GetLaueIndexFromSpaceGroup(phaseInfo.SpaceGroup)]->getSymmetryName(), phaseInfo.UniversalHermannMauguin)});
+    }
+
     std::vector<usize> ensembleTupleDims{phases.size() + 1};
     {
       auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

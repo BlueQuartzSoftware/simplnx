@@ -22,6 +22,7 @@
 #include "EbsdLib/IO/BrukerNano/H5EspritFields.h"
 #include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -150,6 +151,18 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   const auto phases = reader->getPhaseVector();
+  if(!phases.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phases)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
+                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
+  }
+
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

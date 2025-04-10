@@ -12,12 +12,13 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/CtfPhase.h"
 #include "EbsdLib/IO/HKL/CtfReader.h"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 
@@ -130,7 +131,20 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
      << "Sample Physical Dimensions: " << (reader.getXStep() * reader.getXCells()) << " (W) x " << (reader.getYStep() * reader.getYCells()) << " (H) microns"
      << "\n";
   std::string fileInfo = ss.str();
-  std::vector<PreflightValue> preflightUpdatedValues = {{"Ctf File Information", fileInfo}};
+  std::vector<PreflightValue> preflightUpdatedValues = {{"Scan Information", fileInfo}};
+
+  auto phaseInfos = reader.getPhaseVector();
+  if(!phaseInfos.empty())
+  {
+    preflightUpdatedValues.push_back({"Phase Information", ""});
+  }
+  auto laueOps = LaueOps::GetAllOrientationOps();
+  int phaseIndex = 1;
+  for(const auto& phaseInfo : phaseInfos)
+  {
+    preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
+                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
+  }
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
