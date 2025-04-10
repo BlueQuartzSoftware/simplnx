@@ -319,7 +319,7 @@ bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::Boun
 template <typename T>
 bool IsPointInTriangle3D(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2, const nx::core::Point3D<T>& point)
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("GeometryMath::IsPointInTriangle3D() is not implemented");
 }
 
 /**
@@ -380,7 +380,7 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
 template <typename T>
 uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& ray, const nx::core::Point3D<T>& origin, T radius, std::vector<Point3D<T>>& intersections)
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("GeometryMath::FindRayIntersectionsWithSphere() is not implemented");
 }
 
 /**
@@ -392,7 +392,7 @@ uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& ray, const nx::core
 template <typename T>
 T GetLengthOfRayInBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& box)
 {
-  throw std::runtime_error("");
+  throw std::runtime_error("GeometryMath::GetLengthOfRayInBox() is not implemented");
 }
 
 /**
