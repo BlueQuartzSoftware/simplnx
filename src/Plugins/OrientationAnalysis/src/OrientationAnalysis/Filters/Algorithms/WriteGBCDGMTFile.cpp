@@ -1,7 +1,7 @@
 #include "WriteGBCDGMTFile.hpp"
 
-#include "OrientationAnalysis/Math/Matrix3X1.hpp"
-#include "OrientationAnalysis/Math/Matrix3X3.hpp"
+// #include "OrientationAnalysis/Math/Matrix3X1.hpp"
+// #include "OrientationAnalysis/Math/Matrix3X3.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -128,8 +128,9 @@ Result<> WriteGBCDGMTFile::operator()()
   gbcdDeltas[3] = (gbcdLimits[8] - gbcdLimits[3]) / static_cast<double>(gbcdSizes[3]);
   gbcdDeltas[4] = (gbcdLimits[9] - gbcdLimits[4]) / static_cast<double>(gbcdSizes[4]);
 
-  using Matrix3X3Type = Matrix3X3<float64>;
-  using Matrix3X1Type = Matrix3X1<float64>;
+  using Matrix3X3Type = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
+  using Matrix3X1Type = Eigen::Vector3d;
+
   Matrix3X3Type dg;
 
   {
@@ -177,22 +178,23 @@ Result<> WriteGBCDGMTFile::operator()()
       float64 sum = 0.0;
       int32 count = 0;
 
-      const Matrix3X1Type vec(std::sin(phiRad) * std::cos(thetaRad), std::sin(phiRad) * std::sin(thetaRad), std::cos(phiRad));
+      Matrix3X1Type vec = (Matrix3X1Type() << std::sin(phiRad) * std::cos(thetaRad), std::sin(phiRad) * std::sin(thetaRad), std::cos(phiRad)).finished();
       const Matrix3X1Type vec2 = dgt * vec;
 
       // Loop over all the symmetry operators in the given crystal symmetry
       for(int32 i = 0; i < nSym; i++)
       {
         // get symmetry operator1
-        double tempSymOperator[3][3];
-        orientOps->getMatSymOp(i, tempSymOperator);
-        const Matrix3X3Type sym1(tempSymOperator);
+        // double tempSymOperator[3][3];
+        EbsdLib::Matrix3X3D tSymOp = orientOps->getMatSymOpD(i);
+        const Matrix3X3Type sym1 = (Matrix3X3Type() << tSymOp[0], tSymOp[1], tSymOp[2], tSymOp[3], tSymOp[4], tSymOp[5], tSymOp[6], tSymOp[7], tSymOp[8]).finished();
 
         for(int32 j = 0; j < nSym; j++)
         {
           // get symmetry operator2
-          orientOps->getMatSymOp(j, tempSymOperator);
-          const Matrix3X3Type sym2(tempSymOperator);
+          tSymOp = orientOps->getMatSymOpD(j);
+          const Matrix3X3Type sym2 = (Matrix3X3Type() << tSymOp[0], tSymOp[1], tSymOp[2], tSymOp[3], tSymOp[4], tSymOp[5], tSymOp[6], tSymOp[7], tSymOp[8]).finished();
+
           //  calculate symmetric misorientation
           Matrix3X3Type dg2 = sym1 * (dg * sym2.transpose());
           // convert to euler angle
