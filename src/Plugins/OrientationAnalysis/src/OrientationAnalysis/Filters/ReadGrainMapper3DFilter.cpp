@@ -1,6 +1,7 @@
 #include "ReadGrainMapper3DFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadGrainMapper3D.hpp"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 #include "OrientationAnalysis/utilities/GrainMapper3DUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -13,6 +14,8 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 
@@ -188,7 +191,10 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     // read the DCT phase information
     DataPath cellEnsembleAMPath = pLabDCTImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
 
-    auto phases = reader.getPhaseInformation();
+    EbsdReaderUtilities::GeneratePreflightScanInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+
+    auto phases = reader.getPhaseVector();
     std::vector<usize> ensembleTupleDims{phases.size() + 1};
     {
       auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

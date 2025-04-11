@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5OimData.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -19,6 +20,7 @@
 
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -141,7 +143,11 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
-  const auto phases = reader->getPhaseVector();
+
+  EbsdReaderUtilities::GeneratePreflightScanInformation<H5OIMReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5OIMReader>(*reader, preflightUpdatedValues);
+
+  auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAMPath, ensembleTupleDims);

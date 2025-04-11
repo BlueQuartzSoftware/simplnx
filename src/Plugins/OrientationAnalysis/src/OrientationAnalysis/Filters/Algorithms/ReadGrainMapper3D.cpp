@@ -63,7 +63,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
     return MakeErrorResult(-39801, fmt::format("Error reading phase info"));
   }
 
-  auto phases = reader.getPhaseInformation();
+  auto phases = reader.getPhaseVector();
   DataPath cellEnsembleAMPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellEnsembleAttributeMatrixName);
 
   // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!

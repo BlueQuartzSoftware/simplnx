@@ -1,6 +1,7 @@
 #include "ReadAngDataFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadAngData.hpp"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -12,12 +13,12 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/AngPhase.h"
 #include "EbsdLib/IO/TSL/AngReader.h"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 
@@ -97,6 +98,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
   PreflightResult preflightResult;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   AngReader reader;
   reader.setFileName(pInputFileValue.string());
@@ -115,19 +117,9 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   // These variables should be updated with the latest data generated for each variable during preflight.
   // These will be returned through the preflightResult variable to the
   // user interface. You could make these member variables instead if needed.
-  std::stringstream ss;
-  std::array<float, 3> halfRes = {spacing[0] * 0.5F, spacing[1] * 0.5F, spacing[2] * 0.5F};
 
-  ss << "Grid: " << reader.getGrid() << "\n"
-     << "X Step: " << reader.getXStep() << "    Y Step: " << reader.getYStep() << "\n"
-     << "Num Odd Cols: " << reader.getNumOddCols() << "    "
-     << "Num Even Cols: " << reader.getNumEvenCols() << "    "
-     << "Num Rows: " << reader.getNumRows() << "\n"
-     << "Sample Physical Dimensions: " << (reader.getXStep() * reader.getNumOddCols()) << " (W) x " << (reader.getYStep() * reader.getNumRows()) << " (H) microns"
-     << "\n";
-  std::string fileInfo = ss.str();
-
-  std::vector<PreflightValue> preflightUpdatedValues = {{"Ang File Information", fileInfo}};
+  EbsdReaderUtilities::GeneratePreflightScanInformation<AngReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<AngReader>(reader, preflightUpdatedValues);
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),

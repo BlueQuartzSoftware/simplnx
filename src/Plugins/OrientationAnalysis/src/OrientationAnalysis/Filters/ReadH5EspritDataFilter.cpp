@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5EspritData.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -22,6 +23,7 @@
 #include "EbsdLib/IO/BrukerNano/H5EspritFields.h"
 #include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -149,6 +151,10 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
+
+  EbsdReaderUtilities::GeneratePreflightScanInformation<H5EspritReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5EspritReader>(*reader, preflightUpdatedValues);
+
   const auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {

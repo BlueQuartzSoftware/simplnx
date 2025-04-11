@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5OinaData.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -16,8 +17,10 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5OINAReader.h"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -144,6 +147,10 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
+
+  EbsdReaderUtilities::GeneratePreflightScanInformation<H5OINAReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5OINAReader>(reader, preflightUpdatedValues);
+
   const auto phases = reader.getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
