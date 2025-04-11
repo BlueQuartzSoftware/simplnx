@@ -13,15 +13,14 @@ IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& s
   IGeometry::MeshIndexType front = begin;
   IGeometry::MeshIndexType back = end;
 
-  const IGeometry::MeshIndexType max = sorted.size();
   while(true)
   {
-    while(front < max && vertices[(sorted[front] * 3) + offset] < threshold)
+    while(vertices[(sorted[front] * 3) + offset] < threshold)
     {
       front++;
     }
 
-    while(back > 0 && vertices[(sorted[back] * 3) + offset] > threshold)
+    while(vertices[(sorted[back] * 3) + offset] > threshold)
     {
       back--;
     }
@@ -32,13 +31,15 @@ IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& s
     }
 
     std::swap(sorted[front], sorted[back]);
+    front++;
+    back--;
   }
 }
 
 void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry2D::SharedVertexList::store_type& vertices,
-                       IGeometry::MeshIndexType offset)
+                       IGeometry::MeshIndexType offset, const std::atomic_bool& shouldCancel)
 {
-  if(begin >= end)
+  if(begin >= end || shouldCancel)
   {
     return;
   }
@@ -46,12 +47,12 @@ void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry:
   IGeometry::MeshIndexType next = ProcessSection(sorted, begin, end, vertices, offset);
 
   // Recurse
-  QuickSortVertices(sorted, begin, next, vertices, offset);
-  QuickSortVertices(sorted, next + 1, end, vertices, offset);
+  QuickSortVertices(sorted, begin, next, vertices, offset, shouldCancel);
+  QuickSortVertices(sorted, next + 1, end, vertices, offset, shouldCancel);
 }
 } // namespace
 
-MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry2D& geom)
+MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry2D& geom, const std::atomic_bool& shouldCancel)
 {
   const BoundingBox3Df& bounds = geom.getBoundingBox();
 
@@ -63,15 +64,16 @@ MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const
   // Getting the verts list by ref here for the validation in the ref function
   const INodeGeometry2D::SharedVertexList::store_type& vertexListStore = geom.getVerticesRef().getDataStoreRef();
 
-  return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore))};
+  return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore, shouldCancel))};
 }
 
-std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList)
+std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList,
+                                                                                     const std::atomic_bool& shouldCancel)
 {
   std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
   std::iota(sorted.begin(), sorted.end(), 0);
 
-  QuickSortVertices(sorted, 0, sorted.size() - 1, vertexList, to_underlying(axis));
+  QuickSortVertices(sorted, 0, sorted.size() - 1, vertexList, to_underlying(axis), shouldCancel);
 
   return sorted;
 }

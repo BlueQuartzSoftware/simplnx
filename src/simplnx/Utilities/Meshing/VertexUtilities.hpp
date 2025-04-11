@@ -24,7 +24,7 @@ struct SortedVerticesList
  * @param geom The input mesh
  * @returns SortedVerticesList which is a struct containing the sorted indices and the axis they were sorted on
  */
-SortedVerticesList OrderSharedVertices(const INodeGeometry2D& geom);
+SortedVerticesList OrderSharedVertices(const INodeGeometry2D& geom, const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This function sorts the vertices along the given axis. It doesn't modify the input mesh, but instead returns an object containing the relevant information
@@ -32,7 +32,8 @@ SortedVerticesList OrderSharedVertices(const INodeGeometry2D& geom);
  * @param geom The input mesh
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
-std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList);
+std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList,
+                                                                   const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This function attempts to find duplicate vertices. Vertices are all unique if `false`

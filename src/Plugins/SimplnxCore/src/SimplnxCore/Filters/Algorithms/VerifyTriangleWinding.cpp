@@ -62,7 +62,10 @@ Result<> VerifyTriangleWinding::operator()()
     return result;
   }
 
-  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath));
+  m_MessageHandler("Checking for duplicates - sorting vertices");
+  const MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
+
+  m_MessageHandler("Checking for duplicates - validating");
   auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
   if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
@@ -75,6 +78,7 @@ Result<> VerifyTriangleWinding::operator()()
   // Load double-sided mesh grouping
   const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
 
+  m_MessageHandler("Repairing Windings...");
   // This is reused since it may contain warnings
   Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, faceLabelsStore, m_ShouldCancel);
   if(windingResult.invalid())
@@ -82,6 +86,7 @@ Result<> VerifyTriangleWinding::operator()()
     return windingResult;
   }
 
+  m_MessageHandler("Voting on reversal - calculating feature volumes");
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
   for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
@@ -98,6 +103,7 @@ Result<> VerifyTriangleWinding::operator()()
     return volumeResult;
   }
 
+  m_MessageHandler("Voting on reversal - determining validity of reversal");
   // Define a capturing lambda to execute filter without passing member variables to free functions
   const std::function<Result<>(const DataPath&)> f_ExecuteReverseTriangleWinding = [this](const DataPath& triGeomPath) -> Result<> {
     const ReverseTriangleWindingFilter filter;
@@ -130,6 +136,7 @@ Result<> VerifyTriangleWinding::operator()()
 
   if(m_InputValues->RepairNormals)
   {
+    m_MessageHandler("Recalculating normals");
     auto& normals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsPath)->getDataStoreRef();
 
     // Parallel algorithm to calculate normals
