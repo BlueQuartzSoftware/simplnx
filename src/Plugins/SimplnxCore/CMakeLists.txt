@@ -7,8 +7,6 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
-  CreateAMScanPathsFilter
-  SliceTriangleGeometryFilter
   AddBadDataFilter
   AlignGeometriesFilter
   AlignSectionsFeatureCentroidFilter
@@ -17,13 +15,15 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHullFilter
   ArrayCalculatorFilter
-  ComputeArrayHistogramFilter
-  ComputeFeatureSizesFilter
-  ComputeTriangleAreasFilter
   ChangeAngleRepresentationFilter
   CombineAttributeArraysFilter
   CombineNodeBasedGeometriesFilter
   CombineStlFilesFilter
+  ComputeArrayHistogramFilter
+  ComputeArrayStatisticsFilter
+  ComputeBiasedFeaturesFilter
+  ComputeBoundaryCellsFilter
+  ComputeBoundaryElementFractionsFilter
   ComputeDifferencesMapFilter
   ComputeEuclideanDistMapFilter
   ComputeFeatureCentroidsFilter
@@ -32,6 +32,7 @@ set(FilterList
   ComputeFeaturePhasesBinaryFilter
   ComputeFeaturePhasesFilter
   ComputeFeatureRectFilter
+  ComputeFeatureSizesFilter
   ComputeKMeansFilter
   ComputeKMedoidsFilter
   ComputeLargestCrossSectionsFilter
@@ -41,7 +42,9 @@ set(FilterList
   ComputeNumFeaturesFilter
   ComputeSurfaceAreaToVolumeFilter
   ComputeSurfaceFeaturesFilter
+  ComputeTriangleAreasFilter
   ComputeTriangleGeomCentroidsFilter
+  ComputeTriangleGeomVolumesFilter
   ComputeVectorColorsFilter
   ComputeVertexToTriangleDistancesFilter
   ComputeVolumeFractionsFilter
@@ -51,9 +54,11 @@ set(FilterList
   ConvertDataFilter
   CopyDataObjectFilter
   CopyFeatureArrayToElementArrayFilter
+  CreateAMScanPathsFilter
   CreateAttributeMatrixFilter
-  CreateDataArrayFilter
+  CreateColorMapFilter
   CreateDataArrayAdvancedFilter
+  CreateDataArrayFilter
   CreateDataGroupFilter
   CreateFeatureArrayFromElementArrayFilter
   CreateGeometryFilter
@@ -74,13 +79,7 @@ set(FilterList
   ExtractVertexGeometryFilter
   FeatureFaceCurvatureFilter
   FillBadDataFilter
-  ComputeArrayStatisticsFilter
-  ComputeBiasedFeaturesFilter
-  ComputeBoundaryCellsFilter
-  ComputeBoundaryElementFractionsFilter
-  ComputeTriangleGeomVolumesFilter
   FlyingEdges3DFilter
-  CreateColorMapFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
@@ -89,10 +88,10 @@ set(FilterList
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  RequireMinNumNeighborsFilter
   MoveDataFilter
   MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
+  PadImageGeometryFilter
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
@@ -103,18 +102,19 @@ set(FilterList
   ReadHDF5DatasetFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
-  ReadTextDataArrayFilter
   ReadStringDataArrayFilter
+  ReadTextDataArrayFilter
   ReadVolumeGraphicsFileFilter
   ReadVtkStructuredPointsFilter
   RegularGridSampleSurfaceMeshFilter
+  RemoveFlaggedEdgesFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
-  RemoveFlaggedEdgesFilter
   RemoveFlaggedVerticesFilter
-  RequireMinimumSizeFeaturesFilter
   RenameDataObjectFilter
   ReplaceElementAttributesWithNeighborValuesFilter
+  RequireMinimumSizeFeaturesFilter
+  RequireMinNumNeighborsFilter
   ResampleImageGeomFilter
   ResampleRectGridToImageGeomFilter
   ReshapeDataArrayFilter
@@ -125,6 +125,7 @@ set(FilterList
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
   SilhouetteFilter
+  SliceTriangleGeometryFilter
   SplitAttributeArrayFilter
   SurfaceNetsFilter
   TriangleCentroidFilter
@@ -140,29 +141,30 @@ set(FilterList
   WriteFeatureDataCSVFilter
   WriteLosAlamosFFTFilter
   WriteNodesAndElementsFilesFilter
+  WriteSPParksSitesFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
-  WriteSPParksSitesFilter
 )
 
 set(ActionList
 )
 
 set(AlgorithmList
-  CreateAMScanPaths
-  SliceTriangleGeometry
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
   AppendImageGeometry
   ApplyTransformationToGeometry
   ArrayCalculator
-  CombineNodeBasedGeometries
-  ComputeArrayHistogram
   CalculateTriangleGroupCurvatures
   CombineAttributeArrays
+  CombineNodeBasedGeometries
   CombineStlFiles
+  ComputeArrayHistogram
+  ComputeArrayStatistics
+  ComputeBiasedFeatures
+  ComputeBoundaryCells
   ComputeEuclideanDistMap
   ComputeFeatureCentroids
   ComputeFeatureClustering
@@ -175,13 +177,16 @@ set(AlgorithmList
   ComputeNeighborListStatistics
   ComputeSurfaceAreaToVolume
   ComputeTriangleGeomCentroids
+  ComputeTriangleGeomVolumes
   ComputeVectorColors
   ComputeVertexToTriangleDistances
   ConcatenateDataArrays
   ConvertColorToGrayScale
   ConvertData
-  CropEdgeGeometry
+  CreateAMScanPaths
+  CreateColorMap
   CreatePythonSkeleton
+  CropEdgeGeometry
   DBSCAN
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
@@ -191,17 +196,13 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
-  ComputeArrayStatistics
-  ComputeBiasedFeatures
-  ComputeBoundaryCells
   FindNRingNeighbors
-  ComputeTriangleGeomVolumes
   FlyingEdges3D
-  CreateColorMap
   InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing
   NearestPointFuseRegularGrids
+  PadImageGeometry
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
@@ -214,9 +215,9 @@ set(AlgorithmList
   ReadVolumeGraphicsFile
   ReadVtkStructuredPoints
   RegularGridSampleSurfaceMesh
+  RemoveFlaggedEdges
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
-  RemoveFlaggedEdges
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
@@ -224,6 +225,7 @@ set(AlgorithmList
   ScalarSegmentFeatures
   SharedFeatureFace
   Silhouette
+  SliceTriangleGeometry
   SplitAttributeArray
   SurfaceNets
   TriangleCentroid
@@ -234,10 +236,10 @@ set(AlgorithmList
   WriteAvizoUniformCoordinate
   WriteLosAlamosFFT
   WriteNodesAndElementsFiles
+  WriteSPParksSites
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
-  WriteSPParksSites
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}

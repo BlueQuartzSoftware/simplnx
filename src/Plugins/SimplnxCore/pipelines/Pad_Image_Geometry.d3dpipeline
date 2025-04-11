@@ -1,0 +1,287 @@
+{
+  "isDisabled": false,
+  "name": "Pad_Image_Geometry.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "cell_ensemble_attribute_matrix_name": {
+          "value": "Cell Ensemble Data",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "read_h5_ebsd_object": {
+          "value": {
+            "end_slice": 5,
+            "euler_representation": 0,
+            "hdf5_data_paths": [
+              "Confidence Index",
+              "EulerAngles",
+              "Fit",
+              "Image Quality",
+              "Phases",
+              "SEM Signal"
+            ],
+            "input_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
+            "start_slice": 1,
+            "use_recommended_transform": true
+          },
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadH5EbsdFilter",
+        "uuid": "db291b6c-9aaf-432d-9547-430c865a539c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix_path": {
+          "value": "Cell Feature Data",
+          "version": 1
+        },
+        "crop_x_dim": {
+          "value": true,
+          "version": 1
+        },
+        "crop_y_dim": {
+          "value": true,
+          "version": 1
+        },
+        "crop_z_dim": {
+          "value": false,
+          "version": 1
+        },
+        "feature_ids_path": {
+          "value": "",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "max_coord": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "max_voxel": {
+          "value": [
+            150,
+            175,
+            0
+          ],
+          "version": 1
+        },
+        "min_coord": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "min_voxel": {
+          "value": [
+            50,
+            50,
+            0
+          ],
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "remove_original_geometry": {
+          "value": true,
+          "version": 1
+        },
+        "renumber_features": {
+          "value": false,
+          "version": 1
+        },
+        "use_physical_bounds": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CropImageGeometryFilter",
+        "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": true,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::SetImageGeomOriginScalingFilter",
+        "uuid": "057bc7fd-c84a-4902-9397-87e51b1b1fe0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": {
+          "value": "ImageGeom/Cell Data/EulerAngles",
+          "version": 1
+        },
+        "cell_ipf_colors_array_name": {
+          "value": "IPFColors",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "ImageGeom/Cell Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "ImageGeom/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_dir": {
+          "value": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "attribute_matrix_path": {
+          "value": "ImageGeom/Cell Data",
+          "version": 1
+        },
+        "crop_x_dim": {
+          "value": true,
+          "version": 1
+        },
+        "crop_y_dim": {
+          "value": true,
+          "version": 1
+        },
+        "crop_z_dim": {
+          "value": false,
+          "version": 1
+        },
+        "default_fill_value": {
+          "value": 0,
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageGeom",
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "Padded Image Geometry",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "perform_in_place": {
+          "value": true,
+          "version": 1
+        },
+        "update_origin": {
+          "value": false,
+          "version": 1
+        },
+        "x_min_max": {
+          "value": [
+            0,
+            10
+          ],
+          "version": 1
+        },
+        "y_min_max": {
+          "value": [
+            0,
+            10
+          ],
+          "version": 1
+        },
+        "z_min_max": {
+          "value": [
+            10,
+            10
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::PadImageGeometryFilter",
+        "uuid": "1a003f19-aa26-406c-bbef-061f508fc422"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}
