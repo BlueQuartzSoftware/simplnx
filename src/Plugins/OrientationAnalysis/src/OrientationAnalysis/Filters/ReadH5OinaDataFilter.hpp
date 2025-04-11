@@ -24,6 +24,7 @@ public:
   ReadH5OinaDataFilter& operator=(ReadH5OinaDataFilter&&) noexcept = delete;
 
   // Parameter Keys
+  // V1 Keys
   static inline constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
@@ -33,6 +34,9 @@ public:
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
   static inline constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
   static inline constexpr StringLiteral k_ConvertPhaseToInt32_Key = "convert_phase_to_int32";
+
+  // V2 Keys
+  static inline constexpr StringLiteral k_CombineScans_Key = "combine_scans";
 
   /**
    * @brief Returns the name of the filter.

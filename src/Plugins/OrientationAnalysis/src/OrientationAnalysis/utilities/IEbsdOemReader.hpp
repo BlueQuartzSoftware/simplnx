@@ -19,10 +19,11 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
   OEMEbsdScanSelectionParameter::ValueType SelectedScanNames;
+  bool CombineScans;
   bool ReadPatternData;
   DataPath ImageGeometryPath;
-  DataPath CellAttributeMatrixPath;
-  DataPath CellEnsembleAttributeMatrixPath;
+  std::string CellAttributeMatrixName;
+  std::string CellEnsembleAttributeMatrixName;
   bool EdaxHexagonalAlignment;
   bool ConvertPhaseToInt32;
 };
@@ -30,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 /**
  * @class ReadH5Data
  */
-
 template <class T>
 class ORIENTATIONANALYSIS_EXPORT IEbsdOemReader
 {
@@ -54,8 +54,11 @@ public:
 
   Result<> execute()
   {
-    auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-    imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+    if(m_InputValues->CombineScans)
+    {
+      auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+      imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+    }
 
     int index = 0;
     for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)
@@ -68,7 +71,18 @@ public:
         return readResults;
       }
 
-      Result<> copyDataResults = copyRawEbsdData(index);
+      Result<> copyDataResults = {};
+      if(m_InputValues->CombineScans)
+      {
+        copyDataResults = copyRawEbsdData(index);
+      }
+      else
+      {
+        auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(DataPath({currentScanName}));
+        imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+        copyDataResults = copyRawEbsdData(currentScanName);
+      }
+
       if(copyDataResults.invalid())
       {
         return copyDataResults;
@@ -90,6 +104,12 @@ public:
     // If the user has already set a Scan Name to read then we are good to go.
     m_Reader->setHDF5Path(scanName);
 
+    DataPath imagePath({scanName});
+    if(m_InputValues->CombineScans)
+    {
+      imagePath = m_InputValues->ImageGeometryPath;
+    }
+
     if(const int32 err = m_Reader->readFile(); err < 0)
     {
       return MakeErrorResult(-8970, fmt::format("Attempting to read scan '{}' from file '{}' produced an error from the '{}' class.\n  Error Code: {}\n  Message: {}", scanName,
@@ -103,9 +123,10 @@ public:
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
-    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::MaterialName));
-    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+    const DataPath cellEnsembleAM = imagePath.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::CrystalStructures));
+    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::MaterialName));
+    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAM.createChildPath(EbsdLib::AngFile::LatticeConstants));
     Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
@@ -131,10 +152,19 @@ public:
       latticeConstants->setComponent(phaseId, 5, lc[5]);
     }
 
-    return {};
+    if(m_InputValues->CombineScans)
+    {
+      // No need to update origin
+      return {};
+    }
+
+    return updateOrigin(scanName);
   }
 
+  virtual Result<> updateOrigin(const std::string& scanName) = 0;
+
   virtual Result<> copyRawEbsdData(int index) = 0;
+  virtual Result<> copyRawEbsdData(const std::string& scanName) = 0;
 
 protected:
   std::shared_ptr<T> m_Reader;
