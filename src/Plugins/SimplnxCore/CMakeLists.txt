@@ -206,6 +206,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
+  ReadCSVFile
   ReadDeformKeyFileV12
   ReadRawBinary
   ReadStlFile
@@ -281,7 +282,6 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
 # can use the target_sources(...) cmake call
 
 set(PLUGIN_EXTRA_SOURCES
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp"
