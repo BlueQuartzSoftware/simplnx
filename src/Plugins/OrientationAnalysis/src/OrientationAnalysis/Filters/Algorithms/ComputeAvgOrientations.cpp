@@ -24,7 +24,6 @@ ComputeAvgOrientations::~ComputeAvgOrientations() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeAvgOrientations::operator()()
 {
-
   std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
   nx::core::Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
@@ -36,7 +35,7 @@ Result<> ComputeAvgOrientations::operator()()
   nx::core::Float32Array& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath);
   nx::core::Float32Array& avgEuler = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath);
 
-  size_t totalPoints = featureIds.getNumberOfTuples();
+  const size_t totalPoints = featureIds.getNumberOfTuples();
 
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avgQuatsArrayPath, featureIds, m_MessageHandler);
   if(validateNumFeatResult.invalid())
@@ -65,6 +64,10 @@ Result<> ComputeAvgOrientations::operator()()
 
   for(size_t i = 0; i < totalPoints; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(featureIds[i] > 0 && phases[i] > 0)
     {
       int32 phase = phases[i];
@@ -92,6 +95,10 @@ Result<> ComputeAvgOrientations::operator()()
 
   for(size_t featureId = 1; featureId < totalFeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     size_t featureIdOffset = featureId * 4;
     float32 count = counts[featureId];
 

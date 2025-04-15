@@ -116,6 +116,10 @@ Result<> ReadRawBinary::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadRawBinary::execute()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   auto* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
   if(binaryIDataArray->getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))

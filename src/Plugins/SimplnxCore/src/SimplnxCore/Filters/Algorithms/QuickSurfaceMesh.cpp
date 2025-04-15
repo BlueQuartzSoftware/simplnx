@@ -353,8 +353,16 @@ Result<> QuickSurfaceMesh::operator()()
   {
     correctProblemVoxels();
   }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   determineActiveNodes(nodeIds, nodeCount, triangleCount);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   // now create node and triangle arrays knowing the number that will be needed
   std::vector<usize> tupleShape = {triangleCount};
@@ -370,6 +378,10 @@ Result<> QuickSurfaceMesh::operator()()
   }
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   // Scoped because we invalidate connectivity at the end
   Result<> windingResult = {};
@@ -494,6 +506,10 @@ void QuickSurfaceMesh::correctProblemVoxels()
   MeshIndexType iter = 0;
   while(count > 0 && iter < 20)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     iter++;
     count = 0;
 
@@ -658,6 +674,10 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
   // count number of nodes and triangles that will be created
   for(MeshIndexType k = 0; k < zP; k++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     for(MeshIndexType j = 0; j < yP; j++)
     {
       for(MeshIndexType i = 0; i < xP; i++)
@@ -936,6 +956,10 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount)
 {
+  if(m_ShouldCancel)
+  {
+    return;
+  }
   m_MessageHandler(IFilter::Message::Type::Info, "Creating mesh");
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -943,7 +967,6 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   size_t numFeatures = 0;
   size_t numTuples = featureIds.getNumberOfTuples();
   for(size_t i = 0; i < numTuples; i++)
-  // for(const auto& featureId : featureIds)
   {
     const size_t featureId = featureIds[i];
     if(featureId > numFeatures)
@@ -1003,6 +1026,10 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   MeshIndexType triangleIndex = 0;
   for(MeshIndexType k = 0; k < zP; k++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     for(MeshIndexType j = 0; j < yP; j++)
     {
       for(MeshIndexType i = 0; i < xP; i++)
@@ -1522,6 +1549,10 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::generateTripleLines()
 {
+  if(m_ShouldCancel)
+  {
+    return;
+  }
   /**
    * This is a bit of experimental code where we define a triple line as an edge
    * that shares voxels with at least 3 unique Feature Ids. This is different
@@ -1534,10 +1565,6 @@ void QuickSurfaceMesh::generateTripleLines()
    */
   m_MessageHandler(IFilter::Message::Type::Info, "Generating Triple Lines");
 
-  //  DataContainer* m = getDataContainerArray()->getDataContainer(m_FeatureIdsArrayPath.getDataContainerName());
-  //  DataContainer* sm = getDataContainerArray()->getDataContainer(getSurfaceDataContainerName());
-  //
-  //  AttributeMatrix* featAttrMat = sm->getAttributeMatrix(m_FeatureAttributeMatrixName);
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   int32_t numFeatures = 0;
@@ -1572,8 +1599,6 @@ void QuickSurfaceMesh::generateTripleLines()
   MeshIndexType edgeCounter = 0;
 
   // Cycle through again assigning coordinates to each node and assigning node numbers and feature labels to each triangle
-  // int64_t triangleIndex = 0;
-
   ParallelData3DAlgorithm algorithm;
   algorithm.setRange(Range3D(xP - 1, yP - 1, zP - 1));
   if(featureIds.getChunkShape().has_value())

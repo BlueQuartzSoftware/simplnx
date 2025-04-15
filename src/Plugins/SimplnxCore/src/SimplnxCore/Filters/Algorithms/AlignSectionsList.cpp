@@ -23,23 +23,22 @@ AlignSectionsList::~AlignSectionsList() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsList::operator()()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  Result<> result = execute(imageGeom.getDimensions(), m_InputValues->ImageGeometryPath);
-  if(result.invalid())
-  {
-    return result;
-  }
-  if(m_Result.invalid())
-  {
-    return m_Result;
-  }
-  return {};
+  return execute(imageGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
 
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   auto alignSectionsType = m_InputValues->AlignSectionsType;
 
   if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::RelativeShifts)))

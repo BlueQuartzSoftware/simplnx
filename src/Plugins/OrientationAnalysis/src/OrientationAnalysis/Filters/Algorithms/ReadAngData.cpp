@@ -41,6 +41,10 @@ Result<> ReadAngData::operator()()
   {
     return MakeErrorResult(result.first, result.second);
   }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   copyRawEbsdData(&reader);
 
@@ -50,6 +54,7 @@ Result<> ReadAngData::operator()()
 // -----------------------------------------------------------------------------
 std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) const
 {
+
   const std::vector<AngPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
@@ -110,6 +115,10 @@ void ReadAngData::copyRawEbsdData(AngReader* reader) const
 
   // Adjust the values of the 'phase' data to correct for invalid values and assign the read Phase Data into the actual DataArray
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::Phases));
     int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(EbsdLib::Ang::PhaseData));
     for(size_t i = 0; i < totalCells; i++)
@@ -124,6 +133,10 @@ void ReadAngData::copyRawEbsdData(AngReader* reader) const
 
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
     const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi1));
     const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi));
     const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi2));
@@ -138,6 +151,10 @@ void ReadAngData::copyRawEbsdData(AngReader* reader) const
     }
   }
 
+  if(m_ShouldCancel)
+  {
+    return;
+  }
   cDims[0] = 1;
   {
     auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::ImageQuality));

@@ -27,6 +27,10 @@ AlignSectionsFeatureCentroid::~AlignSectionsFeatureCentroid() noexcept = default
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::operator()()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
@@ -69,6 +73,10 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   // Loop over the Z Direction
   for(size_t iter = 0; iter < dims[2]; iter++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
     auto now = std::chrono::steady_clock::now();
     // Only send updates every 1 second
@@ -77,10 +85,6 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
       std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
       m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
       start = std::chrono::steady_clock::now();
-    }
-    if(getCancel())
-    {
-      return {};
     }
 
     size_t count = 0;

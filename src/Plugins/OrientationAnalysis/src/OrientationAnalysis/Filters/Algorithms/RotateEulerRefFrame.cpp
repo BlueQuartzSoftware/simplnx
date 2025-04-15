@@ -40,6 +40,10 @@ public:
     float gNew[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     for(size_t i = start; i < end; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       ea1 = m_CellEulerAngles[3 * i + 0];
       ea2 = m_CellEulerAngles[3 * i + 1];
       ea3 = m_CellEulerAngles[3 * i + 2];
@@ -83,6 +87,11 @@ RotateEulerRefFrame::~RotateEulerRefFrame() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RotateEulerRefFrame::operator()()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
   nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
 
   size_t m_TotalElements = eulerAngles.getNumberOfTuples();
@@ -95,4 +104,9 @@ Result<> RotateEulerRefFrame::operator()()
   dataAlg.setRange(0, m_TotalElements);
   dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel));
   return {};
+}
+
+bool RotateEulerRefFrame::shouldCancel() const
+{
+  return m_ShouldCancel;
 }

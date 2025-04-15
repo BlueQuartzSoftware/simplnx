@@ -54,11 +54,19 @@ Result<> ReadChannel5Data::operator()()
   {
     return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
   }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   const auto result = loadMaterialInfo(&reader);
   if(result.first < 0)
   {
     return MakeErrorResult(result.first, result.second);
+  }
+  if(m_ShouldCancel)
+  {
+    return {};
   }
 
   copyRawEbsdData(&reader);
@@ -130,6 +138,11 @@ void ReadChannel5Data::copyRawEbsdData(CprReader* reader) const
   const std::vector<EbsdLib::CrcDataParser> fieldParsers = reader->createFieldParsers(m_InputValues->InputFile.string());
   for(const auto& parser : fieldParsers)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     const std::string fieldName = parser.FieldDefinition.FieldName;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(fieldName);
 
@@ -148,6 +161,10 @@ void ReadChannel5Data::copyRawEbsdData(CprReader* reader) const
   }
 
   // Copy the data from the 'Phase' array into the 'Phases' array
+  if(m_ShouldCancel)
+  {
+    return;
+  }
   if(m_InputValues->CreateCompatibleArrays)
   {
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
@@ -159,6 +176,10 @@ void ReadChannel5Data::copyRawEbsdData(CprReader* reader) const
   }
 
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
+  if(m_ShouldCancel)
+  {
+    return;
+  }
   if(m_InputValues->CreateCompatibleArrays)
   {
     const auto* fComp0Ptr = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::phi1));
