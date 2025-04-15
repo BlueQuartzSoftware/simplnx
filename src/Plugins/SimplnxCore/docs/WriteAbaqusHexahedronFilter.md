@@ -6,6 +6,8 @@ IO (Output)
 
 ## Description
 
+***WARNING**: If you are not using this filter for stress - strain curves, be sure to disable `Write Dummy Node` or it may mess up mesh connectivity.*
+
 This **Filter** produces the basic five Abaqus .inp files for input into the Abaqus analysis tool. The files created are: xxx.inp (the master file), xxx_nodes.inp, xxx_elems.inp, xxx_elset.inp and xxx_sects.inp. This **Filter** is based on a Python script developed by Matthew W. Priddy (Ga. Tech., early 2015).
 
 ### Example Output

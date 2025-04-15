@@ -15,8 +15,6 @@ namespace
 {
 const DataPath k_FeatureIdsPath = DataPath({Constants::k_DataContainer}).createChildPath(Constants::k_EbsdScanData).createChildPath(Constants::k_FeatureIds);
 
-const std::string k_ExemplarDir = fmt::format("{}/abaqus_hexahedron_writer_test", unit_test::k_TestFilesDir);
-
 std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
@@ -38,42 +36,42 @@ std::vector<char> readIn(const fs::path& filePath)
   return {};
 }
 
-void CompareResults() // compare hash of both file strings
+void CompareResults(const std::string& exemplarDir) // compare hash of both file strings
 {
-  const fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
+  const fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Abaqus_Hexahedron_Writer_Test.inp");
   REQUIRE(fs::exists(writtenFilePath));
-  const fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
+  const fs::path exemplarFilePath = fs::path(exemplarDir + "/Abaqus_Hexahedron_Writer_Test.inp");
   REQUIRE(fs::exists(exemplarFilePath));
   REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
-  const fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
+  const fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Abaqus_Hexahedron_Writer_Test_elems.inp");
   REQUIRE(fs::exists(writtenFilePath2));
-  const fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
+  const fs::path exemplarFilePath2 = fs::path(exemplarDir + "/Abaqus_Hexahedron_Writer_Test_elems.inp");
   REQUIRE(fs::exists(exemplarFilePath2));
   REQUIRE(readIn(writtenFilePath2) == readIn(exemplarFilePath2));
-  const fs::path writtenFilePath3 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
+  const fs::path writtenFilePath3 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Abaqus_Hexahedron_Writer_Test_elset.inp");
   REQUIRE(fs::exists(writtenFilePath3));
-  const fs::path exemplarFilePath3 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
+  const fs::path exemplarFilePath3 = fs::path(exemplarDir + "/Abaqus_Hexahedron_Writer_Test_elset.inp");
   REQUIRE(fs::exists(exemplarFilePath3));
   REQUIRE(readIn(writtenFilePath3) == readIn(exemplarFilePath3));
-  const fs::path writtenFilePath4 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
+  const fs::path writtenFilePath4 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Abaqus_Hexahedron_Writer_Test_nodes.inp");
   REQUIRE(fs::exists(writtenFilePath4));
-  const fs::path exemplarFilePath4 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
+  const fs::path exemplarFilePath4 = fs::path(exemplarDir + "/Abaqus_Hexahedron_Writer_Test_nodes.inp");
   REQUIRE(fs::exists(exemplarFilePath4));
   REQUIRE(readIn(writtenFilePath4) == readIn(exemplarFilePath4));
-  const fs::path writtenFilePath5 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
+  const fs::path writtenFilePath5 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Abaqus_Hexahedron_Writer_Test_sects.inp");
   REQUIRE(fs::exists(writtenFilePath5));
-  const fs::path exemplarFilePath5 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
+  const fs::path exemplarFilePath5 = fs::path(exemplarDir + "/Abaqus_Hexahedron_Writer_Test_sects.inp");
   REQUIRE(fs::exists(exemplarFilePath5));
   REQUIRE(readIn(writtenFilePath5) == readIn(exemplarFilePath5));
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Filter Execution", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
-                                                               "abaqus_hexahedron_writer_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz",
+                                                               "7_0_abaqus_hexahedron_writer_test");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
                                                               "6_6_find_feature_centroids.dream3d");
@@ -84,10 +82,11 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Filter Execution", "[
   Arguments args;
 
   // Create default Parameters for the filter.
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key, std::make_any<int32>(250));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("6_6_Abaqus_Hexahedron_Writer_Test"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Writer_Test"));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
 
@@ -99,5 +98,40 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Filter Execution", "[
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  ::CompareResults();
+  ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/dummy_node", unit_test::k_TestFilesDir));
+}
+
+TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz",
+                                                               "7_0_abaqus_hexahedron_writer_test");
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
+                                                              "6_6_find_feature_centroids.dream3d");
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  const WriteAbaqusHexahedronFilter filter;
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_HourglassStiffness_Key, std::make_any<int32>(250));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Writer_Test"));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/raw", unit_test::k_TestFilesDir));
 }

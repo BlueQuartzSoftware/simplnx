@@ -21,6 +21,7 @@ struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
   StringParameter::ValueType FilePrefix;
   DataPath FeatureIdsArrayPath;
   DataPath ImageGeometryPath;
+  bool WriteDummyNode;
 };
 
 /**

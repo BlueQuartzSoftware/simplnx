@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -54,6 +55,8 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(
+      std::make_unique<BoolParameter>(k_WriteDummyNode_Key, "Write Dummy Node", "When true writes a dummy node used for stress - strain curves as the last node in the `_.nodes.inp` file.", true));
   params.insert(std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The value to use for the Hourglass Stiffness", 250));
   params.insert(std::make_unique<StringParameter>(k_JobName_Key, "Job Name", "The name of the job", "SomeString"));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
@@ -73,7 +76,12 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteAbaqusHexahedronFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change:
+  // Added - k_WriteDummyNode_Key = "write_dummy_node"
+  // Solution - Accept default functionality of parameter (true) to preserve backwards compatibility
 }
 
 //------------------------------------------------------------------------------
@@ -116,6 +124,7 @@ Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.WriteDummyNode = filterArgs.value<bool>(k_WriteDummyNode_Key);
 
   return WriteAbaqusHexahedron(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
