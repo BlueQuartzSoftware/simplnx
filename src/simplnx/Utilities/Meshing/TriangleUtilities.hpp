@@ -4,6 +4,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core::MeshingUtilities
 {
@@ -29,7 +30,8 @@ INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::a
  * @param faceLabelsStore This is the face ids, used to determine expected winding of each triangle
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
-Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel);
+Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel,
+                               const IFilter::MessageHandler& mesgHandler);
 
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
@@ -57,8 +59,8 @@ private:
  * @brief The
  */
 template <class ContainerT>
-Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels, ContainerT& volumes,
-                            const std::atomic_bool& shouldCancel)
+Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels,
+                                 ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
   for(usize i = 0; i < triangles.getNumberOfTuples(); i++)

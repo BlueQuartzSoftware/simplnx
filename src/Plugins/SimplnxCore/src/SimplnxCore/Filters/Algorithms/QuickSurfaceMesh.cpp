@@ -371,7 +371,8 @@ Result<> QuickSurfaceMesh::operator()()
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
 
-  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel);
+  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel,
+                                          m_MessageHandler);
 
 #ifdef QSM_CREATE_TRIPLE_LINES
   if(m_InputValues->pGenerateTripleLines)

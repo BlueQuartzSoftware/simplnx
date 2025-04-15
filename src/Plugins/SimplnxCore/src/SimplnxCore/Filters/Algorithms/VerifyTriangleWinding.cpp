@@ -80,7 +80,7 @@ Result<> VerifyTriangleWinding::operator()()
 
   m_MessageHandler("Repairing Windings...");
   // This is reused since it may contain warnings
-  Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, faceLabelsStore, m_ShouldCancel);
+  Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
   if(windingResult.invalid())
   {
     return windingResult;

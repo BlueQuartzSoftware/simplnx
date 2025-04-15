@@ -3,6 +3,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <chrono>
+
 using namespace nx::core;
 
 namespace
@@ -46,7 +48,8 @@ INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTetr
   return determinant / 6.0f;
 }
 
-Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel)
+Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel,
+                                                 const IFilter::MessageHandler& mesgHandler)
 {
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
@@ -72,10 +75,17 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
 
   // Walk the features repairing the graph group by group
   usize count = 0;
+  auto start = std::chrono::steady_clock::now();
+  usize numTuples = faceLabelsStore.getNumberOfTuples();
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>> edgeList = {};
-    for(usize i = 0; i < faceLabelsStore.getNumberOfTuples(); i++)
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
+    {
+      mesgHandler(fmt::format("Current Feature: {} | Total Progress : {}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature)));
+      start = std::chrono::steady_clock::now();
+    }
+    for(usize i = 0; i < numTuples; i++)
     {
       if(shouldCancel)
       {

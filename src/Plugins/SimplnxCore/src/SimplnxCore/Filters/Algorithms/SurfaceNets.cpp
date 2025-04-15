@@ -429,7 +429,8 @@ Result<> SurfaceNets::operator()()
     }
   }
 
-  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel);
+  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel,
+                                          m_MessageHandler);
 
   return {};
 }
