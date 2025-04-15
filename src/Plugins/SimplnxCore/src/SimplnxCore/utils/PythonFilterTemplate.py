@@ -136,12 +136,10 @@ class #PYTHON_FILTER_NAME#:
     # -----------------------------------------------------------------------------
     # If you have a long running process, check the should_cancel to see if the user cancelled the filter
     # -----------------------------------------------------------------------------
-    if not should_cancel:
-      return nx.Result()
-
+    for i in range(100):
+      if should_cancel:
+        return nx.Result()
+      message_handler(nx.IFilter.Message(nx.IFilter.Message.Type.Info, f'i={i}'))
+      # some expensive operation here
 
     return nx.Result()
-
-
-
-
