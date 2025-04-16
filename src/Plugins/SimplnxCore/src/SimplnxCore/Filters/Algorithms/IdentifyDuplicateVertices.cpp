@@ -29,12 +29,12 @@ const std::atomic_bool& IdentifyDuplicateVertices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IdentifyDuplicateVertices::operator()()
 {
-  const auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
-  const INodeGeometry2D::SharedVertexList::store_type& verts = triGeom.getVertices()->getDataStoreRef();
+  const auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath);
+  const INodeGeometry2D::SharedVertexList::store_type& verts = geom.getVertices()->getDataStoreRef();
 
   // Sort Vertices
-  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
-  if(!MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
+  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
+  if(!MeshingUtilities::HasDuplicateVertices(geom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
     // no duplicates found
     return {};
@@ -60,7 +60,7 @@ Result<> IdentifyDuplicateVertices::operator()()
 
   auto& duplicatesMask = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->DuplicatesMaskPath)->getDataStoreRef();
   duplicatesMask.fill(0);
-  using VertT = INodeGeometry2D::SharedVertexList::value_type;
+  using VertT = INodeGeometry0D::SharedVertexList::value_type;
   for(usize i = 1; i < sortedVerticesList.ordering.size(); i++)
   {
     const IGeometry::MeshIndexType prevIndex = sortedVerticesList.ordering[i - 1] * 3;

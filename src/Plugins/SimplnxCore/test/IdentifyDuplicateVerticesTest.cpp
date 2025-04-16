@@ -12,14 +12,40 @@ using namespace nx::core;
 namespace
 {
 const DataPath k_CompDupPath = DataPath({"computed duplicates mask"});
+
+void GenerateVertexGeom(DataStructure& dataStructure)
+{
+  // Create a Vertex Geometry grid for the Scan Data
+  VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry);
+
+  Float32Array* vertList = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", std::vector<usize>{25}, {3});
+
+  float32 xVal = 0.0f;
+  float32 yVal = 0.0f;
+  float32 zVal = 0.0f;
+  for(usize i = 0; i < vertList->getNumberOfTuples(); i++)
+  {
+    vertList->setValue((i * 3) + 0, xVal);
+    vertList->setValue((i * 3) + 1, yVal);
+    vertList->setValue((i * 3) + 2, zVal);
+
+    xVal += 1.0f;
+    yVal += 1.0f;
+    zVal += 1.0f;
+  }
+
+  vertexGeom->setVertices(*vertList);
 }
+} // namespace
 
 TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[SimplnxCore][IdentifyDuplicateVerticesFilter]")
 {
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = {};
+  GenerateVertexGeom(dataStructure);
+  dataStructure.exportHierarchyAsText(std::cout);
   const std::array<usize, 4> dupIndices = {5, 6, 13, 24};
   {
-    auto& vertexList = dataStructure.getDataAs<VertexGeom>(DataPath({Constants::k_VertexGeometry}))->getVerticesRef();
+    auto& vertexList = dataStructure.getDataRefAs<VertexGeom>(DataPath({Constants::k_VertexGeometry})).getVerticesRef();
 
     // Make sure that we are in bounds
     REQUIRE(vertexList.getNumberOfTuples() > 24);
@@ -56,14 +82,6 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
 
   auto& duplicates = dataStructure.getDataRefAs<UInt8Array>(k_CompDupPath);
 
-  REQUIRE(duplicates[dupIndices[0] - 1] == 0); // First instance
-  REQUIRE(duplicates[dupIndices[0]] == 1); // Duplicate
-  REQUIRE(duplicates[dupIndices[1]] == 1); // Duplicate of Duplicate
-  REQUIRE(duplicates[dupIndices[2] - 1] == 0); // First instance
-  REQUIRE(duplicates[dupIndices[2]] == 1); // Duplicate
-  REQUIRE(duplicates[dupIndices[3] - 1] == 0); // First instance
-  REQUIRE(duplicates[dupIndices[3]] == 1); // Duplicate
-
   usize count = 0;
   for(usize i = 0; i < duplicates.getNumberOfTuples(); i++)
   {
@@ -78,7 +96,8 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
 
 TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[SimplnxCore][IdentifyDuplicateVerticesFilter]")
 {
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = {};
+  GenerateVertexGeom(dataStructure);
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object

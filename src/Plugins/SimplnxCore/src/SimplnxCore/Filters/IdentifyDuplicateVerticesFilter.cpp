@@ -49,8 +49,9 @@ Parameters IdentifyDuplicateVerticesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeomPath_Key, "Input Geometry", "The path to the target geometry, must have a SharedVertexList", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{}));
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_InputGeomPath_Key, "Input Geometry", "The path to the target geometry, must have a SharedVertexList", DataPath{},
+                                                   GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DuplicateMaskPath_Key, "Duplicate Vertices Mask Name", "The location and name of the new duplicate vertices mask array",
@@ -76,18 +77,18 @@ IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const Da
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
-  const auto* triangleGeom = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
-  if(triangleGeom == nullptr || triangleGeom->getVertices() == nullptr)
+  const auto* geom = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
+  if(geom == nullptr || geom->getVertices() == nullptr)
   {
     return MakePreflightErrorResult(-62910, "Input Geometry must contain a SharedVertexList.");
   }
 
   OutputActions actions;
 
-  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{triangleGeom->getVertices()->getNumberOfTuples()}, std::vector<usize>{1},
+  actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{geom->getVertices()->getNumberOfTuples()}, std::vector<usize>{1},
                                                            filterArgs.value<ArrayCreationParameter::ValueType>(k_DuplicateMaskPath_Key)));
 
-  return {};
+  return {std::move(actions)};
 }
 
 //------------------------------------------------------------------------------

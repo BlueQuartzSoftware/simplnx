@@ -6,9 +6,9 @@ namespace
 {
 // Uses Hoare's method for speed
 IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end,
-                                        const INodeGeometry2D::SharedVertexList::store_type& vertices, IGeometry::MeshIndexType offset)
+                                        const INodeGeometry0D::SharedVertexList::store_type& vertices, IGeometry::MeshIndexType offset)
 {
-  const INodeGeometry2D::SharedVertexList::value_type threshold = vertices[(sorted[begin] * 3) + offset];
+  const INodeGeometry0D::SharedVertexList::value_type threshold = vertices[(sorted[begin] * 3) + offset];
 
   IGeometry::MeshIndexType front = begin;
   IGeometry::MeshIndexType back = end;
@@ -36,7 +36,7 @@ IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& s
   }
 }
 
-void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry2D::SharedVertexList::store_type& vertices,
+void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry0D::SharedVertexList::store_type& vertices,
                        IGeometry::MeshIndexType offset, const std::atomic_bool& shouldCancel)
 {
   if(begin >= end || shouldCancel)
@@ -52,7 +52,7 @@ void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry:
 }
 } // namespace
 
-MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry2D& geom, const std::atomic_bool& shouldCancel)
+MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry0D& geom, const std::atomic_bool& shouldCancel)
 {
   const BoundingBox3Df& bounds = geom.getBoundingBox();
 
@@ -62,12 +62,12 @@ MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const
   const AxialAlignment axis = static_cast<AxialAlignment>(std::distance(diff.begin(), std::max_element(diff.begin(), diff.end())));
 
   // Getting the verts list by ref here for the validation in the ref function
-  const INodeGeometry2D::SharedVertexList::store_type& vertexListStore = geom.getVerticesRef().getDataStoreRef();
+  const INodeGeometry0D::SharedVertexList::store_type& vertexListStore = geom.getVerticesRef().getDataStoreRef();
 
   return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore, shouldCancel))};
 }
 
-std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry2D::SharedVertexList::store_type& vertexList,
+std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
                                                                                      const std::atomic_bool& shouldCancel)
 {
   std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
@@ -80,7 +80,7 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
 
 bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
 {
-  using VertT = INodeGeometry2D::SharedVertexList::value_type;
+  using VertT = INodeGeometry0D::SharedVertexList::value_type;
 
   // Leverage ordering assumptions to speed up duplicate checks
   std::array<IGeometry::MeshIndexType, 3> offset;
