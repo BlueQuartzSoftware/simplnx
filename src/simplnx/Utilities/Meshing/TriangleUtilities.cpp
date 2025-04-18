@@ -9,6 +9,43 @@
 
 using namespace nx::core;
 
+namespace
+{
+using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
+
+EdgeListT LoadValidAdjacentEdges(const std::vector<bool>& visited, const std::set<usize>& neighbors, const std::vector<bool>& unmodified,
+                                 INodeGeometry2D::SharedFaceList::store_type& triangles)
+{
+  EdgeListT edgeList = {};
+  for(const usize neighbor : neighbors)
+  {
+    if(!visited[neighbor])
+    {
+      continue;
+    }
+
+    std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(neighbor * 3) + 0], triangles[(neighbor * 3) + 1]);
+    std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(neighbor * 3) + 1], triangles[(neighbor * 3) + 2]);
+    std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(neighbor * 3) + 2], triangles[(neighbor * 3) + 0]);
+
+    if(unmodified[neighbor])
+    {
+      // synthetic flip to maintain homogeneity
+      edge1 = std::make_pair(triangles[(neighbor * 3) + 0], triangles[(neighbor * 3) + 2]);
+      edge2 = std::make_pair(triangles[(neighbor * 3) + 2], triangles[(neighbor * 3) + 1]);
+      edge3 = std::make_pair(triangles[(neighbor * 3) + 1], triangles[(neighbor * 3) + 0]);
+    }
+
+    // Edges are unique
+    edgeList.emplace(std::move(edge1));
+    edgeList.emplace(std::move(edge2));
+    edgeList.emplace(std::move(edge3));
+  }
+
+  return edgeList;
+}
+} // namespace
+
 INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
 {
   const usize vertAIndex = vertIndices[0] * 3;
@@ -64,16 +101,13 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   usize count = 0;
   auto start = std::chrono::steady_clock::now();
   const usize numTuples = faceLabelsStore.getNumberOfTuples();
+  std::vector<bool> visited(faceLabelsStore.getNumberOfTuples(), false);
+  std::vector<bool> unmodified(faceLabelsStore.getNumberOfTuples(), false);
   for(int32 feature = 1; feature < featureCount.size(); feature++)
   {
-    std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>> edgeList = {};
-
-    usize next = 0;
-    usize acceptableZeros = 0;
-
-    std::vector<usize> indices(featureCount[feature], 0);
-
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
+
+    // process base case
     for(usize i = 0; i < numTuples; i++)
     {
       if(faceLabelsStore[i * 2] != feature && faceLabelsStore[(i * 2) + 1] != feature)
@@ -81,111 +115,87 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
         continue;
       }
 
-      searchTargets.push(i);
+      auto numElem = neighbors.getNumberOfElements(i);
+      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+
+      for(uint16 element = 0; element < numElem; element++)
+      {
+        const usize neighbor = neighborListPtr[element];
+        if(faceLabelsStore[neighbor * 2] != feature && faceLabelsStore[(neighbor * 2) + 1] != feature)
+        {
+          continue;
+        }
+        searchTargets.push(neighbor);
+      }
+
+      visited[i] = true;
       break;
     }
 
-    while(std::count(indices.begin(), indices.end(), 0) > acceptableZeros)
+    // begin mass search
+    while(!searchTargets.empty())
     {
       if(shouldCancel)
       {
         return {};
       }
 
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
+      // Dequeue a vertex from queue and store it
+      const IGeometry::MeshIndexType i = searchTargets.front();
+      searchTargets.pop();
+
+      if(visited[i])
       {
-        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(featureCount.size())));
-        start = std::chrono::steady_clock::now();
+        continue;
       }
 
-      while(!searchTargets.empty())
+//      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
+//      {
+//        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(featureCount.size())));
+//        start = std::chrono::steady_clock::now();
+//      }
+
+      auto numElem = neighbors.getNumberOfElements(i);
+      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+
+      std::set<usize> localNeighbors = {};
+
+      for(uint16 element = 0; element < numElem; element++)
       {
-        if(shouldCancel)
-        {
-          return {};
-        }
-
-        // Dequeue a vertex from queue and store it
-        const IGeometry::MeshIndexType i = searchTargets.front();
-        searchTargets.pop();
-
-        if(faceLabelsStore[i * 2] != feature && faceLabelsStore[(i * 2) + 1] != feature)
+        const usize neighbor = neighborListPtr[element];
+        if(faceLabelsStore[neighbor * 2] != feature && faceLabelsStore[(neighbor * 2) + 1] != feature)
         {
           continue;
         }
 
-        auto pos = std::find(indices.begin(), indices.end(), i);
-        if(pos != indices.end())
-        {
-          if(i != 0 || acceptableZeros == 1)
-          {
-            continue;
-          }
-
-          acceptableZeros = 1;
-        }
-
-        auto numElem = neighbors.getNumberOfElements(i);
-        const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
-
-        for(uint16 element = 0; element < numElem; element++)
-        {
-          searchTargets.push(neighborListPtr[element]);
-        }
-
-        indices[next] = i;
-        next++;
-
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
-
-        // This is computationally heavy
-        if(edgeList.find(edge1) != edgeList.end() || edgeList.find(edge2) != edgeList.end() || edgeList.find(edge3) != edgeList.end()) // If true it contains a conflicting edge
-        {
-          // check if previously visited
-          const usize offset = faceLabelsStore[i * 2] == feature ? 1 : 0;
-          const int32 alternateLabel = faceLabelsStore[(i * 2) + offset];
-          if(alternateLabel != 0 && alternateLabel < feature)
-          {
-            count++;
-          }
-          else
-          {
-            // Flip it
-            const IGeometry::MeshIndexType tempValue = triangles[(i * 3) + 0];
-            triangles[(i * 3) + 0] = triangles[(i * 3) + 2];
-            triangles[(i * 3) + 2] = tempValue;
-
-            edge1 = std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 1]);
-            edge2 = std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 2]);
-            edge3 = std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 0]);
-          }
-        }
-
-        // Edges are unique
-        edgeList.emplace(std::move(edge1));
-        edgeList.emplace(std::move(edge2));
-        edgeList.emplace(std::move(edge3));
+        searchTargets.push(neighbor);
+        localNeighbors.emplace(neighbor);
       }
 
-      // Find triangles in the feature that haven't been evaluated, if any
-      // Zero already considered by this point
-      for(usize i = 1; i < numTuples; i++)
+      visited[i] = true;
+
+      EdgeListT edgeList = ::LoadValidAdjacentEdges(visited, localNeighbors, unmodified, triangles);
+
+      // This is computationally heavy
+      if(edgeList.find(std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 1])) != edgeList.end() ||
+         edgeList.find(std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 2])) != edgeList.end() ||
+         edgeList.find(std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 0])) != edgeList.end()) // If true it contains a conflicting edge
       {
-        if(faceLabelsStore[i * 2] != feature && faceLabelsStore[(i * 2) + 1] != feature)
+        // check if previously visited
+        const usize offset = faceLabelsStore[i * 2] == feature ? 1 : 0;
+        const int32 alternateLabel = faceLabelsStore[(i * 2) + offset];
+        if(alternateLabel != 0 && alternateLabel < feature)
         {
-          continue;
+          unmodified[i] = true;
+          count++;
         }
-
-        if(std::find(indices.begin(), indices.end(), i) != indices.end())
+        else
         {
-            // No extra checks because we don't evaluate zero here
-            continue;
+          // Flip it
+          const IGeometry::MeshIndexType tempValue = triangles[(i * 3) + 0];
+          triangles[(i * 3) + 0] = triangles[(i * 3) + 2];
+          triangles[(i * 3) + 2] = tempValue;
         }
-
-        searchTargets.push(i);
-        break;
       }
     }
   }

@@ -1,5 +1,7 @@
 #include "VerifyTriangleWinding.hpp"
 
+#include <algorithm>
+
 #include "SimplnxCore/Filters/ReverseTriangleWindingFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -133,13 +135,10 @@ Result<> VerifyTriangleWinding::operator()()
   int32 maxFeature = 0;
   for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
   {
-    if(faceLabelsStore[i] > maxFeature)
-    {
-      maxFeature = faceLabelsStore[i];
-    }
+    maxFeature = std::max(faceLabelsStore[i], maxFeature);
   }
 
-  std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature);
+  std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature + 1);
   auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), faceLabelsStore, volumes, m_ShouldCancel);
   if(volumeResult.invalid())
   {
