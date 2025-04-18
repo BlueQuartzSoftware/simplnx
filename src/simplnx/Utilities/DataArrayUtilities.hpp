@@ -502,6 +502,21 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
 } // namespace Indexing
 
 /**
+ * This method creates a new array in the destDataStructure using the given array and tupleShape, and initializes the new array to the
+ * given defaultValue.  The new array has the same array type, data type (for data arrays and neighbor lists), and component shape
+ * (for data arrays) as the input array.
+ * @param destDataStructure The destination data structure that the new array will be created.
+ * @param array The input array that will be used to the create the new array, using the same array type and other attributes.
+ * @param newArrayName The name that will be used when creating the new array
+ * @param tupleShape The tuple shape that is used to create the new array.
+ * @param defaultValue The default value that the new array will be initialized with.  The default value is validated to verify that it
+ * can be converted to the proper type needed for the new array, and an error result is returned otherwise.
+ * @return
+ */
+SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const std::vector<usize>& tupleShape,
+                                                                const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
+
+/**
  * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
  *
  * An example use of these functions would be the following (where newCellData is an AttributeMatrix in dataStructure ):

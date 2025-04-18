@@ -23,7 +23,7 @@ constexpr int32 k_RbrTupleDimsInconsistent = -197;
 template <class T>
 void CreateAndInitArray(DataStructure& dataStructure, const DataPath& path, const std::string& initValue)
 {
-  Result<T> result = ConvertTo<T>::convert(initValue);
+  Result<T> result = StringInterpretationUtilities::Convert<T>(initValue);
   T value = result.value();
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(path);
   auto& dataStore = dataArray.getDataStoreRef();

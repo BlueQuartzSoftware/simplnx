@@ -4,6 +4,8 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -30,6 +32,40 @@ struct InitializeNeighborListFunctor
   {
     auto* neighborListPtr = dynamic_cast<NeighborList<T>*>(iNeighborList);
     neighborListPtr->setList(neighborListPtr->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
+  }
+};
+
+/**
+ * @brie
+ */
+struct CreateDefaultValueDataArrayFunctor
+{
+  template <typename T>
+  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape, const std::string& defaultValue,
+                             const std::optional<DataObject::IdType> parentId)
+  {
+    auto newDataArray = DataArray<T>::template CreateWithStore<DataStore<T>>(destDataStructure, name, tupleShape, componentShape, parentId);
+    auto result = StringInterpretationUtilities::Convert<T>(defaultValue);
+    if(result.invalid())
+    {
+      return ConvertResultTo<IArray*>(ConvertResult(std::move(result)), {});
+    }
+    std::fill(newDataArray->begin(), newDataArray->end(), result.value());
+    return {newDataArray};
+  }
+};
+
+/**
+ * @brief
+ */
+struct CreateDefaultValueNeighborListFunctor
+{
+  template <typename T>
+  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<DataObject::IdType> parentId)
+  {
+    auto numTuples = std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
+    auto newNeighborList = NeighborList<T>::Create(destDataStructure, name, numTuples, parentId);
+    return {newNeighborList};
   }
 };
 } // namespace
@@ -199,6 +235,44 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
     return ConvertDataArrayDataStore<float64>(std::dynamic_pointer_cast<DataArray<float64>>(dataArray), dataFormat);
   default:
     return false;
+  }
+}
+
+Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const std::vector<usize>& tupleShape,
+                                                 const std::string& defaultValue, const std::optional<DataObject::IdType> parentId)
+{
+  switch(array->getArrayType())
+  {
+  case IArray::ArrayType::StringArray: {
+    auto newStringArray = StringArray::Create(destDataStructure, newArrayName, parentId);
+    newStringArray->resizeTuples(tupleShape);
+    std::fill(newStringArray->begin(), newStringArray->end(), defaultValue);
+    return {newStringArray};
+  }
+  case IArray::ArrayType::DataArray: {
+    auto iDataArray = dynamic_cast<IDataArray*>(array);
+    auto result = ExecuteDataFunction(CreateDefaultValueDataArrayFunctor{}, iDataArray->getDataType(), destDataStructure, newArrayName, tupleShape, array->getComponentShape(), defaultValue, parentId);
+    if(result.invalid())
+    {
+      return MakeErrorResult<IArray*>(-1050, fmt::format("Unable to create default-initialized data array to append to data array '{}': {}", array->getName(), result.errors()[0].message));
+    }
+    return result;
+  }
+  case IArray::ArrayType::NeighborListArray: {
+    auto iNeighborList = dynamic_cast<INeighborList*>(array);
+    auto result = ExecuteNeighborFunction(CreateDefaultValueNeighborListFunctor{}, iNeighborList->getDataType(), destDataStructure, newArrayName, tupleShape, parentId);
+    if(result.invalid())
+    {
+      return MakeErrorResult<IArray*>(-1051, fmt::format("Unable to create default-initialized neighbor list to append to neighbor list '{}': {}", array->getName(), result.errors()[0].message));
+    }
+    return result;
+  }
+  case IArray::ArrayType::Any:
+  default: {
+    return MakeErrorResult<IArray*>(
+        -1052, fmt::format("Unable to create a default-initialized array: array '{}' is not a StringArray, DataArray, or NeighborList, and these are the only array types supported by this filter!",
+                           array->getName()));
+  }
   }
 }
 
