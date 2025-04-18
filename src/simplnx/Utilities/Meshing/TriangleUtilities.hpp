@@ -27,11 +27,12 @@ INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::a
  * @brief This function attempts to make winding as consistent as possible.
  * NOTE: This algorithm requires that there are NO DUPLICATE vertices in the mesh
  * @param triangles The SharedFaceList that may be modified
+ * @param neighbors The element neighbors adjacency list
  * @param faceLabelsStore This is the face ids, used to determine expected winding of each triangle
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
-Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel,
-                               const IFilter::MessageHandler& mesgHandler);
+Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+                               const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each

@@ -371,8 +371,20 @@ Result<> QuickSurfaceMesh::operator()()
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
 
-  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel,
-                                          m_MessageHandler);
+  // Generate Connectivity
+  m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+  triangleGeom.findElementNeighbors(true);
+  const auto optionalId = triangleGeom.getElementNeighborsId();
+  if(!optionalId.has_value())
+  {
+    return MakeErrorResult(-56341, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
+  }
+  const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+
+  m_MessageHandler("Repairing Windings...");
+
+  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(),
+                                          m_ShouldCancel, m_MessageHandler);
 
 #ifdef QSM_CREATE_TRIPLE_LINES
   if(m_InputValues->pGenerateTripleLines)

@@ -14,25 +14,57 @@ using namespace nx::core;
 
 namespace
 {
-Result<> ImplementReversal(const std::vector<IGeometry::SharedVertexList::value_type>& volumes, const DataPath& geomPath, const std::function<Result<>(const DataPath&)>& reversalFunction)
+class ReverseWindingImpl
 {
-  usize count = 0;
-  for(auto volume : volumes)
+public:
+  using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
+  ReverseWindingImpl(TriStore& triangles, const Int32AbstractDataStore& faceLabels, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
+  : m_Triangles(triangles)
+  , m_FaceLabels(faceLabels)
+  , m_ReversalTargets(reversalTargets)
+  , m_ShouldCancel(shouldCancel)
   {
-    if(std::signbit(volume))
+  }
+  ~ReverseWindingImpl() = default;
+
+  void generate(usize start, usize end) const
+  {
+    for(size_t i = start; i < end; i++)
     {
-      // is negative
-      count++;
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      const int32 feature1 = m_FaceLabels[(i * 2) + 0];
+      const int32 feature2 = m_FaceLabels[(i * 2) + 1];
+      for(const usize target : m_ReversalTargets)
+      {
+        if(target != feature1 && target != feature2)
+        {
+          continue;
+        }
+
+        // Flip it
+        const IGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
+        m_Triangles[(i * 3) + 0] = m_Triangles[(i * 3) + 2];
+        m_Triangles[(i * 3) + 2] = tempValue;
+        break;
+      }
     }
   }
 
-  if(count >= (volumes.size() / 2))
+  void operator()(const Range& range) const
   {
-    return reversalFunction(geomPath);
+    generate(range.min(), range.max());
   }
 
-  return {};
-}
+private:
+  TriStore& m_Triangles;
+  const Int32AbstractDataStore& m_FaceLabels;
+  const std::vector<usize>& m_ReversalTargets;
+  const std::atomic_bool& m_ShouldCancel;
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -78,15 +110,25 @@ Result<> VerifyTriangleWinding::operator()()
   // Load double-sided mesh grouping
   const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
 
+  // Generate Connectivity
+  m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+  triGeom.findElementNeighbors(true);
+  const auto optionalId = triGeom.getElementNeighborsId();
+  if(!optionalId.has_value())
+  {
+    return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
+  }
+  const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+
   m_MessageHandler("Repairing Windings...");
   // This is reused since it may contain warnings
-  Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+  Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
   if(windingResult.invalid())
   {
     return windingResult;
   }
 
-  m_MessageHandler("Voting on reversal - calculating feature volumes");
+  m_MessageHandler("Assessing reversal - calculating feature volumes");
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
   for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
@@ -96,6 +138,7 @@ Result<> VerifyTriangleWinding::operator()()
       maxFeature = faceLabelsStore[i];
     }
   }
+
   std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature);
   auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), faceLabelsStore, volumes, m_ShouldCancel);
   if(volumeResult.invalid())
@@ -103,35 +146,24 @@ Result<> VerifyTriangleWinding::operator()()
     return volumeResult;
   }
 
-  m_MessageHandler("Voting on reversal - determining validity of reversal");
-  // Define a capturing lambda to execute filter without passing member variables to free functions
-  const std::function<Result<>(const DataPath&)> f_ExecuteReverseTriangleWinding = [this](const DataPath& triGeomPath) -> Result<> {
-    const ReverseTriangleWindingFilter filter;
-
-    Arguments args;
-
-    args.insertOrAssign(ReverseTriangleWindingFilter::k_TriGeomPath_Key, std::make_any<DataPath>(triGeomPath));
-
-    auto preflightResult = filter.preflight(m_DataStructure, args, m_MessageHandler, m_ShouldCancel);
-    if(preflightResult.outputActions.invalid())
-    {
-      return ConvertResult(std::move(preflightResult.outputActions));
-    }
-
-    auto executeResult = filter.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
-    if(executeResult.result.invalid())
-    {
-      return executeResult.result;
-    }
-
-    return {};
-  };
-
-  // Do reversal voting based on feature volume calculation
-  Result<> reversalResult = ::ImplementReversal(volumes, m_InputValues->TargetGeometryPath, f_ExecuteReverseTriangleWinding);
-  if(reversalResult.invalid())
+  m_MessageHandler("Implementing reversal in parallel");
+  std::vector<usize> reversalTargets = {};
+  reversalTargets.reserve(volumes.size());
+  for(usize i = 1; i < volumes.size(); i++) // zero is an invalid feature label
   {
-    return reversalResult;
+    if(volumes[i] < 0.0f)
+    {
+      reversalTargets.push_back(i);
+    }
+  }
+  reversalTargets.shrink_to_fit();
+
+  if(!reversalTargets.empty())
+  {
+    // Parallel algorithm to reverse based on feature label
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0ULL, static_cast<usize>(triangles.getNumberOfTuples()));
+    dataAlg.execute(::ReverseWindingImpl(triangles, faceLabelsStore, reversalTargets, m_ShouldCancel));
   }
 
   if(m_InputValues->RepairNormals)
