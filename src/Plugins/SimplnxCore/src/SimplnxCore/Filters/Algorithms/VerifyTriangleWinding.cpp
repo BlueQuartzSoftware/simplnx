@@ -112,22 +112,30 @@ Result<> VerifyTriangleWinding::operator()()
   // Load double-sided mesh grouping
   const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
 
-  // Generate Connectivity
-  m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
-  triGeom.findElementNeighbors(true);
-  const auto optionalId = triGeom.getElementNeighborsId();
-  if(!optionalId.has_value())
+  // Scoped because we invalidate connectivity at the end
+  Result<> windingResult = {};
   {
-    return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
-  }
-  const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+    // Generate Connectivity
+    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    triGeom.findElementNeighbors(true);
+    const auto optionalId = triGeom.getElementNeighborsId();
+    if(!optionalId.has_value())
+    {
+      return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
+    }
+    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-  m_MessageHandler("Repairing Windings...");
-  // This is reused since it may contain warnings
-  Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
-  if(windingResult.invalid())
-  {
-    return windingResult;
+    m_MessageHandler("Repairing Windings...");
+    // This is reused since it may contain warnings
+    windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+    if(windingResult.invalid())
+    {
+      return windingResult;
+    }
+
+    // Purge connectivity
+    m_DataStructure.removeData(triGeom.getElementContainingVertId().value());
+    m_DataStructure.removeData(triGeom.getElementNeighborsId().value());
   }
 
   m_MessageHandler("Assessing reversal - calculating feature volumes");

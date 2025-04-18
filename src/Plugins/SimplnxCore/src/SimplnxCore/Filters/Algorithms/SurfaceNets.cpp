@@ -429,20 +429,28 @@ Result<> SurfaceNets::operator()()
     }
   }
 
-  // Generate Connectivity
-  m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
-  triangleGeom.findElementNeighbors(true);
-  const auto optionalId = triangleGeom.getElementNeighborsId();
-  if(!optionalId.has_value())
+  // Scoped because we invalidate connectivity at the end
+  Result<> windingResult = {};
   {
-    return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
+    // Generate Connectivity
+    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    triangleGeom.findElementNeighbors(true);
+    const auto optionalId = triangleGeom.getElementNeighborsId();
+    if(!optionalId.has_value())
+    {
+      return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
+    }
+    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+
+    m_MessageHandler("Repairing Windings...");
+
+    windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                            m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+
+    // Purge connectivity
+    m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
+    m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
   }
-  const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
 
-  m_MessageHandler("Repairing Windings...");
-
-  MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(),
-                                          m_ShouldCancel, m_MessageHandler);
-
-  return {};
+  return windingResult;
 }
