@@ -71,19 +71,12 @@ INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTetr
 Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
                                                  const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 {
-  // Get max group and feature count (feature id != 0)
-  std::vector<usize> featureCount(1, 0);
+  // Get max group and (feature id != 0)
+  int32 maxFeature = 0;
   for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
   {
-    const int32 feature = faceLabelsStore[i];
-    while(feature >= featureCount.size())
-    {
-      featureCount.push_back(0);
-    }
-
-    featureCount[feature]++;
+    maxFeature = std::max(faceLabelsStore[i], maxFeature);
   }
-  featureCount.shrink_to_fit();
 
   /**
    * This works by making a map of the edges since a properly wound mesh
@@ -103,7 +96,7 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   const usize numTuples = faceLabelsStore.getNumberOfTuples();
   std::vector<bool> visited(faceLabelsStore.getNumberOfTuples(), false);
   std::vector<bool> unmodified(faceLabelsStore.getNumberOfTuples(), false);
-  for(int32 feature = 1; feature < featureCount.size(); feature++)
+  for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
 
@@ -141,10 +134,10 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
       }
 
       // Dequeue a vertex from queue and store it
-      const IGeometry::MeshIndexType i = searchTargets.front();
+      const IGeometry::MeshIndexType triangle = searchTargets.front();
       searchTargets.pop();
 
-      if(visited[i])
+      if(visited[triangle])
       {
         continue;
       }
@@ -155,8 +148,8 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
 //        start = std::chrono::steady_clock::now();
 //      }
 
-      auto numElem = neighbors.getNumberOfElements(i);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+      auto numElem = neighbors.getNumberOfElements(triangle);
+      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
 
       std::set<usize> localNeighbors = {};
 
@@ -172,29 +165,29 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
         localNeighbors.emplace(neighbor);
       }
 
-      visited[i] = true;
+      visited[triangle] = true;
 
       EdgeListT edgeList = ::LoadValidAdjacentEdges(visited, localNeighbors, unmodified, triangles);
 
       // This is computationally heavy
-      if(edgeList.find(std::make_pair(triangles[(i * 3) + 0], triangles[(i * 3) + 1])) != edgeList.end() ||
-         edgeList.find(std::make_pair(triangles[(i * 3) + 1], triangles[(i * 3) + 2])) != edgeList.end() ||
-         edgeList.find(std::make_pair(triangles[(i * 3) + 2], triangles[(i * 3) + 0])) != edgeList.end()) // If true it contains a conflicting edge
+      if(edgeList.find(std::make_pair(triangles[(triangle * 3) + 0], triangles[(triangle * 3) + 1])) != edgeList.end() ||
+         edgeList.find(std::make_pair(triangles[(triangle * 3) + 1], triangles[(triangle * 3) + 2])) != edgeList.end() ||
+         edgeList.find(std::make_pair(triangles[(triangle * 3) + 2], triangles[(triangle * 3) + 0])) != edgeList.end()) // If true it contains a conflicting edge
       {
         // check if previously visited
-        const usize offset = faceLabelsStore[i * 2] == feature ? 1 : 0;
-        const int32 alternateLabel = faceLabelsStore[(i * 2) + offset];
+        const usize offset = faceLabelsStore[triangle * 2] == feature ? 1 : 0;
+        const int32 alternateLabel = faceLabelsStore[(triangle * 2) + offset];
         if(alternateLabel != 0 && alternateLabel < feature)
         {
-          unmodified[i] = true;
+          unmodified[triangle] = true;
           count++;
         }
         else
         {
           // Flip it
-          const IGeometry::MeshIndexType tempValue = triangles[(i * 3) + 0];
-          triangles[(i * 3) + 0] = triangles[(i * 3) + 2];
-          triangles[(i * 3) + 2] = tempValue;
+          const IGeometry::MeshIndexType tempValue = triangles[(triangle * 3) + 0];
+          triangles[(triangle * 3) + 0] = triangles[(triangle * 3) + 2];
+          triangles[(triangle * 3) + 2] = tempValue;
         }
       }
     }
