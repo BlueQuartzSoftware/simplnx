@@ -142,11 +142,11 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
         continue;
       }
 
-//      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
-//      {
-//        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(featureCount.size())));
-//        start = std::chrono::steady_clock::now();
-//      }
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
+      {
+        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        start = std::chrono::steady_clock::now();
+      }
 
       auto numElem = neighbors.getNumberOfElements(triangle);
       const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
