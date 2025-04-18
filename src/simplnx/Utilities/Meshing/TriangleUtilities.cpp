@@ -144,7 +144,7 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
 
       if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
       {
-        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
+        mesgHandler(fmt::format("Current Feature: {} | Total Progress : {:2.2f}%", feature, 100.0f * static_cast<float>(feature) / static_cast<float>(maxFeature + 1)));
         start = std::chrono::steady_clock::now();
       }
 
