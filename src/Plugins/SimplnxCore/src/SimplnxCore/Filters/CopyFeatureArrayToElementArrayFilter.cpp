@@ -105,9 +105,8 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.",
-                                                          DataPath({"Cell Data", "FeatureIds"}) ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CreatedArraySuffix_Key, "Created Array Suffix", "The suffix to add to the input attribute array name when creating the copied array", ""));
 
