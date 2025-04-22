@@ -45,7 +45,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   auto& featureReferenceMisorientations = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureReferenceMisorientationsArrayName);
   auto& avgReferenceMisorientation = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureAvgMisorientationsArrayName);
 
-  auto validateNumFeatResult = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->FeatureAvgMisorientationsArrayName, featureIds);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAvgMisorientationsArrayName.getParent(), featureIds, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;

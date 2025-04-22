@@ -252,35 +252,32 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 }
 
 //-----------------------------------------------------------------------------
-Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds)
+Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& targetAttributeMatrixDataPath, const Int32Array& featureIds,
+                                                            const IFilter::MessageHandler& messageHandler)
 {
-  const auto* featureArrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
-  if(featureArrayPtr == nullptr)
-  {
-    return MakeErrorResult(-5350, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
-  }
-  Result<> results = {};
-  const usize numFeatures = featureArrayPtr->getNumberOfTuples();
+  messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
+
+  auto& targetAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(targetAttributeMatrixDataPath);
+
+  const usize numFeatures = targetAttributeMatrix.getNumTuples();
 
   auto& featureIdsStore = featureIds.getDataStoreRef();
+  auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsStore.begin(), featureIdsStore.end());
 
-  for(const int32& featureId : featureIdsStore)
+  if(*minFeatureId < 0)
   {
-    if(featureId < 0)
-    {
-      results = MakeErrorResult(
-          -5355, fmt::format("Feature Ids array with name '{}' has negative values within the array. The first negative value encountered was '{}'. All values must be positive within the array",
-                             featureIds.getName(), featureId));
-      return results;
-    }
-    if(static_cast<usize>(featureId) >= numFeatures)
-    {
-      results = MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected feature array '{}'",
-                                                   featureIds.getName(), featureId, numFeatures, arrayPath.toString()));
-      return results;
-    }
+    return MakeErrorResult(
+        -5355, fmt::format("Feature Ids array with name '{}' has negative values within the array. The most negative value encountered was '{}'. All values must be positive within the array",
+                           featureIds.getName(), *minFeatureId));
   }
-  return results;
+
+  if(*maxFeatureId >= numFeatures)
+  {
+    return MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected Attribute Matrix: '{}'",
+                                              featureIds.getName(), *maxFeatureId, numFeatures, targetAttributeMatrix.getName()));
+  }
+
+  return {};
 }
 
 //-----------------------------------------------------------------------------

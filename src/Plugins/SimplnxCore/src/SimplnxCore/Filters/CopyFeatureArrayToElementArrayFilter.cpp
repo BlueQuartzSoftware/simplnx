@@ -173,16 +173,16 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
   const auto createdArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
     const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
-    messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating number of featureIds in input array '{}'...", selectedFeatureArrayPath.toString())});
-    auto results = ValidateNumFeaturesInArray(dataStructure, selectedFeatureArrayPath, featureIds);
-    if(results.invalid())
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath.getParent(), featureIds, messageHandler);
+    if(validateNumFeatResult.invalid())
     {
-      return results;
+      return validateNumFeatResult;
     }
 
     messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
