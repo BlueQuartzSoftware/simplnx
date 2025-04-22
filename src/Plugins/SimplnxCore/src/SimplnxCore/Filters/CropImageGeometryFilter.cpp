@@ -667,6 +667,12 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   // to their proper number of tuples.
   if(shouldRenumberFeatures)
   {
+    const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, cellFeatureAMPath, featureIds, messageHandler);
+    if(validateNumFeatResult.invalid())
+    {
+      return validateNumFeatResult;
+    }
     std::vector<DataPath> sourceFeatureDataPaths;
     auto childPathsResult = GetAllChildArrayDataPaths(dataStructure, cellFeatureAMPath);
     if(childPathsResult.has_value())

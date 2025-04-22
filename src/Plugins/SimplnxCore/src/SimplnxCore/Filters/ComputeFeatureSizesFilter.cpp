@@ -10,7 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -147,7 +147,15 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(k_CellFeatureIdsArrayPath_Key)).getDataStoreRef();
-
+  {
+    auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath,
+                                                                                    dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(k_CellFeatureIdsArrayPath_Key)), messageHandler);
+    if(validateNumFeatResult.invalid())
+    {
+      return validateNumFeatResult;
+    }
+  }
   usize totalPoints = featureIds.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);

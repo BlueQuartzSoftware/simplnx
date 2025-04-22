@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -41,34 +42,13 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
-  // Validate that the selected InArray has tuples equal to the largest
-  // Feature Id; the filter would not crash otherwise, but the user should
-  // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
-  // we don't have access to the data yet
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(),
+                                                                                  m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_MessageHandler);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
   auto numFeatures = static_cast<int32>(numCells.getNumberOfTuples());
-  bool mismatchedFeatures = false;
-  int32 largestFeature = 0;
-  usize numTuples = featureIds.getNumberOfTuples();
-  std::string errorMessage;
-  for(usize i = 0; i < numTuples; i++)
-  {
-    if(featureIds[i] > largestFeature)
-    {
-      largestFeature = featureIds[i];
-      if(largestFeature >= numFeatures)
-      {
-        mismatchedFeatures = true;
-        errorMessage = fmt::format("The given FeatureIds Array '{}' has a value that is larger than allowed by the given Feature Attribute Matrix '{}'.\n {} >= {}",
-                                   m_InputValues->FeatureIdsArrayPath.toString(), m_InputValues->NumCellsArrayPath.toString(), largestFeature, numFeatures);
-      }
-    }
-  }
-
-  if(mismatchedFeatures)
-  {
-    return {MakeErrorResult(-5555, errorMessage)};
-  }
-
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
