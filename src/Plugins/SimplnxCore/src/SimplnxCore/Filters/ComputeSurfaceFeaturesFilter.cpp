@@ -298,28 +298,28 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
   const auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  const auto pSurfaceFeaturesArrayPathValue = pCellFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key));
+  const auto pFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key));
 
   // Resize the surface features array to the proper size
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
-  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
+  const auto& featureIdsDataStore = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeaturesDataStore = dataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
 
-  const usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
-  const usize maxFeature = featureIds[featureIdsMaxIdx];
-  const std::vector<usize> surfaceFeaturesTupleShape = {maxFeature + 1};
+  const usize featureIdsMaxIdx = std::distance(featureIdsDataStore.begin(), std::max_element(featureIdsDataStore.cbegin(), featureIdsDataStore.cend()));
+  const usize maxFeature = featureIdsDataStore[featureIdsMaxIdx];
 
-  Result<> resizeResults = ResizeDataArray<uint8>(dataStructure, pSurfaceFeaturesArrayPathValue, surfaceFeaturesTupleShape);
-  if(resizeResults.invalid())
+  const auto* featuresAttrMatPtr = dataStructure.getDataAs<AttributeMatrix>(pFeaturesAttributeMatrixPathValue);
+
+  if(maxFeature >= featuresAttrMatPtr->getNumTuples())
   {
-    return resizeResults;
+    return MakeErrorResult(-17500, fmt::format("Max Feature index '{}' must be less than {}.", maxFeature, featuresAttrMatPtr->getNumTuples()));
   }
-  surfaceFeatures.fill(0);
+  // Initialize all values to 'false' or ZERO.
+  surfaceFeaturesDataStore.fill(0);
 
   // Find surface features
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
-  const usize geometryDimensionality = featureGeometry.getDimensionality();
-  if(geometryDimensionality == 3)
+  if(const usize geometryDimensionality = featureGeometry.getDimensionality(); geometryDimensionality == 3)
   {
     findSurfaceFeatures3D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
   }

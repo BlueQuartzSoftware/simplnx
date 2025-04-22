@@ -773,38 +773,6 @@ SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
 SIMPLNX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
 
 /**
- * @brief This function will ensure that a DataArray can be safely resized to the user entered numeric value
- *
- * @param dataStructure
- * @param arrayPath The path to the DataArray to be reshaped.
- * @param newShape The new tuple shape to resize the array to
- * @return
- */
-template <typename T>
-Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath, const std::vector<usize>& newShape)
-{
-  auto* dataArrayPtr = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-  if(dataArrayPtr == nullptr)
-  {
-    return MakeErrorResult(-4830, fmt::format("Could not find array path '{}' in the given data structure", arrayPath.toString()));
-  }
-  if(dataArrayPtr->getTupleShape() == newShape) // array does not need to be reshaped
-  {
-    return {};
-  }
-  const auto& surfaceFeaturesParent = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
-  if(surfaceFeaturesParent != nullptr) // tuple shape of the parent attribute matrix doesn't match the new tuple shape
-  {
-    return MakeErrorResult(-4831, fmt::format("Cannot resize array at path '{}' to tuple shape {} because the parent is an Attribute Matrix with a tuple shape of {} which does not match.",
-                                              arrayPath.toString(), newShape, surfaceFeaturesParent->getShape()));
-  }
-
-  // the array's parent is not in an Attribute Matrix, so we can safely reshape to the new tuple shape
-  dataArrayPtr->template getIDataStoreRefAs<DataStore<T>>().resizeTuples(newShape);
-  return {};
-}
-
-/**
  * @brief This function resize the outermost vector of the NeighborList's underlying data to the NeighborList's set
  * number of tuples and initializes each item in the vector to a (non null) pointer to an empty vector
  *
