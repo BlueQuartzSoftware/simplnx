@@ -59,6 +59,7 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
+  params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent", "If true, runs the Verify Triangle Winding at the end. See help page.", true));
   params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
@@ -97,7 +98,12 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_RepairTriangleWinding_Key = "repair_triangle_winding";
+  // Solution - set the value to false (not default);
+  //
 }
 
 //------------------------------------------------------------------------------
@@ -186,6 +192,7 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
 
   inputValues.GenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   inputValues.FixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
+  inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
 
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);

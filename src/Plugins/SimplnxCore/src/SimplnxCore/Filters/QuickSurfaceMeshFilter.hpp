@@ -26,6 +26,7 @@ public:
   // Parameter Keys
 
   static inline constexpr StringLiteral k_GenerateTripleLines_Key = "generate_triple_lines";
+  static inline constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
   static inline constexpr StringLiteral k_FixProblemVoxels_Key = "fix_problem_voxels";
   static inline constexpr StringLiteral k_GridGeometryDataPath_Key = "input_grid_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";

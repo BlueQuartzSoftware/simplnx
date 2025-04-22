@@ -38,6 +38,7 @@ public:
   static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
 
   static inline constexpr StringLiteral k_ApplySmoothing_Key = "apply_smoothing";
+  static inline constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
   static inline constexpr StringLiteral k_SmoothingIterations_Key = "smoothing_iterations";
   static inline constexpr StringLiteral k_MaxDistanceFromVoxelCenter_Key = "max_distance_from_voxel";
   static inline constexpr StringLiteral k_RelaxationFactor_Key = "relaxation_factor";

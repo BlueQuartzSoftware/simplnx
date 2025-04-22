@@ -373,6 +373,7 @@ Result<> QuickSurfaceMesh::operator()()
 
   // Scoped because we invalidate connectivity at the end
   Result<> windingResult = {};
+  if(m_InputValues->RepairTriangleWinding)
   {
     // Generate Connectivity
     m_MessageHandler("Generating Connectivity and Triangle Neighbors...");

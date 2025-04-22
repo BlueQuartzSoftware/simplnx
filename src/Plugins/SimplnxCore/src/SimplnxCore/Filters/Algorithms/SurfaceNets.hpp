@@ -17,6 +17,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
   bool ApplySmoothing;
+  bool RepairTriangleWinding;
   int32 SmoothingIterations;
   float32 MaxDistanceFromVoxel;
   float32 RelaxationFactor;

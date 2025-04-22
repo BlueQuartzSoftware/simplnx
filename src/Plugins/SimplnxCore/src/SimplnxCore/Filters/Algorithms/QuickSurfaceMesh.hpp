@@ -17,6 +17,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 {
   bool FixProblemVoxels;
+  bool RepairTriangleWinding;
   bool GenerateTripleLines;
 
   DataPath GridGeomDataPath;
