@@ -85,7 +85,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", "FeatureIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(
