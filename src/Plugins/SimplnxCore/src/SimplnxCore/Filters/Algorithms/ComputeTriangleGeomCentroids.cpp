@@ -37,26 +37,36 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const SharedFaceListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
-  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
 
+  // Get the faceLabels array and then get the min and max values
+  const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
+  auto [minFeatureId, maxFeatureId] = std::minmax_element(faceLabels.begin(), faceLabels.end());
+
+  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
+  if(featAttrMat.getNumTuples() < *maxFeatureId + 1)
+  {
+    m_MessageHandler(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
+    featAttrMat.resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(*maxFeatureId + 1)});
+  }
   MeshIndexType numFeatures = featAttrMat.getNumTuples();
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
-  const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
 
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
-    if(faceLabels[2 * i + 0] > 0)
+    const int32 faceLabel0 = faceLabels[2 * i + 0];
+    const int32 faceLabel1 = faceLabels[2 * i + 1];
+    if(faceLabel0 > 0)
     {
-      vertexSets[faceLabels[2 * i + 0]].insert(triangles[3 * i + 0]);
-      vertexSets[faceLabels[2 * i + 0]].insert(triangles[3 * i + 1]);
-      vertexSets[faceLabels[2 * i + 0]].insert(triangles[3 * i + 2]);
+      vertexSets[faceLabel0].insert(triangles[3 * i + 0]);
+      vertexSets[faceLabel0].insert(triangles[3 * i + 1]);
+      vertexSets[faceLabel0].insert(triangles[3 * i + 2]);
     }
-    if(faceLabels[2 * i + 1] > 0)
+    if(faceLabel1 > 0)
     {
-      vertexSets[faceLabels[2 * i + 1]].insert(triangles[3 * i + 0]);
-      vertexSets[faceLabels[2 * i + 1]].insert(triangles[3 * i + 1]);
-      vertexSets[faceLabels[2 * i + 1]].insert(triangles[3 * i + 2]);
+      vertexSets[faceLabel1].insert(triangles[3 * i + 0]);
+      vertexSets[faceLabel1].insert(triangles[3 * i + 1]);
+      vertexSets[faceLabel1].insert(triangles[3 * i + 2]);
     }
   }
 

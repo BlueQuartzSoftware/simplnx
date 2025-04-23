@@ -243,7 +243,6 @@ const std::atomic_bool& ComputeShapesTriangleGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeShapesTriangleGeom::operator()()
 {
-  using MeshIndexType = IGeometry::MeshIndexType;
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const TriStore& triangleList = triangleGeom.getFacesRef().getDataStoreRef();
   const VertsStore& verts = triangleGeom.getVerticesRef().getDataStoreRef();
@@ -253,11 +252,12 @@ Result<> ComputeShapesTriangleGeom::operator()()
 
   // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
   // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
-  const usize numRegions = *std::max_element(faceLabels.begin(), faceLabels.end());
-
-  if(!ValidateMesh(triangleList, verts.getNumberOfTuples(), numRegions))
   {
-    return MakeErrorResult(-64720, fmt::format("The Euler Characteristic of the shape was found to be unequal to 2, this implies the shape may not be watertight or is malformed."));
+    std::vector<int32> eulerCharacteristics =
+        nx::core::GeometryHelpers::Connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath));
+
+    auto& eulerCharStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->EulerCharacteristicPath).getDataStoreRef();
+    std::copy(eulerCharacteristics.begin(), eulerCharacteristics.end(), eulerCharStoreRef.begin());
   }
 
   // Calculated Arrays

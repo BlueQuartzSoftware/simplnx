@@ -41,6 +41,15 @@ for determining the moments and these values is as follows:
 represented, resulting in inaccurate Omega3 values. This problem is especially apparent for perfect rectangular prisms,
 but any shape with clear sharp corners may be affected.
 
+This filter also computes the Euler Characteristic value which **can** be an indication of the __watertightness__ of the mesh(s). See
+more information at [https://en.wikipedia.org/wiki/Euler_characteristic](https://en.wikipedia.org/wiki/Euler_characteristic)
+
+## WARNING
+
+Accurate computations depend on the mesh being water tight. If a triangle mesh has multiple regions
+then these values will be computed for each region. If a region is not watertight then the computed
+values are probably not correct.
+
 % Auto generated parameter table will be inserted here
 
 ## References

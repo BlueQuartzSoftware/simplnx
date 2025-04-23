@@ -11,9 +11,7 @@
 
 #include <unordered_set>
 
-namespace nx::core
-{
-namespace GeometryHelpers
+namespace nx::core::GeometryHelpers
 {
 using ErrorCode = int32;
 
@@ -22,10 +20,10 @@ namespace Description
 
 /**
  * @brief Generates a string description for the given arguments
- * @param geometry The geometry to generate the information string
  * @param dims The dimensions of the image geometry
  * @param spacing The spacing of the image geometry
  * @param origin The origin of the image geomtry
+ * @param units The units of the geometry
  * @return
  */
 SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units);
@@ -152,6 +150,14 @@ usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
 } // namespace detail
 
 /**
+ * @brief
+ * @param triangleGeom
+ * @param faceLabelsRef
+ * @return
+ */
+std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef);
+
+/**
  * @brief !!! EXPENSIVE !!! This function is a wrapper method for implicitly determining the correct edge calculation/counting algorithm
  * @tparam T indexing type of the face store
  * @param faceStore This is the  face indexing list containing values that correspond to indices in the SharedVertexList
@@ -202,7 +208,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
     usize offset = elemId * numVertsPerElem;
     for(usize j = 0; j < numVertsPerElem; j++)
     {
-      linkCount[elems[offset + j]]++;
+      ++linkCount[elems[offset + j]];
     }
   }
 
@@ -322,7 +328,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
           }
         }
 
-        // So if our vertex match count is numSharedVerts and we have not visited the element in question then add this element index
+        // So if our vertex match count is numSharedVerts, and we have not visited the element in question then add this element index
         // into the list of vertex indices as neighbors for the source element.
         if(vCount == numSharedVerts)
         {
@@ -330,7 +336,7 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
           // Use the current count of neighbors as the index
           // into the loop_neighbors vector and place the value of the vertex element at that index
           loop_neighbors[linkCount[t]] = vertIdxs[vt];
-          linkCount[t]++; // Increment the count for the next time through
+          ++linkCount[t]; // Increment the count for the next time through
           if(linkCount[t] >= loop_neighbors.size())
           {
             loop_neighbors.resize(loop_neighbors.size() + 10);
@@ -583,7 +589,7 @@ void FindUnsharedTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
     {
       std::sort(uEdge.begin(), uEdge.end());
       std::pair<T, T> edge = std::make_pair(uEdge[0], uEdge[1]);
-      edgeMap[edge]++;
+      ++edgeMap[edge];
     }
   }
 
@@ -654,7 +660,7 @@ void FindUnsharedHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
     {
       std::sort(uEdge.begin(), uEdge.end());
       edge = std::make_pair(uEdge[0], uEdge[1]);
-      edgeMap[edge]++;
+      ++edgeMap[edge];
     }
   }
 
@@ -714,7 +720,7 @@ void FindUnsharedTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
     {
       std::sort(tri.begin(), tri.end());
       face = std::make_tuple(tri[0], tri[1], tri[2]);
-      faceMap[face]++;
+      ++faceMap[face];
     }
   }
 
@@ -778,7 +784,7 @@ void FindUnsharedHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
     {
       std::sort(quad.begin(), quad.end());
       face = std::make_tuple(quad[0], quad[1], quad[2], quad[3]);
-      faceMap[face]++;
+      ++faceMap[face];
     }
   }
 
@@ -927,7 +933,7 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
         }
       }
       std::pair<T, T> edge = std::make_pair(v0, v1);
-      edgeMap[edge]++;
+      ++edgeMap[edge];
     }
   }
 
@@ -1107,8 +1113,6 @@ void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, F
 template <typename T>
 void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* areas)
 {
-  float32 nx, ny, nz;
-  int32 projection;
 
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
@@ -1139,10 +1143,10 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     ZXZEuler normal = ZXZEuler(GeometryMath::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
     normal.normalize();
 
-    nx = (normal[0] > 0.0 ? normal[0] : -normal[0]);
-    ny = (normal[1] > 0.0 ? normal[1] : -normal[1]);
-    nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
-    projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
+    float32 nx = (normal[0] > 0.0 ? normal[0] : -normal[0]);
+    float32 ny = (normal[1] > 0.0 ? normal[1] : -normal[1]);
+    float32 nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
+    int32 projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
 
     float* coordinates = coordinate.data();
     for(int64 j = 0; j < numVertsPerElem; j++)
@@ -1165,6 +1169,8 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
         area += coordinates[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 1] - coordinates[3 * j + 1]);
         continue;
       }
+      default:
+        break;
       }
     }
 
@@ -1181,10 +1187,11 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     case 2: {
       area /= (2.0f * nz);
     }
+    default:
+      break;
     }
     elemAreas[i] = fabsf(area);
   }
 }
 } // namespace Topology
-} // namespace GeometryHelpers
-} // namespace nx::core
+} // namespace nx::core::GeometryHelpers
