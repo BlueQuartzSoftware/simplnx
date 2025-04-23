@@ -1,12 +1,12 @@
 
-#include <catch2/catch.hpp>
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/Filters/VerifyTriangleWindingFilter.hpp"
-#include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
@@ -15,7 +15,7 @@ namespace
 {
 const DataPath k_TriangleGeomPath = DataPath({Constants::k_DataContainer});
 const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data);
-}
+} // namespace
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Filter Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {

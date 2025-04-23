@@ -13,8 +13,7 @@ namespace
 {
 using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
 
-EdgeListT LoadValidAdjacentEdges(const std::vector<bool>& visited, const std::set<usize>& neighbors, const std::vector<bool>& unmodified,
-                                 INodeGeometry2D::SharedFaceList::store_type& triangles)
+EdgeListT LoadValidAdjacentEdges(const std::vector<bool>& visited, const std::set<usize>& neighbors, const std::vector<bool>& unmodified, INodeGeometry2D::SharedFaceList::store_type& triangles)
 {
   EdgeListT edgeList = {};
   for(const usize neighbor : neighbors)

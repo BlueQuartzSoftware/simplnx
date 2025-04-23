@@ -4,8 +4,8 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -80,9 +80,9 @@ Parameters VerifyTriangleWindingFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Optional"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If true we will recalculate normals after execution, disable if no normals exist", true));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array",
-                                                          "The path to the triangle normals array", DataPath{},
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If true we will recalculate normals after execution, disable if no normals exist", true));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
@@ -127,7 +127,8 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
       if(existingNormalsPtr->getNumberOfTuples() != triangleGeom->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
       {
         resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
-        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+        resultOutputActions.value().appendAction(
+            std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
         resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
       }
 
@@ -138,7 +139,8 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
     if(existingObjectPtr != nullptr)
     {
       resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+      resultOutputActions.value().appendAction(
+          std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
       resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
       return {std::move(resultOutputActions)};
     }
