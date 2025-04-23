@@ -16,6 +16,8 @@ The user may choose any number of **Cell Attribute Arrays** to transfer to the c
 
 This filter will ensure that the smaller of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in downstream filters to continue to work correctly.
 
+This filter attempts to repair the windings for a mesh. This may not be possible due to the nature of how meshes are stored in the software. See Verify Traingle Winding documentation for detailed breakdown of nuance.
+
 For more information on surface meshing, visit the tutorial.
 
 ---------------

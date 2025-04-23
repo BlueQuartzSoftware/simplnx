@@ -59,7 +59,8 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
-  params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent", "If true, runs the Verify Triangle Winding at the end. See help page.", true));
+  params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent",
+                                                "If true, attempts to repair the windings for the mesh. This may not be possible. See help page.", true));
   params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});

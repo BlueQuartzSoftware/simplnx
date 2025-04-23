@@ -58,7 +58,8 @@ Parameters SurfaceNetsFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
-  params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent", "If true, runs the Verify Triangle Winding at the end. See help page.", true));
+  params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent",
+                                                "If true, attempts to repair the windings for the mesh. This may not be possible. See help page.", true));
 
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
   params.insert(
