@@ -146,17 +146,18 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(k_CellFeatureIdsArrayPath_Key)).getDataStoreRef();
+  auto featureIdsArrayPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto featureIdsArrayPtr = dataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
   {
     auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath,
-                                                                                    dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(k_CellFeatureIdsArrayPath_Key)), messageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, messageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
     }
   }
-  usize totalPoints = featureIds.getNumberOfTuples();
+  usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
   auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
@@ -171,15 +172,15 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
     auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_EquivalentDiametersName_Key)))->getDataStoreRef();
     auto& numElements = dataStructure.getDataAs<Int32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_NumElementsName_Key)))->getDataStoreRef();
 
-    usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
-    usize maxValue = featureIds[featureIdsMaxIdx];
+    usize featureIdsMaxIdx = std::distance(featureIdsStoreRef.begin(), std::max_element(featureIdsStoreRef.cbegin(), featureIdsStoreRef.cend()));
+    usize maxValue = featureIdsStoreRef[featureIdsMaxIdx];
     usize numFeatures = maxValue + 1;
 
     std::vector<uint64> featureCounts(numFeatures, 0);
 
     for(size_t j = 0; j < totalPoints; j++)
     {
-      int32_t gnum = featureIds[j];
+      int32_t gnum = featureIdsStoreRef[j];
       auto temp = featureCounts[gnum] + 1;
       featureCounts[gnum] = temp;
     }
@@ -269,7 +270,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 
     for(size_t j = 0; j < totalPoints; j++)
     {
-      int32 gnum = featureIds[j];
+      int32 gnum = featureIdsStoreRef[j];
       auto temp = featureCounts[gnum] + 1;
       featureCounts[gnum] = temp;
       auto temp2 = volumes[gnum];

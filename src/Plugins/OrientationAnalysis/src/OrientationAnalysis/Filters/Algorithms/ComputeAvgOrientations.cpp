@@ -38,7 +38,7 @@ Result<> ComputeAvgOrientations::operator()()
 
   size_t totalPoints = featureIds.getNumberOfTuples();
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avgQuatsArrayPath.getParent(), featureIds, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avgQuatsArrayPath, featureIds, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;

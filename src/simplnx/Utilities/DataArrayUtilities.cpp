@@ -252,14 +252,26 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 }
 
 //-----------------------------------------------------------------------------
-Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& targetAttributeMatrixDataPath, const Int32Array& featureIds,
+Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds,
                                                             const IFilter::MessageHandler& messageHandler)
 {
   messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
 
-  auto& targetAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(targetAttributeMatrixDataPath);
+  usize numFeatures = 0;
+  std::string sourceName;
 
-  const usize numFeatures = targetAttributeMatrix.getNumTuples();
+  // Check if an Attribute Matrix was passed in
+  auto* targetAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(sourceDataPath);
+  if(nullptr != targetAttributeMatrixPtr)
+  {
+    numFeatures = targetAttributeMatrixPtr->getNumTuples();
+  }
+  // Check if a feature array was passed in
+  auto* targetFeatureArrayPtr = dataStructure.getDataAs<IArray>(sourceDataPath);
+  if(nullptr != targetFeatureArrayPtr)
+  {
+    numFeatures = targetFeatureArrayPtr->getNumberOfTuples();
+  }
 
   auto& featureIdsStore = featureIds.getDataStoreRef();
   auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsStore.begin(), featureIdsStore.end());
@@ -273,8 +285,8 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
 
   if(*maxFeatureId >= numFeatures)
   {
-    return MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected Attribute Matrix: '{}'",
-                                              featureIds.getName(), *maxFeatureId, numFeatures, targetAttributeMatrix.getName()));
+    return MakeErrorResult(-5351, fmt::format("Feature Ids array with name '{}' has a value '{}' that would exceed the number of tuples {} in the selected Data Path: '{}'", featureIds.getName(),
+                                              *maxFeatureId, numFeatures, sourceDataPath.toString()));
   }
 
   return {};

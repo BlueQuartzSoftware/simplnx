@@ -31,7 +31,8 @@ const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
 Result<> ComputeSurfaceAreaToVolume::operator()()
 {
   // Input Cell Data
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
 
   // Input Feature Data
   const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
@@ -42,8 +43,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(),
-                                                                                  m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(), *featureIdsArrayPtr, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -80,7 +80,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
       for(int64 xIdx = 0; xIdx < xPoints; xIdx++)
       {
         float onSurface = 0.0f; // Start totalling the surface area
-        int32 currentFeatureId = featureIds[zStride + yStride + xIdx];
+        int32 currentFeatureId = featureIdsStoreRef[zStride + yStride + xIdx];
         // If the current feature ID is not valid (< 1), then just continue;
         if(currentFeatureId < 1)
         {
@@ -117,7 +117,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
           //
           int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
-          if(featureIds[neighborIndex] != currentFeatureId)
+          if(featureIdsStoreRef[neighborIndex] != currentFeatureId)
           {
             if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // XY face shared
             {
@@ -133,7 +133,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
             }
           }
         }
-        int32 featureId = featureIds[zStride + yStride + xIdx];
+        int32 featureId = featureIdsStoreRef[zStride + yStride + xIdx];
         featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
       }
     }
