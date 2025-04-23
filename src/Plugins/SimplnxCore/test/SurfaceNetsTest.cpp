@@ -235,7 +235,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding and Smoothing", "[SimplnxCore
     CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
   }
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "winding_surface_nets.tar.gz", "winding_surface_nets.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "winding_surface_nets.tar.gz",
+                                                               "winding_surface_nets.dream3d");
 
   // Read the Small IN100 Data set
   auto exemplarFilePath = fs::path(fmt::format("{}/winding_surface_nets.dream3d", nx::core::unit_test::k_TestFilesDir));

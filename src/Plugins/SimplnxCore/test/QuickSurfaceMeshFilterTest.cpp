@@ -94,3 +94,90 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/QuickSurfaceMeshFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSurfaceMeshFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
+  const std::string k_SharedTriListName = "SharedTriList";
+  const std::string k_SharedVertexListName = "SharedVertexList";
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", nx::core::unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+
+  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
+  DataPath triangleGeometryPath({"QuickSurface Mesh Test"});
+  const std::string exemplarGeometryPath("QuickSurface Mesh");
+
+  {
+    // DataStructure dataStructure;
+    Arguments args;
+    QuickSurfaceMeshFilter filter;
+
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_GenerateTripleLines_Key, std::make_any<bool>(false));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+
+    DataPath gridGeomDataPath({k_DataContainer});
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+
+    MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
+                                                                  ebsdSanDataPath.createChildPath("IPFColors")};
+
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
+
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
+
+    DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+
+    DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+
+    DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+
+    DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    // Check a few things about the generated data.
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
+    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+
+    REQUIRE(triangle->getNumberOfTuples() == 63804);
+    REQUIRE(vertices->getNumberOfTuples() == 28894);
+
+    // Compare the shift values
+    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, k_SharedVertexListName}));
+  }
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "winding_quick_surface_mesh.tar.gz",
+                                                               "winding_quick_surface_mesh.dream3d");
+
+  // Read the Small IN100 Data set
+  auto exemplarFilePath = fs::path(fmt::format("{}/winding_quick_surface_mesh.dream3d", nx::core::unit_test::k_TestFilesDir));
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  const DataPath facesPath = triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName);
+  CompareDataArrays<IGeometry::MeshIndexType>(dataStructure.getDataRefAs<IDataArray>(facesPath), exemplarDataStructure.getDataRefAs<IDataArray>(facesPath));
+  CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), triangleGeometryPath.toString());
+
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/winding_quick_surface_mesh.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+}
