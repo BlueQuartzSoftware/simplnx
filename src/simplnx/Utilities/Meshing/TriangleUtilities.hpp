@@ -123,7 +123,7 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_ty
       faceVertexIndices[0] = triangles[triangleIndex];
       faceVertexIndices[1] = triangles[triangleIndex + 2];
       faceVertexIndices[2] = triangles[triangleIndex + 1];
-      
+
       volumes[idsStore[i]] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
   }
