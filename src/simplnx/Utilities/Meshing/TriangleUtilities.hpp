@@ -32,7 +32,7 @@ INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::a
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
-                               const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+                                              const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each

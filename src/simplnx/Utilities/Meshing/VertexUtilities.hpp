@@ -33,7 +33,7 @@ SIMPLNX_EXPORT SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geo
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
 SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
-                                                                   const std::atomic_bool& shouldCancel);
+                                                                                  const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This function attempts to find duplicate vertices. Vertices are all unique if `false`
