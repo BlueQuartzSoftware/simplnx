@@ -20,16 +20,16 @@ class ReverseWindingImpl
 {
 public:
   using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
-  ReverseWindingImpl(TriStore& triangles, const Int32AbstractDataStore& faceLabels, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
+  ReverseWindingImpl(TriStore& triangles, const Int32AbstractDataStore& idsStore, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
   : m_Triangles(triangles)
-  , m_FaceLabels(faceLabels)
+  , m_IdsStore(idsStore)
   , m_ReversalTargets(reversalTargets)
   , m_ShouldCancel(shouldCancel)
   {
   }
   ~ReverseWindingImpl() = default;
 
-  void generate(usize start, usize end) const
+  void generateWithLabels(usize start, usize end) const
   {
     for(size_t i = start; i < end; i++)
     {
@@ -38,8 +38,8 @@ public:
         return;
       }
 
-      const int32 feature1 = m_FaceLabels[(i * 2) + 0];
-      const int32 feature2 = m_FaceLabels[(i * 2) + 1];
+      const int32 feature1 = m_IdsStore[(i * 2) + 0];
+      const int32 feature2 = m_IdsStore[(i * 2) + 1];
       for(const usize target : m_ReversalTargets)
       {
         if(target != feature1 && target != feature2)
@@ -56,14 +56,47 @@ public:
     }
   }
 
+  void generateWithRegions(usize start, usize end) const
+  {
+    for(size_t i = start; i < end; i++)
+    {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      const int32 feature = m_IdsStore[i];
+      for(const usize target : m_ReversalTargets)
+      {
+        if(target != feature)
+        {
+          continue;
+        }
+
+        // Flip it
+        const IGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
+        m_Triangles[(i * 3) + 0] = m_Triangles[(i * 3) + 2];
+        m_Triangles[(i * 3) + 2] = tempValue;
+        break;
+      }
+    }
+  }
+
   void operator()(const Range& range) const
   {
-    generate(range.min(), range.max());
+    if(m_IdsStore.getNumberOfComponents() == 2)
+    {
+      generateWithLabels(range.min(), range.max());
+    }
+    else if(m_IdsStore.getNumberOfComponents() == 1)
+    {
+      generateWithRegions(range.min(), range.max());
+    }
   }
 
 private:
   TriStore& m_Triangles;
-  const Int32AbstractDataStore& m_FaceLabels;
+  const Int32AbstractDataStore& m_IdsStore;
   const std::vector<usize>& m_ReversalTargets;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -109,8 +142,8 @@ Result<> VerifyTriangleWinding::operator()()
 
   TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
 
-  // Load double-sided mesh grouping
-  const Int32AbstractDataStore& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsPath)->getDataStoreRef();
+  // Load mesh grouping (face labels or regions)
+  const Int32AbstractDataStore& idsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->LabelsPath)->getDataStoreRef();
 
   // Scoped because we invalidate connectivity at the end
   Result<> windingResult = {};
@@ -127,7 +160,7 @@ Result<> VerifyTriangleWinding::operator()()
 
     m_MessageHandler("Repairing Windings...");
     // This is reused since it may contain warnings
-    windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+    windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, idsStore, m_ShouldCancel, m_MessageHandler);
     if(windingResult.invalid())
     {
       return windingResult;
@@ -141,13 +174,13 @@ Result<> VerifyTriangleWinding::operator()()
   m_MessageHandler("Assessing reversal - calculating feature volumes");
   // Get max group (feature id != 0)
   int32 maxFeature = 0;
-  for(int32 i = 0; i < faceLabelsStore.getSize(); i++)
+  for(int32 i = 0; i < idsStore.getSize(); i++)
   {
-    maxFeature = std::max(faceLabelsStore[i], maxFeature);
+    maxFeature = std::max(idsStore[i], maxFeature);
   }
 
   std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature + 1);
-  auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), faceLabelsStore, volumes, m_ShouldCancel);
+  auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), idsStore, volumes, m_ShouldCancel);
   if(volumeResult.invalid())
   {
     return volumeResult;
@@ -170,7 +203,7 @@ Result<> VerifyTriangleWinding::operator()()
     // Parallel algorithm to reverse based on feature label
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0ULL, static_cast<usize>(triangles.getNumberOfTuples()));
-    dataAlg.execute(::ReverseWindingImpl(triangles, faceLabelsStore, reversalTargets, m_ShouldCancel));
+    dataAlg.execute(::ReverseWindingImpl(triangles, idsStore, reversalTargets, m_ShouldCancel));
   }
 
   if(m_InputValues->RepairNormals)

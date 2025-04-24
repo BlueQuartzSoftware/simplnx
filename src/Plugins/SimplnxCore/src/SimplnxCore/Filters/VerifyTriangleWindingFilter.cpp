@@ -75,9 +75,9 @@ Parameters VerifyTriangleWindingFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsPath_Key, "Face labels Array",
-                                                          "The path to the face labels array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_LabelsPath_Key, "Face labels or Region Ids Array",
+                                                          "The path to the face labels or region ids array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Optional"});
   params.insertLinkableParameter(
@@ -106,11 +106,18 @@ IFilter::UniquePointer VerifyTriangleWindingFilter::clone() const
 IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  Result<DataPath> targetGeomResult = ::FindParentGeometry(filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsPath_Key), dataStructure);
+  auto pLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
+  Result<DataPath> targetGeomResult = ::FindParentGeometry(pLabelsPath, dataStructure);
   if(targetGeomResult.invalid())
   {
+    return MakePreflightErrorResult(-25741, fmt::format("Error trying to locate parent TriangleGeometry on path {}", pLabelsPath.toString()));
+  }
+
+  usize numComp = dataStructure.getDataAs<IDataArray>(pLabelsPath)->getNumberOfComponents();
+  if(numComp != 1 && numComp != 2)
+  {
     return MakePreflightErrorResult(
-        -25741, fmt::format("Error trying to locate parent TriangleGeometry on path {}", filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsPath_Key).toString()));
+        -25742, fmt::format("Input labels array must be 1 component (Region Ids) or 2 component (Face Labels). Supplied array {} has {} components.", pLabelsPath.getTargetName(), numComp));
   }
 
   if(filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key))
@@ -155,9 +162,9 @@ Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, 
 {
   VerifyTriangleWindingInputValues inputValues;
 
-  inputValues.FaceLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsPath_Key);
+  inputValues.LabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
 
-  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.FaceLabelsPath, dataStructure);
+  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.LabelsPath, dataStructure);
   if(targetGeomResult.invalid())
   {
     return ConvertResult(std::move(targetGeomResult));
@@ -183,7 +190,7 @@ Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsPathKey, k_SurfaceMeshFaceLabelsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

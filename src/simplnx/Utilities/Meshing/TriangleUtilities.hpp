@@ -34,11 +34,11 @@ SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(
  * NOTE: This algorithm requires that there are NO DUPLICATE vertices in the mesh
  * @param triangles The SharedFaceList that may be modified
  * @param neighbors The element neighbors adjacency list
- * @param faceLabelsStore This is the face ids, used to determine expected winding of each triangle
+ * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
-                                              const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+                                              const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
@@ -63,43 +63,74 @@ private:
 };
 
 /**
- * @brief The
+ * @brief This function calculates feature volumes without bounds checking
+ * @tparam ContainerT the type of the array to be filled; must have operator[] defined
+ * @param triangles The SharedFaceList of the target geometry
+ * @param verts The SharedVertexList of the target geometry
+ * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
+ * @param volumes This the array that will be filled with volumes (no bounds check, size > max feature expected)
+ * @returns Result<usize> function result
  */
 template <class ContainerT>
-Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& faceLabels,
+Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& idsStore,
                                  ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
-  for(usize i = 0; i < triangles.getNumberOfTuples(); i++)
+  if(idsStore.getNumberOfComponents() == 2)
   {
-    if(shouldCancel)
+    for(usize i = 0; i < triangles.getNumberOfTuples(); i++)
     {
-      return {};
-    }
+      if(shouldCancel)
+      {
+        return {};
+      }
 
-    const usize triangleIndex = i * 3;
-    faceVertexIndices[0] = triangles[triangleIndex];
-    faceVertexIndices[1] = triangles[triangleIndex + 1];
-    faceVertexIndices[2] = triangles[triangleIndex + 2];
+      const usize triangleIndex = i * 3;
+      faceVertexIndices[0] = triangles[triangleIndex];
+      faceVertexIndices[1] = triangles[triangleIndex + 1];
+      faceVertexIndices[2] = triangles[triangleIndex + 2];
 
-    int32 faceLabel0 = faceLabels[2 * i + 0];
-    int32 faceLabel1 = faceLabels[2 * i + 1];
+      int32 faceLabel0 = idsStore[2 * i + 0];
+      int32 faceLabel1 = idsStore[2 * i + 1];
 
-    if(faceLabel0 < 0 && faceLabel1 >= 0)
-    {
-      std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      if(faceLabel0 < 0 && faceLabel1 >= 0)
+      {
+        std::swap(faceVertexIndices[2], faceVertexIndices[1]);
+        volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      }
+      else if(faceLabel1 < 0 && faceLabel0 >= 0)
+      {
+        volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      }
+      else
+      {
+        volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
+        std::swap(faceVertexIndices[2], faceVertexIndices[1]);
+        volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      }
     }
-    else if(faceLabel1 < 0 && faceLabel0 >= 0)
+  }
+  else if(idsStore.getNumberOfComponents() == 1)
+  {
+    for(usize i = 0; i < triangles.getNumberOfTuples(); i++)
     {
-      volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      if(shouldCancel)
+      {
+        return {};
+      }
+
+      const usize triangleIndex = i * 3;
+      faceVertexIndices[0] = triangles[triangleIndex];
+      faceVertexIndices[1] = triangles[triangleIndex + 1];
+      faceVertexIndices[2] = triangles[triangleIndex + 2];
+
+      volumes[idsStore[i]] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
-    else
-    {
-      volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
-      std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
-    }
+  }
+  else
+  {
+    return MakeErrorResult(-65771, fmt::format("MeshingUtilities::{} invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.\n  {}:{}", __func__,
+                                               idsStore.getNumberOfComponents(), __FILE__, __LINE__));
   }
 
   return {};

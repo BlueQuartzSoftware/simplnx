@@ -33,7 +33,7 @@ const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
 struct SIMPLNXCORE_EXPORT VerifyTriangleWindingInputValues
 {
   DataPath TargetGeometryPath;
-  DataPath FaceLabelsPath;
+  DataPath LabelsPath;
   bool RepairNormals;
   DataPath TriangleNormalsPath;
 };

@@ -24,7 +24,7 @@ public:
   VerifyTriangleWindingFilter& operator=(VerifyTriangleWindingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsPath_Key = "surface_mesh_face_labels_path";
+  static inline constexpr StringLiteral k_LabelsPath_Key = "labels_path";
   static inline constexpr StringLiteral k_RepairNormals_Key = "repair_normals";
   static inline constexpr StringLiteral k_TriangleNormalsPath_Key = "triangle_normals_path";
 
