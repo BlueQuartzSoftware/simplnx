@@ -6,14 +6,14 @@
 
 namespace nx::core::MeshingUtilities
 {
-enum AxialAlignment : uint8
+enum SIMPLNX_EXPORT AxialAlignment : uint8
 {
   X = 0,
   Y = 1,
   Z = 2
 };
 
-struct SortedVerticesList
+struct SIMPLNX_EXPORT SortedVerticesList
 {
   AxialAlignment axis;
   std::vector<IGeometry::MeshIndexType> ordering;
@@ -24,7 +24,7 @@ struct SortedVerticesList
  * @param geom The input mesh
  * @returns SortedVerticesList which is a struct containing the sorted indices and the axis they were sorted on
  */
-SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geom, const std::atomic_bool& shouldCancel);
+SIMPLNX_EXPORT SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geom, const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This function sorts the vertices along the given axis. It doesn't modify the input mesh, but instead returns an object containing the relevant information
@@ -32,7 +32,7 @@ SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geom, const std::a
  * @param geom The input mesh
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
-std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
+SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
                                                                    const std::atomic_bool& shouldCancel);
 
 /**
@@ -41,5 +41,5 @@ std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::Mes
  * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
  * @returns bool false means vertices are unique
  */
-bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
+SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
 } // namespace nx::core::MeshingUtilities
