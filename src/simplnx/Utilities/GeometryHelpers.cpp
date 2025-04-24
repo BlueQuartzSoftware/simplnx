@@ -100,8 +100,6 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
   {
     eulerCharacteristicValues[i] = static_cast<int32>(static_cast<int64>(uniqueVerts[i].size()) + regionTriangleCount[i] - static_cast<int64>(uniqueEdges[i].size()));
   }
-  //    std::string message = fmt::format("Region: {} Euler Characteristic: {} = V:{} + F:{} - E:{}", regionIdx, eulerCharacteristic, uniqueVerts.size(), numTriangles, uniqueEdges.size());
-  //    m_MessageHandler(IFilter::Message::Type::Info, message);
   return eulerCharacteristicValues;
 }
 
