@@ -20,7 +20,7 @@ inline static constexpr usize k_20 = 6;
 inline static constexpr usize k_21 = 7;
 inline static constexpr usize k_22 = 8;
 
-INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
+SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
 } // namespace detail
 
 /**
