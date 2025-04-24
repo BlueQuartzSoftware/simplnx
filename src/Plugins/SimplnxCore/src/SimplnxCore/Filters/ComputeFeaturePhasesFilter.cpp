@@ -55,7 +55,7 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"Cell Data", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Feature Attribute Matrix",
@@ -126,10 +126,10 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
   auto& featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
 
   // Validate the featurePhases array is the proper size
-  auto validateResults = ValidateNumFeaturesInArray(dataStructure, pFeaturePhasesArrayPathValue, featureIdsArray);
-  if(validateResults.invalid())
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pCellFeatureAMPathValue, featureIdsArray, messageHandler);
+  if(validateNumFeatResult.invalid())
   {
-    return validateResults;
+    return validateNumFeatResult;
   }
 
   usize totalPoints = featureIds.getNumberOfTuples();

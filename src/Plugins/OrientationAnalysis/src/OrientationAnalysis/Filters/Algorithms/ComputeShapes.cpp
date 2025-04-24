@@ -2,9 +2,11 @@
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
+
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -113,6 +115,12 @@ const std::atomic_bool& ComputeShapes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeShapes::operator()()
 {
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto spacing = imageGeom.getSpacing();

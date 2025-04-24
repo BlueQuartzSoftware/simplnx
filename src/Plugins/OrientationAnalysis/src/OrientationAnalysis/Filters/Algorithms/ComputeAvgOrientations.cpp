@@ -38,10 +38,10 @@ Result<> ComputeAvgOrientations::operator()()
 
   size_t totalPoints = featureIds.getNumberOfTuples();
 
-  auto numFeatResults = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->avgQuatsArrayPath, featureIds);
-  if(numFeatResults.invalid())
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avgQuatsArrayPath, featureIds, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
   {
-    return numFeatResults;
+    return validateNumFeatResult;
   }
   size_t totalFeatures = avgQuats.getNumberOfTuples();
   std::vector<float> counts(totalFeatures, 0.0f);

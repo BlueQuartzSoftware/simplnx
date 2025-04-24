@@ -236,7 +236,7 @@ Parameters ComputeSurfaceFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "The geometry in which to find surface features", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"Cell Data", "FeatureIds"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Cell Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
@@ -302,19 +302,17 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key));
 
   // Resize the surface features array to the proper size
-  const auto& featureIdsDataStore = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
   auto& surfaceFeaturesDataStore = dataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
 
-  const usize featureIdsMaxIdx = std::distance(featureIdsDataStore.begin(), std::max_element(featureIdsDataStore.cbegin(), featureIdsDataStore.cend()));
-  const usize maxFeature = featureIdsDataStore[featureIdsMaxIdx];
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
-  const auto* featuresAttrMatPtr = dataStructure.getDataAs<AttributeMatrix>(pFeaturesAttributeMatrixPathValue);
-
-  if(maxFeature >= featuresAttrMatPtr->getNumTuples())
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, messageHandler);
+  if(validateNumFeatResult.invalid())
   {
-    return MakeErrorResult(-17500, fmt::format("Max Feature index '{}' must be less than {}.", maxFeature, featuresAttrMatPtr->getNumTuples()));
+    return validateNumFeatResult;
   }
-  // Initialize all values to 'false' or ZERO.
+
+  // Initialize all values to 'false' or ZERO.Ï
   surfaceFeaturesDataStore.fill(0);
 
   // Find surface features

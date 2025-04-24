@@ -10,10 +10,8 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -105,7 +103,7 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CreatedArraySuffix_Key, "Created Array Suffix", "The suffix to add to the input attribute array name when creating the copied array", ""));
@@ -172,16 +170,16 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
   const auto createdArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
     const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
-    messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating number of featureIds in input array '{}'...", selectedFeatureArrayPath.toString())});
-    auto results = ValidateNumFeaturesInArray(dataStructure, selectedFeatureArrayPath, featureIds);
-    if(results.invalid())
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath, featureIds, messageHandler);
+    if(validateNumFeatResult.invalid())
     {
-      return results;
+      return validateNumFeatResult;
     }
 
     messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});

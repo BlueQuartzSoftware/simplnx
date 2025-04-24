@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -30,7 +31,8 @@ const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
 Result<> ComputeSurfaceAreaToVolume::operator()()
 {
   // Input Cell Data
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
 
   // Input Feature Data
   const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
@@ -41,34 +43,12 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
-  // Validate that the selected InArray has tuples equal to the largest
-  // Feature Id; the filter would not crash otherwise, but the user should
-  // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
-  // we don't have access to the data yet
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(), *featureIdsArrayPtr, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
   auto numFeatures = static_cast<int32>(numCells.getNumberOfTuples());
-  bool mismatchedFeatures = false;
-  int32 largestFeature = 0;
-  usize numTuples = featureIds.getNumberOfTuples();
-  std::string errorMessage;
-  for(usize i = 0; i < numTuples; i++)
-  {
-    if(featureIds[i] > largestFeature)
-    {
-      largestFeature = featureIds[i];
-      if(largestFeature >= numFeatures)
-      {
-        mismatchedFeatures = true;
-        errorMessage = fmt::format("The given FeatureIds Array '{}' has a value that is larger than allowed by the given Feature Attribute Matrix '{}'.\n {} >= {}",
-                                   m_InputValues->FeatureIdsArrayPath.toString(), m_InputValues->NumCellsArrayPath.toString(), largestFeature, numFeatures);
-      }
-    }
-  }
-
-  if(mismatchedFeatures)
-  {
-    return {MakeErrorResult(-5555, errorMessage)};
-  }
-
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
@@ -100,7 +80,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
       for(int64 xIdx = 0; xIdx < xPoints; xIdx++)
       {
         float onSurface = 0.0f; // Start totalling the surface area
-        int32 currentFeatureId = featureIds[zStride + yStride + xIdx];
+        int32 currentFeatureId = featureIdsStoreRef[zStride + yStride + xIdx];
         // If the current feature ID is not valid (< 1), then just continue;
         if(currentFeatureId < 1)
         {
@@ -137,7 +117,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
           //
           int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
-          if(featureIds[neighborIndex] != currentFeatureId)
+          if(featureIdsStoreRef[neighborIndex] != currentFeatureId)
           {
             if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // XY face shared
             {
@@ -153,7 +133,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
             }
           }
         }
-        int32 featureId = featureIds[zStride + yStride + xIdx];
+        int32 featureId = featureIdsStoreRef[zStride + yStride + xIdx];
         featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
       }
     }

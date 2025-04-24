@@ -202,7 +202,7 @@ Parameters CropImageGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Renumber Features"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature IDs", "DataPath to Cell Feature IDs array", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"Cell Feature Data"})));
@@ -667,6 +667,12 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   // to their proper number of tuples.
   if(shouldRenumberFeatures)
   {
+    const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, cellFeatureAMPath, featureIds, messageHandler);
+    if(validateNumFeatResult.invalid())
+    {
+      return validateNumFeatResult;
+    }
     std::vector<DataPath> sourceFeatureDataPaths;
     auto childPathsResult = GetAllChildArrayDataPaths(dataStructure, cellFeatureAMPath);
     if(childPathsResult.has_value())

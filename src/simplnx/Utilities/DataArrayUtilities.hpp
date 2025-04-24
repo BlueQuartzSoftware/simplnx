@@ -766,11 +766,12 @@ SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
 /**
  * @brief Validates that the number of features in the array are equivalent
  * @param dataStructure the DataStructure containing the array
- * @param arrayPath the DataPath to the array in the dataStructure
+ * @param sourceDataPath The DataPath to the AttributeMatrix or DataArray that the featureIds array indexes into
  * @param featureIds the ids for the array
  * @return void
  */
-SIMPLNX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds,
+                                                                           const IFilter::MessageHandler& messageHandler);
 
 /**
  * @brief This function resize the outermost vector of the NeighborList's underlying data to the NeighborList's set

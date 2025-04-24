@@ -88,7 +88,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs", "FeatureIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "The name of the created feature attribute matrix", "Cell Feature Data"));

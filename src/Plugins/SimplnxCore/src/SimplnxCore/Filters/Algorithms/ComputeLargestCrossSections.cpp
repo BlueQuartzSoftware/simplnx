@@ -35,10 +35,10 @@ Result<> ComputeLargestCrossSections::operator()()
   const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 
   // Validate the largestCrossSectStore array is the proper size
-  auto validateResults = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds);
-  if(validateResults.invalid())
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
   {
-    return validateResults;
+    return validateNumFeatResult;
   }
 
   std::vector<float32> featureCounts(numFeatures, 0.0f);

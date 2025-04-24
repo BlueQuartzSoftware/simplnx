@@ -155,6 +155,13 @@ Result<> ResampleImageGeom::operator()()
 
   if(m_InputValues->RenumberFeatures)
   {
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, m_MessageHandler);
+    if(validateNumFeatResult.invalid())
+    {
+      return validateNumFeatResult;
+    }
+
     std::vector<DataPath> sourceFeatureDataPaths;
     auto childPathsResult = GetAllChildArrayDataPaths(m_DataStructure, cellFeatureAMPath);
     if(childPathsResult.has_value())

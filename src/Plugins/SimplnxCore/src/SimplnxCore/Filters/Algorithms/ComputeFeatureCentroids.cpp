@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -106,10 +107,18 @@ const std::atomic_bool& ComputeFeatureCentroids::getCancel()
 Result<> ComputeFeatureCentroids::operator()()
 {
   // Input Cell Data
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+
+  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
 
   // Output Feature Data
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->CentroidsArrayPath, *featureIdsPtr, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
 
   // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
@@ -132,7 +141,7 @@ Result<> ComputeFeatureCentroids::operator()()
   // by the total number of cores/threads and do a ParallelTask Algorithm instead
   // we might see some speedup.
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
+  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIdsStoreRef));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
   for(size_t featureId = 0; featureId < totalFeatures; featureId++)

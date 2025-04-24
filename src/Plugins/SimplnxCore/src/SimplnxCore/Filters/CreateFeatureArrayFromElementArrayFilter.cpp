@@ -111,7 +111,7 @@ Parameters CreateFeatureArrayFromElementArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Data to Copy to Feature Data", "Element Data to Copy to Feature Data", DataPath{}, nx::core::GetAllDataTypes()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
