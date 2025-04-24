@@ -45,7 +45,7 @@ EdgeListT LoadValidAdjacentEdges(const std::vector<bool>& visited, const std::se
 }
 } // namespace
 
-INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
+INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
 {
   const usize vertAIndex = vertIndices[0] * 3;
   const usize vertBIndex = vertIndices[1] * 3;

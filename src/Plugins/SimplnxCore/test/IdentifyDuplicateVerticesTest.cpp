@@ -1,11 +1,11 @@
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/IdentifyDuplicateVerticesFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-
-#include "SimplnxCore/Filters/IdentifyDuplicateVerticesFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
 

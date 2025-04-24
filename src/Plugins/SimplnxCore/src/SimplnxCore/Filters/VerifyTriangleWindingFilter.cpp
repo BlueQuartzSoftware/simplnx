@@ -81,7 +81,7 @@ Parameters VerifyTriangleWindingFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional"});
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If true we will recalculate normals after execution, disable if no normals exist", true));
+      std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If enabled, the triangle normals will be recomputed if the triangle normals exist", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 

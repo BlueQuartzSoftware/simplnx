@@ -37,8 +37,9 @@ struct SIMPLNXCORE_EXPORT IdentifyDuplicateVerticesInputValues
 };
 
 /**
- * @class ConditionalSetValueFilter
-
+ * @class IdentifyDuplicateVertices
+ * @brief This class walks the vertices and marks any non-unique vertices with a 1 in the supplied mask.
+ * Uses a non-stable sort for detection and flagging, so first instance of a value is not guaranteed to be considered the "unique" one if duplicates are discovered.
  */
 class SIMPLNXCORE_EXPORT IdentifyDuplicateVertices
 {

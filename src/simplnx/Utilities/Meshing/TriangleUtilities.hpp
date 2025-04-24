@@ -20,7 +20,13 @@ inline static constexpr usize k_20 = 6;
 inline static constexpr usize k_21 = 7;
 inline static constexpr usize k_22 = 8;
 
-SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTetrahedronVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
+/**
+ * @brief This function calculates volume of a supplied triangle
+ * @param vertIndices The indices that make up the points of a triangle
+ * @param vertices The SharedVertexList of the parent geometry
+ * @returns INodeGeometry2D::SharedVertexList::value_type the calculated volume
+ */
+SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
 } // namespace detail
 
 /**
@@ -82,17 +88,17 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_ty
     if(faceLabel0 < 0 && faceLabel1 >= 0)
     {
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += detail::FindTetrahedronVolume(faceVertexIndices, verts);
+      volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
     else if(faceLabel1 < 0 && faceLabel0 >= 0)
     {
-      volumes[faceLabel0] += detail::FindTetrahedronVolume(faceVertexIndices, verts);
+      volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
     else
     {
-      volumes[faceLabel0] += detail::FindTetrahedronVolume(faceVertexIndices, verts);
+      volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
       std::swap(faceVertexIndices[2], faceVertexIndices[1]);
-      volumes[faceLabel1] += detail::FindTetrahedronVolume(faceVertexIndices, verts);
+      volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
   }
 

@@ -1,13 +1,13 @@
-
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/LabelTriangleGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/Filters/VerifyTriangleWindingFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
 
