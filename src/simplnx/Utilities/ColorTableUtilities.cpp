@@ -23,6 +23,13 @@ bool ColorTableUtilities::IsValidPreset(const nlohmann::json& preset)
   return false;
 }
 
+bool ColorTableUtilities::IsValidIndexedPreset(const nlohmann::json& preset)
+{
+  const bool hasIndexedColors = preset.contains("IndexedColors");
+  const bool indexedColorsIsArray = (hasIndexedColors && preset["IndexedColors"].is_array() ? true : false);
+  return indexedColorsIsArray;
+}
+
 Result<nlohmann::json> ColorTableUtilities::LoadAllRGBPresets()
 {
   nlohmann::json rgbPresets;
@@ -41,6 +48,46 @@ Result<nlohmann::json> ColorTableUtilities::LoadAllRGBPresets()
   });
 
   return {rgbPresets};
+}
+
+Result<nlohmann::json> ColorTableUtilities::LoadAllIndexedPresets()
+{
+  nlohmann::json indexedPresets;
+
+  for(const auto& preset : ColorTable::k_DefaultColorTableJson)
+  {
+    if(IsValidIndexedPreset(preset))
+    {
+      indexedPresets.push_back(preset);
+    }
+  }
+
+  // Sort the presets by name
+  std::sort(indexedPresets.begin(), indexedPresets.end(), [](const nlohmann::json& a, const nlohmann::json& b) {
+    return nx::core::StringUtilities::toLower(a["Name"].get<std::string>()) < nx::core::StringUtilities::toLower(b["Name"].get<std::string>());
+  });
+
+  return {indexedPresets};
+}
+
+Result<nlohmann::json> ColorTableUtilities::LoadAllPresets()
+{
+  nlohmann::json presets;
+
+  for(const auto& preset : ColorTable::k_DefaultColorTableJson)
+  {
+    if(IsValidIndexedPreset(preset) || IsValidPreset(preset))
+    {
+      presets.push_back(preset);
+    }
+  }
+
+  // Sort the presets by name
+  std::sort(presets.begin(), presets.end(), [](const nlohmann::json& a, const nlohmann::json& b) {
+    return nx::core::StringUtilities::toLower(a["Name"].get<std::string>()) < nx::core::StringUtilities::toLower(b["Name"].get<std::string>());
+  });
+
+  return {presets};
 }
 
 Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std::string& presetName)
