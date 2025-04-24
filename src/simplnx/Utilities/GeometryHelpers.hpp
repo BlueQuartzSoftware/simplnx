@@ -150,12 +150,12 @@ usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
 } // namespace detail
 
 /**
- * @brief
+ * @brief Computes the Euler Characteristic value for a given triangle mesh based on regions/face labels
  * @param triangleGeom
  * @param faceLabelsRef
- * @return
+ * @return A vector of values that represent the Euler Characteristic for each region
  */
-std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef);
+SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef);
 
 /**
  * @brief !!! EXPENSIVE !!! This function is a wrapper method for implicitly determining the correct edge calculation/counting algorithm
@@ -837,34 +837,22 @@ void Find2DElementEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
   {
     const usize offset = i * numVertsPerElem;
 
-    for(usize j = 0; j < numVertsPerElem; j++)
+    for(usize j = 0; j < numVertsPerElem - 1; j++)
     {
-      if(j == (numVertsPerElem - 1))
-      {
-        if(elems[offset + j] > elems[offset + 0])
-        {
-          v0 = elems[offset + 0];
-          v1 = elems[offset + j];
-        }
-        else
-        {
-          v0 = elems[offset + j];
-          v1 = elems[offset + 0];
-        }
-      }
-      else
-      {
-        if(elems[offset + j] > elems[offset + j + 1])
-        {
-          v0 = elems[offset + j + 1];
-          v1 = elems[offset + j];
-        }
-        else
-        {
-          v0 = elems[offset + j];
-          v1 = elems[offset + j + 1];
-        }
-      }
+      auto t0 = elems[offset + j];
+      auto tj = elems[offset + j + 1];
+      v0 = std::min(t0, tj);
+      v1 = std::max(t0, tj);
+      std::pair<T, T> edge = std::make_pair(v0, v1);
+      edgeSet.insert(edge);
+    }
+
+    {
+      usize j = numVertsPerElem - 1;
+      auto t0 = elems[offset];
+      auto tj = elems[offset + j];
+      v0 = std::min(t0, tj);
+      v1 = std::max(t0, tj);
       std::pair<T, T> edge = std::make_pair(v0, v1);
       edgeSet.insert(edge);
     }
@@ -904,34 +892,22 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
   {
     const usize offset = i * numVertsPerElem;
 
-    for(usize j = 0; j < numVertsPerElem; j++)
+    for(usize j = 0; j < numVertsPerElem - 1; j++)
     {
-      if(j == (numVertsPerElem - 1))
-      {
-        if(elems[offset + j] > elems[offset + 0])
-        {
-          v0 = elems[offset + 0];
-          v1 = elems[offset + j];
-        }
-        else
-        {
-          v0 = elems[offset + j];
-          v1 = elems[offset + 0];
-        }
-      }
-      else
-      {
-        if(elems[offset + j] > elems[offset + j + 1])
-        {
-          v0 = elems[offset + j + 1];
-          v1 = elems[offset + j];
-        }
-        else
-        {
-          v0 = elems[offset + j];
-          v1 = elems[offset + j + 1];
-        }
-      }
+      auto t0 = elems[offset + j];
+      auto tj = elems[offset + j + 1];
+      v0 = std::min(t0, tj);
+      v1 = std::max(t0, tj);
+      std::pair<T, T> edge = std::make_pair(v0, v1);
+      ++edgeMap[edge];
+    }
+
+    {
+      usize j = numVertsPerElem - 1;
+      auto t0 = elems[offset];
+      auto tj = elems[offset + j];
+      v0 = std::min(t0, tj);
+      v1 = std::max(t0, tj);
       std::pair<T, T> edge = std::make_pair(v0, v1);
       ++edgeMap[edge];
     }

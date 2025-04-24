@@ -51,42 +51,37 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
       IGeometry::MeshIndexType v0 = 0;
       IGeometry::MeshIndexType v1 = 0;
 
-      auto regionIdx = faceLabels[tIdx * 2 + labelIdx];
+      const auto regionIdx = faceLabels[tIdx * 2 + labelIdx];
       if(regionIdx < 0)
       {
         continue;
       }
 
       ++regionTriangleCount[regionIdx];
-
-      for(usize j = 0; j < numVertsPerElem; j++)
+      // Compute the first 2 pairs of vertices: V0,V1 and V1,V2
+      for(usize j = 0; j < numVertsPerElem - 1; j++)
       {
-        if(j == (numVertsPerElem - 1))
-        {
-          if(triangleList[offset + j] > triangleList[offset + 0])
-          {
-            v0 = triangleList[offset + 0];
-            v1 = triangleList[offset + j];
-          }
-          else
-          {
-            v0 = triangleList[offset + j];
-            v1 = triangleList[offset + 0];
-          }
-        }
-        else
-        {
-          if(triangleList[offset + j] > triangleList[offset + j + 1])
-          {
-            v0 = triangleList[offset + j + 1];
-            v1 = triangleList[offset + j];
-          }
-          else
-          {
-            v0 = triangleList[offset + j];
-            v1 = triangleList[offset + j + 1];
-          }
-        }
+        auto t0 = triangleList[offset + j];
+        auto tj = triangleList[offset + j + 1];
+        v0 = std::min(t0, tj);
+        v1 = std::max(t0, tj);
+
+        EdgePairType edge = std::make_pair(v0, v1);
+        uniqueVerts[regionIdx].insert(v0);
+        uniqueVerts[regionIdx].insert(v1);
+        uniqueEdges[regionIdx].insert(edge);
+      }
+
+      // compute the last pair which wraps from V2,V0
+      {
+        usize j = numVertsPerElem - 1;
+
+        auto t0 = triangleList[offset];
+        auto tj = triangleList[offset + j];
+
+        v0 = std::min(t0, tj);
+        v1 = std::max(t0, tj);
+
         EdgePairType edge = std::make_pair(v0, v1);
         uniqueVerts[regionIdx].insert(v0);
         uniqueVerts[regionIdx].insert(v1);
@@ -103,14 +98,13 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
   return eulerCharacteristicValues;
 }
 
-#if 0
-
 /** This section of code calculates the Euler Characteristic values for all regions
- * in a triangle geometry. It trades computation speed for memory efficiency.
+ * in a triangle geometry. It trades computation speed for memory efficiency by looping
+ * over each region, and then all triangles. This is potentially very slow due to
+ * the looping of every triangle for every region.
  */
-
-
- // this is the very slow, but lest memory intensive way to do this. This will not scale well!!
+#if 0
+ // this is the very slow, but less memory intensive way to do this. This will not scale well!!
   // Loop over each Unique Feature's set of triangles
   for(MeshIndexType regionIdx = 0; regionIdx < numRegions; regionIdx++)
   {
