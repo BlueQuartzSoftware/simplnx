@@ -68,6 +68,8 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "The name of the DataArray that holds the calculated Axis Euler Angles values",
                                                           "AxisEulerAngles"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "The name of the DataArray that holds the calculated Aspect Ratios values", "AspectRatios"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_EulerCharacteristicArrayName_Key, "Euler Characteristic", "The name of the DataArray that holds the calculated Euler Characteristic values",
+                                                          "Euler Characteristic"));
 
   return params;
 }
@@ -75,11 +77,13 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeShapesTriangleGeomFilter::parametersVersion() const
 {
-  return 2;
+  return 3;
 
   // Version 1 -> 2
   // Change 1:
   // Removed input volumes array
+  // Version 2 -> 3
+  // Added Euler Characteristic output array name
 }
 
 //------------------------------------------------------------------------------
@@ -99,6 +103,7 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   auto axisLengthsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
   auto axisEulerAnglesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName_Key);
   auto aspectRatiosArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
+  auto eulerCharacteristicArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_EulerCharacteristicArrayName_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -139,6 +144,13 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
     auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{2}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
+  // Create the Euler Characteristic Output Array
+  {
+    auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EulerCharacteristicArrayName_Key);
+    DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
 
   // Return both the resultOutputActions via std::move()
   return {std::move(resultOutputActions)};
@@ -158,12 +170,13 @@ Result<> ComputeShapesTriangleGeomFilter::executeImpl(DataStructure& dataStructu
   auto axisLengthsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
   auto axisEulerAnglesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName_Key);
   auto aspectRatiosArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
+  auto eulerCharacteristicArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_EulerCharacteristicArrayName_Key);
 
   inputValues.Omega3sArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(omega3sArrayNameValue);
   inputValues.AxisLengthsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(axisLengthsArrayNameValue);
   inputValues.AxisEulerAnglesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(axisEulerAnglesArrayNameValue);
   inputValues.AspectRatiosArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(aspectRatiosArrayNameValue);
-
+  inputValues.EulerCharacteristicPath = inputValues.FeatureAttributeMatrixPath.createChildPath(eulerCharacteristicArrayNameValue);
   return ComputeShapesTriangleGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

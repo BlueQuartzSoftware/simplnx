@@ -19,6 +19,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeomInputValues
   DataPath AxisLengthsArrayPath;
   DataPath AxisEulerAnglesArrayPath;
   DataPath AspectRatiosArrayPath;
+  DataPath EulerCharacteristicPath;
 };
 
 /**
