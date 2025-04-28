@@ -1,0 +1,113 @@
+#pragma once
+
+#include "SimplnxCore/SimplnxCore_export.hpp"
+
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+
+namespace nx::core
+{
+class SIMPLNXCORE_EXPORT SampleScanVectorsFilter : public IFilter
+{
+public:
+  SampleScanVectorsFilter() = default;
+  ~SampleScanVectorsFilter() noexcept override = default;
+
+  SampleScanVectorsFilter(const SampleScanVectorsFilter&) = delete;
+  SampleScanVectorsFilter(SampleScanVectorsFilter&&) noexcept = delete;
+
+  SampleScanVectorsFilter& operator=(const SampleScanVectorsFilter&) = delete;
+  SampleScanVectorsFilter& operator=(SampleScanVectorsFilter&&) noexcept = delete;
+
+  // Parameter Keys
+  static inline constexpr StringLiteral k_ScanVectorSamplingRes_Key = "scan_vector_sampling_resolution";
+  static inline constexpr StringLiteral k_ScanVectorGeometryPath_Key = "scan_vector_geometry_path";
+  static inline constexpr StringLiteral k_TimeArrayPath_Key = "time_array_path";
+  static inline constexpr StringLiteral k_PowerArrayPath_Key = "power_array_path";
+  static inline constexpr StringLiteral k_SliceIdArrayPath_Key = "slice_id_array_path";
+  static inline constexpr StringLiteral k_SampledVertexGeometryPath_Key = "sampled_vertex_geometry_path";
+  static inline constexpr StringLiteral k_CumulativeSampleDistanceArrayName_Key = "cumulative_sample_distance_array_name";
+
+  /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
+   * @brief
+   * @return std::string
+   */
+  std::string name() const override;
+
+  /**
+   * @brief Returns the C++ classname of this filter.
+   * @return std::string
+   */
+  std::string className() const override;
+
+  /**
+   * @brief
+   * @return Uuid
+   */
+  Uuid uuid() const override;
+
+  /**
+   * @brief
+   * @return std::string
+   */
+  std::string humanName() const override;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
+   * @brief
+   * @return Parameters
+   */
+  Parameters parameters() const override;
+
+  /**
+   * @brief Returns parameters version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the parameters change.
+   * @return VersionType
+   */
+  VersionType parametersVersion() const override;
+
+  /**
+   * @brief
+   * @return UniquePointer
+   */
+  UniquePointer clone() const override;
+
+protected:
+  /**
+   * @brief
+   * @param data
+   * @param filterArgs
+   * @param messageHandler
+   * @return Result<OutputActions>
+   */
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override;
+
+  /**
+   * @brief
+   * @param dataStructure
+   * @param args
+   * @param pipelineNode
+   * @param messageHandler
+   * @return Result<>
+   */
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override;
+};
+} // namespace nx::core
+
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, SampleScanVectorsFilter, "116d56d1-163c-4ab2-9a8c-234fba0b15c0");

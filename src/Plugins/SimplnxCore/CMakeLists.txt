@@ -122,6 +122,7 @@ set(FilterList
   ReverseTriangleWindingFilter
   RobustAutomaticThresholdFilter
   RotateSampleRefFrameFilter
+  SampleScanVectorsFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
@@ -225,6 +226,7 @@ set(AlgorithmList
   ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
+  SampleScanVectors
   ScalarSegmentFeatures
   SharedFeatureFace
   Silhouette
