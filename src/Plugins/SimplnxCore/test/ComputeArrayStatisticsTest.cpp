@@ -54,9 +54,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
   maskDataStore[9] = true;
   maskDataStore[10] = true;
 
-  const std::string histogram = "Histogram";
-  const std::string mostPopulatedBin = "Most Populated Bin";
-  const std::string modalBinRanges = "Modal Bin Ranges";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -72,18 +69,12 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -94,9 +85,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>());
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key, std::make_any<std::string>(histogram));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -140,12 +128,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.replaceName(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 11);
-    auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));
-    REQUIRE(histArray != nullptr);
-    auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
-    REQUIRE(mostPopulatedBinArray != nullptr);
-    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(modalBinRanges));
-    REQUIRE(modalBinRangesArray != nullptr);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
 
@@ -155,7 +137,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     auto meanVal = (*meanArray)[0];
     auto medianVal = (*medianArray)[0];
     auto modeVals = (*modeArray).getList(0);
-    auto modalBinRangesVals = (*modalBinRangesArray).getList(0);
     auto stdVal = (*stdArray)[0];
     stdVal = std::ceil(stdVal * 100.0f) / 100.0f; // round value to 2 decimal places
     auto sumVal = (*sumArray)[0];
@@ -166,9 +147,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(maxVal == 45);
     REQUIRE(modeVals.size() == 1);
     REQUIRE(modeVals[0] == 1);
-    REQUIRE(modalBinRangesVals.size() == 2);
-    REQUIRE(modalBinRangesVals[0] == 1);
-    REQUIRE(modalBinRangesVals[1] == 6);
     REQUIRE(std::fabs(meanVal - 14.3333f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(medianVal - 10.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal - 13.02f) < UnitTest::EPSILON);
@@ -196,13 +174,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(std::fabs(stand7 - .58999f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand8 - -.4f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -.33f) < UnitTest::EPSILON);
-    REQUIRE((*histArray)[0] == 4);
-    REQUIRE((*histArray)[1] == 2);
-    REQUIRE((*histArray)[2] == 2);
-    REQUIRE((*histArray)[3] == 0);
-    REQUIRE((*histArray)[4] == 1);
-    REQUIRE((*mostPopulatedBinArray)[0] == 0);
-    REQUIRE((*mostPopulatedBinArray)[1] == 4);
   }
 }
 
@@ -257,9 +228,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
   testFeatIdsDataStore[10] = 2;
   testFeatIdsDataStore[11] = 2;
 
-  const std::string histogram = "Histogram";
-  const std::string mostPopulatedBin = "Most Populated Bin";
-  const std::string modalBinRanges = "Modal Bin Ranges";
   const std::string length = "Length";
   const std::string min = "Minimum";
   const std::string max = "Maximum";
@@ -275,18 +243,12 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
   {
     ComputeArrayStatisticsFilter filter;
     Arguments args;
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(0));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(100));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(5));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMode_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
@@ -297,9 +259,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "FeatureIds"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"TestData", "Mask"})));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key, std::make_any<DataPath>(statsDataPath));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key, std::make_any<std::string>(histogram));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key, std::make_any<std::string>(mostPopulatedBin));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key, std::make_any<std::string>(modalBinRanges));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(length));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(min));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(max));
@@ -351,16 +310,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     auto* standardizeArray = dataStructure.getDataAs<Float32Array>(inputArrayPath.replaceName(standardization));
     REQUIRE(standardizeArray != nullptr);
     REQUIRE(standardizeArray->getNumberOfTuples() == 12);
-    auto* histArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(histogram));
-    REQUIRE(histArray != nullptr);
-    REQUIRE(histArray->getNumberOfTuples() == 3);
-    REQUIRE(histArray->getNumberOfComponents() == 5);
-    auto* mostPopulatedBinArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(mostPopulatedBin));
-    REQUIRE(mostPopulatedBinArray != nullptr);
-    REQUIRE(mostPopulatedBinArray->getNumberOfTuples() == 3);
-    auto* modalBinRangesArray = dataStructure.getDataAs<NeighborList<int32>>(statsDataPath.createChildPath(modalBinRanges));
-    REQUIRE(modalBinRangesArray != nullptr);
-    REQUIRE(modalBinRangesArray->getNumberOfTuples() == 3);
     auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
     REQUIRE(numUniqueValuesArray != nullptr);
     REQUIRE(numUniqueValuesArray->getNumberOfTuples() == 3);
@@ -383,9 +332,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     auto modes0 = (*modeArray).getList(0);
     auto modes1 = (*modeArray).getList(1);
     auto modes2 = (*modeArray).getList(2);
-    auto modalBinRange0 = (*modalBinRangesArray).getList(0);
-    auto modalBinRange1 = (*modalBinRangesArray).getList(1);
-    auto modalBinRange2 = (*modalBinRangesArray).getList(2);
     auto stdVal1 = (*stdArray)[0];
     auto stdVal2 = (*stdArray)[1];
     auto stdVal3 = (*stdArray)[2];
@@ -440,21 +386,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     auto stand7 = standardizeDataStore[7];
     auto stand8 = standardizeDataStore[8];
     auto stand9 = standardizeDataStore[9];
-    auto hist1_1 = (*histArray)[0];
-    auto hist1_2 = (*histArray)[1];
-    auto hist1_3 = (*histArray)[2];
-    auto hist1_4 = (*histArray)[3];
-    auto hist1_5 = (*histArray)[4];
-    auto hist2_1 = (*histArray)[5];
-    auto hist2_2 = (*histArray)[6];
-    auto hist2_3 = (*histArray)[7];
-    auto hist2_4 = (*histArray)[8];
-    auto hist2_5 = (*histArray)[9];
-    auto hist3_1 = (*histArray)[10];
-    auto hist3_2 = (*histArray)[11];
-    auto hist3_3 = (*histArray)[12];
-    auto hist3_4 = (*histArray)[13];
-    auto hist3_5 = (*histArray)[14];
 
     REQUIRE(std::fabs(stand0 - -1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand1 - 0.773739f) < UnitTest::EPSILON);
@@ -466,38 +397,5 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     REQUIRE(std::fabs(stand7 - 0.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
-    REQUIRE(hist1_1 == 1);
-    REQUIRE(hist1_2 == 0);
-    REQUIRE(hist1_3 == 0);
-    REQUIRE(hist1_4 == 0);
-    REQUIRE(hist1_5 == 1);
-    REQUIRE(hist2_1 == 1);
-    REQUIRE(hist2_2 == 0);
-    REQUIRE(hist2_3 == 0);
-    REQUIRE(hist2_4 == 1);
-    REQUIRE(hist2_5 == 2);
-    REQUIRE(hist3_1 == 2);
-    REQUIRE(hist3_2 == 0);
-    REQUIRE(hist3_3 == 0);
-    REQUIRE(hist3_4 == 0);
-    REQUIRE(hist3_5 == 2);
-    REQUIRE((*mostPopulatedBinArray)[0] == 0);
-    REQUIRE((*mostPopulatedBinArray)[1] == 1);
-    REQUIRE((*mostPopulatedBinArray)[2] == 4);
-    REQUIRE((*mostPopulatedBinArray)[3] == 2);
-    REQUIRE((*mostPopulatedBinArray)[4] == 0);
-    REQUIRE((*mostPopulatedBinArray)[5] == 2);
-    REQUIRE(modalBinRange0[0] == 1);
-    REQUIRE(modalBinRange0[1] == 15);
-    REQUIRE(modalBinRange0[2] == 30);
-    REQUIRE(modalBinRange0[3] == 44);
-
-    REQUIRE(modalBinRange1[0] == 11);
-    REQUIRE(modalBinRange1[1] == 14);
-
-    REQUIRE(modalBinRange2[0] == 10);
-    REQUIRE(modalBinRange2[1] == 12);
-    REQUIRE(modalBinRange2[2] == 15);
-    REQUIRE(modalBinRange2[3] == 17);
   }
 }

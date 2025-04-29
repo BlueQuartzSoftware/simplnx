@@ -15,18 +15,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
-  float64 MinRange;
-  float64 MaxRange;
-  int32 NumBins;
-  bool FindHistogram;
-  bool UseFullRange;
   bool FindLength;
   bool FindMin;
   bool FindMax;
   bool FindMean;
   bool FindMedian;
   bool FindMode;
-  bool FindModalBinRanges;
   bool FindStdDeviation;
   bool FindSummation;
   bool UseMask;

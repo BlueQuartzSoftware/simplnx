@@ -42,11 +42,9 @@ template <typename T>
 class ComputeArrayStatisticsByIndexImpl
 {
 public:
-  ComputeArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange,
-                                    int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source,
-                                    BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray,
-                                    Float32Array* stdDevArray, Float32Array* summationArray, UInt64Array* histBinCountsArray, DataArray<T>* histBinRangesArray, UInt64Array* mostPopulatedBinArray,
-                                    NeighborList<T>* modalBinRangesArray, ComputeArrayStatistics* filter)
+  ComputeArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                                    const Int32Array* featureIds, const DataArray<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray,
+                                    Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, ComputeArrayStatistics* filter)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -54,12 +52,6 @@ public:
   , m_Mode(mode)
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
-  , m_Histogram(hist)
-  , m_ModalBinRanges(modalBinRanges)
-  , m_HistMin(histmin)
-  , m_HistMax(histmax)
-  , m_HistFullRange(histfullrange)
-  , m_NumBins(numBins)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
@@ -71,10 +63,6 @@ public:
   , m_ModeArray(modeArray)
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
-  , m_HistBinCountsArray(histBinCountsArray)
-  , m_HistBinRangesArray(histBinRangesArray)
-  , m_MostPopulatedBinArray(mostPopulatedBinArray)
-  , m_ModalBinRangesArray(modalBinRangesArray)
   , m_Filter(filter)
   {
   }
@@ -217,104 +205,6 @@ public:
         }
       }
 
-      AbstractDataStore<uint64>* binCountsStorePtr = nullptr;
-      if(m_HistBinCountsArray != nullptr)
-      {
-        binCountsStorePtr = m_HistBinCountsArray->getDataStore();
-      }
-
-      AbstractDataStore<T>* binRangesStorePtr = nullptr;
-      if(m_HistBinRangesArray != nullptr)
-      {
-        binRangesStorePtr = m_HistBinRangesArray->getDataStore();
-      }
-
-      AbstractDataStore<uint64>* mostPopulatedBinDataStorePtr = nullptr;
-      if(m_MostPopulatedBinArray != nullptr)
-      {
-        mostPopulatedBinDataStorePtr = m_MostPopulatedBinArray->getDataStore();
-      }
-
-      if(m_Histogram && binCountsStorePtr != nullptr && binRangesStorePtr != nullptr)
-      {
-        std::vector<T> ranges(m_NumBins * 2);
-        std::vector<uint64> histogram(m_NumBins, 0);
-        if(length[localFeatureIndex] > 0)
-        {
-          T histMin = static_cast<T>(m_HistMin);
-          T histMax = static_cast<T>(m_HistMax);
-
-          if(m_HistFullRange)
-          {
-            histMin = min[localFeatureIndex];
-            histMax = max[localFeatureIndex] + static_cast<T>(1.0);
-          }
-
-          HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
-
-          const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
-          if(std::fabs(increment) < 1E-10)
-          {
-            histogram[0] = length[localFeatureIndex];
-          }
-          else
-          {
-            for(usize i = 0; i < numTuples; ++i)
-            {
-              if(shouldCancel)
-              {
-                return;
-              }
-              if(m_Mask != nullptr && !m_Mask->isTrue(i))
-              {
-                continue;
-              }
-              if((*m_FeatureIds)[i] != static_cast<int32>(j))
-              {
-                continue;
-              }
-              const T value = m_Source[i];
-              const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
-              if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
-              {
-                histogram[bin]++; // increment histogram element corresponding to this input array value
-              }
-            } // end of numTuples loop
-          }   // end of increment else
-
-          if(m_ModalBinRanges)
-          {
-            if(std::fabs(increment) < 1E-10)
-            {
-              m_ModalBinRangesArray->addEntry(j, histMin);
-              m_ModalBinRangesArray->addEntry(j, histMax);
-            }
-            else
-            {
-              auto modeList = m_ModeArray->getList(j);
-              for(int i = 0; i < modeList.size(); i++)
-              {
-                const T mode = modeList.at(i);
-                const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
-                if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
-                {
-                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin]);
-                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin + 1]);
-                }
-              }
-            }
-          }
-        } // end of length if
-
-        binCountsStorePtr->setTuple(j, histogram);
-        binRangesStorePtr->setTuple(j, ranges);
-
-        auto maxElementIt = std::max_element(histogram.begin(), histogram.end());
-        uint64 index = std::distance(histogram.begin(), maxElementIt);
-        mostPopulatedBinDataStorePtr->setComponent(j, 0, index);
-        mostPopulatedBinDataStorePtr->setComponent(j, 1, histogram[index]);
-      } // end of m_Histogram if
-
       progressCount++;
       now = std::chrono::steady_clock::now();
       if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
@@ -387,12 +277,6 @@ private:
   bool m_Mode;
   bool m_StdDeviation;
   bool m_Summation;
-  bool m_Histogram;
-  bool m_ModalBinRanges;
-  float64 m_HistMin;
-  float64 m_HistMax;
-  bool m_HistFullRange;
-  int32 m_NumBins;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
@@ -404,10 +288,6 @@ private:
   NeighborList<T>* m_ModeArray = nullptr;
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
-  UInt64Array* m_HistBinCountsArray = nullptr;
-  DataArray<T>* m_HistBinRangesArray = nullptr;
-  UInt64Array* m_MostPopulatedBinArray = nullptr;
-  NeighborList<T>* m_ModalBinRangesArray = nullptr;
   ComputeArrayStatistics* m_Filter = nullptr;
 };
 
@@ -597,90 +477,9 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
     }
   }
 
-  if(inputValues->FindHistogram)
-  {
-    auto* array7Ptr = dynamic_cast<UInt64Array*>(arrays[8]);
-    if(array7Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Histogram Bin Counts' array to needed type. Check input array selection.");
-    }
-
-    auto* array12Ptr = dynamic_cast<DataArray<T>*>(arrays[12]);
-    if(array12Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Histogram Bin Ranges' array to needed type. Check input array selection.");
-    }
-
-    auto* array10Ptr = dynamic_cast<UInt64Array*>(arrays[10]);
-    if(array10Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Most Populated Bin' array to needed type. Check input array selection.");
-    }
-
-    auto& binCountsStore = array7Ptr->getDataStoreRef();
-    auto& binRangesStore = array12Ptr->getDataStoreRef();
-    auto& mostPopBinStore = array10Ptr->getDataStoreRef();
-
-    auto range = StatisticsCalculations::findHistogramRange(data, static_cast<T>(inputValues->MinRange), static_cast<T>(inputValues->MaxRange), inputValues->UseFullRange);
-
-    if(inputValues->UseFullRange)
-    {
-      range.second++; // Upper bound must be exclusive
-    }
-
-    std::atomic_bool neverCancel{false};
-    std::atomic<usize> overflow{0};
-    std::vector<uint64> binCounts(inputValues->NumBins, 0);
-    std::vector<T> binRanges(inputValues->NumBins * 2);
-
-    Result<> result = {};
-    if constexpr(std::is_same_v<DataArray<T>, ContainerType>)
-    {
-      result = HistogramUtilities::serial::GenerateHistogram(data.getDataStoreRef(), binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
-    }
-    else
-    {
-      result = HistogramUtilities::serial::GenerateHistogram(data, binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
-    }
-
-    for(size_t i = 0; i < inputValues->NumBins; i++)
-    {
-      binCountsStore.setComponent(i, 0, binCounts[i]);
-      binRangesStore.setComponent(i, 0, binRanges[i * 2]);
-      binRangesStore.setComponent(i, 1, binRanges[i * 2 + 1]);
-    }
-
-    auto maxElementIt = std::max_element(binCounts.begin(), binCounts.end());
-    uint64 index = std::distance(binCounts.begin(), maxElementIt);
-    mostPopBinStore.setComponent(0, 0, index);
-    mostPopBinStore.setComponent(0, 1, binCounts[index]);
-
-    if(inputValues->FindModalBinRanges)
-    {
-      auto* array5Ptr = dynamic_cast<NeighborList<T>*>(arrays[5]);
-      if(array5Ptr == nullptr)
-      {
-        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Mode' array to needed type. Check input array selection.");
-      }
-
-      auto* array11Ptr = dynamic_cast<NeighborList<T>*>(arrays[11]);
-      if(array11Ptr == nullptr)
-      {
-        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Modal Bin Ranges' array to needed type. Check input array selection.");
-      }
-
-      for(const T& mode : array5Ptr->at(0))
-      {
-        std::pair<T, T> modalRange = StatisticsCalculations::findModalBinRange(data, binRanges, mode);
-        array11Ptr->addEntry(0, modalRange.first);
-        array11Ptr->addEntry(0, modalRange.second);
-      }
-    }
-  }
-
   if(inputValues->FindNumUniqueValues)
   {
-    auto* array8Ptr = dynamic_cast<DataArray<int32>*>(arrays[9]);
+    auto* array8Ptr = dynamic_cast<DataArray<int32>*>(arrays[8]);
     if(array8Ptr == nullptr)
     {
       throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
@@ -705,12 +504,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* stdDevArrayPtr = dynamic_cast<Float32Array*>(arrays[6]);
     auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
 
-    auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
-    auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
-    auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
-    auto* modalBinsArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[11]);
-
-    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[13]);
+    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[9]);
 
     IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
     indexAlgArrays.push_back(&source);
@@ -721,9 +515,6 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     indexAlgArrays.push_back(meanArrayPtr);
     indexAlgArrays.push_back(stdDevArrayPtr);
     indexAlgArrays.push_back(summationArrayPtr);
-    indexAlgArrays.push_back(histBinCountsArrayPtr);
-    indexAlgArrays.push_back(histBinRangesArrayPtr);
-    indexAlgArrays.push_back(mostPopulatedBinPtr);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
     if(CheckArraysInMemory(indexAlgArrays))
@@ -733,10 +524,8 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
       tbb::parallel_for(tbbRange,
                         ComputeArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
-                                                             inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                             inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr,
-                                                             lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histBinCountsArrayPtr,
-                                                             histBinRangesArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter),
+                                                             inputValues->FindStdDeviation, inputValues->FindSummation, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr,
+                                                             maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter),
                         simplePartitioner);
     }
     else
@@ -745,10 +534,8 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       indexAlg.setRange(0, numFeatures);
       indexAlg.requireArraysInMemory(indexAlgArrays);
       indexAlg.execute(ComputeArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
-                                                            inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                            inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr,
-                                                            lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histBinCountsArrayPtr,
-                                                            histBinRangesArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter));
+                                                            inputValues->FindStdDeviation, inputValues->FindSummation, mask, featureIds, source, featureHasDataPtr, lengthArrayPtr, minArrayPtr,
+                                                            maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter));
     }
 #endif
 
@@ -757,7 +544,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
 
       auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
-      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[9]);
+      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
 
       IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
       medianAlgArrays.push_back(featureIds);
@@ -960,33 +747,6 @@ struct ComputeArrayStatisticsFunctor
       }
       arrayPtr->fill(0.0F);
     }
-    if(inputValues->FindHistogram)
-    {
-      {
-        auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->BinCountsArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563511, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Histogram Bin Counts' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(0);
-      }
-      {
-        auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->BinRangesArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563514, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Histogram Bin Ranges' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(static_cast<T>(0.0));
-      }
-      {
-        auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->MostPopulatedBinArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563512, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Most Populated Bin' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(0);
-      }
-    }
     if(inputValues->FindNumUniqueValues)
     {
       auto* arrayPtr = dataStructure.getDataAs<Int32Array>(inputValues->NumUniqueValuesName);
@@ -1038,13 +798,18 @@ ComputeArrayStatistics::~ComputeArrayStatistics() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeArrayStatistics::operator()()
 {
-  if(!m_InputValues->FindHistogram && !m_InputValues->FindMin && !m_InputValues->FindMax && !m_InputValues->FindMean && !m_InputValues->FindMedian && !m_InputValues->FindMode &&
-     !m_InputValues->FindStdDeviation && !m_InputValues->FindSummation && !m_InputValues->FindLength)
+  if(!m_InputValues->FindMin && !m_InputValues->FindMax && !m_InputValues->FindMean && !m_InputValues->FindMedian && !m_InputValues->FindMode && !m_InputValues->FindStdDeviation &&
+     !m_InputValues->FindSummation && !m_InputValues->FindLength)
   {
     return {};
   }
 
-  std::vector<IArray*> arrays(13, nullptr);
+  std::vector<IArray*> arrays(9, nullptr);
+
+  //  auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
+  //  auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
+  //  auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
+  //  auto* modalBinsArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[11]);
 
   if(m_InputValues->FindLength)
   {
@@ -1078,26 +843,16 @@ Result<> ComputeArrayStatistics::operator()()
   {
     arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationArrayName);
   }
-  if(m_InputValues->FindHistogram)
-  {
-    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BinCountsArrayName);
-    arrays[12] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BinRangesArrayName);
-    arrays[10] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MostPopulatedBinArrayName);
-  }
-  if(m_InputValues->FindModalBinRanges)
-  {
-    arrays[11] = m_DataStructure.getDataAs<INeighborList>(m_InputValues->ModalBinArrayName);
-  }
   if(m_InputValues->FindNumUniqueValues)
   {
-    arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
+    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
   }
 
   usize numFeatures = 0;
   if(m_InputValues->ComputeByIndex)
   {
-    arrays.resize(14);
-    arrays[13] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
+    arrays.resize(10);
+    arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
 
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
     numFeatures = findNumFeatures(featureIds);

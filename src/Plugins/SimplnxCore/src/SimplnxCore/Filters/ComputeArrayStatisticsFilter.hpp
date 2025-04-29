@@ -25,18 +25,12 @@ public:
   ComputeArrayStatisticsFilter& operator=(ComputeArrayStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindHistogram_Key = "find_histogram";
-  static inline constexpr StringLiteral k_MinRange_Key = "min_range";
-  static inline constexpr StringLiteral k_MaxRange_Key = "max_range";
-  static inline constexpr StringLiteral k_UseFullRange_Key = "use_full_range";
-  static inline constexpr StringLiteral k_NumBins_Key = "num_bins";
   static inline constexpr StringLiteral k_FindLength_Key = "find_length";
   static inline constexpr StringLiteral k_FindMin_Key = "find_min";
   static inline constexpr StringLiteral k_FindMax_Key = "find_max";
   static inline constexpr StringLiteral k_FindMean_Key = "find_mean";
   static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
   static inline constexpr StringLiteral k_FindMode_Key = "find_mode";
-  static inline constexpr StringLiteral k_FindModalBinRanges_Key = "find_modal_bin_ranges";
   static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
   static inline constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
@@ -48,10 +42,6 @@ public:
   static inline constexpr StringLiteral k_FeatureHasDataArrayName_Key = "feature_has_data_array_name";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_DestinationAttributeMatrixPath_Key = "destination_attribute_matrix_path";
-  static inline constexpr StringLiteral k_HistoBinCountName_Key = "histogram_bin_count_name";
-  static inline constexpr StringLiteral k_HistoBinRangeName_Key = "histogram_bin_range_name";
-  static inline constexpr StringLiteral k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
-  static inline constexpr StringLiteral k_ModalBinArrayName_Key = "modal_bin_array_name";
   static inline constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
   static inline constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
   static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
