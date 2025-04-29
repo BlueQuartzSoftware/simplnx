@@ -107,8 +107,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
 
   // Check resulting values
   {
-    auto* dataGroup = dataStructure.getDataAs<DataGroup>(statsDataPath);
-    REQUIRE(dataGroup != nullptr);
+    auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
+    REQUIRE(amPtr != nullptr);
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(length));
     REQUIRE(lengthArray != nullptr);
     auto* minArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(min));
@@ -281,8 +281,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
 
   // Check resulting values
   {
-    auto* dataGroup = dataStructure.getDataAs<DataGroup>(statsDataPath);
-    REQUIRE(dataGroup != nullptr);
+    auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(statsDataPath);
+    REQUIRE(amPtr != nullptr);
     auto* lengthArray = dataStructure.getDataAs<UInt64Array>(statsDataPath.createChildPath(length));
     REQUIRE(lengthArray != nullptr);
     REQUIRE(lengthArray->getNumberOfTuples() == 3);

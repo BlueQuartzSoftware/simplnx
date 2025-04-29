@@ -7,7 +7,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -56,7 +55,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   OutputActions actions;
 
-  auto amAction = std::make_unique<CreateDataGroupAction>(destinationAttributeMatrixValue);
+  auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
 
   actions.appendAction(std::move(amAction));
 

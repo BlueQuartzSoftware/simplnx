@@ -806,6 +806,7 @@ Result<> ComputeArrayStatistics::operator()()
 
   std::vector<IArray*> arrays(9, nullptr);
 
+  // Deleted arrays
   //  auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
   //  auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
   //  auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
@@ -857,16 +858,8 @@ Result<> ComputeArrayStatistics::operator()()
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
     numFeatures = findNumFeatures(featureIds);
 
-    //    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    //    destAttrMatPtr->resizeTuples({numFeatures});
-
-    for(const auto& array : arrays)
-    {
-      if(array != nullptr)
-      {
-        array->resizeTuples({numFeatures});
-      }
-    }
+    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    destAttrMatPtr->resizeTuples({numFeatures});
   }
 
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
