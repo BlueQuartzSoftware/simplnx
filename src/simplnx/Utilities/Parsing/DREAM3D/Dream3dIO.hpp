@@ -100,6 +100,15 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipe
 SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {}, bool writeXdmf = false);
 
 /**
+ * @brief Appends the object at the path in the data structure to the dream3d file
+ * @param path
+ * @param dataStructure
+ * @param dataPath
+ * @return Result<>
+ */
+SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const DataStructure& dataStructure, const DataPath& dataPath);
+
+/**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
  *
  * This method imports both current and legacy DataStructures.

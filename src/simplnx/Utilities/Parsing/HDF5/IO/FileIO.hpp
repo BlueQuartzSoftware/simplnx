@@ -18,6 +18,7 @@ class SIMPLNX_EXPORT FileIO : public GroupIO
 public:
   static FileIO ReadFile(const std::filesystem::path& filepath);
   static FileIO WriteFile(const std::filesystem::path& filepath);
+  static FileIO AppendFile(const std::filesystem::path& filepath);
 
   FileIO() = default;
 

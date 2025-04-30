@@ -82,6 +82,7 @@
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
 #include <simplnx/Utilities/DataGroupUtilities.hpp>
+#include <simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp>
 
 #include <fmt/ranges.h>
 
@@ -1813,4 +1814,6 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "hexahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
       "array_handling"_a = ArrayHandlingType::Copy);
+
+  mod.def("append_to_dream3d_file", &DREAM3D::AppendFile, "path"_a, "data_structure"_a, "data_path"_a);
 }

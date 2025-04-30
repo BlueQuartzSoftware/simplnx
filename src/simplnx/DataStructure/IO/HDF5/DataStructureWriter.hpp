@@ -38,6 +38,8 @@ public:
 
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath);
   static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter);
+  static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath);
+  static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath);
 
   /**
    * @brief Writes the DataObject under the given GroupIO. If the
