@@ -23,11 +23,15 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_ScanVectorSamplingRes_Key = "scan_vector_sampling_resolution";
   static inline constexpr StringLiteral k_ScanVectorGeometryPath_Key = "scan_vector_geometry_path";
-  static inline constexpr StringLiteral k_TimeArrayPath_Key = "time_array_path";
+  static inline constexpr StringLiteral k_CopyPowerData_Key = "copy_power_data";
   static inline constexpr StringLiteral k_PowerArrayPath_Key = "power_array_path";
+  static inline constexpr StringLiteral k_CopySliceIdData_Key = "copy_slice_id_data";
+  static inline constexpr StringLiteral k_CopyEdgeIdData_Key = "copy_edge_id_data";
   static inline constexpr StringLiteral k_SliceIdArrayPath_Key = "slice_id_array_path";
+  static inline constexpr StringLiteral k_CalculateCumulativeSampleDistance_Key = "calculate_cumulative_sample_distance";
   static inline constexpr StringLiteral k_SampledVertexGeometryPath_Key = "sampled_vertex_geometry_path";
   static inline constexpr StringLiteral k_CumulativeSampleDistanceArrayName_Key = "cumulative_sample_distance_array_name";
+  static inline constexpr StringLiteral k_EdgeIdsArrayName_Key = "edge_ids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

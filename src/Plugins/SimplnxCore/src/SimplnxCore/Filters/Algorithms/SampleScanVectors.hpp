@@ -10,11 +10,15 @@ struct SIMPLNXCORE_EXPORT SampleScanVectorsInputValues
 {
   float32 ScanVectorSamplingRes;
   DataPath ScanVectorGeometryPath;
-  DataPath TimeArrayPath;
+  bool CopyPowerData;
   DataPath PowerArrayPath;
+  bool CopySliceIds;
   DataPath SliceIdArrayPath;
   DataPath SampledVertexGeometryPath;
+  bool CalculateCumulativeSampleDistance;
   std::string CumulativeSampleDistanceArrayName;
+  bool CopyEdgeIds;
+  std::string EdgeIdsArrayName;
 };
 
 /**
