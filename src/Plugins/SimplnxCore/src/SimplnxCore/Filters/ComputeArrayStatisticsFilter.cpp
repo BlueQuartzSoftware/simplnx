@@ -1,4 +1,5 @@
 #include "ComputeArrayStatisticsFilter.hpp"
+#include <simplnx/Filter/Actions/DeleteDataAction.hpp>
 
 #include "SimplnxCore/Filters/Algorithms/ComputeArrayStatistics.hpp"
 
@@ -11,9 +12,10 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -24,6 +26,7 @@ using namespace nx::core;
 
 namespace
 {
+const DataPath k_TempMaskPath = DataPath{{"!_!__Internal__Temp_MASK_Path__Internal__!_!"}};
 struct IsIntegerType
 {
   template <typename T>
@@ -61,9 +64,30 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   if(computeByIndexValue)
   {
-    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+
+    auto rangeTypeValue = args.value<ChoicesParameter::ValueType>(ComputeArrayStatisticsFilter::k_RangeType_Key);
+    if(rangeTypeValue != to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None))
+    {
+      {
+        auto arrayPath = destinationAttributeMatrixValue.createChildPath(args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureIdsIndexingName_Key));
+        auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, arrayPath);
+        actions.appendAction(std::move(action));
+      }
+
+      {
+        auto action = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, k_TempMaskPath);
+        actions.appendAction(std::move(action));
+      }
+      {
+        auto action = std::make_unique<DeleteDataAction>(k_TempMaskPath);
+        actions.appendDeferredAction(std::move(action));
+      }
+    }
   }
 
   if(findLength)
@@ -187,12 +211,24 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
       std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_RangeType_Key, "Feature Range Type", "Set a range to manipulate output size in various ways. See detailed breakdown and tips in the documentation...",
+      to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None),
+      ChoicesParameter::Choices{"None", "Ignore Feature 0", "Shrink To Fit", "Padded Custom Range", "Minimum Size in Custom Range"})); // Sequence dependent DO NOT REORDER
+  params.insert(std::make_unique<VectorParameter<int32>>(
+      k_Range_Key, "Custom Feature ID Range",
+      "The range of feature Ids, inclusive, `-1` in upper bound will be resolved to max Feature Id in the array; Only applies to  `Padded Custom Range` and `Minimum Size in Custom Range`",
+      std::vector<int32>{0, -1}, std::vector<std::string>{"Lower Bound (inclusive)", "Upper Bound (inclusive)"}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsIndexingName_Key, "Feature ID Indexing Name",
+                                                          "The name of the indexing array for the output mapping in the reduced `Destination Attribute Matrix`, not applicable if `None` selected",
+                                                          "Reduced Feature Ids Indices"));
 
   params.insertSeparator(Parameters::Separator{"Output Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
                                                           "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
                                                           "determine whether or not the outputted statistics are actually valid or not for a given feature.",
                                                           "FeatureHasData"));
+
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Whether to compute the length of the input array", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_LengthArrayName_Key, "Length Array Name", "The name of the length array", "Length"));
 
@@ -236,6 +272,9 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_FeatureHasDataArrayName_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_RangeType_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_Range_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_FeatureIdsIndexingName_Key, true);
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
   params.linkParameters(k_FindUniqueValues_Key, k_NumUniqueValuesName_Key, true);
 
@@ -262,7 +301,11 @@ IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
   //
   // Change 2:
   // Added - range based gating of feature ids and mapping
-  // Solution - `New k_Scaling_Key Value` = `Old k_Scaling_Key Value` * 100.0f;
+  // Solution - accept default values
+  // New key list:
+  // - k_RangeType_Key = "range_type";
+  // - k_Range_Key = "range";
+  // - k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
 }
 
 //------------------------------------------------------------------------------
@@ -290,8 +333,11 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
+  auto pRangeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
+  auto pRangeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
 
   Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(!pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue && !pFindNumUniqueValuesValue)
   {
@@ -327,6 +373,47 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
     tupleDims = {0};
+
+    switch(static_cast<ComputeArrayStatistics::FeatureIdRangeControls>(pRangeTypeValue))
+    {
+    case ComputeArrayStatistics::FeatureIdRangeControls::None: {
+      preflightUpdatedValues.emplace_back("`None` Selected", "Values for `Custom Feature ID Range` and `Feature ID Indexing Name` will be unused.");
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::IgnoreZero: {
+      preflightUpdatedValues.emplace_back("`Ignore Feature 0` Selected", "Values for `Custom Feature ID Range` will be unused.");
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::ShrinkToFit: {
+      preflightUpdatedValues.emplace_back("`Shrink To Fit` Selected", "Values for `Custom Feature ID Range` will be unused.");
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::PaddedCustomRange: {
+      [[fallthrough]];
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::CustomRange: {
+
+      if(pRangeValue.at(0) < 0 || pRangeValue.at(1) < -1)
+      {
+        return MakePreflightErrorResult(-57215,
+                                        fmt::format("Invalid Range Values: Lower bound must be greater than -1 (supplied value: {}) and Upper bound must be greater than -2 (supplied value: {})",
+                                                    pRangeValue.at(0), pRangeValue.at(1)));
+      }
+      if(pRangeValue.at(1) == -1)
+      {
+        preflightUpdatedValues.emplace_back("Custom Range: `-1` detected",
+                                            "The `-1` in the second position will be treated as unbounded. The max Feature Id will be treated as upper limit during execution");
+      }
+      else
+      {
+        if(pRangeValue.at(0) >= pRangeValue.at(1))
+        {
+          return MakePreflightErrorResult(-57216, fmt::format("Invalid Range Values: Lower bound ({}) must be less than Upper bound ({})", pRangeValue.at(0), pRangeValue.at(1)));
+        }
+      }
+      break;
+    }
+    }
   }
 
   if(pUseMaskValue)
@@ -374,7 +461,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, tupleDims).actions;
 
-  return {std::move(resultOutputActions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -410,6 +497,11 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.replaceName(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
+
+  inputValues.RangeType = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
+  inputValues.Range = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
+  inputValues.TempMaskArrayPath = k_TempMaskPath;
+  inputValues.FeatureIdMapArrayPath = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureIdsIndexingName_Key));
 
   return ComputeArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

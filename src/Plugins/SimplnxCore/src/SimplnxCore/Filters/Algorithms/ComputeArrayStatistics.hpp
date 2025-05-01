@@ -5,9 +5,9 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include <chrono>
 #include <mutex>
@@ -17,7 +17,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
-  ChoicesParameter::ValueType RangeType = 0ULL; // None
+  ChoicesParameter::ValueType RangeType;
   VectorInt32Parameter::ValueType Range;
   bool FindLength;
   bool FindMin;
