@@ -245,7 +245,24 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Removed Histogram Functionality; Deleted Keys include the following:
+  // - k_FindHistogram_Key = "find_histogram";
+  // - k_MinRange_Key = "min_range";
+  // - k_MaxRange_Key = "max_range";
+  // - k_UseFullRange_Key = "use_full_range";
+  // - k_NumBins_Key = "num_bins";
+  // - k_FindModalBinRanges_Key = "find_modal_bin_ranges";
+  // - k_HistoBinCountName_Key = "histogram_bin_count_name";
+  // - k_HistoBinRangeName_Key = "histogram_bin_range_name";
+  // - k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
+  // - k_ModalBinArrayName_Key = "modal_bin_array_name";
+  //
+  // Change 2:
+  // Added - range based gating of feature ids and mapping
+  // Solution - `New k_Scaling_Key Value` = `Old k_Scaling_Key Value` * 100.0f;
 }
 
 //------------------------------------------------------------------------------
@@ -275,7 +292,6 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
 
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(!pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue && !pFindNumUniqueValuesValue)
   {
@@ -288,14 +304,14 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(inputArrayPtr == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-57202, fmt::format("Could not find selected input array at path '{}' ", pSelectedArrayPathValue.toString())), {}};
+    return MakePreflightErrorResult(-57202, fmt::format("Could not find selected input array at path '{}' ", pSelectedArrayPathValue.toString()));
   }
 
   inputDataArrayPaths.push_back(pSelectedArrayPathValue);
 
   if(inputArrayPtr->getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-57203, fmt::format("Input array must be a scalar array")), {}};
+    return MakePreflightErrorResult(-57203, fmt::format("Input array must be a scalar array"));
   }
 
   AttributeMatrix::ShapeType tupleDims = {1};
@@ -306,7 +322,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
     if(featureIdsPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
+      return MakePreflightErrorResult(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString()));
     }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
@@ -318,11 +334,11 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(maskPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString())), {}};
+      return MakePreflightErrorResult(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString()));
     }
     if(maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)
     {
-      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array must be of type Boolean or UInt8")), {}};
+      return MakePreflightErrorResult(-57206, fmt::format("Mask array must be of type Boolean or UInt8"));
     }
     inputDataArrayPaths.push_back(pMaskArrayPathValue);
   }
@@ -331,35 +347,34 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   {
     if(!pFindMeanValue || !pFindStdDeviationValue)
     {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)")), {}};
+      return MakePreflightErrorResult(-57207, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)"));
     }
   }
 
   if(pFindMedianValue && !pFindLengthValue)
   {
-    return {MakeErrorResult<OutputActions>(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)")), {}};
+    return MakePreflightErrorResult(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)"));
   }
 
   if(pFindNumUniqueValuesValue && !pFindLengthValue)
   {
-    return {MakeErrorResult<OutputActions>(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)")), {}};
+    return MakePreflightErrorResult(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)"));
   }
 
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
-    std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
-    return {MakeErrorResult<OutputActions>(-57211, msg)};
+    return MakePreflightErrorResult(-57211, "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).");
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-57212, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(-57212, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, tupleDims).actions;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
