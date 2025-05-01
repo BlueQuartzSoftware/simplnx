@@ -251,7 +251,8 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   auto pCropYDim = filterArgs.value<BoolParameter::ValueType>(k_CropYDim_Key);
   auto pCropZDim = filterArgs.value<BoolParameter::ValueType>(k_CropZDim_Key);
 
-  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  nx::core::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   uint64& xMin = s_HeaderCache[m_InstanceId].xMin;
   uint64& xMax = s_HeaderCache[m_InstanceId].xMax;
@@ -260,9 +261,22 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   uint64& zMax = s_HeaderCache[m_InstanceId].zMax;
   uint64& zMin = s_HeaderCache[m_InstanceId].zMin;
 
+  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  {
+    // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
+    std::string cropOptionsStr = "This filter will crop the image in the following dimension(s):  ";
+    cropOptionsStr.append(pCropXDim ? "X" : "");
+    cropOptionsStr.append(pCropYDim ? "Y" : "");
+    cropOptionsStr.append(pCropZDim ? "Z" : "");
+    preflightUpdatedValues.push_back({"Crop Dimensions", cropOptionsStr});
+
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
+                                                                                                                          srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
+  }
+
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
-    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!")};
+    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!"), preflightUpdatedValues};
   }
 
   xMin = pCropXDim ? minVoxels[0] : 0;
@@ -272,25 +286,22 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   zMin = pCropZDim ? minVoxels[2] : 0;
   zMax = pCropZDim ? maxVoxels[2] : srcImageGeom.getNumZCells() - 1;
 
-  nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   if(!pUsePhysicalBounds)
   {
     if(pCropXDim && xMax < xMin)
     {
       const std::string errMsg = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-      return {MakeErrorResult<OutputActions>(-4011, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4011, errMsg), preflightUpdatedValues};
     }
     if(pCropYDim && yMax < yMin)
     {
       const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      return {MakeErrorResult<OutputActions>(-4012, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4012, errMsg), preflightUpdatedValues};
     }
     if(pCropZDim && zMax < zMin)
     {
       const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      return {MakeErrorResult<OutputActions>(-4013, errMsg)};
+      return {MakeErrorResult<OutputActions>(-4013, errMsg), preflightUpdatedValues};
     }
   }
 
@@ -322,7 +333,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     if(equalCoords)
     {
       const std::string errMsg = "All minimum and maximum values are equal. The cropped region would be a ZERO volume. Please change the maximum values to be larger than the minimum values.";
-      return {MakeErrorResult<OutputActions>(-50556, errMsg)};
+      return {MakeErrorResult<OutputActions>(-50556, errMsg), preflightUpdatedValues};
     }
 
     auto bounds = srcImageGeomPtr->getBoundingBoxf();
@@ -337,7 +348,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
       {
         const std::string errMsg =
             fmt::format("The max value {} ({}) is lower then the min value {} ({}). Please ensure the maximum value is greater than the minimum value.", errLabels[i], max[i], errLabels[i], min[i]);
-        return {MakeErrorResult<OutputActions>(-50559, errMsg)};
+        return {MakeErrorResult<OutputActions>(-50559, errMsg), preflightUpdatedValues};
       }
 
       if(dimEnabled[i] && max[i] < minPoint[i] && min[i] < minPoint[i])
@@ -345,7 +356,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         const std::string errMsg = fmt::format(
             "Both the Minimum and Maximum {} crop values are less than the minimum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
             errLabels[i], errLabels[i], maxPoint[i], fmt::join(minPoint.begin(), minPoint.end(), ","), fmt::join(maxPoint.begin(), maxPoint.end(), ","));
-        return {MakeErrorResult<OutputActions>(-50560, errMsg)};
+        return {MakeErrorResult<OutputActions>(-50560, errMsg), preflightUpdatedValues};
       }
 
       if(dimEnabled[i] && max[i] > maxPoint[i] && min[i] > maxPoint[i])
@@ -353,7 +364,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         const std::string errMsg = fmt::format(
             "Both the Minimum and Maximum {} crop values are greater than the maximum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
             errLabels[i], errLabels[i], maxPoint[i], fmt::join(minPoint.begin(), minPoint.end(), ","), fmt::join(maxPoint.begin(), maxPoint.end(), ","));
-        return {MakeErrorResult<OutputActions>(-50560, errMsg)};
+        return {MakeErrorResult<OutputActions>(-50560, errMsg), preflightUpdatedValues};
       }
 
       if(dimEnabled[i] && min[i] < minPoint[i])
@@ -384,19 +395,19 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   if(pCropXDim && xMax > srcImageGeomPtr->getNumXCells() - 1)
   {
     const std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeomPtr->getNumXCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5553, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5553, errMsg), preflightUpdatedValues};
   }
 
   if(pCropYDim && yMax > srcImageGeomPtr->getNumYCells() - 1)
   {
     const std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeomPtr->getNumYCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5554, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5554, errMsg), preflightUpdatedValues};
   }
 
   if(pCropZDim && zMax > srcImageGeomPtr->getNumZCells() - 1)
   {
     const std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeomPtr->getNumZCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5555, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5555, errMsg), preflightUpdatedValues};
   }
 
   if(static_cast<int>(xMax) - static_cast<int>(xMin) < 0)
@@ -450,7 +461,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     const AttributeMatrix* selectedCellData = srcImageGeomPtr->getCellData();
     if(selectedCellData == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString())), preflightUpdatedValues};
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
@@ -470,15 +481,6 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
-    // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
-    std::string cropOptionsStr = "This filter will crop the image in the following dimension(s):  ";
-    cropOptionsStr.append(pCropXDim ? "X" : "");
-    cropOptionsStr.append(pCropYDim ? "Y" : "");
-    cropOptionsStr.append(pCropZDim ? "Z" : "");
-    preflightUpdatedValues.push_back({"Crop Dimensions", cropOptionsStr});
-
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
     preflightUpdatedValues.push_back(
         {"Cropped Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin,
                                                                                                      srcImageGeomPtr->getUnits())});
@@ -493,7 +495,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(nullptr == srcCellFeatureData)
     {
-      return {MakeErrorResult<OutputActions>(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString()))};
+      return {MakeErrorResult<OutputActions>(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString())), preflightUpdatedValues};
     }
     std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
