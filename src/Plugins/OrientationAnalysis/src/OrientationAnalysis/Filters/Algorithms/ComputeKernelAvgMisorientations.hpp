@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <chrono>
 
@@ -41,7 +42,7 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
-
+  MessageHelper& getMessageHelper();
   void sendThreadSafeProgressMessage(usize counter);
 
 private:
@@ -51,11 +52,10 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   // Thread safe Progress Message
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  MessageHelper m_MessageHelper;
   mutable std::mutex m_ProgressMessage_Mutex;
   size_t m_TotalElements = 0;
   size_t m_ProgressCounter = 0;
-  size_t m_LastProgressInt = 0;
 };
 
 } // namespace nx::core

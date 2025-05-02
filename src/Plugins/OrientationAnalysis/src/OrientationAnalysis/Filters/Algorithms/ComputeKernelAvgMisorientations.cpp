@@ -17,17 +17,18 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(ComputeKernelAvgMisorientations* filter, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
-                                   const std::atomic_bool& shouldCancel)
+  FindKernelAvgMisorientationsImpl(ComputeKernelAvgMisorientations* filter, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
-  , m_ShouldCancel(shouldCancel)
   {
   }
 
   void convert(size_t zStart, size_t zEnd, size_t yStart, size_t yEnd, size_t xStart, size_t xEnd) const
   {
+    const std::atomic_bool& m_ShouldCancel = m_Filter->getCancel();
+    MessageHelper& messageHelper = m_Filter->getMessageHelper();
+
     // Input Arrays / Parameter Data
     const auto& cellPhasesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
     const auto& cellPhases = cellPhasesArray.getDataStoreRef();
@@ -54,7 +55,6 @@ public:
     // messenger values
     usize counter = 0;
     usize increment = (zEnd - zStart) / 100;
-    auto start = std::chrono::steady_clock::now();
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
@@ -68,12 +68,10 @@ public:
 
       if(counter > increment)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        if(messageHelper.canSendMessage())
         {
           m_Filter->sendThreadSafeProgressMessage(counter);
           counter = 0;
-          start = std::chrono::steady_clock::now();
         }
       }
 
@@ -156,7 +154,6 @@ private:
   ComputeKernelAvgMisorientations* m_Filter = nullptr;
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
-  const std::atomic_bool& m_ShouldCancel;
 };
 
 } // namespace
@@ -168,6 +165,7 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_MessageHelper(m_ShouldCancel)
 {
 }
 
@@ -180,24 +178,26 @@ const std::atomic_bool& ComputeKernelAvgMisorientations::getCancel()
   return m_ShouldCancel;
 }
 
+MessageHelper& ComputeKernelAvgMisorientations::getMessageHelper()
+{
+  return m_MessageHelper;
+}
+
 // -----------------------------------------------------------------------------
 void ComputeKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
   m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
+  if(!m_MessageHelper.canSendMessage())
   {
     return;
   }
 
   auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-  std::string ss = fmt::format("Finding Kernel Average Misorientations || {}%", progressInt);
+  std::string ss = fmt::format("Completed {}%", progressInt);
   m_MessageHandler(IFilter::Message::Type::Info, ss);
-
-  m_LastProgressInt = progressInt;
-  m_InitialPoint = std::chrono::steady_clock::now();
+  m_MessageHelper.resetTimeSentinel();
 }
 
 // -----------------------------------------------------------------------------
@@ -219,7 +219,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues));
 
   return {};
 }

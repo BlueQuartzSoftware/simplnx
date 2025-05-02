@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -296,6 +297,8 @@ Result<> ComputeShapesTriangleGeom::operator()()
         0.50000000, 0.50000000, -0.50000000;
   // clang-format on
 
+  MessageHelper messageHelper(m_ShouldCancel);
+
   // Loop over each "Feature" which is the number of tuples in the "Centroids" array
   // We could parallelize over the features?
   for(usize featureId = 1; featureId < numFeatures; featureId++)
@@ -303,6 +306,11 @@ Result<> ComputeShapesTriangleGeom::operator()()
     /**
      * The following section calculates moment of inertia tensor (Cinertia) and omega3s
      */
+    if(messageHelper.canSendMessage())
+    {
+      m_MessageHandler({IFilter::ProgressMessage::Type::Info, fmt::format("Computing feature {}/{}", featureId, numFeatures)});
+      messageHelper.resetTimeSentinel();
+    }
     {
       if(m_ShouldCancel)
       {
