@@ -80,6 +80,7 @@ set(FilterList
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FlyingEdges3DFilter
+  IdentifyDuplicateVerticesFilter
   IdentifySampleFilter
   InitializeDataFilter
   InitializeImageGeomCellDataFilter
@@ -132,6 +133,7 @@ set(FilterList
   TriangleDihedralAngleFilter
   TriangleNormalFilter
   UncertainRegularGridSampleSurfaceMeshFilter
+  VerifyTriangleWindingFilter
   WriteAbaqusHexahedronFilter
   WriteASCIIDataFilter
   WriteAvizoRectilinearCoordinateFilter
@@ -198,6 +200,7 @@ set(AlgorithmList
   FillBadData
   FindNRingNeighbors
   FlyingEdges3D
+  IdentifyDuplicateVertices
   InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing
@@ -231,6 +234,7 @@ set(AlgorithmList
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
+  VerifyTriangleWinding
   WriteAbaqusHexahedron
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate

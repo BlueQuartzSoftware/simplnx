@@ -8,38 +8,25 @@
 namespace nx::core
 {
 /**
- * @class QuickSurfaceMeshFilter
+ * @class VerifyTriangleWindingFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT QuickSurfaceMeshFilter : public IFilter
+class SIMPLNXCORE_EXPORT VerifyTriangleWindingFilter : public IFilter
 {
 public:
-  QuickSurfaceMeshFilter() = default;
-  ~QuickSurfaceMeshFilter() noexcept override = default;
+  VerifyTriangleWindingFilter() = default;
+  ~VerifyTriangleWindingFilter() noexcept override = default;
 
-  QuickSurfaceMeshFilter(const QuickSurfaceMeshFilter&) = delete;
-  QuickSurfaceMeshFilter(QuickSurfaceMeshFilter&&) noexcept = delete;
+  VerifyTriangleWindingFilter(const VerifyTriangleWindingFilter&) = delete;
+  VerifyTriangleWindingFilter(VerifyTriangleWindingFilter&&) noexcept = delete;
 
-  QuickSurfaceMeshFilter& operator=(const QuickSurfaceMeshFilter&) = delete;
-  QuickSurfaceMeshFilter& operator=(QuickSurfaceMeshFilter&&) noexcept = delete;
+  VerifyTriangleWindingFilter& operator=(const VerifyTriangleWindingFilter&) = delete;
+  VerifyTriangleWindingFilter& operator=(VerifyTriangleWindingFilter&&) noexcept = delete;
 
   // Parameter Keys
-
-  static inline constexpr StringLiteral k_GenerateTripleLines_Key = "generate_triple_lines";
-  static inline constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
-  static inline constexpr StringLiteral k_FixProblemVoxels_Key = "fix_problem_voxels";
-  static inline constexpr StringLiteral k_GridGeometryDataPath_Key = "input_grid_geometry_path";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
-
-  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
-
-  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
-  static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";
-
-  static inline constexpr StringLiteral k_FaceDataGroupName_Key = "face_data_group_name";
-  static inline constexpr StringLiteral k_FaceLabelsArrayName_Key = "face_labels_array_name";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_LabelsPath_Key = "labels_path";
+  static inline constexpr StringLiteral k_RepairNormals_Key = "repair_normals";
+  static inline constexpr StringLiteral k_TriangleNormalsPath_Key = "triangle_normals_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -129,4 +116,5 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, QuickSurfaceMeshFilter, "13dd00bd-ad49-4e04-95eb-3267952fd6e5");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, VerifyTriangleWindingFilter, "7a63783e-2449-414c-ae73-58058ae8da7e");
+/* LEGACY UUID FOR THIS FILTER 3524c2dc-df60-5f90-b54b-e04946628a38 */

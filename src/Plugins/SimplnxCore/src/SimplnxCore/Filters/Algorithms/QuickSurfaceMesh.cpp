@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <array>
@@ -370,6 +371,29 @@ Result<> QuickSurfaceMesh::operator()()
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
 
+  // Scoped because we invalidate connectivity at the end
+  Result<> windingResult = {};
+  if(m_InputValues->RepairTriangleWinding)
+  {
+    // Generate Connectivity
+    m_MessageHandler("Generating Connectivity and Triangle Neighbors...");
+    triangleGeom.findElementNeighbors(true);
+    const auto optionalId = triangleGeom.getElementNeighborsId();
+    if(!optionalId.has_value())
+    {
+      return MakeErrorResult(-56341, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
+    }
+    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+
+    m_MessageHandler("Repairing Windings...");
+    windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                            m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+
+    // Purge connectivity
+    m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
+    m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
+  }
+
 #ifdef QSM_CREATE_TRIPLE_LINES
   if(m_InputValues->pGenerateTripleLines)
   {
@@ -440,7 +464,7 @@ Result<> QuickSurfaceMesh::operator()()
   }
 #endif
 
-  return {};
+  return windingResult;
 }
 
 // -----------------------------------------------------------------------------

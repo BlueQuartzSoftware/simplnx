@@ -21,6 +21,8 @@ From the abstract of the paper:
 This filter will ensure that the smallest of the 2 **FaceLabel** values will always be in the first component (component[0]). This will allow assumptions made in
 downstream filters to continue to work correctly.
 
+This filter attempts to repair the windings for a mesh. This may not be possible due to the nature of how meshes are stored in the software. See Verify Traingle Winding documentation for detailed breakdown of nuance.
+
 ---------------
 
 ![Example SurfaceNets Output](Images/SurfaceNets_Output.png)
