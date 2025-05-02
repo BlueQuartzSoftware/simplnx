@@ -6,7 +6,9 @@ DREAM3D Review (Statistics)
 
 ## Description
 
-This **Filter** computes a variety of statistics for a given scalar array.  The currently available statistics are array length, minimum, maximum, (arithmetic) mean, median, mode, standard deviation, and summation; any combination of these statistics may be computed by this **Filter**.  Any scalar array, of any primitive type, may be used as input.  The type of the output arrays depends on the kind of statistic computed:
+***WARNING: Histogram functionality moved to a different filter.***
+
+This **Filter** computes a variety of statistics for a given scalar array. The currently available statistics are array length, minimum, maximum, (arithmetic) mean, median, mode, standard deviation, and summation; any combination of these statistics may be computed by this **Filter**. Any scalar array, of any primitive type, may be used as input. The type of the output arrays depends on the kind of statistic computed:
 
 | Statistic               | Primitive Type                      |
 |-------------------------|-------------------------------------|
@@ -30,27 +32,30 @@ The user must select a destination **Attribute Matrix** in which the computed st
 
 Special operations occur for certain statistics if the supplied array is of type *bool* (for example, a mask array produced [when thresholding](@ref multithresholdobjects)).  The length, minimum, maximum, median, mode, and summation are computed as normal (although the resulting values may be platform dependent).  The mean and standard deviation for a boolean array will be true if there are more instances of true in the array than false.  If *Standardize Data* is chosen for a boolean array, no actual modifications will be made to the input.  These operations for boolean inputs are chosen as a basic convention, and are not intended be representative of true boolean logic.
 
+## Ranges Breakdown
 
-## Hisogram Notes: 
+The ranges feature was added to primarily offer the following functionality:
 
-When creating a histogram the output arrays can take 2 different layouts.
+1. option to output an array that has the Feature id in it. (Feature Ids Indexing Array)
+2. option to set the "Feature Id" range.
 
-### Histogram and "Compute Statistics by Feature/Ensemble" is NOT selected
+- Allow the user to "pad out the feature ids" to a specific range
+- Allow the user to only compute stats for specific feature Ids
 
-The output is in the form of 2 Data Arrays. The first data array will have the counts. The number of tuples of the array is
-the same as the number of bins in the histogram. The second data array will have the bin ranges. The array has 2 components 
-where the first component of each tuple is the minimum of the bin (inclusive) and the second component of the tuple
-is the maximum for that bin (exclusive).
+3. option to Ignore Feature Id Zero.
+4. remove empty spaces for feature ids that start above 1
 
-### Histogram and "Compute Statistics by Feature/Ensemble" IS selected
+All of these can be achieved with the new functionality, here's how:
 
-The output is in the form of 2 arrays, but for each output array the number of tuples of the array
-is the same as the number of features/ensembles for which you are calculating the statistics. The number of components
-for the "Counts" array is now the number of bins. The second array is the same tuple shape as the
-counts array but now the number of components is the number of bins * 2 and the data 
-is encoded as [Bin Min, Bin Max], [Bin Min, Bin Max].
+For option 1, this array (Feature Ids Indexing Array) is automatically created for any Range selection other than `None`. The nuance here is that if your range or `Shrink To Fit` contains all the features this array will be redundant and can be removed, however, this is a very niche occurance and users are encouraged to just select `None` if they know this to be the case.
 
-**Note**: 
+For option 2, this is provided with both the `Padded Custom Range` and `Minimum Size in Custom Range`. The latter is intended for users who are trying to cut down size without aproiri knowledge of the number of features. It will chop anything outside the upper bound or take the max feature if the custom upper bound exceeds it. The same is true for the lower bound in that it will take the higher of the two between provided range and the min Feature Id. `Padded Custom Range` will fill generate/fill extra values for values below and above the minimum and maximum Feature Id respectively. See the bonus section for additional range features.
+
+For option 3, the ability to ignore Feature Id Zero (the invalid Feature Id) is provided directly in the form of `Ignore Feature 0` and indirectly through ranges.
+
+For option 4, the most direct feature to address this is the `Shrink to Fit` range option, however it can also be achived with `Minimum Size in Custom Range`.
+
+*Bonus: If you are unsure of the max feature id in your range, supplying a `-1` will determine the maximum feature id and use it as the upper bound in execution.*
 
 % Auto generated parameter table will be inserted here
 
