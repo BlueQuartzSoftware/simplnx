@@ -75,5 +75,5 @@ test:
 
 about:
   home: https://www.dream3d.io/
-  license: Aferro GPL
+  license: Affero GPL
   summary: simplnx consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
