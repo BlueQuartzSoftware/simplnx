@@ -336,9 +336,17 @@ public:
       {
         return;
       }
-      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), m_FeatureIds[featureId]));
-      T minValue = static_cast<T>(0);
-      T maxValue = static_cast<T>(0);
+      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), featureId));
+      T minValue = std::numeric_limits<T>::max();
+      T maxValue;
+      if constexpr(std::is_floating_point_v<T>)
+      {
+        maxValue = -std::numeric_limits<T>::max();
+      }
+      else
+      {
+        maxValue = std::numeric_limits<T>::min();
+      }
       T summationValue = static_cast<T>(0);
       float32 meanValue = 0.0;
       usize count = 0;
@@ -574,7 +582,7 @@ public:
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {
-      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), m_FeatureIds[featureId]));
+      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), featureId));
       std::set<int32> valuesSet = {};
       std::vector<float32> values = {};
       for(usize i = 0; i < numTuples; i++)
@@ -594,7 +602,7 @@ public:
 
       if(m_FindMedian)
       {
-        if(!values.empty())
+        if(values.empty())
         {
           m_MedianArray->setValue(truePosition, 0.0f);
         }
@@ -1072,8 +1080,8 @@ struct ComputeArrayStatisticsByFeatureFunctor
     const auto& tempMask = tempMaskPtr->getDataStoreRef();
     const auto& data = inputArrayPtr->getDataStoreRef();
     StatisticsByFeatureRangeImpl<T> classToExecute = StatisticsByFeatureRangeImpl<T>(
-        inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation, inputValues->FindSummation, tempMask,
-        featureIdsMap, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
+        inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation, inputValues->FindSummation, featureIdsMap,
+        tempMask, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
     if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
@@ -1248,7 +1256,7 @@ Result<> ComputeArrayStatistics::operator()()
   }
   case FeatureIdRangeControls::PaddedCustomRange: {
     // set number of features to the difference between max and min provided range
-    trueMax = m_InputValues->Range.at(1);
+    trueMax = m_InputValues->Range.at(1) == -1 ? trueMax : m_InputValues->Range.at(1);
     trueMin = m_InputValues->Range.at(0);
     break;
   }
@@ -1257,6 +1265,7 @@ Result<> ComputeArrayStatistics::operator()()
   {
     return MakeErrorResult(-506671, fmt::format("Range Error: Min value ({}) must be less than or equal to Max value ({})", trueMin, trueMax));
   }
+
   numFeatures = (trueMax - trueMin) + 1;
 
   // Temp Mask array created in preflight (for OoC compatibility)
@@ -1319,7 +1328,7 @@ Result<> ComputeArrayStatistics::operator()()
   const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
   // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
+  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues, this);
 }
 
 // -----------------------------------------------------------------------------

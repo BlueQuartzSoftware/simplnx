@@ -1,5 +1,4 @@
 #include "ComputeArrayStatisticsFilter.hpp"
-#include <simplnx/Filter/Actions/DeleteDataAction.hpp>
 
 #include "SimplnxCore/Filters/Algorithms/ComputeArrayStatistics.hpp"
 
@@ -9,6 +8,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -404,12 +404,9 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
         preflightUpdatedValues.emplace_back("Custom Range: `-1` detected",
                                             "The `-1` in the second position will be treated as unbounded. The max Feature Id will be treated as upper limit during execution");
       }
-      else
+      else if(pRangeValue.at(0) >= pRangeValue.at(1))
       {
-        if(pRangeValue.at(0) >= pRangeValue.at(1))
-        {
-          return MakePreflightErrorResult(-57216, fmt::format("Invalid Range Values: Lower bound ({}) must be less than Upper bound ({})", pRangeValue.at(0), pRangeValue.at(1)));
-        }
+        return MakePreflightErrorResult(-57216, fmt::format("Invalid Range Values: Lower bound ({}) must be less than Upper bound ({})", pRangeValue.at(0), pRangeValue.at(1)));
       }
       break;
     }
