@@ -33,6 +33,7 @@ struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureAttributeMatrixPath;
   DataPath ActiveArrayPath;
+  bool IsPeriodic;
 };
 
 /**

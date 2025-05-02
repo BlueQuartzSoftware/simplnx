@@ -122,6 +122,7 @@ ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, Scala
 : SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
+  m_IsPeriodic = inputValues->IsPeriodic;
 }
 
 ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;

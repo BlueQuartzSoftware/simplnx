@@ -31,6 +31,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   // Initialize calculation modifiers
   int64 neighbor = 0;
   bool good = false;
+  bool hasNonContiguousFeature = false;
   int64 col = 0, row = 0, plane = 0;
 
   // Initialize containers
@@ -45,6 +46,15 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     neighPoints[3] = 1;
     neighPoints[4] = dims[0];
     neighPoints[5] = (dims[0] * dims[1]);
+  }
+  int64 periodicPoints[6] = {0, 0, 0, 0, 0, 0};
+  {
+    periodicPoints[0] = (dims[0] * dims[1]) * (dims[2] - 1);
+    periodicPoints[1] = dims[0] * (dims[1] - 1);
+    periodicPoints[2] = dims[0] - 1;
+    periodicPoints[3] = -dims[0] + 1;
+    periodicPoints[4] = -(dims[0] * (dims[1] - 1));
+    periodicPoints[5] = -(dims[0] * dims[1]) * (dims[2] - 1);
   }
 
   auto start = std::chrono::steady_clock::now();
@@ -73,28 +83,34 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
         if(i == 0 && plane == 0)
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
         if(i == 5 && plane == (dims[2] - 1))
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
         if(i == 1 && row == 0)
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
         if(i == 4 && row == (dims[1] - 1))
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
         if(i == 2 && col == 0)
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
         if(i == 3 && col == (dims[0] - 1))
         {
           good = false;
+          neighbor = currentPoint + periodicPoints[i];
         }
-        if(good)
+        if(good || m_IsPeriodic)
         {
           if(determineGrouping(currentPoint, neighbor, gnum))
           {
@@ -112,6 +128,10 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
               {
                 voxelsList[j] = -1;
               }
+            }
+            if(!good)
+            {
+              hasNonContiguousFeature = true;
             }
           }
         }
@@ -132,6 +152,11 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
     nextSeed = seed + 1;
     seed = getSeed(gnum, nextSeed);
+  }
+
+  if(hasNonContiguousFeature)
+  {
+    m_MessageHandler({IFilter::Message::Type::Error, "SegmentFeatures found Non-Contiguous Features."});
   }
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});

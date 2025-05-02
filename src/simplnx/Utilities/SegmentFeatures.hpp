@@ -90,6 +90,7 @@ public:
 
 protected:
   DataStructure& m_DataStructure;
+  bool m_IsPeriodic = false;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   int32 m_FoundFeatures = 0;

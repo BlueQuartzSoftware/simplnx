@@ -18,6 +18,8 @@ The user has the option to *Use Mask Array*, which allows the user to set a bool
 
 After all the **Features** have been identified, an **Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
 
+If the data is specified as **Periodic**, the segmentation will check if features wrap around geometry bounds in a tileable fashion. If any such features are detected, the filter will throw a warning that centroid data may be incorrect.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
