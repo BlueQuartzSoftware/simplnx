@@ -9,7 +9,7 @@ source:
   - path: ../
     folder: simplnx
   - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
-    git_rev: v1.0.33
+    git_rev: v1.0.38
     folder: EbsdLib
   - git_url: https://github.com/BlueQuartzSoftware/H5Support
     git_rev: v1.0.13
@@ -37,7 +37,7 @@ build:
 requirements:
   build:
     - {{ compiler('cxx') }}
-    - cmake =3.26
+    - cmake =3.30
     - ninja
     - git
   host:
@@ -58,6 +58,7 @@ requirements:
     - myst-parser
     - sphinx-markdown-tables
     - sphinx_rtd_theme
+    - libitk-devel =5.4
 
   run:
     - python
@@ -74,5 +75,5 @@ test:
 
 about:
   home: https://www.dream3d.io/
-  license: BSD
+  license: Affero GPL
   summary: simplnx consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
