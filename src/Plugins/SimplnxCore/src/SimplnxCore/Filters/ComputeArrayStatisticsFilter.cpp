@@ -377,15 +377,15 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     switch(static_cast<ComputeArrayStatistics::FeatureIdRangeControls>(pRangeTypeValue))
     {
     case ComputeArrayStatistics::FeatureIdRangeControls::None: {
-      preflightUpdatedValues.emplace_back("`None` Selected", "Values for `Custom Feature ID Range` and `Feature ID Indexing Name` will be unused.");
+      preflightUpdatedValues.push_back({"`None` Selected", "Values for `Custom Feature ID Range` and `Feature ID Indexing Name` will be unused."});
       break;
     }
     case ComputeArrayStatistics::FeatureIdRangeControls::IgnoreZero: {
-      preflightUpdatedValues.emplace_back("`Ignore Feature 0` Selected", "Values for `Custom Feature ID Range` will be unused.");
+      preflightUpdatedValues.push_back({"`Ignore Feature 0` Selected", "Values for `Custom Feature ID Range` will be unused."});
       break;
     }
     case ComputeArrayStatistics::FeatureIdRangeControls::ShrinkToFit: {
-      preflightUpdatedValues.emplace_back("`Shrink To Fit` Selected", "Values for `Custom Feature ID Range` will be unused.");
+      preflightUpdatedValues.push_back({"`Shrink To Fit` Selected", "Values for `Custom Feature ID Range` will be unused."});
       break;
     }
     case ComputeArrayStatistics::FeatureIdRangeControls::PaddedCustomRange: {
@@ -401,8 +401,8 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
       }
       if(pRangeValue.at(1) == -1)
       {
-        preflightUpdatedValues.emplace_back("Custom Range: `-1` detected",
-                                            "The `-1` in the second position will be treated as unbounded. The max Feature Id will be treated as upper limit during execution");
+        preflightUpdatedValues.push_back(
+            {"Custom Range: `-1` detected", "The `-1` in the second position will be treated as unbounded. The max Feature Id will be treated as upper limit during execution"});
       }
       else if(pRangeValue.at(0) >= pRangeValue.at(1))
       {
