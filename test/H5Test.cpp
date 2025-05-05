@@ -981,6 +981,7 @@ TEST_CASE("DataStructureAppend")
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   DataStructure exemplarDataStructure = std::move(readResult.value());
 
+  usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
   for(const DataObject* object : exemplarDataStructure.getTopLevelData())
   {
     REQUIRE(object != nullptr);
@@ -992,6 +993,11 @@ TEST_CASE("DataStructureAppend")
     SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
 
     DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
+    
+    currentTopLevelSize++;
+    
+    REQUIRE(currentTopLevelSize == appendedDataStructure.getTopLevelData().size());
+
     REQUIRE(appendedDataStructure.containsData(originalArrayPath));
     REQUIRE(appendedDataStructure.containsData(path));
 
