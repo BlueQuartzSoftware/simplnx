@@ -993,9 +993,9 @@ TEST_CASE("DataStructureAppend")
     SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
 
     DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
-    
+
     currentTopLevelSize++;
-    
+
     REQUIRE(currentTopLevelSize == appendedDataStructure.getTopLevelData().size());
 
     REQUIRE(appendedDataStructure.containsData(originalArrayPath));
