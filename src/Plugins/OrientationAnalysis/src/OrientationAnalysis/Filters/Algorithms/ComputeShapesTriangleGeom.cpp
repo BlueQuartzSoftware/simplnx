@@ -438,11 +438,6 @@ Result<> ComputeShapesTriangleGeom::operator()()
       // Check for zeroes (zeroes = probably invalid)
       if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
       {
-        // return MakeWarningVoidResult(-64721, fmt::format("{}({}): One or more of the axis lengths for feature {} was unable to be found. This indicates the geometry was malformed.\nFeature
-        // Centroid(XYZ): "
-        //                                            "[{},{},{}]\nX Length: {}\nY Length: {}\nZ Length: {}",
-        //                                            __FILE__, __LINE__, featureId, centroids[(3 * featureId) + 0], centroids[(3 * featureId) + 1], centroids[(3 * featureId) + 2], lengths.xLength,
-        //                                            lengths.yLength, lengths.zLength));
         axisLengths[3 * featureId] = -1.0f;
         axisLengths[(3 * featureId) + 1] = -1.0f;
         axisLengths[(3 * featureId) + 2] = -1.0f;
