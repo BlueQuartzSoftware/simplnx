@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -149,7 +150,7 @@ public:
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
       const std::vector<usize> componentShape = {3};
 
-      Result<> result = nx::core::CreateArray<float>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
+      Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return result;

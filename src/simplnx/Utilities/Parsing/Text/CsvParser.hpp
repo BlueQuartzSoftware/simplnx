@@ -3,7 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -218,7 +218,7 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   for(size_t i = 0; i < totalSize; ++i)
   {
     in >> value;
-    Result<T> parseResult = ConvertTo<T>::convert(value);
+    Result<T> parseResult = StringInterpretationUtilities::Convert<T>(value);
     if(parseResult.invalid())
     {
       return ConvertResult(std::move(parseResult));

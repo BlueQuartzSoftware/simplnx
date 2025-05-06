@@ -1,6 +1,7 @@
 #include "CreateRectGridGeometryAction.hpp"
 
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/core.h>
@@ -185,7 +186,7 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
 {
   const DimensionType componentShape = {1};
   const DataPath boundsPath = getCreatedPath().createChildPath(arrayName);
-  if(Result<> result = CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode, m_CreatedDataStoreFormat); result.invalid())
+  if(Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode, m_CreatedDataStoreFormat); result.invalid())
   {
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;

@@ -526,11 +526,13 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
@@ -540,6 +542,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
@@ -728,6 +731,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.cpp
@@ -736,6 +740,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp

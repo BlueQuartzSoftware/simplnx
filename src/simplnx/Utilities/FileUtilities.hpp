@@ -32,8 +32,8 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <filesystem>
 #include <string>
@@ -123,7 +123,7 @@ public:
 
   Result<> parse(const std::string& token, size_t index) override
   {
-    Result<T> parseResult = ConvertTo<T>::convert(token);
+    Result<T> parseResult = StringInterpretationUtilities::Convert<T>(token);
     if(parseResult.valid())
     {
       m_Array[index] = parseResult.value();

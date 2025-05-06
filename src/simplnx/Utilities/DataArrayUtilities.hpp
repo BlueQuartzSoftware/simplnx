@@ -8,13 +8,14 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
-#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -34,222 +35,8 @@
 #define FSEEK64 std::fseek
 #endif
 
-#define SIMPLNX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                               \
-  CONTAINER_TYPE value;                                                                                                                                                                                \
-  try                                                                                                                                                                                                  \
-  {                                                                                                                                                                                                    \
-    value = FUNCTION(input);                                                                                                                                                                           \
-  } catch(const std::invalid_argument& e)                                                                                                                                                              \
-  {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                             \
-  } catch(const std::out_of_range& e)                                                                                                                                                                  \
-  {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                    \
-  }                                                                                                                                                                                                    \
-                                                                                                                                                                                                       \
-  if(value > std::numeric_limits<TYPE>::max() || value < std::numeric_limits<TYPE>::min())                                                                                                             \
-  {                                                                                                                                                                                                    \
-    return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                    \
-  }                                                                                                                                                                                                    \
-                                                                                                                                                                                                       \
-  return {static_cast<TYPE>(value)};
-
-#define SIMPLNX_DEF_STRING_CONVERTOR_SIGNED_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                        \
-  template <>                                                                                                                                                                                          \
-  struct ConvertTo<TYPE>                                                                                                                                                                               \
-  {                                                                                                                                                                                                    \
-    static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
-    {                                                                                                                                                                                                  \
-      SIMPLNX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                 \
-    }                                                                                                                                                                                                  \
-  };
-
-#define SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                      \
-  template <>                                                                                                                                                                                          \
-  struct ConvertTo<TYPE>                                                                                                                                                                               \
-  {                                                                                                                                                                                                    \
-    static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
-    {                                                                                                                                                                                                  \
-      if(!input.empty() && input.at(0) == '-')                                                                                                                                                         \
-      {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                \
-      }                                                                                                                                                                                                \
-                                                                                                                                                                                                       \
-      SIMPLNX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                                 \
-    }                                                                                                                                                                                                  \
-  };
-
-#define SIMPLNX_DEF_STRING_CONVERTOR_FLOATING_POINT(TYPE, FUNCTION)                                                                                                                                    \
-  template <>                                                                                                                                                                                          \
-  struct ConvertTo<TYPE>                                                                                                                                                                               \
-  {                                                                                                                                                                                                    \
-    static Result<TYPE> convert(const std::string& input)                                                                                                                                              \
-    {                                                                                                                                                                                                  \
-      TYPE value;                                                                                                                                                                                      \
-      try                                                                                                                                                                                              \
-      {                                                                                                                                                                                                \
-        value = static_cast<TYPE>(FUNCTION(input));                                                                                                                                                    \
-      } catch(const std::invalid_argument& e)                                                                                                                                                          \
-      {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                         \
-      } catch(const std::out_of_range& e)                                                                                                                                                              \
-      {                                                                                                                                                                                                \
-        return nx::core::MakeErrorResult<TYPE>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, #TYPE, #FUNCTION));                                \
-      }                                                                                                                                                                                                \
-      return {value};                                                                                                                                                                                  \
-    }                                                                                                                                                                                                  \
-  };
-
 namespace nx::core
 {
-template <class T>
-struct ConvertTo
-{
-};
-
-/**
- * These macros will create convertor objects that convert from a string to a numeric type
- */
-
-SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint8, std::stoull)
-SIMPLNX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int8, std::stoll)
-SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint16, std::stoull)
-SIMPLNX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int16, std::stoll)
-SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint32, std::stoull)
-SIMPLNX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int32, std::stoll)
-SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(uint64, uint64, std::stoull)
-SIMPLNX_DEF_STRING_CONVERTOR_SIGNED_INT(int64, int64, std::stoll)
-#ifdef __APPLE__
-SIMPLNX_DEF_STRING_CONVERTOR_UNSIGNED_INT(usize, usize, std::stoull)
-#endif
-SIMPLNX_DEF_STRING_CONVERTOR_FLOATING_POINT(float32, std::stof)
-SIMPLNX_DEF_STRING_CONVERTOR_FLOATING_POINT(float64, std::stod)
-
-template <>
-struct ConvertTo<bool>
-{
-  static Result<bool> convert(const std::string& input)
-  {
-    if(input == "TRUE" || input == "true" || input == "True")
-    {
-      return {true};
-    }
-
-    if(input == "FALSE" || input == "false" || input == "False")
-    {
-      return {false};
-    }
-
-    Result<int64> intResult = ConvertTo<int64>::convert(input);
-    if(intResult.valid())
-    {
-      return {intResult.value() != 0};
-    }
-
-    Result<float64> floatResult = ConvertTo<float64>::convert(input);
-    if(floatResult.valid())
-    {
-      return {floatResult.value() != 0.0};
-    }
-
-    return {true};
-  }
-};
-
-/**
- * @brief Sets the dataFormat string to the large data format from the prefs
- * if forceOocData is true.
- * @param dataFormat
- */
-SIMPLNX_EXPORT void TryForceLargeDataFormatFromPrefs(std::string& dataFormat);
-
-/**
- * @brief Returns the application's DataIOCollection.
- * @return
- */
-SIMPLNX_EXPORT std::shared_ptr<DataIOCollection> GetIOCollection();
-
-/**
- * @brief Checks if the given string can be correctly converted into the given type
- * @tparam T The primitive type to convert the string into
- * @param valueAsStr The value to convert
- * @param strType The primitive type. The valid values can be found in a constants file
- * @return Result<> object that is either valid or has an error message/code
- */
-template <class T>
-Result<> CheckValuesUnsignedInt(const std::string& valueAsStr, const std::string& strType)
-{
-  static_assert(std::is_unsigned_v<T>);
-
-  if(valueAsStr[0] == '-')
-  {
-    return MakeErrorResult(-255, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType, std::numeric_limits<T>::min(),
-                                             std::numeric_limits<T>::max()));
-  }
-  Result<uint64> conversionResult = ConvertTo<uint64>::convert(valueAsStr);
-  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
-  {
-    uint64 replaceValue = conversionResult.value();
-    if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
-    {
-      return MakeErrorResult(-256, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
-                                               std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
-    }
-  }
-  return ConvertResult(std::move(conversionResult));
-}
-
-/**
- * @brief
- * @tparam T
- * @param valueAsStr
- * @param strType
- * @return
- */
-template <class T>
-Result<> CheckValuesSignedInt(const std::string& valueAsStr, const std::string& strType)
-{
-  static_assert(std::is_signed_v<T>);
-
-  Result<int64> conversionResult = ConvertTo<int64>::convert(valueAsStr);
-  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
-  {
-    int64 replaceValue = conversionResult.value();
-    if(!((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max())))
-    {
-      return MakeErrorResult(-257, fmt::format("The value '{}' could not be converted to {} due to the value being outside of the range for {} to {}", valueAsStr, strType,
-                                               std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
-    }
-  }
-  return ConvertResult(std::move(conversionResult));
-}
-
-/**
- * @brief
- * @tparam T
- * @param valueAsStr
- * @param strType
- * @return
- */
-template <class T>
-Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string& strType)
-{
-  static_assert(std::is_floating_point_v<T>);
-
-  Result<float64> conversionResult = ConvertTo<float64>::convert(valueAsStr);
-  if(conversionResult.valid()) // If the string was converted to a double, then lets check the range is valid
-  {
-    float64 replaceValue = conversionResult.value();
-    if(!(((replaceValue >= static_cast<T>(-1) * std::numeric_limits<T>::max()) && (replaceValue <= static_cast<T>(-1) * std::numeric_limits<T>::min())) || (replaceValue == 0) ||
-         ((replaceValue >= std::numeric_limits<T>::min()) && (replaceValue <= std::numeric_limits<T>::max()))))
-    {
-      return MakeErrorResult<>(-258, fmt::format("The {} replace value was invalid. The valid ranges are -{} to -{}, 0, %{} to %{}", std::numeric_limits<T>::max(), strType,
-                                                 std::numeric_limits<T>::min(), std::numeric_limits<T>::min(), std::numeric_limits<T>::max()));
-    }
-  }
-  return ConvertResult(std::move(conversionResult));
-}
-
 /**
  * @brief Validates whether the string can be converted to the primitive type used in the DataObject.
  *
@@ -312,7 +99,7 @@ struct ConditionalReplaceValueInArrayFromString
     using DataArrayType = DataArray<T>;
 
     auto& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
-    Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
+    Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(valueAsStr);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
@@ -349,156 +136,6 @@ struct ConditionalReplaceValueInArrayFromString
  */
 SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertmask = false);
 
-template <class T>
-uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataStore::ShapeType& componentShape)
-{
-  uint64 numValues = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
-  uint64 numComponents = std::accumulate(componentShape.begin(), componentShape.end(), 1ULL, std::multiplies<>());
-  return numValues * numComponents * sizeof(T);
-}
-
-/**
- * @brief Creates a DataStore with the given properties
- * @tparam T Primitive Type (int, float, ...)
- * @param tupleShape The Tuple Dimensions
- * @param componentShape The component dimensions
- * @param mode The mode to assume: PREFLIGHT or EXECUTE. Preflight will NOT allocate any storage. EXECUTE will allocate the memory/storage
- * @return
- */
-template <class T>
-std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode,
-                                                      std::string dataFormat = "")
-{
-  switch(mode)
-  {
-  case IDataAction::Mode::Preflight: {
-    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape, dataFormat);
-  }
-  case IDataAction::Mode::Execute: {
-    uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
-    TryForceLargeDataFormatFromPrefs(dataFormat);
-    auto ioCollection = GetIOCollection();
-    ioCollection->checkStoreDataFormat(dataSize, dataFormat);
-    return ioCollection->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
-  }
-  default: {
-    throw std::runtime_error("Invalid mode");
-  }
-  }
-}
-
-SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format);
-
-/**
- * @brief Creates a DataArray with the given properties
- * @tparam T Primitive Type (int, float, ...)
- * @param dataStructure The DataStructure to use
- * @param tupleShape The Tuple Dimensions
- * @param nComp The number of components in the DataArray
- * @param path The DataPath to where the data will be stored.
- * @param mode The mode to assume: PREFLIGHT or EXECUTE. Preflight will NOT allocate any storage. EXECUTE will allocate the memory/storage
- * @return
- */
-template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "")
-{
-  auto parentPath = path.getParent();
-
-  std::optional<DataObject::IdType> dataObjectId;
-
-  DataObject* parentObjectPtr = nullptr;
-  if(parentPath.getLength() != 0)
-  {
-    parentObjectPtr = dataStructure.getData(parentPath);
-    if(parentObjectPtr == nullptr)
-    {
-      return MakeErrorResult(-260, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
-    }
-
-    dataObjectId = parentObjectPtr->getId();
-  }
-
-  if(tupleShape.empty())
-  {
-    return MakeErrorResult(-261, fmt::format("CreateArray: Tuple Shape was empty. Please set the number of tuples."));
-  }
-
-  // Validate Number of Components
-  if(compShape.empty())
-  {
-    return MakeErrorResult(-262, fmt::format("CreateArray: Component Shape was empty. Please set the number of components."));
-  }
-  const usize numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  if(numComponents == 0 && mode == IDataAction::Mode::Execute)
-  {
-    return MakeErrorResult(-263, fmt::format("CreateArray: Number of components is ZERO. Please set the number of components."));
-  }
-
-  const usize last = path.getLength() - 1;
-
-  std::string name = path[last];
-
-  const usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  uint64 requiredMemory = numTuples * numComponents * sizeof(T);
-  if(!CheckMemoryRequirement(dataStructure, requiredMemory, dataFormat))
-  {
-    uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
-    uint64 availableMemory = Memory::GetTotalMemory();
-    return MakeErrorResult(-267, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal reported memory: '{}' Bytes", name,
-                                             totalMemory, availableMemory));
-  }
-
-  auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
-  if(nullptr == store)
-  {
-    return MakeErrorResult(-267, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'", path.toString(), dataFormat));
-  }
-  auto dataArray = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
-  if(dataArray == nullptr)
-  {
-    if(dataStructure.getId(path).has_value())
-    {
-      return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
-    }
-
-    if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
-    {
-      auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));
-      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(store->getTupleShape(), " x "));
-      return MakeErrorResult(-265,
-                             fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
-                                         "dimensions or the same total number of tuples.\n{}\n{}",
-                                         name, dataStructure.getDataPathsForId(parentObjectPtr->getId()).front().toString(), amShape, arrayShape));
-    }
-    else
-    {
-      return MakeErrorResult(-266, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
-    }
-  }
-
-  return {};
-}
-
-template <typename T>
-std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T>& dataStore, const std::string& dataFormat)
-{
-  if(dataStore.getDataFormat() == dataFormat)
-  {
-    return nullptr;
-  }
-
-  auto ioCollection = GetIOCollection();
-  std::shared_ptr<AbstractDataStore<T>> newStore = ioCollection->createDataStoreWithType<T>(dataFormat, dataStore.getTupleShape(), dataStore.getComponentShape());
-  if(newStore == nullptr)
-  {
-    return nullptr;
-  }
-
-  newStore->copy(dataStore);
-  return newStore;
-}
-
 template <typename T>
 bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
 {
@@ -507,7 +144,7 @@ bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, co
     return false;
   }
   const AbstractDataStore<T>& dataStore = dataArray->getDataStoreRef();
-  auto convertedDataStore = ConvertDataStore<T>(dataStore, dataFormat);
+  auto convertedDataStore = DataStoreUtilities::ConvertDataStore<T>(dataStore, dataFormat);
   if(convertedDataStore == nullptr)
   {
     return false;

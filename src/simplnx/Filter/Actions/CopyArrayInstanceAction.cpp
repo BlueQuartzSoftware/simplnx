@@ -2,17 +2,26 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
 
 #include <fmt/core.h>
+
+using namespace nx::core;
 
 namespace
 {
 constexpr int32_t k_UnsupportedTypeError = -5001;
 
+template <typename T>
+Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPath&& path, IDataAction::Mode mode)
+{
+  auto* castInputArray = dynamic_cast<DataArray<T>*>(inputDataArray);
+  IDataStore::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();
+  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();
+  return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, path, mode);
 }
-using namespace nx::core;
+} // namespace
 
 namespace nx::core
 {
@@ -24,59 +33,53 @@ CopyArrayInstanceAction::CopyArrayInstanceAction(const DataPath& selectedDataPat
 
 CopyArrayInstanceAction::~CopyArrayInstanceAction() noexcept = default;
 
-#define CAI_BODY(type)                                                                                                                                                                                 \
-  DataArray<type>* castInputArray = dynamic_cast<DataArray<type>*>(inputDataArray);                                                                                                                    \
-  IDataStore::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();                                                                                                                  \
-  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();                                                                                                          \
-  return CreateArray<type>(dataStructure, tupleShape, componentShape, getCreatedPath(), mode);
-
 Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode) const
 {
   auto* inputDataArray = dataStructure.getDataAs<IDataArray>(m_SelectedDataPath);
 
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
   {
-    CAI_BODY(float)
+    return ::DoCopy<float32>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArray))
   {
-    CAI_BODY(double)
+    return ::DoCopy<float64>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArray))
   {
-    CAI_BODY(int8_t)
+    return ::DoCopy<int8>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArray))
   {
-    CAI_BODY(uint8_t)
+    return ::DoCopy<uint8>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArray))
   {
-    CAI_BODY(int16_t)
+    return ::DoCopy<int16>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArray))
   {
-    CAI_BODY(uint16_t)
+    return ::DoCopy<uint16>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArray))
   {
-    CAI_BODY(int32_t)
+    return ::DoCopy<int32>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArray))
   {
-    CAI_BODY(uint32_t)
+    return ::DoCopy<uint32>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArray))
   {
-    CAI_BODY(int64_t)
+    return ::DoCopy<int64>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArray))
   {
-    CAI_BODY(uint64_t)
+    return ::DoCopy<uint64>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
   if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
   {
-    CAI_BODY(bool)
+    return ::DoCopy<bool>(inputDataArray, dataStructure, getCreatedPath(), mode);
   }
 
   static constexpr StringLiteral prefix = "CopyArrayInstanceAction: ";
