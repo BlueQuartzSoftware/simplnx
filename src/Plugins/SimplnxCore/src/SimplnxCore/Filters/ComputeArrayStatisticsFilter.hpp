@@ -54,7 +54,7 @@ public:
   static inline constexpr StringLiteral k_NumUniqueValuesName_Key = "number_unique_values_name";
 
   // Version 2 keys
-  static inline constexpr StringLiteral k_RangeType_Key = "range_type";
+  static inline constexpr StringLiteral k_RangeType_Key = "range_type_index";
   static inline constexpr StringLiteral k_Range_Key = "range";
   static inline constexpr StringLiteral k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
 
