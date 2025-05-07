@@ -32,7 +32,7 @@ SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 
  */
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "",
-                     std::string fillValue = "0")
+                     std::string fillValue = "")
 {
   auto parentPath = path.getParent();
 
@@ -80,19 +80,19 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
                                              totalMemory, availableMemory));
   }
 
-  Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(fillValue);
-  if(conversionResult.invalid())
-  {
-    return ConvertResult(std::move(conversionResult));
-  }
-
   auto store = DataStoreUtilities::CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
   if(nullptr == store)
   {
     return MakeErrorResult(-265, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'", path.toString(), dataFormat));
   }
-  if(mode == IDataAction::Mode::Execute)
+  if(mode == IDataAction::Mode::Execute && !fillValue.empty())
   {
+    Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(fillValue);
+
+    if(conversionResult.invalid())
+    {
+      return ConvertResult(std::move(conversionResult));
+    }
     store->fill(conversionResult.value());
     {
       // Only base data store has initialization value

@@ -17,7 +17,8 @@
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
@@ -180,9 +181,13 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  nx::core::Result result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
@@ -217,9 +222,13 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 242);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   triangleGeom->setFaceList(*dataArray);
 
@@ -228,9 +237,13 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = ArrayCreationUtilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   triangleGeom->setVertices(*vertexArray);
 }
@@ -251,9 +264,13 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 121);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setFaceList(*dataArray);
 
@@ -262,9 +279,13 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -285,9 +306,13 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 264);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedEdgeList>(path);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setEdgeList(*dataArray);
 
@@ -296,9 +321,13 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -319,9 +348,13 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 3);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedTetList>(path);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setPolyhedraList(*dataArray);
 
@@ -330,9 +363,13 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/TetraVertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 9);
-  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -353,9 +390,13 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   REQUIRE(faceCount == 3);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = nx::core::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = nx::core::ArrayFromPath<MeshIndexType>(dataStructure, path);
+  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedHexList>(path);
+  if(dataArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setPolyhedraList(*dataArray);
 
@@ -364,9 +405,13 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   inputFile = fmt::format("{}/test/Data/HexaVertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 20);
-  result = nx::core::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = nx::core::ArrayFromPath<float>(dataStructure, path);
+  auto* vertexArray = dataStructure.getDataAs<Float32Array>(path);
+  if(vertexArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
+  }
   CsvParser::ReadFile<float, float>(inputFile, vertexArray->getDataStoreRef(), skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }

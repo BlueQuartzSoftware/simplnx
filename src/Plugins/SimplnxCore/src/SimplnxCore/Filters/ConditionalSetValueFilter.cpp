@@ -5,6 +5,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"

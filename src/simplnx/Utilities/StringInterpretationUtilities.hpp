@@ -14,82 +14,86 @@ namespace nx::core::StringInterpretationUtilities
 namespace detail
 {
 template <typename T>
-std::function<Result<T>(const std::string&)> StringInterpreterFromType()
+std::string TypeToFuncName()
 {
   if constexpr(std::is_floating_point_v<T>)
   {
     if constexpr(std::is_same_v<T, float32>)
     {
-      return [](const std::string& input) -> Result<T> {
-        try
-        {
-          float32 value = std::stof(input);
-          return {static_cast<T>(value)};
-        } catch(const std::invalid_argument& e)
-        {
-          return nx::core::MakeErrorResult<T>(
-              -10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), typeid(detail::StringInterpreterFromType<T>()).name()));
-        } catch(const std::out_of_range& e)
-        {
-          return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                                  typeid(detail::StringInterpreterFromType<T>()).name()));
-        }
-      };
+      return "std::stof";
     }
     if constexpr(std::is_same_v<T, float64>)
     {
-      return [](const std::string& input) -> Result<T> {
-        try
-        {
-          float64 value = std::stod(input);
-          return {static_cast<T>(value)};
-        } catch(const std::invalid_argument& e)
-        {
-          return nx::core::MakeErrorResult<T>(
-              -10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), typeid(detail::StringInterpreterFromType<T>()).name()));
-        } catch(const std::out_of_range& e)
-        {
-          return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                                  typeid(detail::StringInterpreterFromType<T>()).name()));
-        }
-      };
+      return "std::stod";
     }
   }
   if constexpr(std::is_unsigned_v<T>)
   {
-    return [](const std::string& input) -> Result<T> {
-      try
-      {
-        uint64 value = std::stoull(input);
-        return {static_cast<T>(value)};
-      } catch(const std::invalid_argument& e)
-      {
-        return nx::core::MakeErrorResult<T>(
-            -10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), typeid(detail::StringInterpreterFromType<T>()).name()));
-      } catch(const std::out_of_range& e)
-      {
-        return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                                typeid(detail::StringInterpreterFromType<T>()).name()));
-      }
-    };
+    return "std::stoull";
   }
 
   // is signed and not float
-  return [](const std::string& input) -> Result<T> {
-    try
+  return "std::stoll";
+}
+
+template <typename T>
+Result<T> StringInterpreterFromType(const std::string& input)
+{
+  T outputValue;
+  try
+  {
+    if constexpr(std::is_floating_point_v<T>)
     {
-      int64 value = std::stoll(input);
-      return {static_cast<T>(value)};
-    } catch(const std::invalid_argument& e)
-    {
-      return nx::core::MakeErrorResult<T>(
-          -10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), typeid(detail::StringInterpreterFromType<T>()).name()));
-    } catch(const std::out_of_range& e)
-    {
-      return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                              typeid(detail::StringInterpreterFromType<T>()).name()));
+      if constexpr(std::is_same_v<T, float32>)
+      {
+        float32 value = std::stof(input);
+        outputValue = static_cast<T>(value);
+      }
+      else if constexpr(std::is_same_v<T, float64>)
+      {
+        float64 value = std::stod(input);
+        outputValue = static_cast<T>(value);
+      }
     }
-  };
+    else
+    {
+      if constexpr(std::is_unsigned_v<T>)
+      {
+        if(!input.empty() && input.at(0) == '-')
+        {
+          return nx::core::MakeErrorResult<T>(
+              -10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+        }
+
+        uint64 value = std::stoull(input);
+        if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
+        {
+          return nx::core::MakeErrorResult<T>(
+              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+        }
+        outputValue = static_cast<T>(value);
+      }
+      else
+      {
+        // Default: is signed and not float
+        int64 value = std::stoll(input);
+        if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
+        {
+          return nx::core::MakeErrorResult<T>(
+              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+        }
+        outputValue = static_cast<T>(value);
+      }
+    }
+  } catch(const std::invalid_argument& e)
+  {
+    return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+  } catch(const std::out_of_range& e)
+  {
+    return nx::core::MakeErrorResult<T>(-10352,
+                                        fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+  }
+  return {outputValue};
 }
 } // namespace detail
 
@@ -110,7 +114,7 @@ Result<T> Convert(const std::string& input)
 
     // We are about to run the gauntlet of std::sto functions, if all of them err out true will be returned
     {
-      Result<int64> result = detail::StringInterpreterFromType<int64>()(input);
+      Result<int64> result = detail::StringInterpreterFromType<int64>(input);
       if(result.valid())
       {
         return {result.value() != 0};
@@ -118,7 +122,7 @@ Result<T> Convert(const std::string& input)
     }
 
     {
-      Result<uint64> result = detail::StringInterpreterFromType<uint64>()(input);
+      Result<uint64> result = detail::StringInterpreterFromType<uint64>(input);
       if(result.valid())
       {
         return {result.value() != 0};
@@ -126,7 +130,7 @@ Result<T> Convert(const std::string& input)
     }
 
     {
-      Result<float64> result = detail::StringInterpreterFromType<float64>()(input);
+      Result<float64> result = detail::StringInterpreterFromType<float64>(input);
       if(result.valid())
       {
         return {result.value() != 0.0};
@@ -134,7 +138,7 @@ Result<T> Convert(const std::string& input)
     }
 
     {
-      Result<float32> result = detail::StringInterpreterFromType<float32>()(input);
+      Result<float32> result = detail::StringInterpreterFromType<float32>(input);
       if(result.valid())
       {
         return {result.value() != 0.0};
@@ -144,31 +148,7 @@ Result<T> Convert(const std::string& input)
     return {true};
   }
 
-  if constexpr(!std::is_floating_point_v<T> && std::is_unsigned_v<T>)
-  {
-    if(!input.empty() && input.at(0) == '-')
-    {
-      return nx::core::MakeErrorResult<T>(-10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                              typeid(detail::StringInterpreterFromType<T>()).name()));
-    }
-  }
-
-  Result<T> result = detail::StringInterpreterFromType<T>()(input);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  if constexpr(std::is_floating_point_v<T>)
-  {
-    if(result.value() > std::numeric_limits<T>::max() || result.value() < std::numeric_limits<T>::min())
-    {
-      return nx::core::MakeErrorResult<T>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()),
-                                                              typeid(detail::StringInterpreterFromType<T>()).name()));
-    }
-  }
-
-  return result;
+  return detail::StringInterpreterFromType<T>(input);
 }
 
 Result<> CheckValueConverts(DataType type, const std::string& value);

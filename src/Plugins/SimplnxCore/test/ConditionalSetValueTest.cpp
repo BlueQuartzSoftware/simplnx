@@ -2,8 +2,8 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -300,14 +300,13 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[Conditiona
   nx::core::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataStructure.getData(ciDataPath);
 
-  DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
+  auto* ciDataArray = dataStructure.getDataAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
   ciDataArray->fill(10.0);
 
   const std::string removeStr = "10.0";
-  const auto removeVal = static_cast<float32>(ConvertTo<float32>::convert(removeStr).value());
+  const auto removeVal = static_cast<float32>(StringInterpretationUtilities::Convert<float32>(removeStr).value());
 
   args.insertOrAssign(ConditionalSetValueFilter::k_UseConditional_Key, std::make_any<bool>(false));
   args.insertOrAssign(ConditionalSetValueFilter::k_RemoveValue_Key, std::make_any<std::string>(removeStr));

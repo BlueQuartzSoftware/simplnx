@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -67,7 +67,7 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   DataStructure dataStructure;
   IDataStore::ShapeType tupleShape{k_NumTuples};
   IDataStore::ShapeType componentShape{k_NumComponents};
-  Result<> result = CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
+  Result<> result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
   REQUIRE(result.valid() == true);
 
   auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(k_DataPath);

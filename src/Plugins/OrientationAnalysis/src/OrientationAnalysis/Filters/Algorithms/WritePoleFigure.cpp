@@ -12,9 +12,11 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/RTree.hpp"
@@ -272,7 +274,7 @@ public:
     using DimensionType = std::vector<size_t>;
 
     DimensionType faceTupleShape = {0};
-    Result result = CreateArray<IGeometry::MeshIndexType>(dataStructure, faceTupleShape, {3ULL}, sharedFaceListPath, IDataAction::Mode::Execute);
+    Result result = ArrayCreationUtilities::CreateArray<IGeometry::MeshIndexType>(dataStructure, faceTupleShape, {3ULL}, sharedFaceListPath, IDataAction::Mode::Execute);
     if(result.invalid())
     {
       return -1;
@@ -285,13 +287,17 @@ public:
     DataPath vertexPath({"Delaunay", "SharedVertexList"});
 
     DimensionType vertexTupleShape = {0};
-    result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, IDataAction::Mode::Execute);
+    result = ArrayCreationUtilities::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, IDataAction::Mode::Execute);
     if(result.invalid())
     {
       return -2;
       // return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
     }
-    Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
+    auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+    if(vertexArray == nullptr)
+    {
+      throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+    }
     triangleGeom.setVertices(*vertexArray);
     triangleGeom.resizeVertexList(numPts);
 
@@ -674,12 +680,12 @@ Result<> WritePoleFigure::operator()()
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
   {
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
@@ -819,13 +825,13 @@ Result<> WritePoleFigure::operator()()
       {
         const std::vector<size_t> intensityImageDims = {static_cast<usize>(config.imageDim), static_cast<usize>(config.imageDim), 1ULL};
         DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
-        Result<> result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+        Result<> result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
 
         arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name));
-        result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+        result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
 
         arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name));
-        result = CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+        result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
       }
 
       auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name)));
@@ -1069,7 +1075,7 @@ Result<> WritePoleFigure::operator()()
         tupleShape[2] = pageWidth;
         // Create an output array to hold the RGB formatted color image
         auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("Phase_{}", phase));
-        auto arrayCreationResult = nx::core::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
+        auto arrayCreationResult = ArrayCreationUtilities::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
         if(arrayCreationResult.invalid())
         {
           return arrayCreationResult;

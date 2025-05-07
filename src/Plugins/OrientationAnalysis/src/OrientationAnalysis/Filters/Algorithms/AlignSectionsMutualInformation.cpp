@@ -47,7 +47,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   {
     try
     {
-      m_MaskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_MaskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

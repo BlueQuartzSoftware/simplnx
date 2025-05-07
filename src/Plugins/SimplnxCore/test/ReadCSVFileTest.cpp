@@ -7,7 +7,7 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -153,7 +153,7 @@ void TestCase_TestPrimitives(nonstd::span<std::string> values)
   REQUIRE(values.size() == array->getSize());
   for(int i = 0; i < values.size(); i++)
   {
-    Result<T> parseResult = ConvertTo<T>::convert(values[i]);
+    Result<T> parseResult = StringInterpretationUtilities::Convert<T>(values[i]);
     SIMPLNX_RESULT_REQUIRE_VALID(parseResult);
     const auto& exemplaryValue = parseResult.value();
     const auto& testValue = array->at(i);
@@ -319,52 +319,52 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 3): Invalid filter execution - O
 
   // Int64 - Out of bounds
   v = {"-9223372036854775809"};
-  TestCase_TestPrimitives_Error<int64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<int64>(v, -10352);
 
   v = {"9223372036854775808"};
-  TestCase_TestPrimitives_Error<int64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<int64>(v, -10352);
 
   // UInt8 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint8>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<uint8>(v, -10350);
 
   v = {"256"};
   TestCase_TestPrimitives_Error<uint8>(v, k_OverflowErrorCode);
 
   // UInt16 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint16>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<uint16>(v, -10350);
 
   v = {"65536"};
   TestCase_TestPrimitives_Error<uint16>(v, k_OverflowErrorCode);
 
   // UInt32 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint32>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<uint32>(v, -10350);
 
   v = {"4294967296"};
   TestCase_TestPrimitives_Error<uint32>(v, k_OverflowErrorCode);
 
   // UInt64 - Out of bounds
   v = {"-1"};
-  TestCase_TestPrimitives_Error<uint64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<uint64>(v, -10350);
 
   v = {"18446744073709551616"};
-  TestCase_TestPrimitives_Error<uint64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<uint64>(v, -10352);
 
   // Float32 - Out of bounds
   v = {"-3.5E38"};
-  TestCase_TestPrimitives_Error<float32>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<float32>(v, -10352);
 
   v = {"3.5E38"};
-  TestCase_TestPrimitives_Error<float32>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<float32>(v, -10352);
 
   // Float64 - Out of bounds
   v = {"-1.8E308"};
-  TestCase_TestPrimitives_Error<float64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<float64>(v, -10352);
 
   v = {"1.8E308"};
-  TestCase_TestPrimitives_Error<float64>(v, k_OverflowErrorCode);
+  TestCase_TestPrimitives_Error<float64>(v, -10352);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 4): Invalid filter execution - Invalid arguments")

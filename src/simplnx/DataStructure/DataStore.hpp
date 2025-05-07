@@ -211,10 +211,10 @@ public:
   /**
    * @brief This method copies a value to the member variable m_InitValue
    */
-   void setInitValue(T value)
-   {
-     m_InitValue = value;
-   }
+  void setInitValue(T value)
+  {
+    m_InitValue = value;
+  }
 
   /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.

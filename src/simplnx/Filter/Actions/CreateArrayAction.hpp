@@ -20,7 +20,7 @@ class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "0");
+  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
 
   ~CreateArrayAction() noexcept override;
 
@@ -86,6 +86,6 @@ private:
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
   std::string m_DataFormat = "";
-  std::string m_FillValue = "0";
+  std::string m_FillValue = "";
 };
 } // namespace nx::core

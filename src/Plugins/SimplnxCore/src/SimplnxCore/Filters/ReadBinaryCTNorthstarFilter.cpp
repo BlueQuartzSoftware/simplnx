@@ -11,8 +11,8 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fstream>
@@ -109,7 +109,7 @@ Result<std::vector<std::pair<fs::path, usize>>> ReadFileList(std::ifstream& inSt
 
       if(tokens[0] == "<NbSlices>")
       {
-        Result<usize> result = ConvertTo<usize>::convert(tokens[1]);
+        Result<usize> result = StringInterpretationUtilities::Convert<usize>(tokens[1]);
         if(result.invalid())
         {
           const Error& err = result.errors()[0];
@@ -145,7 +145,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
   {
     if(tokens[0] == "<Min>")
     {
-      Result<float32> result = ConvertTo<float32>::convert(tokens[1]);
+      Result<float32> result = StringInterpretationUtilities::Convert<float32>(tokens[1]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -154,7 +154,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
       }
       minLocation[1] = result.value();
 
-      result = ConvertTo<float32>::convert(tokens[2]);
+      result = StringInterpretationUtilities::Convert<float32>(tokens[2]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -163,7 +163,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
       }
       minLocation[2] = result.value();
 
-      result = ConvertTo<float32>::convert(tokens[3]);
+      result = StringInterpretationUtilities::Convert<float32>(tokens[3]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -174,7 +174,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
     }
     else if(tokens[0] == "<Max>")
     {
-      Result<float32> result = ConvertTo<float32>::convert(tokens[1]);
+      Result<float32> result = StringInterpretationUtilities::Convert<float32>(tokens[1]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -183,7 +183,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
       }
       maxLocation[1] = result.value();
 
-      result = ConvertTo<float32>::convert(tokens[2]);
+      result = StringInterpretationUtilities::Convert<float32>(tokens[2]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -192,7 +192,7 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
       }
       maxLocation[2] = result.value();
 
-      result = ConvertTo<float32>::convert(tokens[3]);
+      result = StringInterpretationUtilities::Convert<float32>(tokens[3]);
       if(result.invalid())
       {
         const Error& err = result.errors()[0];
@@ -218,7 +218,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
 {
   std::vector<usize> voxels = {0, 0, 0};
 
-  Result<usize> result = ConvertTo<usize>::convert(tokens[1]);
+  Result<usize> result = StringInterpretationUtilities::Convert<usize>(tokens[1]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -227,7 +227,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
   }
   voxels[1] = result.value();
 
-  result = ConvertTo<usize>::convert(tokens[2]);
+  result = StringInterpretationUtilities::Convert<usize>(tokens[2]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -236,7 +236,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
   }
   voxels[2] = result.value();
 
-  result = ConvertTo<usize>::convert(tokens[3]);
+  result = StringInterpretationUtilities::Convert<usize>(tokens[3]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];

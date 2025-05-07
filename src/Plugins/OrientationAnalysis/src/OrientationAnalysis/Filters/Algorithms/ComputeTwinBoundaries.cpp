@@ -3,7 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -151,7 +151,7 @@ class CalculateTwinBoundaryWithIncoherenceImpl
 public:
   CalculateTwinBoundaryWithIncoherenceImpl(float32 angtol, float32 axistol, const Int32AbstractDataStore& faceLabels, const Float64AbstractDataStore& faceNormals,
                                            const Float32AbstractDataStore& avgQuats, const Int32AbstractDataStore& featurePhases, const UInt32AbstractDataStore& crystalStructures,
-                                           std::unique_ptr<MaskCompare>& twinBoundaries, Float32AbstractDataStore& twinBoundaryIncoherence, const std::atomic_bool& shouldCancel,
+                                           std::unique_ptr<MaskCompareUtilities::MaskCompare>& twinBoundaries, Float32AbstractDataStore& twinBoundaryIncoherence, const std::atomic_bool& shouldCancel,
                                            std::atomic_bool& hasNaN)
   : m_AxisTol(axistol)
   , m_AngTol(angtol)
@@ -225,7 +225,7 @@ private:
   const Float32AbstractDataStore& m_AvgQuats;
   const Int32AbstractDataStore& m_FeaturePhases;
   const UInt32AbstractDataStore& m_CrystalStructures;
-  std::unique_ptr<MaskCompare>& m_TwinBoundaries;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_TwinBoundaries;
   Float32AbstractDataStore& m_TwinBoundaryIncoherence;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool& m_HasNaN;
@@ -240,7 +240,7 @@ class CalculateTwinBoundaryImpl
 {
 public:
   CalculateTwinBoundaryImpl(float32 angtol, float32 axistol, const Int32AbstractDataStore& faceLabels, const Float32AbstractDataStore& avgQuats, const Int32AbstractDataStore& featurePhases,
-                            const UInt32AbstractDataStore& crystalStructures, std::unique_ptr<MaskCompare>& twinBoundaries, const std::atomic_bool& shouldCancel)
+                            const UInt32AbstractDataStore& crystalStructures, std::unique_ptr<MaskCompareUtilities::MaskCompare>& twinBoundaries, const std::atomic_bool& shouldCancel)
   : m_AxisTol(axistol)
   , m_AngTol(angtol)
   , m_FaceLabels(faceLabels)
@@ -292,7 +292,7 @@ private:
   const Float32AbstractDataStore& m_AvgQuats;
   const Int32AbstractDataStore& m_FeaturePhases;
   const UInt32AbstractDataStore& m_CrystalStructures;
-  std::unique_ptr<MaskCompare>& m_TwinBoundaries;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_TwinBoundaries;
   const std::atomic_bool& m_ShouldCancel;
   std::vector<LaueOps::Pointer> m_OrientationOps;
 };
@@ -347,10 +347,10 @@ Result<> ComputeTwinBoundaries::operator()()
   const auto& avgQuats = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
   const auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
 
-  std::unique_ptr<MaskCompare> twinBoundaries;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> twinBoundaries;
   try
   {
-    twinBoundaries = InstantiateMaskCompare(m_DataStructure, m_InputValues->TwinBoundariesArrayPath);
+    twinBoundaries = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->TwinBoundariesArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

@@ -38,7 +38,7 @@ Result<> CAxisSegmentFeatures::operator()()
   {
     try
     {
-      m_GoodVoxelsArray = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_GoodVoxelsArray = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range&)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
