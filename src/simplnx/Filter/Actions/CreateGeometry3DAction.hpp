@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
@@ -196,23 +196,31 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      Result result = CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString())));
       }
-      SharedCellList* polyhedronList = ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
+      auto* polyhedronList = dataStructure.getDataAs<SharedCellList>(cellsPath);
+      if(polyhedronList == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", cellsPath.toString()));
+      }
       geometry3d->setPolyhedraList(*polyhedronList);
 
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
-      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
+      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArray == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+      }
       geometry3d->setVertices(*vertexArray);
     }
 

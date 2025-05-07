@@ -5,9 +5,9 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 using namespace nx::core;
 
@@ -20,7 +20,7 @@ constexpr int32 k_ConvertReplaceValueTypeError = -125;
 template <typename ScalarType>
 ScalarType convertFromStringToType(const std::string& convertValue)
 {
-  Result<ScalarType> convertResult = ConvertTo<ScalarType>::convert(convertValue);
+  Result<ScalarType> convertResult = StringInterpretationUtilities::Convert<ScalarType>(convertValue);
 
   if(convertResult.invalid())
   {

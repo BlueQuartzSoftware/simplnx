@@ -3,9 +3,9 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include <random>
-#include <simplnx/Utilities/DataArrayUtilities.hpp>
 
 using namespace nx::core;
 
@@ -137,12 +137,12 @@ Result<> ComputeFeatureClustering::operator()()
   auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->ClusteringListArrayName);
   auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
   auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
-  std::unique_ptr<MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   if(m_InputValues->RemoveBiasedFeatures)
   {
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->BiasedFeaturesArrayPath);
+      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->BiasedFeaturesArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

@@ -1,10 +1,11 @@
 #include "DBSCAN.hpp"
 
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <fmt/format.h>
@@ -20,7 +21,7 @@ private:
   using AbstractDataStoreT = AbstractDataStore<T>;
 
 public:
-  FindEpsilonNeighborhoodsImpl(DBSCAN* filter, float64 epsilon, const AbstractDataStoreT& inputData, const std::unique_ptr<MaskCompare>& mask, usize numCompDims, usize numTuples,
+  FindEpsilonNeighborhoodsImpl(DBSCAN* filter, float64 epsilon, const AbstractDataStoreT& inputData, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize numCompDims, usize numTuples,
                                ClusterUtilities::DistanceMetric distMetric, std::vector<std::list<usize>>& neighborhoods)
   : m_Filter(filter)
   , m_Epsilon(epsilon)
@@ -77,7 +78,7 @@ private:
   DBSCAN* m_Filter;
   float64 m_Epsilon;
   const AbstractDataStoreT& m_InputDataStore;
-  const std::unique_ptr<MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   usize m_NumCompDims;
   usize m_NumTuples;
   ClusterUtilities::DistanceMetric m_DistMetric;
@@ -91,8 +92,8 @@ private:
   using AbstractDataStoreT = AbstractDataStore<T>;
 
 public:
-  DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore, float32 epsilon, int32 minPoints,
-                 ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore,
+                 float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputDataStore(inputDataStore)
   , m_Mask(maskDataArray)
@@ -288,7 +289,7 @@ public:
 private:
   DBSCAN* m_Filter;
   const AbstractDataStoreT& m_InputDataStore;
-  const std::unique_ptr<MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   AbstractDataStore<int32>& m_FeatureIds;
   float32 m_Epsilon;
   int32 m_MinPoints;
@@ -299,8 +300,8 @@ private:
 struct DBSCANFunctor
 {
   template <typename T>
-  void operator()(bool cache, bool useRandom, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompare>& maskCompare, Int32Array& fIds, float32 epsilon, int32 minPoints,
-                  ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  void operator()(bool cache, bool useRandom, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, Int32Array& fIds,
+                  float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   {
     if(cache)
     {
@@ -358,10 +359,10 @@ Result<> DBSCAN::operator()()
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  std::unique_ptr<MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

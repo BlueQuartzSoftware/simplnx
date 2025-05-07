@@ -540,6 +540,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
@@ -741,6 +742,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
@@ -748,6 +750,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp

@@ -1,26 +1,19 @@
 #pragma once
 
+#include "simplnx/simplnx_export.hpp"
+
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/EmptyDataStore.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
-#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
-#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
-#include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/TemplateHelpers.hpp"
-#include "simplnx/simplnx_export.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -198,30 +191,6 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 }
 
 /**
- * @brief Attempts to retrieve a DataArray at a given DataPath in the DataStructure. Throws runtime_error on error
- * @tparam T
- * @param data
- * @param path
- * @return
- */
-template <class T>
-DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
-{
-  using DataArrayType = DataArray<T>;
-  DataObject* objectPtr = dataStructure.getData(path);
-  if(objectPtr == nullptr)
-  {
-    throw std::runtime_error(fmt::format("DataArray does not exist at DataPath: '{}'", path.toString()));
-  }
-  auto* dataArray = dynamic_cast<DataArrayType*>(objectPtr);
-  if(dataArray == nullptr)
-  {
-    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
-  }
-  return dataArray;
-}
-
-/**
  * @brief
  * @tparam T
  * @param data
@@ -376,15 +345,6 @@ Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, 
 SIMPLNX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode);
 
 /**
- * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected NumericType
- *
- * @param value The string value that is to be parsed
- * @param numericType The NumericType to parse the value into.
- * @return
- */
-SIMPLNX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType numericType);
-
-/**
  * @brief This method will ensure that all the arrays are of the same type
  * @param dataStructure DataStructure that contains the data arrays
  * @param dataArrayPaths  The Paths to check
@@ -418,163 +378,6 @@ SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const
  * @param neighborListPath The path to the NeighborList to be initialized.
  */
 SIMPLNX_EXPORT void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighborListPath);
-
-/**
- * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
- * for the developer. There is virtual function call overhead with using these structs and functions.
- *
- * An example use of these functions would be the following:
- * @code
- *  std::unique_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
- *  if(!maskCompare->bothTrue(arrayIndex, anotherArrayIndex))
- *  {
- *    // Do something based on the if statement...
- *  }
- * @endcode
- */
-struct MaskCompare
-{
-  virtual ~MaskCompare() noexcept = default;
-
-  /**
-   * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
-   * *both* of the values are false, this will return false.
-   * @param indexA First index
-   * @param indexB Second index
-   * @return
-   */
-  virtual bool bothTrue(usize indexA, usize indexB) const = 0;
-
-  /**
-   * @brief Both of the values pointed to by the index *must* be `false` or non-zero. If either of the values or
-   * *both* of the values are `true`, this will return `false`.
-   * @param indexA
-   * @param indexB
-   * @return
-   */
-  virtual bool bothFalse(usize indexA, usize indexB) const = 0;
-
-  /**
-   * @brief Returns `true` or `false` based on the value at the index
-   * @param index index to check
-   * @return
-   */
-  virtual bool isTrue(usize index) const = 0;
-
-  virtual void setValue(usize index, bool val) = 0;
-
-  virtual usize getNumberOfTuples() const = 0;
-
-  virtual usize getNumberOfComponents() const = 0;
-
-  virtual usize countTrueValues() const = 0;
-};
-
-struct BoolMaskCompare : public MaskCompare
-{
-  BoolMaskCompare(AbstractDataStore<bool>& dataStore)
-  : m_DataStore(dataStore)
-  {
-  }
-  ~BoolMaskCompare() noexcept override = default;
-
-  AbstractDataStore<bool>& m_DataStore;
-  bool bothTrue(usize indexA, usize indexB) const override
-  {
-    return m_DataStore.at(indexA) && m_DataStore.at(indexB);
-  }
-  bool bothFalse(usize indexA, usize indexB) const override
-  {
-    return !m_DataStore.at(indexA) && !m_DataStore.at(indexB);
-  }
-  bool isTrue(usize index) const override
-  {
-    return m_DataStore.at(index);
-  }
-  void setValue(usize index, bool val) override
-  {
-    m_DataStore[index] = val;
-  }
-  usize getNumberOfTuples() const override
-  {
-    return m_DataStore.getNumberOfTuples();
-  }
-  usize getNumberOfComponents() const override
-  {
-    return m_DataStore.getNumberOfComponents();
-  }
-
-  usize countTrueValues() const override
-  {
-    return std::count(m_DataStore.begin(), m_DataStore.end(), true);
-  }
-};
-
-struct UInt8MaskCompare : public MaskCompare
-{
-  UInt8MaskCompare(AbstractDataStore<uint8>& dataStore)
-  : m_DataStore(dataStore)
-  {
-  }
-  ~UInt8MaskCompare() noexcept override = default;
-
-  AbstractDataStore<uint8>& m_DataStore;
-  bool bothTrue(usize indexA, usize indexB) const override
-  {
-    return m_DataStore.at(indexA) != 0 && m_DataStore.at(indexB) != 0;
-  }
-  bool bothFalse(usize indexA, usize indexB) const override
-  {
-    return m_DataStore.at(indexA) == 0 && m_DataStore.at(indexB) == 0;
-  }
-  bool isTrue(usize index) const override
-  {
-    return m_DataStore.at(index) != 0;
-  }
-  void setValue(usize index, bool val) override
-  {
-    m_DataStore[index] = static_cast<uint8>(val);
-  }
-  usize getNumberOfTuples() const override
-  {
-    return m_DataStore.getNumberOfTuples();
-  }
-  usize getNumberOfComponents() const override
-  {
-    return m_DataStore.getNumberOfComponents();
-  }
-
-  usize countTrueValues() const override
-  {
-    const usize falseCount = std::count(m_DataStore.begin(), m_DataStore.end(), 0);
-    return getNumberOfTuples() - falseCount;
-  }
-};
-
-/**
- * @brief Convenience method to create an instance of the MaskCompare subclass.
- *
- * An example use of these functions would be the following:
- * @code
- *  std::unique_ptr<MaskCompare> maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->goodVoxelsArrayPath);
- *  if(!maskCompare->bothTrue(arrayIndex, anotherArrayIndex))
- *  {
- *    // Do something based on the if statement...
- *  }
- * @endcode
- *
- * @param dataStructure The DataStructure object to pull the DataArray from
- * @param maskArrayPath The DataPath of the mask array.
- * @return
- */
-SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath);
-
-/**
- * @brief Convenience method to create an instance of the MaskCompare subclass
- * @param maskArrayPtr A Pointer to the mask array which can be of either `bool` or `uint8` type.
- * @return
- */
-SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
 
 template <typename T>
 class CopyTupleUsingIndexList

@@ -2,7 +2,6 @@
 
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/core.h>
 
@@ -191,7 +190,11 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  Float32Array* boundsArray = ArrayFromPath<float>(dataStructure, boundsPath);
+  auto* boundsArray = dataStructure.getDataAs<Float32Array>(boundsPath);
+  if(boundsArray == nullptr)
+  {
+    throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", boundsPath.toString()));
+  }
 
   return boundsArray;
 }

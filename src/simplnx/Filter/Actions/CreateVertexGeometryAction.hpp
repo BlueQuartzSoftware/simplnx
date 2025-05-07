@@ -7,7 +7,6 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
@@ -155,7 +154,11 @@ public:
       {
         return result;
       }
-      const Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArray == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+      }
       vertexGeom->setVertices(*vertexArray);
     }
 

@@ -9,7 +9,9 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -26,7 +28,7 @@ struct CreateAndInitArrayFunctor
   template <class T>
   void operator()(IDataArray* iDataArray, const std::string& initValue)
   {
-    Result<T> result = ConvertTo<T>::convert(initValue);
+    Result<T> result = StringInterpretationUtilities::Convert<T>(initValue);
 
     auto* dataStore = iDataArray->template getIDataStoreAs<AbstractDataStore<T>>();
     dataStore->fill(result.value());
@@ -131,7 +133,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
   // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
-  Result<> result = CheckValueConverts(initValue, numericType);
+  Result<> result = StringInterpretationUtilities::CheckValueConverts(ConvertNumericTypeToDataType(numericType), initValue);
   if(result.invalid())
   {
     return {ConvertResultTo<OutputActions>(std::move(result), {})};

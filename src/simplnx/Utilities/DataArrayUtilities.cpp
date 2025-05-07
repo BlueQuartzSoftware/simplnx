@@ -3,10 +3,12 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
-#include <set>
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
+#include "simplnx/Utilities/TemplateHelpers.hpp"
 
 using namespace nx::core;
 
@@ -35,50 +37,11 @@ struct InitializeNeighborListFunctor
 namespace nx::core
 {
 //-----------------------------------------------------------------------------
-Result<> CheckValueConverts(const std::string& value, NumericType numericType)
-{
-  switch(numericType)
-  {
-  case NumericType::int8: {
-    return ConvertResult(StringInterpretationUtilities::Convert<int8>(value));
-  }
-  case NumericType::uint8: {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint8>(value));
-  }
-  case NumericType::int16: {
-    return ConvertResult(StringInterpretationUtilities::Convert<int16>(value));
-  }
-  case NumericType::uint16: {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint16>(value));
-  }
-  case NumericType::int32: {
-    return ConvertResult(StringInterpretationUtilities::Convert<int32>(value));
-  }
-  case NumericType::uint32: {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint32>(value));;
-  }
-  case NumericType::int64: {
-    return ConvertResult(StringInterpretationUtilities::Convert<int64>(value));
-  }
-  case NumericType::uint64: {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint64>(value));
-  }
-  case NumericType::float32: {
-    return ConvertResult(StringInterpretationUtilities::Convert<float32>(value));
-  }
-  case NumericType::float64: {
-    return ConvertResult(StringInterpretationUtilities::Convert<float64>(value));;
-  }
-  }
-  return MakeErrorResult(-10102, fmt::format("CheckInitValueConverts: Cannot convert input value '{}' to type '{}'", value, NumericTypeToString(numericType)));
-}
-
-//-----------------------------------------------------------------------------
 Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
 {
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(&inputDataArray))
   {
-    return ConvertResult(StringInterpretationUtilities::Convert<float32>(value));;
+    return ConvertResult(StringInterpretationUtilities::Convert<float32>(value));
   }
   if(TemplateHelpers::CanDynamicCast<Float64Array>()(&inputDataArray))
   {
@@ -251,30 +214,6 @@ void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighb
 {
   auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(neighborListPath);
   ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborListPtr->getDataType(), neighborListPtr);
-}
-
-//-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
-{
-  auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
-
-  return InstantiateMaskCompare(maskArray);
-}
-
-//-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
-{
-  switch(maskArray.getDataType())
-  {
-  case DataType::boolean: {
-    return std::make_unique<BoolMaskCompare>(dynamic_cast<BoolArray&>(maskArray).getDataStoreRef());
-  }
-  case DataType::uint8: {
-    return std::make_unique<UInt8MaskCompare>(dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef());
-  }
-  default:
-    throw std::runtime_error("InstantiateMaskCompare: The Mask Array being used is NOT of type bool or uint8.");
-  }
 }
 
 //-----------------------------------------------------------------------------

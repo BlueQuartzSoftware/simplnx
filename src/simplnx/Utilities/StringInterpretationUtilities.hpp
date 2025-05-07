@@ -171,4 +171,5 @@ Result<T> Convert(const std::string& input)
   return result;
 }
 
+Result<> CheckValueConverts(DataType type, const std::string& value);
 } // namespace nx::core::StringInterpretationUtilities
