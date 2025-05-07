@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -39,9 +40,8 @@ Result<usize> countSamplesForEdge(const Float32Array& edgeVertices, const UInt64
   return {computeNumSamplePoints(dist, samplingRes)};
 }
 
-Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, std::optional<Float32Array> powerArray, std::optional<Int32Array> sliceIdsArray, float32 samplingRes,
-                    Float32Array& vertices, std::optional<Float32Array> pointPowerArray, std::optional<Int32Array> pointSliceIdsArray, std::optional<UInt64Array> pointEdgeIdsArray,
-                    std::optional<Float32Array> cumulativeSampleDistArray, int64& vertCount)
+Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, Float32Array* powerArrayPtr, Int32Array* sliceIdsArrayPtr, float32 samplingRes, Float32Array& vertices,
+                    Float32Array* pointPowerArrayPtr, Int32Array* pointSliceIdsArrayPtr, UInt64Array* pointEdgeIdsArrayPtr, Float32Array* cumulativeSampleDistArrayPtr, int64& vertCount)
 {
   auto result = computeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
@@ -68,21 +68,21 @@ Result<> sampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Arr
     vertices[3 * vertCount] = startX + delX * static_cast<float32>(j);
     vertices[3 * vertCount + 1] = startY + delY * static_cast<float32>(j);
     vertices[3 * vertCount + 2] = startZ + delZ * static_cast<float32>(j);
-    if(powerArray.has_value() && powerArray.has_value())
+    if(nullptr != powerArrayPtr)
     {
-      pointPowerArray.value()[vertCount] = powerArray.value()[edgeIndex];
+      pointPowerArrayPtr->setValue(vertCount, powerArrayPtr->at(edgeIndex));
     }
-    if(pointSliceIdsArray.has_value() && sliceIdsArray.has_value())
+    if(pointSliceIdsArrayPtr != nullptr && sliceIdsArrayPtr != nullptr)
     {
-      pointSliceIdsArray.value()[vertCount] = sliceIdsArray.value()[edgeIndex];
+      pointSliceIdsArrayPtr->setValue(vertCount, sliceIdsArrayPtr->at(edgeIndex));
     }
-    if(pointEdgeIdsArray.has_value())
+    if(pointEdgeIdsArrayPtr != nullptr)
     {
-      pointEdgeIdsArray.value()[vertCount] = edgeIndex;
+      pointEdgeIdsArrayPtr->setValue(vertCount, edgeIndex);
     }
-    if(cumulativeSampleDistArray.has_value())
+    if(cumulativeSampleDistArrayPtr != nullptr)
     {
-      cumulativeSampleDistArray.value()[vertCount] = step * static_cast<float32>(j);
+      cumulativeSampleDistArrayPtr->setValue(vertCount, step * static_cast<float32>(j));
     }
     ++vertCount;
   }
@@ -107,22 +107,56 @@ SampleScanVectors::~SampleScanVectors() noexcept = default;
 Result<> SampleScanVectors::operator()()
 {
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->ScanVectorGeometryPath);
-  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->SampledVertexGeometryPath);
-  auto& powerArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->PowerArrayPath);
-  auto& sliceIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SliceIdArrayPath);
+  auto numEdges = edgeGeom.getNumberOfEdges();
 
-  auto& pointPowerArray =
-      m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(powerArray.getName()));
-  auto& pointSliceIdsArray =
-      m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(sliceIdsArray.getName()));
-  auto& pointEdgeIdsArray =
-      m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->EdgeIdsArrayName));
-  auto& cumulativeSampleDistArray = m_DataStructure.getDataRefAs<Float32Array>(
-      m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->CumulativeSampleDistanceArrayName));
+  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->SampledVertexGeometryPath);
+
+  // These are optional and may not exist
+  Float32Array* powerArrayPtr = nullptr;
+  Float32Array* pointPowerArrayPtr = nullptr;
+
+  if(m_InputValues->CopyPowerData)
+  {
+    powerArrayPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->PowerArrayPath);
+    if(powerArrayPtr->getNumberOfTuples() != numEdges)
+    {
+      return MakeErrorResult(5330, fmt::format("Selected Power Array '{}' does not have the correct number of tuples. Required: {}  Current: {}", m_InputValues->PowerArrayPath.toString(), numEdges,
+                                               powerArrayPtr->getNumberOfTuples()));
+    }
+    pointPowerArrayPtr =
+        m_DataStructure.getDataAs<Float32Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(powerArrayPtr->getName()));
+  }
+
+  Int32Array* sliceIdsArrayPtr = nullptr;
+  Int32Array* pointSliceIdsArrayPtr = nullptr;
+  if(m_InputValues->CopySliceIds)
+  {
+    sliceIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->SliceIdArrayPath);
+    if(sliceIdsArrayPtr->getNumberOfTuples() != numEdges)
+    {
+      return MakeErrorResult(5330, fmt::format("Selected Slice Ids Array '{}' does not have the correct number of tuples. Required: {}  Current: {}", m_InputValues->SliceIdArrayPath.toString(),
+                                               numEdges, sliceIdsArrayPtr->getNumberOfTuples()));
+    }
+    pointSliceIdsArrayPtr =
+        m_DataStructure.getDataAs<Int32Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(sliceIdsArrayPtr->getName()));
+  }
+
+  UInt64Array* pointEdgeIdsArrayPtr = nullptr;
+  if(m_InputValues->CopyEdgeIds)
+  {
+    pointEdgeIdsArrayPtr =
+        m_DataStructure.getDataAs<UInt64Array>(m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->EdgeIdsArrayName));
+  }
+
+  Float32Array* cumulativeSampleDistArrayPtr = nullptr;
+  if(m_InputValues->CalculateCumulativeSampleDistance)
+  {
+    cumulativeSampleDistArrayPtr = m_DataStructure.getDataAs<Float32Array>(
+        m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->CumulativeSampleDistanceArrayName));
+  }
 
   // --- Step 1: Count how many total sample points to generate ---
   m_MessageHandler(IFilter::Message::Type::Info, "Counting total sample points for all scan vectors...");
-  usize numEdges = edgeGeom.getNumberOfEdges();
   usize numVertices = 0;
 
   auto& edgeVertices = edgeGeom.getVerticesRef();
@@ -159,8 +193,8 @@ Result<> SampleScanVectors::operator()()
     {
       return {};
     }
-    sampleEdge(i, edgeVertices, edges, powerArray, sliceIdsArray, m_InputValues->ScanVectorSamplingRes, vertices, pointPowerArray, pointSliceIdsArray, pointEdgeIdsArray, cumulativeSampleDistArray,
-               vertCount);
+    sampleEdge(i, edgeVertices, edges, powerArrayPtr, sliceIdsArrayPtr, m_InputValues->ScanVectorSamplingRes, vertices, pointPowerArrayPtr, pointSliceIdsArrayPtr, pointEdgeIdsArrayPtr,
+               cumulativeSampleDistArrayPtr, vertCount);
   }
 
   return {};
