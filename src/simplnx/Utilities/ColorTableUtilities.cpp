@@ -26,7 +26,7 @@ bool ColorTableUtilities::IsValidPreset(const nlohmann::json& preset)
 bool ColorTableUtilities::IsValidIndexedPreset(const nlohmann::json& preset)
 {
   const bool hasIndexedColors = preset.contains("IndexedColors");
-  const bool indexedColorsIsArray = (hasIndexedColors && preset["IndexedColors"].is_array() ? true : false);
+  const bool indexedColorsIsArray = hasIndexedColors && preset["IndexedColors"].is_array();
   return indexedColorsIsArray;
 }
 
