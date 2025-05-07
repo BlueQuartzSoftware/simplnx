@@ -61,6 +61,12 @@ Result<T> StringInterpreterFromType(const std::string& input)
       {
         if(!input.empty() && input.at(0) == '-')
         {
+#ifdef __APPLE__
+          if(std::is_same_v<T, usize>)
+          {
+            return nx::core::MakeErrorResult<T>(-10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
+          }
+#endif
           return nx::core::MakeErrorResult<T>(
               -10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
         }
@@ -68,6 +74,12 @@ Result<T> StringInterpreterFromType(const std::string& input)
         uint64 value = std::stoull(input);
         if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
         {
+#ifdef __APPLE__
+          if(std::is_same_v<T, usize>)
+          {
+            return nx::core::MakeErrorResult<T>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
+          }
+#endif
           return nx::core::MakeErrorResult<T>(
               -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
         }
@@ -87,9 +99,21 @@ Result<T> StringInterpreterFromType(const std::string& input)
     }
   } catch(const std::invalid_argument& e)
   {
+#ifdef __APPLE__
+    if(std::is_same_v<T, usize>)
+    {
+      return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
+    }
+#endif
     return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
   } catch(const std::out_of_range& e)
   {
+#ifdef __APPLE__
+    if(std::is_same_v<T, usize>)
+    {
+      return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
+    }
+#endif
     return nx::core::MakeErrorResult<T>(-10352,
                                         fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
   }
