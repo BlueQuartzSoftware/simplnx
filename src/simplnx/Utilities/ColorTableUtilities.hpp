@@ -18,6 +18,10 @@ namespace nx::core::ColorTableUtilities
  */
 SIMPLNX_EXPORT Result<nlohmann::json> LoadAllRGBPresets();
 
+SIMPLNX_EXPORT Result<nlohmann::json> LoadAllIndexedPresets();
+
+SIMPLNX_EXPORT Result<nlohmann::json> LoadAllPresets();
+
 /**
  * @brief ExtractControlPoints This method will create a 2-D array of control points based on a the name of the preset
  * @param presetName this is a string that corresponds to a "name" of a json object
@@ -36,5 +40,7 @@ SIMPLNX_EXPORT std::string GetDefaultRGBPresetName();
  * @return
  */
 SIMPLNX_EXPORT bool IsValidPreset(const nlohmann::json& preset);
+
+SIMPLNX_EXPORT bool IsValidIndexedPreset(const nlohmann::json& preset);
 
 } // namespace nx::core::ColorTableUtilities
