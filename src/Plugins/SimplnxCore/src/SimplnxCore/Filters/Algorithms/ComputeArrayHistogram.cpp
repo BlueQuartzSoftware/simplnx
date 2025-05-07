@@ -7,17 +7,18 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
+#include <simplnx/DataStructure/INeighborList.hpp>
 #include <tuple>
 
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel,
                                              ComputeArrayHistogramInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHandler(msgHandler)
 {
 }
 
@@ -56,15 +57,29 @@ Result<> ComputeArrayHistogram::operator()()
     const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
     auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
     auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
+    auto& mostPopulated = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(i))->getDataStoreRef();
+    INeighborList* modalBinRanges = nullptr;
+    if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
+    {
+      auto modalBinRangesPaths = m_InputValues->CreatedBinModalRangesDataPaths.value();
+      modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
+    }
     Result<> result = {};
     if(m_InputValues->UserDefinedRange)
     {
       ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges,
-                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, counts, overflow);
+                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, counts, mostPopulated, overflow);
     }
     else
     {
-      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, m_ShouldCancel, numBins, counts, overflow);
+      ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, m_ShouldCancel, numBins, counts,
+                             mostPopulated, overflow);
+    }
+
+    if(modalBinRanges != nullptr)
+    {
+      ExecuteParallelFunctor<HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor, NoBooleanType>(
+          HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, modalBinRanges, m_ShouldCancel);
     }
 
     if(result.invalid())

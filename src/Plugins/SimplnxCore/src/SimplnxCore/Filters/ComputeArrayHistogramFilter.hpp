@@ -34,6 +34,9 @@ public:
   static inline constexpr StringLiteral k_DataGroupPath_Key = "output_data_group_path";
   static inline constexpr StringLiteral k_HistoBinCountName_Key = "histogram_bin_count_suffix";
   static inline constexpr StringLiteral k_HistoBinRangeName_Key = "histogram_bin_range_suffix";
+  static inline constexpr StringLiteral k_HistoMostPopulatedBinName_Key = "histogram_most_populated_bin_suffix";
+  static inline constexpr StringLiteral k_CalculateModalBinRanges_Key = "calculate_modal_bin_ranges";
+  static inline constexpr StringLiteral k_HistoModalBinRangesName_Key = "histogram_modal_bin_ranges_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

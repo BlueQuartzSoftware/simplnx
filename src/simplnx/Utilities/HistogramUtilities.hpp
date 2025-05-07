@@ -4,6 +4,8 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
 namespace nx::core::HistogramUtilities
 {
@@ -102,9 +104,9 @@ auto CalculateBin(Type value, Type min, float32 increment)
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, class InputContainer, class RangesContainer, class CountsContainer>
+template <typename Type, class InputContainer, class RangesContainer, class CountsContainer, class MostPopulatedContainer>
 Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
-                           CountsContainer& histogramCountsStore, std::atomic<usize>& overflow)
+                           CountsContainer& histogramCountsStore, MostPopulatedContainer& mostPopulatedStore, std::atomic<usize>& overflow)
 {
   static_assert(std::is_same_v<typename InputContainer::value_type, typename RangesContainer::value_type>,
                 "HistogramUtilities::GenerateHistogram: inputStore and binRangesStore must be of the same type. HistogramUtilities:99");
@@ -283,12 +285,14 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
-                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
-  : m_ShouldCancel(shouldCancel)
+                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
   , m_InputStore(inputStore)
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
+  , m_MostPopulatedStore(mostPopulatedStore)
   , m_Overflow(overflow)
   {
     m_Range = std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second));
@@ -305,12 +309,14 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<SizeType>& histogramStore, std::atomic<usize>& overflow)
-  : m_ShouldCancel(shouldCancel)
+                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
   , m_InputStore(inputStore)
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
+  , m_MostPopulatedStore(mostPopulatedStore)
   , m_Overflow(overflow)
   {
     auto minMax = std::minmax_element(m_InputStore.begin(), m_InputStore.end());
@@ -325,7 +331,13 @@ public:
    */
   void operator()() const
   {
-    serial::GenerateHistogram(m_InputStore, m_BinRangesStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
+    serial::GenerateHistogram(m_InputStore, m_BinRangesStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_MostPopulatedStore, m_Overflow);
+
+    // Calculate most populated array
+    auto maxElementIt = std::max_element(m_HistogramStore.begin(), m_HistogramStore.end());
+    uint64 index = std::distance(m_HistogramStore.begin(), maxElementIt);
+    m_MostPopulatedStore.setComponent(0, 0, index);
+    m_MostPopulatedStore.setComponent(0, 1, m_HistogramStore[index]);
   }
 
 private:
@@ -335,7 +347,74 @@ private:
   const AbstractDataStore<Type>& m_InputStore;
   AbstractDataStore<Type>& m_BinRangesStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
+  AbstractDataStore<SizeType>& m_MostPopulatedStore;
   std::atomic<usize>& m_Overflow;
+};
+
+/**
+ * @class GenerateHistogramImpl
+ * @brief This class is a pseudo-wrapper for the serial::GenerateHistogram, the reason for this class' existence is to hold/define ownership of objects in each thread
+ * @tparam Type this the end type of the function in that the container and data values are of this type
+ * @tparam SizeType this is the scalar type of the bin counts container
+ */
+template <typename Type>
+class CalculateModalBinRangesImpl
+{
+public:
+  /**
+   * @function constructor
+   * @brief This constructor constructs the object then calculates and stores the range implicitly
+   * @param inputStore this is the AbstractDataStore holding the data that will be binned
+   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
+   * @param modalBinRanges this is the AbstractDataStore that the ranges will be loaded into.
+   * @param shouldCancel this is an atomic value that will determine whether execution ends early
+   */
+  CalculateModalBinRangesImpl(const AbstractDataStore<Type>& inputStore, const AbstractDataStore<Type>& binRangesStore, NeighborList<Type>& modalBinRanges, const std::atomic_bool& shouldCancel)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
+  , m_BinRangesStore(binRangesStore)
+  , m_ModalBinRanges(modalBinRanges)
+  {
+  }
+
+  ~CalculateModalBinRangesImpl() = default;
+
+  /**
+   * @function operator()
+   * @brief This function serves as the execute method
+   */
+  void operator()() const
+  {
+    std::vector<Type> modes = StatisticsCalculations::findModes(m_InputStore);
+    for(const Type& mode : modes)
+    {
+      std::pair<Type, Type> modalRange = StatisticsCalculations::findModalBinRange(m_InputStore, m_BinRangesStore, mode);
+      m_ModalBinRanges.addEntry(0, modalRange.first);
+      m_ModalBinRanges.addEntry(0, modalRange.second);
+    }
+  }
+
+private:
+  const std::atomic_bool& m_ShouldCancel;
+  const AbstractDataStore<Type>& m_InputStore;
+  const AbstractDataStore<Type>& m_BinRangesStore;
+  NeighborList<Type>& m_ModalBinRanges;
+};
+
+/**
+ * @class CalculateModalBinRangesImplFunctor
+ * @brief This is a compatibility functor that leverages existing typecasting functions to create the appropriately typed CalculateModalBinRangesImpl() cleanly.
+ * Designed for compatibility with the existing parallel execution classes.
+ */
+struct CalculateModalBinRangesImplFunctor
+{
+  template <typename T, class... ArgsT>
+  auto operator()(const IDataArray* inputArray, const IDataArray* binRangesArray, INeighborList* modalBinRangesNL, ArgsT&&... args)
+  {
+    NeighborList<T>& modalBinRanges = *(dynamic_cast<NeighborList<T>*>(modalBinRangesNL));
+    return CalculateModalBinRangesImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), modalBinRanges,
+                                       std::forward<ArgsT>(args)...);
+  }
 };
 
 /**
