@@ -1226,15 +1226,6 @@ Result<> ComputeArrayStatistics::operator()()
   usize numFeatures = trueMax + 1;
 
   const FeatureIdRangeControls selection = static_cast<FeatureIdRangeControls>(m_InputValues->RangeType);
-  if(selection == FeatureIdRangeControls::None)
-  {
-    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    destAttrMatPtr->resizeTuples({numFeatures});
-    const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
-
-    // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-    return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
-  }
 
   // Unique Range of some sort if we made it here
   switch(selection)
@@ -1259,6 +1250,17 @@ Result<> ComputeArrayStatistics::operator()()
     trueMax = m_InputValues->Range.at(1) == -1 ? trueMax : m_InputValues->Range.at(1);
     trueMin = m_InputValues->Range.at(0);
     break;
+  }
+  case FeatureIdRangeControls::None: {
+    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    destAttrMatPtr->resizeTuples({numFeatures});
+    const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
+
+    // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
+    return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
+  }
+  default: {
+    return MakeErrorResult(-506670, fmt::format("Unknown feature id range controls option selected!", trueMin, trueMax));
   }
   }
   if(trueMin > trueMax)
