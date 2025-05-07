@@ -137,7 +137,8 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   }
 
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue),
+                                                            CreateArrayAction::k_DefaultDataFormat, "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -145,7 +146,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
       resultOutputActions.value().appendAction(std::move(createAction));
     }
 
@@ -179,7 +180,6 @@ Result<> ComputeKMeansFilter::executeImpl(DataStructure& dataStructure, const Ar
   if(!filterArgs.value<bool>(k_UseMask_Key))
   {
     maskPath = DataPath({k_MaskName});
-    dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
   }
 
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
@@ -200,9 +200,7 @@ Result<> ComputeKMeansFilter::executeImpl(DataStructure& dataStructure, const Ar
   inputValues.Seed = seed;
 
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto fIdsPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
-  dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
-  inputValues.FeatureIdsArrayPath = fIdsPath;
+  inputValues.FeatureIdsArrayPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
 
   return ComputeKMeans(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

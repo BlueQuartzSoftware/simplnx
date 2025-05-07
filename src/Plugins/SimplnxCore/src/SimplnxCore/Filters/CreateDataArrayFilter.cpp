@@ -11,9 +11,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <stdexcept>
 
@@ -22,19 +20,7 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_EmptyParameterError = -123;
-
-struct CreateAndInitArrayFunctor
-{
-  template <class T>
-  void operator()(IDataArray* iDataArray, const std::string& initValue)
-  {
-    Result<T> result = StringInterpretationUtilities::Convert<T>(initValue);
-
-    auto* dataStore = iDataArray->template getIDataStoreAs<AbstractDataStore<T>>();
-    dataStore->fill(result.value());
-  }
-};
-} // namespace
+}
 
 namespace nx::core
 {
@@ -132,12 +118,6 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
   {
     return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
-  // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
-  Result<> result = StringInterpretationUtilities::CheckValueConverts(ConvertNumericTypeToDataType(numericType), initValue);
-  if(result.invalid())
-  {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
-  }
 
   std::vector<usize> compDims = std::vector<usize>{numComponents};
   std::vector<usize> tupleDims = {};
@@ -177,7 +157,8 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     }
   }
 
-  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);
+  // Sanity check that init value can be converted safely to the final numeric type integrated into action
+  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat, initValue);
 
   resultOutputActions.value().appendAction(std::move(action));
 
@@ -188,11 +169,6 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto path = args.value<DataPath>(k_DataPath_Key);
-  auto initValue = args.value<std::string>(k_InitializationValue_Key);
-
-  ExecuteNeighborFunction(CreateAndInitArrayFunctor{}, ConvertNumericTypeToDataType(args.value<NumericType>(k_NumericType_Key)), dataStructure.getDataAs<IDataArray>(path), initValue);
-
   return {};
 }
 

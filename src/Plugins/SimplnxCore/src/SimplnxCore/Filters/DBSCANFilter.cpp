@@ -140,7 +140,8 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   }
 
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue));
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue),
+                                                            CreateArrayAction::k_DefaultDataFormat, "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -148,7 +149,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
       resultOutputActions.value().appendAction(std::move(createAction));
     }
 
@@ -180,7 +181,6 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   if(!filterArgs.value<bool>(k_UseMask_Key))
   {
     maskPath = DataPath({k_MaskName});
-    dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
   }
 
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
@@ -202,9 +202,7 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.DistanceMetric = static_cast<ClusterUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
   inputValues.MaskArrayPath = maskPath;
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto fIdsPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
-  dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
-  inputValues.FeatureIdsArrayPath = fIdsPath;
+  inputValues.FeatureIdsArrayPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.FeatureAM = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   inputValues.AllowCaching = filterArgs.value<bool>(k_UsePrecaching_Key);
   inputValues.UseRandom = static_cast<AlgType>(filterArgs.value<ChoicesParameter::ValueType>(k_InitTypeIndex_Key)) != AlgType::Iterative;

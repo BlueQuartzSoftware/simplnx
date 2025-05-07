@@ -18,6 +18,8 @@
 
 namespace nx::core::ArrayCreationUtilities
 {
+inline static constexpr StringLiteral k_DefaultDataFormat = "";
+
 SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format);
 
 /**
@@ -85,7 +87,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   {
     return MakeErrorResult(-265, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'", path.toString(), dataFormat));
   }
-  if(mode == IDataAction::Mode::Execute && !fillValue.empty())
+  if(!fillValue.empty())
   {
     Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(fillValue);
 
@@ -93,13 +95,16 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     {
       return ConvertResult(std::move(conversionResult));
     }
-    store->fill(conversionResult.value());
+    if(mode == IDataAction::Mode::Execute)
     {
-      // Only base data store has initialization value
-      std::weak_ptr<DataStore<T>> weakDataStorePtr = std::dynamic_pointer_cast<DataStore<T>>(store);
-      if(auto dataStorePtr = weakDataStorePtr.lock(); dataStorePtr != nullptr)
+      store->fill(conversionResult.value());
       {
-        dataStorePtr->setInitValue(conversionResult.value());
+        // Only base data store has initialization value
+        std::weak_ptr<DataStore<T>> weakDataStorePtr = std::dynamic_pointer_cast<DataStore<T>>(store);
+        if(auto dataStorePtr = weakDataStorePtr.lock(); dataStorePtr != nullptr)
+        {
+          dataStorePtr->setInitValue(conversionResult.value());
+        }
       }
     }
   }

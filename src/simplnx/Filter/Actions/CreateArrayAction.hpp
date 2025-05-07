@@ -13,11 +13,12 @@ namespace nx::core
 {
 /**
  * @brief Action for creating DataArrays in a DataStructure
- * @tparam T the type of the fill value being supplied
  */
 class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 {
 public:
+  inline static constexpr StringLiteral k_DefaultDataFormat = "";
+
   CreateArrayAction() = delete;
 
   CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
