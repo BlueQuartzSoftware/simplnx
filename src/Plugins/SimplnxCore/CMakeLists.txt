@@ -94,6 +94,7 @@ set(FilterList
   NearestPointFuseRegularGridsFilter
   PadImageGeometryFilter
   PartitionGeometryFilter
+  PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   ReadBinaryCTNorthstarFilter
@@ -122,7 +123,6 @@ set(FilterList
   ReverseTriangleWindingFilter
   RobustAutomaticThresholdFilter
   RotateSampleRefFrameFilter
-  SampleScanVectorsFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
@@ -208,6 +208,7 @@ set(AlgorithmList
   NearestPointFuseRegularGrids
   PadImageGeometry
   PartitionGeometry
+  PointSampleEdgeGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
@@ -226,7 +227,6 @@ set(AlgorithmList
   ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
-  SampleScanVectors
   ScalarSegmentFeatures
   SharedFeatureFace
   Silhouette

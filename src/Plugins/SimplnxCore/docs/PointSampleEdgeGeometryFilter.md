@@ -1,13 +1,13 @@
-# Sample Scan Vectors
+# Point Sample Edge Geometry
 
 ## Description
 
-This **Filter** will take an Edge geometry of scan vectors and sample each edge at a fixed spatial resolution to generate a new Vertex geometry of sample points.  For each interpolated point it will:
+This **Filter** will take an Edge geometry and sample each edge at a fixed spatial resolution to generate a new Vertex geometry of sample points.  For each interpolated point it will:
 
-- Copy over the power value from the original edge.
-- Copy over the slice ID from the original edge.
 - Copy over the edge ID from the original edge.
 - Record the linear distance from the beginning of its scan vector.
+
+The user can select additional Edge Data Arrays to also be copied onto the newly constructed Vertex geometry
 
 % Auto generated parameter table will be inserted here
 
