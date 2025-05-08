@@ -73,15 +73,13 @@ Result<T> StringInterpreterFromType(const std::string& input)
       {
         if(!input.empty() && input.at(0) == '-')
         {
-          return nx::core::MakeErrorResult<T>(
-              -10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
+          return nx::core::MakeErrorResult<T>(-10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
 
         uint64 value = std::stoull(input);
         if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
         {
-          return nx::core::MakeErrorResult<T>(
-              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
+          return nx::core::MakeErrorResult<T>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
         outputValue = static_cast<T>(value);
       }
@@ -91,8 +89,7 @@ Result<T> StringInterpreterFromType(const std::string& input)
         int64 value = std::stoll(input);
         if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
         {
-          return nx::core::MakeErrorResult<T>(
-              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
+          return nx::core::MakeErrorResult<T>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
         outputValue = static_cast<T>(value);
       }
@@ -102,8 +99,7 @@ Result<T> StringInterpreterFromType(const std::string& input)
     return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
   } catch(const std::out_of_range& e)
   {
-    return nx::core::MakeErrorResult<T>(-10352,
-                                        fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
+    return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
   }
   return {outputValue};
 }
