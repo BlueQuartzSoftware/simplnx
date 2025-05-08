@@ -44,11 +44,11 @@ public:
                      const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayStore(arrayStore)
   , m_BinPoints(binPoints)
+  , m_ArrayMin(arrayStore[0])
+  , m_ArrayMax(arrayStore[0])
   , m_NumControlColors(numControlColors)
   , m_ControlPoints(controlPoints)
   , m_ColorStore(colorStore)
-  , m_ArrayMin(arrayStore[0])
-  , m_ArrayMax(arrayStore[0])
   , m_GoodVoxels(goodVoxels)
   , m_InvalidColor(invalidColor)
   {

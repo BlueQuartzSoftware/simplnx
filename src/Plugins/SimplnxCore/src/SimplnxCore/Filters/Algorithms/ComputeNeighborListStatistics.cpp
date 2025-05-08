@@ -23,6 +23,7 @@ public:
   ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                     std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
+  , m_ShouldCancel(shouldCancel)
   , m_Source(source)
   , m_Length(length)
   , m_Min(min)
@@ -32,7 +33,6 @@ public:
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
   , m_Arrays(arrays)
-  , m_ShouldCancel(shouldCancel)
   {
   }
 

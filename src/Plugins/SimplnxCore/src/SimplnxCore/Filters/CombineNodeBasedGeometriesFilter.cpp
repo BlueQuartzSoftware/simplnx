@@ -633,14 +633,14 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   auto boolResult = DoesGeometryElementExist(vertexArraysExist, inputGeometryPaths, "a vertices array");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
 
   // Determine whether the vertex attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(vertexAttrMatricesExist, inputGeometryPaths, "a vertex attribute matrix");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
 
   // Determine whether the vertex data arrays are consistent across all geometries
@@ -652,7 +652,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
     }
 
     // If it does not exist, move on to validating the next vertex data array
@@ -689,7 +689,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   boolResult = DoesGeometryElementExist(edgeArraysExist, inputGeometryPaths, "an edges array");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
   bool edgesArrayExists = boolResult.value();
 
@@ -697,7 +697,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   boolResult = DoesGeometryElementExist(edgeAttrMatricesExist, inputGeometryPaths, "an edge attribute matrix");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
   bool edgeAttrMatrixExists = boolResult.value();
 
@@ -710,7 +710,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
     }
 
     // If it does not exist, move on to validating the next edge data array
@@ -747,7 +747,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   boolResult = DoesGeometryElementExist(faceArraysExist, inputGeometryPaths, "a faces array");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
   bool facesArrayExists = boolResult.value();
 
@@ -755,7 +755,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   boolResult = DoesGeometryElementExist(faceAttrMatricesExist, inputGeometryPaths, "a face attribute matrix");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
   bool faceAttrMatrixExists = boolResult.value();
 
@@ -768,7 +768,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
     }
 
     // If it does not exist, move on to validating the next face data array
@@ -805,14 +805,14 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   boolResult = DoesGeometryElementExist(polyArraysExist, inputGeometryPaths, "a polyhedra array");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
 
   // Determine whether the polyhedra attribute matrix exists in all geometries
   boolResult = DoesGeometryElementExist(polyAttrMatricesExist, inputGeometryPaths, "a polyhedra attribute matrix");
   if(boolResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
   }
 
   // Determine whether the polyhedra data arrays are consistent across all geometries
@@ -824,7 +824,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     boolResult = DoesGeometryElementExist(arrayInfoOpts, inputGeometryPaths, arrayDesc);
     if(boolResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(boolResult))), {})};
+      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(boolResult)), {})};
     }
 
     // If it does not exist, move on to validating the next polyhedra data array

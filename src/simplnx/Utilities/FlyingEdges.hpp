@@ -623,8 +623,8 @@ public:
   , m_TriCounter((m_NY - 1) * (m_NZ - 1))
   , m_EdgeCases((m_NX - 1) * m_NY * m_NZ)
   , m_CubeCases((m_NX - 1) * (m_NY - 1) * (m_NZ - 1))
-  , m_TrisStore(m_TriangleGeom.getFaces()->getDataStoreRef())
   , m_PointsStore(m_TriangleGeom.getVertices()->getDataStoreRef())
+  , m_TrisStore(m_TriangleGeom.getFaces()->getDataStoreRef())
   , m_NormalsStore(normals)
   {
   }

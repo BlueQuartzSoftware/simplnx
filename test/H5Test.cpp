@@ -167,7 +167,6 @@ const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 void CreateVertexGeometry(DataStructure& dataStructure)
 {
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_VertexGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
   auto vertexGeometry = VertexGeom::Create(dataStructure, "[Geometry] Vertex", geometryGroup->getId());
 
   // DataGroup* scanData = DataGroup::Create(dataStructure, "AttributeMatrix", group->getId());

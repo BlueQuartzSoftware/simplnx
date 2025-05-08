@@ -38,7 +38,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
   usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;
 
   usize zShift = 0;
-  int32 fileIndex = 1;
+  // int32 fileIndex = 1;
 
   for(const auto& dataFileInput : inputValues->DataFilePaths)
   {
@@ -104,7 +104,7 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
       fileZSlice++;
     }
     zShift += dataFileInput.second;
-    fileIndex++;
+    // fileIndex++;
 
     if(shouldCancel)
     {

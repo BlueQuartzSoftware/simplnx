@@ -504,7 +504,10 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
   int32 count = 0;
   for(const auto& value : activeObjects)
   {
-    value ? count++ : count = count;
+    if(value)
+    {
+      count++;
+    }
   }
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});

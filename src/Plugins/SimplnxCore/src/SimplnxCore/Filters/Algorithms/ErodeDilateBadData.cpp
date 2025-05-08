@@ -20,9 +20,9 @@ public:
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
-  , m_FeatureIds(featureIds)
   , m_Neighbors(neighbors)
   , m_DataArrayPtr(dataArrayPtr)
+  , m_FeatureIds(featureIds)
   {
   }
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented

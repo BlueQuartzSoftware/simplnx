@@ -1114,7 +1114,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     }
     else
     {
-      Result<> result = ConvertResult(std::move(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight)));
+      Result<> result = ConvertResult(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
       daResults.push_back(result);
     }
   }

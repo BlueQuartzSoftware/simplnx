@@ -400,15 +400,15 @@ auto BindFilter(py::handle scope, const Internals& internals)
 
     std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
     auto executeDocStringHolder = std::make_unique<std::string>(fmt::format("{}\n\nExecutes the filter\n", executeSig));
-    filter.def_static("human_name", [&internals]() {
+    filter.def_static("human_name", []() {
       FilterT filter;
       return filter.humanName();
     });
-    filter.def_static("name", [&internals]() {
+    filter.def_static("name", []() {
       FilterT filter;
       return filter.name();
     });
-    filter.def_static("uuid", [&internals]() {
+    filter.def_static("uuid", []() {
       FilterT filter;
       return filter.uuid();
     });

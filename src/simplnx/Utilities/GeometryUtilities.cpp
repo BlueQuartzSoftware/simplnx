@@ -563,7 +563,6 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   std::vector<int32> sliceIds;
   std::vector<int32> regionIds;
 
-  int32 edgeCounter = 0;
   int32 sliceIndex = -1;
   // Loop over each slice plane
   for(float zValue = zStart; zValue <= zEnd; zValue = zValue + sliceSpacing)
@@ -610,7 +609,6 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
         {
           regionIds.push_back(regionId);
         }
-        edgeCounter++;
       }
     } // END TRIANGLE LOOP
   }   // END SLICE LOOP

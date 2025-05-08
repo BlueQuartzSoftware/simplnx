@@ -320,14 +320,12 @@ Result<> ComputeShapesTriangleGeom::operator()()
 
       // for each triangle we need the transformation matrix A defined by the three points as columns
       // Loop over all triangle faces
-      int32_t tCount = 0;
       for(usize i = 0; i < numFaces; i++)
       {
         if(faceLabels[2 * i] != featureId && faceLabels[(2 * i) + 1] != featureId)
         {
           continue;
         }
-        tCount++;
         const usize compIndex = (faceLabels[2 * i] == featureId ? 0 : 1);
         std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
 

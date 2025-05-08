@@ -740,7 +740,6 @@ void GeneratePythonRstFiles()
       std::stringstream memberStream;
       memberStream << "      :param DataStructure data_structure: The DataStructure object that holds the data to be processed.\n";
 
-      size_t index = 0;
       for(const auto& parameterPair : parameters)
       {
         auto const& anyParameter = parameterPair.second;
@@ -749,7 +748,6 @@ void GeneratePythonRstFiles()
         rstStream << parameterPair.first;
         memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": "
                      << anyParameter->helpText() << "\n";
-        index++;
       }
       rstStream << ")\n\n";
 

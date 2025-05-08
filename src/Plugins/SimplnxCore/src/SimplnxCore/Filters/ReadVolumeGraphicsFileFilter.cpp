@@ -160,7 +160,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
       auto result = ParseArray<float32, ParseFloatVec2>(tokens, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<FileBlock>(ConvertResult(std::move(result)), {});
       }
       fileBlock.DataRange = result.value();
     }
@@ -182,7 +182,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
       auto result = ParseArray<usize, ParseSizeVec3>(tokens, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<FileBlock>(ConvertResult(std::move(result)), {});
       }
       else if(tokens[0] == k_RegionOfInterestStart)
       {
@@ -234,7 +234,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
       auto result = ParseArray<int32, ParseIntArray>(tokens, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<GeometryBlock>(ConvertResult(std::move(result)), {});
       }
       block.RotationMatrix = result.value();
     }
@@ -243,7 +243,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
       auto result = ParseArray<float32, ParseFloatVec3>(tokens, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<GeometryBlock>(ConvertResult(std::move(result)), {});
       }
       else if(tokens[0] == k_RelativePosition)
       {
@@ -297,7 +297,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
       auto result = ParseFileBlock(vgHeaderFile, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(ConvertResult(std::move(result)), {});
       }
       fileBlock = result.value();
     }
@@ -307,7 +307,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
       auto result = ParseGeometryBlock(vgHeaderFile, lineCount);
       if(result.invalid())
       {
-        return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(std::move(ConvertResult(std::move(result))), {});
+        return ConvertResultTo<ReadVolumeGraphicsFileFilter::HeaderMetadata>(ConvertResult(std::move(result)), {});
       }
       geomBlock = result.value();
     }
@@ -426,7 +426,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   Result<HeaderMetadata> metadataResult = ReadHeaderMetaData(pVGHeaderFileValue.string());
   if(metadataResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(metadataResult))), {})};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
 
   HeaderMetadata metadata = metadataResult.value();

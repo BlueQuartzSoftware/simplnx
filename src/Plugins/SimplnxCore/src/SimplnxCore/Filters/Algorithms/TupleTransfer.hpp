@@ -17,7 +17,7 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT AbstractTupleTransfer
 {
 public:
-  ~AbstractTupleTransfer() = default;
+  virtual ~AbstractTupleTransfer() = default;
 
   AbstractTupleTransfer(const AbstractTupleTransfer&) = delete;
   AbstractTupleTransfer(AbstractTupleTransfer&&) noexcept = delete;
@@ -69,7 +69,7 @@ public:
     m_NumComps = cellArrayPtr->getNumberOfComponents();
   }
 
-  ~TransferTuple() = default;
+  ~TransferTuple() override = default;
   TransferTuple(const TransferTuple&) = delete;
   TransferTuple(TransferTuple&&) noexcept = delete;
   TransferTuple& operator=(const TransferTuple&) = delete;

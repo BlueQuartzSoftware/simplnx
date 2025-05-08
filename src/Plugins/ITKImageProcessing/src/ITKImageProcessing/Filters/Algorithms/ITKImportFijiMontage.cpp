@@ -32,9 +32,9 @@ public:
   IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, const ITKImportFijiMontageInputValues* inputs)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
-  , m_InputValues(inputs)
   , m_Allocate(inputs->allocate)
   , m_Cache(m_Filter->getCache())
+  , m_InputValues(inputs)
   {
   }
   ~IOHandler() noexcept = default;

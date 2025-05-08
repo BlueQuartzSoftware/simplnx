@@ -251,7 +251,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   Result<> csvResult = FileUtilities::ValidateCSVFile(inputFilePath);
   if(csvResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(ConvertResult(std::move(csvResult))), {}), {}};
+    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(csvResult)), {}), {}};
   }
 
   std::vector<std::string> headers;

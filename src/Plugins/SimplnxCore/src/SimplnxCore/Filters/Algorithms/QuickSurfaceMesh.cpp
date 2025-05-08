@@ -68,11 +68,11 @@ struct GenerateTripleLinesImpl
   using MeshIndexType = typename QuickSurfaceMesh::MeshIndexType;
 
   GenerateTripleLinesImpl(ImageGeom* imageGeom, Int32AbstractDataStore& featureIdsStore, VertexMap& vertexMapRef, EdgeMap& edgeMapRef)
-  : featureIds(featureIdsStore)
+  : origin(imageGeom->getOrigin())
+  , res(imageGeom->getSpacing())
+  , featureIds(featureIdsStore)
   , vertexMap(vertexMapRef)
   , edgeMap(edgeMapRef)
-  , origin(imageGeom->getOrigin())
-  , res(imageGeom->getSpacing())
   {
     SizeVec3 udims = imageGeom->getDimensions();
 

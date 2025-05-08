@@ -40,8 +40,8 @@ public:
   , m_Phases(phases)
   , m_Normals(normals)
   , m_Eulers(eulers)
-  , m_Colors(colors)
   , m_CrystalStructures(crystalStructures)
+  , m_Colors(colors)
   {
   }
   virtual ~CalculateFaceIPFColorsImpl() = default;
