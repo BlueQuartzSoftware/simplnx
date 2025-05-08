@@ -40,6 +40,18 @@ template <typename T>
 Result<T> StringInterpreterFromType(const std::string& input)
 {
   T outputValue;
+
+  // This is segmented out to contain the need for apple specific macros in the case of error
+  std::string typeName = "usize";
+#ifdef __APPLE__
+  if constexpr(!std::is_same_v<T, usize>)
+  {
+    typeName = DataTypeToString(GetDataType<T>());
+  }
+#else
+  typeName = DataTypeToString(GetDataType<T>());
+#endif
+
   try
   {
     if constexpr(std::is_floating_point_v<T>)
@@ -61,27 +73,15 @@ Result<T> StringInterpreterFromType(const std::string& input)
       {
         if(!input.empty() && input.at(0) == '-')
         {
-#ifdef __APPLE__
-          if(std::is_same_v<T, usize>)
-          {
-            return nx::core::MakeErrorResult<T>(-10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
-          }
-#endif
           return nx::core::MakeErrorResult<T>(
-              -10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+              -10350, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
 
         uint64 value = std::stoull(input);
         if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
         {
-#ifdef __APPLE__
-          if(std::is_same_v<T, usize>)
-          {
-            return nx::core::MakeErrorResult<T>(-10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
-          }
-#endif
           return nx::core::MakeErrorResult<T>(
-              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
         outputValue = static_cast<T>(value);
       }
@@ -92,30 +92,18 @@ Result<T> StringInterpreterFromType(const std::string& input)
         if(value > std::numeric_limits<T>::max() || value < std::numeric_limits<T>::min())
         {
           return nx::core::MakeErrorResult<T>(
-              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+              -10353, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
         }
         outputValue = static_cast<T>(value);
       }
     }
   } catch(const std::invalid_argument& e)
   {
-#ifdef __APPLE__
-    if(std::is_same_v<T, usize>)
-    {
-      return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
-    }
-#endif
-    return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+    return nx::core::MakeErrorResult<T>(-10351, fmt::format("Error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
   } catch(const std::out_of_range& e)
   {
-#ifdef __APPLE__
-    if(std::is_same_v<T, usize>)
-    {
-      return nx::core::MakeErrorResult<T>(-10352, fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, "usize", detail::TypeToFuncName<T>()));
-    }
-#endif
     return nx::core::MakeErrorResult<T>(-10352,
-                                        fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, DataTypeToString(GetDataType<T>()), detail::TypeToFuncName<T>()));
+                                        fmt::format("Overflow error trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
   }
   return {outputValue};
 }
