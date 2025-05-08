@@ -78,60 +78,17 @@ public:
     const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    std::vector<uint64> length(numCurrentFeatures, 0);
-    std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
-    std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
-    std::vector<float32> summation(numCurrentFeatures, 0);
-    std::vector<std::map<T, uint64>> modalMaps(numCurrentFeatures);
-    usize progressCount = 0;
-
-    usize progressIncrement = numTuples / 100;
-
-    for(usize i = 0; i < numTuples; ++i)
+    auto msgHandler = [this](const std::string& msg) { m_Filter->sendThreadSafeInfoMessage("Preparing features/ensembles for stats calculation " + msg); };
+    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, shouldCancel);
+    if(shouldCancel)
     {
-      if(shouldCancel)
-      {
-        return;
-      }
-      if(m_Mask != nullptr && !m_Mask->isTrue(i))
-      {
-        continue;
-      }
-      for(usize j = 0; j < numCurrentFeatures; j++)
-      {
-        if(m_FeatureIds[i] != static_cast<int32>(start + j))
-        {
-          continue;
-        }
-
-        ++length[j];
-
-        if(m_Source[i] < min[j])
-        {
-          min[j] = m_Source[i];
-        }
-
-        if(m_Source[i] > max[j])
-        {
-          max[j] = m_Source[i];
-        }
-
-        summation[j] = summation[j] + m_Source[i];
-
-        modalMaps[j][m_Source[i]]++;
-      }
-
-      progressCount++;
-      now = std::chrono::steady_clock::now();
-      if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
-      {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating FeatureHasData Array [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(i) / static_cast<float>(numTuples)));
-        progressCount = 0;
-        initialTime = std::chrono::steady_clock::now();
-      }
+      return;
     }
 
-    m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing Results Feature/Ensemble Range [{}-{}]", start, end));
+    usize progressCount = 0;
+    usize progressIncrement = numTuples / 100;
+
+    m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature range [{}-{}]", start, end));
     progressIncrement = numCurrentFeatures / 100;
     progressCount = 0;
     std::vector<float32> meanArray;
@@ -210,7 +167,7 @@ public:
       now = std::chrono::steady_clock::now();
       if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
       {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, j, end));
+        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end));
         progressCount = 0;
         initialTime = std::chrono::steady_clock::now();
       }
