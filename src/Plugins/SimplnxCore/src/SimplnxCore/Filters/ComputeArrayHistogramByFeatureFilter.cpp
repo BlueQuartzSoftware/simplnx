@@ -94,6 +94,7 @@ Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
   params.linkParameters(k_CreateNewDataGroup_Key, k_NewDataGroupPath_Key, true);
   params.linkParameters(k_CreateNewDataGroup_Key, k_DataGroupPath_Key, false);
   params.linkParameters(k_CalculateModalBinRanges_Key, k_HistoModalBinRangesName_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
 }
