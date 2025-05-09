@@ -90,6 +90,20 @@ auto ExecuteParallelFunction(DataType dataType, ParallelRunnerT&& runner, ArgsT&
   }
 }
 
+/**
+ * @brief This function calls a functor operator() to generate a body then feeds that body to the runner to execute
+ * @tparam FuncT The type (Name) of the functor struct
+ * @tparam ArrayTypeOptions This is from type utilities allows for type gating e.g. NoBooleanType (see usages for clarity)
+ * @tparam ParallelRunnerT This is the type of runner, Either TaskRunner or some form of ParallelDataAlgorithm expected
+ * @tparam ArgsT The types of the args to be forwarded to the functor (determined implicitly)
+ * @param func This is the functor responsible for creating and returning the parallel class to be executed
+ * (essentially it is a wrapper (the struct itself) with a factory function (the operator() method) for templated classes)
+ * @param dataType This is the enum for the typing passed to the functor
+ * @param runner This is the actual parallel runner object. Keep in mind this will be passing a range arg in operator() call to your
+ * parallel class if it inherits from ParallelDataAlgorithm or no args if it is a ParallelTaskAlgorithm
+ * @param args These are the args perfect-forwarded to your functor's operator() function
+ * @return
+ */
 template <class FuncT, class ArrayTypeOptions = ArrayUseAllTypes, class ParallelRunnerT, class... ArgsT>
 auto ExecuteParallelFunctor(FuncT&& func, DataType dataType, ParallelRunnerT&& runner, ArgsT&&... args)
 {

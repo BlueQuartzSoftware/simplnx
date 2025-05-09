@@ -429,192 +429,6 @@ FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& 
  * @tparam Type this the end type of the function in that the container and data values are of this type
  * @tparam SizeType this is the scalar type of the bin counts container
  */
-template <typename Type, std::integral SizeType>
-class GenerateFeatureHistogramImpl
-{
-public:
-  /**
-   * @function constructor
-   * @brief This constructor requires a defined range and creates the object
-   * @param inputStore this is the AbstractDataStore holding the data that will be binned
-   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
-   * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
-   * @param shouldCancel this is an atomic value that will determine whether execution ends early
-   * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
-   * @param histogramStore this is the AbstractDataStore that will hold the counts for each bin (variable type sizing)
-   * @param overflow this is an atomic counter for the number of values that fall outside the bin range
-   */
-  GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
-                               const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
-                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow,
-                               const IFilter::MessageHandler& msgHandler)
-  : m_InputStore(inputStore)
-  , m_ShouldCancel(shouldCancel)
-  , m_NumBins(numBins)
-  , m_BinRangesStore(binRangesStore)
-  , m_ModalBinRangesList(modalBinRangesList)
-  , m_HistMin(histMin)
-  , m_HistMax(histMax)
-  , m_HistFullRange(histFullRange)
-  , m_HistogramStore(histogramStore)
-  , m_MostPopulatedStore(mostPopulatedStore)
-  , m_FeatureIdsStore(featureIdsStore)
-  , m_Mask(mask)
-  , m_Overflow(overflow)
-  , m_MsgHandler(msgHandler)
-  {
-  }
-
-  ~GenerateFeatureHistogramImpl() = default;
-
-  /**
-   * @function operator()
-   * @brief This function serves as the execute method
-   */
-  void operator()(const Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-  void compute(usize start, usize end) const
-  {
-    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
-    auto now = std::chrono::steady_clock::now();
-    const usize milliDelay = 1000;
-
-    const usize numTuples = m_FeatureIdsStore.getNumberOfTuples();
-    const usize numCurrentFeatures = end - start;
-
-    auto msgHandler = [this](const std::string& msg) { m_MsgHandler(IFilter::Message::Type::Info, "Preparing features/ensembles for histogram calculation " + msg); };
-    auto [length, min, max, summation, modalMaps] = CalculateFeatureHasDataStats(m_InputStore, m_FeatureIdsStore, start, end, m_Mask, msgHandler, m_ShouldCancel);
-    if(m_ShouldCancel)
-    {
-      return;
-    }
-
-    m_MsgHandler(IFilter::Message::Type::Info, fmt::format("Calculating histogram for feature range [{}-{}]", start, end));
-    usize progressIncrement = numCurrentFeatures / 100;
-    usize progressCount = 0;
-    for(usize j = start; j < end; j++)
-    {
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-      const usize localFeatureIndex = j - start;
-
-      std::vector<Type> ranges(m_NumBins * 2);
-      std::vector<uint64> histogram(m_NumBins, 0);
-      if(length[localFeatureIndex] > 0)
-      {
-        auto histMin = static_cast<Type>(m_HistMin);
-        auto histMax = static_cast<Type>(m_HistMax);
-
-        if(m_HistFullRange)
-        {
-          histMin = min[localFeatureIndex];
-          histMax = max[localFeatureIndex] + static_cast<Type>(1.0);
-        }
-
-        HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
-
-        const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
-        if(std::fabs(increment) < 1E-10)
-        {
-          histogram[0] = length[localFeatureIndex];
-        }
-        else
-        {
-          for(usize i = 0; i < numTuples; ++i)
-          {
-            if(m_ShouldCancel)
-            {
-              return;
-            }
-            if(m_Mask != nullptr && !m_Mask->isTrue(i))
-            {
-              continue;
-            }
-            if(m_FeatureIdsStore[i] != static_cast<int32>(j))
-            {
-              continue;
-            }
-            const Type value = m_InputStore[i];
-            const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
-            if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
-            {
-              histogram[bin]++; // increment histogram element corresponding to this input array value
-            }
-          } // end of numTuples loop
-        } // end of increment else
-
-        if(m_ModalBinRangesList != nullptr)
-        {
-          if(std::fabs(increment) < 1E-10)
-          {
-            m_ModalBinRangesList->addEntry(j, start);
-            m_ModalBinRangesList->addEntry(j, end);
-          }
-          else
-          {
-            auto modeList = StatisticsCalculations::findModes(m_InputStore);
-            for(int i = 0; i < modeList.size(); i++)
-            {
-              const Type mode = modeList.at(i);
-              const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, start, increment);
-              if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
-              {
-                m_ModalBinRangesList->addEntry(j, ranges[modalBin]);
-                m_ModalBinRangesList->addEntry(j, ranges[modalBin + 1]);
-              }
-            }
-          }
-        }
-
-      } // end of length if
-
-      m_HistogramStore.setTuple(j, histogram);
-      m_BinRangesStore.setTuple(j, ranges);
-
-      auto maxElementIt = std::max_element(histogram.begin(), histogram.end());
-      uint64 index = std::distance(histogram.begin(), maxElementIt);
-      m_MostPopulatedStore.setComponent(j, 0, index);
-      m_MostPopulatedStore.setComponent(j, 1, histogram[index]);
-
-      progressCount++;
-      now = std::chrono::steady_clock::now();
-      if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
-      {
-        m_MsgHandler(IFilter::Message::Type::Info, fmt::format("Calculating histogram for feature [{}-{}] {}/{}", start, end, j, end));
-        progressCount = 0;
-        initialTime = std::chrono::steady_clock::now();
-      }
-    }
-  }
-
-private:
-  const std::atomic_bool& m_ShouldCancel;
-  float64 m_HistMin;
-  float64 m_HistMax;
-  bool m_HistFullRange;
-  int32 m_NumBins;
-  const std::unique_ptr<MaskCompare>& m_Mask;
-  const AbstractDataStore<Type>& m_InputStore;
-  const AbstractDataStore<int32>& m_FeatureIdsStore;
-  AbstractDataStore<SizeType>& m_HistogramStore;
-  AbstractDataStore<Type>& m_BinRangesStore;
-  AbstractDataStore<uint64>& m_MostPopulatedStore;
-  NeighborList<Type>* m_ModalBinRangesList;
-  const IFilter::MessageHandler& m_MsgHandler;
-  std::atomic<usize>& m_Overflow;
-};
-
-/**
- * @class GenerateHistogramImpl
- * @brief This class is a pseudo-wrapper for the serial::GenerateHistogram, the reason for this class' existence is to hold/define ownership of objects in each thread
- * @tparam Type this the end type of the function in that the container and data values are of this type
- * @tparam SizeType this is the scalar type of the bin counts container
- */
 template <typename Type>
 class CalculateModalBinRangesImpl
 {
@@ -690,6 +504,213 @@ struct InstantiateHistogramImplFunctor
 };
 
 /**
+ * @class GenerateHistogramImpl
+ * @brief This class is a pseudo-wrapper for the serial::GenerateHistogram, the reason for this class' existence is to hold/define ownership of objects in each thread
+ * @tparam Type this the end type of the function in that the container and data values are of this type
+ * @tparam SizeType this is the scalar type of the bin counts container
+ */
+template <typename Type, std::integral SizeType>
+class GenerateFeatureHistogramImpl
+{
+public:
+  /**
+   * @function constructor
+   * @brief This constructor requires a defined range and creates the object
+   * @param inputStore this is the AbstractDataStore holding the data that will be binned
+   * @param binRangesStore this is the AbstractDataStore that the ranges will be loaded into.
+   * @param rangeMinMax this is assumed to be the inclusive minimum value and exclusive maximum value for the overall histogram bins. FORMAT: [minimum, maximum)
+   * @param shouldCancel this is an atomic value that will determine whether execution ends early
+   * @param numBins this is the total number of bin ranges being calculated and by extension the indexing value for the ranges
+   * @param histogramStore this is the AbstractDataStore that will hold the counts for each bin (variable type sizing)
+   * @param overflow this is an atomic counter for the number of values that fall outside the bin range
+   */
+  GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
+                               const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
+                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
+  , m_NumBins(numBins)
+  , m_BinRangesStore(binRangesStore)
+  , m_ModalBinRangesList(modalBinRangesList)
+  , m_HistMin(histMin)
+  , m_HistMax(histMax)
+  , m_HistFullRange(histFullRange)
+  , m_HistogramStore(histogramStore)
+  , m_MostPopulatedStore(mostPopulatedStore)
+  , m_FeatureIdsStore(featureIdsStore)
+  , m_Mask(mask)
+  , m_Overflow(overflow)
+  {
+  }
+
+  GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
+                               bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
+                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow)
+  : m_InputStore(inputStore)
+  , m_ShouldCancel(shouldCancel)
+  , m_NumBins(numBins)
+  , m_BinRangesStore(binRangesStore)
+  , m_ModalBinRangesList(nullptr)
+  , m_HistMin(histMin)
+  , m_HistMax(histMax)
+  , m_HistFullRange(histFullRange)
+  , m_HistogramStore(histogramStore)
+  , m_MostPopulatedStore(mostPopulatedStore)
+  , m_FeatureIdsStore(featureIdsStore)
+  , m_Mask(mask)
+  , m_Overflow(overflow)
+  {
+  }
+
+  ~GenerateFeatureHistogramImpl() = default;
+
+  /**
+   * @function operator()
+   * @brief This function serves as the execute method
+   */
+  void operator()(const Range& range) const
+  {
+    compute(range.min(), range.max());
+  }
+
+  void compute(usize start, usize end) const
+  {
+    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    const usize milliDelay = 1000;
+
+    const usize numTuples = m_FeatureIdsStore.getNumberOfTuples();
+    const usize numCurrentFeatures = end - start;
+
+    // auto msgHandler = [this](const std::string& msg) { m_MsgHandler(IFilter::Message::Type::Info, "Preparing features/ensembles for histogram calculation " + msg); };
+    auto [length, min, max, summation, modalMaps] = CalculateFeatureHasDataStats(m_InputStore, m_FeatureIdsStore, start, end, m_Mask, {}, m_ShouldCancel);
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
+    // m_MsgHandler(IFilter::Message::Type::Info, fmt::format("Calculating histogram for feature range [{}-{}]", start, end));
+    usize progressIncrement = numCurrentFeatures / 100;
+    usize progressCount = 0;
+    for(usize j = start; j < end; j++)
+    {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+      const usize localFeatureIndex = j - start;
+
+      std::vector<Type> ranges(m_NumBins * 2);
+      std::vector<uint64> histogram(m_NumBins, 0);
+      if(length[localFeatureIndex] > 0)
+      {
+        auto histMin = static_cast<Type>(m_HistMin);
+        auto histMax = static_cast<Type>(m_HistMax);
+
+        if(m_HistFullRange)
+        {
+          histMin = min[localFeatureIndex];
+          histMax = max[localFeatureIndex] + static_cast<Type>(1.0);
+        }
+
+        HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
+
+        const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
+        if(std::fabs(increment) < 1E-10)
+        {
+          histogram[0] = length[localFeatureIndex];
+        }
+        else
+        {
+          for(usize i = 0; i < numTuples; ++i)
+          {
+            if(m_ShouldCancel)
+            {
+              return;
+            }
+            if(m_Mask != nullptr && !m_Mask->isTrue(i))
+            {
+              continue;
+            }
+            if(m_FeatureIdsStore[i] != static_cast<int32>(j))
+            {
+              continue;
+            }
+            const Type value = m_InputStore[i];
+            const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, static_cast<Type>(histMin), increment)); // find bin for this input array value
+            if((bin >= 0) && (bin < m_NumBins))                                                                                          // make certain bin is in range
+            {
+              histogram[bin]++; // increment histogram element corresponding to this input array value
+            }
+          } // end of numTuples loop
+        }   // end of increment else
+
+        // Bool breaks neighbor lists; if we have made it here we know m_ModalBinRangesList is a nullptr
+        if constexpr(!std::is_same_v<Type, bool>)
+        {
+          if(m_ModalBinRangesList != nullptr)
+          {
+            if(std::fabs(increment) < 1E-10)
+            {
+              m_ModalBinRangesList->addEntry(j, start);
+              m_ModalBinRangesList->addEntry(j, end);
+            }
+            else
+            {
+              auto modeList = StatisticsCalculations::findModes(m_InputStore);
+              for(int i = 0; i < modeList.size(); i++)
+              {
+                const Type mode = modeList.at(i);
+                const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, static_cast<Type>(start), increment);
+                if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
+                {
+                  m_ModalBinRangesList->addEntry(j, ranges[modalBin]);
+                  m_ModalBinRangesList->addEntry(j, ranges[modalBin + 1]);
+                }
+              }
+            }
+          }
+        }
+
+      } // end of length if
+
+      // setTuple does not accept vectors see definition/other usages in the code-base
+      //      m_HistogramStore.setTuple(j, histogram);
+      //      m_BinRangesStore.setTuple(j, ranges);
+
+      auto maxElementIt = std::max_element(histogram.begin(), histogram.end());
+      uint64 index = std::distance(histogram.begin(), maxElementIt);
+      m_MostPopulatedStore.setComponent(j, 0, index);
+      m_MostPopulatedStore.setComponent(j, 1, histogram[index]);
+
+      //      progressCount++;
+      //      now = std::chrono::steady_clock::now();
+      //      if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
+      //      {
+      //        m_MsgHandler(IFilter::Message::Type::Info, fmt::format("Calculating histogram for feature [{}-{}] {}/{}", start, end, j, end));
+      //        progressCount = 0;
+      //        initialTime = std::chrono::steady_clock::now();
+      //      }
+    }
+  }
+
+private:
+  const std::atomic_bool& m_ShouldCancel;
+  float64 m_HistMin;
+  float64 m_HistMax;
+  bool m_HistFullRange;
+  int32 m_NumBins;
+  const std::unique_ptr<MaskCompare>& m_Mask;
+  const AbstractDataStore<Type>& m_InputStore;
+  const AbstractDataStore<int32>& m_FeatureIdsStore;
+  AbstractDataStore<SizeType>& m_HistogramStore;
+  AbstractDataStore<Type>& m_BinRangesStore;
+  AbstractDataStore<uint64>& m_MostPopulatedStore;
+  NeighborList<Type>* m_ModalBinRangesList;
+  std::atomic<usize>& m_Overflow;
+};
+
+/**
  * @class InstantiateHistogramImplFunctor
  * @brief This is a compatibility functor that leverages existing typecasting functions to create the appropriately typed GenerateHistogramImpl() cleanly.
  * Designed for compatibility with the existing parallel execution classes.
@@ -697,21 +718,16 @@ struct InstantiateHistogramImplFunctor
 struct InstantiateHistogramByFeatureImplFunctor
 {
   template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* inputArray, IDataArray* binRangesArray, INeighborList* modalBinRangesNL, ArgsT&&... args)
+  auto operator()(INeighborList* modalBinRangesNL, const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
   {
-    NeighborList<T>* nl = nullptr;
-    if(modalBinRangesNL != nullptr)
-    {
-      nl = dynamic_cast<NeighborList<T>*>(modalBinRangesNL);
-    }
-
-    const tbb::simple_partitioner simplePartitioner;
-    const size_t grainSize = 500;
-    const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
-    tbb::parallel_for(tbbRange,
-                      GenerateFeatureHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), nl,
-                                                   std::forward<ArgsT>(args)...),
-                      simplePartitioner);
+    return GenerateFeatureHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(),
+                                        dynamic_cast<NeighborList<T>*>(modalBinRangesNL), std::forward<ArgsT>(args)...);
+  }
+  template <typename T, class... ArgsT>
+  auto operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
+  {
+    return GenerateFeatureHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(),
+                                        std::forward<ArgsT>(args)...);
   }
 };
 } // namespace concurrent
