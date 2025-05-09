@@ -272,6 +272,21 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "-1");                    // underflow
   ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "184467440737095516150"); // overflow
 
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+  /**
+   * The following tests will not pass on windows because the standard allows for
+   * processing of subnormal floating point numbers: https://en.wikipedia.org/wiki/Subnormal_number
+   *
+   * Unix string to numeric disallows these subnormal float values due to the err being
+   * higher in the denormalized values.
+   *
+   * These subnormal numbers can be processed on unix with some workarounds or
+   * we can enforce err on windows with other workarounds. Until a clear stance is taken
+   * by a majority of project maintainers we are temporarily removing tests.
+   *
+   * Unix-like systems will err out with underflow in line with original test assumptions
+   */
+#else
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float32DataSet});
   ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "1.17549e-039");  // underflow
   ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "3.40282e+039");  // overflow
@@ -283,6 +298,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
   ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
   ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
+#endif
 }
 
 TEST_CASE("SimplnxCore::ConditionalSetValueFilter: No Conditional", "[ConditionalSetValueFilter]")

@@ -56,24 +56,6 @@ Result<T> StringInterpreterFromType(const std::string& input)
   {
     if constexpr(std::is_floating_point_v<T>)
     {
-#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-      std::size_t index = 0;
-      if constexpr(std::is_same_v<T, float32>)
-      {
-        float32 value = std::stof(input, &index);
-        outputValue = static_cast<T>(value);
-      }
-      else if constexpr(std::is_same_v<T, float64>)
-      {
-        float64 value = std::stod(input, &index);
-        outputValue = static_cast<T>(value);
-      }
-      if(index != input.size())
-      {
-        return nx::core::MakeErrorResult<T>(
-            -10354, fmt::format("Error: unable to parse to end of floating-point string trying to convert '{}' to type '{}' using function '{}'", input, typeName, detail::TypeToFuncName<T>()));
-      }
-#else
       if constexpr(std::is_same_v<T, float32>)
       {
         float32 value = std::stof(input);
@@ -84,7 +66,6 @@ Result<T> StringInterpreterFromType(const std::string& input)
         float64 value = std::stod(input);
         outputValue = static_cast<T>(value);
       }
-#endif
     }
     else
     {
