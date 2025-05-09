@@ -20,6 +20,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CombineNodeBasedGeometriesTest.cpp
   CombineStlFilesTest.cpp
   ComputeArrayHistogramTest.cpp
+  ComputeArrayHistogramByFeatureTest.cpp
   ComputeArrayStatisticsTest.cpp
   ComputeBiasedFeaturesTest.cpp
   ComputeBoundaryCellsTest.cpp

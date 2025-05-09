@@ -300,7 +300,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
   const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStore = featureIdsArray.getDataStoreRef();
 
-  usize numFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end());
+  usize numFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end()) + 1;
 
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
@@ -325,7 +325,6 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     }
 
     ParallelDataAlgorithm dataAlg;
-    dataAlg.setParallelizationEnabled(true);
     dataAlg.setRange(0, numFeatures);
 
     bool histFullRange = !m_InputValues->UserDefinedRange;

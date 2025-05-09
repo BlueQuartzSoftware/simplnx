@@ -381,7 +381,7 @@ private:
 };
 
 template <typename T>
-using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std::vector<T>, std::vector<float32>, std::vector<std::unordered_map<T, uint64>>>;
+using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std::vector<T>, std::vector<float32>, std::vector<std::map<T, uint64>>>;
 
 template <typename T>
 FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
@@ -398,7 +398,7 @@ FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& 
   std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
   std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
   std::vector<float32> summation(numCurrentFeatures, 0);
-  std::vector<std::unordered_map<T, uint64>> modalMaps(numCurrentFeatures);
+  std::vector<std::map<T, uint64>> modalMaps(numCurrentFeatures);
   usize progressCount = 0;
 
   usize progressIncrement = numTuples / 100;
