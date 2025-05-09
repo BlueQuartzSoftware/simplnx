@@ -17,6 +17,7 @@ namespace
 constexpr int32 k_EmptyParameterValue = -123;
 constexpr int32 k_IncorrectInputArrayType = -124;
 constexpr int32 k_ConvertReplaceValueTypeError = -125;
+constexpr int32 k_ConvertRemoveValueTypeError = -126;
 
 struct ReplaceValueInArrayFunctor
 {
@@ -119,11 +120,11 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
 
   if(replaceValueString.empty())
   {
-    return {MakeErrorResult<OutputActions>(::k_EmptyParameterValue, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return MakePreflightErrorResult(::k_EmptyParameterValue, fmt::format("{}: Replacement parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
   if(removeValueString.empty())
   {
-    return {MakeErrorResult<OutputActions>(::k_EmptyParameterValue, fmt::format("{}: Remove parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return MakePreflightErrorResult(::k_EmptyParameterValue, fmt::format("{}: Remove parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
 
   if(useConditionalValue)
@@ -133,29 +134,27 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
 
     if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
     {
-      return {MakeErrorResult<OutputActions>(
-          ::k_IncorrectInputArrayType, fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()))};
+      return MakePreflightErrorResult(::k_IncorrectInputArrayType,
+                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()));
     }
   }
 
   // Sanity check all the inputs here
   Result<> result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), replaceValueString);
-  // We can do this because nothing happens to the DataStructure. *IF* the filter is
-  // modifying the DataStructure then we should be using a custom OutputActions instance
-  // or hopefully an existing Actions subclass
-
   if(result.invalid())
   {
-    return {MakeErrorResult<OutputActions>(::k_ConvertReplaceValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
-                                                                                         __LINE__, replaceValueString, fmt::underlying(inputDataObject->getDataObjectType())))};
+    return MakePreflightErrorResult(::k_ConvertReplaceValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert replace value {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
+                                                                                  __LINE__, replaceValueString, fmt::underlying(inputDataObject->getDataObjectType())));
   }
 
   result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), removeValueString);
+  if(result.invalid())
+  {
+    return MakePreflightErrorResult(::k_ConvertRemoveValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert remove value {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
+                                                                                 __LINE__, removeValueString, fmt::underlying(inputDataObject->getDataObjectType())));
+  }
 
-  // convert the result from above to a Result<OutputActions> object and return. Note the
-  // std::move() used for the `result` variable. We can do this because we will *NOT* be
-  // using the variable past this line.
-  return {ConvertResultTo<OutputActions>(std::move(result), {})};
+  return {};
 }
 
 Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

@@ -26,7 +26,7 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataStructure, const DataPat
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(!preflightResult.outputActions.valid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 template <class T>
