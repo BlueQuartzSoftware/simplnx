@@ -1,9 +1,5 @@
 #include "SimplnxCore/Filters/ComputeArrayHistogramFilter.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 

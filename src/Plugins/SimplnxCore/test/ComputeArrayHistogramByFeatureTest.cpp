@@ -1,9 +1,5 @@
 #include "SimplnxCore/Filters/ComputeArrayHistogramByFeatureFilter.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -133,8 +129,6 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-    UnitTest::WriteTestDataStructure(dataStructure, "/tmp/ds.dream3d");
   }
 
   // Check resulting values
