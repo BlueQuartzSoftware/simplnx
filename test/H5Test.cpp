@@ -1014,7 +1014,7 @@ TEST_CASE("DataStructureAppend")
 
   DataStructure baseDataStructure;
 
-  auto createArrayResult = CreateArray<int32>(baseDataStructure, {10, 10, 10}, {3}, originalArrayPath, IDataAction::Mode::Execute);
+  auto createArrayResult = ArrayCreationUtilities::CreateArray<int32>(baseDataStructure, {10, 10, 10}, {3}, originalArrayPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(createArrayResult);
 
   const auto& originalArray = baseDataStructure.getDataRefAs<Int32Array>(originalArrayPath);
