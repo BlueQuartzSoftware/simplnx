@@ -17,11 +17,13 @@
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
+
+#include "simplnx/UnitTest/DataObjectComparison.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "GeometryTestUtilities.hpp"
 
@@ -957,4 +959,68 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
   HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
   REQUIRE(datasetIO.getId() > 0);
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
+}
+
+TEST_CASE("DataStructureAppend")
+{
+  const std::filesystem::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
+  const std::filesystem::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
+  const DataPath originalArrayPath({"foo"});
+
+  DataStructure baseDataStructure;
+
+  auto createArrayResult = CreateArray<int32>(baseDataStructure, {10, 10, 10}, {3}, originalArrayPath, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(createArrayResult);
+
+  const auto& originalArray = baseDataStructure.getDataRefAs<Int32Array>(originalArrayPath);
+
+  Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+  DataStructure exemplarDataStructure = std::move(readResult.value());
+
+  usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
+  for(const DataObject* object : exemplarDataStructure.getTopLevelData())
+  {
+    REQUIRE(object != nullptr);
+    DataPath path({object->getName()});
+    auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
+    SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
+
+    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath);
+    SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
+
+    DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
+
+    currentTopLevelSize++;
+
+    REQUIRE(currentTopLevelSize == appendedDataStructure.getTopLevelData().size());
+
+    REQUIRE(appendedDataStructure.containsData(originalArrayPath));
+    REQUIRE(appendedDataStructure.containsData(path));
+
+    const DataObject& appendedOriginalArray = appendedDataStructure.getDataRef(originalArrayPath);
+    REQUIRE(UnitTest::Comparison::CompareDataObject(originalArray, appendedOriginalArray));
+
+    const DataObject& appendedObject = appendedDataStructure.getDataRef(path);
+    const DataObject& exemplarObject = exemplarDataStructure.getDataRef(path);
+
+    REQUIRE(UnitTest::Comparison::CompareDataObject(exemplarObject, appendedObject));
+  }
+
+  // Failure states
+
+  // empty path
+  auto appendFailureResult1 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, DataPath());
+  SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult1);
+
+  // not top level
+  auto appendFailureResult2 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, DataPath({"foo", "bar"}));
+  SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult2);
+
+  // target already exists
+  auto appendFailureResult3 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, originalArrayPath);
+  SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult3);
 }

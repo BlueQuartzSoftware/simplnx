@@ -36,6 +36,77 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::
   return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 
+Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  if(dataPath.empty())
+  {
+    return MakeErrorResult(-1, "DataPath must be non empty");
+  }
+
+  if(dataPath.getLength() != 1)
+  {
+    return MakeErrorResult(-2, "Object to append must be at the top level of the DataStructure");
+  }
+
+  if(!dataStructure.containsData(dataPath))
+  {
+    return MakeErrorResult(-3, fmt::format("Object doesn't exist at path '{}'", dataPath.toString()));
+  }
+
+  GroupIO dataStructureGroup = file.openGroup(Constants::k_DataStructureTag);
+  if(!dataStructureGroup.isValid())
+  {
+    return MakeErrorResult(-5, "Failed to open top-level DataStructure group");
+  }
+
+  const std::string& targetName = dataPath[0];
+
+  if(dataStructureGroup.exists(targetName))
+  {
+    return MakeErrorResult(-6, fmt::format("Cannot append because object '{}' already exists", targetName));
+  }
+
+  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  if(idResult.invalid())
+  {
+    return ConvertResult(std::move(idResult));
+  }
+  DataObject::IdType nextObjectId = idResult.value();
+
+  DataStructure dataStructureShallowCopy = dataStructure;
+
+  for(DataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
+  {
+    if(topLevelObject->getName() != targetName)
+    {
+      dataStructureShallowCopy.removeData(topLevelObject->getId());
+    }
+  }
+
+  dataStructureShallowCopy.resetIds(nextObjectId);
+
+  auto writeNextIdResult = dataStructureGroup.writeScalarAttribute(Constants::k_NextIdTag, dataStructureShallowCopy.getNextId());
+  if(writeNextIdResult.invalid())
+  {
+    return writeNextIdResult;
+  }
+
+  const DataObject& dataObject = dataStructureShallowCopy.getDataRef(dataPath);
+  HDF5::DataStructureWriter dataStructureWriter;
+  return dataStructureWriter.writeDataObject(&dataObject, dataStructureGroup);
+}
+
+Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  auto file = FileIO::AppendFile(filepath);
+  if(!file.isValid())
+  {
+    return MakeErrorResult(-4, fmt::format("Unable to open file '{}'", filepath.string()));
+  }
+
+  return AppendFile(file, dataStructure, dataPath);
+}
+
 Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
   // Check if data has already been written

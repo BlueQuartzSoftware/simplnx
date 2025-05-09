@@ -1623,3 +1623,19 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
 
   return {};
 }
+
+Result<> DREAM3D::AppendFile(const std::filesystem::path& path, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  auto file = nx::core::HDF5::FileIO::AppendFile(path);
+  if(!file.isValid())
+  {
+    return MakeErrorResult(-1, fmt::format("DREAM3D::AppendFile: Unable to open '{}' for appending", path.string()));
+  }
+
+  const auto fileVersion = GetFileVersion(file);
+  if(fileVersion != k_CurrentFileVersion)
+  {
+    return MakeErrorResult(-2, fmt::format("DREAM3D::AppendFile: Incompatible file version '{}'. Expected '{}'", fileVersion, k_CurrentFileVersion));
+  }
+  return HDF5::DataStructureWriter::AppendFile(file, dataStructure, dataPath);
+}

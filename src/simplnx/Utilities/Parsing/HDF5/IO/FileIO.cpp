@@ -34,6 +34,12 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
   return {};
 }
 
+FileIO FileIO::AppendFile(const std::filesystem::path& filepath)
+{
+  hid_t fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  return FileIO(filepath, fileId);
+}
+
 FileIO::FileIO(const std::filesystem::path& filepath, hid_t fileId)
 : GroupIO()
 {
