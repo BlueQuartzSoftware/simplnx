@@ -20,6 +20,7 @@ struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
   MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths = {};
   MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths = {};
   std::optional<MultiArraySelectionParameter::ValueType> CreatedBinModalRangesDataPaths;
+  std::optional<DataPath> MaskPath;
 };
 
 /**

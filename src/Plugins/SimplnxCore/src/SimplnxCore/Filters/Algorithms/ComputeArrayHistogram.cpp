@@ -64,16 +64,23 @@ Result<> ComputeArrayHistogram::operator()()
       auto modalBinRangesPaths = m_InputValues->CreatedBinModalRangesDataPaths.value();
       modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
     }
+
+    std::unique_ptr<MaskCompare> mask = nullptr;
+    if(m_InputValues->MaskPath.has_value())
+    {
+      mask = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskPath.value());
+    }
+
     Result<> result = {};
     if(m_InputValues->UserDefinedRange)
     {
       ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges,
-                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, counts, mostPopulated, overflow);
+                             std::make_pair(m_InputValues->MinRange, m_InputValues->MaxRange), m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow);
     }
     else
     {
       ExecuteParallelFunctor(HistogramUtilities::concurrent::InstantiateHistogramImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, m_ShouldCancel, numBins, counts,
-                             mostPopulated, overflow);
+                             mostPopulated, mask, overflow);
     }
 
     if(modalBinRanges != nullptr)

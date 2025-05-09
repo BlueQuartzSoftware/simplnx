@@ -37,6 +37,8 @@ public:
   static inline constexpr StringLiteral k_HistoMostPopulatedBinName_Key = "histogram_most_populated_bin_suffix";
   static inline constexpr StringLiteral k_CalculateModalBinRanges_Key = "calculate_modal_bin_ranges";
   static inline constexpr StringLiteral k_HistoModalBinRangesName_Key = "histogram_modal_bin_ranges_suffix";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

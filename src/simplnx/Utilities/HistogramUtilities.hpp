@@ -106,9 +106,9 @@ auto CalculateBin(Type value, Type min, float32 increment)
  * @param histogramCountsStore this is the container that will hold the counts for each bin (variable type sizing)
  * @param overflow this is an atomic counter for the number of values that fall outside the bin range
  */
-template <typename Type, class InputContainer, class RangesContainer, class CountsContainer, class MostPopulatedContainer>
+template <typename Type, class InputContainer, class RangesContainer, class CountsContainer>
 Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& binRangesStore, const std::pair<Type, Type>& rangeMinMax, const std::atomic_bool& shouldCancel, const int32 numBins,
-                           CountsContainer& histogramCountsStore, MostPopulatedContainer& mostPopulatedStore, std::atomic<usize>& overflow)
+                           CountsContainer& histogramCountsStore, std::atomic<usize>& overflow)
 {
   static_assert(std::is_same_v<typename InputContainer::value_type, typename RangesContainer::value_type>,
                 "HistogramUtilities::GenerateHistogram: inputStore and binRangesStore must be of the same type. HistogramUtilities:99");
@@ -135,7 +135,7 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
     {
       return MakeErrorResult(-23763, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
     }
-    const auto bin = CalculateBin(inputStore[i], rangeMinMax.first, increment);
+    const auto bin = CalculateBin(static_cast<Type>(inputStore[i]), rangeMinMax.first, increment);
     if((bin >= 0) && (bin < numBins))
     {
       histogramCountsStore[bin]++;
@@ -287,7 +287,8 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
-                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, std::atomic<usize>& overflow)
+                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask,
+                        std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -295,6 +296,7 @@ public:
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
   , m_MostPopulatedStore(mostPopulatedStore)
+  , m_Mask(mask)
   , m_Overflow(overflow)
   {
     m_Range = std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second));
@@ -311,7 +313,7 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, std::atomic<usize>& overflow)
+                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -319,6 +321,7 @@ public:
   , m_BinRangesStore(binRangesStore)
   , m_HistogramStore(histogramStore)
   , m_MostPopulatedStore(mostPopulatedStore)
+  , m_Mask(mask)
   , m_Overflow(overflow)
   {
     auto minMax = std::minmax_element(m_InputStore.begin(), m_InputStore.end());
@@ -333,7 +336,30 @@ public:
    */
   void operator()() const
   {
-    serial::GenerateHistogram(m_InputStore, m_BinRangesStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_MostPopulatedStore, m_Overflow);
+    if(m_Mask)
+    {
+      // This section extracts out the data into a separate storage class. Note that
+      // this could get real ugly for an out-of-core DataArray
+      const usize numTuples = m_InputStore.getNumberOfTuples();
+      std::vector<Type> data;
+      data.reserve(numTuples);
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(m_Mask->isTrue(i))
+        {
+          data.push_back(m_InputStore[i]);
+        }
+      }
+      data.shrink_to_fit();
+
+      auto minMax = std::minmax_element(data.begin(), data.end());
+      std::pair<Type, Type> range = std::make_pair(*minMax.first, *minMax.second + static_cast<Type>(1.0));
+      serial::GenerateHistogram(data, m_BinRangesStore, range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
+    }
+    else
+    {
+      serial::GenerateHistogram(m_InputStore, m_BinRangesStore, m_Range, m_ShouldCancel, m_NumBins, m_HistogramStore, m_Overflow);
+    }
 
     // Calculate most populated array
     auto maxElementIt = std::max_element(m_HistogramStore.begin(), m_HistogramStore.end());
@@ -350,6 +376,7 @@ private:
   AbstractDataStore<Type>& m_BinRangesStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
   AbstractDataStore<SizeType>& m_MostPopulatedStore;
+  const std::unique_ptr<MaskCompare>& m_Mask;
   std::atomic<usize>& m_Overflow;
 };
 

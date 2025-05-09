@@ -5,6 +5,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
@@ -64,6 +65,9 @@ Parameters ComputeArrayHistogramFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the exclusive upper bound of the histogram.", 1.0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
@@ -89,6 +93,7 @@ Parameters ComputeArrayHistogramFilter::parameters() const
   params.linkParameters(k_CreateNewDataGroup_Key, k_NewDataGroupPath_Key, true);
   params.linkParameters(k_CreateNewDataGroup_Key, k_DataGroupPath_Key, false);
   params.linkParameters(k_CalculateModalBinRanges_Key, k_HistoModalBinRangesName_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
 }
@@ -223,6 +228,12 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
   if(calculateModalRanges)
   {
     inputValues.CreatedBinModalRangesDataPaths = createdModalRangesDataPaths;
+  }
+
+  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
+  if(useMask)
+  {
+    inputValues.MaskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   }
 
   return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
