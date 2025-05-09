@@ -18,19 +18,6 @@ constexpr int32 k_EmptyParameterValue = -123;
 constexpr int32 k_IncorrectInputArrayType = -124;
 constexpr int32 k_ConvertReplaceValueTypeError = -125;
 
-template <typename ScalarType>
-ScalarType convertFromStringToType(const std::string& convertValue)
-{
-  Result<ScalarType> convertResult = StringInterpretationUtilities::Convert<ScalarType>(convertValue);
-
-  if(convertResult.invalid())
-  {
-    throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot convert {} from string.", "ReplaceValueInArrayFunctor", __FILE__, __LINE__, convertValue));
-  }
-
-  return static_cast<ScalarType>(convertResult.value());
-}
-
 struct ReplaceValueInArrayFunctor
 {
   template <typename ScalarType>
@@ -38,8 +25,8 @@ struct ReplaceValueInArrayFunctor
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
-    auto removeVal = convertFromStringToType<ScalarType>(removeValue);
-    auto replaceVal = convertFromStringToType<ScalarType>(replaceValue);
+    ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
+    ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
 
     const auto size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
 
@@ -128,7 +115,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
 
-  const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
+  const auto& inputDataObject = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
 
   if(replaceValueString.empty())
   {
@@ -152,7 +139,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   }
 
   // Sanity check all the inputs here
-  Result<> result = CheckValueConvertsToArrayType(replaceValueString, inputDataObject);
+  Result<> result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), replaceValueString);
   // We can do this because nothing happens to the DataStructure. *IF* the filter is
   // modifying the DataStructure then we should be using a custom OutputActions instance
   // or hopefully an existing Actions subclass
@@ -160,10 +147,10 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(result.invalid())
   {
     return {MakeErrorResult<OutputActions>(::k_ConvertReplaceValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
-                                                                                         __LINE__, replaceValueString, fmt::underlying(inputDataObject.getDataObjectType())))};
+                                                                                         __LINE__, replaceValueString, fmt::underlying(inputDataObject->getDataObjectType())))};
   }
 
-  result = CheckValueConvertsToArrayType(removeValueString, inputDataObject);
+  result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), removeValueString);
 
   // convert the result from above to a Result<OutputActions> object and return. Note the
   // std::move() used for the `result` variable. We can do this because we will *NOT* be

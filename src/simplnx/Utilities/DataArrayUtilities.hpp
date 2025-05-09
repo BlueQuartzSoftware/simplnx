@@ -31,16 +31,6 @@
 namespace nx::core
 {
 /**
- * @brief Validates whether the string can be converted to the primitive type used in the DataObject.
- *
- * The validate will check overflow and underflow and that the string represents some sort of numeric value
- * @param value
- * @param inputDataArray
- * @return
- */
-SIMPLNX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
-
-/**
  * @brief Replaces every value in an array based on a `mask` array.
  * @tparam T The primitive type used in the data array
  * @param inputArrayPtr InputArray that will have values replaced

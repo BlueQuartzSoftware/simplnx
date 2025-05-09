@@ -37,53 +37,6 @@ struct InitializeNeighborListFunctor
 namespace nx::core
 {
 //-----------------------------------------------------------------------------
-Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
-{
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<float32>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<float64>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<int8>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint8>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<int16>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint16>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<int32>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint32>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<int64>(value));
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(&inputDataArray))
-  {
-    return ConvertResult(StringInterpretationUtilities::Convert<uint64>(value));
-  }
-
-  return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
-}
-
-//-----------------------------------------------------------------------------
 bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
 {
   std::set<nx::core::DataType> types;

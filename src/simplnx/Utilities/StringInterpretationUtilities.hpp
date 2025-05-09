@@ -159,5 +159,5 @@ Result<T> Convert(const std::string& input)
   return detail::StringInterpreterFromType<T>(input);
 }
 
-Result<> CheckValueConverts(DataType type, const std::string& value);
+SIMPLNX_EXPORT Result<> CheckValueConverts(DataType type, const std::string& value);
 } // namespace nx::core::StringInterpretationUtilities
