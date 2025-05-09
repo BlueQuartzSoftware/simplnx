@@ -155,8 +155,10 @@ Result<T> Convert(const std::string& input)
 
     return {true};
   }
-
-  return detail::StringInterpreterFromType<T>(input);
+  else
+  {
+    return detail::StringInterpreterFromType<T>(input);
+  }
 }
 
 SIMPLNX_EXPORT Result<> CheckValueConverts(DataType type, const std::string& value);
