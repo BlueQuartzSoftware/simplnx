@@ -1,17 +1,16 @@
-# Compute Frequency Histogram
-
-## Group (Subgroup)
-
-Statistics(Ensemble)
+# Compute Attribute Array Frequency Histogram
 
 ## Description
 
-This **Filter** accepts **DataArray(s)** as input, creates histogram **DataArray(s)** in specified **DataGroup** from input **DataArray(s)**, then calculates histogram values according to user parameters and stores values in created histogram **DataArray(s)**.
+This **Filter** accepts one or more numeric **DataArray** inputs and generates corresponding histogram **DataArray** outputs within a target **DataGroup**. For each selected array, it divides the data range—using either automatically derived or user-defined minimum/maximum values—into equal-width bins and counts the number of elements per bin.
 
-The output is in the form of 2 Data Arrays. The first data array will have the counts. The number of tuples of the array is
-the same as the number of bins in the histogram. The second data array will have the bin ranges. The array has 2 components 
-where the first component of each tuple is the minimum of the bin (inclusive) and the second component of the tuple
-is the maximum for that bin (exclusive).
+Optionally, a mask **DataArray** can be provided to include only specific elements in the histogram computation.
+
+Outputs include:
+- **Counts DataArray**: A tuple for each bin representing the number of elements in that bin.
+- **Bin Ranges DataArray**: A two-component tuple per bin defining the inclusive lower bound and exclusive upper bound.
+- **Most Populated Bin DataArray**: Reports the index of the bin that has the most values.
+- **Modal Bin Ranges NeighborList** (optional): Specifies the inclusive lower and exclusive upper bound bin indices containing the input data’s mode(s). Because there can be multiple modes, this list may include more than two entries.
 
 ## Example Data
 
