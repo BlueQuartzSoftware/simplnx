@@ -23,6 +23,16 @@ template <typename T, template <typename> class Point = Point3D>
 class BoundingBox
 {
 public:
+  enum class faces_enum : int8
+  {
+    none = 0,
+    top,
+    bottom,
+    left,
+    right,
+    front,
+    back
+  };
   //========================================= STL INTERFACE COMPATIBILITY =================================
   using size_type = usize;
   using reference = T&;

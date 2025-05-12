@@ -156,7 +156,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   if(hasNonContiguousFeature)
   {
-    m_MessageHandler({IFilter::Message::Type::Error, "SegmentFeatures found Non-Contiguous Features."});
+    m_MessageHandler({IFilter::Message::Type::Info, "SegmentFeatures found Non-Contiguous Features."});
   }
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});

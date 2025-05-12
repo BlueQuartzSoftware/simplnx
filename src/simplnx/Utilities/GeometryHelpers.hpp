@@ -5,10 +5,12 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 
 #include <Eigen/Dense>
 
+#include <set>
 #include <unordered_set>
 
 namespace nx::core::GeometryHelpers
@@ -942,6 +944,37 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
 
 namespace Topology
 {
+using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
+
+/**
+ * @brief Checks a set of vertices to see if any of the points lie within one of
+ * the faces of the specified BoundingBox. Returns a set of BoundingBox2Df::faces_enum
+ * that the selected vertices lie along.
+ *
+ * The vertices are expected to be organized within the specified BoundingBox and
+ * not aligned in an abstract shape.
+ * @param boundingBox
+ * @param vertices
+ * @param vertexSet
+ * @return BoundingBoxFaces
+ */
+BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
+
+/**
+ * @brief Adjusts centroids for periodic edge cases. The data is assumed to
+ * match the specified bounding box in shape as abstract shapes are not
+ * supported by this function.
+ * Returns true if the feature ID is periodic. Otherwise, returns false.
+ * @param boundingBox
+ * @param faces
+ * @param centroids
+ * @param featureId
+ */
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
+
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
+                                                    Float32AbstractDataStore& centroids);
+
 /**
  * @brief
  * @tparam T

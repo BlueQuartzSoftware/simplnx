@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 using namespace nx::core;
 
@@ -37,6 +38,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const SharedFaceListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
+  const BoundingBox3Df boundingBox = triangleGeom.getBoundingBox();
 
   // Get the faceLabels array and then get the min and max values
   const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
@@ -76,6 +78,9 @@ Result<> ComputeTriangleGeomCentroids::operator()()
 
   for(MeshIndexType i = 0; i < numFeatures; i++)
   {
+    std::set<MeshIndexType> vertexSet = vertexSets[i];
+    auto periodicFaces = GeometryHelpers::Topology::FindElementPeriodicFaces(boundingBox, vertexCoords, vertexSet);
+
     for(const auto& vert : vertexSets[i])
     {
       centroids[3 * i + 0] += vertexCoords[3 * vert + 0];
@@ -87,6 +92,15 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       centroids[3 * i + 0] /= static_cast<float32>(vertexSets[i].size());
       centroids[3 * i + 1] /= static_cast<float32>(vertexSets[i].size());
       centroids[3 * i + 2] /= static_cast<float32>(vertexSets[i].size());
+
+      if(m_InputValues->IsPeriodic)
+      {
+        if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(boundingBox, periodicFaces, centroids, i))
+        {
+          IFilter::Message warningMsg{IFilter::Message::Type::Info, fmt::format("Feature ID {} may be periodic. Manual review may be necessary.", i)};
+          m_MessageHandler.m_Callback(warningMsg);
+        }
+      }
     }
     vertexSets[i].clear();
   }
