@@ -12,8 +12,6 @@ namespace
 constexpr float64 k_max_difference = 0.0001;
 constexpr StringLiteral k_BinRangesName = "Ranges";
 constexpr StringLiteral k_BinCountsName = "Counts";
-constexpr StringLiteral k_MostPopulatedBinName = "Most Populated Bin";
-constexpr StringLiteral k_ModalBinRangesName = "Modal Bin Ranges";
 constexpr StringLiteral k_Array0Name = "array0";
 constexpr StringLiteral k_Array1Name = "array1";
 constexpr StringLiteral k_Array2Name = "array2";
