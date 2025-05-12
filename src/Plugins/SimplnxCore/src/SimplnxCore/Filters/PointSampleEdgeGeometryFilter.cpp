@@ -164,7 +164,7 @@ Result<> PointSampleEdgeGeometryFilter::executeImpl(DataStructure& dataStructure
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)
   {
-  createdDataPaths.push_back(inputs.pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+    createdDataPaths.push_back(inputs.pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
   }
   inputs.pCreatedDataArrayPaths = createdDataPaths;
 
