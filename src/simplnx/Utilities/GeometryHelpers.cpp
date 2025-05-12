@@ -179,35 +179,37 @@ BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, con
   const auto maxPoint = boundingBox.getMaxPoint();
   const auto minPoint = boundingBox.getMinPoint();
 
+  constexpr float32 k_Epsilon = std::numeric_limits<float32>::epsilon();
+
   for(const auto& vert : vertexSet)
   {
     const float32 x = vertices[3 * vert + 0];
     const float32 y = vertices[3 * vert + 1];
     const float32 z = vertices[3 * vert + 2];
 
-    if(std::abs(x - minPoint[0]) <= FLT_EPSILON)
+    if(std::abs(x - minPoint[0]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::left);
     }
-    else if(std::abs(x - maxPoint[0]) <= FLT_EPSILON)
+    else if(std::abs(x - maxPoint[0]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::right);
     }
 
-    if(std::abs(y - minPoint[1]) <= FLT_EPSILON)
+    if(std::abs(y - minPoint[1]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::top);
     }
-    else if(std::abs(y - maxPoint[1]) <= FLT_EPSILON)
+    else if(std::abs(y - maxPoint[1]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::bottom);
     }
 
-    if(std::abs(z - minPoint[2]) <= FLT_EPSILON)
+    if(std::abs(z - minPoint[2]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::front);
     }
-    else if(std::abs(z - maxPoint[2]) <= FLT_EPSILON)
+    else if(std::abs(z - maxPoint[2]) <= k_Epsilon)
     {
       edgeFaces.insert(BoundingBox3Df::faces_enum::back);
     }
