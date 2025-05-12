@@ -210,9 +210,6 @@ Result<> ComputeFeatureCentroids::operator()()
   if(m_InputValues->IsPeriodic)
   {
     m_MessageHandler({IFilter::Message::Type::Info, "Checking for periodic data."});
-
-    usize testIndex = 48 * 2;
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Range X: {} / {}", rangeXStoreRef[testIndex], rangeXStoreRef[testIndex + 1])});
     if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(imageGeom, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef, centroids))
     {
       m_MessageHandler({IFilter::Message::Type::Info, "ComputeFeatureCentroids found Non-Contiguous Features. Centroids may require additional checks."});
