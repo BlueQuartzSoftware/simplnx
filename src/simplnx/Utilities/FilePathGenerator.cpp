@@ -43,7 +43,7 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
   }
   int32 index = 0;
   std::string paddingSpecifier = paddingDigits >= 1 ? fmt::format(":0{}d", paddingDigits) : "";
-  std::string formatString = fmt::format("{{}}/{{}}{{{}}}{{}}{{}}", paddingSpecifier);
+  const std::string formatString = fmt::format("{{}}/{{}}{{{}}}{{}}{{}}", paddingSpecifier);
   for(int32 i = 0; i < (end - start) + 1; i += increment)
   {
     if(order == Ordering::LowToHigh)
@@ -59,5 +59,24 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
   }
 
   return fileList;
+}
+
+// -----------------------------------------------------------------------------
+std::string GenerateExampleFile(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix, std::string_view fileSuffix,
+                                std::string_view fileExtension, uint32 paddingDigits)
+{
+  int32 index = 0;
+  std::string paddingSpecifier = paddingDigits >= 1 ? fmt::format(":0{}d", paddingDigits) : "";
+  const std::string formatString = fmt::format("{{}}{{{}}}{{}}{{}}", paddingSpecifier);
+  if(order == Ordering::LowToHigh)
+  {
+    index = start;
+  }
+  else
+  {
+    index = end;
+  }
+  std::string filePath = fmt::format(fmt::runtime(formatString), filePrefix, index, fileSuffix, fileExtension);
+  return filePath;
 }
 } // namespace nx::core::FilePathGenerator
