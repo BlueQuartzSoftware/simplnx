@@ -120,7 +120,7 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
   if(crystalStructures.getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array")};
   }
 
   std::vector<DataPath> dataPaths;
@@ -129,7 +129,7 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   const Float32Array& quats = dataStructure.getDataRefAs<Float32Array>(pCellEulerAnglesArrayPathValue);
   if(quats.getNumberOfComponents() != 3)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Euler Angles Input Array must be a 3 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Euler Angles Input Array must be a 3 component Float32 array")};
   }
   dataPaths.push_back(pCellEulerAnglesArrayPathValue);
 
@@ -137,7 +137,7 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   if(phases.getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array")};
   }
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
@@ -150,7 +150,7 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
     const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
     }
 
     if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)

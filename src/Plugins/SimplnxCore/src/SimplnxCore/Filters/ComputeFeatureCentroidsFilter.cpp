@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
   const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12700, fmt::format("Cannot find the selected feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-12700, fmt::format("Cannot find the selected feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
   IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();
 

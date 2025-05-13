@@ -104,32 +104,32 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
 
   if(pConversionAlgorithmValue > 3)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{
-        -10701, fmt::format("Conversion Algorithm choice is invalid. Valid values are 0=Luminosity, 1=Average, 2=Lightness, 3=SingleChannel. Value supplied is {}", pConversionAlgorithmValue)}})};
+    return {MakeErrorResult<OutputActions>(
+        -10701, fmt::format("Conversion Algorithm choice is invalid. Valid values are 0=Luminosity, 1=Average, 2=Lightness, 3=SingleChannel. Value supplied is {}", pConversionAlgorithmValue))};
   }
 
   if(pConversionAlgorithmValue == 3 && pColorChannelValue > 3)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", pColorChannelValue)}})};
+    return {MakeErrorResult<OutputActions>(-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", pColorChannelValue))};
   }
 
   if(pConversionAlgorithmValue == 0)
   {
     if(pColorWeightsValue[0] < 0.0F || pColorWeightsValue[1] < 0.0F || pColorWeightsValue[2] < 0.0F)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-10704, "1 of more of the Color Weight values have a negative value. This is not allowed."}})};
+      return {MakeErrorResult<OutputActions>(-10704, "1 of more of the Color Weight values have a negative value. This is not allowed.")};
     }
 
     float colorWeightSum = pColorWeightsValue[0] + pColorWeightsValue[1] + pColorWeightsValue[2];
     if(colorWeightSum < .9800 || colorWeightSum > 1.02)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum)}})};
+      return {MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
     }
   }
 
   if(inputDataArrayPaths.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-10705, fmt::format("No input arrays selected for conversion.")}})};
+    return {MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
   }
 
   DataPath outputDataArrayPath;
@@ -138,7 +138,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
     const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
     if(inputArray == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-10700, fmt::format("Input Data Array does not exist at DataPath {}", inputDataArrayPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-10700, fmt::format("Input Data Array does not exist at DataPath {}", inputDataArrayPath.toString()))};
     }
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     std::string inputArrayName = inputDataArrayPath.getTargetName();

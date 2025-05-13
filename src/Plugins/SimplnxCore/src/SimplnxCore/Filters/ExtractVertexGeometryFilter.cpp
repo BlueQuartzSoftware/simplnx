@@ -135,7 +135,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(nullptr == goodVoxelsArray)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", pMaskArrayPathValue.toString())}})};
+      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", pMaskArrayPathValue.toString()))};
     }
 
     if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)

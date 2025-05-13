@@ -34,7 +34,7 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) cons
 
   if(!dataStructure.insert(importData, getCreatedPath().getParent()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, getCreatedPath().toString())}})};
+    return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, getCreatedPath().toString()));
   }
 
   return {};

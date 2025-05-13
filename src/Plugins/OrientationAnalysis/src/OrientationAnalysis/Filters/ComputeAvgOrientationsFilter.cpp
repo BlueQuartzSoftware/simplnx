@@ -114,7 +114,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
   if(crystalStructures.getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array")};
   }
 
   std::vector<DataPath> dataPaths;
@@ -123,7 +123,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   const Float32Array& quats = dataStructure.getDataRefAs<Float32Array>(pCellQuatsArrayPathValue);
   if(quats.getNumberOfComponents() != 4)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
   }
   dataPaths.push_back(pCellQuatsArrayPathValue);
 
@@ -131,7 +131,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   if(phases.getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array")};
   }
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
@@ -139,7 +139,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pCellFeatureIdsArrayPathValue);
   if(featureIds.getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "FeatureIds Input Array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "FeatureIds Input Array must be a 1 component Int32 array")};
   }
   dataPaths.push_back(pCellFeatureIdsArrayPathValue);
 

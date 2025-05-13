@@ -133,7 +133,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   auto fileReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileIOError, "Failed to open the HDF5 file at the specified path."}})};
+    return {MakeErrorResult<OutputActions>(k_FailedOpenFileIOError, "Failed to open the HDF5 file at the specified path.")};
   }
 
   Result<OutputActions> result;

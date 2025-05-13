@@ -96,7 +96,7 @@ IFilter::PreflightResult ComputeQuaternionConjugateFilter::preflightImpl(const D
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuaternionDataArrayPathValue);
   if(quats.getNumberOfComponents() != 4)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
   }
 
   {

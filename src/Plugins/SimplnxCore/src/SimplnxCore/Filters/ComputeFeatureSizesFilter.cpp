@@ -109,12 +109,12 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
 
   if(geometry == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeometry, "Could not find the target geometry."}})};
+    return {MakeErrorResult<OutputActions>(k_MissingGeometry, "Could not find the target geometry.")};
   }
 
   if(featureIdsArray == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingFeatureIds, "Could not find Feature IDs array."}})};
+    return {MakeErrorResult<OutputActions>(k_MissingFeatureIds, "Could not find Feature IDs array.")};
   }
 
   const std::string arrayDataFormat = featureIdsArray->getDataFormat();
@@ -209,7 +209,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
         if(featureCounts[i] > 9007199254740992ULL)
         {
           std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
+          return MakeErrorResult(k_BadFeatureCount, ss);
         }
         volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
 
@@ -228,7 +228,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
         if(featureCounts[i] > 9007199254740992ULL)
         {
           std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
+          return MakeErrorResult(k_BadFeatureCount, ss);
         }
 
         volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
@@ -245,7 +245,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
       if(err < 0)
       {
         std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", imageGeom->getTypeName());
-        return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
+        return MakeErrorResult(err, ss);
       }
     }
   }
@@ -261,7 +261,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
     if(err < 0)
     {
       std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", geom->getTypeName());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{err, ss}})};
+      return MakeErrorResult(err, ss);
     }
 
     const Float32Array* elemSizes = geom->getElementSizes();

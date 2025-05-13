@@ -140,18 +140,18 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   if(dataStructure.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
   {
     auto ss = fmt::format("Moving Vertex Geometry not found at path: {}", movingVertexPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingMovingVertex, ss}})};
+    return {MakeErrorResult<OutputActions>(k_MissingMovingVertex, ss)};
   }
   if(dataStructure.getDataAs<VertexGeom>(targetVertexPath) == nullptr)
   {
     auto ss = fmt::format("Target Vertex Geometry not found at path: {}", targetVertexPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingTargetVertex, ss}})};
+    return {MakeErrorResult<OutputActions>(k_MissingTargetVertex, ss)};
   }
 
   if(numIterations < 1)
   {
     auto ss = fmt::format("Must perform at least 1 iterations");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumIterations, ss}})};
+    return {MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
   usize numTuples = 1;

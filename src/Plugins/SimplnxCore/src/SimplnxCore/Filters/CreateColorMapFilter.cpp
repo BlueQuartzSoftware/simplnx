@@ -129,7 +129,7 @@ IFilter::PreflightResult CreateColorMapFilter::preflightImpl(const DataStructure
     const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
     }
 
     if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)

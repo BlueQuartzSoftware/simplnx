@@ -115,14 +115,14 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
   // Get the Centroids Feature Array and get its TupleShape
   const auto* centroids = dataStructure.getDataAs<Float32Array>(pCentroidsArrayPath);
   if(nullptr == centroids)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12802, "Centroids Feature Data Array is not of the correct type"}})};
+    return {MakeErrorResult<OutputActions>(-12802, "Centroids Feature Data Array is not of the correct type")};
   }
 
   IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();

@@ -44,7 +44,7 @@ Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices,
         fmt::format("Supplied {} list contains a vertex index larger than the total length of the supplied shared vertex list\nIndex Value: {}\nNumber of Vertices: {}", cellType, idx, numVertices);
     if(treatWarningsAsErrors)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-8340, msg}})};
+      return MakeErrorResult(-8340, msg);
     }
     warningResults.warnings().push_back(Warning{-9841, msg});
   }
@@ -236,7 +236,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     if(dataStructure.getDataAs<Float32Array>(pVertexListPath) == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9840, fmt::format("Cannot find selected vertex list at path '{}'", pVertexListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9840, fmt::format("Cannot find selected vertex list at path '{}'", pVertexListPath.toString()))};
     }
   }
   if(pGeometryType == k_TriangleGeometry || pGeometryType == k_QuadGeometry)
@@ -283,17 +283,17 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     const auto xBounds = dataStructure.getDataAs<Float32Array>(pXBoundsPath);
     if(xBounds == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9841, fmt::format("Cannot find selected quadrilateral list at path '{}'", pXBoundsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9841, fmt::format("Cannot find selected quadrilateral list at path '{}'", pXBoundsPath.toString()))};
     }
     const auto yBounds = dataStructure.getDataAs<Float32Array>(pYBoundsPath);
     if(yBounds == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9842, fmt::format("Cannot find selected quadrilateral list at path '{}'", pYBoundsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9842, fmt::format("Cannot find selected quadrilateral list at path '{}'", pYBoundsPath.toString()))};
     }
     const auto zBounds = dataStructure.getDataAs<Float32Array>(pZBoundsPath);
     if(zBounds == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9843, fmt::format("Cannot find selected quadrilateral list at path '{}'", pZBoundsPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9843, fmt::format("Cannot find selected quadrilateral list at path '{}'", pZBoundsPath.toString()))};
     }
     usize xTuples = xBounds->getNumberOfTuples();
     usize yTuples = yBounds->getNumberOfTuples();
@@ -319,7 +319,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pEdgeAMName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
     if(const auto* edgeList = dataStructure.getDataAs<UInt64Array>(pEdgeListPath); edgeList == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9845, fmt::format("Cannot find selected edge list at path '{}'", pEdgeListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9845, fmt::format("Cannot find selected edge list at path '{}'", pEdgeListPath.toString()))};
     }
 
     auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, ArrayHandlingType{pArrayHandling});
@@ -330,7 +330,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
     if(const auto* triangleList = dataStructure.getDataAs<UInt64Array>(pTriangleListPath); triangleList == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString()))};
     }
 
     auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
@@ -341,7 +341,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
     if(const auto* quadList = dataStructure.getDataAs<UInt64Array>(pQuadListPath); quadList == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString()))};
     }
 
     auto createQuadGeomAction = std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
@@ -352,7 +352,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
     if(const auto* tetList = dataStructure.getDataAs<UInt64Array>(pTetListPath); tetList == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString()))};
     }
 
     auto createTetGeomAction = std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
@@ -363,7 +363,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
     if(const auto* hexList = dataStructure.getDataAs<UInt64Array>(pHexListPath); hexList == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString()))};
     }
 
     auto createHexGeomAction = std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});

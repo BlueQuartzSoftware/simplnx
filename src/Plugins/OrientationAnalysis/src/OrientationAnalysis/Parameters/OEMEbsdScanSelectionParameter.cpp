@@ -198,7 +198,7 @@ Result<> OEMEbsdScanSelectionParameter::validate(const std::any& valueRef) const
   const std::string lowerExtension = nx::core::StringUtilities::toLower(value.inputFilePath.extension().string());
   if(value.inputFilePath.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-20032, fmt::format("File extension '{}' is not a valid file extension.", value.inputFilePath.extension().string())}})};
+    return MakeErrorResult(-20032, fmt::format("File extension '{}' is not a valid file extension.", value.inputFilePath.extension().string()));
   }
   return {};
 }

@@ -117,7 +117,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeomPathValue);
   if(imageGeomPtr == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("Could not find input image geometry at path '{}'", pImageGeomPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingGeomError, fmt::format("Could not find input image geometry at path '{}'", pImageGeomPathValue.toString()))};
   }
 
   std::vector<DataPath> dataArrayPaths;
@@ -126,17 +126,17 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto* confIndexPtr = dataStructure.getDataAs<IDataArray>(pConfidenceIndexArrayPathValue);
   if(nullptr == confIndexPtr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find confidence index array at path '{}'", pConfidenceIndexArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find confidence index array at path '{}'", pConfidenceIndexArrayPathValue.toString()))};
   }
   auto* confIndexFloatPtr = dataStructure.getDataAs<Float32Array>(pConfidenceIndexArrayPathValue);
   if(nullptr == confIndexFloatPtr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{
-        Error{k_IncorrectInputArray, fmt::format("Confidence index array at path '{}' is not of the correct type. It must be Float32.", pConfidenceIndexArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray,
+                                           fmt::format("Confidence index array at path '{}' is not of the correct type. It must be Float32.", pConfidenceIndexArrayPathValue.toString()))};
   }
   if(confIndexFloatPtr->getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Confidence index input array must be a 1 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Confidence index input array must be a 1 component Float32 array")};
   }
   dataArrayPaths.push_back(pConfidenceIndexArrayPathValue);
 
@@ -144,7 +144,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto* cellPhasesPtr = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue);
   if(nullptr == cellPhasesPtr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find cell phases array at path '{}'", pCellPhasesArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find cell phases array at path '{}'", pCellPhasesArrayPathValue.toString()))};
   }
   auto* cellPhasesInt32Ptr = dataStructure.getDataAs<Int32Array>(pCellPhasesArrayPathValue);
   if(nullptr == cellPhasesInt32Ptr)
@@ -154,7 +154,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   }
   if(cellPhasesInt32Ptr->getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Cell phases input array must be a 1 component Int32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Cell phases input array must be a 1 component Int32 array")};
   }
   dataArrayPaths.push_back(pCellPhasesArrayPathValue);
 
@@ -162,7 +162,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   auto* crystalStructuresPtr = dataStructure.getDataAs<IDataArray>(pCrystalStructuresArrayPathValue);
   if(nullptr == crystalStructuresPtr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
   }
   auto* crystalStructuresUInt32Ptr = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
   if(nullptr == crystalStructuresUInt32Ptr)
@@ -172,14 +172,14 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   }
   if(crystalStructuresUInt32Ptr->getNumberOfComponents() != 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Crystal structures input array must be a 1 component UInt32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal structures input array must be a 1 component UInt32 array")};
   }
 
   // validate the quaternions array
   auto* quatsPtr = dataStructure.getDataAs<IDataArray>(pQuatsArrayPathValue);
   if(nullptr == quatsPtr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find quaternions array at path '{}'", pQuatsArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find quaternions array at path '{}'", pQuatsArrayPathValue.toString()))};
   }
   auto* quatsFloat32Ptr = dataStructure.getDataAs<Float32Array>(pQuatsArrayPathValue);
   if(nullptr == quatsFloat32Ptr)
@@ -189,7 +189,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   }
   if(quatsFloat32Ptr->getNumberOfComponents() != 4)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Quaternion input array must be a 4 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion input array must be a 4 component Float32 array")};
   }
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
