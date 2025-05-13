@@ -101,7 +101,7 @@ Parameters ComputeArrayHistogramFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeArrayHistogramFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------

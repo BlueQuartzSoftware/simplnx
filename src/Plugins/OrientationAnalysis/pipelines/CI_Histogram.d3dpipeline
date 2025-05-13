@@ -207,12 +207,12 @@
           "value": true,
           "version": 1
         },
-        "histogram_bin_count_suffix": {
-          "value": " Histogram Counts",
+        "histogram_bin_count_name": {
+          "value": "Bin Counts",
           "version": 1
         },
-        "histogram_bin_range_suffix": {
-          "value": " Histogram Bin Ranges",
+        "histogram_bin_range_name": {
+          "value": "Bin Ranges",
           "version": 1
         },
         "max_range": {
@@ -270,8 +270,8 @@
         },
         "input_data_array_paths": {
           "value": [
-            "DataContainer/Statistics/Confidence Index Histogram Counts",
-            "DataContainer/Statistics/Confidence Index Histogram Bin Ranges"
+            "DataContainer/Statistics/\"Confidence Index\" Histogram/Bin Counts",
+            "DataContainer/Statistics/\"Confidence Index\" Histogram/Bin Ranges"
           ],
           "version": 1
         },

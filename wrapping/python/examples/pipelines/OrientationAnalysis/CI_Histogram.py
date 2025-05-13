@@ -91,8 +91,8 @@ nx_filter = nx.ComputeArrayHistogramFilter()
 result = nx_filter.execute(
     data_structure=data_structure,
     #data_group_name=nx.DataPath("DataContainer/Statistics"),
-    histogram_bin_count_suffix=" Histogram",
-    histogram_bin_range_suffix=" Histogram Ranges",
+    histogram_bin_count_name="Bin Counts",
+    histogram_bin_range_name="Bin Ranges",
     max_range=1.0,
     min_range=0.0,
     create_new_data_group=True,
@@ -117,7 +117,7 @@ result = nx_filter.execute(
     #output_dir: PathLike = ...,
     output_path=output_file_path,
     output_style_index=1,
-    input_data_array_paths=[nx.DataPath("DataContainer/Statistics/Confidence Index Histogram")]
+    input_data_array_paths=[nx.DataPath("DataContainer/Statistics/\"Confidence Index\" Histogram/Bin Counts")]
 )
 nxtest.check_filter_result(nx_filter, result)
 

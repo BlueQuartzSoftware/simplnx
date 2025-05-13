@@ -343,8 +343,8 @@ nx_filter = nx.ComputeArrayHistogramFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
-    histogram_bin_count_suffix=" Histogram",
-    histogram_bin_range_suffix=" Histogram Ranges",
+    histogram_bin_count_name="Bin Counts",
+    histogram_bin_range_name="Bin Ranges",
     create_new_data_group=True,
     new_data_group_path=nx.DataPath("fw-ar-IF1-aptr12-corr/Histograms"),
     number_of_bins=256,
@@ -362,7 +362,7 @@ result = nx_filter.execute(
     delimiter_index=2,
     output_path=nxtest.get_data_directory() / "Output/fw-ar-IF1-aptr12-corr/EqDiamHistogram.csv",
     output_style_index=1,
-    input_data_array_paths=[nx.DataPath("fw-ar-IF1-aptr12-corr/Histograms/EquivalentDiameters Histogram")]
+    input_data_array_paths=[nx.DataPath("fw-ar-IF1-aptr12-corr/Histograms/\"EquivalentDiameters\" Histogram/Bin Counts")]
 )
 nxtest.check_filter_result(nx_filter, result)
 
