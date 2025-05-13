@@ -36,8 +36,8 @@ public:
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
                                const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
-                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow,
-                               std::atomic<usize>& calculatedFeatureCount, usize totalFeatureCount, ComputeArrayHistogramByFeature* filter)
+                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                               std::atomic<usize>& overflow, std::atomic<usize>& calculatedFeatureCount, usize totalFeatureCount, ComputeArrayHistogramByFeature* filter)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -59,8 +59,8 @@ public:
 
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
                                bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
-                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow, std::atomic<usize>& calculatedFeatureCount,
-                               usize totalFeatureCount, ComputeArrayHistogramByFeature* filter)
+                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow,
+                               std::atomic<usize>& calculatedFeatureCount, usize totalFeatureCount, ComputeArrayHistogramByFeature* filter)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -237,7 +237,7 @@ private:
   float64 m_HistMax;
   bool m_HistFullRange;
   int32 m_NumBins;
-  const std::unique_ptr<MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   const AbstractDataStore<Type>& m_InputStore;
   const AbstractDataStore<int32>& m_FeatureIdsStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
@@ -318,10 +318,10 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     counts.resizeTuples({numFeatures});
     mostPopulated.resizeTuples({numFeatures});
 
-    std::unique_ptr<MaskCompare> mask = nullptr;
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> mask = nullptr;
     if(m_InputValues->UseMask)
     {
-      mask = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     }
 
     ParallelDataAlgorithm dataAlg;

@@ -43,9 +43,9 @@ template <typename T>
 class StatisticsByFeatureImpl
 {
 public:
-  StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompare>& mask, const Int32AbstractDataStore& featureIds,
-                          const AbstractDataStore<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray,
-                          NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, ComputeArrayStatistics* filter)
+  StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                          const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray,
+                          DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, ComputeArrayStatistics* filter)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -507,7 +507,7 @@ private:
   bool m_FindNumUniqueValues;
   Float32Array* m_MedianArray;
   Int32Array* m_NumUniqueValuesArray;
-  const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
   const Int32AbstractDataStore& m_FeatureIds;
   const AbstractDataStore<T>& m_Source;
   const DataArray<uint64>* m_LengthArray = nullptr;
@@ -811,7 +811,7 @@ struct ComputeArrayStatisticsFunctor
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
   {
-    std::unique_ptr<MaskCompare> maskCompare = nullptr;
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
     {
       try

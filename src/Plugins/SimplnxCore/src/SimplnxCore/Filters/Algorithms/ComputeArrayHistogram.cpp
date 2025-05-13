@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -65,10 +66,10 @@ Result<> ComputeArrayHistogram::operator()()
       modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
     }
 
-    std::unique_ptr<MaskCompare> mask = nullptr;
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> mask = nullptr;
     if(m_InputValues->MaskPath.has_value())
     {
-      mask = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskPath.value());
+      mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskPath.value());
     }
 
     Result<> result = {};

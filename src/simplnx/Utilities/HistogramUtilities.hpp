@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
 namespace nx::core::HistogramUtilities
@@ -287,8 +288,8 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
-                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask,
-                        std::atomic<usize>& overflow)
+                        const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore,
+                        const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -312,7 +313,8 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompare>& mask, std::atomic<usize>& overflow)
+                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                        std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -374,7 +376,7 @@ private:
   AbstractDataStore<Type>& m_BinRangesStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
   AbstractDataStore<SizeType>& m_MostPopulatedStore;
-  const std::unique_ptr<MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   std::atomic<usize>& m_Overflow;
 };
 
@@ -383,7 +385,8 @@ using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std:
 
 template <typename T>
 FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
-                                                    const std::unique_ptr<MaskCompare>& mask, const std::function<void(const std::string&)>& msgHandler, const std::atomic_bool& shouldCancel)
+                                                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::function<void(const std::string&)>& msgHandler,
+                                                    const std::atomic_bool& shouldCancel)
 {
   std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
   auto now = std::chrono::steady_clock::now();
