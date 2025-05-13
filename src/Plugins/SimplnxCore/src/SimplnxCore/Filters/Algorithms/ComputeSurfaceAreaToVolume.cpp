@@ -73,6 +73,8 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Z Slice: '{}'", zIdx));
+
     int64 zStride = zIdx * xPoints * yPoints;
     for(int64 yIdx = 0; yIdx < yPoints; yIdx++)
     {
@@ -148,6 +150,8 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
 
   if(m_InputValues->CalculateSphericity) // Calc the sphericity if requested
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
+
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
     for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {

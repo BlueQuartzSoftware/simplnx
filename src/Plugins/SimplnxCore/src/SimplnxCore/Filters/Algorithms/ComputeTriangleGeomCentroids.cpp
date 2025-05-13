@@ -52,6 +52,8 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
 
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Gathering unique vertices for {} triangles", numTriangles));
+
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
     const int32 faceLabel0 = faceLabels[2 * i + 0];
@@ -69,6 +71,8 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       vertexSets[faceLabel1].insert(triangles[3 * i + 2]);
     }
   }
+
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing centroids for {} features", numFeatures));
 
   for(MeshIndexType i = 0; i < numFeatures; i++)
   {

@@ -91,6 +91,8 @@ Result<> ExtractComponentAsArray::operator()()
   const auto compToRemoveNum = static_cast<usize>(abs(m_InputValues->CompNumber));
   // this will be the original array if components are not being removed, else it is resized array
   auto* baseArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath);
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Extracting Component"));
+
   if((!removeComponentsFromArrayBool) && moveComponentsToNewArrayBool)
   {
     ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayPtr->getDataType(), baseArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
@@ -101,10 +103,12 @@ Result<> ExtractComponentAsArray::operator()()
 
   if(moveComponentsToNewArrayBool)
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving Component"));
     auto* extractedCompArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath);
     ExecuteDataFunction(ExtractComponentsFunctor{}, tempArrayPtr->getDataType(), tempArrayPtr, extractedCompArrayPtr, compToRemoveNum);
   }
 
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Removing Original Component"));
   // remove by default, because the only case where they weren't removed was covered at start
   ExecuteDataFunction(RemoveComponentsFunctor{}, tempArrayPtr->getDataType(), tempArrayPtr, baseArrayPtr, compToRemoveNum);
 

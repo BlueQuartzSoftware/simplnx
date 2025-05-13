@@ -29,6 +29,10 @@ AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::operator()()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
@@ -86,6 +90,10 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
       auto now = std::chrono::steady_clock::now();
       // Only send updates every 1 second

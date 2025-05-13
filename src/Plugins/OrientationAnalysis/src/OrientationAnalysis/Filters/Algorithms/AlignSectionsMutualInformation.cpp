@@ -31,6 +31,10 @@ AlignSectionsMutualInformation::~AlignSectionsMutualInformation() noexcept = def
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMutualInformation::operator()()
 {
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
@@ -87,6 +91,10 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       float32 minDisorientation = std::numeric_limits<float32>::max();

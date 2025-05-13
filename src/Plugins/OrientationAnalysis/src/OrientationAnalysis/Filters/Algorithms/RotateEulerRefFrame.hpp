@@ -32,6 +32,7 @@ public:
   RotateEulerRefFrame& operator=(RotateEulerRefFrame&&) = delete;      // Move Assignment Not Implemented
 
   Result<> operator()();
+  bool shouldCancel() const;
 
 private:
   DataStructure& m_DataStructure;

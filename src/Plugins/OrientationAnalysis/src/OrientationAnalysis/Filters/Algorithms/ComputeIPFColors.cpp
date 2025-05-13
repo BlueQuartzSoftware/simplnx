@@ -57,6 +57,10 @@ public:
     size_t index = 0;
     for(size_t i = start; i < end; i++)
     {
+      if(m_Filter->shouldCancel())
+      {
+        return;
+      }
       phase = m_CellPhases[i];
       index = i * 3;
       m_CellIPFColors.setValue(index, 0);
@@ -195,4 +199,9 @@ This indicates a problem with the input cell phase data. DREAM3D-NX will give IN
 void ComputeIPFColors::incrementPhaseWarningCount()
 {
   ++m_PhaseWarningCount;
+}
+
+bool ComputeIPFColors::shouldCancel() const
+{
+  return m_ShouldCancel;
 }

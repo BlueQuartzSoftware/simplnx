@@ -22,7 +22,7 @@ inline void ComputeMisorientation(const QuatD& q1, const QuatD& q2, Float32Array
   outputMisorientations[tupleIdx * 4 + 3] = axisAngle[3] * Constants::k_180OverPiD; // Convert the output Angle to Degrees.
 }
 
-Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues)
+Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues, const std::atomic_bool& m_ShouldCancel)
 {
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(inputValues->InputPhasesArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(inputValues->InputCrystalStructuresArrayPath);
@@ -38,6 +38,10 @@ Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorie
 
   for(int64_t tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(cellPhases[tupleIdx] > 0) // We must have a valid phase index.
     {
       size_t laueClass = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
@@ -62,7 +66,7 @@ Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorie
   return {};
 }
 
-Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues)
+Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues, const std::atomic_bool& m_ShouldCancel)
 {
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(inputValues->InputPhasesArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(inputValues->InputCrystalStructuresArrayPath);
@@ -84,6 +88,10 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
 
   for(int64_t tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(cellPhases[tupleIdx] > 0) // We must have a valid phase index.
     {
       size_t phase1 = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
@@ -127,11 +135,11 @@ Result<> ComputeMisorientations::operator()()
 
   if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseArraysIndex)
   {
-    result = ComputeUsingArrays(m_DataStructure, m_InputValues);
+    result = ComputeUsingArrays(m_DataStructure, m_InputValues, m_ShouldCancel);
   }
   else if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseReferenceAxesIndex)
   {
-    result = ComputeUsingReferenceOrientation(m_DataStructure, m_InputValues);
+    result = ComputeUsingReferenceOrientation(m_DataStructure, m_InputValues, m_ShouldCancel);
   }
 
   return result;

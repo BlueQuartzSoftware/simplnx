@@ -48,7 +48,8 @@ public:
    */
   void incrementPhaseWarningCount();
 
-protected:
+  bool shouldCancel() const;
+
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;

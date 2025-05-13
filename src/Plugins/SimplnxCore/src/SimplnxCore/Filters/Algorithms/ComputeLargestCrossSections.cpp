@@ -82,6 +82,9 @@ Result<> ComputeLargestCrossSections::operator()()
     stride2 = inPlane1;
     stride3 = inPlane1 * inPlane2;
   }
+
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", outPlane));
+
   for(size_t i = 0; i < outPlane; i++)
   {
     std::fill(featureCounts.begin(), featureCounts.end(), 0.0f);
