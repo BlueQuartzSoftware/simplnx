@@ -6,8 +6,6 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <random>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -122,7 +120,7 @@ Result<> RequireMinNumNeighbors::operator()()
 
   // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
   DataPath cellDataAttrMatrixPath = m_InputValues->FeatureIdsPath.getParent();
-  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray);
+  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray, m_InputValues->IgnoredVoxelArrayPaths);
   if(!result.has_value())
   {
     return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
