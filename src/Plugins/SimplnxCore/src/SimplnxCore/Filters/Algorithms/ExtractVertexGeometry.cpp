@@ -96,6 +96,8 @@ Result<> ExtractVertexGeometry::operator()()
 
   // Copy the mask array into a std::vector<bool>. This is just easier in
   // case the mask array is indeed one of the copied or moved arrays.
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Preparing arrays for extraction..."));
+
   std::vector<bool> maskedPoints;
   if(m_InputValues->UseMask)
   {
@@ -125,6 +127,8 @@ Result<> ExtractVertexGeometry::operator()()
 
   // Use the APIs from the IGeometryGrid to get the XYZ coord for the center
   // of each cell and then set that into the new VertexGeometry
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
+
   IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
   usize vertIdx = 0;
@@ -149,6 +153,8 @@ Result<> ExtractVertexGeometry::operator()()
   // If we are copying arrays, either with or without a mask, this code is applicable.
   if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Copy))
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));
+
     // Since we made copies of the DataArrays, we can safely resize the entire Attribute Matrix,
     // which will resize all the contained DataArrays
     AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();
@@ -168,6 +174,8 @@ Result<> ExtractVertexGeometry::operator()()
   // If we are MOVING arrays AND we are using a mask then we need this code block to execute
   if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Move) && m_InputValues->UseMask && vertexCount != cellCount)
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving cell data to vertex geometry"));
+
     // The arrays have already been moved at this point, so the source and
     // destinations are the same. This should work.
     for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)

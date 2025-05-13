@@ -47,6 +47,8 @@ Result<> ErodeDilateMask::operator()()
 
   for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {}", iteration));
+
     for(size_t j = 0; j < totalPoints; j++)
     {
       maskCopy[j] = mask[j];
