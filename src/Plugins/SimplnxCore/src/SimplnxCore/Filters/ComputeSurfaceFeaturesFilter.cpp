@@ -284,8 +284,8 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
     tupleDims = surfaceFeaturesParent->getShape();
   }
 
-  auto createSurfaceFeaturesAction =
-      std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue));
+  auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(
+      DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
   resultOutputActions.value().appendAction(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -302,8 +302,6 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayName_Key));
 
   // Resize the surface features array to the proper size
-  auto& surfaceFeaturesDataStore = dataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
-
   const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, messageHandler);
@@ -311,9 +309,6 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   {
     return validateNumFeatResult;
   }
-
-  // Initialize all values to 'false' or ZERO.Ï
-  surfaceFeaturesDataStore.fill(0);
 
   // Find surface features
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);

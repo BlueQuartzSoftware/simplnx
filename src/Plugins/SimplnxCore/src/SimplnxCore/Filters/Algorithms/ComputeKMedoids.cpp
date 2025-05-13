@@ -2,8 +2,8 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include <random>
 
@@ -15,8 +15,8 @@ template <typename T>
 class KMedoidsTemplate
 {
 public:
-  KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompare>& maskDataArray, usize numClusters,
-                   Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray,
+                   usize numClusters, Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_Medoids(medoidsIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -93,7 +93,7 @@ private:
   ComputeKMedoids* m_Filter;
   const AbstractDataStoreT& m_InputArray;
   AbstractDataStoreT& m_Medoids;
-  const std::unique_ptr<MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
   usize m_NumClusters;
   Int32AbstractDataStore& m_FeatureIds;
   ClusterUtilities::DistanceMetric m_DistMetric;
@@ -209,10 +209,10 @@ const std::atomic_bool& ComputeKMedoids::getCancel()
 Result<> ComputeKMedoids::operator()()
 {
   auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  std::unique_ptr<MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

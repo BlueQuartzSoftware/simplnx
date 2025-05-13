@@ -1,9 +1,10 @@
 #pragma once
 
+#include "simplnx/simplnx_export.hpp"
+
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/simplnx_export.hpp"
 
 #include <string>
 #include <vector>
@@ -16,9 +17,11 @@ namespace nx::core
 class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 {
 public:
+  inline static constexpr StringLiteral k_DefaultDataFormat = "";
+
   CreateArrayAction() = delete;
 
-  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "");
+  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
 
   ~CreateArrayAction() noexcept override;
 
@@ -84,5 +87,6 @@ private:
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
   std::string m_DataFormat = "";
+  std::string m_FillValue = "";
 };
 } // namespace nx::core

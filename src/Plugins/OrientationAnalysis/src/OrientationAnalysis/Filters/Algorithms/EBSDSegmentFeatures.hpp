@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/SegmentFeatures.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -79,7 +79,7 @@ private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
   Float32Array* m_QuatsArray = nullptr;
   FeatureIdsArrayType* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompare> m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
   DataArray<uint32>* m_CrystalStructures = nullptr;
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;

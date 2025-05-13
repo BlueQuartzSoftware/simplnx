@@ -322,8 +322,8 @@ void SingleComponentArrayCalculatorTest1()
 
   SECTION("Single Array Tests (Force Incorrect Tuple Counts)")
   {
-    runTest("-InputArray1", k_NumericArrayPath, -265, CalculatorItem::WarningCode::None);
-    runTest(k_InputArray2, k_NumericArrayPath, -265, CalculatorItem::WarningCode::None);
+    runTest("-InputArray1", k_NumericArrayPath, -268, CalculatorItem::WarningCode::None);
+    runTest(k_InputArray2, k_NumericArrayPath, -268, CalculatorItem::WarningCode::None);
 
     int numTuple = 10;
     double value = 18;

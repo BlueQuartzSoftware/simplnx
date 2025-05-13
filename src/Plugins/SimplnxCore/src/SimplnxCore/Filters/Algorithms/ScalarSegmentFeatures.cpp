@@ -133,7 +133,7 @@ Result<> ScalarSegmentFeatures::operator()()
   {
     try
     {
-      m_GoodVoxels = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_GoodVoxels = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
@@ -146,7 +146,6 @@ Result<> ScalarSegmentFeatures::operator()()
   auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
   auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
   size_t inDataPoints = inputDataArray->getNumberOfTuples();
@@ -223,7 +222,6 @@ Result<> ScalarSegmentFeatures::operator()()
 
   // make sure all values are initialized and "re-reserve" index 0
   auto& activeStore = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
-  activeStore.fill(1);
   activeStore[0] = 0;
 
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids

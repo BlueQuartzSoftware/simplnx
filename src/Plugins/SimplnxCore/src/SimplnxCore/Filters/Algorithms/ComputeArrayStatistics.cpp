@@ -4,6 +4,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -42,7 +43,7 @@ class ComputeArrayStatisticsByIndexImpl
 {
 public:
   ComputeArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange,
-                                    int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source,
+                                    int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source,
                                     BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray,
                                     Float32Array* stdDevArray, Float32Array* summationArray, UInt64Array* histBinCountsArray, DataArray<T>* histBinRangesArray, UInt64Array* mostPopulatedBinArray,
                                     NeighborList<T>* modalBinRangesArray, ComputeArrayStatistics* filter)
@@ -392,7 +393,7 @@ private:
   float64 m_HistMax;
   bool m_HistFullRange;
   int32 m_NumBins;
-  const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
   BoolArray* m_FeatureHasDataArray = nullptr;
@@ -414,8 +415,8 @@ template <typename T>
 class FindArrayMedianUniqueByIndexImpl
 {
 public:
-  FindArrayMedianUniqueByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, bool findMedian, bool findNumUnique, Float32Array* medianArray,
-                                   Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics* filter)
+  FindArrayMedianUniqueByIndexImpl(const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, bool findMedian, bool findNumUnique,
+                                   Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics* filter)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -491,7 +492,7 @@ private:
   bool m_FindNumUniqueValues;
   Float32Array* m_MedianArray;
   Int32Array* m_NumUniqueValuesArray;
-  const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
   const DataArray<uint64>* m_LengthArray = nullptr;
@@ -691,7 +692,7 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const ComputeArrayStatisticsInputValues* inputValues,
+void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const ComputeArrayStatisticsInputValues* inputValues,
                     std::vector<IArray*>& arrays, usize numFeatures, ComputeArrayStatistics* filter)
 {
   if(inputValues->ComputeByIndex)
@@ -802,7 +803,7 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray,
+void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray,
                             const Float32Array& sigArray, Float32Array& standardizedArray)
 {
   auto& data = dataArray.getDataStoreRef();
@@ -830,7 +831,8 @@ void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const s
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void StandardizeData(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Float32Array& muArray, const Float32Array& sigArray, Float32Array& standardizedArray)
+void StandardizeData(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Float32Array& muArray, const Float32Array& sigArray,
+                     Float32Array& standardizedArray)
 {
   auto& data = dataArray.getDataStoreRef();
   auto& standardized = standardizedArray.getDataStoreRef();
@@ -868,12 +870,12 @@ struct ComputeArrayStatisticsFunctor
     {
       featureIdsPtr = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath);
     }
-    std::unique_ptr<MaskCompare> maskCompare = nullptr;
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
     {
       try
       {
-        maskCompare = InstantiateMaskCompare(dataStructure, inputValues->MaskArrayPath);
+        maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, inputValues->MaskArrayPath);
       } catch(const std::out_of_range& exception)
       {
         // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

@@ -4,7 +4,7 @@
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include <Eigen/Dense>
 
@@ -37,10 +37,10 @@ const std::atomic_bool& ComputeVectorColors::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeVectorColors::operator()()
 {
-  std::unique_ptr<MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

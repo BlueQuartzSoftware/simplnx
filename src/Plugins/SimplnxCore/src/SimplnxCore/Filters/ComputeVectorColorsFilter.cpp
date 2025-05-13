@@ -109,7 +109,7 @@ IFilter::PreflightResult ComputeVectorColorsFilter::preflightImpl(const DataStru
 
   if(!pUseGoodVoxelsValue)
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath, CreateArrayAction::k_DefaultDataFormat, "true");
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -128,7 +128,6 @@ Result<> ComputeVectorColorsFilter::executeImpl(DataStructure& dataStructure, co
   if(!inputValues.UseMask)
   {
     inputValues.MaskArrayPath = k_MaskArrayPath;
-    dataStructure.getDataAs<BoolArray>(k_MaskArrayPath)->fill(true);
   }
   else
   {

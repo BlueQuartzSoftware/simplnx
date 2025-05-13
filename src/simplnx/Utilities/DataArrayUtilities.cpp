@@ -3,9 +3,12 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-
-#include <set>
+#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
+#include "simplnx/Utilities/TemplateHelpers.hpp"
 
 using namespace nx::core;
 
@@ -17,7 +20,7 @@ Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, co
   auto& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
   const IDataStore::ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
   dataStructure.removeData(dataPath);
-  return CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
+  return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
 }
 
 struct InitializeNeighborListFunctor
@@ -33,108 +36,6 @@ struct InitializeNeighborListFunctor
 
 namespace nx::core
 {
-//-----------------------------------------------------------------------------
-void TryForceLargeDataFormatFromPrefs(std::string& dataFormat)
-{
-  auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
-  if(preferencesPtr->forceOocData())
-  {
-    dataFormat = preferencesPtr->largeDataFormat();
-  }
-}
-
-//-----------------------------------------------------------------------------
-std::shared_ptr<DataIOCollection> GetIOCollection()
-{
-  return Application::GetOrCreateInstance()->getIOCollection();
-}
-
-//-----------------------------------------------------------------------------
-Result<> CheckValueConverts(const std::string& value, NumericType numericType)
-{
-  switch(numericType)
-  {
-  case NumericType::int8: {
-    return CheckValuesSignedInt<int8>(value, Constants::k_Int8);
-  }
-  case NumericType::uint8: {
-    return CheckValuesUnsignedInt<uint8>(value, Constants::k_UInt8);
-  }
-  case NumericType::int16: {
-    return CheckValuesSignedInt<int16>(value, Constants::k_Int16);
-  }
-  case NumericType::uint16: {
-    return CheckValuesUnsignedInt<uint16>(value, Constants::k_UInt16);
-  }
-  case NumericType::int32: {
-    return CheckValuesSignedInt<int32>(value, Constants::k_Int32);
-  }
-  case NumericType::uint32: {
-    return CheckValuesUnsignedInt<uint32>(value, Constants::k_UInt32);
-  }
-  case NumericType::int64: {
-    return CheckValuesSignedInt<int64>(value, Constants::k_Int64);
-  }
-  case NumericType::uint64: {
-    return CheckValuesUnsignedInt<uint64>(value, Constants::k_UInt64);
-  }
-  case NumericType::float32: {
-    return CheckValuesFloatDouble<float32>(value, Constants::k_Float32);
-  }
-  case NumericType::float64: {
-    return CheckValuesFloatDouble<float64>(value, Constants::k_Float64);
-  }
-  }
-  return MakeErrorResult(-10102, fmt::format("CheckInitValueConverts: Cannot convert input value '{}' to type '{}'", value, NumericTypeToString(numericType)));
-}
-
-//-----------------------------------------------------------------------------
-Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray)
-{
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(&inputDataArray))
-  {
-    return CheckValuesFloatDouble<float32>(value, Constants::k_Float32);
-  }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(&inputDataArray))
-  {
-    return CheckValuesFloatDouble<float64>(value, Constants::k_Float64);
-  }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(&inputDataArray))
-  {
-    return CheckValuesSignedInt<int8>(value, Constants::k_Int8);
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(&inputDataArray))
-  {
-    return CheckValuesUnsignedInt<uint8>(value, Constants::k_UInt8);
-  }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(&inputDataArray))
-  {
-    return CheckValuesSignedInt<int16>(value, Constants::k_Int16);
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(&inputDataArray))
-  {
-    return CheckValuesUnsignedInt<uint16>(value, Constants::k_UInt16);
-  }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(&inputDataArray))
-  {
-    return CheckValuesSignedInt<int32>(value, Constants::k_Int32);
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(&inputDataArray))
-  {
-    return CheckValuesUnsignedInt<uint32>(value, Constants::k_UInt32);
-  }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(&inputDataArray))
-  {
-    return CheckValuesSignedInt<int64>(value, Constants::k_Int64);
-  }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(&inputDataArray))
-  {
-    return CheckValuesUnsignedInt<uint64>(value, Constants::k_UInt64);
-  }
-
-  return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
-}
-
 //-----------------------------------------------------------------------------
 bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
 {
@@ -157,37 +58,6 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
     types.insert(iArrayPtr->getNumberOfTuples());
   }
   return types.size() == 1;
-}
-
-//-----------------------------------------------------------------------------
-bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format)
-{
-  static const uint64 k_AvailableMemory = Memory::GetTotalMemory();
-
-  // Only check if format is set to in-memory
-  if(!format.empty())
-  {
-    return true;
-  }
-
-  Preferences* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
-
-  const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
-  const uint64 largeDataStructureSize = preferencesPtr->largeDataStructureSize();
-  std::string largeDataFormat = preferencesPtr->largeDataFormat();
-
-  if(memoryUsage >= largeDataStructureSize)
-  {
-    // Check if out-of-core is available / enabled
-    if(largeDataFormat.empty() && memoryUsage >= k_AvailableMemory)
-    {
-      return false;
-    }
-    // Use out-of-core
-    format = largeDataFormat;
-  }
-
-  return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -297,30 +167,6 @@ void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighb
 {
   auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(neighborListPath);
   ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborListPtr->getDataType(), neighborListPtr);
-}
-
-//-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
-{
-  auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
-
-  return InstantiateMaskCompare(maskArray);
-}
-
-//-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
-{
-  switch(maskArray.getDataType())
-  {
-  case DataType::boolean: {
-    return std::make_unique<BoolMaskCompare>(dynamic_cast<BoolArray&>(maskArray).getDataStoreRef());
-  }
-  case DataType::uint8: {
-    return std::make_unique<UInt8MaskCompare>(dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef());
-  }
-  default:
-    throw std::runtime_error("InstantiateMaskCompare: The Mask Array being used is NOT of type bool or uint8.");
-  }
 }
 
 //-----------------------------------------------------------------------------

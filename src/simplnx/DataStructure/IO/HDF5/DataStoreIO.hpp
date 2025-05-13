@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include "fmt/format.h"
@@ -55,7 +55,7 @@ inline std::shared_ptr<AbstractDataStore<T>> ReadDataStore(const nx::core::HDF5:
   auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);
 
   // Create DataStore
-  auto dataStore = CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto dataStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
   dataStore->readHdf5(datasetReader);
   return dataStore;
 }

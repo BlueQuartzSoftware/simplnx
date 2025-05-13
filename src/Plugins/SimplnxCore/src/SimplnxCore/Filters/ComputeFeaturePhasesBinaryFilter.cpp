@@ -1,5 +1,6 @@
 #include "ComputeFeaturePhasesBinaryFilter.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -7,10 +8,9 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 using namespace nx::core;
 
@@ -110,10 +110,10 @@ Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStruct
   auto& featurePhasesArray =
       dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)))->getDataStoreRef();
 
-  std::unique_ptr<MaskCompare> goodVoxelsMask;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> goodVoxelsMask;
   try
   {
-    goodVoxelsMask = InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_MaskArrayPath_Key));
+    goodVoxelsMask = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_MaskArrayPath_Key));
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

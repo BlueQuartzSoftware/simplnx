@@ -2,8 +2,8 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <iostream>
@@ -221,7 +221,7 @@ Result<> readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool b
       std::fill(buffer.begin(), buffer.begin() + bytesRead, 0);
       for(const auto& token : tokens)
       {
-        auto result = nx::core::ConvertTo<T>::convert(token);
+        auto result = StringInterpretationUtilities::Convert<T>(token);
         if(result.invalid())
         {
           return ConvertResult(std::move(result));
@@ -589,19 +589,19 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::DimensionType pointDims(3, 0);
-  auto convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[1]);
+  auto convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[1]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
   }
   pointDims[0] = convertResultSizeT.value();
-  convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[2]);
+  convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[2]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
   }
   pointDims[1] = convertResultSizeT.value();
-  convertResultSizeT = nx::core::ConvertTo<usize>::convert(tokens[3]);
+  convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[3]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
@@ -634,19 +634,19 @@ Result<> ReadVtkStructuredPoints::readFile()
 
   CreateImageGeometryAction::SpacingType spacing(3, 0.0f);
 
-  auto convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[1]);
+  auto convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[1]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
   }
   spacing[0] = convertResultF32.value();
-  convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[2]);
+  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[2]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
   }
   spacing[1] = convertResultF32.value();
-  convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[3]);
+  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[3]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
@@ -673,19 +673,19 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::OriginType origin(3, 0.0f);
-  convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[1]);
+  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[1]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
   }
   origin[0] = convertResultF32.value();
-  convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[2]);
+  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[2]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
   }
   origin[1] = convertResultF32.value();
-  convertResultF32 = nx::core::ConvertTo<float32>::convert(tokens[3]);
+  convertResultF32 = StringInterpretationUtilities::Convert<float32>(tokens[3]);
   if(convertResultF32.invalid())
   {
     return ConvertResult(std::move(convertResultF32));
@@ -726,7 +726,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::string sectionType = std::string(tokens[0]);
-  auto convertResultI32 = nx::core::ConvertTo<int32>::convert(tokens[1]);
+  auto convertResultI32 = StringInterpretationUtilities::Convert<int32>(tokens[1]);
   if(convertResultI32.invalid())
   {
     return ConvertResult(std::move(convertResultI32));
@@ -902,7 +902,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
       // Read the number of values
       std::fill(buf.begin(), buf.end(), '\0'); // Splat nulls across the vector
       ReadString(in, buf.data(), kBufferSize);
-      auto convertResultI32 = nx::core::ConvertTo<int32>::convert({buf.data()});
+      auto convertResultI32 = StringInterpretationUtilities::Convert<int32>({buf.data()});
       return {convertResultI32.value()};
     }
     else

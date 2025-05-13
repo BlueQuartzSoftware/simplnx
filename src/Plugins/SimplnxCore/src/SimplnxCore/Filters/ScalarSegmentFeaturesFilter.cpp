@@ -165,11 +165,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   // Create the Cell Level FeatureIds array
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, createdArrayFormat);
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, createdArrayFormat, "0");
 
   // Create the Feature Attribute Matrix
   auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{1});
-  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat);
+  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat, "1");
 
   nx::core::Result<OutputActions> resultOutputActions;
 

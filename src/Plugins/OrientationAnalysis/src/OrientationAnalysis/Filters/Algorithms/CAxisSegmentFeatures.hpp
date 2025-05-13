@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/SegmentFeatures.hpp"
 
 namespace nx::core
@@ -55,7 +55,7 @@ private:
 
   Float32Array* m_QuatsArray = nullptr;
   Int32Array* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompare> m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
   Int32Array* m_FeatureIdsArray = nullptr;
 };
 

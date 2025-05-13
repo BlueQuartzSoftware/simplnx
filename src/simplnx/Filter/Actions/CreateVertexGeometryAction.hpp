@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
@@ -149,12 +149,16 @@ public:
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
       const std::vector<usize> componentShape = {3};
 
-      Result<> result = nx::core::CreateArray<float>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
+      Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return result;
       }
-      const Float32Array* vertexArray = nx::core::ArrayFromPath<float>(dataStructure, vertexPath);
+      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArray == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+      }
       vertexGeom->setVertices(*vertexArray);
     }
 

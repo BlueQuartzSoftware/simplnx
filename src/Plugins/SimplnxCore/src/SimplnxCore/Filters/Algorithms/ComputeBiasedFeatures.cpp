@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 using namespace nx::core;
 
@@ -55,10 +55,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   auto& biasedFeaturesStore = m_DataStructure.getDataAsUnsafe<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompare> surfaceFeatures = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> surfaceFeatures = nullptr;
   try
   {
-    surfaceFeatures = InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+    surfaceFeatures = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
@@ -196,10 +196,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   auto& biasedFeaturesStore = m_DataStructure.getDataAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   try
   {
-    maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

@@ -9,7 +9,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/AlignSections.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 namespace nx::core
 {
@@ -59,7 +59,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::unique_ptr<MaskCompare> m_MaskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_MaskCompare = nullptr;
 };
 
 } // namespace nx::core

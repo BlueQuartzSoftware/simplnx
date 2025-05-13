@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
@@ -197,23 +197,31 @@ public:
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
       // Create the default DataArray that will hold the EdgeList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      Result result = CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString())));
       }
-      SharedEdgeList* createdEdges = ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
+      auto* createdEdges = dataStructure.getDataAs<SharedEdgeList>(edgesPath);
+      if(createdEdges == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", edgesPath.toString()));
+      }
       geometry1d->setEdgeList(*createdEdges);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
-      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
+      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArray == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+      }
       geometry1d->setVertices(*vertexArray);
     }
 

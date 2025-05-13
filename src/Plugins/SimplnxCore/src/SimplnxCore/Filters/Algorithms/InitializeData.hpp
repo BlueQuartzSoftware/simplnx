@@ -3,7 +3,7 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 namespace nx::core
@@ -181,8 +181,7 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
         return IFilter::MakePreflightErrorResult(-11611, fmt::format("Empty value found after '{}' components were converted. Check for duplicate '{}' next to one another.", comp, k_DelimiterChar));
       }
 
-      Result<T> result = ConvertTo<T>::convert(splitVals[comp]);
-
+      Result<T> result = StringInterpretationUtilities::Convert<T>(splitVals[comp]);
       if(result.invalid())
       {
         return IFilter::MakePreflightErrorResult(-11612, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));

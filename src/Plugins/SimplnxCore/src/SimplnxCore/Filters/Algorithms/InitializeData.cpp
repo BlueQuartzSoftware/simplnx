@@ -1,12 +1,10 @@
-
-
 #include "InitializeData.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <chrono>
 #include <limits>
@@ -39,7 +37,7 @@ void ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& 
 
     for(const auto& str : stringValues)
     {
-      values.emplace_back(ConvertTo<T>::convert(str).value());
+      values.emplace_back(StringInterpretationUtilities::Convert<T>(str).value());
     }
 
     usize numTup = dataStore.getNumberOfTuples();
@@ -54,7 +52,7 @@ void ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& 
   }
   else
   {
-    Result<T> result = ConvertTo<T>::convert(stringValues[0]);
+    Result<T> result = StringInterpretationUtilities::Convert<T>(stringValues[0]);
     T value = result.value();
     dataStore.fill(value);
   }
@@ -70,11 +68,11 @@ void IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std::str
 
   for(usize comp = 0; comp < numComp; comp++)
   {
-    Result<T> result = ConvertTo<T>::convert(startValues[comp]);
+    Result<T> result = StringInterpretationUtilities::Convert<T>(startValues[comp]);
     values[comp] = result.value();
     if constexpr(!std::is_same_v<T, bool>)
     {
-      result = ConvertTo<T>::convert(stepValues[comp]);
+      result = StringInterpretationUtilities::Convert<T>(stepValues[comp]);
       steps[comp] = result.value();
     }
   }
@@ -89,11 +87,11 @@ void IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std::str
 
       if constexpr(IncrementalOptions::UsingAddition)
       {
-        values[comp] = ConvertTo<uint8>::convert(stepValues[comp]).value() != 0 ? true : values[comp];
+        values[comp] = StringInterpretationUtilities::Convert<T>(stepValues[comp]).value() != 0 ? true : values[comp];
       }
       if constexpr(IncrementalOptions::UsingSubtraction)
       {
-        values[comp] = ConvertTo<uint8>::convert(stepValues[comp]).value() != 0 ? false : values[comp];
+        values[comp] = StringInterpretationUtilities::Convert<T>(stepValues[comp]).value() != 0 ? false : values[comp];
       }
     }
 
@@ -293,9 +291,9 @@ struct FillArrayFunctor
       std::vector<T> range;
       for(usize comp = 0; comp < numComp; comp++)
       {
-        Result<T> result = ConvertTo<T>::convert(randBegin[comp]);
+        Result<T> result = StringInterpretationUtilities::Convert<T>(randBegin[comp]);
         range.push_back(result.value());
-        result = ConvertTo<T>::convert(randEnd[comp]);
+        result = StringInterpretationUtilities::Convert<T>(randEnd[comp]);
         range.push_back(result.value());
       }
       return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed);

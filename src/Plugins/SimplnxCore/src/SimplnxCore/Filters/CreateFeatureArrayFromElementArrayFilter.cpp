@@ -23,9 +23,6 @@ struct CopyCellDataFunctor
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    // Initialize the output array with a default value
-    createdDataStore.fill(0);
-
     usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
 
     std::map<int32, usize> featureMap;
@@ -162,8 +159,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
 
   {
     DataType dataType = selectedCellArray.getDataType();
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(), pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(),
+                                                                 pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

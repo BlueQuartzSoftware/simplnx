@@ -15,7 +15,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <chrono>
@@ -226,7 +226,7 @@ using ErrorType = OutOfBoundsType<false, false, true>;
 
 template <class OutOfBoundsType = SilentType, bool UseMask = false>
 Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom* image, UInt64AbstractDataStore& voxelIndices,
-                         const std::unique_ptr<MaskCompare>& maskCompare, uint64 outOfBoundsValue)
+                         const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
 {
   // Validation
   if(image == nullptr)
@@ -441,7 +441,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
       actions.appendAction(std::move(createAction));
     }
 
@@ -483,12 +483,11 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   if(!args.value<bool>(k_UseMask_Key))
   {
     maskPath = DataPath({k_MaskName});
-    dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
   }
-  std::unique_ptr<MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = InstantiateMaskCompare(dataStructure, maskPath);
+    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, maskPath);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

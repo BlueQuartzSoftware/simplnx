@@ -14,7 +14,7 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -143,10 +143,8 @@ DataStructure CreateTestDataStructure()
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
 
   Result<> arrayCreationResults =
-      CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}), IDataAction::Mode::Execute);
-  auto& dataArray = dataStructure.getDataRefAs<Int8Array>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}));
-  auto& dataStore = dataArray.getDataStoreRef();
-  std::fill(dataStore.begin(), dataStore.end(), 1);
+      ArrayCreationUtilities::CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}),
+                                                IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1");
   return dataStructure;
 }
 

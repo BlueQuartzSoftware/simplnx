@@ -7,7 +7,7 @@
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/core.h>
@@ -197,23 +197,31 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      Result result = CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString())));
       }
-      SharedTriList* triangles = ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
+      auto* triangles = dataStructure.getDataAs<SharedTriList>(trianglesPath);
+      if(triangles == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", trianglesPath.toString()));
+      }
       geometry2d->setFaceList(*triangles);
 
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
       }
-      Float32Array* vertexArray = ArrayFromPath<float>(dataStructure, vertexPath);
+      auto* vertexArray = dataStructure.getDataAs<Float32Array>(vertexPath);
+      if(vertexArray == nullptr)
+      {
+        throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
+      }
       geometry2d->setVertices(*vertexArray);
     }
 

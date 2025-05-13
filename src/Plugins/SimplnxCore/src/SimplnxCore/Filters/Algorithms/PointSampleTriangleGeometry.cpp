@@ -36,7 +36,7 @@
 #include "TupleTransfer.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 using namespace nx::core;
 
@@ -84,12 +84,12 @@ Result<> PointSampleTriangleGeometry::operator()()
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array
   // 'on demand' in the loop. That is a BAD idea as is it really slow to do that. (10x slower).
-  std::unique_ptr<MaskCompare> maskArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArray = nullptr;
   if(m_Inputs->pUseMask)
   {
     try
     {
-      maskArray = InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
+      maskArray = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from

@@ -3,8 +3,8 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
@@ -37,12 +37,12 @@ Result<> AlignSectionsMisorientation::operator()()
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
   {
     try
     {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
