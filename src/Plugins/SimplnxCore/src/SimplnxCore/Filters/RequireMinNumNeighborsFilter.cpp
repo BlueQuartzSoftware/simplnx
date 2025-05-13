@@ -1,5 +1,7 @@
 #include "RequireMinNumNeighborsFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/RequireMinNumNeighbors.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
@@ -9,7 +11,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -20,281 +21,6 @@ namespace
 constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
 
-Result<> assignBadPoints(DataStructure& dataStructure, const Arguments& args, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-{
-  auto imageGeomPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
-  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
-  auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key);
-  auto cellDataAttrMatrix = featureIdsPath.getParent();
-
-  auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
-
-  usize totalPoints = featureIds.getNumberOfTuples();
-  SizeVec3 udims = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
-
-  // This was checked up in the execute function (which is called before this function)
-  // so if we got this far then all should be good with the return. We might get
-  // an empty vector<> but that is OK.
-  std::vector<DataPath> cellDataArrayPaths = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrix, DataObject::Type::DataArray).value();
-
-  std::array<int64, 3> dims = {
-      static_cast<int64>(udims[0]),
-      static_cast<int64>(udims[1]),
-      static_cast<int64>(udims[2]),
-  };
-
-  std::vector<int32_t> neighbors(totalPoints, -1);
-
-  int32 good = 1;
-  int32 current = 0;
-  int32 most = 0;
-  int64 neighborPoint = 0;
-  usize numFeatures = numNeighbors.getNumberOfTuples();
-
-  int64 neighborPointIdx[6] = {0, 0, 0, 0, 0, 0};
-  neighborPointIdx[0] = -dims[0] * dims[1];
-  neighborPointIdx[1] = -dims[0];
-  neighborPointIdx[2] = -1;
-  neighborPointIdx[3] = 1;
-  neighborPointIdx[4] = dims[0];
-  neighborPointIdx[5] = dims[0] * dims[1];
-
-  usize counter = 1;
-  int64 voxelIndex = 0;
-  int64 kStride = 0;
-  int64 jStride = 0;
-  int32 featureName = 0;
-  int32 feature = 0;
-  int32 neighbor = 0;
-  std::vector<int32> n(numFeatures + 1, 0);
-  std::vector<size_t> badFeatureIdIndexes;
-
-  int32_t progInt = 0;
-  auto start = std::chrono::steady_clock::now();
-
-  while(counter != 0)
-  {
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      std::string message = fmt::format("Finding voxels to be assigned Counter = {}", counter);
-      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-      start = now;
-    }
-
-    if(shouldCancel)
-    {
-      return {};
-    }
-    counter = 0;
-    badFeatureIdIndexes.clear();
-    for(int64 k = 0; k < dims[2]; k++)
-    {
-      kStride = dims[0] * dims[1] * k;
-      for(int64 j = 0; j < dims[1]; j++)
-      {
-        jStride = dims[0] * j;
-        for(int64 i = 0; i < dims[0]; i++)
-        {
-          voxelIndex = kStride + jStride + i;
-          featureName = featureIds[voxelIndex];
-          if(featureName < 0)
-          {
-            badFeatureIdIndexes.push_back(voxelIndex);
-            counter++;
-            current = 0;
-            most = 0;
-            for(int32 l = 0; l < 6; l++)
-            {
-              good = 1;
-              neighborPoint = voxelIndex + neighborPointIdx[l];
-              if(l == 0 && k == 0)
-              {
-                good = 0;
-              }
-              if(l == 5 && k == (dims[2] - 1))
-              {
-                good = 0;
-              }
-              if(l == 1 && j == 0)
-              {
-                good = 0;
-              }
-              if(l == 4 && j == (dims[1] - 1))
-              {
-                good = 0;
-              }
-              if(l == 2 && i == 0)
-              {
-                good = 0;
-              }
-              if(l == 3 && i == (dims[0] - 1))
-              {
-                good = 0;
-              }
-              if(good == 1)
-              {
-                feature = featureIds[neighborPoint];
-                if(feature >= 0)
-                {
-                  n[feature]++;
-                  current = n[feature];
-                  if(current > most)
-                  {
-                    most = current;
-                    neighbors[voxelIndex] = neighborPoint;
-                  }
-                }
-              }
-            }
-            for(int32 l = 0; l < 6; l++)
-            {
-              good = 1;
-              neighborPoint = voxelIndex + neighborPointIdx[l];
-              if(l == 0 && k == 0)
-              {
-                good = 0;
-              }
-              if(l == 5 && k == (dims[2] - 1))
-              {
-                good = 0;
-              }
-              if(l == 1 && j == 0)
-              {
-                good = 0;
-              }
-              if(l == 4 && j == (dims[1] - 1))
-              {
-                good = 0;
-              }
-              if(l == 2 && i == 0)
-              {
-                good = 0;
-              }
-              if(l == 3 && i == (dims[0] - 1))
-              {
-                good = 0;
-              }
-              if(good == 1)
-              {
-                feature = featureIds[neighborPoint];
-                if(feature >= 0)
-                {
-                  n[feature] = 0;
-                }
-              }
-            }
-          }
-          else if(featureName >= numFeatures)
-          {
-            std::string message = fmt::format("Error: Found a feature Id '{}' that is >= the number of features '{}' at voxel index X={},Y={},Z={}.", featureName, numFeatures, i, j, k);
-            messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-            return MakeErrorResult(-55567, message);
-          }
-        }
-      }
-    }
-
-    // TODO This can be parallelized much like NeighborOrientationCorrelation
-    // Only iterate over the cell data with a featureId = -1;
-    for(const auto& cellArrayPath : cellDataArrayPaths)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      auto* voxelArray = dataStructure.getDataAs<IDataArray>(cellArrayPath);
-      size_t arraySize = voxelArray->size();
-      for(const auto& featureIdIndex : badFeatureIdIndexes)
-      {
-        featureName = featureIds[featureIdIndex];
-        neighbor = neighbors[featureIdIndex];
-        if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0))
-        {
-          std::string message =
-              fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, cellArrayPath.toString(), arraySize);
-          messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-          return MakeErrorResult(-55568, message);
-        }
-
-        if(featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
-        {
-          voxelArray->copyTuple(neighbor, featureIdIndex);
-        }
-      }
-    }
-  }
-  return {};
-}
-
-nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& dataStructure, const Arguments& args, const std::atomic_bool& shouldCancel)
-{
-  auto imageGeomPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
-  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
-  auto minNumNeighbors = args.value<uint64>(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key);
-
-  auto phaseNumber = args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key);
-
-  auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = dataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
-
-  auto applyToSinglePhase = args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key);
-  Int32AbstractDataStore* featurePhases =
-      applyToSinglePhase ? dataStructure.getDataAs<Int32Array>(args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key))->getDataStore() : nullptr;
-
-  bool good = false;
-  usize totalPoints = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
-  usize totalFeatures = numNeighbors.getNumberOfTuples();
-
-  std::vector<bool> activeObjects(totalFeatures, true);
-
-  for(usize i = 1; i < totalFeatures; i++)
-  {
-    if(applyToSinglePhase && featurePhases != nullptr)
-    {
-      if(numNeighbors[i] >= minNumNeighbors || featurePhases->getValue(i) != phaseNumber)
-      {
-        good = true;
-      }
-      else
-      {
-        activeObjects[i] = false;
-      }
-    }
-    else
-    {
-      if(numNeighbors[i] >= minNumNeighbors)
-      {
-        good = true;
-      }
-      else
-      {
-        activeObjects[i] = false;
-      }
-    }
-  }
-  if(!good)
-  {
-    return nonstd::make_unexpected<Error>({-1, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"});
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    int32 featureId = featureIds[i];
-    if(!activeObjects[featureId])
-    {
-      featureIds[i] = -1;
-    }
-  }
-  return activeObjects;
-}
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -439,82 +165,18 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
-  auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
-  auto phaseNumber = args.value<uint64>(k_PhaseNumber_Key);
+  RequireMinNumNeighborsInputValues inputValues;
 
-  // If running on a single phase, validate that the user has not entered a phase number
-  // that is not in the system ; the filter would not crash otherwise, but the user should
-  // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
-  // we don't have access to the data yet
-  if(applyToSinglePhase)
-  {
-    auto& featurePhases = dataStructure.getDataAs<Int32Array>(featurePhasesPath)->getDataStoreRef();
+  inputValues.ApplyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
+  inputValues.FeaturePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
+  inputValues.PhaseNumber = args.value<uint64>(k_PhaseNumber_Key);
+  inputValues.MinNumNeighbors = args.value<uint64>(k_MinNumNeighbors_Key);
+  inputValues.ImageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.FeatureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  inputValues.NumNeighborsPath = args.value<DataPath>(k_NumNeighborsPath_Key);
+  inputValues.IgnoredVoxelArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
 
-    usize numFeatures = featurePhases.getNumberOfTuples();
-    bool unavailablePhase = true;
-    for(usize i = 0; i < numFeatures; i++)
-    {
-      if(featurePhases[i] == phaseNumber)
-      {
-        unavailablePhase = false;
-        break;
-      }
-    }
-
-    if(unavailablePhase)
-    {
-      std::string ss = fmt::format("The phase number ({}) is not available in the supplied Feature phases array with path ({})", phaseNumber, featurePhasesPath.toString());
-      return MakeErrorResult(-5555, ss);
-    }
-  }
-
-  auto activeObjectsResult = mergeContainedFeatures(dataStructure, args, shouldCancel);
-  if(!activeObjectsResult.has_value())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
-  }
-
-  auto featureIdsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key);
-
-  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
-  auto cellDataAttrMatrixPath = featureIdsPath.getParent();
-  auto result = nx::core::GetAllChildDataPaths(dataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray);
-  if(!result.has_value())
-  {
-    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
-  }
-
-  // Run the algorithm.
-  auto assignBadPointsResult = assignBadPoints(dataStructure, args, messageHandler, shouldCancel);
-  if(assignBadPointsResult.invalid())
-  {
-    return assignBadPointsResult;
-  }
-
-  auto& featureIdsStore = dataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
-
-  auto numNeighborsPath = args.value<DataPath>(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key);
-  auto* numNeighborsArray = dataStructure.getDataAs<Int32Array>(numNeighborsPath);
-
-  DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
-  size_t currentFeatureCount = numNeighborsArray->getNumberOfTuples();
-
-  auto activeObjects = activeObjectsResult.value();
-  int32 count = 0;
-  for(const auto& value : activeObjects)
-  {
-    if(value)
-    {
-      count++;
-    }
-  }
-  std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
-  messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-
-  nx::core::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsStore, currentFeatureCount, messageHandler, shouldCancel);
-
-  return {};
+  return RequireMinNumNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

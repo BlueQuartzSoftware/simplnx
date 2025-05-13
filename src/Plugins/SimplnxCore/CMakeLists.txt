@@ -226,6 +226,7 @@ set(AlgorithmList
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
   ReplaceElementAttributesWithNeighborValues
+  RequireMinNumNeighbors
   ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
