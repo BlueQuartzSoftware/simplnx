@@ -142,7 +142,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12600, "Cell Feature AttributeMatrix Path is NOT an AttributeMatrix"}})};
+    return {MakeErrorResult<OutputActions>(-12600, "Cell Feature AttributeMatrix Path is NOT an AttributeMatrix")};
   }
   tupleShape = featureAttrMatrix->getShape();
   auto tupleCount = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());

@@ -96,12 +96,12 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
   auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
   if(inputArray == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-65400, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-65400, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString()))};
   }
   usize numComponents = inputArray->getNumberOfComponents();
   if(numComponents <= 1)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
   }
 
   std::vector<usize> tdims = inputArray->getIDataStoreRef().getTupleShape();
@@ -115,9 +115,9 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
       auto compIndex = static_cast<usize>(comp);
       if(comp >= numComponents || comp < 0)
       {
-        return {nonstd::make_unexpected(std::vector<Error>{Error{
+        return {MakeErrorResult<OutputActions>(
             -65402, fmt::format("Selected component '{}' is not a valid component. Input array at path '{}' only has {} components, please choose a component number between 0 and {} to extract.",
-                                comp, pInputArrayPath.toString(), numComponents, numComponents - 1)}})};
+                                comp, pInputArrayPath.toString(), numComponents, numComponents - 1))};
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);

@@ -440,7 +440,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
     std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-57211, msg}})};
+    return {MakeErrorResult<OutputActions>(-57211, msg)};
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(inputDataArrayPaths);

@@ -129,7 +129,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   const auto* cellDataArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(nullptr == cellDataArray)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString())}})};
+    return {MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
   IDataStore::ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();

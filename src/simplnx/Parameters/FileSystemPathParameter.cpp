@@ -249,12 +249,12 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     {
       if(!path.has_extension())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string())}})};
+        return MakeErrorResult(-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string()));
       }
       std::string lowerExtension = nx::core::StringUtilities::toLower(path.extension().string());
       if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string())}})};
+        return MakeErrorResult(-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string()));
       }
     }
 

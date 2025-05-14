@@ -98,7 +98,7 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
   if(gridResolution[0] <= 0.0f || gridResolution[1] <= 0.0f || gridResolution[2] <= 0.0f)
   {
     std::string ss = fmt::format("Grid resolutions must be greater than zero");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-11001, ss}})};
+    return {MakeErrorResult<OutputActions>(-11001, ss)};
   }
 
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);

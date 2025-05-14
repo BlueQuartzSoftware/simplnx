@@ -96,7 +96,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pRodriguesDataArrayPathValue);
   if(quats.getNumberOfComponents() != 3)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Rodrigues Input Array must be a 3 component Float32 array"}})};
+    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Rodrigues Input Array must be a 3 component Float32 array")};
   }
 
   {

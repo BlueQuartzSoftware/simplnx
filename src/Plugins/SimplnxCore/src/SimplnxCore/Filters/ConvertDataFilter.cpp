@@ -96,7 +96,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
   if(inputArrayPtr == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-15201, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-15201, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString()))};
   }
 
   resultOutputActions.value().appendAction(

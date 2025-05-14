@@ -325,18 +325,18 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   if(minAllowedFeatureSize < 0)
   {
     std::string ss = fmt::format("The minimum Feature size (%1) must be 0 or positive", minAllowedFeatureSize);
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-k_BadMinAllowedFeatureSize, ss}})};
+    return {MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
   }
 
   const auto* featureIdsPtr = dataStructure.getDataAs<FeatureIdsArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "FeatureIds not provided as an Int32 Array."}})};
+    return {MakeErrorResult<OutputActions>(k_BadNumCellsPath, "FeatureIds not provided as an Int32 Array.")};
   }
   const auto* numCellsPtr = dataStructure.getDataAs<NumCellsArrayType>(numCellsPath);
   if(numCellsPtr == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumCellsPath, "Num Cells not provided as an Int32 Array."}})};
+    return {MakeErrorResult<OutputActions>(k_BadNumCellsPath, "Num Cells not provided as an Int32 Array.")};
   }
   dataArrayPaths.push_back(numCellsPath);
 
@@ -355,7 +355,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   const auto* featureDataGroup = dataStructure.getDataAs<BaseGroup>(featureGroupDataPath);
   if(nullptr == featureDataGroup)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_ParentlessPathError, "The provided NumCells DataPath does not have a parent."}})};
+    return {MakeErrorResult<OutputActions>(k_ParentlessPathError, "The provided NumCells DataPath does not have a parent.")};
   }
 
   // Create the preflightResult object
@@ -413,7 +413,7 @@ Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStruct
     if(unavailablePhase)
     {
       std::string ss = fmt::format("The phase number {} is not available in the supplied Feature phases array with path {}", phaseNumber, featurePhasesPath.toString());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-5555, ss}})};
+      return MakeErrorResult(-5555, ss);
     }
   }
 

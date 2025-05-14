@@ -69,13 +69,12 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 
     if(dataStructure.getDataAs<DataObject>(targetPath) != nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          {-6203, fmt::format("{}Unable to import DataObject at '{}' because an object already exists there. Consider a rename of existing object.", prefix, targetPath.toString())}})};
+      return MakeErrorResult(-6203, fmt::format("{}Unable to import DataObject at '{}' because an object already exists there. Consider a rename of existing object.", prefix, targetPath.toString()));
     }
 
     if(!dataStructure.insert(importData, targetPath.getParent()))
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString())}})};
+      return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString()));
     }
   }
   if(!errorMessages.str().empty())

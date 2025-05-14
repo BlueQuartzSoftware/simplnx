@@ -91,7 +91,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 //   DataObject* targetObject = dataStructure.getData(path);
 //   if(targetObject == nullptr)
 //   {
-//     return {nonstd::make_unexpected(std::vector<Error>{{k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataPath '{}' which does not exist.", path.toString())}})};
+//     return MakeErrorResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataPath '{}' which does not exist.", path.toString()));
 //   }
 //
 //   auto parent = dataStructure.getDataAs<BaseGroup>(path.getParent());
@@ -122,13 +122,13 @@ Result<> DeleteDataAction::apply(DataStructure& dataStructure, Mode mode) const
     // case DeleteType::IndependentChildren:
     //   if(dynamic_cast<BaseGroup*>(targetObject) == nullptr)
     //   {
-    //     return {nonstd::make_unexpected(std::vector<Error>{{k_ClassTypeErrorCode, fmt::format("The type of DataObject '{}' is not a subclass of BaseGroup.", path().getTargetName())}})};
+    //     return MakeErrorResult(k_ClassTypeErrorCode, fmt::format("The type of DataObject '{}' is not a subclass of BaseGroup.", path().getTargetName()));
     //   }
     //   return TerminateNodesRecursively(dataStructure, path(), mode, true);
     // case DeleteType::AllChildren:
     //   if(dynamic_cast<BaseGroup*>(targetObject) == nullptr)
     //   {
-    //     return {nonstd::make_unexpected(std::vector<Error>{{k_ClassTypeErrorCode, fmt::format("The type of DataObject '{}' is not a subclass of BaseGroup.", path().getTargetName())}})};
+    //     return MakeErrorResult(k_ClassTypeErrorCode, fmt::format("The type of DataObject '{}' is not a subclass of BaseGroup.", path().getTargetName()));
     //   }
     //   return TerminateNodesRecursively(dataStructure, path(), mode, false);
     // case DeleteType::JustPath:

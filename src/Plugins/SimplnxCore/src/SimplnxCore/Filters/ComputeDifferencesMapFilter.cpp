@@ -35,13 +35,13 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, 
       else if(dataType != dataArray->getDataType())
       {
         std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-        return {nonstd::make_unexpected(std::vector<Error>{Error{-90001, ss}})};
+        return {MakeErrorResult<OutputActions>(-90001, ss)};
       }
     }
     else
     {
       std::string ss = fmt::format("Selected DataPath must point to a DataArray");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90002, ss}})};
+      return {MakeErrorResult<OutputActions>(-90002, ss)};
     }
   }
   return {};
@@ -172,7 +172,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(firstInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", firstInputArrayPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-k_MissingInputArray, ss}})};
+    return {MakeErrorResult<OutputActions>(-k_MissingInputArray, ss)};
   }
 
   dataArrayPaths.push_back(firstInputArrayPath);
@@ -181,7 +181,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(secondInputArray == nullptr)
   {
     std::string ss = fmt::format("Could not find input array at path {}", secondInputArrayPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-k_MissingInputArray, ss}})};
+    return {MakeErrorResult<OutputActions>(-k_MissingInputArray, ss)};
   }
   dataArrayPaths.push_back(secondInputArrayPath);
 
@@ -204,7 +204,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(firstInputArray->getNumberOfComponents() != secondInputArray->getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
-    return {nonstd::make_unexpected(std::vector<Error>{Error{nx::core::k_ComponentCountMismatchError, ss}})};
+    return {MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
   }
 
   // validate the number of tuples
