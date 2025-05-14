@@ -101,7 +101,7 @@ Result<> ComputeArrayHistogram::operator()()
       auto modalBinRangesPaths = m_InputValues->CreatedBinModalRangesDataPaths.value();
       modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
       ExecuteParallelFunctor<HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor, NoBooleanType>(
-          HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, modalBinRanges, m_ShouldCancel);
+          HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, modalBinRanges, mask, m_ShouldCancel);
     }
   }
 

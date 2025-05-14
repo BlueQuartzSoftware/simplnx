@@ -117,7 +117,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
   auto& testInputDataStore = testInputArray->getDataStoreRef();
   testInputDataStore[0] = 1;
   testInputDataStore[1] = 20;
-  testInputDataStore[2] = 13;
+  testInputDataStore[2] = 20;
   testInputDataStore[3] = 45;
   testInputDataStore[4] = 5;
   testInputDataStore[5] = 16;
@@ -194,12 +194,14 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
     REQUIRE(modalBinRangesVals[0] == 1);
     REQUIRE(modalBinRangesVals[1] == 6);
 
+    REQUIRE(histArray->size() == 5);
     REQUIRE((*histArray)[0] == 4);
     REQUIRE((*histArray)[1] == 2);
     REQUIRE((*histArray)[2] == 2);
     REQUIRE((*histArray)[3] == 0);
     REQUIRE((*histArray)[4] == 1);
 
+    REQUIRE(rangesArray->size() == 10);
     REQUIRE((*rangesArray)[0] == 1);
     REQUIRE((*rangesArray)[1] == 10);
     REQUIRE((*rangesArray)[2] == 10);
@@ -211,6 +213,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
     REQUIRE((*rangesArray)[8] == 37);
     REQUIRE((*rangesArray)[9] == 46);
 
+    REQUIRE(mostPopulatedBinArray->size() == 2);
     REQUIRE((*mostPopulatedBinArray)[0] == 0);
     REQUIRE((*mostPopulatedBinArray)[1] == 4);
   }

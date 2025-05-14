@@ -471,11 +471,13 @@ public:
    * @param modalBinRanges this is the AbstractDataStore that the ranges will be loaded into.
    * @param shouldCancel this is an atomic value that will determine whether execution ends early
    */
-  CalculateModalBinRangesImpl(const AbstractDataStore<Type>& inputStore, const AbstractDataStore<Type>& binRangesStore, NeighborList<Type>& modalBinRanges, const std::atomic_bool& shouldCancel)
+  CalculateModalBinRangesImpl(const AbstractDataStore<Type>& inputStore, const AbstractDataStore<Type>& binRangesStore, NeighborList<Type>& modalBinRanges,
+                              const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::atomic_bool& shouldCancel)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_BinRangesStore(binRangesStore)
   , m_ModalBinRanges(modalBinRanges)
+  , m_Mask(mask)
   {
   }
 
@@ -487,7 +489,30 @@ public:
    */
   void operator()() const
   {
-    std::vector<Type> modes = StatisticsCalculations::findModes(m_InputStore);
+    std::vector<Type> modes;
+    if(m_Mask)
+    {
+      // This section extracts out the data into a separate storage class. Note that
+      // this could get real ugly for an out-of-core DataArray
+      const usize numTuples = m_InputStore.getNumberOfTuples();
+      std::vector<Type> data;
+      data.reserve(numTuples);
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(m_Mask->isTrue(i))
+        {
+          data.push_back(m_InputStore[i]);
+        }
+      }
+      data.shrink_to_fit();
+
+      modes = StatisticsCalculations::findModes(data);
+    }
+    else
+    {
+      modes = StatisticsCalculations::findModes(m_InputStore);
+    }
+
     for(const Type& mode : modes)
     {
       std::pair<Type, Type> modalRange = StatisticsCalculations::findModalBinRange(m_InputStore, m_BinRangesStore, mode);
@@ -501,6 +526,7 @@ private:
   const AbstractDataStore<Type>& m_InputStore;
   const AbstractDataStore<Type>& m_BinRangesStore;
   NeighborList<Type>& m_ModalBinRanges;
+  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
 };
 
 /**
