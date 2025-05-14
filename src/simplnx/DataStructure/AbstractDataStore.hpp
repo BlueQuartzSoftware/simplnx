@@ -677,15 +677,6 @@ public:
   virtual reference operator[](usize index) = 0;
 
   /**
-   * @brief Returns if there are any elements in the array object
-   * @return bool, true if the DataStore has a size() == 0
-   */
-  bool empty() const override
-  {
-    return getNumberOfTuples() == 0;
-  }
-
-  /**
    * @brief Returns an Iterator to the begining of the DataStore.
    * @return Iterator
    */
