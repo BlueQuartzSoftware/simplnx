@@ -27,6 +27,7 @@ set(FilterList
   ComputeBoundaryElementFractionsFilter
   ComputeDifferencesMapFilter
   ComputeEuclideanDistMapFilter
+  ComputeFeatureBoundsFilter
   ComputeFeatureCentroidsFilter
   ComputeFeatureClusteringFilter
   ComputeFeatureNeighborsFilter
@@ -171,6 +172,7 @@ set(AlgorithmList
   ComputeBiasedFeatures
   ComputeBoundaryCells
   ComputeEuclideanDistMap
+  ComputeFeatureBounds
   ComputeFeatureCentroids
   ComputeFeatureClustering
   ComputeFeatureRect
