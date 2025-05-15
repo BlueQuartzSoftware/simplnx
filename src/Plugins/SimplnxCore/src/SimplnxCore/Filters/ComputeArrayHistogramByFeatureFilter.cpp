@@ -1,5 +1,4 @@
-#include "ComputeArrayHistogramFilter.hpp"
-#include "Algorithms/ComputeArrayHistogram.hpp"
+#include "ComputeArrayHistogramByFeatureFilter.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -12,47 +11,47 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Parameters/StringParameter.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeArrayHistogramByFeature.hpp"
 
 using namespace nx::core;
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string ComputeArrayHistogramFilter::name() const
+std::string ComputeArrayHistogramByFeatureFilter::name() const
 {
-  return FilterTraits<ComputeArrayHistogramFilter>::name.str();
+  return FilterTraits<ComputeArrayHistogramByFeatureFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeArrayHistogramFilter::className() const
+std::string ComputeArrayHistogramByFeatureFilter::className() const
 {
-  return FilterTraits<ComputeArrayHistogramFilter>::className;
+  return FilterTraits<ComputeArrayHistogramByFeatureFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid ComputeArrayHistogramFilter::uuid() const
+Uuid ComputeArrayHistogramByFeatureFilter::uuid() const
 {
-  return FilterTraits<ComputeArrayHistogramFilter>::uuid;
+  return FilterTraits<ComputeArrayHistogramByFeatureFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string ComputeArrayHistogramFilter::humanName() const
+std::string ComputeArrayHistogramByFeatureFilter::humanName() const
 {
-  return "Compute Attribute Array Frequency Histogram";
+  return "Compute Attribute Array Frequency Histogram (Feature)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ComputeArrayHistogramFilter::defaultTags() const
+std::vector<std::string> ComputeArrayHistogramByFeatureFilter::defaultTags() const
 {
-  return {className(), "Statistics", "Ensemble", "Histogram"};
+  return {className(), "Statistics", "Ensemble", "Histogram", "Feature"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ComputeArrayHistogramFilter::parameters() const
+Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
 {
   Parameters params;
 
@@ -73,6 +72,8 @@ Parameters ComputeArrayHistogramFilter::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insertLinkableParameter(
@@ -99,20 +100,20 @@ Parameters ComputeArrayHistogramFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType ComputeArrayHistogramFilter::parametersVersion() const
+IFilter::VersionType ComputeArrayHistogramByFeatureFilter::parametersVersion() const
 {
-  return 2;
+  return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
+IFilter::UniquePointer ComputeArrayHistogramByFeatureFilter::clone() const
 {
-  return std::make_unique<ComputeArrayHistogramFilter>();
+  return std::make_unique<ComputeArrayHistogramByFeatureFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
@@ -124,8 +125,8 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   auto pBinMostPopulatedName = filterArgs.value<std::string>(k_HistoMostPopulatedBinName_Key);
   auto pCalculateModalBinRanges = filterArgs.value<bool>(k_CalculateModalBinRanges_Key);
   auto pBinModalBinRangesName = filterArgs.value<std::string>(k_HistoModalBinRangesName_Key);
-  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
-  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
+  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -134,7 +135,6 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pNewDataGroupNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
-
   DataPath parentPath = {};
   if(pNewDataGroupValue)
   {
@@ -146,9 +146,9 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   }
 
   const IDataArray* maskArray = nullptr;
-  if(useMask)
+  if(pUseMaskValue)
   {
-    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+    maskArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(maskArray->getDataType() != DataType::boolean && maskArray->getDataType() != DataType::uint8)
     {
       return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array '{}' must be of type Boolean or UInt8", maskArray->getName())), {}};
@@ -169,13 +169,13 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint64, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)}, std::vector<usize>{1},
+      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::uint64, std::vector<usize>{1}, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)},
                                                                    arrayGroupPath.createChildPath(pBinCountName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
 
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray->getDataType(), std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)}, std::vector<usize>{2},
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray->getDataType(), std::vector<usize>{1}, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue) * 2},
                                                                    arrayGroupPath.createChildPath(pBinRangeName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
@@ -195,16 +195,17 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeArrayHistogramByFeatureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  ComputeArrayHistogramInputValues inputValues;
+  ComputeArrayHistogramByFeatureInputValues inputValues;
 
   inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
   inputValues.UserDefinedRange = filterArgs.value<bool>(k_UserDefinedRange_Key);
   inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
   inputValues.MaxRange = filterArgs.value<float64>(k_MaxRange_Key);
   inputValues.SelectedArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   auto binCountName = filterArgs.value<std::string>(k_HistoBinCountName_Key);
   auto binRangeName = filterArgs.value<std::string>(k_HistoBinRangeName_Key);
@@ -251,50 +252,9 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
     inputValues.CreatedBinModalRangesDataPaths = createdModalRangesDataPaths;
   }
 
-  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
-  if(useMask)
-  {
-    inputValues.MaskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  }
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-  return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
-}
-
-namespace
-{
-namespace SIMPL
-{
-constexpr StringLiteral k_NumberOfBinsKey = "NumberOfBins";
-constexpr StringLiteral k_UserDefinedRangeKey = "UserDefinedRange";
-constexpr StringLiteral k_MinRangeKey = "MinRange";
-constexpr StringLiteral k_MaxRangeKey = "MaxRange";
-constexpr StringLiteral k_NewDataContainerKey = "NewDataContainer";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
-constexpr StringLiteral k_NewAttributeMatrixNameKey = "NewAttributeMatrixName";
-constexpr StringLiteral k_NewDataArrayNameKey = "NewDataArrayName";
-} // namespace SIMPL
-} // namespace
-
-Result<Arguments> ComputeArrayHistogramFilter::FromSIMPLJson(const nlohmann::json& json)
-{
-  Arguments args = ComputeArrayHistogramFilter().getDefaultArguments();
-
-  std::vector<Result<>> results;
-
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumberOfBinsKey, k_NumberOfBins_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MinRangeKey, k_MinRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MaxRangeKey, k_MaxRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerKey, k_CreateNewDataGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, k_NewDataGroupPath_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerNameKey, SIMPL::k_NewAttributeMatrixNameKey,
-                                                                                                                k_DataGroupPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataArrayNameKey, k_HistoBinCountName_Key));
-
-  Result<> conversionResult = MergeResults(std::move(results));
-
-  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
+  return ComputeArrayHistogramByFeature(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

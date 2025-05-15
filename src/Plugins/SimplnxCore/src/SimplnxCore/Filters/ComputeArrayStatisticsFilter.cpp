@@ -7,14 +7,15 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
+#include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -25,6 +26,7 @@ using namespace nx::core;
 
 namespace
 {
+const DataPath k_TempMaskPath = DataPath{{"!_!__Internal__Temp_MASK_Path__Internal__!_!"}};
 struct IsIntegerType
 {
   template <typename T>
@@ -34,7 +36,7 @@ struct IsIntegerType
   }
 };
 
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args, usize numBins, std::vector<usize> tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args, std::vector<usize> tupleDims)
 {
   auto findLength = args.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);
@@ -42,10 +44,8 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto findMean = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMean_Key);
   auto findMedian = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMedian_Key);
   auto findMode = args.value<bool>(ComputeArrayStatisticsFilter::k_FindMode_Key);
-  auto findModalBinRanges = args.value<bool>(ComputeArrayStatisticsFilter::k_FindModalBinRanges_Key);
   auto findStdDeviation = args.value<bool>(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key);
   auto findSummation = args.value<bool>(ComputeArrayStatisticsFilter::k_FindSummation_Key);
-  auto findHistogramValue = args.value<bool>(ComputeArrayStatisticsFilter::k_FindHistogram_Key);
   auto pFindNumUniqueValuesValue = args.value<bool>(ComputeArrayStatisticsFilter::k_FindUniqueValues_Key);
   auto computeByIndexValue = args.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key);
   auto standardizeDataValue = args.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key);
@@ -58,15 +58,36 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   OutputActions actions;
 
-  auto amAction = std::make_unique<CreateDataGroupAction>(destinationAttributeMatrixValue);
+  auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
 
   actions.appendAction(std::move(amAction));
 
   if(computeByIndexValue)
   {
-    auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    {
+      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key);
+      auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+      actions.appendAction(std::move(action));
+    }
+
+    auto rangeTypeValue = args.value<ChoicesParameter::ValueType>(ComputeArrayStatisticsFilter::k_RangeType_Key);
+    if(rangeTypeValue != to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None))
+    {
+      {
+        auto arrayPath = destinationAttributeMatrixValue.createChildPath(args.value<std::string>(ComputeArrayStatisticsFilter::k_FeatureIdsIndexingName_Key));
+        auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, arrayPath);
+        actions.appendAction(std::move(action));
+      }
+
+      {
+        auto action = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, k_TempMaskPath);
+        actions.appendAction(std::move(action));
+      }
+      {
+        auto action = std::make_unique<DeleteDataAction>(k_TempMaskPath);
+        actions.appendDeferredAction(std::move(action));
+      }
+    }
   }
 
   if(findLength)
@@ -116,54 +137,6 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
     auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_SummationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
-  }
-  if(findHistogramValue && !computeByIndexValue)
-  {
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key);
-      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{numBins}, std::vector<usize>{1ULL}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinRangeName_Key);
-      auto action = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{numBins}, std::vector<usize>{2ULL}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
-      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    if(findModalBinRanges)
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key);
-      auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-  }
-  if(findHistogramValue && computeByIndexValue)
-  {
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinCountName_Key);
-      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_HistoBinRangeName_Key);
-      auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{numBins * 2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_MostPopulatedBinArrayName_Key);
-      auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{2}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
-    if(findModalBinRanges)
-    {
-      auto arrayPath = args.value<std::string>(ComputeArrayStatisticsFilter::k_ModalBinArrayName_Key);
-      auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
-      actions.appendAction(std::move(action));
-    }
   }
   if(standardizeDataValue)
   {
@@ -228,23 +201,6 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrixPath_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
 
-  params.insertSeparator(Parameters::Separator{"Histogram Options"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "Whether to compute the histogram of the input array", false));
-  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 10));
-  params.insert(
-      std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
-
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Custom Histogram Min Value", "Min cutoff value for histogram", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Custom Histogram Max Value", "Max cutoff value for histogram", 1.0));
-
-  params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinCountName_Key, "Histogram Bin Counts Array Name", "The name of the histogram bin counts array", "Histogram Bin Counts"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_HistoBinRangeName_Key, "Histogram Bin Ranges Array Name", "The name of the histogram bin ranges array", "Histogram Bin Ranges"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_MostPopulatedBinArrayName_Key, "Most Populated Bin Array Name", "The name of the Most Populated Bin array", "Most Populated Bin"));
-  params.insert(std::make_unique<BoolParameter>(k_FindModalBinRanges_Key, "Find Modal Histogram Bin Ranges",
-                                                "Whether to compute the histogram bin ranges that contain the mode values.  This option requires that \" Find Mode \" is turned on.", false));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_ModalBinArrayName_Key, "Modal Histogram Bin Ranges Array Name",
-                                                          "The name of the array that stores the histogram bin range(s) that contain the mode(s) of the data.", "Modal Histogram Bin Ranges"));
-
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
@@ -255,12 +211,24 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
       std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_RangeType_Key, "Feature Range Type", "Set a range to manipulate output size in various ways. See detailed breakdown and tips in the documentation...",
+      to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None),
+      ChoicesParameter::Choices{"None", "Ignore Feature 0", "Shrink To Fit", "Padded Custom Range", "Minimum Size in Custom Range"})); // Sequence dependent DO NOT REORDER
+  params.insert(std::make_unique<VectorParameter<int32>>(
+      k_Range_Key, "Custom Feature ID Range",
+      "The range of feature Ids, inclusive, `-1` in upper bound will be resolved to max Feature Id in the array; Only applies to  `Padded Custom Range` and `Minimum Size in Custom Range`",
+      std::vector<int32>{0, -1}, std::vector<std::string>{"Lower Bound (inclusive)", "Upper Bound (inclusive)"}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsIndexingName_Key, "Feature ID Indexing Name",
+                                                          "The name of the indexing array for the output mapping in the reduced `Destination Attribute Matrix`, not applicable if `None` selected",
+                                                          "Reduced Feature Ids Indices"));
 
   params.insertSeparator(Parameters::Separator{"Output Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
                                                           "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
                                                           "determine whether or not the outputted statistics are actually valid or not for a given feature.",
                                                           "FeatureHasData"));
+
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Whether to compute the length of the input array", false));
   params.insert(std::make_unique<DataObjectNameParameter>(k_LengthArrayName_Key, "Length Array Name", "The name of the length array", "Length"));
 
@@ -293,15 +261,6 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
                                                           "NumUniqueValues"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_FindHistogram_Key, k_HistoBinCountName_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_HistoBinRangeName_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_UseFullRange_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_NumBins_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_MinRange_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_MaxRange_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_MostPopulatedBinArrayName_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_FindModalBinRanges_Key, true);
-  params.linkParameters(k_FindHistogram_Key, k_ModalBinArrayName_Key, true);
   params.linkParameters(k_FindLength_Key, k_LengthArrayName_Key, true);
   params.linkParameters(k_FindMin_Key, k_MinimumArrayName_Key, true);
   params.linkParameters(k_FindMax_Key, k_MaximumArrayName_Key, true);
@@ -313,6 +272,9 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_ComputeByIndex_Key, k_FeatureHasDataArrayName_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_RangeType_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_Range_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_FeatureIdsIndexingName_Key, true);
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
   params.linkParameters(k_FindUniqueValues_Key, k_NumUniqueValuesName_Key, true);
 
@@ -322,7 +284,28 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Removed Histogram Functionality; Deleted Keys include the following:
+  // - k_FindHistogram_Key = "find_histogram";
+  // - k_MinRange_Key = "min_range";
+  // - k_MaxRange_Key = "max_range";
+  // - k_UseFullRange_Key = "use_full_range";
+  // - k_NumBins_Key = "num_bins";
+  // - k_FindModalBinRanges_Key = "find_modal_bin_ranges";
+  // - k_HistoBinCountName_Key = "histogram_bin_count_name";
+  // - k_HistoBinRangeName_Key = "histogram_bin_range_name";
+  // - k_MostPopulatedBinArrayName_Key = "most_populated_bin_array_name";
+  // - k_ModalBinArrayName_Key = "modal_bin_array_name";
+  //
+  // Change 2:
+  // Added - range based gating of feature ids and mapping
+  // Solution - accept default values
+  // New key list:
+  // - k_RangeType_Key = "range_type";
+  // - k_Range_Key = "range";
+  // - k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
 }
 
 //------------------------------------------------------------------------------
@@ -335,15 +318,12 @@ IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
 IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pFindHistogramValue = filterArgs.value<bool>(k_FindHistogram_Key);
-  auto pNumBinsValue = filterArgs.value<int32>(k_NumBins_Key);
   auto pFindLengthValue = filterArgs.value<bool>(k_FindLength_Key);
   auto pFindMinValue = filterArgs.value<bool>(k_FindMin_Key);
   auto pFindMaxValue = filterArgs.value<bool>(k_FindMax_Key);
   auto pFindMeanValue = filterArgs.value<bool>(k_FindMean_Key);
   auto pFindMedianValue = filterArgs.value<bool>(k_FindMedian_Key);
   auto pFindModeValue = filterArgs.value<bool>(k_FindMode_Key);
-  auto pFindModalBinRanges = filterArgs.value<bool>(k_FindModalBinRanges_Key);
   auto pFindStdDeviationValue = filterArgs.value<bool>(k_FindStdDeviation_Key);
   auto pFindSummationValue = filterArgs.value<bool>(k_FindSummation_Key);
   auto pFindNumUniqueValuesValue = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -353,21 +333,16 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
+  auto pRangeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
+  auto pRangeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(!pFindHistogramValue && !pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue &&
-     !pFindNumUniqueValuesValue)
+  if(!pFindMinValue && !pFindMaxValue && !pFindMeanValue && !pFindMedianValue && !pFindModeValue && !pFindStdDeviationValue && !pFindSummationValue && !pFindLengthValue && !pFindNumUniqueValuesValue)
   {
     return {ConvertResultTo<OutputActions>(MakeWarningVoidResult(-57200, "No statistics have been selected, so this filter will perform no operations"), {})};
   }
-
-  if(pNumBinsValue < 1)
-  {
-    return {MakeErrorResult<OutputActions>(-57201, "Value entered for number of bins must be a non-zero, positive value."), {}};
-  }
-  auto numBins = static_cast<usize>(pNumBinsValue);
 
   std::vector<DataPath> inputDataArrayPaths;
 
@@ -375,14 +350,14 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(inputArrayPtr == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-57202, fmt::format("Could not find selected input array at path '{}' ", pSelectedArrayPathValue.toString())), {}};
+    return MakePreflightErrorResult(-57202, fmt::format("Could not find selected input array at path '{}' ", pSelectedArrayPathValue.toString()));
   }
 
   inputDataArrayPaths.push_back(pSelectedArrayPathValue);
 
   if(inputArrayPtr->getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-57203, fmt::format("Input array must be a scalar array")), {}};
+    return MakePreflightErrorResult(-57203, fmt::format("Input array must be a scalar array"));
   }
 
   AttributeMatrix::ShapeType tupleDims = {1};
@@ -393,11 +368,49 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
     if(featureIdsPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
+      return MakePreflightErrorResult(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString()));
     }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
     tupleDims = {0};
+
+    switch(static_cast<ComputeArrayStatistics::FeatureIdRangeControls>(pRangeTypeValue))
+    {
+    case ComputeArrayStatistics::FeatureIdRangeControls::None: {
+      preflightUpdatedValues.push_back({"`None` Selected", "Values for `Custom Feature ID Range` and `Feature ID Indexing Name` will be unused."});
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::IgnoreZero: {
+      preflightUpdatedValues.push_back({"`Ignore Feature 0` Selected", "Values for `Custom Feature ID Range` will be unused."});
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::ShrinkToFit: {
+      preflightUpdatedValues.push_back({"`Shrink To Fit` Selected", "Values for `Custom Feature ID Range` will be unused."});
+      break;
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::PaddedCustomRange: {
+      [[fallthrough]];
+    }
+    case ComputeArrayStatistics::FeatureIdRangeControls::CustomRange: {
+
+      if(pRangeValue.at(0) < 0 || pRangeValue.at(1) < -1)
+      {
+        return MakePreflightErrorResult(-57215,
+                                        fmt::format("Invalid Range Values: Lower bound must be greater than -1 (supplied value: {}) and Upper bound must be greater than -2 (supplied value: {})",
+                                                    pRangeValue.at(0), pRangeValue.at(1)));
+      }
+      if(pRangeValue.at(1) == -1)
+      {
+        preflightUpdatedValues.push_back(
+            {"Custom Range: `-1` detected", "The `-1` in the second position will be treated as unbounded. The max Feature Id will be treated as upper limit during execution"});
+      }
+      else if(pRangeValue.at(0) >= pRangeValue.at(1))
+      {
+        return MakePreflightErrorResult(-57216, fmt::format("Invalid Range Values: Lower bound ({}) must be less than Upper bound ({})", pRangeValue.at(0), pRangeValue.at(1)));
+      }
+      break;
+    }
+    }
   }
 
   if(pUseMaskValue)
@@ -405,11 +418,11 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
     if(maskPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString())), {}};
+      return MakePreflightErrorResult(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString()));
     }
     if(maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)
     {
-      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array must be of type Boolean or UInt8")), {}};
+      return MakePreflightErrorResult(-57206, fmt::format("Mask array must be of type Boolean or UInt8"));
     }
     inputDataArrayPaths.push_back(pMaskArrayPathValue);
   }
@@ -418,38 +431,32 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   {
     if(!pFindMeanValue || !pFindStdDeviationValue)
     {
-      return {MakeErrorResult<OutputActions>(-57207, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)")), {}};
+      return MakePreflightErrorResult(-57207, fmt::format(R"(To standardize data, the "Find Mean" and "Find Standard Deviation" options must also be checked)"));
     }
   }
 
   if(pFindMedianValue && !pFindLengthValue)
   {
-    return {MakeErrorResult<OutputActions>(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)")), {}};
+    return MakePreflightErrorResult(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)"));
   }
 
   if(pFindNumUniqueValuesValue && !pFindLengthValue)
   {
-    return {MakeErrorResult<OutputActions>(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)")), {}};
-  }
-
-  if(pFindHistogramValue && pFindModalBinRanges && !pFindModeValue)
-  {
-    return {MakeErrorResult<OutputActions>(-57210, fmt::format(R"(To calculate the modal histogram bin ranges, the "Find Mode" option must also be turned on.)")), {}};
+    return MakePreflightErrorResult(-57209, fmt::format(R"(To find the number of unique values, the "Find Length" option must also be checked)"));
   }
 
   if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {
-    std::string msg = "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).";
-    return {MakeErrorResult<OutputActions>(-57211, msg)};
+    return MakePreflightErrorResult(-57211, "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).");
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(inputDataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-57212, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(-57212, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;
+  resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, tupleDims).actions;
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -460,18 +467,12 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeArrayStatisticsInputValues inputValues;
 
-  inputValues.FindHistogram = filterArgs.value<bool>(k_FindHistogram_Key);
-  inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
-  inputValues.MaxRange = filterArgs.value<float64>(k_MaxRange_Key);
-  inputValues.UseFullRange = filterArgs.value<bool>(k_UseFullRange_Key);
-  inputValues.NumBins = filterArgs.value<int32>(k_NumBins_Key);
   inputValues.FindLength = filterArgs.value<bool>(k_FindLength_Key);
   inputValues.FindMin = filterArgs.value<bool>(k_FindMin_Key);
   inputValues.FindMax = filterArgs.value<bool>(k_FindMax_Key);
   inputValues.FindMean = filterArgs.value<bool>(k_FindMean_Key);
   inputValues.FindMedian = filterArgs.value<bool>(k_FindMedian_Key);
   inputValues.FindMode = filterArgs.value<bool>(k_FindMode_Key);
-  inputValues.FindModalBinRanges = filterArgs.value<bool>(k_FindModalBinRanges_Key);
   inputValues.FindStdDeviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
   inputValues.FindSummation = filterArgs.value<bool>(k_FindSummation_Key);
   inputValues.FindNumUniqueValues = filterArgs.value<bool>(k_FindUniqueValues_Key);
@@ -483,10 +484,6 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
   inputValues.FeatureHasDataArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureHasDataArrayName_Key));
-  inputValues.BinCountsArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistoBinCountName_Key));
-  inputValues.BinRangesArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistoBinRangeName_Key));
-  inputValues.MostPopulatedBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MostPopulatedBinArrayName_Key));
-  inputValues.ModalBinArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_ModalBinArrayName_Key));
   inputValues.LengthArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_LengthArrayName_Key));
   inputValues.MinimumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MinimumArrayName_Key));
   inputValues.MaximumArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MaximumArrayName_Key));
@@ -498,6 +495,11 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.replaceName(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
 
+  inputValues.RangeType = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
+  inputValues.Range = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
+  inputValues.TempMaskArrayPath = k_TempMaskPath;
+  inputValues.FeatureIdMapArrayPath = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureIdsIndexingName_Key));
+
   return ComputeArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
@@ -505,11 +507,6 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_FindHistogramKey = "FindHistogram";
-constexpr StringLiteral k_MinRangeKey = "MinRange";
-constexpr StringLiteral k_MaxRangeKey = "MaxRange";
-constexpr StringLiteral k_UseFullRangeKey = "UseFullRange";
-constexpr StringLiteral k_NumBinsKey = "NumBins";
 constexpr StringLiteral k_FindLengthKey = "FindLength";
 constexpr StringLiteral k_FindMinKey = "FindMin";
 constexpr StringLiteral k_FindMaxKey = "FindMax";
@@ -542,11 +539,6 @@ Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindHistogramKey, k_FindHistogram_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MinRangeKey, k_MinRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_MaxRangeKey, k_MaxRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UseFullRangeKey, k_UseFullRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumBinsKey, k_NumBins_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindLengthKey, k_FindLength_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMinKey, k_FindMin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_FindMaxKey, k_FindMax_Key));
@@ -562,7 +554,6 @@ Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_HistogramArrayNameKey, k_HistoBinCountName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_LengthArrayNameKey, k_LengthArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MinimumArrayNameKey, k_MinimumArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_MaximumArrayNameKey, k_MaximumArrayName_Key));

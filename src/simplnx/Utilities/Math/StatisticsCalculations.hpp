@@ -248,7 +248,7 @@ std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histm
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class Container, typename T, typename... Ts>
-std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const std::vector<T>& binRanges, const T& mode)
+std::pair<T, T> findModalBinRange(const Container<T, Ts...>& source, const Container<T, Ts...>& binRanges, const T& mode)
 {
   if(source.empty())
   {

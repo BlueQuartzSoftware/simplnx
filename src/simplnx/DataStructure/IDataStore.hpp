@@ -84,6 +84,15 @@ public:
   }
 
   /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataStore has a size() == 0
+   */
+  bool empty() const
+  {
+    return getNumberOfTuples() == 0;
+  }
+
+  /**
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */

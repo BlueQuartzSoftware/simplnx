@@ -20,6 +20,7 @@ set(FilterList
   CombineNodeBasedGeometriesFilter
   CombineStlFilesFilter
   ComputeArrayHistogramFilter
+  ComputeArrayHistogramByFeatureFilter
   ComputeArrayStatisticsFilter
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
@@ -165,6 +166,7 @@ set(AlgorithmList
   CombineNodeBasedGeometries
   CombineStlFiles
   ComputeArrayHistogram
+  ComputeArrayHistogramByFeature
   ComputeArrayStatistics
   ComputeBiasedFeatures
   ComputeBoundaryCells

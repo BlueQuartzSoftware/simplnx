@@ -6,6 +6,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 
 #include <chrono>
 #include <mutex>
@@ -15,18 +17,14 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
-  float64 MinRange;
-  float64 MaxRange;
-  int32 NumBins;
-  bool FindHistogram;
-  bool UseFullRange;
+  ChoicesParameter::ValueType RangeType;
+  VectorInt32Parameter::ValueType Range;
   bool FindLength;
   bool FindMin;
   bool FindMax;
   bool FindMean;
   bool FindMedian;
   bool FindMode;
-  bool FindModalBinRanges;
   bool FindStdDeviation;
   bool FindSummation;
   bool UseMask;
@@ -52,6 +50,8 @@ struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
   DataPath SummationArrayName;
   DataPath StandardizedArrayName;
   DataPath NumUniqueValuesName;
+  DataPath TempMaskArrayPath;
+  DataPath FeatureIdMapArrayPath;
 };
 
 /**
@@ -67,6 +67,16 @@ public:
   ComputeArrayStatistics(ComputeArrayStatistics&&) noexcept = delete;
   ComputeArrayStatistics& operator=(const ComputeArrayStatistics&) = delete;
   ComputeArrayStatistics& operator=(ComputeArrayStatistics&&) noexcept = delete;
+
+  // sequence dependent DO NOT REORDER
+  enum FeatureIdRangeControls : uint8
+  {
+    None = 0,
+    IgnoreZero = 1,
+    ShrinkToFit = 2,
+    PaddedCustomRange = 3,
+    CustomRange = 4
+  };
 
   Result<> operator()();
 
@@ -88,12 +98,6 @@ private:
   size_t m_ProgressCounter = 0;
   size_t m_LastProgressInt = 0;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
-  /**
-   * @brief
-   * @param featureIds
-   * @return
-   */
-  usize findNumFeatures(const Int32Array& featureIds) const;
 };
 
 } // namespace nx::core

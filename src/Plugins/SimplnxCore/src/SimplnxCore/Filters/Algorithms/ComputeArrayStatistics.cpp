@@ -8,6 +8,7 @@
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <algorithm>
 #include <unordered_map>
 
 using namespace nx::core;
@@ -39,14 +40,12 @@ bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& ar
 }
 
 template <typename T>
-class ComputeArrayStatisticsByIndexImpl
+class StatisticsByFeatureImpl
 {
 public:
-  ComputeArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange,
-                                    int32 numBins, bool modalBinRanges, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source,
-                                    BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray,
-                                    Float32Array* stdDevArray, Float32Array* summationArray, UInt64Array* histBinCountsArray, DataArray<T>* histBinRangesArray, UInt64Array* mostPopulatedBinArray,
-                                    NeighborList<T>* modalBinRangesArray, ComputeArrayStatistics* filter)
+  StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                          const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray,
+                          DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, ComputeArrayStatistics* filter)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -54,12 +53,6 @@ public:
   , m_Mode(mode)
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
-  , m_Histogram(hist)
-  , m_ModalBinRanges(modalBinRanges)
-  , m_HistMin(histmin)
-  , m_HistMax(histmax)
-  , m_HistFullRange(histfullrange)
-  , m_NumBins(numBins)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
@@ -71,10 +64,6 @@ public:
   , m_ModeArray(modeArray)
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
-  , m_HistBinCountsArray(histBinCountsArray)
-  , m_HistBinRangesArray(histBinRangesArray)
-  , m_MostPopulatedBinArray(mostPopulatedBinArray)
-  , m_ModalBinRangesArray(modalBinRangesArray)
   , m_Filter(filter)
   {
   }
@@ -86,63 +75,20 @@ public:
     const usize milliDelay = 1000;
 
     const std::atomic_bool& shouldCancel = m_Filter->getCancel();
-    const usize numTuples = m_FeatureIds->getNumberOfTuples();
+    const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    std::vector<uint64> length(numCurrentFeatures, 0);
-    std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
-    std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
-    std::vector<float32> summation(numCurrentFeatures, 0);
-    std::vector<std::map<T, uint64>> modalMaps(numCurrentFeatures);
-    usize progressCount = 0;
-
-    usize progressIncrement = numTuples / 100;
-
-    for(usize i = 0; i < numTuples; ++i)
+    auto msgHandler = [this](const std::string& msg) { m_Filter->sendThreadSafeInfoMessage("Preparing features/ensembles for stats calculation " + msg); };
+    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, shouldCancel);
+    if(shouldCancel)
     {
-      if(shouldCancel)
-      {
-        return;
-      }
-      if(m_Mask != nullptr && !m_Mask->isTrue(i))
-      {
-        continue;
-      }
-      for(usize j = 0; j < numCurrentFeatures; j++)
-      {
-        if((*m_FeatureIds)[i] != static_cast<int32>(start + j))
-        {
-          continue;
-        }
-
-        ++length[j];
-
-        if(m_Source[i] < min[j])
-        {
-          min[j] = m_Source[i];
-        }
-
-        if(m_Source[i] > max[j])
-        {
-          max[j] = m_Source[i];
-        }
-
-        summation[j] = summation[j] + m_Source[i];
-
-        modalMaps[j][m_Source[i]]++;
-      }
-
-      progressCount++;
-      now = std::chrono::steady_clock::now();
-      if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
-      {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating FeatureHasData Array [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(i) / static_cast<float>(numTuples)));
-        progressCount = 0;
-        initialTime = std::chrono::steady_clock::now();
-      }
+      return;
     }
 
-    m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing Results Feature/Ensemble Range [{}-{}]", start, end));
+    usize progressCount = 0;
+    usize progressIncrement = numTuples / 100;
+
+    m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature range [{}-{}]", start, end));
     progressIncrement = numCurrentFeatures / 100;
     progressCount = 0;
     std::vector<float32> meanArray;
@@ -217,109 +163,11 @@ public:
         }
       }
 
-      AbstractDataStore<uint64>* binCountsStorePtr = nullptr;
-      if(m_HistBinCountsArray != nullptr)
-      {
-        binCountsStorePtr = m_HistBinCountsArray->getDataStore();
-      }
-
-      AbstractDataStore<T>* binRangesStorePtr = nullptr;
-      if(m_HistBinRangesArray != nullptr)
-      {
-        binRangesStorePtr = m_HistBinRangesArray->getDataStore();
-      }
-
-      AbstractDataStore<uint64>* mostPopulatedBinDataStorePtr = nullptr;
-      if(m_MostPopulatedBinArray != nullptr)
-      {
-        mostPopulatedBinDataStorePtr = m_MostPopulatedBinArray->getDataStore();
-      }
-
-      if(m_Histogram && binCountsStorePtr != nullptr && binRangesStorePtr != nullptr)
-      {
-        std::vector<T> ranges(m_NumBins * 2);
-        std::vector<uint64> histogram(m_NumBins, 0);
-        if(length[localFeatureIndex] > 0)
-        {
-          T histMin = static_cast<T>(m_HistMin);
-          T histMax = static_cast<T>(m_HistMax);
-
-          if(m_HistFullRange)
-          {
-            histMin = min[localFeatureIndex];
-            histMax = max[localFeatureIndex] + static_cast<T>(1.0);
-          }
-
-          HistogramUtilities::serial::FillBinRanges(ranges, std::make_pair(histMin, histMax), m_NumBins);
-
-          const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
-          if(std::fabs(increment) < 1E-10)
-          {
-            histogram[0] = length[localFeatureIndex];
-          }
-          else
-          {
-            for(usize i = 0; i < numTuples; ++i)
-            {
-              if(shouldCancel)
-              {
-                return;
-              }
-              if(m_Mask != nullptr && !m_Mask->isTrue(i))
-              {
-                continue;
-              }
-              if((*m_FeatureIds)[i] != static_cast<int32>(j))
-              {
-                continue;
-              }
-              const T value = m_Source[i];
-              const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment)); // find bin for this input array value
-              if((bin >= 0) && (bin < m_NumBins))                                                                       // make certain bin is in range
-              {
-                histogram[bin]++; // increment histogram element corresponding to this input array value
-              }
-            } // end of numTuples loop
-          }   // end of increment else
-
-          if(m_ModalBinRanges)
-          {
-            if(std::fabs(increment) < 1E-10)
-            {
-              m_ModalBinRangesArray->addEntry(j, histMin);
-              m_ModalBinRangesArray->addEntry(j, histMax);
-            }
-            else
-            {
-              auto modeList = m_ModeArray->getList(j);
-              for(int i = 0; i < modeList.size(); i++)
-              {
-                const T mode = modeList.at(i);
-                const auto modalBin = HistogramUtilities::serial::CalculateBin(mode, histMin, increment);
-                if((modalBin >= 0) && (modalBin < m_NumBins)) // make certain bin is in range
-                {
-                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin]);
-                  m_ModalBinRangesArray->addEntry(j, ranges[modalBin + 1]);
-                }
-              }
-            }
-          }
-        } // end of length if
-
-        binCountsStorePtr->setTuple(j, histogram);
-        binRangesStorePtr->setTuple(j, ranges);
-
-        auto maxElementIt = std::max_element(histogram.begin(), histogram.end());
-        uint64 index = std::distance(histogram.begin(), maxElementIt);
-        mostPopulatedBinDataStorePtr->setComponent(j, 0, index);
-        mostPopulatedBinDataStorePtr->setComponent(j, 1, histogram[index]);
-      } // end of m_Histogram if
-
       progressCount++;
       now = std::chrono::steady_clock::now();
       if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
       {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, j, end));
+        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end));
         progressCount = 0;
         initialTime = std::chrono::steady_clock::now();
       }
@@ -345,7 +193,7 @@ public:
           continue;
         }
         // Is the featureId within our range that we care about
-        const int32 featureId = (*m_FeatureIds)[tupleIndex];
+        const int32 featureId = m_FeatureIds[tupleIndex];
         if(featureId < start || featureId >= end)
         {
           continue;
@@ -387,15 +235,9 @@ private:
   bool m_Mode;
   bool m_StdDeviation;
   bool m_Summation;
-  bool m_Histogram;
-  bool m_ModalBinRanges;
-  float64 m_HistMin;
-  float64 m_HistMax;
-  bool m_HistFullRange;
-  int32 m_NumBins;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
-  const Int32Array* m_FeatureIds = nullptr;
-  const DataArray<T>& m_Source;
+  const Int32AbstractDataStore& m_FeatureIds;
+  const AbstractDataStore<T>& m_Source;
   BoolArray* m_FeatureHasDataArray = nullptr;
   UInt64Array* m_LengthArray = nullptr;
   DataArray<T>* m_MinArray = nullptr;
@@ -404,19 +246,201 @@ private:
   NeighborList<T>* m_ModeArray = nullptr;
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
-  UInt64Array* m_HistBinCountsArray = nullptr;
-  DataArray<T>* m_HistBinRangesArray = nullptr;
-  UInt64Array* m_MostPopulatedBinArray = nullptr;
-  NeighborList<T>* m_ModalBinRangesArray = nullptr;
   ComputeArrayStatistics* m_Filter = nullptr;
 };
 
 template <typename T>
-class FindArrayMedianUniqueByIndexImpl
+class StatisticsByFeatureRangeImpl
 {
 public:
-  FindArrayMedianUniqueByIndexImpl(const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, bool findMedian, bool findNumUnique,
-                                   Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics* filter)
+  StatisticsByFeatureRangeImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const Int32AbstractDataStore& featureIdsMap,
+                               const BoolAbstractDataStore& tempMask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray,
+                               UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray,
+                               Float32Array* summationArray, ComputeArrayStatistics* filter)
+  : m_Length(length)
+  , m_Min(min)
+  , m_Max(max)
+  , m_Mean(mean)
+  , m_Mode(mode)
+  , m_StdDeviation(stdDeviation)
+  , m_Summation(summation)
+  , m_FeatureIdsMap(featureIdsMap)
+  , m_Mask(tempMask)
+  , m_FeatureIds(featureIds)
+  , m_Source(source)
+  , m_FeatureHasDataArray(featureHasDataArray)
+  , m_LengthArray(lengthArray)
+  , m_MinArray(minArray)
+  , m_MaxArray(maxArray)
+  , m_MeanArray(meanArray)
+  , m_ModeArray(modeArray)
+  , m_StdDevArray(stdDevArray)
+  , m_SummationArray(summationArray)
+  , m_Filter(filter)
+  {
+  }
+
+  void compute(usize start, usize end) const
+  {
+    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+
+    const std::atomic_bool& shouldCancel = m_Filter->getCancel();
+    const usize numTuples = m_Source.getNumberOfTuples();
+    for(usize featureId = start; featureId < end; featureId++)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), featureId));
+      T minValue = std::numeric_limits<T>::max();
+      T maxValue;
+      if constexpr(std::is_floating_point_v<T>)
+      {
+        maxValue = -std::numeric_limits<T>::max();
+      }
+      else
+      {
+        maxValue = std::numeric_limits<T>::min();
+      }
+      T summationValue = static_cast<T>(0);
+      float32 meanValue = 0.0;
+      usize count = 0;
+      std::map<T, uint64> modalMap = {};
+      for(usize i = 0; i < numTuples; ++i)
+      {
+        if(m_Mask[i] && m_FeatureIds[i] == featureId)
+        {
+          count++;
+          T val = m_Source[i];
+          minValue = std::min(minValue, val);
+          maxValue = std::max(maxValue, val);
+          summationValue += val;
+          modalMap[val]++;
+        }
+      }
+
+      if(count > 0) // This guards against dividing by zero
+      {
+        m_FeatureHasDataArray->initializeTuple(truePosition, true);
+        if(m_Length)
+        {
+          m_LengthArray->initializeTuple(truePosition, count);
+        }
+        if(m_Min)
+        {
+          m_MinArray->initializeTuple(truePosition, minValue);
+        }
+        if(m_Max)
+        {
+          m_MaxArray->initializeTuple(truePosition, maxValue);
+        }
+        if(m_Summation)
+        {
+          m_SummationArray->initializeTuple(truePosition, summationValue);
+        }
+
+        if(count > 0)
+        {
+          if constexpr(std::is_same_v<T, bool>)
+          {
+            meanValue = static_cast<float32>(summationValue >= (numTuples - summationValue));
+          }
+          else
+          {
+            meanValue = summationValue / static_cast<float32>(count);
+          }
+        }
+
+        if(m_Mean)
+        {
+          m_MeanArray->initializeTuple(truePosition, meanValue);
+        }
+
+        if(m_Mode)
+        {
+          if(!modalMap.empty())
+          {
+            // Find the maximum occurrence
+            auto pr = std::max_element(modalMap.begin(), modalMap.end(), [](const auto& x, const auto& y) { return x.second < y.second; });
+            int maxCount = pr->second;
+
+            // Store all values that have this maximum occurrence under the proper feature id
+            for(const auto& modalPair : modalMap)
+            {
+              if(modalPair.second == maxCount)
+              {
+                m_ModeArray->addEntry(truePosition, modalPair.first);
+              }
+            }
+          }
+        }
+
+        if(m_StdDeviation)
+        {
+          // https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/variance-standard-deviation-population/a/calculating-standard-deviation-step-by-step
+          float64 sumOfDiffs = 0.0;
+          for(usize i = 0; i < numTuples; ++i)
+          {
+            if(m_Mask[i] && m_FeatureIds[i] == featureId)
+            {
+              sumOfDiffs += static_cast<float64>((m_Source[i] - meanValue) * (m_Source[i] - meanValue));
+            }
+          }
+
+          // Set the value into the output array
+          m_StdDevArray->setValue(truePosition, static_cast<float32>(std::sqrt(sumOfDiffs / static_cast<float64>(count))));
+        }
+      }
+      else
+      {
+        m_FeatureHasDataArray->initializeTuple(truePosition, false);
+      }
+
+      now = std::chrono::steady_clock::now();
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > 1000)
+      {
+        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, featureId, end));
+        initialTime = std::chrono::steady_clock::now();
+      }
+    }
+  } // end of compute
+
+  void operator()(const Range& range) const
+  {
+    compute(range.min(), range.max());
+  }
+
+private:
+  bool m_Length;
+  bool m_Min;
+  bool m_Max;
+  bool m_Mean;
+  bool m_Mode;
+  bool m_StdDeviation;
+  bool m_Summation;
+  const Int32AbstractDataStore& m_FeatureIdsMap;
+  const BoolAbstractDataStore& m_Mask;
+  const Int32AbstractDataStore& m_FeatureIds;
+  const AbstractDataStore<T>& m_Source;
+  BoolArray* m_FeatureHasDataArray = nullptr;
+  UInt64Array* m_LengthArray = nullptr;
+  DataArray<T>* m_MinArray = nullptr;
+  DataArray<T>* m_MaxArray = nullptr;
+  Float32Array* m_MeanArray = nullptr;
+  NeighborList<T>* m_ModeArray = nullptr;
+  Float32Array* m_StdDevArray = nullptr;
+  Float32Array* m_SummationArray = nullptr;
+  ComputeArrayStatistics* m_Filter = nullptr;
+};
+
+template <typename T>
+class MedianByFeatureImpl
+{
+public:
+  MedianByFeatureImpl(const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, bool findMedian, bool findNumUnique,
+                      Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics* filter)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -428,13 +452,6 @@ public:
   , m_Filter(filter)
   {
   }
-
-  virtual ~FindArrayMedianUniqueByIndexImpl() = default;
-
-  FindArrayMedianUniqueByIndexImpl(const FindArrayMedianUniqueByIndexImpl&) = default;           // Copy Constructor Not Implemented
-  FindArrayMedianUniqueByIndexImpl(FindArrayMedianUniqueByIndexImpl&&) noexcept = default;       // Move Constructor Not Implemented
-  FindArrayMedianUniqueByIndexImpl& operator=(const FindArrayMedianUniqueByIndexImpl&) = delete; // Copy Assignment Not Implemented
-  FindArrayMedianUniqueByIndexImpl& operator=(FindArrayMedianUniqueByIndexImpl&&) = delete;      // Move Assignment Not Implemented
 
   void compute(usize start, usize end) const
   {
@@ -448,8 +465,6 @@ public:
       featureSources[featureSourceIndex].reserve(m_LengthArray->operator[](featureSourceIndex + start));
     }
     const usize numTuples = m_Source.getNumberOfTuples();
-    const auto& featureIds = m_FeatureIds->getDataStoreRef();
-    const auto& source = m_Source.getDataStoreRef();
 
     for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
     {
@@ -459,12 +474,12 @@ public:
         continue;
       }
       // Is the featureId within our range that we care about
-      const int32 featureId = featureIds[tupleIndex];
+      const int32 featureId = m_FeatureIds[tupleIndex];
       if(featureId < start || featureId >= end)
       {
         continue;
       }
-      featureSources[featureId - start].push_back(source[tupleIndex]);
+      featureSources[featureId - start].push_back(m_Source[tupleIndex]);
     }
 
     for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
@@ -493,9 +508,98 @@ private:
   Float32Array* m_MedianArray;
   Int32Array* m_NumUniqueValuesArray;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
-  const Int32Array* m_FeatureIds = nullptr;
-  const DataArray<T>& m_Source;
+  const Int32AbstractDataStore& m_FeatureIds;
+  const AbstractDataStore<T>& m_Source;
   const DataArray<uint64>* m_LengthArray = nullptr;
+  ComputeArrayStatistics* m_Filter = nullptr;
+};
+
+template <typename T>
+class MedianByFeatureRangeImpl
+{
+public:
+  MedianByFeatureRangeImpl(const Int32AbstractDataStore& featureIdsMap, const BoolAbstractDataStore& tempMask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source,
+                           bool findMedian, bool findNumUnique, Float32Array* medianArray, Int32Array* numUniqueValuesArray, ComputeArrayStatistics* filter)
+  : m_FindMedian(findMedian)
+  , m_FindNumUniqueValues(findNumUnique)
+  , m_MedianArray(medianArray)
+  , m_NumUniqueValuesArray(numUniqueValuesArray)
+  , m_FeatureIdsMap(featureIdsMap)
+  , m_Mask(tempMask)
+  , m_FeatureIds(featureIds)
+  , m_Source(source)
+  , m_Filter(filter)
+  {
+  }
+
+  void compute(usize start, usize end) const
+  {
+    m_Filter->sendThreadSafeInfoMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
+
+    const usize numTuples = m_Source.getNumberOfTuples();
+    for(usize featureId = start; featureId < end; featureId++)
+    {
+      const usize truePosition = std::distance(m_FeatureIdsMap.begin(), std::find(m_FeatureIdsMap.begin(), m_FeatureIdsMap.end(), featureId));
+      std::set<int32> valuesSet = {};
+      std::vector<float32> values = {};
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(m_Mask[i] && m_FeatureIds[i] == featureId)
+        {
+          if(m_FindMedian)
+          {
+            values.push_back(m_Source[i]);
+          }
+          if(m_FindNumUniqueValues)
+          {
+            valuesSet.emplace(m_Source[i]);
+          }
+        }
+      }
+
+      if(m_FindMedian)
+      {
+        if(values.empty())
+        {
+          m_MedianArray->setValue(truePosition, 0.0f);
+        }
+        else
+        {
+          std::sort(values.begin(), values.end());
+          if(values.size() % 2 == 1)
+          {
+            const usize halfElements = static_cast<usize>(std::floor(values.size() / 2.0f));
+            m_MedianArray->setValue(truePosition, values[halfElements]);
+          }
+          else
+          {
+            const usize idxLow = (values.size() / 2) - 1;
+            const usize idxHigh = values.size() / 2;
+            m_MedianArray->setValue(truePosition, (values[idxLow] + values[idxHigh]) * 0.5f);
+          }
+        }
+      }
+      if(m_FindNumUniqueValues)
+      {
+        m_NumUniqueValuesArray->setValue(truePosition, static_cast<int32>(valuesSet.size()));
+      }
+    }
+  }
+
+  void operator()(const Range& range) const
+  {
+    compute(range.min(), range.max());
+  }
+
+private:
+  bool m_FindMedian;
+  bool m_FindNumUniqueValues;
+  Float32Array* m_MedianArray;
+  Int32Array* m_NumUniqueValuesArray;
+  const BoolAbstractDataStore& m_Mask;
+  const Int32AbstractDataStore& m_FeatureIds;
+  const Int32AbstractDataStore& m_FeatureIdsMap;
+  const AbstractDataStore<T>& m_Source;
   ComputeArrayStatistics* m_Filter = nullptr;
 };
 
@@ -597,90 +701,9 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
     }
   }
 
-  if(inputValues->FindHistogram)
-  {
-    auto* array7Ptr = dynamic_cast<UInt64Array*>(arrays[8]);
-    if(array7Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Histogram Bin Counts' array to needed type. Check input array selection.");
-    }
-
-    auto* array12Ptr = dynamic_cast<DataArray<T>*>(arrays[12]);
-    if(array12Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Histogram Bin Ranges' array to needed type. Check input array selection.");
-    }
-
-    auto* array10Ptr = dynamic_cast<UInt64Array*>(arrays[10]);
-    if(array10Ptr == nullptr)
-    {
-      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Most Populated Bin' array to needed type. Check input array selection.");
-    }
-
-    auto& binCountsStore = array7Ptr->getDataStoreRef();
-    auto& binRangesStore = array12Ptr->getDataStoreRef();
-    auto& mostPopBinStore = array10Ptr->getDataStoreRef();
-
-    auto range = StatisticsCalculations::findHistogramRange(data, static_cast<T>(inputValues->MinRange), static_cast<T>(inputValues->MaxRange), inputValues->UseFullRange);
-
-    if(inputValues->UseFullRange)
-    {
-      range.second++; // Upper bound must be exclusive
-    }
-
-    std::atomic_bool neverCancel{false};
-    std::atomic<usize> overflow{0};
-    std::vector<uint64> binCounts(inputValues->NumBins, 0);
-    std::vector<T> binRanges(inputValues->NumBins * 2);
-
-    Result<> result = {};
-    if constexpr(std::is_same_v<DataArray<T>, ContainerType>)
-    {
-      result = HistogramUtilities::serial::GenerateHistogram(data.getDataStoreRef(), binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
-    }
-    else
-    {
-      result = HistogramUtilities::serial::GenerateHistogram(data, binRanges, range, neverCancel, inputValues->NumBins, binCounts, overflow);
-    }
-
-    for(size_t i = 0; i < inputValues->NumBins; i++)
-    {
-      binCountsStore.setComponent(i, 0, binCounts[i]);
-      binRangesStore.setComponent(i, 0, binRanges[i * 2]);
-      binRangesStore.setComponent(i, 1, binRanges[i * 2 + 1]);
-    }
-
-    auto maxElementIt = std::max_element(binCounts.begin(), binCounts.end());
-    uint64 index = std::distance(binCounts.begin(), maxElementIt);
-    mostPopBinStore.setComponent(0, 0, index);
-    mostPopBinStore.setComponent(0, 1, binCounts[index]);
-
-    if(inputValues->FindModalBinRanges)
-    {
-      auto* array5Ptr = dynamic_cast<NeighborList<T>*>(arrays[5]);
-      if(array5Ptr == nullptr)
-      {
-        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Mode' array to needed type. Check input array selection.");
-      }
-
-      auto* array11Ptr = dynamic_cast<NeighborList<T>*>(arrays[11]);
-      if(array11Ptr == nullptr)
-      {
-        throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Modal Bin Ranges' array to needed type. Check input array selection.");
-      }
-
-      for(const T& mode : array5Ptr->at(0))
-      {
-        std::pair<T, T> modalRange = StatisticsCalculations::findModalBinRange(data, binRanges, mode);
-        array11Ptr->addEntry(0, modalRange.first);
-        array11Ptr->addEntry(0, modalRange.second);
-      }
-    }
-  }
-
   if(inputValues->FindNumUniqueValues)
   {
-    auto* array8Ptr = dynamic_cast<DataArray<int32>*>(arrays[9]);
+    auto* array8Ptr = dynamic_cast<DataArray<int32>*>(arrays[8]);
     if(array8Ptr == nullptr)
     {
       throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
@@ -692,184 +715,102 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays,
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const ComputeArrayStatisticsInputValues* inputValues,
-                    std::vector<IArray*>& arrays, usize numFeatures, ComputeArrayStatistics* filter)
+Result<> InitializeArrays(DataStructure& dataStructure, const ComputeArrayStatisticsInputValues* inputValues)
 {
+  using InputDataArrayType = DataArray<T>;
+  // Need to initialize the output data arrays
   if(inputValues->ComputeByIndex)
   {
-    auto* lengthArrayPtr = dynamic_cast<DataArray<uint64>*>(arrays[0]);
-    auto* minArrayPtr = dynamic_cast<DataArray<T>*>(arrays[1]);
-    auto* maxArrayPtr = dynamic_cast<DataArray<T>*>(arrays[2]);
-    auto* meanArrayPtr = dynamic_cast<Float32Array*>(arrays[3]);
-    auto* modeArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[5]);
-    auto* stdDevArrayPtr = dynamic_cast<Float32Array*>(arrays[6]);
-    auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
-
-    auto* histBinCountsArrayPtr = dynamic_cast<UInt64Array*>(arrays[8]);
-    auto* histBinRangesArrayPtr = dynamic_cast<DataArray<T>*>(arrays[12]);
-    auto* mostPopulatedBinPtr = dynamic_cast<UInt64Array*>(arrays[10]);
-    auto* modalBinsArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[11]);
-
-    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[13]);
-
-    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
-    indexAlgArrays.push_back(&source);
-    indexAlgArrays.push_back(featureHasDataPtr);
-    indexAlgArrays.push_back(lengthArrayPtr);
-    indexAlgArrays.push_back(minArrayPtr);
-    indexAlgArrays.push_back(maxArrayPtr);
-    indexAlgArrays.push_back(meanArrayPtr);
-    indexAlgArrays.push_back(stdDevArrayPtr);
-    indexAlgArrays.push_back(summationArrayPtr);
-    indexAlgArrays.push_back(histBinCountsArrayPtr);
-    indexAlgArrays.push_back(histBinRangesArrayPtr);
-    indexAlgArrays.push_back(mostPopulatedBinPtr);
-
-#ifdef SIMPLNX_ENABLE_MULTICORE
-    if(CheckArraysInMemory(indexAlgArrays))
+    auto* arrayPtr = dataStructure.getDataAs<BoolArray>(inputValues->FeatureHasDataArrayName);
+    if(arrayPtr == nullptr)
     {
-      const tbb::simple_partitioner simplePartitioner;
-      const size_t grainSize = 500;
-      const tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
-      tbb::parallel_for(tbbRange,
-                        ComputeArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
-                                                             inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                             inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr,
-                                                             lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histBinCountsArrayPtr,
-                                                             histBinRangesArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter),
-                        simplePartitioner);
+      return MakeErrorResult(-563502, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Feature-Has-Data' array to needed type. Check input array selection.");
     }
-    else
-    {
-      ParallelDataAlgorithm indexAlg;
-      indexAlg.setRange(0, numFeatures);
-      indexAlg.requireArraysInMemory(indexAlgArrays);
-      indexAlg.execute(ComputeArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
-                                                            inputValues->FindStdDeviation, inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                            inputValues->UseFullRange, inputValues->NumBins, inputValues->FindModalBinRanges, mask, featureIds, source, featureHasDataPtr,
-                                                            lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, histBinCountsArrayPtr,
-                                                            histBinRangesArrayPtr, mostPopulatedBinPtr, modalBinsArrayPtr, filter));
-    }
-#endif
-
-    if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
-    {
-      filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
-
-      auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
-      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[9]);
-
-      IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
-      medianAlgArrays.push_back(featureIds);
-      medianAlgArrays.push_back(&source);
-      medianAlgArrays.push_back(medianArrayPtr);
-      medianAlgArrays.push_back(numUniqueValuesArrayPtr);
-      medianAlgArrays.push_back(lengthArrayPtr);
-
-      ParallelDataAlgorithm medianDataAlg;
-      medianDataAlg.requireArraysInMemory(medianAlgArrays);
-      medianDataAlg.setRange(0, numFeatures);
-      medianDataAlg.execute(
-          FindArrayMedianUniqueByIndexImpl<T>(mask, featureIds, source, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, filter));
-    }
+    arrayPtr->fill(false);
   }
-  else
+  if(inputValues->FindLength)
   {
-    if(inputValues->UseMask)
+    auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->LengthArrayName);
+    if(arrayPtr == nullptr)
     {
-      // This section extracts out the data into a separate storage class. Note that
-      // this could get real ugly for an out-of-core DataArray
-      const usize numTuples = source.getNumberOfTuples();
-      std::vector<T> data;
-      data.reserve(numTuples);
-      for(usize i = 0; i < numTuples; i++)
-      {
-        if(mask->isTrue(i))
-        {
-          data.push_back(source[i]);
-        }
-      }
-      data.shrink_to_fit();
-      // compute the statistics for the entire array
-      FindStatisticsImpl<std::vector<T>, T>(data, arrays, inputValues);
+      return MakeErrorResult(-563503, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
-    else
-    {
-      // compute the statistics for the entire array
-      FindStatisticsImpl<DataArray<T>, T>(source, arrays, inputValues);
-    }
+    arrayPtr->fill(0ULL);
   }
-}
-
-// -----------------------------------------------------------------------------
-template <typename T>
-void StandardizeDataByIndex(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32Array* featureIdsArray, const Float32Array& muArray,
-                            const Float32Array& sigArray, Float32Array& standardizedArray)
-{
-  auto& data = dataArray.getDataStoreRef();
-  auto& standardized = standardizedArray.getDataStoreRef();
-  const auto& featureIds = featureIdsArray->getDataStoreRef();
-  const auto& mu = muArray.getDataStoreRef();
-  const auto& sig = sigArray.getDataStoreRef();
-
-  const usize numTuples = data.getNumberOfTuples();
-  for(usize i = 0; i < numTuples; i++)
+  if(inputValues->FindMin)
   {
-    if(useMask)
+    auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MinimumArrayName);
+    if(arrayPtr == nullptr)
     {
-      if(mask->isTrue(i))
-      {
-        standardized.setValue(i, (static_cast<float32>(data[i]) - mu[featureIds.at(i)]) / sig[featureIds.at(i)]);
-      }
+      return MakeErrorResult(-563504, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
-    else
-    {
-      standardized.setValue(i, (static_cast<float32>(data[i]) - mu[featureIds.at(i)]) / sig[featureIds.at(i)]);
-    }
+    arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::max()));
   }
-}
-
-// -----------------------------------------------------------------------------
-template <typename T>
-void StandardizeData(const DataArray<T>& dataArray, bool useMask, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Float32Array& muArray, const Float32Array& sigArray,
-                     Float32Array& standardizedArray)
-{
-  auto& data = dataArray.getDataStoreRef();
-  auto& standardized = standardizedArray.getDataStoreRef();
-  const auto& mu = muArray.getDataStoreRef();
-  const auto& sig = sigArray.getDataStoreRef();
-
-  const usize numTuples = data.getNumberOfTuples();
-
-  for(usize i = 0; i < numTuples; i++)
+  if(inputValues->FindMax)
   {
-    if(useMask)
+    auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MaximumArrayName);
+    if(arrayPtr == nullptr)
     {
-      if(mask->isTrue(i))
-      {
-        standardized.setValue(i, (static_cast<float32>(data[i]) - mu[0]) / sig[0]);
-      }
+      return MakeErrorResult(-563505, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
-    else
-    {
-      standardized.setValue(i, (static_cast<float32>(data[i]) - mu[0]) / sig[0]);
-    }
+    arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::min()));
   }
+  if(inputValues->FindMean)
+  {
+    auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MeanArrayName);
+    if(arrayPtr == nullptr)
+    {
+      return MakeErrorResult(-563506, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
+    }
+    arrayPtr->fill(0.0F);
+  }
+  if(inputValues->FindMedian)
+  {
+    auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MedianArrayName);
+    if(arrayPtr == nullptr)
+    {
+      return MakeErrorResult(-563507, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Median' array to needed type. Check input array selection.");
+    }
+    arrayPtr->fill(0.0F);
+  }
+  if(inputValues->FindStdDeviation)
+  {
+    auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->StdDeviationArrayName);
+    if(arrayPtr == nullptr)
+    {
+      return MakeErrorResult(-563509, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Standard Deviation' array to needed type. Check input array selection.");
+    }
+    arrayPtr->fill(0.0F);
+  }
+  if(inputValues->FindSummation)
+  {
+    auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->SummationArrayName);
+    if(arrayPtr == nullptr)
+    {
+      return MakeErrorResult(-563510, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
+    }
+    arrayPtr->fill(0.0F);
+  }
+  if(inputValues->FindNumUniqueValues)
+  {
+    auto* arrayPtr = dataStructure.getDataAs<Int32Array>(inputValues->NumUniqueValuesName);
+    if(arrayPtr == nullptr)
+    {
+      return MakeErrorResult(-563513, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
+    }
+    arrayPtr->fill(-1);
+  }
+  // End Initialization
+
+  return {};
 }
 
 // -----------------------------------------------------------------------------
 struct ComputeArrayStatisticsFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IArray*>& arrays, usize numFeatures, const ComputeArrayStatisticsInputValues* inputValues,
-                      ComputeArrayStatistics* filter)
+  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
   {
-    const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
-    Int32Array* featureIdsPtr = nullptr;
-    if(inputValues->ComputeByIndex)
-    {
-      featureIdsPtr = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath);
-    }
     std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
     {
@@ -885,136 +826,272 @@ struct ComputeArrayStatisticsFunctor
       }
     }
 
-    using InputDataArrayType = DataArray<T>;
+    Result<> initializationResult = InitializeArrays<T>(dataStructure, inputValues);
+    if(initializationResult.invalid())
+    {
+      return initializationResult;
+    }
 
-    // Need to initialize the output data arrays
-    if(inputValues->ComputeByIndex)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<BoolArray>(inputValues->FeatureHasDataArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563502, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Feature-Has-Data' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(false);
-    }
-    if(inputValues->FindLength)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->LengthArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563503, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Length' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(0ULL);
-    }
-    if(inputValues->FindMin)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MinimumArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563504, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Min' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::max()));
-    }
-    if(inputValues->FindMax)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MaximumArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563505, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Max' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::min()));
-    }
-    if(inputValues->FindMean)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MeanArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563506, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(0.0F);
-    }
-    if(inputValues->FindMedian)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MedianArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563507, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Median' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(0.0F);
-    }
-    if(inputValues->FindStdDeviation)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->StdDeviationArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563509, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Standard Deviation' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(0.0F);
-    }
-    if(inputValues->FindSummation)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->SummationArrayName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563510, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(0.0F);
-    }
-    if(inputValues->FindHistogram)
-    {
-      {
-        auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->BinCountsArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563511, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Histogram Bin Counts' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(0);
-      }
-      {
-        auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->BinRangesArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563514, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Histogram Bin Ranges' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(static_cast<T>(0.0));
-      }
-      {
-        auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->MostPopulatedBinArrayName);
-        if(arrayPtr == nullptr)
-        {
-          return MakeErrorResult(-563512, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Most Populated Bin' array to needed type. Check input array selection.");
-        }
-        arrayPtr->fill(0);
-      }
-    }
-    if(inputValues->FindNumUniqueValues)
-    {
-      auto* arrayPtr = dataStructure.getDataAs<Int32Array>(inputValues->NumUniqueValuesName);
-      if(arrayPtr == nullptr)
-      {
-        return MakeErrorResult(-563513, "ComputeArrayStatisticsFunctor could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
-      }
-      arrayPtr->fill(-1);
-    }
-    // End Initialization
-
+    const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
     // this level checks whether computing by index or not and preps the calculations accordingly
-    FindStatistics<T>(inputArray, featureIdsPtr, maskCompare, inputValues, arrays, numFeatures, filter);
+    if(inputValues->UseMask)
+    {
+      // This section extracts out the data into a separate storage class. Note that
+      // this could get real ugly for an out-of-core DataArray
+      const usize numTuples = inputArray.getNumberOfTuples();
+      std::vector<T> data;
+      data.reserve(numTuples);
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(maskCompare->isTrue(i))
+        {
+          data.push_back(inputArray[i]);
+        }
+      }
+      data.shrink_to_fit();
+      // compute the statistics for the entire array
+      FindStatisticsImpl<std::vector<T>, T>(data, arrays, inputValues);
+    }
+    else
+    {
+      // compute the statistics for the entire array
+      FindStatisticsImpl<DataArray<T>, T>(inputArray, arrays, inputValues);
+    }
 
     // compute the standardized data based on whether computing by index or not
     if(inputValues->StandardizeData)
     {
-      const auto& mean = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanArrayName);
-      const auto& std = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDeviationArrayName);
-      auto& standardized = dataStructure.getDataRefAs<Float32Array>(inputValues->StandardizedArrayName);
+      const auto& mean = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanArrayName).getDataStoreRef();
+      const auto& std = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDeviationArrayName).getDataStoreRef();
+      auto& standardized = dataStructure.getDataRefAs<Float32Array>(inputValues->StandardizedArrayName).getDataStoreRef();
+      auto& data = inputArray.getDataStoreRef();
 
-      if(inputValues->ComputeByIndex)
+      const usize numTuples = data.getNumberOfTuples();
+
+      for(usize i = 0; i < numTuples; i++)
       {
-        StandardizeDataByIndex<T>(inputArray, inputValues->UseMask, maskCompare, featureIdsPtr, mean, std, standardized);
+        if(!inputValues->UseMask || maskCompare->isTrue(i))
+        {
+          standardized.setValue(i, (static_cast<float32>(data[i]) - mean[0]) / std[0]);
+        }
       }
-      else
+    }
+    return {};
+  }
+};
+
+// -----------------------------------------------------------------------------
+struct ComputeArrayStatisticsByFeatureFunctor
+{
+  template <typename T>
+  Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, usize numFeatures, const ComputeArrayStatisticsInputValues* inputValues,
+                      ComputeArrayStatistics* filter)
+  {
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+    if(inputValues->UseMask)
+    {
+      try
       {
-        StandardizeData<T>(inputArray, inputValues->UseMask, maskCompare, mean, std, standardized);
+        maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, inputValues->MaskArrayPath);
+      } catch(const std::out_of_range& exception)
+      {
+        // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+        // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+        const std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->MaskArrayPath.toString());
+        return MakeErrorResult(-563508, message);
+      }
+    }
+
+    Result<> initializationResult = InitializeArrays<T>(dataStructure, inputValues);
+    if(initializationResult.invalid())
+    {
+      return initializationResult;
+    }
+
+    // this level preps and preforms the calculations accordingly
+    const auto* inputArrayPtr = static_cast<const DataArray<T>*>(inputIDataArray);
+    const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath);
+    auto* lengthArrayPtr = dynamic_cast<DataArray<uint64>*>(arrays[0]);
+    auto* minArrayPtr = dynamic_cast<DataArray<T>*>(arrays[1]);
+    auto* maxArrayPtr = dynamic_cast<DataArray<T>*>(arrays[2]);
+    auto* meanArrayPtr = dynamic_cast<Float32Array*>(arrays[3]);
+    auto* modeArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[5]);
+    auto* stdDevArrayPtr = dynamic_cast<Float32Array*>(arrays[6]);
+    auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
+
+    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[9]);
+
+    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
+    indexAlgArrays.push_back(inputArrayPtr);
+    indexAlgArrays.push_back(featureHasDataPtr);
+    indexAlgArrays.push_back(lengthArrayPtr);
+    indexAlgArrays.push_back(minArrayPtr);
+    indexAlgArrays.push_back(maxArrayPtr);
+    indexAlgArrays.push_back(meanArrayPtr);
+    indexAlgArrays.push_back(stdDevArrayPtr);
+    indexAlgArrays.push_back(summationArrayPtr);
+
+    const auto& featureIds = featureIdsPtr->getDataStoreRef();
+    auto& data = inputArrayPtr->getDataStoreRef();
+    StatisticsByFeatureImpl<T> classToExecute = StatisticsByFeatureImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
+                                                                           inputValues->FindStdDeviation, inputValues->FindSummation, maskCompare, featureIds, data, featureHasDataPtr, lengthArrayPtr,
+                                                                           minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
+    if(CheckArraysInMemory(indexAlgArrays))
+    {
+      const tbb::simple_partitioner simplePartitioner;
+      const usize grainSize = 500;
+      tbb::blocked_range<usize> tbbRange(0, numFeatures, grainSize);
+      tbb::parallel_for(tbbRange, std::move(classToExecute), simplePartitioner);
+    }
+    else
+    {
+      ParallelDataAlgorithm indexAlg;
+      indexAlg.setRange(0, numFeatures);
+      indexAlg.requireArraysInMemory(indexAlgArrays);
+      indexAlg.execute(std::move(classToExecute));
+    }
+
+    if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
+    {
+      filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
+
+      auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
+      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
+
+      ParallelDataAlgorithm medianDataAlg;
+      {
+        // Scoped to prevent alg use of ptr array
+        IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
+        medianAlgArrays.push_back(featureIdsPtr);
+        medianAlgArrays.push_back(inputArrayPtr);
+        medianAlgArrays.push_back(medianArrayPtr);
+        medianAlgArrays.push_back(numUniqueValuesArrayPtr);
+        medianAlgArrays.push_back(lengthArrayPtr);
+
+        medianDataAlg.requireArraysInMemory(medianAlgArrays);
+      }
+      medianDataAlg.setRange(0, numFeatures);
+      medianDataAlg.execute(
+          MedianByFeatureImpl<T>(maskCompare, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, filter));
+    }
+
+    // compute the standardized data
+    if(inputValues->StandardizeData)
+    {
+      const auto& mean = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanArrayName).getDataStoreRef();
+      const auto& std = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDeviationArrayName).getDataStoreRef();
+      auto& standardized = dataStructure.getDataRefAs<Float32Array>(inputValues->StandardizedArrayName).getDataStoreRef();
+
+      const usize numTuples = data.getNumberOfTuples();
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(!inputValues->UseMask || maskCompare->isTrue(i))
+        {
+          standardized.setValue(i, (static_cast<float32>(data[i]) - mean[featureIds.at(i)]) / std[featureIds.at(i)]);
+        }
+      }
+    }
+    return {};
+  }
+
+  template <typename T>
+  Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, const std::pair<int32, int32>& range,
+                      const ComputeArrayStatisticsInputValues* inputValues, ComputeArrayStatistics* filter)
+  {
+    Result<> initializationResult = InitializeArrays<T>(dataStructure, inputValues);
+    if(initializationResult.invalid())
+    {
+      return initializationResult;
+    }
+
+    // this level preps and preforms the calculations accordingly
+    const auto* tempMaskPtr = dataStructure.getDataAs<BoolArray>(inputValues->TempMaskArrayPath); // this already accounts for previous mask
+    const auto* featureIdsMapPtr = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdMapArrayPath);
+    const auto* inputArrayPtr = static_cast<const DataArray<T>*>(inputIDataArray);
+    const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath);
+    auto* lengthArrayPtr = dynamic_cast<DataArray<uint64>*>(arrays[0]);
+    auto* minArrayPtr = dynamic_cast<DataArray<T>*>(arrays[1]);
+    auto* maxArrayPtr = dynamic_cast<DataArray<T>*>(arrays[2]);
+    auto* meanArrayPtr = dynamic_cast<Float32Array*>(arrays[3]);
+    auto* modeArrayPtr = dynamic_cast<NeighborList<T>*>(arrays[5]);
+    auto* stdDevArrayPtr = dynamic_cast<Float32Array*>(arrays[6]);
+    auto* summationArrayPtr = dynamic_cast<Float32Array*>(arrays[7]);
+
+    auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[9]);
+
+    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
+    indexAlgArrays.push_back(tempMaskPtr);
+    indexAlgArrays.push_back(featureIdsMapPtr);
+    indexAlgArrays.push_back(featureIdsPtr);
+    indexAlgArrays.push_back(inputArrayPtr);
+    indexAlgArrays.push_back(featureHasDataPtr);
+    indexAlgArrays.push_back(lengthArrayPtr);
+    indexAlgArrays.push_back(minArrayPtr);
+    indexAlgArrays.push_back(maxArrayPtr);
+    indexAlgArrays.push_back(meanArrayPtr);
+    indexAlgArrays.push_back(stdDevArrayPtr);
+    indexAlgArrays.push_back(summationArrayPtr);
+
+    const auto& featureIds = featureIdsPtr->getDataStoreRef();
+    const auto& featureIdsMap = featureIdsMapPtr->getDataStoreRef();
+    const auto& tempMask = tempMaskPtr->getDataStoreRef();
+    const auto& data = inputArrayPtr->getDataStoreRef();
+    StatisticsByFeatureRangeImpl<T> classToExecute = StatisticsByFeatureRangeImpl<T>(
+        inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation, inputValues->FindSummation, featureIdsMap,
+        tempMask, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
+    if(CheckArraysInMemory(indexAlgArrays))
+    {
+      const tbb::simple_partitioner simplePartitioner;
+      const usize grainSize = 500;
+      tbb::blocked_range<usize> tbbRange(range.first, range.second + 1, grainSize);
+      tbb::parallel_for(tbbRange, std::move(classToExecute), simplePartitioner);
+    }
+    else
+    {
+      ParallelDataAlgorithm indexAlg;
+      indexAlg.setRange(range.first, range.second + 1);
+      indexAlg.requireArraysInMemory(indexAlgArrays);
+      indexAlg.execute(std::move(classToExecute));
+    }
+
+    if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
+    {
+      filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
+
+      auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
+      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
+
+      ParallelDataAlgorithm medianDataAlg;
+      {
+        // Scoped to prevent alg use of ptr array
+        IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
+        medianAlgArrays.push_back(featureIdsPtr);
+        medianAlgArrays.push_back(inputArrayPtr);
+        medianAlgArrays.push_back(medianArrayPtr);
+        medianAlgArrays.push_back(numUniqueValuesArrayPtr);
+
+        medianDataAlg.requireArraysInMemory(medianAlgArrays);
+      }
+      medianDataAlg.setRange(range.first, range.second + 1);
+      medianDataAlg.execute(
+          MedianByFeatureRangeImpl<T>(featureIdsMap, tempMask, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, filter));
+    }
+
+    // compute the standardized data based on whether computing by index or not
+    if(inputValues->StandardizeData)
+    {
+      const auto& mean = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanArrayName).getDataStoreRef();
+      const auto& std = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDeviationArrayName).getDataStoreRef();
+      auto& standardized = dataStructure.getDataRefAs<Float32Array>(inputValues->StandardizedArrayName).getDataStoreRef();
+
+      const usize numTuples = data.getNumberOfTuples();
+      for(usize i = 0; i < numTuples; i++)
+      {
+        if(tempMask[i])
+        {
+          const usize truePosition = std::distance(featureIdsMap.begin(), std::find(featureIdsMap.begin(), featureIdsMap.end(), featureIds[i]));
+          standardized.setValue(i, (static_cast<float32>(data[i]) - mean[truePosition]) / std[truePosition]);
+        }
       }
     }
     return {};
@@ -1038,13 +1115,13 @@ ComputeArrayStatistics::~ComputeArrayStatistics() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeArrayStatistics::operator()()
 {
-  if(!m_InputValues->FindHistogram && !m_InputValues->FindMin && !m_InputValues->FindMax && !m_InputValues->FindMean && !m_InputValues->FindMedian && !m_InputValues->FindMode &&
-     !m_InputValues->FindStdDeviation && !m_InputValues->FindSummation && !m_InputValues->FindLength)
+  if(!m_InputValues->FindMin && !m_InputValues->FindMax && !m_InputValues->FindMean && !m_InputValues->FindMedian && !m_InputValues->FindMode && !m_InputValues->FindStdDeviation &&
+     !m_InputValues->FindSummation && !m_InputValues->FindLength)
   {
     return {};
   }
 
-  std::vector<IArray*> arrays(13, nullptr);
+  std::vector<IArray*> arrays(9, nullptr);
 
   if(m_InputValues->FindLength)
   {
@@ -1078,48 +1155,139 @@ Result<> ComputeArrayStatistics::operator()()
   {
     arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationArrayName);
   }
-  if(m_InputValues->FindHistogram)
-  {
-    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BinCountsArrayName);
-    arrays[12] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BinRangesArrayName);
-    arrays[10] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MostPopulatedBinArrayName);
-  }
-  if(m_InputValues->FindModalBinRanges)
-  {
-    arrays[11] = m_DataStructure.getDataAs<INeighborList>(m_InputValues->ModalBinArrayName);
-  }
   if(m_InputValues->FindNumUniqueValues)
   {
-    arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
+    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
   }
 
-  usize numFeatures = 0;
-  if(m_InputValues->ComputeByIndex)
+  if(!m_InputValues->ComputeByIndex)
   {
-    arrays.resize(14);
-    arrays[13] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-    numFeatures = findNumFeatures(featureIds);
+    // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
+    return ExecuteNeighborFunction(ComputeArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, m_InputValues);
+  }
 
-    //    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    //    destAttrMatPtr->resizeTuples({numFeatures});
+  arrays.resize(10);
+  arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
 
-    for(const auto& array : arrays)
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  // Get max and min feature ids
+  int32 trueMin = -1; // expected inclusive
+  int32 trueMax = -1; // expected inclusive
+  {
+    const auto [min, max] = std::minmax_element(featureIds.cbegin(), featureIds.cend());
+    trueMin = *min;
+    trueMax = *max;
+  }
+  usize numFeatures = trueMax + 1;
+
+  const FeatureIdRangeControls selection = static_cast<FeatureIdRangeControls>(m_InputValues->RangeType);
+
+  // Unique Range of some sort if we made it here
+  switch(selection)
+  {
+  case FeatureIdRangeControls::IgnoreZero: {
+    // set number of features to the difference between max and 1 feature id
+    trueMin = 1;
+    break;
+  }
+  case FeatureIdRangeControls::ShrinkToFit: {
+    // set number of features to the difference between max and min feature id
+    break;
+  }
+  case FeatureIdRangeControls::CustomRange: {
+    // set the bounds to difference between std::min(max, range.max) and std::max(min, range.min)
+    trueMax = m_InputValues->Range.at(1) == -1 ? trueMax : std::min(trueMax, m_InputValues->Range.at(1));
+    trueMin = std::max(trueMin, m_InputValues->Range.at(0));
+    break;
+  }
+  case FeatureIdRangeControls::PaddedCustomRange: {
+    // set number of features to the difference between max and min provided range
+    trueMax = m_InputValues->Range.at(1) == -1 ? trueMax : m_InputValues->Range.at(1);
+    trueMin = m_InputValues->Range.at(0);
+    break;
+  }
+  case FeatureIdRangeControls::None: {
+    auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    destAttrMatPtr->resizeTuples({numFeatures});
+    const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
+
+    // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
+    return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
+  }
+  default: {
+    return MakeErrorResult(-506670, fmt::format("Unknown feature id range controls option selected!", trueMin, trueMax));
+  }
+  }
+  if(trueMin > trueMax)
+  {
+    return MakeErrorResult(-506671, fmt::format("Range Error: Min value ({}) must be less than or equal to Max value ({})", trueMin, trueMax));
+  }
+
+  numFeatures = (trueMax - trueMin) + 1;
+
+  // Temp Mask array created in preflight (for OoC compatibility)
+  auto& tempMask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->TempMaskArrayPath).getDataStoreRef();
+  tempMask.fill(false);
+  if(m_InputValues->UseMask)
+  {
+    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+    try
     {
-      if(array != nullptr)
+      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      const std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      return MakeErrorResult(-563501, message);
+    }
+
+    for(usize i = 0; i < featureIds.getNumberOfTuples(); i++)
+    {
+      // If using mask and mask value is false; mark false
+      if(!maskCompare->isTrue(i))
       {
-        array->resizeTuples({numFeatures});
+        continue;
       }
+
+      // If value outside range; mark false
+      const int32 featureId = featureIds[i];
+      if(featureId > trueMax || featureId < trueMin)
+      {
+        continue;
+      }
+
+      tempMask[i] = true;
+    }
+  }
+  else
+  {
+    for(usize i = 0; i < featureIds.getNumberOfTuples(); i++)
+    {
+      // If value outside range; mark false
+      const int32 featureId = featureIds[i];
+      if(featureId > trueMax || featureId < trueMin)
+      {
+        continue;
+      }
+
+      tempMask[i] = true;
     }
   }
 
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
+  // Fill the feature id mapping array with std::iota from true min
+  auto& featureIdMapping = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdMapArrayPath);
+  featureIdMapping.resizeTuples(std::vector<usize>{numFeatures});
+  std::iota(featureIdMapping.begin(), featureIdMapping.end(), trueMin);
+
+  auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+  destAttrMatPtr->resizeTuples({numFeatures});
+  const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
   // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-  ExecuteNeighborFunction(ComputeArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
-
-  return {};
+  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues, this);
 }
 
 // -----------------------------------------------------------------------------
@@ -1134,7 +1302,7 @@ void ComputeArrayStatistics::sendThreadSafeProgressMessage(usize counter)
   const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
   m_ProgressCounter += counter;
-  auto progressInt = static_cast<size_t>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
+  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
 
   if(m_ProgressCounter > 1 && m_LastProgressInt != progressInt)
   {
@@ -1152,23 +1320,7 @@ void ComputeArrayStatistics::sendThreadSafeInfoMessage(const std::string& messag
   auto now = std::chrono::steady_clock::now();
   if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > m_MilliDelay)
   {
-    m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+    m_MessageHandler(IFilter::Message::Type::Info, message);
     m_InitialTime = std::chrono::steady_clock::now();
   }
-}
-
-// -----------------------------------------------------------------------------
-usize ComputeArrayStatistics::findNumFeatures(const Int32Array& featureIds) const
-{
-  m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, "Finding Max FeatureId..."});
-  usize numFeatures = 0;
-  const usize totalPoints = featureIds.getNumberOfTuples();
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    if(featureIds[i] > numFeatures)
-    {
-      numFeatures = featureIds[i];
-    }
-  }
-  return numFeatures + 1;
 }
