@@ -145,18 +145,26 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     parentPath = pDataGroupNameValue;
   }
 
+  const IDataArray* maskArray = nullptr;
   if(pUseMaskValue)
   {
-    const auto& maskPtr = dataStructure.getDataRefAs<IDataArray>(pMaskArrayPathValue);
-    if(maskPtr.getDataType() != DataType::boolean && maskPtr.getDataType() != DataType::uint8)
+    maskArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    if(maskArray->getDataType() != DataType::boolean && maskArray->getDataType() != DataType::uint8)
     {
-      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array must be of type Boolean or UInt8")), {}};
+      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array '{}' must be of type Boolean or UInt8", maskArray->getName())), {}};
     }
   }
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    {
+      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}.  These tuple counts MUST match.", maskArray->getName(),
+                                                                 maskArray->getNumberOfTuples(), dataArray->getName(), dataArray->getNumberOfTuples())),
+              {}};
+    }
+
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 

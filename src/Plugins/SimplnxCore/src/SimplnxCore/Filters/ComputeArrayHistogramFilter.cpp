@@ -124,6 +124,8 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   auto pBinMostPopulatedName = filterArgs.value<std::string>(k_HistoMostPopulatedBinName_Key);
   auto pCalculateModalBinRanges = filterArgs.value<bool>(k_CalculateModalBinRanges_Key);
   auto pBinModalBinRangesName = filterArgs.value<std::string>(k_HistoModalBinRangesName_Key);
+  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -132,6 +134,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pNewDataGroupNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
+
   DataPath parentPath = {};
   if(pNewDataGroupValue)
   {
@@ -141,9 +144,27 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   {
     parentPath = pDataGroupNameValue;
   }
+
+  const IDataArray* maskArray = nullptr;
+  if(useMask)
+  {
+    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+    if(maskArray->getDataType() != DataType::boolean && maskArray->getDataType() != DataType::uint8)
+    {
+      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array '{}' must be of type Boolean or UInt8", maskArray->getName())), {}};
+    }
+  }
+
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    {
+      return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}.  These tuple counts MUST match.", maskArray->getName(),
+                                                                 maskArray->getNumberOfTuples(), dataArray->getName(), dataArray->getNumberOfTuples())),
+              {}};
+    }
+
     auto arrayGroupPath = parentPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(arrayGroupPath));
 
