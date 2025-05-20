@@ -101,6 +101,7 @@ set(FilterList
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
+  RandomizeFeatureIdsFilter
   ReadBinaryCTNorthstarFilter
   ReadCSVFileFilter
   ReadDeformKeyFileV12Filter

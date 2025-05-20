@@ -3,6 +3,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
@@ -189,32 +190,7 @@ Result<> MergeTwins::operator()()
   // would look like a smooth gradient. This is a user input parameter
   { // Randomize Parent IDs
     m_MessageHandler({IFilter::Message::Type::Info, "Randomizing Parent Ids...."});
-
-    std::mt19937_64 gen(std::mt19937_64::default_seed); // Standard mersenne_twister_engine seeded with milliseconds
-    std::uniform_real_distribution<float64> dist(0, 1);
-
-    auto nParents = static_cast<usize>(numParents);
-
-    std::vector<int32> parentIds(numParents);
-    std::iota(parentIds.begin(), parentIds.end(), 0);
-
-    m_MessageHandler({IFilter::Message::Type::Info, "Shuffling elements ...."});
-    //--- Shuffle elements by randomly exchanging each with one other.
-    for(usize i = 1; i < nParents; i++)
-    {
-      auto r = static_cast<usize>(std::floor(dist(gen) * static_cast<float64>(numParents - 1))); // Random remaining position.
-      int32 pid_i = parentIds[i];
-      parentIds[i] = parentIds[r];
-      parentIds[r] = pid_i;
-    }
-
-    m_MessageHandler({IFilter::Message::Type::Info, "Adjusting Feature Ids Array...."});
-    // Now adjust all the Feature ID values for each Voxel
-    for(usize i = 0; i < totalPoints; ++i)
-    {
-      cellParentIds[i] = parentIds[cellParentIds[i]];
-      featureParentIds[featureIds[i]] = cellParentIds[i];
-    }
+    ClusterUtilities::RandomizeFeatureIds(featureParentIds, numParents);
   }
 
   return result;
