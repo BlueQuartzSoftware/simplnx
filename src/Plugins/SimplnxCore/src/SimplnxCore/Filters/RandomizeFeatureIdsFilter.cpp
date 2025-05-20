@@ -71,15 +71,14 @@ IFilter::UniquePointer RandomizeFeatureIdsFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
-  
+
   const Int32Array* featureIdsArray = dataStructure.getDataAs<Int32Array>(featureIdsPath);
   if(featureIdsArray == nullptr)
   {
-      return MakePreflightErrorResult(
-          -72601, fmt::format("The Feature IDs array was not found at path '{}'", featureIdsPath.toString()));
+    return MakePreflightErrorResult(-72601, fmt::format("The Feature IDs array was not found at path '{}'", featureIdsPath.toString()));
   }
 
   return {};
@@ -87,7 +86,7 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
 
 //------------------------------------------------------------------------------
 Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto featureIdsPath = args.value<DataPath>(k_FeatureIds_Key);
 
