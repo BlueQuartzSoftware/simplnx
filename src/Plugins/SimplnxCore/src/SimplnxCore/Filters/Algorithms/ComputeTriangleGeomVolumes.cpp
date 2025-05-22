@@ -1,7 +1,6 @@
 #include "ComputeTriangleGeomVolumes.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -39,25 +38,21 @@ Result<> ComputeTriangleGeomVolumes::operator()()
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
 
-  std::set<int32> featureSet;
+  auto maxFaceLabel = std::max_element(faceLabels.begin(), faceLabels.end()); // Ensure the max value is set.
 
-  for(MeshIndexType i = 0; i < numTriangles; i++)
-  {
-    if(faceLabels[2 * i + 0] > 0)
-    {
-      featureSet.insert(faceLabels[2 * i + 0]);
-    }
-    if(faceLabels[2 * i + 1] > 0)
-    {
-      featureSet.insert(faceLabels[2 * i + 1]);
-    }
-  }
-
-  AttributeMatrix::ShapeType tDims = {featureSet.size() + 1};
+  AttributeMatrix::ShapeType tDims = {static_cast<usize>(*maxFaceLabel) + 1ULL};
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   featAttrMat.resizeTuples(tDims);
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
   volumes.fill(0.0f); // Initialize all volumes to ZERO
+
+  // Ensure any FeatureId/FaceLabel that is used will be a valid index into the volumes array.
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->VolumesArrayPath,
+                                                                                  m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath), true, m_MessageHandler);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
 
   auto result = MeshingUtilities::CalculateFeatureVolumes(triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getVertices()->getDataStoreRef(), faceLabels, volumes, m_ShouldCancel);
   if(result.invalid())
@@ -65,7 +60,7 @@ Result<> ComputeTriangleGeomVolumes::operator()()
     return result;
   }
 
-  for(usize i = 0; i < tDims[0]; i++)
+  for(usize i = 0; i < volumes.size(); i++)
   {
     volumes[i] = std::abs(volumes[i]);
   }

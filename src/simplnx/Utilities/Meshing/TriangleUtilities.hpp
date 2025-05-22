@@ -21,7 +21,7 @@ inline static constexpr usize k_21 = 7;
 inline static constexpr usize k_22 = 8;
 
 /**
- * @brief This function calculates volume of a supplied triangle
+ * @brief This function calculates the volume of a supplied triangle
  * @param vertIndices The indices that make up the points of a triangle
  * @param vertices The SharedVertexList of the parent geometry
  * @returns INodeGeometry2D::SharedVertexList::value_type the calculated volume
@@ -35,6 +35,8 @@ SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(
  * @param triangles The SharedFaceList that may be modified
  * @param neighbors The element neighbors adjacency list
  * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
+ * @param shouldCancel
+ * @param mesgHandler
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
 SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
@@ -63,12 +65,13 @@ private:
 };
 
 /**
- * @brief This function calculates feature volumes without bounds checking
+ * @brief This function calculates feature volumes without any bound check applied
  * @tparam ContainerT the type of the array to be filled; must have operator[] defined
  * @param triangles The SharedFaceList of the target geometry
  * @param verts The SharedVertexList of the target geometry
  * @param idsStore This is the face ids or the region ids; num of components < 3 enforced
  * @param volumes This the array that will be filled with volumes (no bounds check, size > max feature expected)
+ * @param shouldCancel Atomic Bool to check if the algorithm should exit early
  * @returns Result<usize> function result
  */
 template <class ContainerT>
