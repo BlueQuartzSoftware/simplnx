@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -219,94 +220,74 @@ std::array<size_t, 3> TripletSort(T aVal, T bVal, T cVal, bool lowToHigh)
   return idx;
 }
 
-} // namespace
+using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
 
-// -----------------------------------------------------------------------------
-ComputeShapesTriangleGeom::ComputeShapesTriangleGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                     ComputeShapesTriangleGeomInputValues* inputValues)
-: m_DataStructure(dataStructure)
-, m_InputValues(inputValues)
-, m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+class ComputeShapesTriangleGeomImpl
 {
-}
+private:
+  ComputeShapesTriangleGeom* m_FilterPtr = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
+  const AbstractDataStore<float32>& m_Centroids;
+  const AbstractDataStore<int32>& m_FaceLabels;
+  const TriangleGeom& m_TriangleGeom;
 
-// -----------------------------------------------------------------------------
-ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeShapesTriangleGeom::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-Result<> ComputeShapesTriangleGeom::operator()()
-{
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  const TriStore& triangleList = triangleGeom.getFacesRef().getDataStoreRef();
-  const VertsStore& verts = triangleGeom.getVerticesRef().getDataStoreRef();
-
-  const auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath).getDataStoreRef();
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath).getDataStoreRef();
-
-  // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
-  // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
+public:
+  ComputeShapesTriangleGeomImpl(ComputeShapesTriangleGeom* filter, const std::atomic_bool& shouldCancel, const AbstractDataStore<float32>& centroids, const AbstractDataStore<int32>& faceLabels,
+                                const TriangleGeom& triangleGeom)
+  : m_FilterPtr(filter)
+  , m_ShouldCancel(shouldCancel)
+  , m_Centroids(centroids)
+  , m_FaceLabels(faceLabels)
+  , m_TriangleGeom(triangleGeom)
   {
-    std::vector<int32> eulerCharacteristics =
-        nx::core::GeometryHelpers::Connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath));
-
-    auto& eulerCharStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->EulerCharacteristicPath).getDataStoreRef();
-    std::copy(eulerCharacteristics.begin(), eulerCharacteristics.end(), eulerCharStoreRef.begin());
   }
 
-  // Calculated Arrays
-  auto& omega3S = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
-  auto& axisEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
-  auto& axisLengths = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
-  auto& aspectRatios = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
-
-  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
-  Matrix3x3 Cinertia;
-
-  const usize numFaces = faceLabels.getNumberOfTuples();
-  const usize numFeatures = centroids.getNumberOfTuples();
-
-  nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
-
-  // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
-  // will be normalized using this value;
-  constexpr float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
-
-  // define the canonical cMatrix matrix
-  constexpr float64 aVal = 1.0 / 60.0;
-  constexpr float64 bVal = aVal / 2.0;
-  // clang-format off
-  Matrix3x3 cMatrix;
-  cMatrix << aVal, bVal, bVal, bVal, aVal, bVal, bVal, bVal, aVal;
-
-  // and the identity matrix
-  Matrix3x3 identityMat;
-  identityMat << 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
-
-  // The cMatrix-Prime matrix
-  Matrix3x3 cPrime;
-  cPrime << -0.50000000, 0.50000000, 0.50000000,
-        0.50000000, -0.50000000, 0.50000000,
-        0.50000000, 0.50000000, -0.50000000;
-  // clang-format on
-
-  // Loop over each "Feature" which is the number of tuples in the "Centroids" array
-  // We could parallelize over the features?
-  for(usize featureId = 1; featureId < numFeatures; featureId++)
+  void convert(size_t featureIdStart, size_t featureIdEnd) const
   {
-    /**
-     * The following section calculates moment of inertia tensor (Cinertia) and omega3s
-     */
+    float32 omega3;
+    std::array<float32, 3> axisEulerAngles;
+    std::array<float32, 3> axisLengths;
+    std::array<float32, 2> aspectRatios;
+
+    const TriStore& triangleList = m_TriangleGeom.getFacesRef().getDataStoreRef();
+    const VertsStore& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
+
+    const usize numFaces = m_FaceLabels.getNumberOfTuples();
+    const usize numFeatures = m_Centroids.getNumberOfTuples();
+
+    Matrix3x3 Cinertia;
+    nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
+
+    // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
+    // will be normalized using this value;
+    constexpr float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
+
+    // define the canonical cMatrix matrix
+    constexpr float64 aVal = 1.0 / 60.0;
+    constexpr float64 bVal = aVal / 2.0;
+    // clang-format off
+    Matrix3x3 cMatrix;
+    cMatrix << aVal, bVal, bVal, bVal, aVal, bVal, bVal, bVal, aVal;
+
+    // and the identity matrix
+    Matrix3x3 identityMat;
+    identityMat << 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+
+    // The cMatrix-Prime matrix
+    Matrix3x3 cPrime;
+    cPrime << -0.50000000, 0.50000000, 0.50000000,
+          0.50000000, -0.50000000, 0.50000000,
+          0.50000000, 0.50000000, -0.50000000;
+    // clang-format on
+
+    // Loop over each "Feature" which is the number of tuples in the "Centroids" array
+    // We could parallelize over the features?
+    for(usize featureId = featureIdStart; featureId < featureIdEnd; featureId++)
     {
+      // ===== The following section calculates the moment of inertia tensor (Cinertia) and omega3s =======
       if(m_ShouldCancel)
       {
-        return {};
+        return;
       }
       float64 Vol = 0.0;
       // define the accumulator arrays
@@ -314,19 +295,19 @@ Result<> ComputeShapesTriangleGeom::operator()()
       Cacc << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
 
       // Get the centroid for the feature
-      centroid[0] = centroids[(3 * featureId) + 0];
-      centroid[1] = centroids[(3 * featureId) + 1];
-      centroid[2] = centroids[(3 * featureId) + 2];
+      centroid[0] = m_Centroids[(3 * featureId) + 0];
+      centroid[1] = m_Centroids[(3 * featureId) + 1];
+      centroid[2] = m_Centroids[(3 * featureId) + 2];
 
       // for each triangle we need the transformation matrix A defined by the three points as columns
       // Loop over all triangle faces
       for(usize i = 0; i < numFaces; i++)
       {
-        if(faceLabels[2 * i] != featureId && faceLabels[(2 * i) + 1] != featureId)
+        if(m_FaceLabels[2 * i] != featureId && m_FaceLabels[(2 * i) + 1] != featureId)
         {
           continue;
         }
-        const usize compIndex = (faceLabels[2 * i] == featureId ? 0 : 1);
+        const usize compIndex = (m_FaceLabels[2 * i] == featureId ? 0 : 1);
         std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
 
         const nx::core::Point3Df& aVert = vertCoords[0] - centroid;
@@ -347,57 +328,51 @@ Result<> ComputeShapesTriangleGeom::operator()()
       // extract the moments from the inertia tensor
       const Eigen::Vector3d eVec(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
       auto sols = cPrime * eVec;
-      omega3S[featureId] = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
-    }
+      omega3 = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
 
-    /**
-     * This next section finds the principle axis via eigenvalues.
-     * Paper/Lecture Notes (Page 5): https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/dd277ec654440f4c2b5b07d6c286c3fd_MIT16_07F09_Lec26.pdf
-     * Video Walkthrough [0:00-10:45]: https://www.youtube.com/watch?v=IEDniK9kmaw
-     *
-     * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
-     * which are the angular velocity vectors.
-     */
-    const Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
+      /**
+       * This next section finds the principle axis via eigenvalues.
+       * Paper/Lecture Notes (Page 5): https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/dd277ec654440f4c2b5b07d6c286c3fd_MIT16_07F09_Lec26.pdf
+       * Video Walkthrough [0:00-10:45]: https://www.youtube.com/watch?v=IEDniK9kmaw
+       *
+       * The main goal is to derive the eigenvalues from the moment of inertia tensor therein finding the eigenvectors,
+       * which are the angular velocity vectors.
+       */
+      const Eigen::EigenSolver<Matrix3x3> eigenSolver(Cinertia);
 
-    // The primary axis is the largest eigenvalue
-    Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
+      // The primary axis is the largest eigenvalue
+      Eigen::EigenSolver<Matrix3x3>::EigenvalueType eigenvalues = eigenSolver.eigenvalues();
 
-    // This is the angular velocity vector, each row represents an axial alignment (principle axis)
-    Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
+      // This is the angular velocity vector, each row represents an axial alignment (principle axis)
+      Eigen::EigenSolver<Matrix3x3>::EigenvectorsType eigenvectors = eigenSolver.eigenvectors();
 
-    /**
-     * Following section for debugging
-     */
-    //    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
-    //    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
-    //
-    //    constexpr char k_BaselineAxisLabel = 'x'; // x
-    //    char axisLabel = 'x';
-    //    float64 primaryAxis = eigenvalues[0].real();
-    //    for(usize i = 1; i < eigenvalues.size(); i++)
-    //    {
-    //      if(primaryAxis < eigenvalues[i].real())
-    //      {
-    //        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
-    //        primaryAxis = eigenvalues[i].real();
-    //      }
-    //    }
-    //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
+      /**
+       * Following section for debugging
+       */
+      //    std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+      //    std::cout << "\n Eigenvectors:\n" << eigenvectors << std::endl;
+      //
+      //    constexpr char k_BaselineAxisLabel = 'x'; // x
+      //    char axisLabel = 'x';
+      //    float64 primaryAxis = eigenvalues[0].real();
+      //    for(usize i = 1; i < eigenvalues.size(); i++)
+      //    {
+      //      if(primaryAxis < eigenvalues[i].real())
+      //      {
+      //        axisLabel = k_BaselineAxisLabel + static_cast<char>(i);
+      //        primaryAxis = eigenvalues[i].real();
+      //      }
+      //    }
+      //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
 
-    // Presort eigen ordering for following sections
-    // Returns the argument order sorted high to low
-    std::array<size_t, 3> idxs = ::TripletSort(eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real(), false);
+      // Presort eigen ordering for following sections
+      // Returns the argument order sorted high to low
+      std::array<size_t, 3> idxs = ::TripletSort(eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real(), false);
 
-    Matrix3x3 orientationMatrix = {};
-
-    /**
-     * The following section calculates the axis eulers
-     */
-    {
+      // ============ The following section calculates the axis eulers ===========
       if(m_ShouldCancel)
       {
-        return {};
+        return;
       }
 
       // EigenVector associated with the largest EigenValue goes in the 3rd column
@@ -411,49 +386,140 @@ Result<> ComputeShapesTriangleGeom::operator()()
 
       // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
       //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
+      Matrix3x3 orientationMatrix = {};
       orientationMatrix.row(0) = col1.real();
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
 
       auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(orientationMatrix.data(), 9));
 
-      axisEulerAngles[3 * featureId] = static_cast<float32>(euler[0]);
-      axisEulerAngles[(3 * featureId) + 1] = static_cast<float32>(euler[1]);
-      axisEulerAngles[(3 * featureId) + 2] = static_cast<float32>(euler[2]);
-    }
+      axisEulerAngles[0] = static_cast<float32>(euler[0]);
+      axisEulerAngles[1] = static_cast<float32>(euler[1]);
+      axisEulerAngles[2] = static_cast<float32>(euler[2]);
 
-    /**
-     * The following section finds axes
-     */
-    {
+      // ====================  The following section finds axes ==================
       if(m_ShouldCancel)
       {
-        return {};
+        return;
       }
 
-      const ::AxialLengths lengths = FindIntersections(orientationMatrix, faceLabels, triangleList, verts, centroids, featureId, m_ShouldCancel);
+      const ::AxialLengths lengths = FindIntersections(orientationMatrix, m_FaceLabels, triangleList, verts, m_Centroids, featureId, m_ShouldCancel);
 
       // Check for zeroes (zeroes = probably invalid)
       if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
       {
-        axisLengths[3 * featureId] = -1.0f;
-        axisLengths[(3 * featureId) + 1] = -1.0f;
-        axisLengths[(3 * featureId) + 2] = -1.0f;
-        aspectRatios[2 * featureId] = -1.0f;
-        aspectRatios[(2 * featureId) + 1] = -1.0f;
+        axisLengths[0] = -1.0f;
+        axisLengths[1] = -1.0f;
+        axisLengths[2] = -1.0f;
+        aspectRatios[0] = -1.0f;
+        aspectRatios[1] = -1.0f;
       }
       else
       {
-        axisLengths[3 * featureId] = static_cast<float32>(lengths.xLength);
-        axisLengths[(3 * featureId) + 1] = static_cast<float32>(lengths.yLength);
-        axisLengths[(3 * featureId) + 2] = static_cast<float32>(lengths.zLength);
+        axisLengths[0] = static_cast<float32>(lengths.xLength);
+        axisLengths[1] = static_cast<float32>(lengths.yLength);
+        axisLengths[2] = static_cast<float32>(lengths.zLength);
         auto bOverA = static_cast<float32>(lengths.yLength / lengths.xLength);
         auto cOverA = static_cast<float32>(lengths.zLength / lengths.xLength);
-        aspectRatios[2 * featureId] = bOverA;
-        aspectRatios[(2 * featureId) + 1] = cOverA;
+        aspectRatios[0] = bOverA;
+        aspectRatios[1] = cOverA;
       }
-    }
+      m_FilterPtr->updateResults(featureId, omega3, axisEulerAngles, axisLengths, aspectRatios);
+    } // end
   }
+
+  void operator()(const Range& range) const
+  {
+    convert(range.min(), range.max());
+  }
+};
+
+} // namespace
+
+// -----------------------------------------------------------------------------
+ComputeShapesTriangleGeom::ComputeShapesTriangleGeom(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     ComputeShapesTriangleGeomInputValues* inputValues)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
+
+void ComputeShapesTriangleGeom::updateResults(int32 featureId, float32 omega3, const std::array<float32, 3>& axisEulerAngles, const std::array<float32, 3>& axisLengths,
+                                              const std::array<float32, 2>& aspectRatios)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  m_FeatureUpdateCount++;
+  auto& omega3sRef = *m_Omega3s;                 // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
+  auto& axisEulerAnglesRef = *m_AxisEulerAngles; // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
+  auto& axisLengthsRef = *m_AxisLengths;         // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
+  auto& aspectRatiosRef = *m_AspectRatios;       // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
+
+  omega3sRef.setValue(featureId, omega3);
+
+  axisEulerAnglesRef[3 * featureId] = static_cast<float32>(axisEulerAngles[0]);
+  axisEulerAnglesRef[(3 * featureId) + 1] = static_cast<float32>(axisEulerAngles[1]);
+  axisEulerAnglesRef[(3 * featureId) + 2] = static_cast<float32>(axisEulerAngles[2]);
+
+  axisLengthsRef[3 * featureId] = axisLengths[0];
+  axisLengthsRef[(3 * featureId) + 1] = axisLengths[1];
+  axisLengthsRef[(3 * featureId) + 2] = axisLengths[2];
+
+  aspectRatiosRef[2 * featureId] = aspectRatios[0];
+  aspectRatiosRef[(2 * featureId) + 1] = aspectRatios[1];
+
+  // Send at most 100 messages.
+  if(m_FeatureUpdateCount % m_NumFeatureInc == 0)
+  {
+    auto now = std::chrono::steady_clock::now();
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
+    {
+      return;
+    }
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Computing Feature {}/{}", m_FeatureUpdateCount, m_NumFeatures)});
+    m_InitialPoint = std::chrono::steady_clock::now();
+  }
+}
+
+// -----------------------------------------------------------------------------
+Result<> ComputeShapesTriangleGeom::operator()()
+{
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  const auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath).getDataStoreRef();
+  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath).getDataStoreRef();
+
+  // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
+  // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
+  {
+    std::vector<int32> eulerCharacteristics =
+        nx::core::GeometryHelpers::Connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath));
+
+    auto& eulerCharStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->EulerCharacteristicPath).getDataStoreRef();
+    std::copy(eulerCharacteristics.begin(), eulerCharacteristics.end(), eulerCharStoreRef.begin());
+  }
+
+  // Calculated Arrays
+  m_Omega3s = m_DataStructure.getDataAs<Float32Array>(m_InputValues->Omega3sArrayPath);
+  m_AxisEulerAngles = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
+  m_AxisLengths = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
+  m_AspectRatios = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
+
+  m_NumFeatures = centroids.getNumberOfTuples();
+  m_NumFeatureInc = m_NumFeatures / 100;
+  if(m_NumFeatureInc == 0)
+  {
+    m_NumFeatureInc = 1;
+  }
+  m_FeatureUpdateCount = 0;
+
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(1, m_NumFeatures);
+  dataAlg.setParallelizationEnabled(true);
+  dataAlg.execute(ComputeShapesTriangleGeomImpl(this, m_ShouldCancel, centroids, faceLabels, triangleGeom));
 
   return {};
 }
