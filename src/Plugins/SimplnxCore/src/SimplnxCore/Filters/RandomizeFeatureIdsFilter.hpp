@@ -21,14 +21,7 @@ public:
   RandomizeFeatureIdsFilter& operator=(RandomizeFeatureIdsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-
-  /**
-   * @brief Reads SIMPL json and converts it simplnx Arguments.
-   * @param json
-   * @return Result<Arguments>
-   */
-  //static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids_path";
 
   /**
    * @brief Returns the filter's name.
