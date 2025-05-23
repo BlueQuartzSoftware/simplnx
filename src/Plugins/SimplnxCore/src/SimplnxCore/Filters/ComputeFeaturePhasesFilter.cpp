@@ -126,7 +126,7 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
   auto& featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
 
   // Validate the featurePhases array is the proper size
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pCellFeatureAMPathValue, featureIdsArray, messageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pCellFeatureAMPathValue, featureIdsArray, false, messageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;

@@ -75,6 +75,7 @@ template <class ContainerT>
 Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& idsStore,
                                  ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
+  usize volumeSize = volumes.size();
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
   if(idsStore.getNumberOfComponents() == 2)
   {
@@ -93,16 +94,19 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_ty
       int32 faceLabel0 = idsStore[2 * i + 0];
       int32 faceLabel1 = idsStore[2 * i + 1];
 
-      if(faceLabel0 < 0 && faceLabel1 >= 0)
+      bool faceLabel0InRange = faceLabel0 >= 0 && faceLabel0 < static_cast<int64_t>(volumeSize);
+      bool faceLabel1InRange = faceLabel1 >= 0 && faceLabel1 < static_cast<int64_t>(volumeSize);
+
+      if(faceLabel0 < 0 && faceLabel1InRange)
       {
         std::swap(faceVertexIndices[2], faceVertexIndices[1]);
         volumes[faceLabel1] += detail::FindTriangleVolume(faceVertexIndices, verts);
       }
-      else if(faceLabel1 < 0 && faceLabel0 >= 0)
+      else if(faceLabel1 < 0 && faceLabel0InRange)
       {
         volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
       }
-      else
+      else if(faceLabel0InRange && faceLabel1InRange)
       {
         volumes[faceLabel0] += detail::FindTriangleVolume(faceVertexIndices, verts);
         std::swap(faceVertexIndices[2], faceVertexIndices[1]);
@@ -124,7 +128,12 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_ty
       faceVertexIndices[1] = triangles[triangleIndex + 2];
       faceVertexIndices[2] = triangles[triangleIndex + 1];
 
-      volumes[idsStore[i]] += detail::FindTriangleVolume(faceVertexIndices, verts);
+      int32 featureId = idsStore[i];
+      if(featureId < 0)
+      {
+        continue;
+      }
+      volumes[featureId] += detail::FindTriangleVolume(faceVertexIndices, verts);
     }
   }
   else

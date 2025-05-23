@@ -176,7 +176,7 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
     const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath, featureIds, messageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath, featureIds, false, messageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;

@@ -355,14 +355,15 @@ SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
  * @param dataStructure the DataStructure containing the array
  * @param sourceDataPath The DataPath to the AttributeMatrix or DataArray that the featureIds array indexes into
  * @param featureIds the ids for the array
+ * @param ignoreNegativeValues Ignore negative values in the feature Ids array. This should be used carefully.
  * @return void
  */
-SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds,
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
                                                                            const IFilter::MessageHandler& messageHandler);
 
 /**
  * @brief This function resize the outermost vector of the NeighborList's underlying data to the NeighborList's set
- * number of tuples and initializes each item in the vector to a (non null) pointer to an empty vector
+ * number of tuples and initializes each item in the vector to a (non-null) pointer to an empty vector
  *
  * @param dataStructure
  * @param neighborListPath The path to the NeighborList to be initialized.
