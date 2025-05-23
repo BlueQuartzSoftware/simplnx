@@ -304,7 +304,7 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   // Resize the surface features array to the proper size
   const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, messageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, false, messageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;

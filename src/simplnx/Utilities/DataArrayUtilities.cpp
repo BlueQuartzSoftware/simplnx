@@ -122,7 +122,7 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 }
 
 //-----------------------------------------------------------------------------
-Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds,
+Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
                                                             const IFilter::MessageHandler& messageHandler)
 {
   messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
@@ -146,7 +146,7 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   auto& featureIdsStore = featureIds.getDataStoreRef();
   auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsStore.begin(), featureIdsStore.end());
 
-  if(*minFeatureId < 0)
+  if(!ignoreNegativeValues && *minFeatureId < 0)
   {
     return MakeErrorResult(
         -5355, fmt::format("Feature Ids array with name '{}' has negative values within the array. The most negative value encountered was '{}'. All values must be positive within the array",

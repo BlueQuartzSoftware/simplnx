@@ -151,7 +151,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
   {
     auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, messageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, messageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;

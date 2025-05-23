@@ -114,7 +114,7 @@ Result<> ComputeFeatureCentroids::operator()()
   // Output Feature Data
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->CentroidsArrayPath, *featureIdsPtr, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->CentroidsArrayPath, *featureIdsPtr, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;

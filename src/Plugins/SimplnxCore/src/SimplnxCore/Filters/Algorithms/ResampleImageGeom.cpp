@@ -156,7 +156,7 @@ Result<> ResampleImageGeom::operator()()
   if(m_InputValues->RenumberFeatures)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, m_MessageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;

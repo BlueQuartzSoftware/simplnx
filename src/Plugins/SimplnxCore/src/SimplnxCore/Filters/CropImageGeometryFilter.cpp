@@ -670,7 +670,7 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   if(shouldRenumberFeatures)
   {
     const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, cellFeatureAMPath, featureIds, messageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, cellFeatureAMPath, featureIds, false, messageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
