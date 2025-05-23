@@ -5,13 +5,19 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace nx::core;
 
@@ -60,9 +66,9 @@ Parameters ComputeFeatureBoundsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "The DataPath to the DataArray that specifies which feature each point belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VerticesArrayPath_Key, "Vertex List", "The DataPath to the DataArray that contains the points for every cell in the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{GetDataType<IGeometry::SharedVertexList::value_type>()},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(
+      k_SelectedGeometryPath_Key, "Selected Geometry", "The DataPath to the Geometry that contains the points/edges/faces for the geometry", DataPath{},
+      GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Image, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAMPath_Key, "Feature Data Attribute Matrix",
@@ -77,9 +83,9 @@ Parameters ComputeFeatureBoundsFilter::parameters() const
                                                           "The name of the array containing the min and max point of the bounding box for each feature", "Feature Bounds"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_OutputType_Key, k_MinArrayName_Key, 0ULL);
-  params.linkParameters(k_OutputType_Key, k_MaxArrayName_Key, 0ULL);
-  params.linkParameters(k_OutputType_Key, k_UnifiedArrayName_Key, 1ULL);
+  params.linkParameters(k_OutputType_Key, k_MinArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
+  params.linkParameters(k_OutputType_Key, k_MaxArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
+  params.linkParameters(k_OutputType_Key, k_UnifiedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
 
   return params;
 }
@@ -103,6 +109,50 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   auto pOutputTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
   auto pFeatureAMPathValue = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
+  auto pSelectedGeomPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
+
+  const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
+
+  usize expectedFeatureSize = 0;
+  std::string targetStr = "";
+  switch(geom.getGeomType())
+  {
+  case IGeometry::Type::Image: {
+    expectedFeatureSize = dynamic_cast<const ImageGeom&>(geom).getNumberOfCells();
+    targetStr = "cells";
+    break;
+  }
+  case IGeometry::Type::Triangle: {
+    expectedFeatureSize = dynamic_cast<const TriangleGeom&>(geom).getNumberOfFaces();
+    targetStr = "triangles";
+    break;
+  }
+  case IGeometry::Type::Vertex: {
+    expectedFeatureSize = dynamic_cast<const VertexGeom&>(geom).getNumberOfVertices();
+    targetStr = "vertices";
+    break;
+  }
+  case IGeometry::Type::Edge: {
+    expectedFeatureSize = dynamic_cast<const EdgeGeom&>(geom).getNumberOfEdges();
+    targetStr = "edges";
+    break;
+  }
+  case IGeometry::Type::Quad: {
+    expectedFeatureSize = dynamic_cast<const QuadGeom&>(geom).getNumberOfFaces();
+    targetStr = "faces";
+    break;
+  }
+  default: {
+    return MakePreflightErrorResult(-89473, fmt::format("Unexpected input geometry type. Geometry name {}", geom.getName()));
+  }
+  }
+
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIds.getNumberOfTuples() != expectedFeatureSize)
+  {
+    return MakePreflightErrorResult(-89474, fmt::format("Expected Feature Ids size: {} | Actual Feature Ids size: {} | Feature Ids should be equivalent to the number of {}.", expectedFeatureSize,
+                                                        featureIds.getNumberOfTuples(), targetStr));
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(pFeatureAMPathValue);
@@ -147,7 +197,7 @@ Result<> ComputeFeatureBoundsFilter::executeImpl(DataStructure& dataStructure, c
   ComputeFeatureBoundsInputValues inputValues;
 
   inputValues.OutputType = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
-  inputValues.VertsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VerticesArrayPath_Key);
+  inputValues.GeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
   inputValues.FeatureAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
   inputValues.MinArrayPath = inputValues.FeatureAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MinArrayName_Key));

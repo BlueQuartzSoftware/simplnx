@@ -12,7 +12,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ComputeFeatureBoundsInputValues
 {
   ChoicesParameter::ValueType OutputType;
-  DataPath VertsArrayPath;
+  DataPath GeometryPath;
   DataPath FeatureAMPath;
   DataPath FeatureIdsArrayPath;
   DataPath MinArrayPath;
