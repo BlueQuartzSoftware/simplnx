@@ -96,26 +96,27 @@ public:
             uint32_t phase1 = crystalStructures[cellPhases[point]];
             for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
             {
-              size_t jStride = j * xPoints * yPoints;
+
               if(plane + j < 0 || plane + j > zPoints - 1)
               {
                 continue;
               }
+              const int64_t jStride = j * xPoints * yPoints;
               for(int32_t k = -kernelSize[1]; k < kernelSize[1] + 1; k++)
               {
-                size_t kStride = k * xPoints;
                 if(row + k < 0 || row + k > yPoints - 1)
                 {
                   continue;
                 }
+                const int64_t kStride = k * xPoints;
                 for(int32_t l = -kernelSize[0]; l < kernelSize[0] + 1; l++)
                 {
                   if(col + l < 0 || col + l > xPoints - 1)
                   {
                     continue;
                   }
-                  const size_t neighbor = point + (jStride) + (kStride) + (l);
-                  if(featureIds[point] == featureIds[neighbor])
+                  const int64_t neighbor = static_cast<int64_t>(point) + jStride + kStride + l;
+                  if(neighbor >= 0 && featureIds[point] == featureIds[static_cast<size_t>(neighbor)])
                   {
                     quatIndex = neighbor * 4;
                     q2[0] = quats[quatIndex];
@@ -123,7 +124,7 @@ public:
                     q2[2] = quats[quatIndex + 2];
                     q2[3] = quats[quatIndex + 3];
                     OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
-                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiD);
+                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiF);
                     numVoxel++;
                   }
                 }

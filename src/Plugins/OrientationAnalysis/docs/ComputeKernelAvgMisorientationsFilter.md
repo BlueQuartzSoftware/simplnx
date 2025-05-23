@@ -11,6 +11,8 @@ This **Filter** determines the Kernel Average Misorientation (KAM) for each **Ce
 1. Calculate the misorientation angle between each **Cell** in a kernel and the central **Cell** of the kernel
 2. Average all of the misorientations for the kernel and store at the central **Cell**
 
+The calculation will **not** consider cells that belong to different 'feature Ids', ie.e, different grains.
+
 *Note:* All **Cells** in the kernel are weighted equally during the averaging, though they are not equidistant from the central **Cell**.
 
 % Auto generated parameter table will be inserted here
