@@ -10,6 +10,15 @@
 namespace nx::core
 {
 
+struct ShapeResultValues
+{
+  int32 featureId;
+  float32 omega3;
+  std::array<float32, 3> axisEulerAngles;
+  std::array<float32, 3> axisLengths;
+  std::array<float32, 2> aspectRatios;
+};
+
 struct ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeomInputValues
 {
   DataPath TriangleGeometryPath;
@@ -39,7 +48,7 @@ public:
 
   Result<> operator()();
 
-  void updateResults(int32 featureId, float32 omega3, const std::array<float32, 3>& axisEulerAngles, const std::array<float32, 3>& axisLengths, const std::array<float32, 2>& aspectRatios);
+  void updateResults(const std::vector<ShapeResultValues>& results);
 
 private:
   DataStructure& m_DataStructure;

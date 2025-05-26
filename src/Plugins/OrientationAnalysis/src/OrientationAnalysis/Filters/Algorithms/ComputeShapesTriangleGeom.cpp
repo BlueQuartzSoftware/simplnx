@@ -1,7 +1,6 @@
 #include "ComputeShapesTriangleGeom.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
@@ -20,19 +19,19 @@ namespace
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
-usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
-{
-  return numVertices + numFaces - (2 * numRegions);
-}
+// usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
+// {
+//   return numVertices + numFaces - (2 * numRegions);
+// }
 
-template <typename T>
-bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usize numRegions)
-{
-  // Expensive call
-  const usize numEdges = GeometryHelpers::Connectivity::FindNumEdges(faceStore, numVertices);
-
-  return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
-}
+// template <typename T>
+// bool ValidateMesh(const AbstractDataStore<T>& faceStore, usize numVertices, usize numRegions)
+// {
+//   // Expensive call
+//   const usize numEdges = GeometryHelpers::Connectivity::FindNumEdges(faceStore, numVertices);
+//
+//   return numEdges == FindEulerCharacteristic(numVertices, faceStore.getNumberOfTuples(), numRegions);
+// }
 
 struct AxialLengths
 {
@@ -72,7 +71,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& or
 
     if(faceLabelsStore[2 * i] != featureId && faceLabelsStore[(2 * i) + 1] != featureId)
     {
-      // Triangle not in feature continue
+      // Triangle not in feature. Continue
       continue;
     }
 
@@ -244,16 +243,13 @@ public:
 
   void convert(size_t featureIdStart, size_t featureIdEnd) const
   {
-    float32 omega3;
-    std::array<float32, 3> axisEulerAngles;
-    std::array<float32, 3> axisLengths;
-    std::array<float32, 2> aspectRatios;
+
+    std::vector<ShapeResultValues> results;
 
     const TriStore& triangleList = m_TriangleGeom.getFacesRef().getDataStoreRef();
     const VertsStore& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
 
     const usize numFaces = m_FaceLabels.getNumberOfTuples();
-    const usize numFeatures = m_Centroids.getNumberOfTuples();
 
     Matrix3x3 Cinertia;
     nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
@@ -284,6 +280,8 @@ public:
     // We could parallelize over the features?
     for(usize featureId = featureIdStart; featureId < featureIdEnd; featureId++)
     {
+      ShapeResultValues currentResult;
+      currentResult.featureId = featureId;
       // ===== The following section calculates the moment of inertia tensor (Cinertia) and omega3s =======
       if(m_ShouldCancel)
       {
@@ -328,7 +326,7 @@ public:
       // extract the moments from the inertia tensor
       const Eigen::Vector3d eVec(Cinertia(0, 0), Cinertia(1, 1), Cinertia(2, 2));
       auto sols = cPrime * eVec;
-      omega3 = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
+      currentResult.omega3 = static_cast<float32>(((Vol * Vol) / sols.prod()) / k_Sphere);
 
       /**
        * This next section finds the principle axis via eigenvalues.
@@ -365,7 +363,7 @@ public:
       //    }
       //    std::cout << "\nPrimary Axis: " << axisLabel << " | Associated Eigenvalue: " << primaryAxis << std::endl;
 
-      // Presort eigen ordering for following sections
+      // Presort eigen ordering for the following sections
       // Returns the argument order sorted high to low
       std::array<size_t, 3> idxs = ::TripletSort(eigenvalues[0].real(), eigenvalues[1].real(), eigenvalues[2].real(), false);
 
@@ -385,7 +383,7 @@ public:
       auto col1 = eigenvectors.col(idxs[2]);
 
       // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
-      //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
+      //(Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
       Matrix3x3 orientationMatrix = {};
       orientationMatrix.row(0) = col1.real();
       orientationMatrix.row(1) = col2.real();
@@ -393,9 +391,9 @@ public:
 
       auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(orientationMatrix.data(), 9));
 
-      axisEulerAngles[0] = static_cast<float32>(euler[0]);
-      axisEulerAngles[1] = static_cast<float32>(euler[1]);
-      axisEulerAngles[2] = static_cast<float32>(euler[2]);
+      currentResult.axisEulerAngles[0] = static_cast<float32>(euler[0]);
+      currentResult.axisEulerAngles[1] = static_cast<float32>(euler[1]);
+      currentResult.axisEulerAngles[2] = static_cast<float32>(euler[2]);
 
       // ====================  The following section finds axes ==================
       if(m_ShouldCancel)
@@ -408,24 +406,26 @@ public:
       // Check for zeroes (zeroes = probably invalid)
       if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
       {
-        axisLengths[0] = -1.0f;
-        axisLengths[1] = -1.0f;
-        axisLengths[2] = -1.0f;
-        aspectRatios[0] = -1.0f;
-        aspectRatios[1] = -1.0f;
+        currentResult.axisLengths[0] = -1.0f;
+        currentResult.axisLengths[1] = -1.0f;
+        currentResult.axisLengths[2] = -1.0f;
+        currentResult.aspectRatios[0] = -1.0f;
+        currentResult.aspectRatios[1] = -1.0f;
       }
       else
       {
-        axisLengths[0] = static_cast<float32>(lengths.xLength);
-        axisLengths[1] = static_cast<float32>(lengths.yLength);
-        axisLengths[2] = static_cast<float32>(lengths.zLength);
+        currentResult.axisLengths[0] = static_cast<float32>(lengths.xLength);
+        currentResult.axisLengths[1] = static_cast<float32>(lengths.yLength);
+        currentResult.axisLengths[2] = static_cast<float32>(lengths.zLength);
         auto bOverA = static_cast<float32>(lengths.yLength / lengths.xLength);
         auto cOverA = static_cast<float32>(lengths.zLength / lengths.xLength);
-        aspectRatios[0] = bOverA;
-        aspectRatios[1] = cOverA;
+        currentResult.aspectRatios[0] = bOverA;
+        currentResult.aspectRatios[1] = cOverA;
       }
-      m_FilterPtr->updateResults(featureId, omega3, axisEulerAngles, axisLengths, aspectRatios);
+      results.push_back(currentResult);
     } // end
+
+    m_FilterPtr->updateResults(results);
   }
 
   void operator()(const Range& range) const
@@ -449,29 +449,30 @@ ComputeShapesTriangleGeom::ComputeShapesTriangleGeom(DataStructure& dataStructur
 // -----------------------------------------------------------------------------
 ComputeShapesTriangleGeom::~ComputeShapesTriangleGeom() noexcept = default;
 
-void ComputeShapesTriangleGeom::updateResults(int32 featureId, float32 omega3, const std::array<float32, 3>& axisEulerAngles, const std::array<float32, 3>& axisLengths,
-                                              const std::array<float32, 2>& aspectRatios)
+void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValues>& results)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  m_FeatureUpdateCount++;
+  m_FeatureUpdateCount = m_FeatureUpdateCount + results.size();
   auto& omega3sRef = *m_Omega3s;                 // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega3sArrayPath);
   auto& axisEulerAnglesRef = *m_AxisEulerAngles; // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
   auto& axisLengthsRef = *m_AxisLengths;         // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
   auto& aspectRatiosRef = *m_AspectRatios;       // m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
 
-  omega3sRef.setValue(featureId, omega3);
+  for(const auto& result : results)
+  {
+    omega3sRef.setValue(result.featureId, result.omega3);
 
-  axisEulerAnglesRef[3 * featureId] = static_cast<float32>(axisEulerAngles[0]);
-  axisEulerAnglesRef[(3 * featureId) + 1] = static_cast<float32>(axisEulerAngles[1]);
-  axisEulerAnglesRef[(3 * featureId) + 2] = static_cast<float32>(axisEulerAngles[2]);
+    axisEulerAnglesRef.setValue(3 * result.featureId, static_cast<float32>(result.axisEulerAngles[0]));
+    axisEulerAnglesRef.setValue((3 * result.featureId) + 1, static_cast<float32>(result.axisEulerAngles[1]));
+    axisEulerAnglesRef.setValue((3 * result.featureId) + 2, static_cast<float32>(result.axisEulerAngles[2]));
 
-  axisLengthsRef[3 * featureId] = axisLengths[0];
-  axisLengthsRef[(3 * featureId) + 1] = axisLengths[1];
-  axisLengthsRef[(3 * featureId) + 2] = axisLengths[2];
+    axisLengthsRef.setValue(3 * result.featureId, result.axisLengths[0]);
+    axisLengthsRef.setValue((3 * result.featureId) + 1, result.axisLengths[1]);
+    axisLengthsRef.setValue((3 * result.featureId) + 2, result.axisLengths[2]);
 
-  aspectRatiosRef[2 * featureId] = aspectRatios[0];
-  aspectRatiosRef[(2 * featureId) + 1] = aspectRatios[1];
-
+    aspectRatiosRef.setValue(2 * result.featureId, result.aspectRatios[0]);
+    aspectRatiosRef.setValue((2 * result.featureId) + 1, result.aspectRatios[1]);
+  }
   // Send at most 100 messages.
   if(m_FeatureUpdateCount % m_NumFeatureInc == 0)
   {
@@ -493,7 +494,7 @@ Result<> ComputeShapesTriangleGeom::operator()()
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath).getDataStoreRef();
 
   // the assumption here is face labels contains information on region ids, that it is contiguous in the values, and that 0 is an invalid id
-  // (ie the max function means that if the values in array are [1,2,4,5] it will assume there are 5 regions)
+  // (i.e., the max function means that if the values in the array are [1,2,4,5] it will assume there are 5 regions)
   {
     std::vector<int32> eulerCharacteristics =
         nx::core::GeometryHelpers::Connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath));
