@@ -1,4 +1,4 @@
-#include "SplitAttributeArray.hpp"
+#include "SplitDataArrayByComponent.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -11,7 +11,7 @@ namespace
 struct SplitArraysFunctor
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, const SplitAttributeArrayInputValues* inputValues)
+  void operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, const SplitDataArrayByComponentInputValues* inputValues)
   {
     const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numTuples = inputStore.getNumberOfTuples();
@@ -32,7 +32,8 @@ struct SplitArraysFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-SplitAttributeArray::SplitAttributeArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SplitAttributeArrayInputValues* inputValues)
+SplitDataArrayByComponent::SplitDataArrayByComponent(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                     SplitDataArrayByComponentInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -41,16 +42,16 @@ SplitAttributeArray::SplitAttributeArray(DataStructure& dataStructure, const IFi
 }
 
 // -----------------------------------------------------------------------------
-SplitAttributeArray::~SplitAttributeArray() noexcept = default;
+SplitDataArrayByComponent::~SplitDataArrayByComponent() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& SplitAttributeArray::getCancel()
+const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> SplitAttributeArray::operator()()
+Result<> SplitDataArrayByComponent::operator()()
 {
   auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
 

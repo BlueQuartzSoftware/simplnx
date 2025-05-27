@@ -111,7 +111,7 @@
 #include "SimplnxCore/Filters/SetImageGeomOriginScalingFilter.hpp"
 #include "SimplnxCore/Filters/SilhouetteFilter.hpp"
 #include "SimplnxCore/Filters/SliceTriangleGeometryFilter.hpp"
-#include "SimplnxCore/Filters/SplitAttributeArrayFilter.hpp"
+#include "SimplnxCore/Filters/SplitDataArrayByComponentFilter.hpp"
 #include "SimplnxCore/Filters/TriangleCentroidFilter.hpp"
 #include "SimplnxCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "SimplnxCore/Filters/TriangleNormalFilter.hpp"
@@ -206,7 +206,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("3062fc2c-76b2-5c50-92b7-edbbb424c41d").value(), {nx::core::FilterTraits<RobustAutomaticThresholdFilter>::uuid, &RobustAutomaticThresholdFilter::FromSIMPLJson}}, // RobustAutomaticThresholdFilter
     {nx::core::Uuid::FromString("2c5edebf-95d8-511f-b787-90ee2adf485c").value(), {nx::core::FilterTraits<ScalarSegmentFeaturesFilter>::uuid, &ScalarSegmentFeaturesFilter::FromSIMPLJson}}, // ScalarSegmentFeatures
     {nx::core::Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value(), {nx::core::FilterTraits<SetImageGeomOriginScalingFilter>::uuid, &SetImageGeomOriginScalingFilter::FromSIMPLJson}}, // SetOriginResolutionImageGeom
-    {nx::core::Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value(), {nx::core::FilterTraits<SplitAttributeArrayFilter>::uuid, &SplitAttributeArrayFilter::FromSIMPLJson}}, // SplitAttributeArray
+    {nx::core::Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value(), {nx::core::FilterTraits<SplitDataArrayByComponentFilter>::uuid, &SplitDataArrayByComponentFilter::FromSIMPLJson}}, // SplitDataArrayByComponent
     {nx::core::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), {nx::core::FilterTraits<ReadStlFileFilter>::uuid, &ReadStlFileFilter::FromSIMPLJson}}, // ReadStlFile
     {nx::core::Uuid::FromString("5fbf9204-2c6c-597b-856a-f4612adbac38").value(), {nx::core::FilterTraits<WriteASCIIDataFilter>::uuid, &WriteASCIIDataFilter::FromSIMPLJson}}, // WriteASCIIData
     {nx::core::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), {nx::core::FilterTraits<TriangleDihedralAngleFilter>::uuid, &TriangleDihedralAngleFilter::FromSIMPLJson}}, // TriangleDihedralAngleFilter
