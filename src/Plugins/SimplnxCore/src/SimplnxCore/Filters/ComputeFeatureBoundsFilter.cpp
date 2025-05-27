@@ -113,39 +113,7 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
 
   const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
 
-  usize expectedFeatureSize = 0;
-  std::string targetStr = "";
-  switch(geom.getGeomType())
-  {
-  case IGeometry::Type::Image: {
-    expectedFeatureSize = dynamic_cast<const ImageGeom&>(geom).getNumberOfCells();
-    targetStr = "cells";
-    break;
-  }
-  case IGeometry::Type::Triangle: {
-    expectedFeatureSize = dynamic_cast<const TriangleGeom&>(geom).getNumberOfFaces();
-    targetStr = "triangles";
-    break;
-  }
-  case IGeometry::Type::Vertex: {
-    expectedFeatureSize = dynamic_cast<const VertexGeom&>(geom).getNumberOfVertices();
-    targetStr = "vertices";
-    break;
-  }
-  case IGeometry::Type::Edge: {
-    expectedFeatureSize = dynamic_cast<const EdgeGeom&>(geom).getNumberOfEdges();
-    targetStr = "edges";
-    break;
-  }
-  case IGeometry::Type::Quad: {
-    expectedFeatureSize = dynamic_cast<const QuadGeom&>(geom).getNumberOfFaces();
-    targetStr = "faces";
-    break;
-  }
-  default: {
-    return MakePreflightErrorResult(-89473, fmt::format("Unexpected input geometry type. Geometry name {}", geom.getName()));
-  }
-  }
+  usize expectedFeatureSize = geom.getNumberOfCells();
 
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(featureIds.getNumberOfTuples() != expectedFeatureSize)
