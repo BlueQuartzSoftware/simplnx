@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeBoundaryElementFractionsTest.cpp
   ComputeDifferencesMapTest.cpp
   ComputeEuclideanDistMapTest.cpp
+  ComputeFeatureBoundsTest.cpp
   ComputeFeatureCentroidsTest.cpp
   ComputeFeatureClusteringTest.cpp
   ComputeFeatureNeighborsTest.cpp
