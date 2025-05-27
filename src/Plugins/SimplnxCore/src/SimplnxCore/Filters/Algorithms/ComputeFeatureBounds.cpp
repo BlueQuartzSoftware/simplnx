@@ -179,24 +179,10 @@ std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const 
 }
 } // namespace Geometry2D
 
-template <bool ImageGeomV, bool Geom0DV, bool Geom1DV, bool Geom2DV>
-struct GeometryOptions
-{
-  static constexpr bool UsingImage = ImageGeomV;
-  static constexpr bool Using0D = Geom0DV;
-  static constexpr bool Using1D = Geom1DV;
-  static constexpr bool Using2D = Geom2DV;
-};
-
-using ImageOption = GeometryOptions<true, false, false, false>;
-using Geom0DOption = GeometryOptions<false, true, false, false>;
-using Geom1DOption = GeometryOptions<false, false, true, false>;
-using Geom2DOption = GeometryOptions<false, false, false, true>;
-
 template <typename T>
 concept GeometryType = std::is_base_of_v<IGeometry, T>;
 
-template <class GeometryOptions, GeometryType GeomT>
+template <GeometryType GeomT>
 class ComputeSplitBoundsImpl
 {
 public:
@@ -215,22 +201,22 @@ public:
     std::pair<Point3Df, Point3Df> minMax;
     for(usize feature = start; feature < end; feature++)
     {
-      if constexpr(GeometryOptions::UsingImage)
+      if constexpr(std::is_same_v<ImageGeom, GeomT>)
       {
         minMax = GeometryGrid::CalculateFeatureBounds(feature, m_Geom, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using0D)
+      if constexpr(std::is_same_v<VertexGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         minMax = Geometry0D::CalculateFeatureBounds(feature, verts, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using1D)
+      if constexpr(std::is_same_v<EdgeGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
         minMax = Geometry1D::CalculateFeatureBounds(feature, verts, edges, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using2D)
+      if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
@@ -262,7 +248,7 @@ private:
   Float32AbstractDataStore& m_MaxBounds;
 };
 
-template <class GeometryOptions, GeometryType GeomT>
+template <GeometryType GeomT>
 class ComputeUnifiedBoundsImpl
 {
 public:
@@ -281,22 +267,22 @@ public:
     std::pair<Point3Df, Point3Df> minMax;
     for(usize feature = start; feature < end; feature++)
     {
-      if constexpr(GeometryOptions::UsingImage)
+      if constexpr(std::is_same_v<ImageGeom, GeomT>)
       {
         minMax = GeometryGrid::CalculateFeatureBounds(feature, m_Geom, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using0D)
+      if constexpr(std::is_same_v<VertexGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         minMax = Geometry0D::CalculateFeatureBounds(feature, verts, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using1D)
+      if constexpr(std::is_same_v<EdgeGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
         minMax = Geometry1D::CalculateFeatureBounds(feature, verts, edges, m_FeatureIds);
       }
-      if constexpr(GeometryOptions::Using2D)
+      if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
       {
         const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
         const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
@@ -327,29 +313,29 @@ private:
   Float32AbstractDataStore& m_UnifiedBounds;
 };
 
-template <template <class, class> class BodyT, class... ArgsT>
+template <template <class> class BodyT, class... ArgsT>
 Result<> ExecuteComputeBounds(const IGeometry& geom, ParallelDataAlgorithm&& dataAlg, ArgsT&&... args)
 {
   switch(geom.getGeomType())
   {
   case IGeometry::Type::Image: {
-    dataAlg.execute(BodyT<ImageOption, ImageGeom>(dynamic_cast<const ImageGeom&>(geom), std::forward<ArgsT>(args)...));
+    dataAlg.execute(BodyT<ImageGeom>(dynamic_cast<const ImageGeom&>(geom), std::forward<ArgsT>(args)...));
     break;
   }
   case IGeometry::Type::Triangle: {
-    dataAlg.execute(BodyT<Geom2DOption, TriangleGeom>(dynamic_cast<const TriangleGeom&>(geom), std::forward<ArgsT>(args)...));
+    dataAlg.execute(BodyT<TriangleGeom>(dynamic_cast<const TriangleGeom&>(geom), std::forward<ArgsT>(args)...));
     break;
   }
   case IGeometry::Type::Vertex: {
-    dataAlg.execute(BodyT<Geom0DOption, VertexGeom>(dynamic_cast<const VertexGeom&>(geom), std::forward<ArgsT>(args)...));
+    dataAlg.execute(BodyT<VertexGeom>(dynamic_cast<const VertexGeom&>(geom), std::forward<ArgsT>(args)...));
     break;
   }
   case IGeometry::Type::Edge: {
-    dataAlg.execute(BodyT<Geom1DOption, EdgeGeom>(dynamic_cast<const EdgeGeom&>(geom), std::forward<ArgsT>(args)...));
+    dataAlg.execute(BodyT<EdgeGeom>(dynamic_cast<const EdgeGeom&>(geom), std::forward<ArgsT>(args)...));
     break;
   }
   case IGeometry::Type::Quad: {
-    dataAlg.execute(BodyT<Geom2DOption, QuadGeom>(dynamic_cast<const QuadGeom&>(geom), std::forward<ArgsT>(args)...));
+    dataAlg.execute(BodyT<QuadGeom>(dynamic_cast<const QuadGeom&>(geom), std::forward<ArgsT>(args)...));
     break;
   }
   default: {
@@ -371,18 +357,6 @@ ComputeFeatureBounds::ComputeFeatureBounds(DataStructure& dataStructure, const I
 
 // -----------------------------------------------------------------------------
 ComputeFeatureBounds::~ComputeFeatureBounds() noexcept = default;
-
-// -----------------------------------------------------------------------------
-void ComputeFeatureBounds::updateProgress(const std::string& message)
-{
-  m_MessageHandler(IFilter::Message::Type::Info, message);
-}
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureBounds::getCancel()
-{
-  return m_ShouldCancel;
-}
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureBounds::operator()()

@@ -118,16 +118,12 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   if(featureIds.getNumberOfTuples() != expectedFeatureSize)
   {
-    return MakePreflightErrorResult(-89474, fmt::format("Expected Feature Ids size: {} | Actual Feature Ids size: {} | Feature Ids should be equivalent to the number of {}.", expectedFeatureSize,
-                                                        featureIds.getNumberOfTuples(), targetStr));
+    return MakePreflightErrorResult(-89474, fmt::format("Expected Feature Ids size: {} | Actual Feature Ids size: {} | Feature Ids should be equivalent to the number of cells.", expectedFeatureSize,
+                                                        featureIds.getNumberOfTuples()));
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
   auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(pFeatureAMPathValue);
-  if(featureAM == nullptr)
-  {
-    return MakePreflightErrorResult(-89470, fmt::format("Object at path {} must be a valid Attribute Matrix", pFeatureAMPathValue.toString()));
-  }
   AttributeMatrix::ShapeType tupleShape = featureAM->getShape();
   switch(static_cast<ComputeFeatureBounds::OutputDataType>(pOutputTypeValue))
   {
