@@ -14,6 +14,7 @@ assert nl.get_number_of_lists() == SIZE
 
 INDEX = 2
 
+# get_list returns a copy
 assert nl.get_list(INDEX) == []
 assert nl.get_list_size(INDEX) == 0
 
@@ -23,3 +24,11 @@ nl.add_entry(INDEX, VALUE)
 
 assert nl.get_list(INDEX) == [VALUE]
 assert nl.get_list_size(INDEX) == 1
+
+for i in range(3):
+  nl.add_entry(1, i)
+
+for grain_id in range(nl.get_number_of_lists()):
+  print(f'grain_id={grain_id}')
+  for value in nl.get_list(grain_id):
+    print(value)
