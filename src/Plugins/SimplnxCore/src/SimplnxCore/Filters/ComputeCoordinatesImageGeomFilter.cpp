@@ -105,13 +105,13 @@ IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const 
 
   if(pOutputTypeValue != to_underlying(ComputeCoordinatesImageGeom::OutputType::Index))
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numberOfCells}, std::vector<usize>{1}, pCoordsArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numberOfCells}, std::vector<usize>{3}, pCoordsArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   if(pOutputTypeValue != to_underlying(ComputeCoordinatesImageGeom::OutputType::Physical))
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numberOfCells}, std::vector<usize>{1}, pIndicesArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numberOfCells}, std::vector<usize>{3}, pIndicesArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
