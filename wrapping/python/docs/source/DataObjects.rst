@@ -366,6 +366,75 @@ DataStore Example Usage
    # The developer can also just inline the above lines into a single line
    npdata = data_structure[output_array_path].store.npview
 
+
+.. _NeighborList:
+
+NeighborList
+-----------
+
+.. py:class:: NeighborList[T]
+
+   .. py:property:: tuple_shape
+      :type: list[int]
+
+      The dimensions of the NeighborList from slowest to fastest (C Ordering)
+
+   .. py:property:: component_shape
+      :type: list[int]
+
+      The dimensions of the components of the NeighborList from slowest to fastest (C Ordering)
+
+   .. py:property:: dtype
+      :type: numpy.dtype
+
+      The type of the NeighborList elements
+
+   .. py:method:: get_list(grain_id: int) -> list[T]
+
+      Returns the target neighbor list.
+
+      :param int grain_id: The grain id of the target list
+      :return: The target list
+      :rtype: list[T]
+
+   .. py:method:: set_list(grain_id: int, neighbor_list: list[T])
+
+      Set the target neighbor list to the given list.
+
+      :param int grain_id: The grain id of the target list
+      :param list[T] neighbor_list: The replacement list
+
+   .. py:method:: get_value(grain_id: int, index: int) -> T
+
+      Returns the value at the given index in the target neighbor list.
+
+      :param int grain_id: The grain id of the target list
+      :param int index: The index into the target list
+      :return: The target value
+      :rtype: T
+
+   .. py:method:: add_entry(grain_id: int, value: T)
+
+      Appends the given value to the target neighbor list.
+
+      :param int grain_id: The grain id of the target list
+      :param T value: The value to append
+
+   .. py:method:: get_list_size(grain_id: int) -> int
+
+      Returns the size of the target neighbor list.
+
+      :param int grain_id: The grain id of the target list
+      :return: The target list size
+      :rtype: int
+
+   .. py:method:: get_number_of_lists() -> int
+
+      Returns the total number of lists.
+
+      :return: The total number of lists
+      :rtype: int
+
 .. _AttributeMatrix:
 
 AttributeMatrix

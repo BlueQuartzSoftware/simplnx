@@ -25,6 +25,7 @@
 #include <simplnx/DataStructure/Geometry/TetrahedralGeom.hpp>
 #include <simplnx/DataStructure/Geometry/TriangleGeom.hpp>
 #include <simplnx/DataStructure/Geometry/VertexGeom.hpp>
+#include <simplnx/DataStructure/NeighborList.hpp>
 #include <simplnx/DataStructure/StringArray.hpp>
 #include <simplnx/Filter/Actions/CopyArrayInstanceAction.hpp>
 #include <simplnx/Filter/Actions/CopyDataObjectAction.hpp>
@@ -208,6 +209,35 @@ auto BindDataArray(py::handle scope, const char* name)
 #define SIMPLNX_PY_BIND_DATA_ARRAY(scope, className) BindDataArray<className::value_type>(scope, #className)
 #define SIMPLNX_PY_BIND_DATA_STORE(scope, className) BindDataStore<className::value_type>(scope, #className)
 #define SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, IDataStore, std::shared_ptr<className>)
+
+template <class T>
+auto BindNeighborList(py::handle scope, const char* name)
+{
+  using NeighborListType = NeighborList<T>;
+
+  auto neighborList = py::class_<NeighborListType, INeighborList, std::shared_ptr<NeighborListType>>(scope, name);
+  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
+  neighborList.def("get_list", &NeighborListType::getList, "grain_id"_a);
+  neighborList.def("set_list", py::overload_cast<int32, const typename NeighborListType::VectorType&>(&NeighborListType::setList), "grain_id"_a, "neighbor_list"_a);
+  neighborList.def(
+      "get_value",
+      [](const NeighborListType& self, int32 grainId, int32 index) {
+        bool ok = false;
+        int32 value = self.getValue(grainId, index, ok);
+        if(!ok)
+        {
+          throw std::out_of_range(fmt::format("NeighborList.get_value called with grain_id = {} and index = {} which was out of range", grainId, index));
+        }
+        return value;
+      },
+      "grain_id"_a, "index"_a);
+  neighborList.def("add_entry", &NeighborListType::addEntry, "grain_id"_a, "value"_a);
+  neighborList.def("get_list_size", &NeighborListType::getListSize, "grain_id"_a);
+  neighborList.def("get_number_of_lists", &NeighborListType::getNumberOfLists);
+  return neighborList;
+}
+
+#define SIMPLNX_PY_BIND_NEIGHBOR_LIST(scope, className) BindNeighborList<className::value_type>(scope, #className)
 
 template <class GeomT>
 auto BindCreateGeometry2DAction(py::handle scope, const char* name)
@@ -1025,6 +1055,19 @@ PYBIND11_MODULE(simplnx, mod)
   stringArray.def_property_readonly("cdims", &StringArray::getComponentShape);
   stringArray.def_property_readonly("values", &StringArray::values);
   stringArray.def("resize_tuples", &StringArray::resizeTuples, "Resize the tuples with the given shape");
+
+  auto iNeighborList = py::class_<INeighborList, IArray, std::shared_ptr<INeighborList>>(mod, "INeighborList");
+
+  auto neighborListInt8 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Int8NeighborList);
+  auto neighborListUInt8 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, UInt8NeighborList);
+  auto neighborListInt16 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Int16NeighborList);
+  auto neighborListUInt16 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, UInt16NeighborList);
+  auto neighborListInt32 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Int32NeighborList);
+  auto neighborListUInt32 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, UInt32NeighborList);
+  auto neighborListInt64 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Int64NeighborList);
+  auto neighborListUInt64 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, UInt64NeighborList);
+  auto neighborListFloat32 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Float32NeighborList);
+  auto neighborListFloat64 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Float64NeighborList);
 
   auto dataArrayInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, Int8Array);
   auto dataArrayUInt8 = SIMPLNX_PY_BIND_DATA_ARRAY(mod, UInt8Array);
