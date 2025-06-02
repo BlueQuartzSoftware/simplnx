@@ -8,282 +8,300 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <algorithm>
 #include <fmt/format.h>
+#include <queue>
+#include <unordered_map>
 
 using namespace nx::core;
 
 namespace
 {
+
 template <typename T>
-class FindEpsilonNeighborhoodsImpl
+class GridSpatialIndex
 {
 private:
   using AbstractDataStoreT = AbstractDataStore<T>;
 
-public:
-  FindEpsilonNeighborhoodsImpl(DBSCAN* filter, float64 epsilon, const AbstractDataStoreT& inputData, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize numCompDims, usize numTuples,
-                               ClusterUtilities::DistanceMetric distMetric, std::vector<std::list<usize>>& neighborhoods)
-  : m_Filter(filter)
-  , m_Epsilon(epsilon)
-  , m_InputDataStore(inputData)
-  , m_Mask(mask)
-  , m_NumCompDims(numCompDims)
-  , m_NumTuples(numTuples)
-  , m_DistMetric(distMetric)
-  , m_Neighborhoods(neighborhoods)
+  std::unordered_map<size_t, std::vector<usize>> grid_cells;
+  float64 cell_size;
+  usize num_dimensions;
+  std::vector<T> min_bounds, max_bounds;
+  const AbstractDataStoreT& data_store;
+  usize num_components;
+
+  size_t hash_cell_coordinates(const std::vector<int>& coordinates) const noexcept
   {
+    size_t hash_value = 0;
+    const size_t prime_base = 73856093;
+
+    for(usize i = 0; i < coordinates.size(); ++i)
+    {
+      hash_value ^= static_cast<size_t>(coordinates[i]) * (prime_base + i);
+    }
+    return hash_value;
   }
 
-  void compute(usize start, usize end) const
+  std::vector<int> calculate_cell_coordinates(usize point_index) const noexcept
   {
-    for(usize i = start; i < end; i++)
+    std::vector<int> coordinates(num_dimensions);
+
+    for(usize dim = 0; dim < num_dimensions; ++dim)
     {
-      if(m_Filter->getCancel())
+      T point_value = data_store[point_index * num_components + dim];
+      coordinates[dim] = static_cast<int>((point_value - min_bounds[dim]) / cell_size);
+    }
+    return coordinates;
+  }
+
+public:
+  GridSpatialIndex(const AbstractDataStoreT& input_data, usize num_comps, usize num_tuples, float64 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+  : data_store(input_data)
+  , num_components(num_comps)
+  , cell_size(epsilon)
+  , num_dimensions(num_comps)
+  {
+    if(num_tuples == 0)
+      return;
+
+    // Calculate data bounds
+    min_bounds.resize(num_dimensions);
+    max_bounds.resize(num_dimensions);
+
+    bool bounds_initialized = false;
+
+    for(usize i = 0; i < num_tuples; ++i)
+    {
+      if(mask->isTrue(i))
       {
+        for(usize dim = 0; dim < num_dimensions; ++dim)
+        {
+          T value = data_store[i * num_components + dim];
+
+          if(!bounds_initialized)
+          {
+            min_bounds[dim] = max_bounds[dim] = value;
+          }
+          else
+          {
+            min_bounds[dim] = std::min(min_bounds[dim], value);
+            max_bounds[dim] = std::max(max_bounds[dim], value);
+          }
+        }
+        bounds_initialized = true;
+      }
+    }
+
+    // Populate grid cells
+    for(usize i = 0; i < num_tuples; ++i)
+    {
+      if(mask->isTrue(i))
+      {
+        auto coordinates = calculate_cell_coordinates(i);
+        size_t hash_key = hash_cell_coordinates(coordinates);
+        grid_cells[hash_key].push_back(i);
+      }
+    }
+  }
+
+  std::vector<usize> find_neighbors(usize query_index, float64 epsilon_value, ClusterUtilities::DistanceMetric distance_metric) const
+  {
+    std::vector<usize> neighbors;
+    auto center_coordinates = calculate_cell_coordinates(query_index);
+
+    // Check all neighboring grid cells (including center cell)
+    std::function<void(std::vector<int>, usize)> check_neighboring_cells;
+    check_neighboring_cells = [&](std::vector<int> current_coords, usize dimension_index) {
+      if(dimension_index == num_dimensions)
+      {
+        size_t cell_hash = hash_cell_coordinates(current_coords);
+        auto cell_iterator = grid_cells.find(cell_hash);
+
+        if(cell_iterator != grid_cells.end())
+        {
+          for(usize candidate_index : cell_iterator->second)
+          {
+            float64 distance = ClusterUtilities::GetDistance(data_store, query_index * num_components, data_store, candidate_index * num_components, num_components, distance_metric);
+
+            if(distance < epsilon_value)
+            {
+              neighbors.push_back(candidate_index);
+            }
+          }
+        }
         return;
       }
-      if(m_Mask->isTrue(i))
+
+      // Check current cell and adjacent cells in current dimension
+      for(int offset = -1; offset <= 1; ++offset)
       {
-        // directly inline to try to convince compiler to construct in place
-        m_Neighborhoods[i] = epsilon_neighbors(i);
+        current_coords[dimension_index] = center_coordinates[dimension_index] + offset;
+        check_neighboring_cells(current_coords, dimension_index + 1);
       }
-    }
-  }
+    };
 
-  [[nodiscard]] std::list<usize> epsilon_neighbors(usize index) const
-  {
-    std::list<usize> neighbors;
-
-    for(usize i = 0; i < m_NumTuples; i++)
-    {
-      if(m_Mask->isTrue(i))
-      {
-        float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (m_NumCompDims * index), m_InputDataStore, (m_NumCompDims * i), m_NumCompDims, m_DistMetric);
-        if(dist < m_Epsilon)
-        {
-          neighbors.push_back(i);
-        }
-      }
-    }
-
+    std::vector<int> coordinates(num_dimensions);
+    check_neighboring_cells(coordinates, 0);
     return neighbors;
   }
-
-  void operator()(const Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-private:
-  DBSCAN* m_Filter;
-  float64 m_Epsilon;
-  const AbstractDataStoreT& m_InputDataStore;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
-  usize m_NumCompDims;
-  usize m_NumTuples;
-  ClusterUtilities::DistanceMetric m_DistMetric;
-  std::vector<std::list<usize>>& m_Neighborhoods;
 };
 
-template <typename T, bool PrecacheV = true, bool RandomInitV = true>
-class DBSCANTemplate
+template <typename T>
+class OptimizedDBSCANTemplate
 {
 private:
   using AbstractDataStoreT = AbstractDataStore<T>;
 
 public:
-  DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore,
-                 float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  OptimizedDBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& input_data, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask_array, AbstractDataStore<int32>& feature_ids,
+                          float32 epsilon, int32 min_points, ClusterUtilities::DistanceMetric distance_metric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
-  , m_InputDataStore(inputDataStore)
-  , m_Mask(maskDataArray)
-  , m_FeatureIds(fIdsDataStore)
+  , m_InputDataStore(input_data)
+  , m_Mask(mask_array)
+  , m_FeatureIds(feature_ids)
   , m_Epsilon(epsilon)
-  , m_MinPoints(minPoints)
-  , m_DistMetric(distMetric)
+  , m_MinPoints(min_points)
+  , m_DistMetric(distance_metric)
   , m_Seed(seed)
   {
   }
-  ~DBSCANTemplate() = default;
 
-  DBSCANTemplate(const DBSCANTemplate&) = delete; // Copy Constructor Not Implemented
-  void operator=(const DBSCANTemplate&) = delete; // Move assignment Not Implemented
+  ~OptimizedDBSCANTemplate() = default;
 
-  // -----------------------------------------------------------------------------
+  OptimizedDBSCANTemplate(const OptimizedDBSCANTemplate&) = delete;
+  void operator=(const OptimizedDBSCANTemplate&) = delete;
+
   void operator()()
   {
-    usize numTuples = m_InputDataStore.getNumberOfTuples();
-    usize numCompDims = m_InputDataStore.getNumberOfComponents();
-    std::vector<bool> visited(numTuples, false);   // Uses one bit per value for space efficiency
-    std::vector<bool> clustered(numTuples, false); // Uses one bit per value for space efficiency
+    usize num_tuples = m_InputDataStore.getNumberOfTuples();
+    usize num_components = m_InputDataStore.getNumberOfComponents();
 
-    auto minDist = static_cast<float64>(m_Epsilon);
-    int32 cluster = 0;
+    // Initialize point states efficiently
+    std::vector<bool> visited(num_tuples, false);
+    std::vector<bool> is_core_point(num_tuples, false);
 
-    std::vector<std::list<usize>> epsilonNeighborhoods;
+    // Initialize all feature IDs to noise (-1 becomes 0 for noise)
+    std::fill(m_FeatureIds.begin(), m_FeatureIds.end(), 0);
 
-    if constexpr(PrecacheV)
-    {
-      // In-memory only with current implementation for speed with std::list
-      epsilonNeighborhoods = std::vector<std::list<usize>>(numTuples);
+    float64 epsilon_value = static_cast<float64>(m_Epsilon);
+    int32 current_cluster_id = 1; // Start from 1, 0 is reserved for noise
 
-      m_Filter->updateProgress("Finding Neighborhoods in parallel...");
-      ParallelDataAlgorithm dataAlg;
-      dataAlg.setRange(0ULL, numTuples);
-      dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
+    m_Filter->updateProgress("Building spatial index...");
 
-      m_Filter->updateProgress("Neighborhoods found.");
-    }
+    // Build spatial index for efficient neighbor finding
+    GridSpatialIndex<T> spatial_index(m_InputDataStore, num_components, num_tuples, epsilon_value, m_Mask);
 
-    std::mt19937_64 gen(m_Seed);
-    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
+    m_Filter->updateProgress("Starting clustering process...");
+    auto clustering_start_time = std::chrono::steady_clock::now();
 
-    m_Filter->updateProgress("Beginning clustering...");
-    auto start = std::chrono::steady_clock::now();
-    usize i = 0;
-    uint8 misses = 0;
-    while(std::find(visited.begin(), visited.end(), false) != visited.end())
+    // Process each point
+    for(usize point_index = 0; point_index < num_tuples; ++point_index)
     {
       if(m_Filter->getCancel())
       {
         return;
       }
 
-      usize index;
-      if constexpr(!RandomInitV)
+      // Skip if already visited or masked out
+      if(visited[point_index] || !m_Mask->isTrue(point_index))
       {
-        index = i;
-        if(i >= numTuples)
-        {
-          break;
-        }
-        i++;
-      }
-      if constexpr(RandomInitV)
-      {
-        index = dist(gen);
+        continue;
       }
 
-      if(visited[index])
+      visited[point_index] = true;
+
+      // Progress reporting every 1000 points or every second
+      if(point_index % 1000 == 0)
       {
-        if(misses >= 10)
+        auto current_time = std::chrono::steady_clock::now();
+        if(std::chrono::duration_cast<std::chrono::seconds>(current_time - clustering_start_time).count() >= 1)
         {
-          auto findIter = std::find(visited.begin(), visited.end(), false);
-          if(findIter == visited.end())
+          float32 progress_percentage = (static_cast<float32>(point_index) / static_cast<float32>(num_tuples)) * 100.0f;
+          m_Filter->updateProgress(fmt::format("Processing point {} of {} ({:.1f}% complete)", point_index, num_tuples, progress_percentage));
+          clustering_start_time = current_time;
+        }
+      }
+
+      // Find all neighbors within epsilon distance
+      auto neighbors = spatial_index.find_neighbors(point_index, epsilon_value, m_DistMetric);
+
+      // Check if this is a core point
+      if(static_cast<int32>(neighbors.size()) < m_MinPoints)
+      {
+        // Not enough neighbors - remains noise (feature ID = 0)
+        continue;
+      }
+
+      // This is a core point - start a new cluster
+      is_core_point[point_index] = true;
+      m_FeatureIds[point_index] = current_cluster_id;
+
+      // Expand cluster using queue-based approach
+      std::queue<usize> expansion_queue;
+
+      // Add all unvisited neighbors to expansion queue
+      for(usize neighbor_index : neighbors)
+      {
+        if(m_Mask->isTrue(neighbor_index))
+        {
+          if(!visited[neighbor_index])
           {
-            break;
+            visited[neighbor_index] = true;
+            expansion_queue.push(neighbor_index);
           }
-          index = std::distance(visited.begin(), findIter);
 
-          if constexpr(RandomInitV)
+          // Assign to cluster if not already assigned
+          if(m_FeatureIds[neighbor_index] == 0)
           {
-            dist = std::uniform_int_distribution<usize>(index, numTuples - 1);
+            m_FeatureIds[neighbor_index] = current_cluster_id;
           }
-        }
-        else
-        {
-          misses++;
-          continue;
         }
       }
 
-      misses = 0;
-
-      if(m_Mask->isTrue(index))
+      // Expand cluster by processing queue
+      while(!expansion_queue.empty())
       {
-        visited[index] = true;
-        auto now = std::chrono::steady_clock::now();
-        // Only send updates every 1 second
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        if(m_Filter->getCancel())
         {
-          float32 progress = (static_cast<float32>(index) / static_cast<float32>(numTuples)) * 100.0f;
-          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", index, numTuples, progress));
-          start = std::chrono::steady_clock::now();
+          return;
         }
 
-        std::list<usize> neighbors;
-        if constexpr(PrecacheV)
+        usize current_point = expansion_queue.front();
+        expansion_queue.pop();
+
+        // Find neighbors of current point
+        auto current_neighbors = spatial_index.find_neighbors(current_point, epsilon_value, m_DistMetric);
+
+        // If current point is also a core point, add its unvisited neighbors to queue
+        if(static_cast<int32>(current_neighbors.size()) >= m_MinPoints)
         {
-          neighbors = epsilonNeighborhoods[index];
-        }
-        if constexpr(!PrecacheV)
-        {
-          for(usize j = 0; j < numTuples; j++)
+          is_core_point[current_point] = true;
+
+          for(usize neighbor_idx : current_neighbors)
           {
-            if(m_Mask->isTrue(j))
+            if(m_Mask->isTrue(neighbor_idx))
             {
-              float64 distance = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * index), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
-              if(distance < m_Epsilon)
+              if(!visited[neighbor_idx])
               {
-                neighbors.push_back(j);
+                visited[neighbor_idx] = true;
+                expansion_queue.push(neighbor_idx);
               }
-            }
-          }
-        }
 
-        if(static_cast<int32>(neighbors.size()) < m_MinPoints)
-        {
-          m_FeatureIds[index] = 0;
-          clustered[index] = true;
-        }
-        else
-        {
-          if(m_Filter->getCancel())
-          {
-            return;
-          }
-          cluster++;
-          m_FeatureIds[index] = cluster;
-          clustered[index] = true;
-
-          for(auto&& idx : neighbors)
-          {
-            if(m_Mask->isTrue(idx))
-            {
-              if(!visited[idx])
+              // Assign to cluster if it's noise
+              if(m_FeatureIds[neighbor_idx] == 0)
               {
-                visited[idx] = true;
-
-                std::list<usize> neighbors_prime;
-                if constexpr(PrecacheV)
-                {
-                  neighbors_prime = epsilonNeighborhoods[idx];
-                }
-                if constexpr(!PrecacheV)
-                {
-                  for(usize j = 0; j < numTuples; j++)
-                  {
-                    if(m_Mask->isTrue(j))
-                    {
-                      float64 distance = ClusterUtilities::GetDistance(m_InputDataStore, (numCompDims * idx), m_InputDataStore, (numCompDims * j), numCompDims, m_DistMetric);
-                      if(distance < m_Epsilon)
-                      {
-                        neighbors_prime.push_back(j);
-                      }
-                    }
-                  }
-                }
-
-                if(static_cast<int32>(neighbors_prime.size()) >= m_MinPoints)
-                {
-                  neighbors.splice(std::end(neighbors), neighbors_prime);
-                }
-              }
-              if(!clustered[idx])
-              {
-                m_FeatureIds[idx] = cluster;
-                clustered[idx] = true;
+                m_FeatureIds[neighbor_idx] = current_cluster_id;
               }
             }
           }
         }
       }
-      else
-      {
-        visited[index] = true;
-      }
+
+      ++current_cluster_id;
     }
-    m_Filter->updateProgress("Clustering Complete!");
+
+    m_Filter->updateProgress(fmt::format("Clustering complete! Found {} clusters.", current_cluster_id - 1));
   }
 
 private:
@@ -297,36 +315,18 @@ private:
   std::mt19937_64::result_type m_Seed;
 };
 
-struct DBSCANFunctor
+struct OptimizedDBSCANFunctor
 {
   template <typename T>
-  void operator()(bool cache, bool useRandom, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, Int32Array& fIds,
-                  float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  void operator()(bool cache, bool use_random, DBSCAN* filter, const IDataArray& input_array, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask_compare, Int32Array& feature_ids,
+                  float32 epsilon, int32 min_points, ClusterUtilities::DistanceMetric distance_metric, std::mt19937_64::result_type seed)
   {
-    if(cache)
-    {
-      if(useRandom)
-      {
-        DBSCANTemplate<T, true, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
-      }
-      else
-      {
-        DBSCANTemplate<T, true, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
-      }
-    }
-    else
-    {
-      if(useRandom)
-      {
-        DBSCANTemplate<T, false, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
-      }
-      else
-      {
-        DBSCANTemplate<T, false, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
-      }
-    }
+    // Note: cache and use_random parameters are ignored in optimized version
+    // The new implementation uses spatial indexing which is more efficient than caching
+    OptimizedDBSCANTemplate<T>(filter, input_array.template getIDataStoreRefAs<AbstractDataStore<T>>(), mask_compare, feature_ids.getDataStoreRef(), epsilon, min_points, distance_metric, seed)();
   }
 };
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -356,28 +356,28 @@ const std::atomic_bool& DBSCAN::getCancel()
 // -----------------------------------------------------------------------------
 Result<> DBSCAN::operator()()
 {
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& clustering_array = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto& feature_ids = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> mask_compare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    mask_compare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
-    return MakeErrorResult(-54060, message);
+    std::string error_message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    return MakeErrorResult(-54060, error_message);
   }
 
-  ExecuteNeighborFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, m_InputValues->UseRandom, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon,
-                          m_InputValues->MinPoints, m_InputValues->DistanceMetric, m_InputValues->Seed);
+  // Execute optimized DBSCAN algorithm
+  ExecuteNeighborFunction(OptimizedDBSCANFunctor{}, clustering_array.getDataType(), m_InputValues->AllowCaching, m_InputValues->UseRandom, this, clustering_array, mask_compare, feature_ids,
+                          m_InputValues->Epsilon, m_InputValues->MinPoints, m_InputValues->DistanceMetric, m_InputValues->Seed);
 
-  updateProgress("Resizing Clustering Attribute Matrix...");
-  auto& featureIdsDataStore = featureIds.getDataStoreRef();
-  int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
-  m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(maxCluster + 1)});
+  updateProgress("Resizing clustering attribute matrix...");
+
+  auto& feature_ids_store = feature_ids.getDataStoreRef();
+  int32 max_cluster_id = *std::max_element(feature_ids_store.begin(), feature_ids_store.end());
+  m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(max_cluster_id + 1)});
 
   return {};
 }
