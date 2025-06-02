@@ -216,6 +216,7 @@ auto BindNeighborList(py::handle scope, const char* name)
   using NeighborListType = NeighborList<T>;
 
   auto neighborList = py::class_<NeighborListType, INeighborList, std::shared_ptr<NeighborListType>>(scope, name);
+  neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   neighborList.def("get_list", &NeighborListType::getList, "grain_id"_a);
   neighborList.def("set_list", py::overload_cast<int32, const typename NeighborListType::VectorType&>(&NeighborListType::setList), "grain_id"_a, "neighbor_list"_a);
   neighborList.def(
