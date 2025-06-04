@@ -272,7 +272,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // this constitutes a rotation matrix to a local coordinate system
     double rot[3][3] = {{up[0], up[1], up[2]}, {vp[0], vp[1], vp[2]}, {np[0], np[1], np[2]}};
     double out[3] = {0.0, 0.0, 0.0};
-    // Transform all centroids and normals to new coordinate system
+    // Transform all centroids and normals to a new coordinate system
     for(size_t m = 0; m < patchCentroids->getNumberOfTuples(); ++m)
     {
       ::memcpy(out, &patchCentroids->data()[m * 3], 3 * sizeof(double));
@@ -287,7 +287,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       MatrixMath::Multiply3x3with3x1(rot, &patchNormals->data()[m * 3], out);
       ::memcpy(&patchNormals->data()[m * 3], out, 3 * sizeof(double));
 
-      // We rotate the normals now, but we don't use them yet. If we start using part 3 of Goldfeathers paper then we
+      // We rotate the normals now, but we don't use them yet. If we start using part 3 of Goldfeather's paper, then we
       // will need the normals.
     }
 

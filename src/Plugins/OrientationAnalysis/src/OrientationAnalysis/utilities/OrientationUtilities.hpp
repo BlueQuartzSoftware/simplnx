@@ -12,6 +12,9 @@ namespace OrientationUtilities
 using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix3dR = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
 
+using Matrix1dR = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
+using Matrix1FR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
+
 template <typename T>
 Eigen::Matrix<T, 3, 3, Eigen::RowMajor> OrientationMatrixToGMatrix(const Orientation<T>& oMatrix)
 {
@@ -69,6 +72,38 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> EbsdLibMatrixToEigenMatrix(const EbsdLib
 }
 
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
+
+template <typename T>
+Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrix(T g[3][3])
+{
+  Eigen::Matrix<T, 3, 3, Eigen::RowMajor> eigenMatrix;
+  eigenMatrix(0, 0) = g[0][0];
+  eigenMatrix(0, 1) = g[0][1];
+  eigenMatrix(0, 2) = g[0][2];
+  eigenMatrix(1, 0) = g[1][0];
+  eigenMatrix(1, 1) = g[1][1];
+  eigenMatrix(1, 2) = g[1][2];
+  eigenMatrix(2, 0) = g[2][0];
+  eigenMatrix(2, 1) = g[2][1];
+  eigenMatrix(2, 2) = g[2][2];
+  return eigenMatrix;
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(T oMatrix[3][3])
+{
+  Eigen::Matrix<T, 3, 3, Eigen::RowMajor> g1t;
+  g1t(0, 0) = oMatrix[0];
+  g1t(0, 1) = oMatrix[3];
+  g1t(0, 2) = oMatrix[6];
+  g1t(1, 0) = oMatrix[1];
+  g1t(1, 1) = oMatrix[4];
+  g1t(1, 2) = oMatrix[7];
+  g1t(2, 0) = oMatrix[2];
+  g1t(2, 1) = oMatrix[5];
+  g1t(2, 2) = oMatrix[8];
+  return g1t;
+}
 
 } // namespace OrientationUtilities
 } // namespace nx::core

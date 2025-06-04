@@ -1,5 +1,7 @@
 #include "RotateEulerRefFrame.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
@@ -32,12 +34,11 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    float rotMat[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0F)).toGMatrix(rotMat);
+    auto om = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0F));
+
+    OrientationUtilities::Matrix3fR rotMat = OrientationUtilities::OrientationMatrixToGMatrix(om);
 
     float ea1 = 0, ea2 = 0, ea3 = 0;
-    float g[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float gNew[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     for(size_t i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -47,12 +48,11 @@ public:
       ea1 = m_CellEulerAngles[3 * i + 0];
       ea2 = m_CellEulerAngles[3 * i + 1];
       ea3 = m_CellEulerAngles[3 * i + 2];
-      OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(ea1, ea2, ea3)).toGMatrix(g);
+      om = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(ea1, ea2, ea3));
+      OrientationUtilities::Matrix3fR g = OrientationUtilities::OrientationMatrixToGMatrix(om);
+      OrientationUtilities::Matrix3fR gNew = (g * rotMat).colwise().normalized();
 
-      nx::core::MatrixMath::Multiply3x3with3x3(g, rotMat, gNew);
-      nx::core::MatrixMath::Normalize3x3(gNew);
-
-      OrientationF eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(gNew));
+      auto eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(gNew.data(), 9));
       m_CellEulerAngles[3 * i] = eu[0];
       m_CellEulerAngles[3 * i + 1] = eu[1];
       m_CellEulerAngles[3 * i + 2] = eu[2];

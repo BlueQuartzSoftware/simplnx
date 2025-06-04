@@ -48,7 +48,13 @@ namespace nx::core
  */
 namespace MatrixMath
 {
-
+template <typename T>
+void Print3x3(std::ostream& o, T outMat[3][3])
+{
+  o << outMat[0][0] << " " << outMat[0][1] << " " << outMat[0][2] << "\n";
+  o << outMat[1][0] << " " << outMat[1][1] << " " << outMat[1][2] << "\n";
+  o << outMat[2][0] << " " << outMat[2][1] << " " << outMat[2][2] << "\n";
+}
 /**
  * @brief Performs the Matrix Multiplication of g1 and g2 and puts the result into outMat. (Single Precision version)
  * @param g1
@@ -350,7 +356,9 @@ void Identity3x3(T g[3][3])
 }
 
 /**
- * @brief Performs an "in place" normalization of the 3x1 vector.
+ * @brief Performs an "in place" normalization of the 3x3 vector down the columns.
+ *
+ * This is the same as Eigen::colwise().normalized() function.
  * @param g
  */
 template <typename T>

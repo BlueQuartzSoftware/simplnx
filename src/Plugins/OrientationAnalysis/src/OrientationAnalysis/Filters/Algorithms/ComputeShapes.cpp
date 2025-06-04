@@ -568,24 +568,24 @@ void ComputeShapes::findAxisEulers()
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
     // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
-    //(Note that the 3 direction is actually the long axis and the 1 direction is actually the short axis)
+    // (Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
     // clang-format off
     size_t idx = featureId*9;
-    float g[3][3] = {{m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6]},
-                     {m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7]},
-                     {m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8]}};
+    OrientationF g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],
+                     m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7],
+                     m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8]};
     // clang-format on
 
     // check for right-handedness
-    OrientationTransformation::ResultType result = OrientationTransformation::om_check(OrientationF(g));
+    OrientationTransformation::ResultType result = OrientationTransformation::om_check(g);
     if(result.result == 0)
     {
-      g[2][0] *= -1.0f;
-      g[2][1] *= -1.0f;
-      g[2][2] *= -1.0f;
+      g[6] *= -1.0f;
+      g[7] *= -1.0f;
+      g[8] *= -1.0f;
     }
 
-    OrientationF eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(g));
+    OrientationF eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(g);
 
     axisEulerAngles[3 * featureId] = eu[0];
     axisEulerAngles[3 * featureId + 1] = eu[1];

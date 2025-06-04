@@ -1,7 +1,8 @@
 #include "ComputeSchmids.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -55,30 +56,21 @@ Result<> ComputeSchmids::operator()()
 
   int32_t slipSystem = 0;
 
-  double g[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  double sampleLoading[3] = {0.0f, 0.0f, 0.0f};
-  double crystalLoading[3] = {0.0f, 0.0f, 0.0f};
+  Eigen::Vector3d sampleLoading = {m_InputValues->LoadingDirection[0], m_InputValues->LoadingDirection[1], m_InputValues->LoadingDirection[2]};
+  sampleLoading.normalize();
+
   double angleComps[2] = {0.0f, 0.0f};
   double schmid = 0.0f;
 
-  sampleLoading[0] = m_InputValues->LoadingDirection[0];
-  sampleLoading[1] = m_InputValues->LoadingDirection[1];
-  sampleLoading[2] = m_InputValues->LoadingDirection[2];
-  MatrixMath::Normalize3x1(sampleLoading);
-  double plane[3] = {0.0f, 0.0f};
-  double direction[3] = {0.0f, 0.0f};
-
+  Eigen::Vector3d plane;
+  Eigen::Vector3d direction;
   if(m_InputValues->OverrideSystem)
   {
-    plane[0] = m_InputValues->SlipPlane[0];
-    plane[1] = m_InputValues->SlipPlane[1];
-    plane[2] = m_InputValues->SlipPlane[2];
-    MatrixMath::Normalize3x1(plane);
+    plane = {m_InputValues->SlipPlane[0], m_InputValues->SlipPlane[1], m_InputValues->SlipPlane[2]};
+    plane.normalize();
 
-    direction[0] = m_InputValues->SlipDirection[0];
-    direction[1] = m_InputValues->SlipDirection[1];
-    direction[2] = m_InputValues->SlipDirection[2];
-    MatrixMath::Normalize3x1(direction);
+    direction = {m_InputValues->SlipDirection[0], m_InputValues->SlipDirection[1], m_InputValues->SlipDirection[2]};
+    direction.normalize();
   }
 
   for(size_t i = 1; i < totalFeatures; i++)
@@ -88,17 +80,17 @@ Result<> ComputeSchmids::operator()()
     {
       continue;
     }
-    OrientationTransformation::qu2om<QuatF, OrientationD>({avgQuatPtr[i * 4 + 0], avgQuatPtr[i * 4 + 1], avgQuatPtr[i * 4 + 2], avgQuatPtr[i * 4 + 3]}).toGMatrix(g);
-
-    MatrixMath::Multiply3x3with3x1(g, sampleLoading, crystalLoading);
+    auto om = OrientationTransformation::qu2om<QuatF, OrientationD>({avgQuatPtr[i * 4 + 0], avgQuatPtr[i * 4 + 1], avgQuatPtr[i * 4 + 2], avgQuatPtr[i * 4 + 3]});
+    auto g = OrientationUtilities::OrientationMatrixToGMatrix(om);
+    Eigen::Vector3d crystalLoading = g * sampleLoading;
 
     if(!m_InputValues->OverrideSystem)
     {
-      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading, schmid, angleComps, slipSystem);
+      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading.data(), schmid, angleComps, slipSystem);
     }
     else
     {
-      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading, plane, direction, schmid, angleComps, slipSystem);
+      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading.data(), plane.data(), direction.data(), schmid, angleComps, slipSystem);
     }
 
     schmidArray[i] = static_cast<float>(schmid);
