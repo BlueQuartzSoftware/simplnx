@@ -243,6 +243,7 @@ Result<> ComputeCoordinateThreshold::operator()()
 
       return 1;
     };
+    break;
   }
   case BoundsType::Sphere: {
     VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
