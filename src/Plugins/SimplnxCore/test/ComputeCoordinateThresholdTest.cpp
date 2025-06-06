@@ -85,19 +85,53 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
   imageGeom->setDimensions(dimsIn);
   imageGeom->setOrigin({0, 0, 0});
   imageGeom->setSpacing({1, 1, 1});
-  std::vector<size_t> dims(3, 0);
-  dims[0] = 1;
-  dims[1] = 5;
-  dims[2] = 5;
+
+#if 0
+      0, 0, 0, 0, 0,
+      0, 1, 1, 1, 0,
+      0, 1, 1, 1, 0,
+      0, 1, 1, 1, 0,
+      0, 0, 0, 0, 0;
+#endif
 
   VectorFloat32Parameter::ValueType minCoord = {1.0f, 1.0f, 0.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {4.0f, 4.0f, 0.0f};
+  VectorFloat32Parameter::ValueType maxCoord = {4.0f, 4.0f, 1.0f};
 
   SECTION("Baseline")
   {
     RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+
+    REQUIRE(mask[0] == 0);
+    REQUIRE(mask[1] == 0);
+    REQUIRE(mask[2] == 0);
+    REQUIRE(mask[3] == 0);
+    REQUIRE(mask[4] == 0);
+
+    REQUIRE(mask[5] == 0);
+    REQUIRE(mask[6] == 1);
+    REQUIRE(mask[7] == 1);
+    REQUIRE(mask[8] == 1);
+    REQUIRE(mask[9] == 0);
+
+    REQUIRE(mask[10] == 0);
+    REQUIRE(mask[11] == 1);
+    REQUIRE(mask[12] == 1);
+    REQUIRE(mask[13] == 1);
+    REQUIRE(mask[14] == 0);
+
+    REQUIRE(mask[15] == 0);
+    REQUIRE(mask[16] == 1);
+    REQUIRE(mask[17] == 1);
+    REQUIRE(mask[18] == 1);
+    REQUIRE(mask[19] == 0);
+
+    REQUIRE(mask[20] == 0);
+    REQUIRE(mask[21] == 0);
+    REQUIRE(mask[22] == 0);
+    REQUIRE(mask[23] == 0);
+    REQUIRE(mask[24] == 0);
   }
 
   SECTION("Inverted")
@@ -105,6 +139,36 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
     RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+
+    REQUIRE(mask[0] == 1);
+    REQUIRE(mask[1] == 1);
+    REQUIRE(mask[2] == 1);
+    REQUIRE(mask[3] == 1);
+    REQUIRE(mask[4] == 1);
+
+    REQUIRE(mask[5] == 1);
+    REQUIRE(mask[6] == 0);
+    REQUIRE(mask[7] == 0);
+    REQUIRE(mask[8] == 0);
+    REQUIRE(mask[9] == 1);
+
+    REQUIRE(mask[10] == 1);
+    REQUIRE(mask[11] == 0);
+    REQUIRE(mask[12] == 0);
+    REQUIRE(mask[13] == 0);
+    REQUIRE(mask[14] == 1);
+
+    REQUIRE(mask[15] == 1);
+    REQUIRE(mask[16] == 0);
+    REQUIRE(mask[17] == 0);
+    REQUIRE(mask[18] == 0);
+    REQUIRE(mask[19] == 1);
+
+    REQUIRE(mask[20] == 1);
+    REQUIRE(mask[21] == 1);
+    REQUIRE(mask[22] == 1);
+    REQUIRE(mask[23] == 1);
+    REQUIRE(mask[24] == 1);
   }
 }
 
@@ -117,18 +181,52 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
   imageGeom->setDimensions(dimsIn);
   imageGeom->setOrigin({0, 0, 0});
   imageGeom->setSpacing({1, 1, 1});
-  std::vector<size_t> dims(3, 0);
-  dims[0] = 1;
-  dims[1] = 5;
-  dims[2] = 5;
 
-  VectorFloat32Parameter::ValueType sphereInfo = {0.0f, 0.0f, 0.0f, 0.0f};
+#if 0
+      0, 0, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 1, 1, 1, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, 0, 0;
+#endif
+
+  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 0.5f, 1.0f};
 
   SECTION("Baseline")
   {
     SphereExecuteFilter(dataStructure, false, sphereInfo);
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+
+    REQUIRE(mask[0] == 0);
+    REQUIRE(mask[1] == 0);
+    REQUIRE(mask[2] == 0);
+    REQUIRE(mask[3] == 0);
+    REQUIRE(mask[4] == 0);
+
+    REQUIRE(mask[5] == 0);
+    REQUIRE(mask[6] == 0);
+    REQUIRE(mask[7] == 1);
+    REQUIRE(mask[8] == 0);
+    REQUIRE(mask[9] == 0);
+
+    REQUIRE(mask[10] == 0);
+    REQUIRE(mask[11] == 1);
+    REQUIRE(mask[12] == 1);
+    REQUIRE(mask[13] == 1);
+    REQUIRE(mask[14] == 0);
+
+    REQUIRE(mask[15] == 0);
+    REQUIRE(mask[16] == 0);
+    REQUIRE(mask[17] == 1);
+    REQUIRE(mask[18] == 0);
+    REQUIRE(mask[19] == 0);
+
+    REQUIRE(mask[20] == 0);
+    REQUIRE(mask[21] == 0);
+    REQUIRE(mask[22] == 0);
+    REQUIRE(mask[23] == 0);
+    REQUIRE(mask[24] == 0);
   }
 
   SECTION("Inverted")
@@ -136,6 +234,36 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
     SphereExecuteFilter(dataStructure, true, sphereInfo);
 
     const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+
+    REQUIRE(mask[0] == 1);
+    REQUIRE(mask[1] == 1);
+    REQUIRE(mask[2] == 1);
+    REQUIRE(mask[3] == 1);
+    REQUIRE(mask[4] == 1);
+
+    REQUIRE(mask[5] == 1);
+    REQUIRE(mask[6] == 1);
+    REQUIRE(mask[7] == 0);
+    REQUIRE(mask[8] == 1);
+    REQUIRE(mask[9] == 1);
+
+    REQUIRE(mask[10] == 1);
+    REQUIRE(mask[11] == 0);
+    REQUIRE(mask[12] == 0);
+    REQUIRE(mask[13] == 0);
+    REQUIRE(mask[14] == 1);
+
+    REQUIRE(mask[15] == 1);
+    REQUIRE(mask[16] == 1);
+    REQUIRE(mask[17] == 0);
+    REQUIRE(mask[18] == 1);
+    REQUIRE(mask[19] == 1);
+
+    REQUIRE(mask[20] == 1);
+    REQUIRE(mask[21] == 1);
+    REQUIRE(mask[22] == 1);
+    REQUIRE(mask[23] == 1);
+    REQUIRE(mask[24] == 1);
   }
 }
 
@@ -207,7 +335,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
     vertices[i * 3 + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 1.5f};
+  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 2.6f};
 
   SECTION("Baseline")
   {
@@ -424,7 +552,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {1.5f, 1.5f, 1.5f, 2.0f};
+  VectorFloat32Parameter::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, 1.75f};
 
   SECTION("Baseline")
   {
@@ -513,7 +641,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {5.0f, 5.0f, 5.0f, 2.0f};
+  VectorFloat32Parameter::ValueType sphereInfo = {5.5f, 5.5f, 5.5f, 2.6f};
 
   SECTION("Baseline")
   {

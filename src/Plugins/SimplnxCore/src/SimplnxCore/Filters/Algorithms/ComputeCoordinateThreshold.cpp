@@ -248,20 +248,14 @@ Result<> ComputeCoordinateThreshold::operator()()
   case BoundsType::Sphere: {
     VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
     f_IsInBounds = [sphereInfo](float32 x, float32 y, float32 z) -> uint8 {
-      float32 xDiff = std::abs(sphereInfo[0] - std::abs(x));
-      if(xDiff > std::abs(sphereInfo[3]))
-      {
-        return 0;
-      }
+      float32 xDiff = x - sphereInfo[0];
+      float32 yDiff = y - sphereInfo[1];
+      float32 zDiff = z - sphereInfo[2];
 
-      float32 yDiff = std::abs(sphereInfo[1] - std::abs(x));
-      if(yDiff > std::abs(sphereInfo[3]))
-      {
-        return 0;
-      }
+      // Do not switch to pow() inlined is faster for square case for floating point num
+      float32 tDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
 
-      float32 zDiff = std::abs(sphereInfo[2] - std::abs(x));
-      if(zDiff > std::abs(sphereInfo[3]))
+      if(tDiff > (std::abs(sphereInfo[3]) * std::abs(sphereInfo[3])))
       {
         return 0;
       }
