@@ -22,6 +22,7 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
+  this->m_NeighborScheme = m_InputValues->NeighborScheme;
   auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);

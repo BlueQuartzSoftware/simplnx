@@ -18,6 +18,11 @@ The user has the option to *Use Mask Array*, which allows the user to set a bool
 
 After all the **Features** have been identified, a **Feature Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
 
+## Note on Neighbor Scheme
+
+Historically DREAM.3D version 6.x has used *only* the 6 face neighbors of a voxel. This release introduces the option
+of using all 26 neighboring voxels that are connected by a face, edge or vertex. The default for the filter
+is to still use the 6 face neighbors in order to stay consistent with the output from DREAM.3D version 6.x.
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

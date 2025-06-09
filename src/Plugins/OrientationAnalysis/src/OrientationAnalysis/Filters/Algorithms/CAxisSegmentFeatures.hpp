@@ -16,6 +16,7 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
   float32 MisorientationTolerance;
   bool UseMask;
   bool RandomizeFeatureIds;
+  SegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
@@ -43,8 +44,6 @@ public:
   CAxisSegmentFeatures& operator=(CAxisSegmentFeatures&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 protected:
   int64 getSeed(int32 gnum, int64 nextSeed) const override;

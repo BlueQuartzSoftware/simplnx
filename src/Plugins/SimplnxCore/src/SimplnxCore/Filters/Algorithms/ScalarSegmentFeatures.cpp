@@ -130,6 +130,7 @@ ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ScalarSegmentFeatures::operator()()
 {
+  this->m_NeighborScheme = m_InputValues->NeighborScheme;
   if(m_InputValues->UseMask)
   {
     try

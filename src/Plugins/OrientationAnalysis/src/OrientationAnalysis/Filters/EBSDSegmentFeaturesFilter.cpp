@@ -65,6 +65,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)",
                                                    "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
@@ -106,7 +107,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType EBSDSegmentFeaturesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -205,8 +206,8 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
+  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
-  // Let the Algorithm instance do the work
   return EBSDSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

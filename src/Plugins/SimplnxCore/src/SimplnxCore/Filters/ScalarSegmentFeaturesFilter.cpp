@@ -66,6 +66,8 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<NumberParameter<int>>(k_ScalarToleranceKey, "Scalar Tolerance", "Tolerance for segmenting input Cell Data", 1));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatures_Key, "Randomize Feature IDs", "Specifies if feature IDs should be randomized during calculations", false));
 
+  params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
+
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the DataArray Mask", DataPath(),
@@ -93,7 +95,7 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ScalarSegmentFeaturesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
@@ -198,6 +200,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
+  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

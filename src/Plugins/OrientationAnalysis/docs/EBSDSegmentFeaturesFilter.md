@@ -20,6 +20,12 @@ After all the **Features** have been identified, a **Feature Attribute Matrix** 
 
 If the data is specified as **Periodic**, the segmentation will check if features wrap around geometry bounds in a tileable fashion. If any such features are detected, the filter will throw a warning that centroid data may be incorrect.
 
+## Note on Neighbor Scheme
+
+Historically DREAM.3D version 6.x has used *only* the 6 face neighbors of a voxel. This release introduces the option
+of using all 26 neighboring voxels that are connected by a face, edge or vertex. The default for the filter
+is to still use the 6 face neighbors in order to stay consistent with the output from DREAM.3D version 6.x.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
