@@ -93,8 +93,7 @@ protected:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   int32 m_FoundFeatures = 0;
-
-private:
+  bool m_UseFaceNeighbors = true;
 };
 
 } // namespace nx::core

@@ -2,7 +2,131 @@
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 
+#include <cstdint>
+#include <vector>
+
 using namespace nx::core;
+
+namespace
+{
+
+// dims: width=dims[0], height=dims[1], depth=dims[2]
+
+/**
+ * @brief This will find the 6 face neighbor's indices.
+ * @param currentPoint
+ * @param width
+ * @param height
+ * @param depth
+ * @return
+ */
+std::vector<int64_t> getFaceNeighbors(int64_t currentPoint, int64_t width, int64_t height, int64_t depth)
+{
+  std::vector<int64_t> neighbors;
+  neighbors.reserve(6);
+
+  // decode currentPoint -> (col, row, plane)
+  const int64_t col = currentPoint % width;
+  const int64_t tmp = currentPoint / width;
+  const int64_t row = tmp % height;
+  const int64_t plane = tmp / height;
+
+  // stride for one z-slice
+  const int64_t slice = width * height;
+
+  if(col > 0)
+  {
+    neighbors.push_back(currentPoint - 1);
+  }
+  if(col < width - 1)
+  {
+    neighbors.push_back(currentPoint + 1);
+  }
+  if(row > 0)
+  {
+    neighbors.push_back(currentPoint - width);
+  }
+  if(row < height - 1)
+  {
+    neighbors.push_back(currentPoint + width);
+  }
+  if(plane > 0)
+  {
+    neighbors.push_back(currentPoint - slice);
+  }
+  if(plane < depth - 1)
+  {
+    neighbors.push_back(currentPoint + slice);
+  }
+
+  return neighbors;
+}
+
+/**
+ * @brief This will find all indices that are connected via the 26 face, edge or vertex
+ * @param currentPoint
+ * @param width
+ * @param height
+ * @param depth
+ * @return
+ */
+std::vector<int64_t> getAllNeighbors(int64_t currentPoint, int64_t width, int64_t height, int64_t depth)
+{
+  std::vector<int64_t> neighbors;
+  neighbors.reserve(26);
+
+  // decode currentPoint -> (col, row, plane)
+  int64_t col = currentPoint % width;
+  int64_t tmp = currentPoint / width;
+  int64_t row = tmp % height;
+  int64_t plane = tmp / height;
+
+  // stride for one z-slice
+  int64_t slice = width * height;
+
+  // baseOffset == currentPoint
+  int64_t baseOffset = currentPoint;
+
+  for(int64_t dz = -1; dz <= 1; ++dz)
+  {
+    int64_t p = plane + dz;
+    if(p < 0 || p >= depth)
+    {
+      continue;
+    }
+    int64_t dzOff = dz * slice;
+
+    for(int64_t dy = -1; dy <= 1; ++dy)
+    {
+      int64_t r = row + dy;
+      if(r < 0 || r >= height)
+      {
+        continue;
+      }
+      int64_t dyOff = dy * width;
+
+      for(int64_t dx = -1; dx <= 1; ++dx)
+      {
+        // skip the center voxel itself
+        if(dx == 0 && dy == 0 && dz == 0)
+        {
+          continue;
+        }
+        int64_t c = col + dx;
+        if(c < 0 || c >= width)
+        {
+          continue;
+        }
+        int64_t neighbor = baseOffset + dzOff + dyOff + dx;
+        neighbors.push_back(neighbor);
+      }
+    }
+  }
+
+  return neighbors;
+}
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
@@ -28,24 +152,9 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   int64 seed = getSeed(gnum, nextSeed);
   usize size = 0;
 
-  // Initialize calculation modifiers
-  int64 neighbor = 0;
-  bool good = false;
-  int64 col = 0, row = 0, plane = 0;
-
   // Initialize containers
   usize initialVoxelsListSize = 100000;
   std::vector<int64_t> voxelsList(initialVoxelsListSize, -1);
-
-  int64 neighPoints[6] = {0, 0, 0, 0, 0, 0};
-  { // Initialize neighPoints in a readable fashion
-    neighPoints[0] = -(dims[0] * dims[1]);
-    neighPoints[1] = -dims[0];
-    neighPoints[2] = -1;
-    neighPoints[3] = 1;
-    neighPoints[4] = dims[0];
-    neighPoints[5] = (dims[0] * dims[1]);
-  }
 
   auto start = std::chrono::steady_clock::now();
 
@@ -63,55 +172,33 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     {
       int64 currentPoint = voxelsList[size - 1];
       size -= 1;
-      col = currentPoint % dims[0];
-      row = (currentPoint / dims[0]) % dims[1];
-      plane = currentPoint / (dims[0] * dims[1]);
-      for(int32 i = 0; i < 6; i++)
+      std::vector<int64_t> neighPoints;
+      if(m_UseFaceNeighbors)
       {
-        good = true;
-        neighbor = currentPoint + neighPoints[i];
-        if(i == 0 && plane == 0)
+        neighPoints = getFaceNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+      }
+      else
+      {
+        neighPoints = getAllNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+      }
+
+      for(const auto& neighbor : neighPoints)
+      {
+        if(determineGrouping(currentPoint, neighbor, gnum))
         {
-          good = false;
-        }
-        if(i == 5 && plane == (dims[2] - 1))
-        {
-          good = false;
-        }
-        if(i == 1 && row == 0)
-        {
-          good = false;
-        }
-        if(i == 4 && row == (dims[1] - 1))
-        {
-          good = false;
-        }
-        if(i == 2 && col == 0)
-        {
-          good = false;
-        }
-        if(i == 3 && col == (dims[0] - 1))
-        {
-          good = false;
-        }
-        if(good)
-        {
-          if(determineGrouping(currentPoint, neighbor, gnum))
+          voxelsList[size] = neighbor;
+          size++;
+          if(neighbor == nextSeed)
           {
-            voxelsList[size] = neighbor;
-            size++;
-            if(neighbor == nextSeed)
+            nextSeed = neighbor + 1;
+          }
+          if(size >= voxelsList.size())
+          {
+            size = voxelsList.size();
+            voxelsList.resize(size + initialVoxelsListSize);
+            for(std::vector<int64_t>::size_type j = size; j < voxelsList.size(); ++j)
             {
-              nextSeed = neighbor + 1;
-            }
-            if(size >= voxelsList.size())
-            {
-              size = voxelsList.size();
-              voxelsList.resize(size + initialVoxelsListSize);
-              for(std::vector<int64_t>::size_type j = size; j < voxelsList.size(); ++j)
-              {
-                voxelsList[j] = -1;
-              }
+              voxelsList[j] = -1;
             }
           }
         }
