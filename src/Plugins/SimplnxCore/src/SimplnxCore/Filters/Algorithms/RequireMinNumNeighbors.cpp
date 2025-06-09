@@ -8,6 +8,39 @@
 
 using namespace nx::core;
 
+namespace
+{
+
+struct UpdateDataFunctor
+{
+  template <typename T>
+  Result<> operator()(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
+                      const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
+  {
+    auto voxelArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
+    auto arraySize = voxelArray.getSize();
+    for(const auto& featureIdIndex : badFeatureIdIndexes)
+    {
+      int32 featureName = featureIds[featureIdIndex];
+      int32 neighbor = neighbors[featureIdIndex];
+      if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0))
+      {
+        std::string message =
+            fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, dataArrayPath.toString(), arraySize);
+        mesgHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+        return MakeErrorResult(-55568, message);
+      }
+      if(int32 fId = featureIds[neighbor]; featureName < 0 && neighbor >= 0 && fId >= 0)
+      {
+        voxelArray.copyTuple(neighbor, featureIdIndex);
+      }
+    }
+    return {};
+  }
+};
+
+} // namespace
+
 // -----------------------------------------------------------------------------
 RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                RequireMinNumNeighborsInputValues* inputValues)
@@ -20,18 +53,6 @@ RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, con
 
 // -----------------------------------------------------------------------------
 RequireMinNumNeighbors::~RequireMinNumNeighbors() noexcept = default;
-
-// -----------------------------------------------------------------------------
-void RequireMinNumNeighbors::updateProgress(const std::string& message)
-{
-  m_MessageHandler(IFilter::Message::Type::Info, message);
-}
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& RequireMinNumNeighbors::getCancel()
-{
-  return m_ShouldCancel;
-}
 
 // -----------------------------------------------------------------------------
 Result<> RequireMinNumNeighbors::operator()()
@@ -47,6 +68,19 @@ Result<> RequireMinNumNeighbors::operator()()
   usize totalPoints = imageGeom.getNumberOfCells();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
+  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
+  DataPath cellDataAttrMatrixPath = m_InputValues->FeatureIdsPath.getParent();
+  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray, m_InputValues->IgnoredVoxelArrayPaths);
+  if(!result.has_value())
+  {
+    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
+  }
+  std::vector<DataPath> cellDataArrayPaths = result.value();
+
+  // Run the algorithm.
+  // This was checked up in the execute function (which is called before this function),
+  // so if we got this far then all should be good with the return. We might get
+  // an empty vector<> but that is OK.
   if(m_InputValues->ApplyToSinglePhase)
   {
     auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStoreRef();
@@ -109,6 +143,10 @@ Result<> RequireMinNumNeighbors::operator()()
   {
     return {};
   }
+  auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
+  m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
+
+  // Mark all features to be removed with a -1 value.
   for(usize i = 0; i < totalPoints; i++)
   {
     int32 featureId = featureIds[i];
@@ -118,20 +156,6 @@ Result<> RequireMinNumNeighbors::operator()()
     }
   }
 
-  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
-  DataPath cellDataAttrMatrixPath = m_InputValues->FeatureIdsPath.getParent();
-  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray, m_InputValues->IgnoredVoxelArrayPaths);
-  if(!result.has_value())
-  {
-    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
-  }
-
-  // Run the algorithm.
-  // This was checked up in the execute function (which is called before this function)
-  // so if we got this far then all should be good with the return. We might get
-  // an empty vector<> but that is OK.
-  std::vector<DataPath> cellDataArrayPaths = result.value();
-
   SizeVec3 udims = imageGeom.getDimensions();
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -139,6 +163,7 @@ Result<> RequireMinNumNeighbors::operator()()
       static_cast<int64>(udims[2]),
   };
 
+  // Create a temp array to hold the neighbor values
   std::vector<int32> neighbors(featureIds.getNumberOfTuples(), -1);
 
   int32 good = 1;
@@ -165,20 +190,8 @@ Result<> RequireMinNumNeighbors::operator()()
   std::vector<int32> n(numFeatures + 1, 0);
   std::vector<usize> badFeatureIdIndexes;
 
-  int32 progInt = 0;
-  auto start = std::chrono::steady_clock::now();
-
   while(counter != 0)
   {
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      std::string message = fmt::format("Finding voxels to be assigned Counter = {}", counter);
-      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-      start = now;
-    }
-
     if(m_ShouldCancel)
     {
       return {};
@@ -194,13 +207,14 @@ Result<> RequireMinNumNeighbors::operator()()
         for(int64 i = 0; i < dims[0]; i++)
         {
           voxelIndex = kStride + jStride + i;
-          featureName = featureIds[voxelIndex];
-          if(featureName < 0)
+          featureName = featureIds[voxelIndex]; // Get the featureId value
+          if(featureName < 0)                   // Was this voxel marked to be removed
           {
             badFeatureIdIndexes.push_back(voxelIndex);
             counter++;
             current = 0;
             most = 0;
+            // Loop over the 6 face neighbors of the voxel
             for(int32 l = 0; l < 6; l++)
             {
               good = 1;
@@ -244,6 +258,7 @@ Result<> RequireMinNumNeighbors::operator()()
                 }
               }
             }
+            // Loop over the 6 face neighbors of the voxel
             for(int32 l = 0; l < 6; l++)
             {
               good = 1;
@@ -292,8 +307,17 @@ Result<> RequireMinNumNeighbors::operator()()
       }
     }
 
-    // TODO This can be parallelized much like NeighborOrientationCorrelation
-    // Only iterate over the cell data with a featureId = -1;
+    std::string message = fmt::format("{} voxels to update..", counter);
+    m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
+
+    // TODO: This can be parallelized much like NeighborOrientationCorrelation, just do not update the featureIds array during that section. Wait until everything is complete
+    //  This next section finds the "FeatureIds" array and moves that array to the end of the list
+    auto featureIdsIter = std::find(cellDataArrayPaths.begin(), cellDataArrayPaths.end(), m_InputValues->FeatureIdsPath);
+    if(featureIdsIter != cellDataArrayPaths.end())
+    {
+      cellDataArrayPaths.erase(featureIdsIter);
+      cellDataArrayPaths.push_back(m_InputValues->FeatureIdsPath);
+    }
     for(const auto& cellArrayPath : cellDataArrayPaths)
     {
       if(m_ShouldCancel)
@@ -301,28 +325,9 @@ Result<> RequireMinNumNeighbors::operator()()
         return {};
       }
       auto* voxelArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-      size_t arraySize = voxelArray->size();
-      for(const auto& featureIdIndex : badFeatureIdIndexes)
-      {
-        featureName = featureIds[featureIdIndex];
-        neighbor = neighbors[featureIdIndex];
-        if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0))
-        {
-          std::string message =
-              fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, cellArrayPath.toString(), arraySize);
-          m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-          return MakeErrorResult(-55568, message);
-        }
-
-        if(featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
-        {
-          voxelArray->copyTuple(neighbor, featureIdIndex);
-        }
-      }
+      ExecuteDataFunction(UpdateDataFunctor{}, voxelArray->getDataType(), m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
     }
   }
-
-  DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
 
   int32 count = 0;
   for(const auto& value : activeObjects)
@@ -334,7 +339,7 @@ Result<> RequireMinNumNeighbors::operator()()
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
-
+  DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
   nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel);
 
   return {};
