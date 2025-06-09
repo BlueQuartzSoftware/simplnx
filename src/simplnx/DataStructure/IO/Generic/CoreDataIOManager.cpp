@@ -1,6 +1,7 @@
 #include "CoreDataIOManager.hpp"
 
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 
 namespace nx::core::Generic
 {
@@ -9,6 +10,7 @@ CoreDataIOManager::CoreDataIOManager()
 {
   addCoreFactories();
   addDataStoreFnc();
+  addListStoreFnc();
 }
 
 CoreDataIOManager::~CoreDataIOManager() noexcept = default;
@@ -66,5 +68,50 @@ void CoreDataIOManager::addDataStoreFnc()
     return dataStore;
   };
   addDataStoreCreationFnc(formatName(), dataStoreFnc);
+}
+
+void CoreDataIOManager::addListStoreFnc()
+{
+  ListStoreCreateFnc listStoreFnc = [](nx::core::DataType numericType, usize tupleCount) {
+    std::unique_ptr<IListStore> listStore = nullptr;
+    switch(numericType)
+    {
+    case DataType::int8:
+      listStore = std::make_unique<Int8ListStore>(tupleCount);
+      break;
+    case DataType::int16:
+      listStore = std::make_unique<Int16ListStore>(tupleCount);
+      break;
+    case DataType::int32:
+      listStore = std::make_unique<Int32ListStore>(tupleCount);
+      break;
+    case DataType::int64:
+      listStore = std::make_unique<Int64ListStore>(tupleCount);
+      break;
+    case DataType::uint8:
+      listStore = std::make_unique<UInt8ListStore>(tupleCount);
+      break;
+    case DataType::uint16:
+      listStore = std::make_unique<UInt16ListStore>(tupleCount);
+      break;
+    case DataType::uint32:
+      listStore = std::make_unique<UInt32ListStore>(tupleCount);
+      break;
+    case DataType::uint64:
+      listStore = std::make_unique<UInt64ListStore>(tupleCount);
+      break;
+    case DataType::float32:
+      listStore = std::make_unique<Float32ListStore>(tupleCount);
+      break;
+    case DataType::float64:
+      listStore = std::make_unique<Float64ListStore>(tupleCount);
+      break;
+    case DataType::boolean:
+      listStore = nullptr;
+      break;
+    }
+    return listStore;
+  };
+  addListStoreCreationFnc(formatName(), listStoreFnc);
 }
 } // namespace nx::core::Generic

@@ -2,6 +2,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -451,6 +452,21 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
   }
 
   return strings;
+}
+
+template <typename T>
+std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore() const
+{
+  using ShapeType = typename IDataStore::ShapeType;
+
+  auto dataset = open();
+  size_t numElements = getNumElements();
+
+  ShapeType tupleShape{numElements};
+  ShapeType componentShape{1};
+  auto dataStorePtr = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  dataStorePtr->readHdf5(*this);
+  return dataStorePtr;
 }
 
 template <typename T>
@@ -1401,6 +1417,21 @@ template SIMPLNX_EXPORT std::vector<double> DatasetIO::readAsVector<double>() co
 #ifdef _WIN32
 template SIMPLNX_EXPORT std::vector<bool> DatasetIO::readAsVector<bool>() const;
 #endif
+
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int8_t>> DatasetIO::readAsDataStore<int8_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int16_t>> DatasetIO::readAsDataStore<int16_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int32_t>> DatasetIO::readAsDataStore<int32_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int64_t>> DatasetIO::readAsDataStore<int64_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint8_t>> DatasetIO::readAsDataStore<uint8_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDataStore<uint16_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>() const;
+#ifdef __APPLE__
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>() const;
+#endif
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>() const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>() const;
 
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;

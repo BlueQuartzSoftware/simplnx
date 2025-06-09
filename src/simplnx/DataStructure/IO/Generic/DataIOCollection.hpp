@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/AbstractListStore.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include "simplnx/Common/Types.hpp"
@@ -58,6 +59,15 @@ public:
     DataType numericType = GetDataType<T>();
     std::shared_ptr<IDataStore> dataStore = createDataStore(type, numericType, tupleShape, componentShape);
     return std::dynamic_pointer_cast<AbstractDataStore<T>>(dataStore);
+  }
+
+  std::unique_ptr<IListStore> createListStore(const std::string& type, DataType numericType, usize tupleCount) const;
+  template <typename T>
+  std::shared_ptr<AbstractListStore<T>> createListStoreWithType(const std::string& dataFormat, usize tupleCount) const
+  {
+    DataType numericType = GetDataType<T>();
+    std::shared_ptr<IListStore> listStore = createListStore(dataFormat, numericType, tupleCount);
+    return std::dynamic_pointer_cast<AbstractListStore<T>>(listStore);
   }
 
   /**

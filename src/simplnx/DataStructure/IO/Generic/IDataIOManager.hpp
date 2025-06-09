@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IListStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataFactory.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -28,7 +29,9 @@ public:
   using factory_collection = std::map<factory_id_type, factory_ptr>;
   using DataStoreCreateFnc =
       std::function<std::unique_ptr<IDataStore>(DataType, const typename IDataStore::ShapeType&, const typename IDataStore::ShapeType&, const std::optional<IDataStore::ShapeType>&)>;
+  using ListStoreCreateFnc = std::function<std::unique_ptr<IListStore>(DataType, usize)>;
   using DataStoreCreationMap = std::map<std::string, DataStoreCreateFnc>;
+  using ListStoreCreationMap = std::map<std::string, ListStoreCreateFnc>;
 
   virtual ~IDataIOManager() noexcept;
 
@@ -75,14 +78,18 @@ public:
   bool hasDataStoreCreationFnc(const std::string& type) const;
 
   DataStoreCreateFnc dataStoreCreationFnc(const std::string& type) const;
+  bool hasListStoreCreationFnc(const std::string& type) const;
+  ListStoreCreateFnc listStoreCreationFnc(const std::string& type) const;
 
 protected:
   IDataIOManager();
 
   void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFnc creationFnc);
+  void addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc);
 
 private:
   factory_collection m_FactoryCollection;
   DataStoreCreationMap m_DataStoreCreationMap;
+  ListStoreCreationMap m_ListStoreCreationMap;
 };
 } // namespace nx::core

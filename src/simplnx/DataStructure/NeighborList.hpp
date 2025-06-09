@@ -47,12 +47,34 @@ public:
    * @brief
    * @param dataStructure
    * @param name
+   * @param numTuples
+   * @param parentId = {}
+   * @tparam T
+   * @return NeighborList<T>*
+   */
+  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
+   * @param dataStructure
+   * @param name
    * @param importId
    * @param data
    * @param parentId
    * @return NeighborList<T>*
    */
   static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& data, const std::optional<IdType>& parentId = {});
+
+  /**
+   * @brief
+   * @param dataStructure
+   * @param name
+   * @param importId
+   * @param storeData
+   * @param parentId
+   * @return NeighborList<T>*
+   */
+  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& storeData, const std::optional<IdType>& parentId = {});
 
   ~NeighborList() override = default;
 
@@ -364,6 +386,12 @@ public:
   std::shared_ptr<store_type> getStore() const;
 
   /**
+   * @brief Replaces the AbstractListStore used to store values.
+   * @param store
+   */
+  void setStore(const std::shared_ptr<store_type>& store);
+
+  /**
    * @brief Returns a vector of vectors containing the current values.
    */
   std::vector<VectorType> getVectors() const;
@@ -387,7 +415,17 @@ protected:
   /**
    * @brief NeighborList
    */
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore);
+
+  /**
+   * @brief NeighborList
+   */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
+
+  /**
+   * @brief NeighborList
+   */
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, IdType importId);
 
 private:
   std::shared_ptr<store_type> m_Store;

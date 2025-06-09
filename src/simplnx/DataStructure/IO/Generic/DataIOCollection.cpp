@@ -60,6 +60,20 @@ std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string&
   return coreManager.dataStoreCreationFnc(coreManager.formatName())(dataType, tupleShape, componentShape, {});
 }
 
+std::unique_ptr<IListStore> DataIOCollection::createListStore(const std::string& type, DataType dataType, usize tupleCount) const
+{
+  for(const auto& [ioType, ioManager] : m_ManagerMap)
+  {
+    if(ioManager->hasListStoreCreationFnc(type))
+    {
+      return ioManager->listStoreCreationFnc(type)(dataType, tupleCount);
+    }
+  }
+
+  nx::core::Generic::CoreDataIOManager coreManager;
+  return coreManager.listStoreCreationFnc(coreManager.formatName())(dataType, tupleCount);
+}
+
 void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const
 {
   if(!dataFormat.empty())

@@ -31,6 +31,7 @@ private:
   void addCoreFactories();
 
   void addDataStoreFnc();
+  void addListStoreFnc();
 
   factory_collection m_FactoryCollection;
 };

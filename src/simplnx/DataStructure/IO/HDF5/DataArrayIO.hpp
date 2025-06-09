@@ -47,6 +47,82 @@ public:
     err = (data == nullptr) ? -400 : 0;
   }
 
+  template <typename K>
+  static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
+  {
+    std::shared_ptr<AbstractDataStore<T>> dataStore = DataStoreIO::ReadDataStore<T>(datasetReader);
+    if(dataStore == nullptr)
+    {
+      return MakeErrorResult(-150202, fmt::format("Failed to import DataArray data at path '{}'.", dataPath.toString()));
+    }
+    dataArray->setDataStore(dataStore);
+    return {};
+  }
+
+  /**
+   * @brief Replaces the AbstractDataStore using data from the HDF5 dataset.
+   * @param dataStructure
+   * @param dataPath
+   * @param dataStructureReader
+   * @return Result<>
+   */
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override
+  {
+    if(!dataStructure.containsData(dataPath))
+    {
+      return MakeErrorResult(-150200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
+    }
+
+    auto* dataArray = dataStructure.getDataAs<data_type>(dataPath);
+    if(dataArray == nullptr)
+    {
+      return MakeErrorResult(-150201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
+    }
+
+    auto datasetReader = dataStructureGroup.openDataset(dataPath.toString());
+    std::string dataTypeStr;
+    auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    dataTypeStr = std::move(dataTypeStrResult.value());
+    const bool isBoolArray = (dataTypeStr.compare("DataArray<bool>") == 0);
+
+    auto typeResult = datasetReader.getDataType();
+    const auto type = std::move(typeResult.value());
+    switch(type)
+    {
+    case DataType::float32:
+      return importDataStore<float32>(dataArray, dataPath, datasetReader);
+    case DataType::float64:
+      return importDataStore<float64>(dataArray, dataPath, datasetReader);
+    case DataType::int8:
+      return importDataStore<int8>(dataArray, dataPath, datasetReader);
+    case DataType::int16:
+      return importDataStore<int16>(dataArray, dataPath, datasetReader);
+    case DataType::int32:
+      return importDataStore<int32>(dataArray, dataPath, datasetReader);
+    case DataType::int64:
+      return importDataStore<int64>(dataArray, dataPath, datasetReader);
+    case DataType::uint8: {
+      if(isBoolArray)
+      {
+        return importDataStore<bool>(dataArray, dataPath, datasetReader);
+      }
+      else
+      {
+        return importDataStore<uint8>(dataArray, dataPath, datasetReader);
+      }
+    }
+    break;
+    case DataType::uint16:
+      return importDataStore<uint16>(dataArray, dataPath, datasetReader);
+    case DataType::uint32:
+      return importDataStore<uint32>(dataArray, dataPath, datasetReader);
+    case DataType::uint64:
+      return importDataStore<uint64>(dataArray, dataPath, datasetReader);
+    default:
+      return MakeErrorResult(-150209, fmt::format("Undetermined DataArray type: '{}'", dataTypeStr));
+    }
+  }
+
   /**
    * @brief Attempts to read the DataArray from HDF5.
    * Returns a Result<> with any errors or warnings encountered during the process.

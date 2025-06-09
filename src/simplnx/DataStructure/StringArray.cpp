@@ -234,4 +234,9 @@ void StringArray::swapTuples(usize index0, usize index1)
   (*m_Strings)[index1] = value;
 }
 
+
+void StringArray::setStore(const std::shared_ptr<AbstractStringStore>& newStore)
+{
+  m_Strings = newStore;
+}
 } // namespace nx::core

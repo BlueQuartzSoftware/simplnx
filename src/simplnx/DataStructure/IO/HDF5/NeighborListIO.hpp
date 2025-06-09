@@ -4,6 +4,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/EmptyListStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
@@ -20,6 +21,7 @@ class NeighborListIO : public IDataIO
 {
 public:
   using data_type = NeighborList<T>;
+  using store_type = typename data_type::store_type;
   using shared_vector_type = typename data_type::SharedVectorType;
 
   NeighborListIO() = default;
@@ -32,10 +34,22 @@ public:
    * @param dataReader
    * @return Result<>
    */
-  static std::vector<shared_vector_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader)
+  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore = false)
   {
     try
     {
+      if(useEmptyDataStore)
+      {
+        auto tupleDimsResult = dataReader.readVectorAttribute<uint64>("TupleDimensions");
+        if(tupleDimsResult.invalid())
+        {
+          return nullptr;
+        }
+        std::vector<uint64> tupleDims = tupleDimsResult.value();
+        uint64 numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<uint64>(1), std::multiplies<>());
+        return std::make_shared<EmptyListStore<T>>(numTuples);
+      }
+
       std::string numNeighborsName;
       auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
       if(numNeighborsNameResult.invalid())
@@ -48,33 +62,39 @@ public:
       auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
       auto& numNeighborsStore = *numNeighborsPtr.get();
 
-      std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
-      if(flatDataStore.empty())
+      auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
+      if(flatDataStorePtr == nullptr)
       {
-        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {} called {}", dataReader.getFilePath().string(), dataReader.getName()));
+        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at '{}' called '{}'", dataReader.getFilePath().string(), dataReader.getName()));
       }
 
-      std::vector<shared_vector_type> dataVector;
+      const AbstractDataStore<T>& flatDataStore = *flatDataStorePtr.get();
+      if(flatDataStore.empty())
+      {
+        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at '{}' called '{}'", dataReader.getFilePath().string(), dataReader.getName()));
+      }
+
       usize offset = 0;
       const auto numTuples = numNeighborsStore.getNumberOfTuples();
+      auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numTuples);
+      AbstractListStore<T>& listStore = *listStorePtr.get();
       for(usize i = 0; i < numTuples; i++)
       {
         const auto numNeighbors = numNeighborsStore[i];
-        auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
-        std::vector<T>& vector = *sharedVector.get();
+        std::vector<T> vector(numNeighbors);
 
         size_t neighborListStart = offset;
         size_t neighborListEnd = offset + numNeighbors;
-        sharedVector->assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
+        vector.assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
         offset += numNeighbors;
-        dataVector.push_back(sharedVector);
+        listStore.setList(i, vector);
       }
 
-      return dataVector;
+      return listStorePtr;
     } catch(const std::exception& e)
     {
       std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << std::endl;
-      return {};
+      return nullptr;
     }
   }
 
@@ -93,13 +113,80 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
-    auto dataVector = ReadHdf5Data(parentGroup, datasetReader);
-    auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, dataVector, parentId);
+    auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore);
+    auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
     if(dataObject == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
       return MakeErrorResult(-505, ss);
     }
+    return {};
+  }
+
+  /**
+   * @brief Replaces the AbstractListStore using data from the HDF5 dataset.
+   * @param dataStructure
+   * @param dataPath
+   * @param dataStructureReader
+   * @return Result<>
+   */
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override
+  {
+    if(!dataStructure.containsData(dataPath))
+    {
+      return MakeErrorResult(-150200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
+    }
+
+    NeighborList<T>& neighborList = dataStructure.getDataRefAs<NeighborList<T>>(dataPath);
+
+    auto parentGroup = dataStructureGroup.openGroup(dataPath.getParent().toString());
+    if(parentGroup.isValid())
+    {
+      return MakeErrorResult(-150201, fmt::format("Failed to open HDF5 parent group for path '{}'", dataPath.toString()));
+    }
+
+    auto dataReader = parentGroup.openDataset(dataPath.getTargetName());
+
+    std::string numNeighborsName;
+    auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
+    if(numNeighborsNameResult.invalid())
+    {
+      return {};
+    }
+    numNeighborsName = std::move(numNeighborsNameResult.value());
+
+    auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
+    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
+    auto& numNeighborsStore = *numNeighborsPtr.get();
+
+    auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
+    if(flatDataStorePtr == nullptr)
+    {
+      return MakeErrorResult(-150201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
+    }
+    AbstractDataStore<T>& flatDataStore = *(flatDataStorePtr.get());
+    if(flatDataStore.empty())
+    {
+      throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at '{}' called '{}'", dataReader.getFilePath().string(), dataReader.getName()));
+    }
+
+    usize offset = 0;
+    const auto numTuples = numNeighborsStore.getNumberOfTuples();
+    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numTuples);
+    AbstractListStore<T>& listStore = *listStorePtr.get();
+    for(usize i = 0; i < numTuples; i++)
+    {
+      const auto numNeighbors = numNeighborsStore[i];
+      std::vector<T> vector(numNeighbors);
+
+      size_t neighborListStart = offset;
+      size_t neighborListEnd = offset + numNeighbors;
+      vector.assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
+      offset += numNeighbors;
+      listStore.setList(i, vector);
+    }
+
+    neighborList.setStore(listStorePtr);
     return {};
   }
 

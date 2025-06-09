@@ -37,6 +37,10 @@ public:
    */
   static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
+  static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+
+  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+
   /**
    * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupIO.
    * Returns any HDF5 error code that occur by reference. Otherwise, this value

@@ -118,6 +118,12 @@ SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const Data
  */
 SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
 
+SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+
+SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
+
+SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader);
+
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
  * This method imports both current and legacy DataStructures.

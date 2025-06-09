@@ -7,6 +7,8 @@
 
 namespace nx::core
 {
+class DataStructure;
+
 namespace HDF5
 {
 class DataStructureReader;
@@ -37,6 +39,8 @@ public:
    */
   virtual Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                             const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const = 0;
+
+  virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const;
 
   /**
    * @brief Attempts to write a DataObject to HDF5.
