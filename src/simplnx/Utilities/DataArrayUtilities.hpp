@@ -492,6 +492,135 @@ Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usiz
   return {};
 }
 
+/**
+ * @brief Copy a block of tuples from inputArray into destArray.
+ *
+ * @param srcStart  first tuple to copy in each dimension
+ * @param dstStart  first destination tuple in each dimension
+ * @param extent    length of block (tuple count) in each dimension
+ *
+ * Layout is assumed row-major (last index fastest).
+ */
+template <class K>
+Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>& srcStart, const std::vector<usize>& dstStart, const std::vector<usize>& extent)
+{
+  const auto& shape = inputArray.getTupleShape();
+  const usize rank = shape.size();
+
+  if(rank == 0)
+  {
+    return MakeErrorResult(-2030, "CopyDataND: Input array has no tuple dimensions (rank 0); unable to perform an N‑D copy.");
+  }
+  if(srcStart.size() != rank)
+  {
+    return MakeErrorResult(-2031, fmt::format("CopyDataND: srcStart length ({}) does not match input array rank ({}); provide one start index per dimension.", srcStart.size(), rank));
+  }
+  if(dstStart.size() != rank)
+  {
+    return MakeErrorResult(-2032, fmt::format("CopyDataND: dstStart length ({}) does not match input array rank ({}); provide one destination start index per dimension.", dstStart.size(), rank));
+  }
+  if(extent.size() != rank)
+  {
+    return MakeErrorResult(-2033, fmt::format("CopyDataND: extent length ({}) does not match input array rank ({}); provide one extent (tuple count) per dimension.", extent.size(), rank));
+  }
+
+  for(usize d = 0; d < rank; ++d)
+  {
+    if(srcStart[d] + extent[d] > shape[d])
+    {
+      return MakeErrorResult(-2034, fmt::format("CopyDataND: Source block exceeds bounds in dimension {} (srcStart={} + extent={} > srcSize={}).", d, srcStart[d], extent[d], shape[d]));
+    }
+    if(dstStart[d] + extent[d] > destArray.getTupleShape()[d])
+    {
+      return MakeErrorResult(
+          -2035, fmt::format("CopyDataND: Destination block exceeds bounds in dimension {} (dstStart={} + extent={} > dstSize={}).", d, dstStart[d], extent[d], destArray.getTupleShape()[d]));
+    }
+  }
+
+  const usize comps = inputArray.getNumberOfComponents();
+  if(comps != destArray.getNumberOfComponents())
+  {
+    return MakeErrorResult(-2036, fmt::format("CopyDataND: Component count mismatch between source ({}) and destination ({}); both arrays must have identical component counts.", comps,
+                                              destArray.getNumberOfComponents()));
+  }
+
+  // Compute strides (in tuples)
+  std::vector<usize> stride(rank, 1);
+  for(usize d = rank; d-- > 1;)
+  {
+    stride[d - 1] = stride[d] * shape[d];
+  }
+
+  // Helper method to flatten a multi-index
+  auto flatten = [&](const std::vector<usize>& idx) -> usize {
+    usize off = 0;
+    for(usize d = 0; d < rank; ++d)
+    {
+      off += idx[d] * stride[d];
+    }
+    return off;
+  };
+
+  std::vector<usize> currentIdx(rank, 0);
+  const usize tuplesToCopy = std::accumulate(extent.begin(), extent.end(), usize{1}, std::multiplies<>());
+
+  usize dstOffset = 0;
+  for(usize n = 0; n < tuplesToCopy; ++n)
+  {
+    // Convert the current multidimensional offset (currentIdx) into a 1‑D linear
+    // tuple index inside the source array.  Adding `flatten(srcStart)` accounts
+    // for the absolute starting position of the copy‑from block.
+    const usize srcLinearIdx = flatten(currentIdx) + flatten(srcStart);
+    // Do the same for the destination array, offset by `dstStart`.
+    const usize dstLinearIdx = flatten(dstStart) + dstOffset;
+
+    // Copy a single tuple worth of data.
+    // StringArray: direct element assignment
+    // NeighborList: copy entire neighbor list for this tuple
+    // DataArray: use CopyData
+    if constexpr(std::is_same_v<K, StringArray>)
+    {
+      destArray[dstLinearIdx] = inputArray[srcLinearIdx];
+    }
+    else if constexpr(std::is_base_of_v<INeighborList, K>)
+    {
+      destArray.setList(static_cast<int32>(dstLinearIdx), inputArray.getList(static_cast<int32>(srcLinearIdx)));
+    }
+    else // DataArray
+    {
+      auto copyResult = CopyData(inputArray, destArray, dstLinearIdx, srcLinearIdx, 1);
+      if(copyResult.invalid())
+      {
+        return copyResult;
+      }
+    }
+
+    // Advance `currentIdx` as if it were an odometer:
+    // increment the least‑significant dimension; if it overflows, reset it to 0
+    // and propagate the carry toward more‑significant dimensions.
+    for(usize d = rank; d > 0;)
+    {
+      --d;             // move to the next more‑significant dimension
+      ++currentIdx[d]; // attempt to increment this dimension
+
+      if(currentIdx[d] < extent[d])
+      {
+        // Increment succeeded without overflow
+        break;
+      }
+      else
+      {
+        // Overflow -> reset this dimension and continue carrying.
+        currentIdx[d] = 0;
+      }
+    }
+
+    dstOffset++;
+  }
+
+  return {};
+}
+
 enum class Direction
 {
   X,

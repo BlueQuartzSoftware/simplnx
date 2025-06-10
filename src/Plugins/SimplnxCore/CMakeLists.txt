@@ -132,6 +132,7 @@ set(FilterList
   SilhouetteFilter
   SliceTriangleGeometryFilter
   SplitDataArrayByComponentFilter
+  SplitDataArrayByTupleFilter
   SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
@@ -239,6 +240,7 @@ set(AlgorithmList
   Silhouette
   SliceTriangleGeometry
   SplitDataArrayByComponent
+  SplitDataArrayByTuple
   SurfaceNets
   TriangleCentroid
   TupleTransfer
