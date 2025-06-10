@@ -6,6 +6,9 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
 namespace nx::core
 {
@@ -18,6 +21,11 @@ struct SIMPLNXCORE_EXPORT ComputeFeatureBoundsInputValues
   DataPath MinArrayPath;
   DataPath MaxArrayPath;
   DataPath UnifiedArrayPath;
+
+  bool CreateEdgeGeometry;
+  DataGroupCreationParameter::ValueType EdgeGeometryDataPath;
+  DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
+  DataObjectNameParameter::ValueType FeatureIdsArrayName;
 };
 
 /**
