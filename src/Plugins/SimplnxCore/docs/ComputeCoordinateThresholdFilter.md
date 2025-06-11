@@ -6,13 +6,19 @@ Geometry
 
 ## Description
 
-This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibilty, while leveraging exisitng algorithms. This filter doesn't modify the input geometry in any way, if you wish to modify the data within the bounds consider using one of the cleanup filters on the marked values. See _Remove Flagged Vertices/Edges/Triangles_ for an example of a potential followup filter. There are several caveats to be aware of with this filter, detailed thouroghly in the following sections.
+This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibility, while leveraging existing algorithms. This filter doesn't modify the input geometry in any way if you wish to modify the data within the bounding box, consider using one of the cleanup filters on the marked values. See _Remove Flagged Vertices/Edges/Triangles_ for an example of a potential followup filter.
+
+This filter has a check at runtime (during the execute phase, before individual mask value determination begins) that will return a warning (not error) if the bounds don't intersect any cells in the geometry. The intention of this is to alert the user that the mask will contain the same value throughout to allow the user to adapt the pipeline/parameters accordingly. When this check causes early bailout and warning, the mask will still be filled with outside bounds flag at every value. `ImageGeom` is the exception to this as it has checks done at preflight to prevent this from occurring.
+
+There are several issues to be aware of with this filter, detailed thoroughly in the following sections.
 
 ### Input Geometry Types
 
-This filter is meant to be as widely applicable as possible, so **cells will only be included in bounding box if all points fall within the bounds**.
+This filter is meant to be as widely applicable as possible, so **cells will only be included in the bounding box if all points fall within the bounds**.
 
-Starting with the simple case, a `VertexGeom`, if a vertex/point (cell-level) falls inside the bounds it will be flagged as within the bounds in the mask. The same is true for `ImageGeom`. For `EdgeGeom`, the edges (cell-level) must have both points fall inside the bounds to be considered inside. For `TriangleGeom`, the faces (cell-level) must have all 3 points fall inside the bounds to be considered inside. For `QuadGeom`, the faces (cell-level) must have all 4 points fall inside the bounds to be considered inside.
+Starting with the simple case, a `VertexGeom`, if a vertex/point (cell-level) falls inside the bounding box, it will be flagged as within the bounds in the mask. For `EdgeGeom`, the edges (cell-level) must have both points fall inside the bounds to be considered inside. For `TriangleGeom`, the faces (cell-level) must have all 3 points fall inside the bounds to be considered inside. For `QuadGeom`, the faces (cell-level) must have all 4 points fall inside the bounds to be considered inside.
+
+`ImageGeom` is a nuanced case. For it to be considered inside, all eight of the vertices making up the cell/voxel must fall within the bounds. This differs from various other places in the code where the centroids of the voxel are used to make determinations.
 
 ### Sphere Bounding Type
 
@@ -22,7 +28,7 @@ The way a point is determined to be in the sphere uses the following calculation
 
 ### Inverting the Mask
 
-This is primarily a convience option provided to the user. If toggled on the values will be true (`1`) by default and values withing the bounds will be marked false (`0`). This doesn't modify anything other than switching what value is set for bounds that fall inside or outside respectively.
+This is primarily a convenience option provided to the user. If toggled on the values will be true (`1`) by default and values withing the bounds will be marked false (`0`). This doesn't modify anything other than switching what value is set for bounds that fall inside or outside respectively.
 
 % Auto generated parameter table will be inserted here
 
