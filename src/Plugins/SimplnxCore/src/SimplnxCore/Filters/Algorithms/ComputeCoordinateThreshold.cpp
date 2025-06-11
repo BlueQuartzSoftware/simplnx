@@ -1,7 +1,6 @@
 #include "ComputeCoordinateThreshold.hpp"
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
@@ -12,6 +11,7 @@
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -59,12 +59,27 @@ public:
           for(usize k = 0; k < xPoints; k++)
           {
             // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-            float32 xVal = k * spacing[0] + origin[0] + (0.5f * spacing[0]);
-            float32 yVal = j * spacing[1] + origin[1] + (0.5f * spacing[1]);
-            float32 zVal = i * spacing[2] + origin[2] + (0.5f * spacing[2]);
+            float32 minXVal = k * spacing[0] + origin[0];
+            float32 minYVal = j * spacing[1] + origin[1];
+            float32 minZVal = i * spacing[2] + origin[2];
+
+            float32 maxXVal = k * spacing[0] + origin[0] + spacing[0];
+            float32 maxYVal = j * spacing[1] + origin[1] + spacing[1];
+            float32 maxZVal = i * spacing[2] + origin[2] + spacing[2];
+
+            // Check every vertex for spherical and other potential thresholds
+            uint8 inBoundsVertexCount = 0;
+            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, minYVal, minZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, minYVal, minZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, maxYVal, minZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, minYVal, maxZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, maxYVal, maxZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(minXVal, maxYVal, maxZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, minYVal, maxZVal);
+            inBoundsVertexCount += m_IsInBoundsFunct(maxXVal, maxYVal, minZVal);
 
             usize tup = zStride + yStride + k;
-            if(m_IsInBoundsFunct(xVal, yVal, zVal) == 1)
+            if(inBoundsVertexCount == 8)
             {
               m_Mask.setValue(tup, trueValue);
             }
@@ -167,6 +182,7 @@ private:
 Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
 {
   ParallelDataAlgorithm dataAlg;
+  dataAlg.setParallelizationEnabled(false);
   switch(geom.getGeomType())
   {
   case IGeometry::Type::Image: {
@@ -200,6 +216,46 @@ Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask,
   }
   }
   return {};
+}
+
+bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThresholdInputValues* inputValues)
+{
+  if(geom.getGeomType() == IGeometry::Type::Image)
+  {
+    return true;
+  }
+
+  const auto& iNodeGeom = dynamic_cast<const INodeGeometry0D&>(geom);
+
+  BoundingBox3Df bounds = iNodeGeom.getBoundingBox();
+  std::array<float32, 3> minPoint = bounds.getMinPoint().toArray();
+  std::array<float32, 3> maxPoint = bounds.getMaxPoint().toArray();
+
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(inputValues->ShapeType))
+  {
+  case ComputeCoordinateThreshold::BoundsType::Rectangle: {
+    VectorFloat32Parameter::ValueType minBound = inputValues->MinCoord;
+    VectorFloat32Parameter::ValueType maxBound = inputValues->MaxCoord;
+
+    if(maxPoint[0] < minBound[0] || maxPoint[1] < minBound[1] || maxPoint[2] < minBound[2])
+    {
+      return false;
+    }
+
+    if(minPoint[0] > maxBound[0] || minPoint[1] > maxBound[1] || minPoint[2] > maxBound[2])
+    {
+      return false;
+    }
+
+    return true;
+  }
+  case ComputeCoordinateThreshold::BoundsType::Sphere: {
+    VectorFloat32Parameter::ValueType sphereInfo = inputValues->SphereInfo;
+    return IntersectionUtilities::SphereIntersectsRectangularPrism({sphereInfo[0], sphereInfo[1], sphereInfo[2]}, sphereInfo[3], minPoint, maxPoint);
+  }
+  }
+
+  return true;
 }
 } // namespace
 
@@ -255,7 +311,7 @@ Result<> ComputeCoordinateThreshold::operator()()
       // Do not switch to pow() inlined is faster for square case for floating point num
       float32 tDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
 
-      if(tDiff > (std::abs(sphereInfo[3]) * std::abs(sphereInfo[3])))
+      if(tDiff > (sphereInfo[3] * sphereInfo[3]))
       {
         return 0;
       }
@@ -267,6 +323,20 @@ Result<> ComputeCoordinateThreshold::operator()()
 
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
   auto& mask = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
+
+  if(!PrecheckRuntimeGeom(geom, m_InputValues))
+  {
+    if(m_InputValues->Invert)
+    {
+      mask.fill(1);
+    }
+    else
+    {
+      mask.fill(0);
+    }
+
+    return MakeWarningVoidResult(-24715, "The input geometry did not contain any points within the supplied coordinate bounds, all values in the mask are the same.");
+  }
 
   ExecuteComputeMask(geom, mask, m_InputValues->Invert, f_IsInBounds);
 

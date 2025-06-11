@@ -4,12 +4,8 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -17,6 +13,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/IntersectionUtilities.hpp"
 
 using namespace nx::core;
 
@@ -112,6 +109,72 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
 
   usize numCells = geom.getNumberOfCells();
+
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(pContainerShapeTypeValue))
+  {
+  case ComputeCoordinateThreshold::Rectangle: {
+    auto pMinPoint = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinCoord_Key);
+    auto pMaxPoint = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxCoord_Key);
+
+    if(pMaxPoint[0] < pMinPoint[0] || pMaxPoint[1] < pMinPoint[1] || pMaxPoint[2] < pMinPoint[2])
+    {
+      return MakePreflightErrorResult(-24710,
+                                      fmt::format("The maximum coordinate has one or more values less than those in the minimum coordinate.\nMin Coord(XYZ): {}, {}, {}\nMax Coord(XYZ): {}, {}, {}",
+                                                  pMinPoint[0], pMinPoint[1], pMinPoint[2], pMaxPoint[0], pMaxPoint[1], pMaxPoint[2]));
+    }
+
+    if(geom.getGeomType() == IGeometry::Type::Image)
+    {
+      const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
+
+      BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
+      const Point3Df& minBound = bounds.getMinPoint();
+      const Point3Df& maxBound = bounds.getMaxPoint();
+
+      if(pMaxPoint[0] < minBound[0] || pMaxPoint[1] < minBound[1] || pMaxPoint[2] < minBound[2])
+      {
+        return MakePreflightErrorResult(-24711, fmt::format("The supplied bounding box falls outside the geometries minimum point, filter will do nothing. Minimum Point in Geometry(XYZ): {}, {}, {}",
+                                                            minBound[0], minBound[1], minBound[2]));
+      }
+
+      if(pMinPoint[0] > maxBound[0] || pMinPoint[1] > maxBound[1] || pMinPoint[2] > maxBound[2])
+      {
+        return MakePreflightErrorResult(-24712, fmt::format("The supplied bounding box falls outside the geometries maximum point, filter will do nothing. Maximum Point in Geometry(XYZ): {}, {}, {}",
+                                                            maxBound[0], maxBound[1], maxBound[2]));
+      }
+    }
+
+    break;
+  }
+  case ComputeCoordinateThreshold::Sphere: {
+    auto pSphereInfo = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key);
+
+    if(pSphereInfo[3] <= 0)
+    {
+      return MakePreflightErrorResult(-24713, fmt::format("The spheres radius must be greater than 0. Supplied radius: {}", pSphereInfo[3]));
+    }
+
+    if(geom.getGeomType() == IGeometry::Type::Image)
+    {
+      const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
+
+      BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
+      const Point3Df& minBound = bounds.getMinPoint();
+      const Point3Df& maxBound = bounds.getMaxPoint();
+
+      bool doesIntersect = IntersectionUtilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
+
+      if(!doesIntersect)
+      {
+        return MakePreflightErrorResult(
+            -24714,
+            fmt::format("The supplied sphere falls outside the geometries bounds, filter will do nothing.\nMinimum Point in Geometry(XYZ): {}, {}, {}\nMaximum Point in Geometry(XYZ): {}, {}, {}",
+                        minBound[0], minBound[1], minBound[2], maxBound[0], maxBound[1], maxBound[2]));
+      }
+    }
+    break;
+  }
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   {

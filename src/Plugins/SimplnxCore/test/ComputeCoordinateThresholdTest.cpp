@@ -76,6 +76,270 @@ void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, con
 }
 } // namespace
 
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Error - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
+  geom->setVertices(*vertexArray);
+
+  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  geom->setFaceList(*facesArray);
+
+  auto& vertices = vertexArray->getDataStoreRef();
+  auto& faces = facesArray->getDataStoreRef();
+  for(usize i = 0; i < 6; ++i)
+  {
+    faces[i] = i;
+    vertices[(i * 3) + 0] = i;
+    vertices[(i * 3) + 1] = i;
+    vertices[(i * 3) + 2] = i;
+  }
+
+  VectorFloat32Parameter::ValueType minCoord = {3.5f, 3.5f, 3.5f};
+  VectorFloat32Parameter::ValueType maxCoord = {-1.0f, -1.0f, -1.0f};
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
+  geom->setVertices(*vertexArray);
+
+  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  geom->setFaceList(*facesArray);
+
+  auto& vertices = vertexArray->getDataStoreRef();
+  auto& faces = facesArray->getDataStoreRef();
+  for(usize i = 0; i < 6; ++i)
+  {
+    faces[i] = i;
+    vertices[(i * 3) + 0] = i;
+    vertices[(i * 3) + 1] = i;
+    vertices[(i * 3) + 2] = i;
+  }
+
+  VectorFloat32Parameter::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, -1.75f};
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t dimsIn[3] = {5, 5, 1};
+  imageGeom->setDimensions(dimsIn);
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+
+#if 0
+      0, 0, 0, 0, 0,
+      0, 1, 1, 1, 0,
+      0, 1, 1, 1, 0,
+      0, 1, 1, 1, 0,
+      0, 0, 0, 0, 0;
+#endif
+
+  VectorFloat32Parameter::ValueType minCoord = {5.5f, 5.5f, 1.5f};
+  VectorFloat32Parameter::ValueType maxCoord = {6.5f, 6.5f, 1.5f};
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t dimsIn[3] = {5, 5, 1};
+  imageGeom->setDimensions(dimsIn);
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+
+#if 0
+      0, 0, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 1, 1, 1, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, 0, 0;
+#endif
+
+  VectorFloat32Parameter::ValueType sphereInfo = {5.5f, 5.5f, 1.5f, 0.5f};
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
+  geom->setVertices(*vertexArray);
+
+  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  geom->setFaceList(*facesArray);
+
+  auto& vertices = vertexArray->getDataStoreRef();
+  auto& faces = facesArray->getDataStoreRef();
+  for(usize i = 0; i < 6; ++i)
+  {
+    faces[i] = i;
+    vertices[(i * 3) + 0] = i;
+    vertices[(i * 3) + 1] = i;
+    vertices[(i * 3) + 2] = i;
+  }
+
+  VectorFloat32Parameter::ValueType minCoord;
+  VectorFloat32Parameter::ValueType maxCoord;
+
+  SECTION("Positive Case")
+  {
+    minCoord = {6.0f, 6.0f, 6.0f};
+    maxCoord = {9.0f, 9.0f, 9.0f};
+  }
+
+  SECTION("Negative Case")
+  {
+    minCoord = {-2.0f, -2.0f, -2.0f};
+    maxCoord = {-1.0f, -1.0f, -1.0f};
+  }
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE(!executeResult.result.warnings().empty());
+}
+
+TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
+{
+  DataStructure dataStructure;
+
+  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
+  geom->setVertices(*vertexArray);
+
+  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  geom->setFaceList(*facesArray);
+
+  auto& vertices = vertexArray->getDataStoreRef();
+  auto& faces = facesArray->getDataStoreRef();
+  for(usize i = 0; i < 6; ++i)
+  {
+    faces[i] = i;
+    vertices[(i * 3) + 0] = i;
+    vertices[(i * 3) + 1] = i;
+    vertices[(i * 3) + 2] = i;
+  }
+
+  VectorFloat32Parameter::ValueType sphereInfo = {6.0f, 6.0f, 6.0f, 0.75f};
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ComputeCoordinateThresholdFilter filter;
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE(!executeResult.result.warnings().empty());
+}
+
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
@@ -190,7 +454,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
       0, 0, 0, 0, 0;
 #endif
 
-  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 0.5f, 1.0f};
+  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 0.5f, 1.66f};
 
   SECTION("Baseline")
   {

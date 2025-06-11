@@ -350,6 +350,178 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin,
   return {};
 }
 
+/**
+ * @brief This function determines whether any point in a given rectangular prism falls within a sphere
+ * @tparam T floating point number (algorithm is capable of working with other primitives, but restricted until use case arises)
+ * @param sphereCenter The center of the sphere (XYZ)
+ * @param radius The radius of the sphere
+ * @param minBound The minimum point of the rectangular prism (XYZ)
+ * @param maxBound The maximum point of the rectangular prism (XYZ)
+ * @return bool returns true if sphere intersects rectangular prism
+ */
+template <std::floating_point T>
+bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T radius, const std::array<T, 3>& minBound, const std::array<T, 3>& maxBound)
+{
+  /**
+   * For this we are first going to determine the region the center falls in. Where
+   * X is in the bounding box of the rectangle
+   * E is somewhere outside the rectangle but falls within the unbounded planes of the parallel sides
+   * C is somewhere outside the rectangle but falls within the unbounded planes of the adjacent sides
+   *
+   * This solution for 2D space is being expanded to 3D
+   *
+   * C | E | C
+   * E | X | E
+   * C | E | C
+   *
+   * Next we validate overlap with the radius. If
+   * The center was in X we are done
+   * The center was in C find if vertex/edge point falls within the sphere
+   * The center was in E verify distance to face is less than the radius
+   */
+
+  // Check if center is outside lower bound
+  bool outMinX = sphereCenter[0] < minBound[0];
+  bool outMinY = sphereCenter[1] < minBound[1];
+  bool outMinZ = sphereCenter[2] < minBound[2];
+
+  // Check if center is outside upper bound
+  bool outMaxX = sphereCenter[0] > maxBound[0];
+  bool outMaxY = sphereCenter[1] > maxBound[1];
+  bool outMaxZ = sphereCenter[2] > maxBound[2];
+
+  if(outMinX || outMinY || outMinZ || outMaxX || outMaxY || outMaxZ)
+  {
+    float32 xPoint;
+    float32 yPoint;
+    float32 zPoint;
+    if(outMinX && outMinY && outMinZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = minBound[0];
+      yPoint = minBound[1];
+      zPoint = minBound[2];
+    }
+    else if(outMaxX && outMinY && outMinZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = maxBound[0];
+      yPoint = minBound[1];
+      zPoint = minBound[2];
+    }
+    else if(outMinX && outMaxY && outMinZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = minBound[0];
+      yPoint = maxBound[1];
+      zPoint = minBound[2];
+    }
+    else if(outMinX && outMinY && outMaxZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = minBound[0];
+      yPoint = minBound[1];
+      zPoint = maxBound[2];
+    }
+    else if(outMaxX && outMaxY && outMaxZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = maxBound[0];
+      yPoint = maxBound[1];
+      zPoint = maxBound[2];
+    }
+    else if(outMinX && outMaxY && outMaxZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = minBound[0];
+      yPoint = maxBound[1];
+      zPoint = maxBound[2];
+    }
+    else if(outMaxX && outMinY && outMaxZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = maxBound[0];
+      yPoint = minBound[1];
+      zPoint = maxBound[2];
+    }
+    else if(outMaxX && outMaxY && outMinZ)
+    {
+      // Center is in C; Checking if point falls in sphere
+      xPoint = maxBound[0];
+      yPoint = maxBound[1];
+      zPoint = minBound[2];
+    }
+    else
+    {
+      // Center is in E or F (Face); Checking if point falls in sphere via distance to nearest point in rect bounds
+      bool inXBound = !outMinX && !outMaxX;
+      bool inYBound = !outMinY && !outMaxY;
+      bool inZBound = !outMinZ && !outMaxZ;
+
+      if(inXBound)
+      {
+        xPoint = sphereCenter[0];
+      }
+      else
+      {
+        if(outMinX)
+        {
+          xPoint = minBound[0];
+        }
+        if(outMaxX)
+        {
+          xPoint = maxBound[0];
+        }
+      }
+      if(inYBound)
+      {
+        yPoint = sphereCenter[1];
+      }
+      else
+      {
+        if(outMinY)
+        {
+          yPoint = minBound[1];
+        }
+        if(outMaxY)
+        {
+          yPoint = maxBound[1];
+        }
+      }
+      if(inZBound)
+      {
+        zPoint = sphereCenter[2];
+      }
+      else
+      {
+        if(outMinZ)
+        {
+          zPoint = minBound[2];
+        }
+        if(outMaxZ)
+        {
+          zPoint = maxBound[2];
+        }
+      }
+    }
+
+    float32 xDiff = xPoint - sphereCenter[0];
+    float32 yDiff = yPoint - sphereCenter[1];
+    float32 zDiff = zPoint - sphereCenter[2];
+
+    // Do not switch to pow() inlined is faster for square case for floating point num
+    float32 tDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
+
+    if(tDiff > (radius * radius))
+    {
+      return false;
+    }
+  }
+  // Center is in X or point is within the radius; Valid
+
+  return true;
+}
+
 } // namespace IntersectionUtilities
 
 } // namespace nx::core
