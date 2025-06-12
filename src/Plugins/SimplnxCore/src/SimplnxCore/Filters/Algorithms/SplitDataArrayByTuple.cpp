@@ -49,17 +49,6 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-// struct SplitNeighborListByTupleImpl
-//{
-//   template <typename T>
-//   Result<> operator()(const NeighborList<T>& inputNL, NeighborList<T>& outputNL, usize inputTupleOffset)
-//   {
-//     auto outputTupleShape = outputNL.getTupleShape();
-//     usize startOutputOffset = 0;
-//     return CopyFromArray::CopyDataND(inputNL, outputNL, {inputTupleOffset}, {startOutputOffset}, outputTupleShape);
-//   }
-// };
-
 template <typename T>
 class SplitNeighborListByTupleImpl
 {
@@ -116,13 +105,12 @@ struct is_allowed_array_type<StringArray> : std::true_type
 
 template <typename ArrayType>
 typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
-                                                                                                        const std::vector<DataPath>& outputArrayPaths, const IFilter::MessageHandler& messageHandler,
-                                                                                                        const std::atomic_bool& shouldCancel)
+                                                                                                        const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
+                                                                                                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   // The actual splitting of the dataStructure array is done in parallel where parallel here
   // refers to the splitting of the DataArray into each output array being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(false);
   auto& inputArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
   auto inputTupleShape = inputArray.getTupleShape();
   std::vector<usize> inputTupleShapeOffset(inputTupleShape.size(), 0);
@@ -140,7 +128,7 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
     // Run this directly since ArrayType is the template parameter
     taskRunner.execute(SplitDataArrayByTupleImpl<ArrayType>(inputArray, outputArray, inputTupleShapeOffset, shouldCancel));
 
-    std::transform(inputTupleShapeOffset.begin(), inputTupleShapeOffset.end(), outputArray.getTupleShape().begin(), inputTupleShapeOffset.begin(), std::plus<>{});
+    inputTupleShapeOffset[splitDimension] += outputArray.getTupleShape()[splitDimension];
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
@@ -175,10 +163,10 @@ Result<> SplitNeighborListsByTupleImpl(DataStructure& dataStructure, const DataP
 struct SplitDataArraysTemplateImpl
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, const IFilter::MessageHandler& messageHandler,
+  void operator()(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, usize splitDimension, const IFilter::MessageHandler& messageHandler,
                   const std::atomic_bool& shouldCancel, Result<>& result)
   {
-    result = SplitArraysByTupleImpl<DataArray<T>>(dataStructure, inputArrayPath, outputArrayPaths, messageHandler, shouldCancel);
+    result = SplitArraysByTupleImpl<DataArray<T>>(dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel);
   }
 };
 
@@ -192,12 +180,12 @@ struct SplitNeighborListsTemplateImpl
   }
 };
 
-Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, const IFilter::MessageHandler& messageHandler,
-                            const std::atomic_bool& shouldCancel)
+Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
+                            const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   Result<> result;
-  ExecuteDataFunction(SplitDataArraysTemplateImpl{}, inputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPaths, messageHandler, shouldCancel, result);
+  ExecuteDataFunction(SplitDataArraysTemplateImpl{}, inputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel, result);
   return result;
 }
 
@@ -238,21 +226,21 @@ Result<> SplitDataArrayByTuple::operator()()
   switch(inputDataArray.getArrayType())
   {
   case IArray::ArrayType::DataArray: {
-    return SplitArraysByTuple(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_MessageHandler, m_ShouldCancel);
+    return SplitArraysByTuple(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::StringArray: {
-    return SplitArraysByTupleImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_MessageHandler, m_ShouldCancel);
+    return SplitArraysByTupleImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::NeighborListArray: {
     return SplitNeighborLists(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::Any: {
-    return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::InputArrayEqualsAny),
+    return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
                            fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", m_InputValues->InputArrayPath.toString()));
   }
   default: {
     return MakeErrorResult(
-        to_underlying(SplitDataArrayByTuple::ErrorCodes::InputArrayUnsupported),
+        to_underlying(SplitDataArrayByTuple::ErrorCodes::UnsupportedArrayType),
         fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", m_InputValues->InputArrayPath.toString()));
   }
   }

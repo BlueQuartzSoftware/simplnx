@@ -26,8 +26,8 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_DataArrayPath_Key = "data_array_path";
   static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
-  static inline constexpr StringLiteral k_SplitArraysTupleShapes_Key = "split_arrays_tuple_shapes";
-  static inline constexpr StringLiteral k_NumOfAttrMatrixSplitArrays_Key = "num_of_attr_matrix_split_arrays";
+  static inline constexpr StringLiteral k_SplitDimension_Key = "split_dimension";
+  static inline constexpr StringLiteral k_SplitDimensionCounts_Key = "split_dimension_counts";
   static inline constexpr StringLiteral k_AttrMatrixTupleShape_Key = "attr_matrix_tuple_shape";
   static inline constexpr StringLiteral k_OutputContainer = "output_container_index";
   static inline constexpr StringLiteral k_NewAttributeMatrixPath = "new_attribute_matrix_path";

@@ -92,11 +92,11 @@ struct ConditionalReplaceValueInArrayFromString
 
     if(nx::core::DataType::uint8 == arrayType)
     {
-      ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, uint8>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::int8 == arrayType)
     {
-      ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, int8>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::boolean == arrayType)
     {
@@ -423,6 +423,95 @@ private:
   nonstd::span<const int64> m_NewToOldIndices;
 };
 
+namespace Indexing
+{
+/**
+ * @brief Flatten N-dimensional position to an array index.
+ * @param position N-dimensional position
+ * @param shape Shape of the array to index
+ * @return T
+ */
+inline uint64 Flatten(const std::vector<uint64>& position, const std::vector<uint64>& shape)
+{
+  using index_type = uint64;
+  const usize dimensions = position.size();
+
+  if(shape.size() != dimensions)
+  {
+    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
+  }
+
+  index_type index = 0;
+  index_type mult = 1;
+  const bool usingColumnMajor = true;
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    index += position[offset] * mult;
+    mult *= shape[offset];
+  }
+
+  return index;
+}
+
+inline usize Flatten(const std::vector<usize>& position, const std::vector<usize>& shape)
+{
+  std::vector<uint64> positionUSize;
+  positionUSize.reserve(position.size());
+  std::vector<uint64> shapeUSize;
+  shapeUSize.reserve(shape.size());
+  std::transform(position.begin(), position.end(), std::back_inserter(positionUSize), [](const auto& val) { return static_cast<uint64>(val); });
+  std::transform(shape.begin(), shape.end(), std::back_inserter(shapeUSize), [](const auto& val) { return static_cast<uint64>(val); });
+  return Flatten(positionUSize, shapeUSize);
+}
+
+/**
+ * @brief Find N-dimensional position from an array index and shape.
+ * @param index Array index
+ * @param shape Shape of the array to index
+ * @return std::vector<uint64>
+ */
+inline std::vector<uint64> FindPosition(uint64 index, const std::vector<uint64>& shape)
+{
+  using index_type = uint64;
+  using shape_type = std::vector<index_type>;
+
+  const bool usingColumnMajor = true;
+  const usize dimensions = shape.size();
+  shape_type position(dimensions);
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    position[offset] = index % shape[offset];
+    index /= shape[offset];
+  }
+  return position;
+}
+
+inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usize>& extent)
+{
+  // Advance idx as if it were an odometer.
+  // Increment the fastest dimension; if it overflows, reset it to 0
+  // and propagate the carry toward the next slowest dimension.
+  for(usize d = idx.size(); d > 0;)
+  {
+    --d; // move to the next slowest dimension
+    ++idx[d];
+
+    if(idx[d] < extent[d])
+    {
+      // Increment succeeded without overflow
+      break;
+    }
+    else
+    {
+      // Overflow: reset this dimension and continue carrying.
+      idx[d] = 0;
+    }
+  }
+}
+} // namespace Indexing
+
 /**
  * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
  *
@@ -504,8 +593,9 @@ Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usiz
 template <class K>
 Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>& srcStart, const std::vector<usize>& dstStart, const std::vector<usize>& extent)
 {
-  const auto& shape = inputArray.getTupleShape();
-  const usize rank = shape.size();
+  const auto& inputShape = inputArray.getTupleShape();
+  const auto& destShape = destArray.getTupleShape();
+  const usize rank = inputShape.size();
 
   if(rank == 0)
   {
@@ -526,9 +616,9 @@ Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>&
 
   for(usize d = 0; d < rank; ++d)
   {
-    if(srcStart[d] + extent[d] > shape[d])
+    if(srcStart[d] + extent[d] > inputShape[d])
     {
-      return MakeErrorResult(-2034, fmt::format("CopyDataND: Source block exceeds bounds in dimension {} (srcStart={} + extent={} > srcSize={}).", d, srcStart[d], extent[d], shape[d]));
+      return MakeErrorResult(-2034, fmt::format("CopyDataND: Source block exceeds bounds in dimension {} (srcStart={} + extent={} > srcSize={}).", d, srcStart[d], extent[d], inputShape[d]));
     }
     if(dstStart[d] + extent[d] > destArray.getTupleShape()[d])
     {
@@ -544,23 +634,6 @@ Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>&
                                               destArray.getNumberOfComponents()));
   }
 
-  // Compute strides (in tuples)
-  std::vector<usize> stride(rank, 1);
-  for(usize d = rank; d-- > 1;)
-  {
-    stride[d - 1] = stride[d] * shape[d];
-  }
-
-  // Helper method to flatten a multi-index
-  auto flatten = [&](const std::vector<usize>& idx) -> usize {
-    usize off = 0;
-    for(usize d = 0; d < rank; ++d)
-    {
-      off += idx[d] * stride[d];
-    }
-    return off;
-  };
-
   std::vector<usize> currentIdx(rank, 0);
   const usize tuplesToCopy = std::accumulate(extent.begin(), extent.end(), usize{1}, std::multiplies<>());
 
@@ -570,9 +643,9 @@ Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>&
     // Convert the current multidimensional offset (currentIdx) into a 1‑D linear
     // tuple index inside the source array.  Adding `flatten(srcStart)` accounts
     // for the absolute starting position of the copy‑from block.
-    const usize srcLinearIdx = flatten(currentIdx) + flatten(srcStart);
+    const usize srcLinearIdx = Indexing::Flatten(currentIdx, inputShape) + Indexing::Flatten(srcStart, inputShape);
     // Do the same for the destination array, offset by `dstStart`.
-    const usize dstLinearIdx = flatten(dstStart) + dstOffset;
+    const usize dstLinearIdx = Indexing::Flatten(dstStart, destShape) + dstOffset;
 
     // Copy a single tuple worth of data.
     // StringArray: direct element assignment
@@ -595,25 +668,8 @@ Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>&
       }
     }
 
-    // Advance `currentIdx` as if it were an odometer:
-    // increment the least‑significant dimension; if it overflows, reset it to 0
-    // and propagate the carry toward more‑significant dimensions.
-    for(usize d = rank; d > 0;)
-    {
-      --d;             // move to the next more‑significant dimension
-      ++currentIdx[d]; // attempt to increment this dimension
-
-      if(currentIdx[d] < extent[d])
-      {
-        // Increment succeeded without overflow
-        break;
-      }
-      else
-      {
-        // Overflow -> reset this dimension and continue carrying.
-        currentIdx[d] = 0;
-      }
-    }
+    // Advance currentIdx as if it were an odometer
+    Indexing::IncrementLikeOdometer(currentIdx, extent);
 
     dstOffset++;
   }
@@ -1466,7 +1522,7 @@ public:
 
   void operator()() const
   {
-    size_t numComps = m_OldCellArray.getNumberOfComponents();
+    usize numComps = m_OldCellArray.getNumberOfComponents();
     const auto& oldCellData = m_OldCellArray.getDataStoreRef();
 
     auto& dataStore = m_NewCellArray.getDataStoreRef();
@@ -1475,7 +1531,7 @@ public:
     uint64 destTupleIndex = 0;
     for(const auto& srcIndex : m_NewEdgesIndex)
     {
-      for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+      for(usize compIndex = 0; compIndex < numComps; compIndex++)
       {
         dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
       }
@@ -1505,60 +1561,4 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
-
-namespace Indexing
-{
-/**
- * @brief Flatten N-dimensional position to an array index.
- * @param position N-dimensional position
- * @param shape Shape of the array to index
- * @return uint64
- */
-inline uint64 Flatten(const std::vector<uint64_t>& position, const std::vector<uint64_t>& shape)
-{
-  using index_type = uint64;
-  const size_t dimensions = position.size();
-
-  if(shape.size() != dimensions)
-  {
-    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
-  }
-
-  index_type index = 0;
-  index_type mult = 1;
-  const bool usingColumnMajor = true;
-  for(index_type i = 0; i < dimensions; i++)
-  {
-    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
-    index += position[offset] * mult;
-    mult *= shape[offset];
-  }
-
-  return index;
-}
-
-/**
- * @brief Find N-dimensional position from an array index and shape.
- * @param index Array index
- * @param shape Shape of the array to index
- * @return std::vector<uint64>
- */
-inline std::vector<uint64> FindPosition(uint64_t index, const std::vector<uint64_t>& shape)
-{
-  using index_type = uint64;
-  using shape_type = std::vector<index_type>;
-
-  const bool usingColumnMajor = true;
-  const size_t dimensions = shape.size();
-  shape_type position(dimensions);
-  for(index_type i = 0; i < dimensions; i++)
-  {
-    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
-    position[offset] = index % shape[offset];
-    index /= shape[offset];
-  }
-  return position;
-}
-} // namespace Indexing
-
 } // namespace nx::core

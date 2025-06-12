@@ -6,30 +6,36 @@ DREAM3D Review (Memory/Management)
 
 ## Description
 
-This **Filter** splits an **Attribute Array** into **several smaller arrays based on the *tuple* layout**.
+This **Filter** splits a **Data Array** into several smaller arrays along a single tuple dimension. 
+The user specifies how many tuples each output array should contain along that dimension; all other dimensions remain unchanged.
 
-The user tells the filter how many tuples should go into each output array by specifying one or more **tuple‑shape blocks** (for example `5 | 2 | 3`).
-
-Each output array is an ***exact copy* of the selected tuples (all components are preserved unchanged)** and therefore has the **same primitive type** and **same component‑count** as the original array.
-
-Using a 1‑component, (4, 3) tuple shape integer array as an example:
+For example, given an array with tuple shape `(4, 3)`:
 
 ```
-{0} {1} {2} {3}
-{4} {5} {6} {7}
-{8} {9} {10} {11}
+{0} {1} {2}
+{3} {4} {5}
+{6} {7} {8}
+{9} {10} {11}
 ```
 
-A tuple‑shape list of `(2, 1) and (1, 1)` produces two new arrays:
+with tuples for the output arrays set to 2 & 1 and split dimension set to 1 produces two new arrays with tuple shapes (4,2) and (4,1) respectively:
 
 ```
-{0} {1}                     (2 tuples)
-{3}                         (1 tuple)
+{0} {1}
+{3} {4}
+{6} {7}
+{9} {10}
 ```
 
-If you choose *Existing Data Group / Attribute Matrix* the split arrays are placed into a pre‑existing container.  
-Otherwise the filter can create a *new* Data Group or *new* Attribute Matrix to hold the results.  
-An optional flag allows you to **delete the original input array** after splitting.
+```
+{2}
+{5}
+{8}
+{11}
+```
+
+
+If you choose *Existing Data Group or Existing Attribute Matrix* the split arrays are placed into a pre‑existing container.  Otherwise the filter can create a *new* Data Group or *new* Attribute Matrix to hold the results.  An optional flag allows you to delete the original input array after splitting.
 
 > **Looking to split by _components_ instead?**  
 > See the *[Split Data Array (By Component)](SplitDataArrayByComponentFilter.md)* filter that separates each component into its own scalar array.
@@ -37,9 +43,6 @@ An optional flag allows you to **delete the original input array** after splitti
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
-
-* Split a 3‑component `UInt8` color array into training / validation / test sets of 60 % / 20 % / 20 % tuples.  
-* Divide a very large `NeighborList` into smaller chunks so each GPU kernel gets a contiguous range of tuples.
 
 ## License & Copyright
 

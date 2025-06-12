@@ -14,6 +14,7 @@ struct SIMPLNXCORE_EXPORT SplitDataArrayByTupleInputValues
 {
   DataPath InputArrayPath;
   std::vector<DataPath> OutputArrayPaths;
+  usize SplitDimension;
 };
 
 /**
@@ -33,9 +34,16 @@ public:
   // Error Codes
   enum class ErrorCodes : int32
   {
-    NonPositiveTupleDimValue = -2302,
-    InputArrayEqualsAny = -2303,
-    InputArrayUnsupported = -2304
+    NoInputArray = -65400,
+    SplitDimLessThanZero = -65401,
+    SplitDimOutOfRange = -65402,
+    SplitCountLessThanZero = -65403,
+    SplitCountSumNotEqual = -65404,
+    AttrMatrixTupleShapeNegative = -65405,
+    AttrMatrixTupleShapeNoCommonMultiplier = -65406,
+    AnyArrayType = -65407,
+    UnsupportedArrayType = -65408,
+    MultiDimensionalSplitCount = -65409
   };
 
   SplitDataArrayByTuple(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SplitDataArrayByTupleInputValues* inputValues);
