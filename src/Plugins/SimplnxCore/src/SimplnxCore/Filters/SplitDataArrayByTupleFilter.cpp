@@ -215,9 +215,10 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
 }
 
 Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newAttrMatrixPath, const DataPath& existingAttrMatrixPath,
-                                   const std::vector<usize>& inputArrayTupleShape, const std::vector<usize>& newAttrMatrixTupleShape, usize splitDimension, const DataStructure& dataStructure,
+                                   const std::vector<usize>& inputArrayTupleShape, const std::vector<float64>& newAttrMatrixTupleShape, usize splitDimension, const DataStructure& dataStructure,
                                    std::vector<DataPath>& arrayPaths, std::vector<std::vector<usize>>& tupleShapes, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
+  std::vector<usize> tupleShape;
   if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
   {
     for(usize j = 0; j < newAttrMatrixTupleShape.size(); ++j)
@@ -228,12 +229,8 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
                                 fmt::format("Attribute matrix tuple shape contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", newAttrMatrixTupleShape[j], j))};
       }
     }
-  }
 
-  std::vector<usize> tupleShape;
-  if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
-  {
-    tupleShape = newAttrMatrixTupleShape;
+    tupleShape = std::vector<usize>(newAttrMatrixTupleShape.begin(), newAttrMatrixTupleShape.end());
   }
   else
   {
@@ -452,8 +449,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   else
   {
     // Outputting to attribute matrix
-    auto newAttrMatrixTupleShape = std::vector<usize>(pNewAttrMatrixTupleShape[0].begin(), pNewAttrMatrixTupleShape[0].end());
-    auto result = preflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray->getTupleShape(), newAttrMatrixTupleShape, splitDimension,
+    auto result = preflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray->getTupleShape(), pNewAttrMatrixTupleShape[0], splitDimension,
                                             dataStructure, arrayPaths, tupleShapes, preflightUpdatedValues);
     if(result.invalid())
     {

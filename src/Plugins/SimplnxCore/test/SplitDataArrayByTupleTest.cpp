@@ -101,7 +101,8 @@ DataStructure createDataStructure(const std::vector<usize>& tupleShape, const st
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][SplitDataArrayByTupleFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64)
+TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution", "[SimplnxCore][SplitDataArrayByTupleFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32,
+                   float64)
 {
   using T = TestType;
 
@@ -111,7 +112,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
   Arguments args;
   args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
 
-  SECTION("Valid – New Data Group")
+  SECTION("New Data Group")
   {
     DataStructure ds = createDataStructure<T>({10}, {2});
 
@@ -154,7 +155,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) != nullptr);
   }
 
-  SECTION("Valid – Existing Data Group")
+  SECTION("Existing Data Group")
   {
     DataStructure ds = createDataStructure<T>({10}, {2});
     DataGroup::Create(ds, k_ExistingDGName);
@@ -220,7 +221,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) == nullptr); // deleted
   }
 
-  SECTION("Valid – New Attribute Matrix")
+  SECTION("New Attribute Matrix")
   {
     DataStructure ds = createDataStructure<T>({4, 8, 4}, {2});
 
@@ -258,7 +259,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     compareSplitArray(inputArray, arr2, {0, 0, 2});
   }
 
-  SECTION("Valid – Existing Attribute Matrix")
+  SECTION("Existing Attribute Matrix")
   {
     DataStructure ds = createDataStructure<T>({10, 15, 20}, {2});
     AttributeMatrix::Create(ds, k_ExistingAMName, {10, 3, 20});
@@ -309,7 +310,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     compareSplitArray(inputArray, arr5, {0, 12, 0});
   }
 
-  SECTION("Valid – 2D Tuple Shape")
+  SECTION("2D Tuple Shape")
   {
     DataStructure ds = createDataStructure<T>({10, 15}, {2});
 
@@ -343,14 +344,12 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     const auto& arr3 = ds.getDataRefAs<DataArray<T>>(DataPath({k_NewDGName, makeArrayName(k_DataArrayName, 3, 3)}));
     REQUIRE(arr3.getTupleShape() == std::vector<usize>{10, 4});
 
-    UnitTest::WriteTestDataStructure(ds, "/tmp/output.dream3d");
-
     compareSplitArray(inputArray, arr1, {0, 0});
     compareSplitArray(inputArray, arr2, {0, 5});
     compareSplitArray(inputArray, arr3, {0, 11});
   }
 
-  SECTION("Valid – 3D Tuple Shape")
+  SECTION("3D Tuple Shape")
   {
     DataStructure ds = createDataStructure<T>({10, 10, 10}, {2});
 
@@ -389,7 +388,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     compareSplitArray(inputArray, arr3, {0, 0, 9});
   }
 
-  SECTION("Valid – NeighborList")
+  SECTION("NeighborList")
   {
     DataStructure ds;
     auto* am = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
@@ -438,7 +437,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(ds.getDataAs<NeighborList<T>>(DataPath({k_AttributeMatrixName, "Input NL"})) != nullptr);
   }
 
-  SECTION("Valid – String Array")
+  SECTION("String Array")
   {
     DataStructure ds;
     auto* am = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
@@ -488,10 +487,19 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     // Original StringArray still exists
     REQUIRE(ds.getDataAs<StringArray>(DataPath({k_AttributeMatrixName, "Input Strings"})) != nullptr);
   }
+}
 
-  SECTION("Invalid – Tuple shape contains non‑positive value")
+TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[SimplnxCore][SplitDataArrayByTupleFilter]")
+{
+  UnitTest::LoadPlugins();
+  SplitDataArrayByTupleFilter filter;
+
+  Arguments args;
+  args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_InputArrayPath));
+
+  SECTION("Tuple shape contains non‑positive value")
   {
-    DataStructure ds = createDataStructure<T>({10}, {2});
+    DataStructure ds = createDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -507,9 +515,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero));
   }
 
-  SECTION("Invalid – Tuple shapes do not sum to input tuple shape")
+  SECTION("Tuple shapes do not sum to input tuple shape")
   {
-    DataStructure ds = createDataStructure<T>({10}, {2});
+    DataStructure ds = createDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -525,9 +533,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual));
   }
 
-  SECTION("Invalid – New Attribute Matrix tuple shape contains non‑positive value")
+  SECTION("New Attribute Matrix tuple shape contains non‑positive value")
   {
-    DataStructure ds = createDataStructure<T>({10}, {2});
+    DataStructure ds = createDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -542,9 +550,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
   }
 
-  SECTION("Invalid – New Attribute Matrix tuple shape does not divide input in only one dimension")
+  SECTION("New Attribute Matrix tuple shape does not divide input in only one dimension")
   {
-    DataStructure ds = createDataStructure<T>({10, 15}, {2});
+    DataStructure ds = createDataStructure<uint32>({10, 15}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
@@ -559,9 +567,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
   }
 
-  SECTION("Invalid – Existing Attribute Matrix tuple shape does not divide input")
+  SECTION("Existing Attribute Matrix tuple shape does not divide input")
   {
-    DataStructure ds = createDataStructure<T>({10}, {2});
+    DataStructure ds = createDataStructure<uint32>({10}, {2});
     AttributeMatrix::Create(ds, k_BadExistingAMName, {3});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
@@ -575,9 +583,9 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter", "[SimplnxCore][Sp
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
   }
 
-  SECTION("Invalid – New Attribute Matrix tuple shape has negative value")
+  SECTION("New Attribute Matrix tuple shape has non-positive value")
   {
-    DataStructure ds = createDataStructure<T>({10}, {2});
+    DataStructure ds = createDataStructure<uint32>({10}, {2});
 
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_OutputContainer,
