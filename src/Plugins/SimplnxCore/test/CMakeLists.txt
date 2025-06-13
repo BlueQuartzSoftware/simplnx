@@ -132,7 +132,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SharedFeatureFaceTest.cpp
   SilhouetteTest.cpp
   SliceTriangleGeometryTest.cpp
-  SplitAttributeArrayTest.cpp
+  SplitDataArrayByComponentTest.cpp
+  SplitDataArrayByTupleTest.cpp
   SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp

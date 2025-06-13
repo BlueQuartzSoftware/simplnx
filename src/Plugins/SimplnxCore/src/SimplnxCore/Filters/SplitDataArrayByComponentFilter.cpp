@@ -1,6 +1,6 @@
-#include "SplitAttributeArrayFilter.hpp"
+#include "SplitDataArrayByComponentFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/SplitAttributeArray.hpp"
+#include "SimplnxCore/Filters/Algorithms/SplitDataArrayByComponent.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -18,44 +18,44 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string SplitAttributeArrayFilter::name() const
+std::string SplitDataArrayByComponentFilter::name() const
 {
-  return FilterTraits<SplitAttributeArrayFilter>::name.str();
+  return FilterTraits<SplitDataArrayByComponentFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string SplitAttributeArrayFilter::className() const
+std::string SplitDataArrayByComponentFilter::className() const
 {
-  return FilterTraits<SplitAttributeArrayFilter>::className;
+  return FilterTraits<SplitDataArrayByComponentFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid SplitAttributeArrayFilter::uuid() const
+Uuid SplitDataArrayByComponentFilter::uuid() const
 {
-  return FilterTraits<SplitAttributeArrayFilter>::uuid;
+  return FilterTraits<SplitDataArrayByComponentFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string SplitAttributeArrayFilter::humanName() const
+std::string SplitDataArrayByComponentFilter::humanName() const
 {
-  return "Split Multi component Attribute Array";
+  return "Split Data Array (By Component)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> SplitAttributeArrayFilter::defaultTags() const
+std::vector<std::string> SplitDataArrayByComponentFilter::defaultTags() const
 {
-  return {className(), "Core", "Split", "Data", "Multi-Component"};
+  return {className(), "Core", "Split", "Data", "Multi-Component", "Component"};
 }
 
 //------------------------------------------------------------------------------
-Parameters SplitAttributeArrayFilter::parameters() const
+Parameters SplitDataArrayByComponentFilter::parameters() const
 {
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArrayPath_Key, "Multi-Component Attribute Array", "The multicomponent Attribute Array to split", DataPath{}, GetAllDataTypes()));
-  params.insert(std::make_unique<StringParameter>(k_Postfix_Key, "Postfix", "Postfix to add to the end of the split Attribute Arrays", "_Component"));
-  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original multicomponent array after splitting", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MultiCompArrayPath_Key, "Multi-Component Attribute Array", "The multi-component data array to split", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<StringParameter>(k_Postfix_Key, "Postfix", "Postfix to add to the end of the split data arrays", "_Component"));
+  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original multi-component data array after splitting", false));
 
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
@@ -69,20 +69,20 @@ Parameters SplitAttributeArrayFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType SplitAttributeArrayFilter::parametersVersion() const
+IFilter::VersionType SplitDataArrayByComponentFilter::parametersVersion() const
 {
   return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SplitAttributeArrayFilter::clone() const
+IFilter::UniquePointer SplitDataArrayByComponentFilter::clone() const
 {
-  return std::make_unique<SplitAttributeArrayFilter>();
+  return std::make_unique<SplitDataArrayByComponentFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   auto pPostfix = filterArgs.value<std::string>(k_Postfix_Key);
@@ -143,10 +143,10 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitAttributeArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  SplitAttributeArrayInputValues inputValues;
+  SplitDataArrayByComponentInputValues inputValues;
   inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
   inputValues.SplitArraysSuffix = filterArgs.value<std::string>(k_Postfix_Key);
   if(filterArgs.value<bool>(k_SelectComponents_Key))
@@ -169,7 +169,7 @@ Result<> SplitAttributeArrayFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  return SplitAttributeArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return SplitDataArrayByComponent(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
@@ -181,9 +181,9 @@ constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
 } // namespace SIMPL
 } // namespace
 
-Result<Arguments> SplitAttributeArrayFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  Arguments args = SplitAttributeArrayFilter().getDefaultArguments();
+  Arguments args = SplitDataArrayByComponentFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
 

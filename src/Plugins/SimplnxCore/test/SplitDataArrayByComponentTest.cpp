@@ -1,9 +1,8 @@
-#include "SimplnxCore/Filters/SplitAttributeArrayFilter.hpp"
+#include "SimplnxCore/Filters/SplitDataArrayByComponentFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -13,6 +12,8 @@
 
 using namespace nx::core;
 
+namespace
+{
 // -----------------------------------------------------------------------------
 void fillDataArray(BoolArray* inputArray)
 {
@@ -98,20 +99,20 @@ DataStructure createDataStructure()
 template <typename T>
 void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, const DynamicTableInfo::RowType& extractComps = {})
 {
-  SplitAttributeArrayFilter filter;
+  SplitDataArrayByComponentFilter filter;
 
   DataPath arrayPath({"AttributeMatrix", "MultiComponent Array " + dataType});
   std::vector<usize> compsToCheck;
 
   Arguments args;
   // read in the exemplar shift data file
-  args.insertOrAssign(SplitAttributeArrayFilter::k_MultiCompArrayPath_Key, std::make_any<DataPath>(arrayPath));
-  args.insertOrAssign(SplitAttributeArrayFilter::k_Postfix_Key, std::make_any<std::string>("Component"));
-  args.insertOrAssign(SplitAttributeArrayFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
+  args.insertOrAssign(SplitDataArrayByComponentFilter::k_MultiCompArrayPath_Key, std::make_any<DataPath>(arrayPath));
+  args.insertOrAssign(SplitDataArrayByComponentFilter::k_Postfix_Key, std::make_any<std::string>("Component"));
+  args.insertOrAssign(SplitDataArrayByComponentFilter::k_DeleteOriginal_Key, std::make_any<bool>(false));
   if(!extractComps.empty())
   {
-    args.insertOrAssign(SplitAttributeArrayFilter::k_SelectComponents_Key, std::make_any<bool>(true));
-    args.insertOrAssign(SplitAttributeArrayFilter::k_ComponentsToExtract_Key, std::make_any<DynamicTableParameter::ValueType>({extractComps}));
+    args.insertOrAssign(SplitDataArrayByComponentFilter::k_SelectComponents_Key, std::make_any<bool>(true));
+    args.insertOrAssign(SplitDataArrayByComponentFilter::k_ComponentsToExtract_Key, std::make_any<DynamicTableParameter::ValueType>({extractComps}));
     for(const auto& comp : extractComps)
     {
       compsToCheck.push_back(static_cast<usize>(comp));
@@ -119,7 +120,7 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
   }
   else
   {
-    args.insertOrAssign(SplitAttributeArrayFilter::k_SelectComponents_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SplitDataArrayByComponentFilter::k_SelectComponents_Key, std::make_any<bool>(false));
     for(usize i = 0; i < 5; ++i)
     {
       compsToCheck.push_back(i);
@@ -151,9 +152,10 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
     }
   }
 }
+} // namespace
 
 // -----------------------------------------------------------------------------
-TEST_CASE("SimplnxCore::SplitAttributeArray", "[SimplnxCore][SplitAttributeArrayFilter]")
+TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArrayByComponentFilter]")
 {
   UnitTest::LoadPlugins();
 

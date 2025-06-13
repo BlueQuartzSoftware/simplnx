@@ -8,20 +8,20 @@
 namespace nx::core
 {
 /**
- * @class SplitAttributeArrayFilter
+ * @class SplitDataArrayByComponentFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT SplitAttributeArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT SplitDataArrayByComponentFilter : public IFilter
 {
 public:
-  SplitAttributeArrayFilter() = default;
-  ~SplitAttributeArrayFilter() noexcept override = default;
+  SplitDataArrayByComponentFilter() = default;
+  ~SplitDataArrayByComponentFilter() noexcept override = default;
 
-  SplitAttributeArrayFilter(const SplitAttributeArrayFilter&) = delete;
-  SplitAttributeArrayFilter(SplitAttributeArrayFilter&&) noexcept = delete;
+  SplitDataArrayByComponentFilter(const SplitDataArrayByComponentFilter&) = delete;
+  SplitDataArrayByComponentFilter(SplitDataArrayByComponentFilter&&) noexcept = delete;
 
-  SplitAttributeArrayFilter& operator=(const SplitAttributeArrayFilter&) = delete;
-  SplitAttributeArrayFilter& operator=(SplitAttributeArrayFilter&&) noexcept = delete;
+  SplitDataArrayByComponentFilter& operator=(const SplitDataArrayByComponentFilter&) = delete;
+  SplitDataArrayByComponentFilter& operator=(SplitDataArrayByComponentFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_MultiCompArrayPath_Key = "multicomponent_array_path";
@@ -118,4 +118,4 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, SplitAttributeArrayFilter, "55da791f-4d1c-4413-8673-742f27d2b22b");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, SplitDataArrayByComponentFilter, "55da791f-4d1c-4413-8673-742f27d2b22b");

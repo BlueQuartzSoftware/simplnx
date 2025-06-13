@@ -131,7 +131,8 @@ set(FilterList
   SharedFeatureFaceFilter
   SilhouetteFilter
   SliceTriangleGeometryFilter
-  SplitAttributeArrayFilter
+  SplitDataArrayByComponentFilter
+  SplitDataArrayByTupleFilter
   SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
@@ -238,7 +239,8 @@ set(AlgorithmList
   SharedFeatureFace
   Silhouette
   SliceTriangleGeometry
-  SplitAttributeArray
+  SplitDataArrayByComponent
+  SplitDataArrayByTuple
   SurfaceNets
   TriangleCentroid
   TupleTransfer

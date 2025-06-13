@@ -92,11 +92,11 @@ struct ConditionalReplaceValueInArrayFromString
 
     if(nx::core::DataType::uint8 == arrayType)
     {
-      ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, uint8>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::int8 == arrayType)
     {
-      ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, int8>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::boolean == arrayType)
     {
@@ -423,6 +423,84 @@ private:
   nonstd::span<const int64> m_NewToOldIndices;
 };
 
+namespace Indexing
+{
+/**
+ * @brief Flatten N-dimensional position to an array index.
+ * @param position N-dimensional position
+ * @param shape Shape of the array to index
+ * @return usize
+ */
+inline usize Flatten(const std::vector<usize>& position, const std::vector<usize>& shape)
+{
+  using index_type = usize;
+  const usize dimensions = position.size();
+
+  if(shape.size() != dimensions)
+  {
+    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
+  }
+
+  index_type index = 0;
+  index_type mult = 1;
+  const bool usingColumnMajor = true;
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    index += position[offset] * mult;
+    mult *= shape[offset];
+  }
+
+  return index;
+}
+
+/**
+ * @brief Find N-dimensional position from an array index and shape.
+ * @param index Array index
+ * @param shape Shape of the array to index
+ * @return std::vector<uint64>
+ */
+inline std::vector<uint64> FindPosition(uint64 index, const std::vector<uint64>& shape)
+{
+  using index_type = uint64;
+  using shape_type = std::vector<index_type>;
+
+  const bool usingColumnMajor = true;
+  const usize dimensions = shape.size();
+  shape_type position(dimensions);
+  for(index_type i = 0; i < dimensions; i++)
+  {
+    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
+    position[offset] = index % shape[offset];
+    index /= shape[offset];
+  }
+  return position;
+}
+
+inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usize>& extent)
+{
+  // Advance idx as if it were an odometer.
+  // Increment the fastest dimension; if it overflows, reset it to 0
+  // and propagate the carry toward the next slowest dimension.
+  for(usize d = idx.size(); d > 0;)
+  {
+    --d; // move to the next slowest dimension
+    ++idx[d];
+
+    if(idx[d] < extent[d])
+    {
+      // Increment succeeded without overflow
+      break;
+    }
+    else
+    {
+      // Overflow: reset this dimension and continue carrying.
+      idx[d] = 0;
+    }
+  }
+}
+} // namespace Indexing
+
 /**
  * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
  *
@@ -488,6 +566,102 @@ Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usiz
   auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
   auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
   std::copy(srcBegin, srcEnd, dstBegin);
+
+  return {};
+}
+
+/**
+ * @brief Copy a block of tuples from inputArray into destArray.
+ *
+ * @param srcStart  first tuple to copy in each dimension
+ * @param dstStart  first destination tuple in each dimension
+ * @param extent    length of block (tuple count) in each dimension
+ *
+ * Layout is assumed row-major (last index fastest).
+ */
+template <class K>
+Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>& srcStart, const std::vector<usize>& dstStart, const std::vector<usize>& extent)
+{
+  const auto& inputShape = inputArray.getTupleShape();
+  const auto& destShape = destArray.getTupleShape();
+  const usize rank = inputShape.size();
+
+  if(rank == 0)
+  {
+    return MakeErrorResult(-2030, "CopyDataND: Input array has no tuple dimensions (rank 0); unable to perform an N‑D copy.");
+  }
+  if(srcStart.size() != rank)
+  {
+    return MakeErrorResult(-2031, fmt::format("CopyDataND: srcStart length ({}) does not match input array rank ({}); provide one start index per dimension.", srcStart.size(), rank));
+  }
+  if(dstStart.size() != rank)
+  {
+    return MakeErrorResult(-2032, fmt::format("CopyDataND: dstStart length ({}) does not match input array rank ({}); provide one destination start index per dimension.", dstStart.size(), rank));
+  }
+  if(extent.size() != rank)
+  {
+    return MakeErrorResult(-2033, fmt::format("CopyDataND: extent length ({}) does not match input array rank ({}); provide one extent (tuple count) per dimension.", extent.size(), rank));
+  }
+
+  for(usize d = 0; d < rank; ++d)
+  {
+    if(srcStart[d] + extent[d] > inputShape[d])
+    {
+      return MakeErrorResult(-2034, fmt::format("CopyDataND: Source block exceeds bounds in dimension {} (srcStart={} + extent={} > srcSize={}).", d, srcStart[d], extent[d], inputShape[d]));
+    }
+    if(dstStart[d] + extent[d] > destArray.getTupleShape()[d])
+    {
+      return MakeErrorResult(
+          -2035, fmt::format("CopyDataND: Destination block exceeds bounds in dimension {} (dstStart={} + extent={} > dstSize={}).", d, dstStart[d], extent[d], destArray.getTupleShape()[d]));
+    }
+  }
+
+  const usize comps = inputArray.getNumberOfComponents();
+  if(comps != destArray.getNumberOfComponents())
+  {
+    return MakeErrorResult(-2036, fmt::format("CopyDataND: Component count mismatch between source ({}) and destination ({}); both arrays must have identical component counts.", comps,
+                                              destArray.getNumberOfComponents()));
+  }
+
+  std::vector<usize> currentIdx(rank, 0);
+  const usize tuplesToCopy = std::accumulate(extent.begin(), extent.end(), usize{1}, std::multiplies<>());
+
+  usize dstOffset = 0;
+  for(usize n = 0; n < tuplesToCopy; ++n)
+  {
+    // Convert the current multidimensional offset (currentIdx) into a 1‑D linear
+    // tuple index inside the source array.  Adding `flatten(srcStart)` accounts
+    // for the absolute starting position of the copy‑from block.
+    const usize srcLinearIdx = Indexing::Flatten(currentIdx, inputShape) + Indexing::Flatten(srcStart, inputShape);
+    // Do the same for the destination array, offset by `dstStart`.
+    const usize dstLinearIdx = Indexing::Flatten(dstStart, destShape) + dstOffset;
+
+    // Copy a single tuple worth of data.
+    // StringArray: direct element assignment
+    // NeighborList: copy entire neighbor list for this tuple
+    // DataArray: use CopyData
+    if constexpr(std::is_same_v<K, StringArray>)
+    {
+      destArray[dstLinearIdx] = inputArray[srcLinearIdx];
+    }
+    else if constexpr(std::is_base_of_v<INeighborList, K>)
+    {
+      destArray.setList(static_cast<int32>(dstLinearIdx), inputArray.getList(static_cast<int32>(srcLinearIdx)));
+    }
+    else // DataArray
+    {
+      auto copyResult = CopyData(inputArray, destArray, dstLinearIdx, srcLinearIdx, 1);
+      if(copyResult.invalid())
+      {
+        return copyResult;
+      }
+    }
+
+    // Advance currentIdx as if it were an odometer
+    Indexing::IncrementLikeOdometer(currentIdx, extent);
+
+    dstOffset++;
+  }
 
   return {};
 }
@@ -1337,7 +1511,7 @@ public:
 
   void operator()() const
   {
-    size_t numComps = m_OldCellArray.getNumberOfComponents();
+    usize numComps = m_OldCellArray.getNumberOfComponents();
     const auto& oldCellData = m_OldCellArray.getDataStoreRef();
 
     auto& dataStore = m_NewCellArray.getDataStoreRef();
@@ -1346,7 +1520,7 @@ public:
     uint64 destTupleIndex = 0;
     for(const auto& srcIndex : m_NewEdgesIndex)
     {
-      for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+      for(usize compIndex = 0; compIndex < numComps; compIndex++)
       {
         dataStore.setValue(destTupleIndex * numComps + compIndex, oldCellData.getValue(srcIndex * numComps + compIndex));
       }
@@ -1376,60 +1550,4 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
 } // namespace TransferGeometryElementData
-
-namespace Indexing
-{
-/**
- * @brief Flatten N-dimensional position to an array index.
- * @param position N-dimensional position
- * @param shape Shape of the array to index
- * @return uint64
- */
-inline uint64 Flatten(const std::vector<uint64_t>& position, const std::vector<uint64_t>& shape)
-{
-  using index_type = uint64;
-  const size_t dimensions = position.size();
-
-  if(shape.size() != dimensions)
-  {
-    throw std::runtime_error("Could not flatten position due to mismatched dimensions");
-  }
-
-  index_type index = 0;
-  index_type mult = 1;
-  const bool usingColumnMajor = true;
-  for(index_type i = 0; i < dimensions; i++)
-  {
-    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
-    index += position[offset] * mult;
-    mult *= shape[offset];
-  }
-
-  return index;
-}
-
-/**
- * @brief Find N-dimensional position from an array index and shape.
- * @param index Array index
- * @param shape Shape of the array to index
- * @return std::vector<uint64>
- */
-inline std::vector<uint64> FindPosition(uint64_t index, const std::vector<uint64_t>& shape)
-{
-  using index_type = uint64;
-  using shape_type = std::vector<index_type>;
-
-  const bool usingColumnMajor = true;
-  const size_t dimensions = shape.size();
-  shape_type position(dimensions);
-  for(index_type i = 0; i < dimensions; i++)
-  {
-    const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
-    position[offset] = index % shape[offset];
-    index /= shape[offset];
-  }
-  return position;
-}
-} // namespace Indexing
-
 } // namespace nx::core
