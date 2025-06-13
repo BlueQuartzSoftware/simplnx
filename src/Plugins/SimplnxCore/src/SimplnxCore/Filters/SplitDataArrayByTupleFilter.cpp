@@ -210,7 +210,7 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
   auto arrayPathsStrs = dataPathsToStrings(arrayPaths);
   std::vector<std::string> displayPaths = createDisplayPaths(arrayPathsStrs, splitArrayTupleShapes);
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back(IFilter::PreflightValue(fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))));
+  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))});
   return {};
 }
 
@@ -273,7 +273,7 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
   auto arrayPathsStrs = dataPathsToStrings(arrayPaths);
   std::vector<std::string> displayPaths = createDisplayPaths(arrayPathsStrs, tupleShapes);
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back(IFilter::PreflightValue(fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))));
+  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))});
   return {};
 }
 } // namespace
@@ -421,7 +421,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   // Output input array's tuple shape to preflight updated values
   std::vector<std::string> displayPaths = createDisplayPaths({pInputArrayPath.toString()}, {inputArray->getTupleShape()});
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back(PreflightValue("Input Array", StringUtilities::join(displayPathsViews, "\n")));
+  preflightUpdatedValues.push_back({"Input Array", StringUtilities::join(displayPathsViews, "\n")});
 
   std::vector<DataPath> arrayPaths;
   std::vector<std::vector<usize>> tupleShapes;
