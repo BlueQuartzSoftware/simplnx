@@ -429,11 +429,11 @@ namespace Indexing
  * @brief Flatten N-dimensional position to an array index.
  * @param position N-dimensional position
  * @param shape Shape of the array to index
- * @return T
+ * @return usize
  */
-inline uint64 Flatten(const std::vector<uint64>& position, const std::vector<uint64>& shape)
+inline usize Flatten(const std::vector<usize>& position, const std::vector<usize>& shape)
 {
-  using index_type = uint64;
+  using index_type = usize;
   const usize dimensions = position.size();
 
   if(shape.size() != dimensions)
@@ -452,17 +452,6 @@ inline uint64 Flatten(const std::vector<uint64>& position, const std::vector<uin
   }
 
   return index;
-}
-
-inline usize Flatten(const std::vector<usize>& position, const std::vector<usize>& shape)
-{
-  std::vector<uint64> positionUSize;
-  positionUSize.reserve(position.size());
-  std::vector<uint64> shapeUSize;
-  shapeUSize.reserve(shape.size());
-  std::transform(position.begin(), position.end(), std::back_inserter(positionUSize), [](const auto& val) { return static_cast<uint64>(val); });
-  std::transform(shape.begin(), shape.end(), std::back_inserter(shapeUSize), [](const auto& val) { return static_cast<uint64>(val); });
-  return Flatten(positionUSize, shapeUSize);
 }
 
 /**
