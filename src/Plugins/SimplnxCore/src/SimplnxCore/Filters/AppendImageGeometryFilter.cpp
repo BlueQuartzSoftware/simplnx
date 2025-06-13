@@ -182,7 +182,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   {
     pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
     auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
-                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellAttributeMatrixName);
+                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellAttributeMatrixName, destGeometry.getUnits());
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
