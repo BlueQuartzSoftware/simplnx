@@ -153,9 +153,9 @@ Result<> ComputeFeatureCentroids::operator()()
   IDataStore::ShapeType tupleShape{totalFeatures};
   IDataStore::ShapeType componentShape{3};
 
-  auto sumPtr = CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  auto centerPtr = CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  auto countPtr = CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto sumPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto centerPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto countPtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
 
   Float64AbstractDataStore& sum = *sumPtr.get();
   Float64AbstractDataStore& center = *centerPtr.get();
@@ -167,9 +167,9 @@ Result<> ComputeFeatureCentroids::operator()()
 
   // Create data stores to check if feature IDs are periodic
   componentShape[0] = 2;
-  auto rangeXStorePtr = CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  auto rangeYStorePtr = CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  auto rangeZStorePtr = CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto rangeXStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto rangeYStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto rangeZStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
 
   UInt64AbstractDataStore& rangeXStoreRef = *rangeXStorePtr.get();
   UInt64AbstractDataStore& rangeYStoreRef = *rangeYStorePtr.get();
