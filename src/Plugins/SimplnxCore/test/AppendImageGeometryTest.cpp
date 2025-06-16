@@ -6,7 +6,9 @@
 #include <simplnx/Utilities/DataArrayUtilities.hpp>
 
 #include "SimplnxCore/Filters/AppendImageGeometryFilter.hpp"
+#include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
+#include "SimplnxCore/Filters/DeleteDataFilter.hpp"
 #include "SimplnxCore/Filters/RenameDataObjectFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -29,12 +31,19 @@ const DataPath k_CroppedBottomYPath({"CroppedBottomY"});
 const DataPath k_CroppedMiddleYPath({"CroppedMiddleY"});
 const DataPath k_CroppedTopYPath({"CroppedTopY"});
 const DataPath k_AppendedGeometryPath({"AppendedGeometry"});
-constexpr StringLiteral k_MirroredXExemplarDCName("MirroredXDataContainer");
-constexpr StringLiteral k_MirroredYExemplarDCName("MirroredYDataContainer");
-constexpr StringLiteral k_MirroredZExemplarDCName("MirroredZDataContainer");
+const DataPath k_SmallerDataContainerPath({"SmallerDataContainer"});
+const DataPath k_MirroredXExemplarDCPath({"MirroredXDataContainer"});
+const DataPath k_MirroredYExemplarDCPath({"MirroredYDataContainer"});
+const DataPath k_MirroredZExemplarDCPath({"MirroredZDataContainer"});
 const DataPath k_InvalidTestGeometryPath1({"Image2dDataContainer"});
 const DataPath k_InvalidTestGeometryPath2({"Resampled_2D_ImageGeom"});
 const DataPath k_InvalidTestGeometryPath3({"Resampled_3D_ImageGeom"});
+const DataPath k_XInconsistentArraysExemplarDCPath({"XInconsistentArrays"});
+const DataPath k_YInconsistentArraysExemplarDCPath({"YInconsistentArrays"});
+const DataPath k_ZInconsistentArraysExemplarDCPath({"ZInconsistentArrays"});
+const DataPath k_MirroredXInconsistentArraysExemplarDCPath({"MirroredXInconsistentArrays"});
+const DataPath k_MirroredYInconsistentArraysExemplarDCPath({"MirroredYInconsistentArrays"});
+const DataPath k_MirroredZInconsistentArraysExemplarDCPath({"MirroredZInconsistentArrays"});
 const DataPath k_SmallIN100Path({k_SmallIN100});
 
 void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, const DataPath& createdPath, const std::vector<uint64>& minVoxel, const std::vector<uint64>& maxVoxel)
@@ -55,12 +64,38 @@ void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, co
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
+void addArray(DataStructure& dataStructure, const DataPath& dataArrayPath, NumericType numericType, uint64 compCount, const std::string& initValue)
+{
+  CreateDataArrayFilter filter;
+  Arguments args;
+
+  args.insert(CreateDataArrayFilter::k_NumericType_Key, std::make_any<NumericType>(numericType));
+  args.insert(CreateDataArrayFilter::k_NumComps_Key, std::make_any<uint64>(compCount));
+  args.insert(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+  args.insert(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(dataArrayPath));
+  args.insert(CreateDataArrayFilter::k_InitializationValue_Key, std::make_any<std::string>(initValue));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+}
+
+void removeArray(DataStructure& dataStructure, const DataPath& dataArrayPath)
+{
+  DeleteDataFilter filter;
+  Arguments args;
+
+  args.insert(DeleteDataFilter::k_DataPath_Key, std::make_any<std::vector<DataPath>>({dataArrayPath}));
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+}
+
 void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minMiddleVoxel,
                                         const std::vector<uint64>& maxMiddleVoxel, const std::vector<uint64>& minTopVoxel, const std::vector<uint64>& maxTopVoxel, const DataPath& bottomPath,
                                         const DataPath& middlePath, const DataPath& topPath)
 {
   // Create a neighbor list and string array for the original input geometry and manually divide them up to the two cropped halves since CropImageGeometryFilter only supports IDataArrays
-  const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DataContainerPath.createChildPath(k_CellData));
+  const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_SmallerDataContainerPath.createChildPath(k_CellData));
   const usize numTuples = cellDataAM.getNumTuples();
 
   std::vector<std::string> stringArrayValues(numTuples);
@@ -163,6 +198,7 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
   args.insertOrAssign(AppendImageGeometryFilter::k_CheckResolution_Key, std::make_any<bool>(true));
   args.insertOrAssign(AppendImageGeometryFilter::k_SaveAsNewGeometry_Key, std::make_any<bool>(newGeometryPathOpt.has_value()));
   args.insertOrAssign(AppendImageGeometryFilter::k_MirrorGeometry_Key, std::make_any<bool>(mirror));
+  args.insertOrAssign(AppendImageGeometryFilter::k_DefaultValue_Key, std::make_any<std::string>("2"));
 
   if(newGeometryPathOpt.has_value())
   {
@@ -190,60 +226,100 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
 
 } // namespace
 
+static usize num = 1;
+
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  auto [dimensionStr, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, exemplarGeometryPath, appendDimension, mirror] =
-      GENERATE(std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
-                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_DataContainer, 0, false),
-               std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
-                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_DataContainer, 1, false),
-               std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
-                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_DataContainer, 2, false),
-               std::make_tuple("X Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{66, 200, 116}, std::vector<uint64>{67, 0, 0}, std::vector<uint64>{121, 200, 116},
-                               std::vector<uint64>{122, 0, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_MirroredXExemplarDCName, 0, true),
-               std::make_tuple("Y Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 62, 116}, std::vector<uint64>{0, 63, 0}, std::vector<uint64>{188, 122, 116},
-                               std::vector<uint64>{0, 123, 0}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_MirroredYExemplarDCName, 1, true),
-               std::make_tuple("Z Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{188, 200, 41}, std::vector<uint64>{0, 0, 42}, std::vector<uint64>{188, 200, 87},
-                               std::vector<uint64>{0, 0, 88}, std::vector<uint64>{188, 200, 116}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_MirroredZExemplarDCName, 2, true));
-
-  SECTION(fmt::format("{}", dimensionStr))
   {
-    // Crop bottom half
-    cropGeometry(dataStructure, k_DataContainerPath, bottomPath, minBottom, maxBottom);
+    auto [dimensionStr, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath, exemplarGeometryPath, appendDimension, mirror, testMissingArrays, testExtraArrays,
+          exemplarNumAppendedArrays] =
+        GENERATE(
+            std::make_tuple("X Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{10, 29, 29}, std::vector<uint64>{11, 0, 0}, std::vector<uint64>{20, 29, 29}, std::vector<uint64>{21, 0, 0},
+                            std::vector<uint64>{29, 29, 29}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_SmallerDataContainerPath, 0, false, false, false, 8),
+            std::make_tuple("Y Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 10, 29}, std::vector<uint64>{0, 11, 0}, std::vector<uint64>{29, 20, 29}, std::vector<uint64>{0, 21, 0},
+                            std::vector<uint64>{29, 29, 29}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_SmallerDataContainerPath, 1, false, false, false, 8),
+            std::make_tuple("Z Dimension", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 29, 10}, std::vector<uint64>{0, 0, 11}, std::vector<uint64>{29, 29, 20}, std::vector<uint64>{0, 0, 21},
+                            std::vector<uint64>{29, 29, 29}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_SmallerDataContainerPath, 2, false, false, false, 8),
+            std::make_tuple("X Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{10, 29, 29}, std::vector<uint64>{11, 0, 0}, std::vector<uint64>{20, 29, 29},
+                            std::vector<uint64>{21, 0, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_MirroredXExemplarDCPath, 0, true, false,
+                            false, 8),
+            std::make_tuple("Y Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 10, 29}, std::vector<uint64>{0, 11, 0}, std::vector<uint64>{29, 20, 29},
+                            std::vector<uint64>{0, 21, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_MirroredYExemplarDCPath, 1, true, false,
+                            false, 8),
+            std::make_tuple("Z Dimension Mirrored", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 29, 10}, std::vector<uint64>{0, 0, 11}, std::vector<uint64>{29, 29, 20},
+                            std::vector<uint64>{0, 0, 21}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_MirroredZExemplarDCPath, 2, true, false,
+                            false, 8),
+            std::make_tuple("X Dimension - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{10, 29, 29}, std::vector<uint64>{11, 0, 0}, std::vector<uint64>{20, 29, 29},
+                            std::vector<uint64>{21, 0, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_XInconsistentArraysExemplarDCPath, 0,
+                            false, true, true, 9),
+            std::make_tuple("Y Dimension - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 10, 29}, std::vector<uint64>{0, 11, 0}, std::vector<uint64>{29, 20, 29},
+                            std::vector<uint64>{0, 21, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_YInconsistentArraysExemplarDCPath, 1,
+                            false, true, true, 9),
+            std::make_tuple("Z Dimension - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 29, 10}, std::vector<uint64>{0, 0, 11}, std::vector<uint64>{29, 29, 20},
+                            std::vector<uint64>{0, 0, 21}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_ZInconsistentArraysExemplarDCPath, 2,
+                            false, true, true, 9),
+            std::make_tuple("X Dimension Mirrored - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{10, 29, 29}, std::vector<uint64>{11, 0, 0}, std::vector<uint64>{20, 29, 29},
+                            std::vector<uint64>{21, 0, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomXPath, k_CroppedMiddleXPath, k_CroppedTopXPath, k_MirroredXInconsistentArraysExemplarDCPath,
+                            0, true, true, true, 9),
+            std::make_tuple("Y Dimension Mirrored - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 10, 29}, std::vector<uint64>{0, 11, 0}, std::vector<uint64>{29, 20, 29},
+                            std::vector<uint64>{0, 21, 0}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomYPath, k_CroppedMiddleYPath, k_CroppedTopYPath, k_MirroredYInconsistentArraysExemplarDCPath,
+                            1, true, true, true, 9),
+            std::make_tuple("Z Dimension Mirrored - Inconsistent Arrays", std::vector<uint64>{0, 0, 0}, std::vector<uint64>{29, 29, 10}, std::vector<uint64>{0, 0, 11}, std::vector<uint64>{29, 29, 20},
+                            std::vector<uint64>{0, 0, 21}, std::vector<uint64>{29, 29, 29}, k_CroppedBottomZPath, k_CroppedMiddleZPath, k_CroppedTopZPath, k_MirroredZInconsistentArraysExemplarDCPath,
+                            2, true, true, true, 9));
 
-    // Crop middle half
-    cropGeometry(dataStructure, k_DataContainerPath, middlePath, minMiddle, maxMiddle);
-
-    // Crop top half
-    cropGeometry(dataStructure, k_DataContainerPath, topPath, minTop, maxTop);
-
-    // Create neighbor lists and string arrays
-    createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
-
-    DataPath appendedCellDataPath;
-    SECTION("Append Geometry")
+    SECTION(fmt::format("{}", dimensionStr))
     {
-      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {}, mirror);
-      appendedCellDataPath = bottomPath.createChildPath(k_CellData);
+      // Crop bottom third
+      cropGeometry(dataStructure, k_SmallerDataContainerPath, bottomPath, minBottom, maxBottom);
+
+      // Crop middle third
+      cropGeometry(dataStructure, k_SmallerDataContainerPath, middlePath, minMiddle, maxMiddle);
+
+      // Crop top third
+      cropGeometry(dataStructure, k_SmallerDataContainerPath, topPath, minTop, maxTop);
+
+      // Create neighbor lists and string arrays
+      createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
+
+      if(testMissingArrays)
+      {
+        // Remove arrays
+        removeArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Confidence_Index));
+        removeArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Phases));
+      }
+
+      if(testExtraArrays)
+      {
+        // Add array
+        addArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath("Foo"), NumericType::float32, 1, "5");
+      }
+
+      DataPath appendedCellDataPath;
+      SECTION("Append Geometry")
+      {
+        appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {}, mirror);
+        appendedCellDataPath = bottomPath.createChildPath(k_CellData);
+      }
+
+      SECTION("New Geometry")
+      {
+        appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath, mirror);
+        appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
+      }
+
+      const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
+      REQUIRE(numAppendedArrays == exemplarNumAppendedArrays);
+
+      CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, exemplarGeometryPath.getTargetName());
     }
-
-    SECTION("New Geometry")
-    {
-      appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath, mirror);
-      appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
-    }
-
-    const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
-    REQUIRE(numAppendedArrays == 8);
-
-    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, exemplarGeometryPath);
   }
 }
 
