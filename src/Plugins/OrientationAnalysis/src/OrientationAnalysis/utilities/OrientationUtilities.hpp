@@ -74,7 +74,7 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> EbsdLibMatrixToEigenMatrix(const EbsdLib
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
 
 template <typename T>
-Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrix(T g[3][3])
+Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrix(const T g[3][3])
 {
   Eigen::Matrix<T, 3, 3, Eigen::RowMajor> eigenMatrix;
   eigenMatrix(0, 0) = g[0][0];
