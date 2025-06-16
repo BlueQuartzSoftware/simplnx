@@ -13,7 +13,7 @@ using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix3dR = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
 
 using Matrix1dR = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
-using Matrix1FR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
+using Matrix1fR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
 
 template <typename T>
 Eigen::Matrix<T, 3, 3, Eigen::RowMajor> OrientationMatrixToGMatrix(const Orientation<T>& oMatrix)
@@ -90,7 +90,7 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrix(const T g[3][3])
 }
 
 template <typename T>
-Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(T oMatrix[3][3])
+Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(const T oMatrix[3][3])
 {
   Eigen::Matrix<T, 3, 3, Eigen::RowMajor> g1t;
   g1t(0, 0) = oMatrix[0];
