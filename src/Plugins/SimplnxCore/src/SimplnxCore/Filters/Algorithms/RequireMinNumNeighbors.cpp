@@ -10,35 +10,29 @@ using namespace nx::core;
 
 namespace
 {
-
-struct UpdateDataFunctor
+Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
+                            const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
 {
-  template <typename T>
-  Result<> operator()(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
-                      const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
+  auto* voxelArray = dataStructure.getDataAs<IDataArray>(dataArrayPath);
+  auto arraySize = voxelArray->getSize();
+  for(const auto& featureIdIndex : badFeatureIdIndexes)
   {
-    auto voxelArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
-    auto arraySize = voxelArray.getSize();
-    for(const auto& featureIdIndex : badFeatureIdIndexes)
+    int32 featureName = featureIds.getValue(featureIdIndex);
+    int32 neighbor = neighbors[featureIdIndex];
+    if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds.getValue(neighbor) >= 0))
     {
-      int32 featureName = featureIds[featureIdIndex];
-      int32 neighbor = neighbors[featureIdIndex];
-      if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds[neighbor] >= 0))
-      {
-        std::string message =
-            fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, dataArrayPath.toString(), arraySize);
-        mesgHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
-        return MakeErrorResult(-55568, message);
-      }
-      if(int32 fId = featureIds[neighbor]; featureName < 0 && neighbor >= 0 && fId >= 0)
-      {
-        voxelArray.copyTuple(neighbor, featureIdIndex);
-      }
+      const std::string message =
+          fmt::format("Out of range: While trying to copy a tuple from index {} to index {}\n  Array Name: {}\n  Num. Tuples: {}", neighbor, featureIdIndex, dataArrayPath.toString(), arraySize);
+      mesgHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
+      return MakeErrorResult(-55568, message);
     }
-    return {};
+    if(int32 fId = featureIds.getValue(neighbor); featureName < 0 && neighbor >= 0 && fId >= 0)
+    {
+      voxelArray->copyTuple(neighbor, featureIdIndex);
+    }
   }
-};
-
+  return {};
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -324,8 +318,7 @@ Result<> RequireMinNumNeighbors::operator()()
       {
         return {};
       }
-      auto* voxelArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-      ExecuteDataFunction(UpdateDataFunctor{}, voxelArray->getDataType(), m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
+      CopyTupleFromArray(m_DataStructure, cellArrayPath, badFeatureIdIndexes, featureIds, neighbors, m_MessageHandler);
     }
   }
 
