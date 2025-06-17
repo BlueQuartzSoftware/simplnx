@@ -42,6 +42,25 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
   // return BaseGroup::readHdf5(dataStructureReader, groupReader, useEmptyDataStore);
   return {};
 }
+
+Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
+  auto* geometry = dataStructure.getDataAs<EdgeGeom>(dataPath);
+  if (geometry == nullptr)
+  {
+    return MakeErrorResult(-25070, fmt::format("Failed to finish importing geometry at path '{}'. Geometry does not exist or is of wrong type.", dataPath.toString()));
+  }
+
+  auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+  geometry->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+  geometry->setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+  geometry->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+  geometry->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+  geometry->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+
+  return {};
+}
+
 Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());

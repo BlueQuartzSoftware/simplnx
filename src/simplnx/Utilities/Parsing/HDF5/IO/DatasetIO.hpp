@@ -523,7 +523,7 @@ extern template std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDa
 extern template std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>() const;
 extern template std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>() const;
 #ifdef __APPLE__
-extern template std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>() const;
+// extern template std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>() const;
 #endif
 extern template std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>() const;
 extern template std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>() const;

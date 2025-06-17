@@ -27,6 +27,27 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
 
   return {};
 }
+
+Result<> INodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<INodeGeometry1D>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50590, fmt::format("Failed to finish importing INodeGeometry1D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  {
+    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+    geom->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+    geom->setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+    geom->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+    geom->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+    geom->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  }
+
+  return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   Result<> result = INodeGeom0dIO::WriteNodeGeom0dData(dataStructureWriter, geometry, parentGroupWriter, importable);

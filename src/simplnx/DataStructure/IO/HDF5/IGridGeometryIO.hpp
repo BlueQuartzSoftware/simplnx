@@ -45,6 +45,8 @@ protected:
    * @return Result<>
    */
   static Result<> WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable);
+
+  static Result<> FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
 };
 } // namespace HDF5
 } // namespace nx::core

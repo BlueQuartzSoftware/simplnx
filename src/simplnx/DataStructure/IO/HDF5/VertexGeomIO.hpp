@@ -30,6 +30,8 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
+
   /**
    * @brief Attempts to write an VertexGeom to HDF5.
    * @param dataStructureWriter

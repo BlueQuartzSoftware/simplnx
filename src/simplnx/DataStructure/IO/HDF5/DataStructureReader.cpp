@@ -60,7 +60,7 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
   std::shared_ptr<IDataIO> factory = nullptr;
 
   std::string parentPathString = Constants::k_DataStructureTag;
-  parentPathString += dataPath.getParent().toString();
+  parentPathString += "/" + dataPath.getParent().toString();
 
   DataStructureReader dataStructureReader;
   auto parentGroupReader = fileReader.openGroup(parentPathString);

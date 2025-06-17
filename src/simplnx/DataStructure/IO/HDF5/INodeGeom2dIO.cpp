@@ -27,6 +27,24 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
   return {};
 }
 
+Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50591, fmt::format("Failed to finish importing INodeGeometry2D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  {
+    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+    geom->setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
+    geom->setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
+    geom->setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
+  }
+
+  return INodeGeom1dIO::FinishImportingNodeGeom1dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   Result<> result = INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);

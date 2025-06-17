@@ -49,6 +49,8 @@ protected:
    * @return Result<>
    */
   static Result<> WriteGeometryData(DataStructureWriter& dataStructureWriter, const IGeometry& geometry, group_writer_type& parentGroup, bool importable);
+
+  static Result<> FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
 };
 } // namespace HDF5
 } // namespace nx::core

@@ -144,6 +144,7 @@ bool GroupIO::exists(const std::string& childName) const
 
 ObjectIO::ObjectType GroupIO::getObjectType(const std::string& childName) const
 {
+  open();
   if(!isValid())
   {
     return ObjectType::Unknown;

@@ -26,6 +26,25 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
 
   return {};
 }
+
+Result<> INodeGeom3dIO::FinishImportingNodeGeom3dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<INodeGeometry3D>(dataPath);
+  if (geom == nullptr)
+  {
+    return MakeErrorResult(-50592, fmt::format("Failed to finish importing INodeGeometry3D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  {
+    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+    geom->setPolyhedronListId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
+    geom->setPolyhedraDataId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
+    geom->setUnsharedFacedId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
+  }
+  
+  return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geom, group_writer_type& parentGroup, bool importable)
 {
   Result<> result = INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geom, parentGroup, importable);

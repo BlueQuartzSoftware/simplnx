@@ -61,6 +61,42 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   return {};
 }
 
+Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
+  auto* geom = dataStructure.getDataAs<RectGridGeom>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50590, fmt::format("Failed to finish importing RectGridGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  {
+    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
+
+    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+    {
+      auto value = unitsAttr.value();
+      geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+    }
+
+    // Read Dimensions
+    auto volumeDimensionsResult = groupReader.readVectorAttribute<usize>("Dimensions");
+    if(volumeDimensionsResult.invalid())
+    {
+      return ConvertInvalidResult<void>(std::move(volumeDimensionsResult));
+    }
+    const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
+
+    geom->setDimensions(volumeDimensions);
+
+    // Read DataObject IDs
+    geom->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
+    geom->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
+    geom->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+  }
+
+  return IGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable) const
 {
   Result<> result = IGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroup, importable);

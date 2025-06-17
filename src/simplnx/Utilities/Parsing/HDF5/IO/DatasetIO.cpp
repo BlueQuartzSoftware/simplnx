@@ -464,7 +464,7 @@ std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore() const
 
   ShapeType tupleShape{numElements};
   ShapeType componentShape{1};
-  auto dataStorePtr = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  std::shared_ptr<AbstractDataStore<T>> dataStorePtr = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
   dataStorePtr->readHdf5(*this);
   return dataStorePtr;
 }
@@ -1427,7 +1427,7 @@ template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>() const;
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>() const;
 #ifdef __APPLE__
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>() const;
+// template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>() const;
 #endif
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>() const;
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>() const;

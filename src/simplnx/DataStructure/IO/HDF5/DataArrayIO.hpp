@@ -66,7 +66,7 @@ public:
    * @param dataStructureReader
    * @return Result<>
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -79,7 +79,7 @@ public:
       return MakeErrorResult(-150201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
     }
 
-    auto datasetReader = dataStructureGroup.openDataset(dataPath.toString());
+    auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
     std::string dataTypeStr;
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
     dataTypeStr = std::move(dataTypeStrResult.value());
