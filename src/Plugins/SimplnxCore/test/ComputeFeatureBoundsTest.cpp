@@ -89,7 +89,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.5f, 1.5f, 0.5f, 3.5f, 3.5f, 0.5f};
+  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
   const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
@@ -161,7 +161,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.5f, 1.5f, 0.5f, 3.5f, 3.5f, 0.5f};
+  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
   const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
   const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
