@@ -403,16 +403,6 @@ T GetLengthOfRayInBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
 
 /**
- * @brief Returns the BoundingBox around the specified face manipulated by the
- * provided rotation matrix.
- * @param faces
- * @param faceId
- * @param float[3][3]
- * @return nx::core::BoundingBox<float32>
- */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfRotatedFace(nx::core::TriangleGeom& faces, int32 faceId, float32 g[3][3]);
-
-/**
  * @brief Returns the BoundingBox around the specified face.
  * @param faces
  * @param faceId
@@ -426,19 +416,6 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
  * @return nx::core::BoundingBox<float32>
  */
 nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds);
-
-/**
- * @brief Returns the bounding box around the specified faces manipulated by the
- * provided rotation matrix.
- * @param faces
- * @param faceIds
- * @param float32 g[3][3]
- * @return nx::core::BoundingBox<float32>
- */
-// nx::core::BoundingBox<float32> FindBoundingBoxOfRotatedFaces(TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds, float32 g[3][3])
-//{
-//  throw std::runtime_error("");
-//}
 
 /**
  * @brief Returns true if the specified Ray crosses into or out of the triangle

@@ -185,7 +185,6 @@ Result<> WriteGBCDGMTFile::operator()()
       for(int32 i = 0; i < nSym; i++)
       {
         // get symmetry operator1
-        // double tempSymOperator[3][3];
         EbsdLib::Matrix3X3D tSymOp = orientOps->getMatSymOpD(i);
         const Matrix3X3Type sym1 = (Matrix3X3Type() << tSymOp[0], tSymOp[1], tSymOp[2], tSymOp[3], tSymOp[4], tSymOp[5], tSymOp[6], tSymOp[7], tSymOp[8]).finished();
 
