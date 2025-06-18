@@ -164,3 +164,115 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
   } // End Region Loop
 #endif
 } // namespace nx::core::GeometryHelpers::Connectivity
+
+namespace nx::core::GeometryHelpers::Topology
+{
+BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet)
+{
+  if(vertexSet.empty())
+  {
+    return {};
+  }
+
+  BoundingBoxFaces edgeFaces;
+
+  const auto maxPoint = boundingBox.getMaxPoint();
+  const auto minPoint = boundingBox.getMinPoint();
+
+  constexpr float32 k_Epsilon = std::numeric_limits<float32>::epsilon();
+
+  for(const auto& vert : vertexSet)
+  {
+    const float32 x = vertices[3 * vert + 0];
+    const float32 y = vertices[3 * vert + 1];
+    const float32 z = vertices[3 * vert + 2];
+
+    if(std::abs(x - minPoint[0]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::left);
+    }
+    else if(std::abs(x - maxPoint[0]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::right);
+    }
+
+    if(std::abs(y - minPoint[1]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::top);
+    }
+    else if(std::abs(y - maxPoint[1]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::bottom);
+    }
+
+    if(std::abs(z - minPoint[2]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::front);
+    }
+    else if(std::abs(z - maxPoint[2]) <= k_Epsilon)
+    {
+      edgeFaces.insert(BoundingBox3Df::faces_enum::back);
+    }
+  }
+  return edgeFaces;
+}
+
+bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
+{
+  bool isPeriodic = false;
+  const auto minPoint = boundingBox.getMinPoint();
+  const auto maxPoint = boundingBox.getMaxPoint();
+
+  if(faces.contains(BoundingBox3Df::faces_enum::left) && faces.contains(BoundingBox3Df::faces_enum::right))
+  {
+    centroids[3 * featureId + 0] += std::abs(maxPoint[0] - minPoint[0]) / 2.0f;
+    isPeriodic = true;
+  }
+  if(faces.contains(BoundingBox3Df::faces_enum::top) && faces.contains(BoundingBox3Df::faces_enum::bottom))
+  {
+    centroids[3 * featureId + 1] += std::abs(maxPoint[1] - minPoint[1]) / 2.0f;
+    isPeriodic = true;
+  }
+  if(faces.contains(BoundingBox3Df::faces_enum::front) && faces.contains(BoundingBox3Df::faces_enum::back))
+  {
+    centroids[3 * featureId + 2] += std::abs(maxPoint[2] - minPoint[2]) / 2.0f;
+    isPeriodic = true;
+  }
+
+  return isPeriodic;
+}
+
+bool AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
+                                     Float32AbstractDataStore& centroids)
+{
+  const size_t xPoints = imageGeom.getNumXCells() - 1;
+  const size_t yPoints = imageGeom.getNumYCells() - 1;
+  const size_t zPoints = imageGeom.getNumZCells() - 1;
+
+  bool isAdjusted = false;
+
+  const usize numFeatures = xRanges.size() / 2;
+  for(usize featureId = 0; featureId < numFeatures; featureId++)
+  {
+    if(xRanges[featureId * 2 + 0] == 0 && xRanges[featureId * 2 + 1] == xPoints)
+    {
+      isAdjusted = true;
+      centroids[featureId * 3 + 0] += xPoints / 2.0f;
+    }
+
+    if(yRanges[featureId * 2 + 0] == 0 && yRanges[featureId * 2 + 1] == yPoints)
+    {
+      isAdjusted = true;
+      centroids[featureId * 3 + 1] += yPoints / 2.0f;
+    }
+
+    if(zRanges[featureId * 2 + 0] == 0 && zRanges[featureId * 2 + 1] == zPoints)
+    {
+      isAdjusted = true;
+      centroids[featureId * 3 + 2] += zPoints / 2.0f;
+    }
+  }
+
+  return isAdjusted;
+}
+} // namespace nx::core::GeometryHelpers::Topology

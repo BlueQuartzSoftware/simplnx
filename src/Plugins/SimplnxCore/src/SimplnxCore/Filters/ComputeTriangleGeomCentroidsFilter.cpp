@@ -7,6 +7,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -60,6 +61,8 @@ Parameters ComputeTriangleGeomCentroidsFilter::parameters() const
                                                                     DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Calculated Centroids", "Centroid values created in the Face Feature Data", "Centroids"));
+
+  params.insert(std::make_unique<BoolParameter>(k_IsPeriodic_Key, "Is Periodic", "Should segment features wrap around the image data", false));
 
   return params;
 }
@@ -118,6 +121,7 @@ Result<> ComputeTriangleGeomCentroidsFilter::executeImpl(DataStructure& dataStru
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
 
   auto volumesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
   inputValues.CentroidsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(volumesArrayNameValue);

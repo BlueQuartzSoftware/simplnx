@@ -21,6 +21,7 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
   int ScalarTolerance = 0;
   bool UseMask;
   bool RandomizeFeatureIds;
+  bool IsPeriodic = false;
   DataPath ImageGeometryPath;
   DataPath InputDataPath;
   DataPath MaskArrayPath;

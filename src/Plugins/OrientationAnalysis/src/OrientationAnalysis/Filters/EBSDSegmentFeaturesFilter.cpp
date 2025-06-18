@@ -95,6 +95,8 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
                                                           "At the end of the Filter, all Features will be Active",
                                                           "Active"));
 
+  params.insert(std::make_unique<BoolParameter>(k_IsPeriodic_Key, "Is Periodic", "Should segment features wrap around the image data", false));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
@@ -202,6 +204,7 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
 
   // Let the Algorithm instance do the work
   return EBSDSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -85,6 +85,8 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureName_Key, "Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "Cell Feature Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "Created array", "Active"));
 
+  params.insert(std::make_unique<BoolParameter>(k_IsPeriodic_Key, "Is Periodic", "Should segment features wrap around the image data", false));
+
   return params;
 }
 
@@ -195,6 +197,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.ImageGeometryPath = args.value<DataPath>(k_GridGeomPath_Key);
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.IsPeriodic = args.value<bool>(k_IsPeriodic_Key);
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

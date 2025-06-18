@@ -8,6 +8,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -65,6 +66,8 @@ Parameters ComputeFeatureCentroidsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Centroids", "DataPath to create the 'Centroids' output array", "Centroids"));
+
+  params.insert(std::make_unique<BoolParameter>(k_IsPeriodic_Key, "Is Periodic", "Should segment features wrap around the image data", false));
 
   return params;
 }
@@ -128,6 +131,7 @@ Result<> ComputeFeatureCentroidsFilter::executeImpl(DataStructure& dataStructure
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   inputValues.CentroidsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pCentroidsArrayName);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
 
   return ComputeFeatureCentroids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

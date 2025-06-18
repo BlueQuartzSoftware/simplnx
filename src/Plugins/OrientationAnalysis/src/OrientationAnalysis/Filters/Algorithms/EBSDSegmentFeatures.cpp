@@ -13,6 +13,7 @@ EBSDSegmentFeatures::EBSDSegmentFeatures(DataStructure& dataStructure, const IFi
 , m_InputValues(inputValues)
 {
   m_OrientationOps = LaueOps::GetAllOrientationOps();
+  m_IsPeriodic = inputValues->IsPeriodic;
 }
 
 // -----------------------------------------------------------------------------

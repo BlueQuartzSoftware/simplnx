@@ -15,6 +15,7 @@ struct SIMPLNXCORE_EXPORT ComputeTriangleGeomCentroidsInputValues
   DataPath FaceLabelsArrayPath;
   DataPath FeatureAttributeMatrixPath;
   DataPath CentroidsArrayPath;
+  bool IsPeriodic = false;
 };
 
 /**

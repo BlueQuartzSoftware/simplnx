@@ -37,6 +37,7 @@ public:
   static inline constexpr StringLiteral k_CellFeatureName_Key = "cell_feature_group_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
+  static inline constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
