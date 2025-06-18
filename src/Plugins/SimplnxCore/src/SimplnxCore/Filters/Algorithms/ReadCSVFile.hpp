@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/util/ReadCSVData.hpp"
 
 namespace fs = std::filesystem;
 
@@ -46,11 +47,11 @@ public:
   ReadCSVFile& operator=(const ReadCSVFile&) = delete;
   ReadCSVFile& operator=(ReadCSVFile&&) noexcept = delete;
 
-  Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders,
-                    const std::vector<DataType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims,
-                    const std::vector<char>& delimiters, bool consecutiveDelimiters, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler);
+  Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders, const std::vector<CSVType>& columnDataTypes,
+                    const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
+                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler);
 
-  Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<DataType>& columnDataTypes,
+  Result<> readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<CSVType>& columnDataTypes,
                     const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
                     const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler);
 };

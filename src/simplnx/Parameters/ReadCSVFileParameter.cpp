@@ -116,15 +116,15 @@ constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
 constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
 constexpr StringLiteral k_ConsecutiveDelimitersKey = "Wizard_ConsecutiveDelimiters";
 
-std::vector<DataType> ConvertDataTypeStrings(const std::vector<std::string>& dataTypes)
+std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
 {
-  std::vector<DataType> output;
+  std::vector<CSVType> output;
 
   for(usize i = 0; i < dataTypes.size(); i++)
   {
     try
     {
-      output.push_back(nx::core::StringToDataType(dataTypes[i]));
+      output.push_back(nx::core::StringToCSVType(dataTypes[i]));
     } catch(const std::exception& e)
     {
     }
@@ -158,7 +158,7 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
   value.customHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
   value.startImportRow = json[k_BeginIndexKey].get<int32>();
-  value.dataTypes = ConvertDataTypeStrings(dataTypeStrings);
+  value.dataTypes = ConvertCSVTypeStrings(dataTypeStrings);
   value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
   value.headersLine = json[k_HeaderLineKey].get<int32>();
 

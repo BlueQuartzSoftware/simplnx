@@ -26,7 +26,7 @@ ReadCSVFile::ReadCSVFile() = default;
 
 ReadCSVFile::~ReadCSVFile() noexcept = default;
 
-Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<DataType>& columnDataTypes,
+Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<CSVType>& columnDataTypes,
                                const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)
 {
@@ -39,7 +39,7 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
 }
 
 Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders,
-                               const std::vector<DataType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims,
+                               const std::vector<CSVType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const std::vector<usize>& tupleDims,
                                const std::vector<char>& delimiters, bool consecutiveDelimiters, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)
 {
   auto headers = columnHeaders;
