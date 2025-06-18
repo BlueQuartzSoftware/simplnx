@@ -68,7 +68,7 @@ Parameters ComputeFeatureBoundsFilter::parameters() const
       k_OutputType_Key, "Output Array(s) Type", "If split two three component arrays will be created (Max & Min). If unified one six component array will be created with the XYZXYZ MinMax scheme",
       to_underlying(ComputeFeatureBounds::OutputDataType::Split), ChoicesParameter::Choices{"Split", "Unified"})); // sequence dependent DO NOT REORDER
   params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_Generate_Geometry, "Create Bounding Box Geometries", "Whether or not to create an Edge geometry that are the bounding boxes", false));
+      std::make_unique<BoolParameter>(k_CreateEdgeGeometry_Key, "Create Bounding Box Geometries", "Whether or not to create an Edge geometry that contains the bounding boxes", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(
@@ -93,16 +93,16 @@ Parameters ComputeFeatureBoundsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputEdgeGeometryPath_Key, "Created Edge Geometry", "The name of the created Edge Geometry", DataPath({"Edge Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "Attribute Matrix to store information about the created edges", "Edge Data"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Edge Feature Ids", "Identifies the Feature Id to which each edge belongs", "Feature Ids"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedFeatureIdsArrayName_Key, "Edge Feature Ids", "Identifies the Feature Id to which each edge belongs", "Feature Ids"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputType_Key, k_MinArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
   params.linkParameters(k_OutputType_Key, k_MaxArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
   params.linkParameters(k_OutputType_Key, k_UnifiedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Unified)));
 
-  params.linkParameters(k_Generate_Geometry, k_OutputEdgeGeometryPath_Key, static_cast<BoolParameter::ValueType>(true));
-  params.linkParameters(k_Generate_Geometry, k_EdgeAttributeMatrixName_Key, static_cast<BoolParameter::ValueType>(true));
-  params.linkParameters(k_Generate_Geometry, k_FeatureIdsArrayName_Key, static_cast<BoolParameter::ValueType>(true));
+  params.linkParameters(k_CreateEdgeGeometry_Key, k_OutputEdgeGeometryPath_Key, static_cast<BoolParameter::ValueType>(true));
+  params.linkParameters(k_CreateEdgeGeometry_Key, k_EdgeAttributeMatrixName_Key, static_cast<BoolParameter::ValueType>(true));
+  params.linkParameters(k_CreateEdgeGeometry_Key, k_CreatedFeatureIdsArrayName_Key, static_cast<BoolParameter::ValueType>(true));
 
   return params;
 }
@@ -128,10 +128,10 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   auto pFeatureIdsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
   auto pSelectedGeomPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
 
-  auto pCreateEdgeGeometry = filterArgs.value<bool>(k_Generate_Geometry);
+  auto pCreateEdgeGeometry = filterArgs.value<bool>(k_CreateEdgeGeometry_Key);
   auto pSliceDataContainerNameValue = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputEdgeGeometryPath_Key);
   auto pEdgeAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_EdgeAttributeMatrixName_Key);
-  auto pFeatureIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureIdsArrayName_Key);
+  auto pFeatureIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedFeatureIdsArrayName_Key);
 
   const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
 
@@ -205,10 +205,10 @@ Result<> ComputeFeatureBoundsFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.MaxArrayPath = inputValues.FeatureAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MaxArrayName_Key));
   inputValues.UnifiedArrayPath = inputValues.FeatureAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_UnifiedArrayName_Key));
 
-  inputValues.CreateEdgeGeometry = filterArgs.value<bool>(k_Generate_Geometry);
+  inputValues.CreateEdgeGeometry = filterArgs.value<bool>(k_CreateEdgeGeometry_Key);
   inputValues.EdgeGeometryDataPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputEdgeGeometryPath_Key);
   inputValues.EdgeAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EdgeAttributeMatrixName_Key);
-  inputValues.FeatureIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureIdsArrayName_Key);
+  inputValues.FeatureIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedFeatureIdsArrayName_Key);
 
   return ComputeFeatureBounds(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

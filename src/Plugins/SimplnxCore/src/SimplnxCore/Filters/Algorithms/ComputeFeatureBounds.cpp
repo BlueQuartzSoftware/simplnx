@@ -29,20 +29,20 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
   std::vector<float32> bounds(numFeatures * 6, std::numeric_limits<float32>::quiet_NaN());
   if constexpr(std::is_same_v<ImageGeom, GeomT>)
   {
-    size_t xPoints = geom.getNumXCells();
-    size_t yPoints = geom.getNumYCells();
-    size_t zPoints = geom.getNumZCells();
+    usize xPoints = geom.getNumXCells();
+    usize yPoints = geom.getNumYCells();
+    usize zPoints = geom.getNumZCells();
     FloatVec3 spacing = geom.getSpacing();
     FloatVec3 origin = geom.getOrigin();
 
-    size_t zStride = 0, yStride = 0;
-    for(size_t i = 0; i < zPoints; i++)
+    usize zStride = 0, yStride = 0;
+    for(usize i = 0; i < zPoints; i++)
     {
       zStride = i * xPoints * yPoints;
-      for(size_t j = 0; j < yPoints; j++)
+      for(usize j = 0; j < yPoints; j++)
       {
         yStride = j * xPoints;
-        for(size_t k = 0; k < xPoints; k++)
+        for(usize k = 0; k < xPoints; k++)
         {
           const int32 currentFeatureId = featureIds[zStride + yStride + k];
           if(currentFeatureId < 0)
@@ -280,8 +280,8 @@ Result<> ComputeFeatureBounds::operator()()
     std::array<usize, 2> vertPair = {0, 0};
 
     // Compute the number of features which will tell use the number of vertices and edges
-    size_t numVerts = numFeatures * 8;
-    size_t numEdges = numFeatures * 12;
+    usize numVerts = numFeatures * 8;
+    usize numEdges = numFeatures * 12;
 
     auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometryDataPath);
     edgeGeom.resizeVertexList(numVerts);
@@ -292,8 +292,8 @@ Result<> ComputeFeatureBounds::operator()()
     DataPath edgeAmPath = m_InputValues->EdgeGeometryDataPath.createChildPath(m_InputValues->EdgeAttributeMatrixName);
     auto& edgeFeatureIds = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->FeatureIdsArrayName)).getDataStoreRef();
     edgeFeatureIds.fill(-1);
-    size_t currentOffset = 0;
-    for(size_t idx = 0; idx < numFeatures; ++idx)
+    usize currentOffset = 0;
+    for(usize idx = 0; idx < numFeatures; ++idx)
     {
       usize activeIndex = idx * 6;
       // NaN values mean that there was something wrong with the bounding min/max points.
@@ -322,7 +322,7 @@ Result<> ComputeFeatureBounds::operator()()
       edgeGeom.setVertexCoordinate(currentOffset * 8 + 7, {bounds[activeIndex + 0], bounds[activeIndex + 4], bounds[activeIndex + 5]});
 
       // Create the 12 Edges
-      for(size_t edgeIdx = 0; edgeIdx < cubeEdges.size(); ++edgeIdx)
+      for(usize edgeIdx = 0; edgeIdx < cubeEdges.size(); ++edgeIdx)
       {
         vertPair[0] = currentOffset * 8 + (cubeEdges[edgeIdx].first);
         vertPair[1] = currentOffset * 8 + (cubeEdges[edgeIdx].second);
