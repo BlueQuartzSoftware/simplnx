@@ -5,7 +5,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 namespace nx::core
 {

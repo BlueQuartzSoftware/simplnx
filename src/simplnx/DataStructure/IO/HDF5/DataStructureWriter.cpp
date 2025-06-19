@@ -7,7 +7,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 namespace nx::core::HDF5
 {

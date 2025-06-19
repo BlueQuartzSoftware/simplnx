@@ -16,7 +16,7 @@
 #include <H5Dpublic.h>
 #include <H5Ppublic.h>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 #include <nonstd/span.hpp>
 
 #include <string>

@@ -6,7 +6,7 @@
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <iostream>
 

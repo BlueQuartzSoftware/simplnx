@@ -8,7 +8,7 @@
 #include <H5Gpublic.h>
 #include <H5Ppublic.h>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <string>
 

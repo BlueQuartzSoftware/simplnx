@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 using namespace nx::core;
 

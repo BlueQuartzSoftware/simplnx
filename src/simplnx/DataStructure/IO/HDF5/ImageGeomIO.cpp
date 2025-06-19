@@ -10,7 +10,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 using namespace nx::core;
 
