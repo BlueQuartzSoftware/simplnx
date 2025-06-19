@@ -37,8 +37,6 @@ public:
   RequireMinNumNeighbors& operator=(RequireMinNumNeighbors&&) noexcept = delete;
 
   Result<> operator()();
-  void updateProgress(const std::string& message);
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;
