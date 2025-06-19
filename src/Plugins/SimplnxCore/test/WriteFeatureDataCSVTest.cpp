@@ -45,58 +45,6 @@ std::vector<char> readIn(const fs::path& filePath)
   }
   return {};
 }
-
-std::vector<char> DataArrayOutputCheck(const fs::path& filePath)
-{
-  std::vector<char> contents = readIn(filePath);
-
-  if(contents.empty())
-  {
-    return {};
-  }
-
-  // find end of DataArray Section
-  uint8 count = 4;
-  auto pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
-    return value == '\n' && !(--count);
-  });
-
-  // set to start of next line
-  pos++;
-
-  // build string from psuedo-buffer
-  return {contents.begin(), pos};
-}
-
-std::vector<char> NeighborListOutputCheck(const fs::path& filePath)
-{
-  std::vector<char> contents = readIn(filePath);
-
-  if(contents.empty())
-  {
-    return {};
-  }
-
-  // find end of DataArray Section
-  uint8 count = 4;
-  auto pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
-        return value == '\n' && !(--count);
-      });
-
-  // set to start of next line
-  auto precheckStart = pos++;
-
-  count = 5;
-  pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
-    return value == '\n' && !(--count);
-  });
-
-  auto commaCount = std::count(precheckStart, pos, ',');
-  REQUIRE(commaCount == 2);
-
-  // build string from psuedo-buffer
-  return {pos, contents.end()};
-}
 } // namespace
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
@@ -141,11 +89,10 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ascii_data_exemplars.tar.gz", "ascii_data_exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
 
-  auto exemplarPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
+  auto exemplarPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
-  REQUIRE(DataArrayOutputCheck(file) == DataArrayOutputCheck(exemplarPath));
-  REQUIRE(NeighborListOutputCheck(file) == NeighborListOutputCheck(exemplarPath));
+  REQUIRE(readIn(file) == readIn(exemplarPath));
 }
