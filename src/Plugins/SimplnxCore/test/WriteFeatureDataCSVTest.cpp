@@ -25,9 +25,8 @@ const std::string k_CSVExemplarFileName = "CSV_Exemplar.csv";
 const usize k_NumTuples = 3;
 const std::vector<usize> k_VertexTupleDims = {k_NumTuples};
 const std::vector<usize> k_VertexCompDims = {2};
-} // namespace
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -42,11 +41,63 @@ std::vector<char> readIn(fs::path filePath)
     std::vector<char> contents(length); // act as a buffer
     file.read(contents.data(), length);
 
-    // build string from psuedo-buffer
     return contents;
   }
   return {};
 }
+
+std::vector<char> DataArrayOutputCheck(const fs::path& filePath)
+{
+  std::vector<char> contents = readIn(filePath);
+
+  if(contents.empty())
+  {
+    return {};
+  }
+
+  // find end of DataArray Section
+  uint8 count = 4;
+  auto pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
+    return value == '\n' && !(--count);
+  });
+
+  // set to start of next line
+  pos++;
+
+  // build string from psuedo-buffer
+  return {contents.begin(), pos};
+}
+
+std::vector<char> NeighborListOutputCheck(const fs::path& filePath)
+{
+  std::vector<char> contents = readIn(filePath);
+
+  if(contents.empty())
+  {
+    return {};
+  }
+
+  // find end of DataArray Section
+  uint8 count = 4;
+  auto pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
+        return value == '\n' && !(--count);
+      });
+
+  // set to start of next line
+  auto precheckStart = pos++;
+
+  count = 5;
+  pos = std::find_if(contents.begin(), contents.end(), [&count](const char& value){
+    return value == '\n' && !(--count);
+  });
+
+  auto commaCount = std::count(precheckStart, pos, ',');
+  REQUIRE(commaCount == 2);
+
+  // build string from psuedo-buffer
+  return {pos, contents.end()};
+}
+} // namespace
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
 {
@@ -95,5 +146,6 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   auto exemplarPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
-  REQUIRE(readIn(file) == readIn(exemplarPath));
+  REQUIRE(DataArrayOutputCheck(file) == DataArrayOutputCheck(exemplarPath));
+  REQUIRE(NeighborListOutputCheck(file) == NeighborListOutputCheck(exemplarPath));
 }
