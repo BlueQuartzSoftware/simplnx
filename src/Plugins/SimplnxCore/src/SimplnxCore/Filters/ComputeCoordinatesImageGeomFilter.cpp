@@ -101,17 +101,17 @@ IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const 
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  usize numberOfCells = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeomValue).getNumberOfCells();
+  auto dims = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeomValue).getDimensions();
 
   if(pOutputTypeValue != to_underlying(ComputeCoordinatesImageGeom::OutputType::Index))
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numberOfCells}, std::vector<usize>{3}, pCoordsArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{dims[2], dims[1], dims[0]}, std::vector<usize>{3}, pCoordsArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   if(pOutputTypeValue != to_underlying(ComputeCoordinatesImageGeom::OutputType::Physical))
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numberOfCells}, std::vector<usize>{3}, pIndicesArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{dims[2], dims[1], dims[0]}, std::vector<usize>{3}, pIndicesArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

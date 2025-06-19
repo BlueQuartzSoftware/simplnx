@@ -138,13 +138,13 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
 
         resultType = ICalculatorArray::ValueType::Array;
         calculatedComponentShape = array1->getArray()->getComponentShape();
-        calculatedTupleShape = {array1->getArray()->getNumberOfTuples()};
+        calculatedTupleShape = array1->getArray()->getTupleShape();
       }
       else if(resultType == ICalculatorArray::ValueType::Unknown)
       {
         resultType = ICalculatorArray::ValueType::Number;
         calculatedComponentShape = array1->getArray()->getComponentShape();
-        calculatedTupleShape = {array1->getArray()->getNumberOfTuples()};
+        calculatedTupleShape = array1->getArray()->getTupleShape();
       }
     }
   }
