@@ -16,6 +16,7 @@ struct SIMPLNXCORE_EXPORT AppendImageGeometryInputValues
   std::vector<DataPath> InputGeometriesPaths;
   DataPath DestinationGeometryPath;
   DataPath NewGeometryPath;
+  std::string DefaultValue;
   bool CheckResolution;
   bool MirrorGeometry;
   bool SaveAsNewGeometry;

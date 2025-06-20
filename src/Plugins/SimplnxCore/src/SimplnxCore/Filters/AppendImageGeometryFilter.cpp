@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -67,10 +68,21 @@ Parameters AppendImageGeometryFilter::parameters() const
                                                    std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_MirrorGeometry_Key, "Mirror Geometry In Direction", "Mirrors the resulting geometry in the chosen direction.", false));
   params.insert(std::make_unique<BoolParameter>(k_CheckResolution_Key, "Check Spacing", "Checks to make sure the spacing for the input geometry and destination geometry match", false));
+  params.insert(std::make_unique<StringParameter>(
+      k_DefaultValue_Key, "Default Value",
+      "The default value that will be used if a data array does not exist across all geometries to be combined.  NOTE: This is a string value that can be set to anything, HOWEVER, the filter will "
+      "return an error if the string value cannot be converted to the proper type for any missing arrays.  For example, if you have a 32-bit signed integer array that is "
+      "missing in some geometries and "
+      "you set the default value to 'abc', the filter will return an error since 'abc' cannot be converted to an integer.  If you set the default value to '256' and you have an "
+      "8-bit unsigned "
+      "integer array that is missing in some geometries, the filter will return an error because 256 is outside the range of an 8-bit unsigned integer (0-255).  If the only missing arrays happen to "
+      "be string "
+      "arrays, then in that case 'abc' would actually work as a default value.",
+      "0"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewGeometry_Key, "Save as new geometry",
                                                                  "Save the combined data as a new geometry instead of appending the input data to the destination geometry", false));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometry_Key, "New Image Geometry", "The path to the new geometry with the combined data from the input & destination geometry",
-                                                             DataPath({"AppendedImageGeom"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(
+      k_NewGeometry_Key, "New Image Geometry", "The path to the new geometry with the combined data from the input geometries & destination geometry", DataPath({"Combined Image Geometry"})));
 
   params.linkParameters(k_SaveAsNewGeometry_Key, k_NewGeometry_Key, true);
 
@@ -98,6 +110,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   auto pDirection = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
   auto pCheckResolutionValue = filterArgs.value<bool>(k_CheckResolution_Key);
   auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  auto pDefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -144,7 +157,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     IGeometry::LengthUnit destUnits = destGeometry.getUnits();
     if(inputUnits != destUnits)
     {
-      return MakePreflightErrorResult(-8310, fmt::format("Input units ({}) not equal to Destination units ({})", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits)));
+      resultOutputActions.warnings().push_back(
+          Warning{-8310, fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
     }
 
     switch(pDirection)
@@ -168,7 +182,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   {
     pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
     auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
-                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellAttributeMatrixName);
+                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellAttributeMatrixName, destGeometry.getUnits());
     resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
@@ -180,7 +194,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     return MakePreflightErrorResult(-8205, fmt::format("Calculated tuple offset ({}) for appending the input data is larger than the total number of tuples ({}).", tupleOffset, numNewCellDataTuples));
   }
 
-  std::vector<DataPath> addedArrayPaths;
+  std::vector<std::string> addedArrayNames;
   for(const DataPath& pInputGeometryPathValue : pInputGeometriesPathsValue)
   {
     const auto& inputGeometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryPathValue);
@@ -198,103 +212,125 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     std::vector<std::string> combinedArrayNames;
     std::sort(childNames1.begin(), childNames1.end());
     std::sort(childNames2.begin(), childNames2.end());
-    std::set_intersection(childNames1.begin(), childNames1.end(), childNames2.begin(), childNames2.end(), back_inserter(combinedArrayNames));
+    std::set_union(childNames1.begin(), childNames1.end(), childNames2.begin(), childNames2.end(), back_inserter(combinedArrayNames));
     for(const auto& name : combinedArrayNames)
     {
-      auto newArrayPath = newCellDataPath.createChildPath(name);
-      if(std::find(addedArrayPaths.begin(), addedArrayPaths.end(), newArrayPath) != addedArrayPaths.end())
+      if(std::find(addedArrayNames.begin(), addedArrayNames.end(), name) != addedArrayNames.end())
       {
-        // Do not validate an array that's already been validated and added
+        // This array has already been validated and added
         continue;
       }
 
-      auto* dataArray1 = dataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
-      if(dataArray1 == nullptr)
+      auto inputDataArrayPath = inputCellDataPath.createChildPath(name);
+      auto destDataArrayPath = destCellDataPath.createChildPath(name);
+
+      auto inputDataArray = dataStructure.getDataAs<IArray>(inputDataArrayPath);
+      auto destDataArray = dataStructure.getDataAs<IArray>(destDataArrayPath);
+      if(inputDataArray == nullptr && dataStructure.containsData(inputDataArrayPath))
       {
         resultOutputActions.warnings().push_back(
             {-8206, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IArray.", name, inputCellDataPath.toString())});
         continue;
       }
-      auto* dataArray2 = dataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
-      if(dataArray2 == nullptr)
+
+      if(destDataArray == nullptr && dataStructure.containsData(destDataArrayPath))
       {
         resultOutputActions.warnings().push_back(
             {-8207, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IArray.", name, destCellDataPath.toString())});
         continue;
       }
-      const IArray::ArrayType arrayType = dataArray2->getArrayType();
-      if(arrayType != dataArray1->getArrayType())
-      {
-        const std::string inputArrayStr = *IArray::StringListFromArrayType({dataArray1->getArrayType()}).begin();
-        const std::string destArrayStr = *IArray::StringListFromArrayType({arrayType}).begin();
-        resultOutputActions.warnings().push_back({-8208, fmt::format("Cannot append data from input data object of array type {} to destination data object of array type {} because "
-                                                                     "the array types do not match.",
-                                                                     inputArrayStr, destArrayStr)});
-        continue;
-      }
-      const usize srcNumComps = dataArray1->getNumberOfComponents();
-      const usize numComps = dataArray2->getNumberOfComponents();
-      if(srcNumComps != numComps)
-      {
-        resultOutputActions.warnings().push_back(
-            {-8209, fmt::format("Cannot append data from input data array with {} components to destination data array with {} components.", srcNumComps, numComps)});
-        continue;
-      }
-      const usize srcNumElements = dataArray1->getNumberOfTuples() * srcNumComps;
-      const usize numElements = numNewCellDataTuples * numComps;
-      if(srcNumElements + tupleOffset * numComps > numElements)
-      {
-        resultOutputActions.warnings().push_back(
-            {-8210, fmt::format("Cannot append data from input data array {} with {} total elements to destination data array with {} total elements starting at tuple "
-                                "{} because there are not enough elements in the destination array.",
-                                name, srcNumElements, numElements, tupleOffset)});
-        continue;
-      }
 
-      if(arrayType == IArray::ArrayType::DataArray)
+      if(inputDataArray != nullptr && destDataArray != nullptr)
       {
-        DataType dataType1 = dynamic_cast<const IDataArray*>(dataArray1)->getDataType();
-        DataType dataType2 = dynamic_cast<const IDataArray*>(dataArray2)->getDataType();
-        if(dataType1 != dataType2)
+        const IArray::ArrayType arrayType = destDataArray->getArrayType();
+        if(arrayType != inputDataArray->getArrayType())
+        {
+          const std::string inputArrayStr = *IArray::StringListFromArrayType({inputDataArray->getArrayType()}).begin();
+          const std::string destArrayStr = *IArray::StringListFromArrayType({arrayType}).begin();
+          resultOutputActions.warnings().push_back({-8208, fmt::format("Cannot append data from input data object of array type {} to destination data object of array type {} because "
+                                                                       "the array types do not match.",
+                                                                       inputArrayStr, destArrayStr)});
+          continue;
+        }
+        const usize srcNumComps = inputDataArray->getNumberOfComponents();
+        const usize numComps = destDataArray->getNumberOfComponents();
+        if(srcNumComps != numComps)
         {
           resultOutputActions.warnings().push_back(
-              {-8211, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array types do not match.",
-                                  DataTypeToString(dataType1).str(), DataTypeToString(dataType2).str())});
+              {-8209, fmt::format("Cannot append data from input data array with {} components to destination data array with {} components.", srcNumComps, numComps)});
           continue;
         }
 
-        if(pSaveAsNewGeometry)
+        if(arrayType == IArray::ArrayType::DataArray)
         {
-          auto createArrayAction = std::make_unique<CreateArrayAction>(dataType1, newCellDataDims, dataArray1->getComponentShape(), newArrayPath);
-          resultOutputActions.value().appendAction(std::move(createArrayAction));
-          addedArrayPaths.push_back(newArrayPath);
-        }
-      }
-      if(arrayType == IArray::ArrayType::NeighborListArray)
-      {
-        DataType dataType1 = dynamic_cast<const INeighborList*>(dataArray1)->getDataType();
-        DataType dataType2 = dynamic_cast<const INeighborList*>(dataArray2)->getDataType();
-        if(dataType1 != dataType2)
-        {
-          resultOutputActions.warnings().push_back(
-              {-8211, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array types do not match.",
-                                  DataTypeToString(dataType1).str(), DataTypeToString(dataType2).str())});
-          continue;
+          DataType dataType1 = dynamic_cast<const IDataArray*>(inputDataArray)->getDataType();
+          DataType dataType2 = dynamic_cast<const IDataArray*>(destDataArray)->getDataType();
+          if(dataType1 != dataType2)
+          {
+            resultOutputActions.warnings().push_back(
+                {-8211, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array types do not match.",
+                                    DataTypeToString(dataType1).str(), DataTypeToString(dataType2).str())});
+            continue;
+          }
         }
 
-        if(pSaveAsNewGeometry)
+        if(arrayType == IArray::ArrayType::NeighborListArray)
         {
-          auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType1, numNewCellDataTuples, newArrayPath);
-          resultOutputActions.value().appendAction(std::move(createArrayAction));
-          addedArrayPaths.push_back(newArrayPath);
+          DataType dataType1 = dynamic_cast<const INeighborList*>(inputDataArray)->getDataType();
+          DataType dataType2 = dynamic_cast<const INeighborList*>(destDataArray)->getDataType();
+          if(dataType1 != dataType2)
+          {
+            resultOutputActions.warnings().push_back(
+                {-8211, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array types do not match.",
+                                    DataTypeToString(dataType1).str(), DataTypeToString(dataType2).str())});
+            continue;
+          }
         }
       }
-      if(arrayType == IArray::ArrayType::StringArray && pSaveAsNewGeometry)
+
+      if(pSaveAsNewGeometry || destDataArray == nullptr)
       {
-        auto createArrayAction = std::make_unique<CreateStringArrayAction>(newCellDataDims, newArrayPath);
-        resultOutputActions.value().appendAction(std::move(createArrayAction));
-        addedArrayPaths.push_back(newArrayPath);
+        // pSaveAsNewGeometry = true, destDataArray == valid -> create new geometry array
+        // pSaveAsNewGeometry = true, destDataArray == nullptr -> create new geometry array
+        // pSaveAsNewGeometry = false, destDataArray == nullptr -> create destination geometry array
+
+        auto destArrayPath = destCellDataPath.createChildPath(name);
+        auto newArrayPath = newCellDataPath.createChildPath(name);
+        auto arrayType = inputDataArray != nullptr ? inputDataArray->getArrayType() : destDataArray->getArrayType();
+        auto destGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
+        std::vector<usize> destCellDataDims(destGeomDimsVec.rbegin(), destGeomDimsVec.rend());
+        if(arrayType == IArray::ArrayType::DataArray)
+        {
+          auto inputIDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
+          auto destIDataArray = dataStructure.getDataAs<IDataArray>(destDataArrayPath);
+          auto dataType = inputIDataArray != nullptr ? inputIDataArray->getDataType() : destIDataArray->getDataType();
+          auto compShape = inputDataArray != nullptr ? inputDataArray->getComponentShape() : destDataArray->getComponentShape();
+          auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
+          auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
+          auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, cellDataDims, compShape, cellArrayPath, "", pDefaultValue);
+          resultOutputActions.value().appendAction(std::move(createArrayAction));
+        }
+        if(arrayType == IArray::ArrayType::NeighborListArray)
+        {
+          auto inputINeighborlist = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
+          auto destINeighborlist = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
+          auto dataType = inputINeighborlist != nullptr ? inputINeighborlist->getDataType() : destINeighborlist->getDataType();
+          const usize numDestCellDataTuples = std::accumulate(destCellDataDims.cbegin(), destCellDataDims.cend(), static_cast<size_t>(1), std::multiplies<>());
+          auto numCellDataTuples = pSaveAsNewGeometry ? numNewCellDataTuples : numDestCellDataTuples;
+          auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
+          auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType, numCellDataTuples, cellArrayPath);
+          resultOutputActions.value().appendAction(std::move(createArrayAction));
+        }
+        if(arrayType == IArray::ArrayType::StringArray)
+        {
+          auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
+          auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
+          auto createArrayAction = std::make_unique<CreateStringArrayAction>(cellDataDims, cellArrayPath, pDefaultValue);
+          resultOutputActions.value().appendAction(std::move(createArrayAction));
+        }
       }
+
+      addedArrayNames.push_back(name);
     }
   }
 
@@ -318,6 +354,7 @@ Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.DestinationGeometryPath = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
   inputValues.Direction = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
   inputValues.CheckResolution = filterArgs.value<bool>(k_CheckResolution_Key);
+  inputValues.DefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
   inputValues.MirrorGeometry = filterArgs.value<bool>(k_MirrorGeometry_Key);
   inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
   inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);

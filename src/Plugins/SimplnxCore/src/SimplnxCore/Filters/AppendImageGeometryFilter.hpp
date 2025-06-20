@@ -29,6 +29,7 @@ public:
   static inline constexpr StringLiteral k_Direction_Key = "direction_index";
   static inline constexpr StringLiteral k_MirrorGeometry_Key = "mirror_geometry";
   static inline constexpr StringLiteral k_CheckResolution_Key = "check_resolution";
+  static inline constexpr StringLiteral k_DefaultValue_Key = "default_value";
   static inline constexpr StringLiteral k_SaveAsNewGeometry_Key = "save_as_new_geometry";
   static inline constexpr StringLiteral k_NewGeometry_Key = "output_image_geometry_path";
 

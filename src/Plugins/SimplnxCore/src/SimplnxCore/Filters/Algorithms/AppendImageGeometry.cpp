@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -57,6 +58,9 @@ Result<> AppendImageGeometry::operator()()
     destCellData->resizeTuples(newDims);
   }
 
+  // Create a temporary data structure that we can use to create arrays with default values, if needed
+  DataStructure tmpDataStructure;
+
   ParallelTaskAlgorithm taskRunner;
   for(const auto& [dataId, dataObject] : *newCellData)
   {
@@ -67,11 +71,33 @@ Result<> AppendImageGeometry::operator()()
 
     const std::string name = dataObject->getName();
 
-    auto* newDataArray = m_DataStructure.getDataAs<IArray>(newCellDataPath.createChildPath(name));
-    auto* destDataArray = m_DataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
-    if(destDataArray == nullptr || newDataArray == nullptr)
+    auto newDataArrayPath = newCellDataPath.createChildPath(name);
+    auto destDataArrayPath = destCellDataPath.createChildPath(name);
+    auto* newDataArray = m_DataStructure.getDataAs<IArray>(newDataArrayPath);
+    auto* destDataArray = m_DataStructure.getDataAs<IArray>(destDataArrayPath);
+    //    if(destDataArray == nullptr && newDataArray == nullptr)
+    //    {
+    //      // One of these has to be valid, something has gone horribly wrong
+    //      return MakeErrorResult(-10001,
+    //                             fmt::format("There is no array at path '{}' in the given destination image geometry or at path '{}' in the given new image geometry.  Please contact the
+    //                             developers.",
+    //                                         destDataArrayPath.toString(), newDataArrayPath.toString()));
+    //    }
+
+    // Create default value destination data array if it doesn't exist
+    if(destDataArray == nullptr)
     {
-      continue;
+      // Use UUID as the new array's name to avoid naming clashes.  The name ultimately doesn't matter since it's in a temporary data structure and will never be publicly exposed.
+      auto& dataStructure = m_InputValues->SaveAsNewGeometry ? tmpDataStructure : m_DataStructure;
+      auto dataArrayName = m_InputValues->SaveAsNewGeometry ? Uuid::GenerateV4().str() : newDataArray->getName();
+      auto destArrayDimsVec = destGeomDims.toContainer<std::vector<usize>>();
+      std::reverse(destArrayDimsVec.begin(), destArrayDimsVec.end());
+      auto result = CreateDefaultValueArrayFromArray(dataStructure, newDataArray, dataArrayName, destArrayDimsVec, m_InputValues->DefaultValue);
+      if(result.invalid())
+      {
+        return ConvertResult(std::move(result));
+      }
+      destDataArray = result.value();
     }
 
     std::vector<const IArray*> inputDataArrays;
@@ -99,17 +125,26 @@ Result<> AppendImageGeometry::operator()()
         results = MergeResults(
             results,
             MakeWarningVoidResult(
-                -8213, fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. Cannot append data so the resulting data object will likely contain invalid data!",
-                                   name)));
-        continue;
-      }
+                -8213, fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. The resulting appended data will be initialized to the chosen default value '{}'",
+                                   name, m_InputValues->DefaultValue)));
 
-      auto* inputDataArray = m_DataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
-      if(inputDataArray == nullptr)
-      {
-        continue;
+        // Use UUID as the new array's name to avoid naming clashes.  The name ultimately doesn't matter since it's in a temporary data structure and will never be publicly exposed.
+        auto result = CreateDefaultValueArrayFromArray(tmpDataStructure, destDataArray, Uuid::GenerateV4().str(), tupleShape, m_InputValues->DefaultValue);
+        if(result.invalid())
+        {
+          return ConvertResult(std::move(result));
+        }
+        inputDataArrays.push_back(result.value());
       }
-      inputDataArrays.push_back(inputDataArray);
+      else
+      {
+        auto* inputDataArray = m_DataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
+        if(inputDataArray == nullptr)
+        {
+          continue;
+        }
+        inputDataArrays.push_back(inputDataArray);
+      }
     }
 
     if(m_InputValues->SaveAsNewGeometry)

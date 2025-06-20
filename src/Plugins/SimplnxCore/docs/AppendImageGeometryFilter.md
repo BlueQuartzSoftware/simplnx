@@ -15,7 +15,17 @@ This filter also has an option to mirror the resulting geometry in the chosen di
 
 #### Example 1 (X)
 If the user has an already existing **Image Geometry** that is 100 voxels in the *Y* direction by 300 pixels in the
-*Z* direction and composed of 10 *X* slices, then if the user appends another three data sets in the X direction that are the same dimensions in Y & Z but contain 20 *X* slices each, the resulting **Image Geometry** will have a total of 70 *X* slices.
+*Z* direction and composed of 10 *X* slices, then if the user appends another three geometries in the X direction that are the same dimensions in Y & Z but contain 20 *X* slices each, the resulting **Image Geometry** will have a total of 70 *X* slices.
+
+The filter inputs for this example are as follows:
+
++ **Input Image Geometries**: Geometry A (20x100x300), Geometry B (20x100x300), Geometry C (20x100x300)
++ **Destination Image Geometry**: Image Geometry (10x100x300)
++ **Direction**: X
++ **Mirror Geometry In Direction**: OFF
++ **Check Spacing**: OFF
++ **Default Value**: 0
++ **Save As New Geometry**: OFF
 
 #### Example 2 (Visual Example) (X)
 Here's the SmallIN100 dataset example sliced into three pieces in the X direction:
@@ -32,6 +42,16 @@ And here is what the geometry looks like after appending the three pieces togeth
 If the user has an already existing **Image Geometry** that is 400 voxels in the *X* direction by 200 pixels in the
 *Z* direction and composed of 50 *Y* slices, then if the user appends another two data sets in the Y direction that are the same dimensions in X & Z but contain 40 *Y* slices each, the resulting **Image Geometry** will have a total of 130 *Y* slices.
 
+The filter inputs for this example are as follows:
+
++ **Input Image Geometries**: Geometry A (400x40x200), Geometry B (400x40x200)
++ **Destination Image Geometry**: Image Geometry (400x50x200)
++ **Direction**: Y
++ **Mirror Geometry In Direction**: OFF
++ **Check Spacing**: OFF
++ **Default Value**: 0
++ **Save As New Geometry**: OFF
+
 #### Example 2 (Visual Example) (Y)
 Here's the SmallIN100 dataset example sliced into three pieces in the Y direction:
 
@@ -46,6 +66,16 @@ And here is what the geometry looks like after appending the three pieces togeth
 #### Example 1 (Z)
 If the user has an already existing **Image Geometry** that is 100 voxels in the *X* direction by 200 pixels in the
 *Y* direction and composed of 5 *Z* slices, then if the user appends one other data set in the Z direction that is the same dimensions in X & Y but contains 10 *Z* slices, the resulting **Image Geometry** will have a total of 15 *Z* slices.
+
+The filter inputs for this example are as follows:
+
++ **Input Image Geometries**: Geometry A (100x200x10)
++ **Destination Image Geometry**: Image Geometry (100x200x5)
++ **Direction**: Z
++ **Mirror Geometry In Direction**: OFF
++ **Check Spacing**: OFF
++ **Default Value**: 0
++ **Save As New Geometry**: OFF
 
 #### Example 2 (Visual Example) (Z)
 Here's the SmallIN100 dataset example sliced into three pieces in the Z direction:

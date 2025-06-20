@@ -392,7 +392,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
   }
 
   {
-    const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
+    const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
     ReadDREAM3DFilter filter;
     Arguments args;
@@ -405,7 +405,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v2.tar.gz", "Small_IN100.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto filePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure;
   ReadDREAM3DFilter filter;
@@ -417,42 +417,48 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
     args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Confidence Index"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "EulerAngles"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Fit"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Image Quality"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "Phases"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellData", "SEM Signal"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "LatticeConstants"})));
-    REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "MaterialName"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Confidence Index"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "EulerAngles"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Fit"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Image Quality"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "Phases"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredXDataContainer", "Cell Data", "SEM Signal"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Confidence Index"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "EulerAngles"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Fit"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Image Quality"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "Phases"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredYDataContainer", "Cell Data", "SEM Signal"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Confidence Index"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "EulerAngles"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Fit"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Image Quality"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "Phases"})));
-    REQUIRE(dataStructure.containsData(DataPath({"MirroredZDataContainer", "Cell Data", "SEM Signal"})));
+
+    std::vector<std::string> baseDCNames = {"DataContainer", "SmallerDataContainer"};
+    std::vector<std::string> nlAndStringArrayDCs = {"MirroredXDataContainer",      "MirroredYDataContainer", "MirroredZDataContainer", "MirroredXInconsistentArrays", "MirroredYInconsistentArrays",
+                                                    "MirroredZInconsistentArrays", "XInconsistentArrays",    "YInconsistentArrays",    "ZInconsistentArrays"};
+    std::vector<std::string> fooArrayDCs = {"MirroredXInconsistentArrays", "MirroredYInconsistentArrays", "MirroredZInconsistentArrays",
+                                            "XInconsistentArrays",         "YInconsistentArrays",         "ZInconsistentArrays"};
+    std::vector<std::string> dcNames;
+    dcNames.reserve(baseDCNames.size() + nlAndStringArrayDCs.size() + fooArrayDCs.size());
+    dcNames.insert(dcNames.end(), baseDCNames.begin(), baseDCNames.end());
+    dcNames.insert(dcNames.end(), nlAndStringArrayDCs.begin(), nlAndStringArrayDCs.end());
+    dcNames.insert(dcNames.end(), fooArrayDCs.begin(), fooArrayDCs.end());
+
+    for(const auto& dcName : dcNames)
+    {
+      REQUIRE(dataStructure.containsData(DataPath({dcName})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "Confidence Index"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "EulerAngles"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "Fit"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "Image Quality"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "Phases"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "SEM Signal"})));
+    }
+
+    for(const auto& dcName : baseDCNames)
+    {
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellEnsembleData"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellEnsembleData", "CrystalStructures"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellEnsembleData", "LatticeConstants"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellEnsembleData", "MaterialName"})));
+    }
+
+    for(const auto& dcName : nlAndStringArrayDCs)
+    {
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "NeighborList"})));
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "StringArray"})));
+    }
+
+    for(const auto& dcName : fooArrayDCs)
+    {
+      REQUIRE(dataStructure.containsData(DataPath({dcName, "CellData", "Foo"})));
+    }
   }
   SECTION("Include List - Leaf Node")
   {
