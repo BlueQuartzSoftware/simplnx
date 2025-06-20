@@ -33,7 +33,7 @@ struct fmt::formatter<nx::core::BasicStringLiteral<CharT>>
     return ctx.begin();
   }
 
-  typename buffer_context<CharT>::iterator format(const nx::core::BasicStringLiteral<CharT>& p, buffer_context<CharT>& ctx) const
+  typename buffered_context<CharT>::iterator format(const nx::core::BasicStringLiteral<CharT>& p, buffered_context<CharT>& ctx) const
   {
     static constexpr const CharT* formatStr = GetFormatString();
 

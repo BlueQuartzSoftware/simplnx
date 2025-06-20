@@ -11,7 +11,7 @@
 #include <H5Spublic.h>
 #include <H5Tpublic.h>
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <filesystem>

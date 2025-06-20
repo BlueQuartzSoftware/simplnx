@@ -3,7 +3,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include "H5Dpublic.h"
 #include "H5Spublic.h"

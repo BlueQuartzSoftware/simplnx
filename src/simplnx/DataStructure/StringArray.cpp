@@ -2,7 +2,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
-#include "fmt/format.h"
+#include <fmt/format.h>
 
 #include <numeric>
 #include <stdexcept>
