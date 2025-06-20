@@ -34,7 +34,7 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
   }
 
   // Now adjust all the Grain ID values for each Voxel
-  // instead of taking total points as an input just extract the size, so we don't walk of
+  // instead of taking total points as an input just extract the size, so we don't walk off
   usize totalPoints = featureIdsStore.getSize();
   for(int64 i = 0; i < totalPoints; ++i)
   {
