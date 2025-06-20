@@ -90,8 +90,8 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
 {
   auto featureIdsPath = args.value<DataPath>(k_FeatureIds_Key);
 
-  Int32Array* featureIdsArray = dataStructure.getDataAs<Int32Array>(featureIdsPath);
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsStore = featureIdsArray.getDataStoreRef();
   usize totalFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end());
 
   ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures);
