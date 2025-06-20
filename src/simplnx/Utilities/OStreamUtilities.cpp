@@ -42,7 +42,7 @@ struct PrintNeighborList
       {
         outputStrm << "Feature_IDs" << delimiter;
       }
-      outputStrm << "Element Count" << delimiter << inputNeighborList->getName() << "\n";
+      outputStrm << "NumNeighbors" << delimiter << inputNeighborList->getName() << "\n";
     }
     if(hasIndex)
     {

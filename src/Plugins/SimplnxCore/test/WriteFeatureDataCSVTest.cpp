@@ -25,9 +25,8 @@ const std::string k_CSVExemplarFileName = "CSV_Exemplar.csv";
 const usize k_NumTuples = 3;
 const std::vector<usize> k_VertexTupleDims = {k_NumTuples};
 const std::vector<usize> k_VertexCompDims = {2};
-} // namespace
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -42,11 +41,11 @@ std::vector<char> readIn(fs::path filePath)
     std::vector<char> contents(length); // act as a buffer
     file.read(contents.data(), length);
 
-    // build string from psuedo-buffer
     return contents;
   }
   return {};
 }
+} // namespace
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
 {
@@ -90,9 +89,9 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ascii_data_exemplars.tar.gz", "ascii_data_exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
 
-  auto exemplarPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
+  auto exemplarPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
   REQUIRE(readIn(file) == readIn(exemplarPath));
