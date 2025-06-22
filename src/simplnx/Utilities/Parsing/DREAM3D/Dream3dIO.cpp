@@ -16,6 +16,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/NeighborListIO.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -981,7 +982,10 @@ Result<> finishImportingLegacyDataArrayImpl(DataStructure& dataStructure, const 
     return MakeErrorResult(-4210423, fmt::format("Failed to finish importing legacy DataArray at path '{}'. Imported DataArray not found.", dataPath.toString()));
   }
 
-  auto dataStorePtr = dataSetIO.readAsDataStore<T>();
+  auto tupleShape = nx::core::HDF5::IDataStoreIO::ReadTupleShape(dataSetIO);
+  auto componentShape = nx::core::HDF5::IDataStoreIO::ReadComponentShape(dataSetIO);
+
+  auto dataStorePtr = dataSetIO.readAsDataStore<T>(tupleShape, componentShape);
   if(dataStorePtr == nullptr)
   {
     return MakeErrorResult(-4210424, fmt::format("Failed to finish importing legacy DataArray at path '{}'. Could not import data from HDF5.", dataPath.toString()));
@@ -1250,7 +1254,9 @@ Result<> readLegacyArray(DataStructure& dataStructure, const nx::core::HDF5::Gro
 
 Result<> finishImportingLegacyArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
-  auto dataArraySet = parentReader.openDataset(dataPath.getTargetName());
+  auto dcGroup = parentReader.openGroup(dataPath[0]);
+  auto amGroup = dcGroup.openGroup(dataPath[1]);
+  auto dataArraySet = amGroup.openDataset(dataPath.getTargetName());
   if(isLegacyNeighborList(dataArraySet))
   {
     return finishImportingLegacyNeighborList(dataStructure, parentReader, dataArraySet, dataPath);
@@ -1604,11 +1610,10 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   return nx::core::MergeResults(amResults);
 }
 
-
 Result<> finishImportingLegacyImageGeom(DataStructure& dataStructure, IGeometry* geometry, const HDF5::GroupIO& geometryReader)
 {
   auto* imageGeom = dynamic_cast<ImageGeom*>(geometry);
-  if (imageGeom == nullptr)
+  if(imageGeom == nullptr)
   {
     return MakeErrorResult(-502678, "Failed to finish importing legacy Image Geometry. Existing geometry is not of the correct type");
   }
@@ -1765,7 +1770,7 @@ Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure, const 
   if(geomGroup.isValid())
   {
     auto* geometryPtr = dataStructure.getDataAs<IGeometry>(dataPath);
-    if (geometryPtr == nullptr)
+    if(geometryPtr == nullptr)
     {
       return MakeErrorResult(-502679, fmt::format("Failed to finish importing of geometry at path '{}'. Existing geometry not found.", dataPath.toString()));
     }
@@ -1863,7 +1868,7 @@ Result<std::vector<std::shared_ptr<DataObject>>> ImportLegacyDataObjectFromFile(
 
 Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
-  switch (dataPath.getLength())
+  switch(dataPath.getLength())
   {
   case 1:
     finishImportingLegacyDataContainer(dataStructure, parentReader, dataPath);
@@ -1873,7 +1878,7 @@ Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx:
   case 3:
     finishImportingLegacyArray(dataStructure, parentReader, dataPath);
     break;
-    default:
+  default:
     return MakeErrorResult(-520156, fmt::format("Could not read legacy DREAM3D data at path '{}'", dataPath.toString()));
     break;
   }
@@ -2048,10 +2053,10 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const Data
   else if(fileVersion == k_LegacyFileVersion)
   {
     auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-    std::string parentPathStr = dataPath.getParent().toString();
-    auto parentGroup = dataStructureReader.openGroup(dataPath.getParent().toString());
+    //std::string parentPathStr = dataPath.getParent().toString();
+    //auto parentGroup = dataStructureReader.openGroup(dataPath.getParent().toString());
 
-    return FinishImportingLegacyDataObject(dataStructure, parentGroup, dataPath);
+    return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
   }
   return {};
 }

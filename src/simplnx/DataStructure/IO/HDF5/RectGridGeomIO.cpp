@@ -58,6 +58,11 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
 
+  // Required data
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+
   return {};
 }
 

@@ -74,6 +74,10 @@ public:
    */
   void clearDataStructure();
 
+  void addRequiredPath(const DataPath& requiredDataPath);
+  void addRequiredId(DataObject::IdType requiredDataId);
+  void addRequiredId(DataObject::OptionalId requiredDataId);
+
 protected:
   /**
    * @brief Returns a pointer to the nx::core::HDF5::DataFactoryManager used for finding the
@@ -90,8 +94,12 @@ protected:
    */
   std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
 
+  void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
+
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
+  std::vector<DataPath> m_RequiredPaths;
+  std::vector<DataObject::IdType> m_RequiredIds;
 };
 } // namespace nx::core::HDF5

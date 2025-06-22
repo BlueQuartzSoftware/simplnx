@@ -1,5 +1,6 @@
 #include "INodeGeom0dIO.hpp"
 
+#include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -28,6 +29,10 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
 
   geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
+
+  // Required data
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
 
   return {};
 }

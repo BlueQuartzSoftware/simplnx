@@ -1,5 +1,6 @@
 #include "INodeGeom2dIO.hpp"
 
+#include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -23,6 +24,11 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
   geometry.setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
   geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
   geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
+
+  // Required data
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
 
   return {};
 }

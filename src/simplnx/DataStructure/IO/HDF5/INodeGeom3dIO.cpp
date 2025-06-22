@@ -1,5 +1,6 @@
 #include "INodeGeom3dIO.hpp"
 
+#include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -23,6 +24,11 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
   geom.setPolyhedronListId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
   geom.setPolyhedraDataId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
   geom.setUnsharedFacedId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
+
+  // Required data
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
+  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
 
   return {};
 }
