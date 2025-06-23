@@ -62,17 +62,17 @@ public:
         m_Callback(message);
       }
     }
-    void operator()(const std::string& message) const
+    void operator()(std::string message) const
     {
-      operator()(Message{Message::Type::Info, message});
+      operator()(Message{Message::Type::Info, std::move(message)});
     }
-    void operator()(Message::Type type, const std::string& message) const
+    void operator()(Message::Type type, std::string message) const
     {
-      operator()(Message{type, message});
+      operator()(Message{type, std::move(message)});
     }
-    void operator()(Message::Type type, const std::string& message, int32 progress) const
+    void operator()(Message::Type type, std::string message, int32 progress) const
     {
-      operator()(ProgressMessage{type, message, progress});
+      operator()(ProgressMessage{type, std::move(message), progress});
     }
     Callback m_Callback;
   };
