@@ -36,7 +36,7 @@ public:
 
 private:
   struct Impl;
-  std::unique_ptr<Impl> m_Impl = nullptr;
+  std::unique_ptr<Impl> m_Impl;
 };
 
 template <class CallableT>
