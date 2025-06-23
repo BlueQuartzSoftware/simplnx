@@ -130,10 +130,13 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
 Result<> cacheFullFile(const ReadCSVData& readCsvData)
 {
   s_HeaderCache[s_InstanceId].FilePath = readCsvData.inputFilePath;
-  auto result = cacheHeaders(readCsvData);
-  if(result.invalid())
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && readCsvData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
   {
-    return result;
+    auto result = cacheHeaders(readCsvData);
+    if(result.invalid())
+    {
+      return result;
+    }
   }
 
   s_HeaderCache[s_InstanceId].TotalLines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
