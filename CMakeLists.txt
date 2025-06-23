@@ -544,6 +544,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
@@ -747,6 +748,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
