@@ -188,6 +188,7 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 # -----------------------------------------------------------------------
 # Find HDF5 and get the path to the DLL libraries and put that into a
@@ -265,6 +266,7 @@ target_link_libraries(simplnx
     HDF5::HDF5
     Boost::mp11
     nod::nod
+    spdlog::spdlog
 )
 
 if(UNIX)
