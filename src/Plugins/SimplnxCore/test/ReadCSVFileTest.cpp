@@ -13,6 +13,7 @@
 #include <catch2/catch.hpp>
 
 #include <fstream>
+#include <regex>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -551,5 +552,70 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 7): Valid filter execution - Str
     {
       REQUIRE(array->at(i) == v[i]);
     }
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mixed quoted strings and integers")
+{
+  UnitTest::LoadPlugins();
+  fs::create_directories(k_TestInput.parent_path());
+
+  // Create CSV with single and double quoted strings and integer strings
+  std::ofstream file(k_TestInput);
+  REQUIRE(file.is_open());
+  file << "SQ,DQ,Num\n";
+  std::vector<std::tuple<std::string, std::string, std::string>> rows = {{"'Alice'", "\"Alice\"", "1"}, {"'Bob'", "\"Bob\"", "2"}, {"'Charlie'", "\"Charlie\"", "3"}};
+  for(size_t i = 0; i < rows.size(); ++i)
+  {
+    file << std::get<0>(rows[i]) << "," << std::get<1>(rows[i]) << "," << std::get<2>(rows[i]);
+    if(i < rows.size() - 1)
+    {
+      file << "\n";
+    }
+  }
+  file.close();
+
+  // Set up filter arguments
+  std::vector<std::string> dummy = {"1", "2", "3"};
+  Arguments args = createArguments(k_TestInput.string(), 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {"SQ", "DQ", "Num"}, {CSVType::string, CSVType::string, CSVType::string}, {false, false, false},
+                                   {static_cast<usize>(dummy.size())}, dummy, "New Group");
+
+  ReadCSVFileFilter filter;
+  DataStructure dataStructure;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const std::regex re(R"(^['"]+|['"]+$)"); // Remove quotes and double quotes
+
+  // Verify single quoted column
+  const StringArray* sqArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "SQ"}));
+  REQUIRE(sqArray != nullptr);
+  REQUIRE(sqArray->getSize() == rows.size());
+  for(usize i = 0; i < sqArray->getSize(); ++i)
+  {
+    auto str = std::regex_replace(std::get<0>(rows[i]), re, "");
+    REQUIRE(sqArray->at(i) == str);
+  }
+
+  // Verify double quoted column
+  const StringArray* dqArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "DQ"}));
+  REQUIRE(dqArray != nullptr);
+  REQUIRE(dqArray->getSize() == rows.size());
+  for(usize i = 0; i < dqArray->getSize(); ++i)
+  {
+    auto str = std::regex_replace(std::get<1>(rows[i]), re, "");
+    REQUIRE(sqArray->at(i) == str);
+  }
+
+  // Verify integer column
+  const StringArray* numArray = dataStructure.getDataAs<StringArray>(DataPath({"New Group", "Num"}));
+  REQUIRE(numArray != nullptr);
+  REQUIRE(numArray->getSize() == rows.size());
+  for(usize i = 0; i < numArray->getSize(); ++i)
+  {
+    REQUIRE(numArray->at(i) == std::get<2>(rows[i]));
   }
 }
