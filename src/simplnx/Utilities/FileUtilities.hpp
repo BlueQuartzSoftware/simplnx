@@ -38,6 +38,7 @@
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <filesystem>
+#include <regex>
 #include <string>
 
 namespace nx::core::FileUtilities
@@ -127,7 +128,8 @@ public:
   {
     if constexpr(std::is_same_v<T, std::string>)
     {
-      m_Array[index] = token;
+      const std::regex re(R"(^['"]+|['"]+$)"); // Remove quotes and double quotes
+      m_Array[index] = std::regex_replace(token, re, "");
     }
     else
     {
