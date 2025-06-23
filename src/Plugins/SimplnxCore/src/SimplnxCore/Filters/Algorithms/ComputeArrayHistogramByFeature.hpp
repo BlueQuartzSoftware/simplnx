@@ -42,20 +42,10 @@ public:
 
   Result<> operator()();
 
-  void sendThreadSafeProgressMessage(usize calculatedFeatureCount, usize totalFeatures);
-  void sendThreadSafeInfoMessage(const std::string& message);
-
-  const std::atomic_bool& getCancel();
-
 private:
   DataStructure& m_DataStructure;
   const ComputeArrayHistogramByFeatureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  // Thread safe Progress Message
-  mutable std::mutex m_ProgressMessage_Mutex;
-  usize m_MilliDelay = 1000;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
 };
 } // namespace nx::core

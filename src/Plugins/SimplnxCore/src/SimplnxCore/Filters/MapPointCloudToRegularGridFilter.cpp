@@ -16,9 +16,9 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <chrono>
 #include <cmath>
 
 namespace nx::core
@@ -225,7 +225,7 @@ using WarningType = OutOfBoundsType<false, true, false>;
 using ErrorType = OutOfBoundsType<false, false, true>;
 
 template <class OutOfBoundsType = SilentType, bool UseMask = false>
-Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom* image, UInt64AbstractDataStore& voxelIndices,
+Result<> ProcessVertices(MessageHelper& messageHelper, const VertexGeom& vertices, const ImageGeom* image, UInt64AbstractDataStore& voxelIndices,
                          const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
 {
   // Validation
@@ -239,7 +239,7 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
 
   // Execution
   usize numVerts = vertices.getNumberOfVertices();
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   for(int64 i = 0; i < numVerts; i++)
   {
     if constexpr(UseMask)
@@ -274,12 +274,7 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
       count++;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      messageHandler(fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", static_cast<int64>((static_cast<float32>(i) / numVerts) * 100.0f)));
-      start = now;
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", CalculatePercentCompleteAsInt(i, numVerts)); });
   }
 
   if constexpr(OutOfBoundsType::UsingWarning)
@@ -503,37 +498,39 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
   auto outOfBoundsValue = args.value<uint64>(k_OutOfBoundsValue_Key);
 
+  MessageHelper messageHelper(messageHandler);
+
   // Execute the correct ::ProcessVertices, else error out
   switch(args.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key))
   {
   case k_SilentModeIndex: {
     if(useMask)
     {
-      return ProcessVertices<SilentType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<SilentType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
     else
     {
-      return ProcessVertices<SilentType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<SilentType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
   }
   case k_WarningModeIndex: {
     if(useMask)
     {
-      return ProcessVertices<WarningType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<WarningType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
     else
     {
-      return ProcessVertices<WarningType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<WarningType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
   }
   case k_ErrorModeIndex: {
     if(useMask)
     {
-      return ProcessVertices<ErrorType, true>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<ErrorType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
     else
     {
-      return ProcessVertices<ErrorType, false>(messageHandler, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
+      return ProcessVertices<ErrorType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
     }
   }
   default: {

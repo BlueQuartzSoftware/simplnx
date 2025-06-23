@@ -72,8 +72,6 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
 
   std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
-  int32_t progInt = 0;
-
   // Allocate a 2D Array which will be reused from slice to slice
   std::vector<bool> misorients(dims[0] * dims[1], false);
 
@@ -81,7 +79,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   const auto halfDim1 = static_cast<int64_t>(dims[1] * 0.5f);
 
   double deg2Rad = (nx::core::numbers::pi / 180.0);
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessenger throttledMessenger = getMessageHelper().createThrottledMessenger();
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
@@ -94,15 +92,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       {
         return {};
       }
-      progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
-      auto now = std::chrono::steady_clock::now();
-      // Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
-        m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-        start = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {}% Complete", CalculatePercentCompleteAsInt(iter, dims[2])); });
       if(getCancel())
       {
         return {};
@@ -210,15 +200,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
-      auto now = std::chrono::steady_clock::now();
-      // Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
-        m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-        start = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {}% Complete", CalculatePercentCompleteAsInt(iter, dims[2])); });
       if(getCancel())
       {
         return {};

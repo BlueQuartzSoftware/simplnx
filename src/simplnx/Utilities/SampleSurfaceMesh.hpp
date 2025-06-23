@@ -8,6 +8,7 @@
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
@@ -37,9 +38,6 @@ public:
    */
   Result<> execute(SampleSurfaceMeshInputValues& inputValues);
 
-  void updateProgress(const std::string& progMessage);
-  void sendThreadSafeProgressMessage(usize featureId, size_t numCompleted, size_t totalFeatures);
-
 protected:
   virtual void generatePoints(std::vector<Point3Df>& points) = 0;
 
@@ -47,11 +45,6 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  // Thread safe Progress Message
-  mutable std::mutex m_ProgressMessage_Mutex;
-  usize m_ProgressCounter = 0;
-  usize m_LastProgressInt = 0;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+  MessageHelper m_MessageHelper;
 };
 } // namespace nx::core

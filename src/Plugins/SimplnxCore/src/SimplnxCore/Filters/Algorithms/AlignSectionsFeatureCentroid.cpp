@@ -69,7 +69,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
   std::vector<float> xCentroid(dims[2], 0.0f);
   std::vector<float> yCentroid(dims[2], 0.0f);
 
-  auto start = std::chrono::steady_clock::now();
+  ThrottledMessenger throttledMessenger = getMessageHelper().createThrottledMessenger();
   // Loop over the Z Direction
   for(size_t iter = 0; iter < dims[2]; iter++)
   {
@@ -77,15 +77,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts,
     {
       return {};
     }
-    progInt = static_cast<float>(iter) / static_cast<float>(dims[2]) * 100.0f;
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      std::string message = fmt::format("Determining Shifts || {}% Complete", progInt);
-      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {}% Complete", CalculatePercentCompleteAsInt(iter, dims[2])); });
 
     size_t count = 0;
     xCentroid[iter] = 0;

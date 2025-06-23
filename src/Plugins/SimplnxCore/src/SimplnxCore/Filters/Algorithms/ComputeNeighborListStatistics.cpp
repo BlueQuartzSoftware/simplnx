@@ -3,6 +3,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -21,7 +22,7 @@ public:
   using StoreType = AbstractDataStore<T>;
 
   ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel)
+                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_ShouldCancel(shouldCancel)
   , m_Source(source)
@@ -33,6 +34,7 @@ public:
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
   , m_Arrays(arrays)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
 
@@ -78,8 +80,7 @@ public:
 
     const auto& sourceList = dynamic_cast<const NeighborListType&>(m_Source);
 
-    auto tStart = std::chrono::steady_clock::now();
-    usize counter = 0;
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -125,14 +126,8 @@ public:
         array6->setValue(i, val);
       }
 
-      counter++;
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - tStart).count() > 1000)
-      {
-        m_Filter->sendThreadSafeProgressMessage(counter);
-        counter = 0;
-      }
+      progressMessenger.sendProgressMessage(1);
     }
-    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
   void operator()(const Range& range) const
@@ -154,6 +149,7 @@ private:
   bool m_Summation = false;
 
   std::vector<IDataArray*>& m_Arrays;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -218,16 +214,17 @@ Result<> ComputeNeighborListStatistics::operator()()
     arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
   }
 
-  // Fill progress counters for parallel updates
-  m_ProgressCounter = 0;
-  m_TotalElements = numTuples;
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressMessageHelper progresssMessageHelper = messageHelper.createProgressMessageHelper();
+  progresssMessageHelper.setMaxProgresss(numTuples);
+  progresssMessageHelper.setProgressMessageTemplate("Finding Statistics || {}% Completed");
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
   ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->FindLength, m_InputValues->FindMin, m_InputValues->FindMax,
                                                                             m_InputValues->FindMean, m_InputValues->FindMedian, m_InputValues->FindStdDeviation, m_InputValues->FindSummation, arrays,
-                                                                            m_ShouldCancel);
+                                                                            m_ShouldCancel, progresssMessageHelper);
 
   return {};
 }
@@ -236,19 +233,4 @@ Result<> ComputeNeighborListStatistics::operator()()
 const std::atomic_bool& ComputeNeighborListStatistics::getCancel()
 {
   return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void ComputeNeighborListStatistics::sendThreadSafeProgressMessage(usize counter)
-{
-  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_InitialTime).count() > 1000)
-  {
-    auto progressInt = static_cast<usize>((static_cast<float64>(m_ProgressCounter) / static_cast<float64>(m_TotalElements)) * 100.0);
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Finding Statistics || {}% Completed", progressInt));
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
 }

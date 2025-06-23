@@ -8,14 +8,17 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
 {
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
   SizeVec3 uDims = imageGeom.getDimensions();
 
   int64 dims[3] = {static_cast<int64>(uDims[0]), static_cast<int64>(uDims[1]), static_cast<int64>(uDims[2])};
@@ -37,7 +40,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      filter->sendThreadSafeProgressMessage(progressCounter);
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {}%", CalculatePercentCompleteAsInt(k, dims[2])); });
       progressCounter = 0;
     }
     progressCounter++;
@@ -265,25 +268,6 @@ const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void RemoveFlaggedFeatures::sendThreadSafeProgressMessage(size_t counter)
-{
-  /* This filter is does not currently use multithreading so lock is unnecessary.
-   * If this fact changes one MUST UNCOMMENT the below line! */
-  // std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
-  {
-    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
-    std::string progressMessage = "Processing Image... ";
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
-}
-
-// -----------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::operator()()
 {
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
@@ -306,6 +290,8 @@ Result<> RemoveFlaggedFeatures::operator()()
   {
     return {};
   }
+
+  MessageHelper messageHelper(m_MessageHandler);
 
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
@@ -408,7 +394,7 @@ Result<> RemoveFlaggedFeatures::operator()()
         count++;
         m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), this);
+        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), messageHelper);
 
         if(getCancel())
         {

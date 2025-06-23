@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
@@ -45,7 +46,8 @@ class StatisticsByFeatureImpl
 public:
   StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
                           const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray,
-                          DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, ComputeArrayStatistics* filter)
+                          DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, const std::atomic_bool& shouldCancel,
+                          MessageHelper& messageHelper)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -64,33 +66,30 @@ public:
   , m_ModeArray(modeArray)
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
-  , m_Filter(filter)
+  , m_ShouldCancel(shouldCancel)
+  , m_MessageHelper(messageHelper)
   {
   }
 
   void compute(usize start, usize end) const
   {
-    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
-    auto now = std::chrono::steady_clock::now();
-    const usize milliDelay = 1000;
+    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
 
-    const std::atomic_bool& shouldCancel = m_Filter->getCancel();
     const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    auto msgHandler = [this](const std::string& msg) { m_Filter->sendThreadSafeInfoMessage("Preparing features/ensembles for stats calculation " + msg); };
-    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, shouldCancel);
-    if(shouldCancel)
+    auto msgHandler = [this](const std::string& msg) { m_MessageHelper.trySendMessage("Preparing features/ensembles for stats calculation " + msg); };
+    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, m_ShouldCancel);
+    if(m_ShouldCancel)
     {
       return;
     }
 
     usize progressCount = 0;
-    usize progressIncrement = numTuples / 100;
+    usize progressIncrement = numCurrentFeatures / 100;
 
-    m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature range [{}-{}]", start, end));
-    progressIncrement = numCurrentFeatures / 100;
-    progressCount = 0;
+    m_MessageHelper.sendMessage(fmt::format("Calculating statistics for feature range [{}-{}]", start, end));
+
     std::vector<float32> meanArray;
     if(m_StdDeviation && !m_Mean)
     {
@@ -98,7 +97,7 @@ public:
     }
     for(usize j = start; j < end; j++)
     {
-      if(shouldCancel)
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -164,26 +163,26 @@ public:
       }
 
       progressCount++;
-      now = std::chrono::steady_clock::now();
-      if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
+      if(progressCount > progressIncrement)
       {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end));
-        progressCount = 0;
-        initialTime = std::chrono::steady_clock::now();
+        throttledMessenger.sendThrottledMessage([&]() {
+          progressCount = 0;
+          return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end);
+        });
       }
     }
 
     if(m_StdDeviation)
     {
       // https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/variance-standard-deviation-population/a/calculating-standard-deviation-step-by-step
-      m_Filter->sendThreadSafeInfoMessage(fmt::format("Computing StdDev Feature/Ensemble [{}-{}]", start, end));
+      m_MessageHelper.sendMessage(fmt::format("Computing StdDev Feature/Ensemble [{}-{}]", start, end));
       // This should probably be done with Kahan Summation instead
       std::vector<float64> sumOfDiffs(numCurrentFeatures, 0.0f);
       progressCount = 0;
 
       for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
       {
-        if(shouldCancel)
+        if(m_ShouldCancel)
         {
           return;
         }
@@ -203,12 +202,12 @@ public:
         sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - meanVal) * (m_Source[tupleIndex] - meanVal));
 
         progressCount++;
-        now = std::chrono::steady_clock::now();
-        if(progressCount > progressIncrement && std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > milliDelay)
+        if(progressCount > progressIncrement)
         {
-          m_Filter->sendThreadSafeInfoMessage(fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(tupleIndex) / static_cast<float>(numTuples)));
-          progressCount = 0;
-          initialTime = std::chrono::steady_clock::now();
+          throttledMessenger.sendThrottledMessage([&]() {
+            progressCount = 0;
+            return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(tupleIndex) / static_cast<float>(numTuples));
+          });
         }
       }
 
@@ -246,7 +245,8 @@ private:
   NeighborList<T>* m_ModeArray = nullptr;
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
-  ComputeArrayStatistics* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
+  MessageHelper& m_MessageHelper;
 };
 
 template <typename T>
@@ -256,7 +256,7 @@ public:
   StatisticsByFeatureRangeImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const Int32AbstractDataStore& featureIdsMap,
                                const BoolAbstractDataStore& tempMask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray,
                                UInt64Array* lengthArray, DataArray<T>* minArray, DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray,
-                               Float32Array* summationArray, ComputeArrayStatistics* filter)
+                               Float32Array* summationArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -276,20 +276,18 @@ public:
   , m_ModeArray(modeArray)
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
-  , m_Filter(filter)
+  , m_ShouldCancel(shouldCancel)
+  , m_MessageHelper(messageHelper)
   {
   }
 
   void compute(usize start, usize end) const
   {
-    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
-    auto now = std::chrono::steady_clock::now();
-
-    const std::atomic_bool& shouldCancel = m_Filter->getCancel();
+    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {
-      if(shouldCancel)
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -398,12 +396,7 @@ public:
         m_FeatureHasDataArray->initializeTuple(truePosition, false);
       }
 
-      now = std::chrono::steady_clock::now();
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > 1000)
-      {
-        m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, featureId, end));
-        initialTime = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, featureId, end); });
     }
   } // end of compute
 
@@ -432,7 +425,8 @@ private:
   NeighborList<T>* m_ModeArray = nullptr;
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
-  ComputeArrayStatistics* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
+  MessageHelper& m_MessageHelper;
 };
 
 template <typename T>
@@ -440,7 +434,7 @@ class MedianByFeatureImpl
 {
 public:
   MedianByFeatureImpl(const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, bool findMedian, bool findNumUnique,
-                      Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics* filter)
+                      Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, MessageHelper& messageHelper)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -449,13 +443,13 @@ public:
   , m_FeatureIds(featureIds)
   , m_Source(source)
   , m_LengthArray(lengthArray)
-  , m_Filter(filter)
+  , m_MessageHelper(messageHelper)
   {
   }
 
   void compute(usize start, usize end) const
   {
-    m_Filter->sendThreadSafeInfoMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
+    m_MessageHelper.sendMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
 
     const usize numFeatureSources = end - start;
     // Create the arrays that will collect the values from the arrays. allocate them to the correct size based on the length array
@@ -511,7 +505,7 @@ private:
   const Int32AbstractDataStore& m_FeatureIds;
   const AbstractDataStore<T>& m_Source;
   const DataArray<uint64>* m_LengthArray = nullptr;
-  ComputeArrayStatistics* m_Filter = nullptr;
+  MessageHelper& m_MessageHelper;
 };
 
 template <typename T>
@@ -519,7 +513,7 @@ class MedianByFeatureRangeImpl
 {
 public:
   MedianByFeatureRangeImpl(const Int32AbstractDataStore& featureIdsMap, const BoolAbstractDataStore& tempMask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source,
-                           bool findMedian, bool findNumUnique, Float32Array* medianArray, Int32Array* numUniqueValuesArray, ComputeArrayStatistics* filter)
+                           bool findMedian, bool findNumUnique, Float32Array* medianArray, Int32Array* numUniqueValuesArray, MessageHelper& messageHelper)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -528,13 +522,13 @@ public:
   , m_Mask(tempMask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
-  , m_Filter(filter)
+  , m_MessageHelper(messageHelper)
   {
   }
 
   void compute(usize start, usize end) const
   {
-    m_Filter->sendThreadSafeInfoMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
+    m_MessageHelper.sendMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
 
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
@@ -600,7 +594,7 @@ private:
   const Int32AbstractDataStore& m_FeatureIds;
   const Int32AbstractDataStore& m_FeatureIdsMap;
   const AbstractDataStore<T>& m_Source;
-  ComputeArrayStatistics* m_Filter = nullptr;
+  MessageHelper& m_MessageHelper;
 };
 
 // -----------------------------------------------------------------------------
@@ -885,7 +879,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, usize numFeatures, const ComputeArrayStatisticsInputValues* inputValues,
-                      ComputeArrayStatistics* filter)
+                      const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   {
     std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
@@ -935,7 +929,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
     auto& data = inputArrayPtr->getDataStoreRef();
     StatisticsByFeatureImpl<T> classToExecute = StatisticsByFeatureImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode,
                                                                            inputValues->FindStdDeviation, inputValues->FindSummation, maskCompare, featureIds, data, featureHasDataPtr, lengthArrayPtr,
-                                                                           minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
+                                                                           minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, shouldCancel, messageHelper);
     if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
@@ -953,7 +947,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
     if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
     {
-      filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
+      messageHelper.sendMessage("Starting Median Calculation...");
 
       auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
       auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
@@ -972,7 +966,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
       }
       medianDataAlg.setRange(0, numFeatures);
       medianDataAlg.execute(
-          MedianByFeatureImpl<T>(maskCompare, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, filter));
+          MedianByFeatureImpl<T>(maskCompare, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, messageHelper));
     }
 
     // compute the standardized data
@@ -996,7 +990,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, const std::pair<int32, int32>& range,
-                      const ComputeArrayStatisticsInputValues* inputValues, ComputeArrayStatistics* filter)
+                      const ComputeArrayStatisticsInputValues* inputValues, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   {
     Result<> initializationResult = InitializeArrays<T>(dataStructure, inputValues);
     if(initializationResult.invalid())
@@ -1038,7 +1032,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
     const auto& data = inputArrayPtr->getDataStoreRef();
     StatisticsByFeatureRangeImpl<T> classToExecute = StatisticsByFeatureRangeImpl<T>(
         inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMode, inputValues->FindStdDeviation, inputValues->FindSummation, featureIdsMap,
-        tempMask, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, filter);
+        tempMask, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, shouldCancel, messageHelper);
     if(CheckArraysInMemory(indexAlgArrays))
     {
       const tbb::simple_partitioner simplePartitioner;
@@ -1056,7 +1050,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
     if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
     {
-      filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
+      messageHelper.sendMessage("Starting Median Calculation...");
 
       auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
       auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
@@ -1074,7 +1068,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
       }
       medianDataAlg.setRange(range.first, range.second + 1);
       medianDataAlg.execute(
-          MedianByFeatureRangeImpl<T>(featureIdsMap, tempMask, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, filter));
+          MedianByFeatureRangeImpl<T>(featureIdsMap, tempMask, featureIds, data, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, messageHelper));
     }
 
     // compute the standardized data based on whether computing by index or not
@@ -1160,6 +1154,8 @@ Result<> ComputeArrayStatistics::operator()()
     arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+
   if(!m_InputValues->ComputeByIndex)
   {
     const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
@@ -1214,7 +1210,7 @@ Result<> ComputeArrayStatistics::operator()()
     const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
     // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-    return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this);
+    return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, this, messageHelper);
   }
   default: {
     return MakeErrorResult(-506670, fmt::format("Unknown feature id range controls option selected!", trueMin, trueMax));
@@ -1287,40 +1283,5 @@ Result<> ComputeArrayStatistics::operator()()
   const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
   // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues, this);
-}
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeArrayStatistics::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void ComputeArrayStatistics::sendThreadSafeProgressMessage(usize counter)
-{
-  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-
-  if(m_ProgressCounter > 1 && m_LastProgressInt != progressInt)
-  {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Finding Distances || {}% Completed", progressInt));
-  }
-
-  m_LastProgressInt = progressInt;
-}
-
-// -----------------------------------------------------------------------------
-void ComputeArrayStatistics::sendThreadSafeInfoMessage(const std::string& message)
-{
-  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > m_MilliDelay)
-  {
-    m_MessageHandler(IFilter::Message::Type::Info, message);
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
+  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues, m_ShouldCancel, messageHelper);
 }

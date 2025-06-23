@@ -4,6 +4,7 @@
 #include "SimplnxCore/Filters/Algorithms/FindNRingNeighbors.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 #include <fmt/format.h>
@@ -89,6 +90,8 @@ Result<> FeatureFaceCurvature::operator()()
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all
  * the tasks while the first tasks start up. TBB will then grab a new task from it's own queue to work on it up to the
@@ -98,11 +101,11 @@ Result<> FeatureFaceCurvature::operator()()
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  m_MessageHandler(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
-#else
-
+  messageHelper.sendMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
-  m_TotalElements = sharedFeatureFaces.size();
+
+  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(sharedFeatureFaces.size());
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {
@@ -111,14 +114,14 @@ Result<> FeatureFaceCurvature::operator()()
     CalculateTriangleGroupCurvatures func(this, m_InputValues->NRingCount, triangleIds, m_InputValues->useNormalsForCurveFitting, surfaceMeshPrincipalCurvature1sArrayPtr,
                                           surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr, surfaceMeshPrincipalDirection2sArrayPtr,
                                           surfaceMeshGaussianCurvaturesArrayPtr, surfaceMeshMeanCurvaturesArrayPtr, surfaceMeshWeingartenMatrixArrayPtr, triangleGeomPtr, surfaceMeshFaceLabelsArrayPtr,
-                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel);
+                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel, progressMessageHelper);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
     {
       g->run(func);
     }
 #else
-    m_MessageHandler(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
+    messageHelper.sendMessage(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
     {
       func();
     }
@@ -126,32 +129,11 @@ Result<> FeatureFaceCurvature::operator()()
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  m_MessageHandler(fmt::format("Waiting on computations to complete."));
+  messageHelper.sendMessage("Waiting on computations to complete.");
   g->wait(); // Wait for all the threads to complete before moving on.
 #endif
 
   // Remove elements containing vertices, because Element neighbors created it quietly under the covers
   triangleGeomPtr->deleteElementsContainingVert();
   return {};
-}
-
-// -----------------------------------------------------------------------------
-void FeatureFaceCurvature::sendThreadSafeProgressMessage(usize counter)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  // We DO NOT Want to print at more than once a second. Hey. Don't copy/paste this line.
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-  std::string ss = fmt::format("{}/{}", m_ProgressCounter, m_TotalElements);
-  m_MessageHandler(IFilter::Message::Type::Info, ss);
-
-  m_LastProgressInt = progressInt;
-  m_InitialPoint = std::chrono::steady_clock::now();
 }

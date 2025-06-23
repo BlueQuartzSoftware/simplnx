@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -80,18 +81,11 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
   std::vector<int32_t> neighborCount(totalPoints, 0);
 
-  int64_t progressInt = 0;
-  auto start = std::chrono::steady_clock::now();
+  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   for(size_t i = 0; i < totalPoints; i++)
   {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      progressInt = static_cast<int64_t>((static_cast<float>(i) / totalPoints) * 100.0f);
-      std::string ss = fmt::format("Processing Data '{}'% completed", progressInt);
-      m_MessageHandler({IFilter::Message::Type::Info, ss});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Data '{}'% completed", CalculatePercentCompleteAsInt(i, totalPoints)); });
 
     if(!maskCompare->isTrue(i))
     {
@@ -157,19 +151,12 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     while(counter > 0)
     {
       counter = 0;
-      progressInt = 0;
-      start = std::chrono::steady_clock::now();
       for(size_t i = 0; i < totalPoints; i++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-        {
-          progressInt = static_cast<int64_t>((static_cast<float>(i) / totalPoints) * 100.0f);
-          std::string ss =
-              fmt::format("Level '{}' of '{}' || Processing Data ('{}') '{}'% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber, progressInt);
-          m_MessageHandler({IFilter::Message::Type::Info, ss});
-          start = std::chrono::steady_clock::now();
-        }
+        throttledMessenger.sendThrottledMessage([&]() {
+          return fmt::format("Level '{}' of '{}' || Processing Data ('{}') '{}'% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
+                             CalculatePercentCompleteAsInt(i, totalPoints));
+        });
 
         if(neighborCount[i] >= currentLevel && !maskCompare->isTrue(i))
         {
