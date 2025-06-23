@@ -24,7 +24,7 @@ public:
   {
   }
 
-  ~MessageHandlerSink() noexcept = default;
+  ~MessageHandlerSink() noexcept override = default;
 
   MessageHandlerSink(const MessageHandlerSink&) = delete;
   MessageHandlerSink(MessageHandlerSink&&) = delete;
