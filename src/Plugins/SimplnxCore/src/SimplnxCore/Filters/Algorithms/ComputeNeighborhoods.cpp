@@ -13,7 +13,8 @@ namespace
 class ComputeNeighborhoodsImpl
 {
 public:
-  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel,
+                           ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
   , m_Bins(bins)

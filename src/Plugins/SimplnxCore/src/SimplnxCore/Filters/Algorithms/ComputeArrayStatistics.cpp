@@ -1283,5 +1283,6 @@ Result<> ComputeArrayStatistics::operator()()
   const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
   // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
-  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues, m_ShouldCancel, messageHelper);
+  return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues,
+                                 m_ShouldCancel, messageHelper);
 }
