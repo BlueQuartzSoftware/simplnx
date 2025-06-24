@@ -1,6 +1,7 @@
 #include "SegmentFeatures.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 using namespace nx::core;
 
@@ -184,36 +185,5 @@ SegmentFeatures::SeedGenerator SegmentFeatures::initializeStaticVoxelSeedGenerat
 void SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures) const
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Randomizing Feature Ids");
-  // Generate an even distribution of numbers between the min and max range
-  const usize rangeMin = 1;
-  const usize rangeMax = totalFeatures - 1;
-  auto gen = initializeStaticVoxelSeedGenerator();
-  std::uniform_real_distribution<float64> dist(0, 1);
-
-  std::vector<int32> randomIds(totalFeatures);
-  std::iota(randomIds.begin(), randomIds.end(), 0);
-
-  //--- Shuffle elements by randomly exchanging each with one other.
-  for(usize i = 1; i < totalFeatures; i++)
-  {
-    auto r = static_cast<usize>(std::floor(dist(gen) * static_cast<float64>(rangeMax))); // Random remaining position.
-    if(r < rangeMin)
-    {
-      continue;
-    }
-
-    int32 randId_i = randomIds[i];
-    randomIds[i] = randomIds[r];
-    randomIds[r] = randId_i;
-  }
-
-  // Now adjust all the Grain ID values for each Voxel
-  auto& featureIdsStore = featureIds->getDataStoreRef();
-
-  // instead of taking total points as an input just extract the size, so we don't walk of
-  usize totalPoints = featureIdsStore.getSize();
-  for(int64 i = 0; i < totalPoints; ++i)
-  {
-    featureIdsStore[i] = randomIds[featureIdsStore[i]];
-  }
+  ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

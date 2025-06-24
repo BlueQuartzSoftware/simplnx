@@ -5,6 +5,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -86,7 +87,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->RandomizeFeatureIds)
   {
-    randomizeFeatureIds(m_FeatureIdsArray, this->m_FoundFeatures + 1);
+    ClusterUtilities::RandomizeFeatureIds(m_FeatureIdsArray->getDataStoreRef(), this->m_FoundFeatures + 1);
   }
 
   return {};

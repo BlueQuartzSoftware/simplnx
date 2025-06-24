@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <cmath>
@@ -134,4 +135,11 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
   // Return the correct primitive type for distance
   return dist;
 }
+
+/**
+ * @brief Randomize the provided Feature IDs.
+ * @param featureIds
+ * @param totalFeatures
+ */
+SIMPLNX_EXPORT void RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures);
 } // namespace nx::core::ClusterUtilities
