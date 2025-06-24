@@ -158,7 +158,7 @@ public:
               m_Overflow++;
             }
           } // end of numTuples loop
-        } // end of increment else
+        }   // end of increment else
 
         // Bool breaks neighbor lists; if we have made it here we know m_ModalBinRangesList is a nullptr
         if constexpr(!std::is_same_v<Type, bool>)
