@@ -53,7 +53,7 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
 Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
 {
   auto* geometry = dataStructure.getDataAs<EdgeGeom>(dataPath);
-  if (geometry == nullptr)
+  if(geometry == nullptr)
   {
     return MakeErrorResult(-25070, fmt::format("Failed to finish importing geometry at path '{}'. Geometry does not exist or is of wrong type.", dataPath.toString()));
   }

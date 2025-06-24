@@ -75,7 +75,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 
     if(!dataStructure.insert(importData, targetPath.getParent()))
     {
-      //return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString()));
+      // return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString()));
     }
     if(auto result = DREAM3D::FinishImportingObject(dataStructure, targetPath, fileReader); result.invalid())
     {

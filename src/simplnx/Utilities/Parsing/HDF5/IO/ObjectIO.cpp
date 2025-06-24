@@ -210,7 +210,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   std::string data;
   std::vector<char> attributeOutput;
   Result<std::string> returnResult = {};
-  
+
   open();
   if(!hasAttribute(attributeName))
   {

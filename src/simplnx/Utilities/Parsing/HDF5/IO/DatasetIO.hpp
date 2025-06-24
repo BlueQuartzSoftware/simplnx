@@ -553,7 +553,6 @@ extern template std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataS
 extern template std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
 extern template std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
 
-
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int32_t>(nonstd::span<int32_t>) const;

@@ -64,8 +64,7 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 }
 
 template <class T>
-std::shared_ptr<AbstractListStore<T>> CreateListStore(usize tupleCount, IDataAction::Mode mode = IDataAction::Mode::Execute,
-  std::string dataFormat = "")
+std::shared_ptr<AbstractListStore<T>> CreateListStore(usize tupleCount, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
 {
   switch(mode)
   {

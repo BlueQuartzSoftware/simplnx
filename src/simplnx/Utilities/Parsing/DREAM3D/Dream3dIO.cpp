@@ -2053,8 +2053,8 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const Data
   else if(fileVersion == k_LegacyFileVersion)
   {
     auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-    //std::string parentPathStr = dataPath.getParent().toString();
-    //auto parentGroup = dataStructureReader.openGroup(dataPath.getParent().toString());
+    // std::string parentPathStr = dataPath.getParent().toString();
+    // auto parentGroup = dataStructureReader.openGroup(dataPath.getParent().toString());
 
     return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
   }

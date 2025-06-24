@@ -288,7 +288,7 @@ void DataStructureReader::addRequiredId(DataObject::OptionalId requiredDataId)
 
 void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileReader)
 {
-  for (auto& id : m_RequiredIds)
+  for(auto& id : m_RequiredIds)
   {
     auto* requiredObject = m_CurrentStructure.getData(id);
     if(requiredObject != nullptr)
