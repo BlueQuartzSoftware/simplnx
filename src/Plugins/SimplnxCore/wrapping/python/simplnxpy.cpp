@@ -79,6 +79,7 @@
 #include <simplnx/Parameters/ReadHDF5DatasetParameter.hpp>
 #include <simplnx/Parameters/StringParameter.hpp>
 #include <simplnx/Parameters/VectorParameter.hpp>
+#include <simplnx/Parameters/util/ReadCSVData.hpp>
 #include <simplnx/Pipeline/AbstractPipelineNode.hpp>
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
@@ -496,6 +497,20 @@ PYBIND11_MODULE(simplnx, mod)
   dataType.value("float32", DataType::float32);
   dataType.value("float64", DataType::float64);
   dataType.value("boolean", DataType::boolean);
+
+  py::enum_<CSVType> csvType(mod, "CSVType");
+  csvType.value("int8", CSVType::int8);
+  csvType.value("uint8", CSVType::uint8);
+  csvType.value("int16", CSVType::int16);
+  csvType.value("uint16", CSVType::uint16);
+  csvType.value("int32", CSVType::int32);
+  csvType.value("uint32", CSVType::uint32);
+  csvType.value("int64", CSVType::int64);
+  csvType.value("uint64", CSVType::uint64);
+  csvType.value("float32", CSVType::float32);
+  csvType.value("float64", CSVType::float64);
+  csvType.value("boolean", CSVType::boolean);
+  csvType.value("string", CSVType::string);
 
   mod.def(
       "convert_np_dtype_to_datatype",
