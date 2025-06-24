@@ -31,7 +31,7 @@ public:
   EmptyListStore(const EmptyListStore& rhs) = default;
   EmptyListStore(EmptyListStore&& rhs) = default;
 
-  ~EmptyListStore() = default;
+  ~EmptyListStore() override = default;
 
   /**
    * @brief Returns a copy of the current list store.

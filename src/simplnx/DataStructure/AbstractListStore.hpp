@@ -537,7 +537,7 @@ public:
   using reference = value_type&;
   using const_reference = const value_type&;
 
-  virtual ~AbstractListStore() = default;
+  ~AbstractListStore() override = default;
 
   virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
 

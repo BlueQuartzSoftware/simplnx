@@ -12,7 +12,7 @@ class DatasetIO;
 class IListStore
 {
 public:
-  ~IListStore() = default;
+  virtual ~IListStore() = default;
 
   /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
