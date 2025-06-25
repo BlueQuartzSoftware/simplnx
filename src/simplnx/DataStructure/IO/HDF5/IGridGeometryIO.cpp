@@ -12,7 +12,7 @@ IGridGeometryIO::~IGridGeometryIO() noexcept = default;
 Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName,
                                                DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
-  Result<> result = IGeometryIO::ReadGeometryData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, false);
+  Result<> result = IGeometryIO::ReadGeometryData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
