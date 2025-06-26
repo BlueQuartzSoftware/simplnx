@@ -38,7 +38,7 @@ public:
    * User code does not need to call this constructor.
    * @param messageHandler
    */
-  Messenger(const IFilter::MessageHandler& messageHandler);
+  Messenger(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds throttleRate);
 
   ~Messenger() noexcept;
 
@@ -314,8 +314,8 @@ public:
    * @brief Constructs a MessageHelper using a MessageHandler.
    * @param messageHandler
    */
-  MessageHelper(const IFilter::MessageHandler& messageHandler)
-  : m_Messenger(std::make_shared<Messenger>(messageHandler))
+  MessageHelper(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds throttleRate = std::chrono::milliseconds(1000))
+  : m_Messenger(std::make_shared<Messenger>(messageHandler, throttleRate))
   {
   }
 

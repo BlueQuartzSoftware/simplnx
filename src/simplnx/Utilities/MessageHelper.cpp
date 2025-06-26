@@ -48,25 +48,130 @@ private:
 
 using MessageHandlerSink_mt = MessageHandlerSink<std::mutex>;
 using MessageHandlerSink_st = MessageHandlerSink<spdlog::details::null_mutex>;
+
+template <class Mutex, class BaseDuration = std::chrono::milliseconds>
+class ThrottleSink : public spdlog::sinks::base_sink<Mutex>
+{
+public:
+  ThrottleSink() = delete;
+
+  explicit ThrottleSink(BaseDuration rate)
+  : m_Rate(std::move(rate))
+  , m_Sinks()
+  , m_LastTime(spdlog::log_clock::time_point(BaseDuration::min()))
+  {
+  }
+
+  ThrottleSink(BaseDuration rate, std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks)
+  : m_Rate(std::move(rate))
+  , m_Sinks(std::move(sinks))
+  , m_LastTime(spdlog::log_clock::time_point(BaseDuration::min()))
+  {
+  }
+
+  ~ThrottleSink() noexcept override = default;
+
+  ThrottleSink(const ThrottleSink&) = delete;
+  ThrottleSink(ThrottleSink&&) = delete;
+
+  ThrottleSink& operator=(const ThrottleSink&) = delete;
+  ThrottleSink& operator=(ThrottleSink&&) = delete;
+
+  void add_sink(std::shared_ptr<spdlog::sinks::sink> sink)
+  {
+    std::lock_guard<Mutex> lock(BaseSink::mutex_);
+    m_Sinks.push_back(sink);
+  }
+
+  void remove_sink(std::shared_ptr<spdlog::sinks::sink> sink)
+  {
+    std::lock_guard<Mutex> lock(BaseSink::mutex_);
+    m_Sinks.erase(std::remove(m_Sinks.begin(), m_Sinks.end(), sink), m_Sinks.end());
+  }
+
+  void set_sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks)
+  {
+    std::lock_guard<Mutex> lock(BaseSink::mutex_);
+    m_Sinks = std::move(sinks);
+  }
+
+  std::vector<std::shared_ptr<spdlog::sinks::sink>>& sinks()
+  {
+    return m_Sinks;
+  }
+
+protected:
+  void sink_it_(const spdlog::details::log_msg& msg) override
+  {
+    auto diff = msg.time - m_LastTime;
+    if(diff >= m_Rate)
+    {
+      m_LastTime = msg.time;
+    }
+    else
+    {
+      return;
+    }
+
+    for(auto& sink : m_Sinks)
+    {
+      if(sink->should_log(msg.level))
+      {
+        sink->log(msg);
+      }
+    }
+  }
+
+  void flush_() override
+  {
+    for(auto& sink : m_Sinks)
+    {
+      sink->flush();
+    }
+  }
+
+  void set_formatter_(std::unique_ptr<spdlog::formatter> sink_formatter) override
+  {
+    BaseSink::formatter_ = std::move(sink_formatter);
+    for(auto& sink : m_Sinks)
+    {
+      sink->set_formatter(BaseSink::formatter_->clone());
+    }
+  }
+
+private:
+  using BaseSink = spdlog::sinks::base_sink<Mutex>;
+
+  BaseDuration m_Rate;
+  std::vector<std::shared_ptr<spdlog::sinks::sink>> m_Sinks;
+  spdlog::log_clock::time_point m_LastTime;
+};
+
+using ThrottleSink_mt = ThrottleSink<std::mutex>;
+using ThrottleSink_st = ThrottleSink<spdlog::details::null_mutex>;
+
 } // namespace
 
 struct Messenger::Impl
 {
   const IFilter::MessageHandler& m_MessageHandler;
+  std::chrono::milliseconds m_ThrottleRate;
 
   std::shared_ptr<spdlog::logger> m_ThrottledLogger = nullptr;
   std::shared_ptr<spdlog::logger> m_MandatoryLogger = nullptr;
 
   Impl() = delete;
 
-  Impl(const IFilter::MessageHandler& messageHandler)
+  Impl(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds throttleRate)
   : m_MessageHandler(messageHandler)
+  , m_ThrottleRate(throttleRate)
   {
     auto sink = std::make_shared<MessageHandlerSink_mt>(m_MessageHandler);
+    auto throttledSink = std::make_shared<ThrottleSink_mt>(m_ThrottleRate, std::vector<std::shared_ptr<spdlog::sinks::sink>>{sink});
     spdlog::init_thread_pool(spdlog::details::default_async_q_size, 1U);
     auto threadPool = spdlog::thread_pool();
     m_MandatoryLogger = std::make_shared<spdlog::async_logger>("MessageHandlerMandatoryLogger", sink, threadPool, spdlog::async_overflow_policy::block);
-    m_ThrottledLogger = std::make_shared<spdlog::async_logger>("MessageHandlerThrottledLogger", sink, threadPool, spdlog::async_overflow_policy::overrun_oldest);
+    m_ThrottledLogger = std::make_shared<spdlog::async_logger>("MessageHandlerThrottledLogger", throttledSink, threadPool, spdlog::async_overflow_policy::overrun_oldest);
   }
 
   ~Impl() noexcept
@@ -91,8 +196,8 @@ struct Messenger::Impl
   }
 };
 
-Messenger::Messenger(const IFilter::MessageHandler& messageHandler)
-: m_Impl(std::make_unique<Messenger::Impl>(messageHandler))
+Messenger::Messenger(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds throttleRate)
+: m_Impl(std::make_unique<Messenger::Impl>(messageHandler, throttleRate))
 {
 }
 
