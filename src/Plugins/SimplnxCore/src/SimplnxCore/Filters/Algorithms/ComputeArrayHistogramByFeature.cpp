@@ -213,9 +213,8 @@ public:
       progressCount++;
       if(progressCount > progressIncrement)
       {
-        progressMessenger.sendProgressMessage(progressCount, [&](usize currentProgress, usize maxProgress) {
-          return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress);
-        });
+        progressMessenger.sendProgressMessage(progressCount,
+                                              [&](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
         progressCount = 0;
       }
     }
