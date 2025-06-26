@@ -113,29 +113,29 @@ protected:
       return;
     }
 
-    for(auto& sink : m_Sinks)
+    for(auto& childSink : m_Sinks)
     {
-      if(sink->should_log(msg.level))
+      if(childSink->should_log(msg.level))
       {
-        sink->log(msg);
+        childSink->log(msg);
       }
     }
   }
 
   void flush_() override
   {
-    for(auto& sink : m_Sinks)
+    for(auto& childSink : m_Sinks)
     {
-      sink->flush();
+      childSink->flush();
     }
   }
 
   void set_formatter_(std::unique_ptr<spdlog::formatter> sink_formatter) override
   {
     BaseSink::formatter_ = std::move(sink_formatter);
-    for(auto& sink : m_Sinks)
+    for(auto& childSink : m_Sinks)
     {
-      sink->set_formatter(BaseSink::formatter_->clone());
+      childSink->set_formatter(BaseSink::formatter_->clone());
     }
   }
 
