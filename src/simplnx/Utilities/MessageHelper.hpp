@@ -12,14 +12,16 @@
 namespace nx::core
 {
 /**
- * @brief Calculates the perecent complete as an int32
+ * @brief Calculates the perecent complete
+ * @tparam T
  * @param currentProgress
  * @param max
  * @return
  */
-inline constexpr int32 CalculatePercentCompleteAsInt(usize currentProgress, usize max)
+template <class T = float32>
+inline constexpr T CalculatePercentComplete(usize currentProgress, usize max)
 {
-  return static_cast<int32>(static_cast<float32>(currentProgress) / static_cast<float32>(max) * 100.0f);
+  return static_cast<T>(static_cast<float32>(currentProgress) / static_cast<float32>(max) * 100.0f);
 }
 
 /**
@@ -147,7 +149,8 @@ concept ProgressMessageFunctor = std::is_invocable_r_v<std::string, CallableT, u
  * Stores the max progress which should be set before sending updates.
  * Stores the current progress as an atomic variable to be thread safe.
  * Stores an optional message template which will be used to construct messages.
- * It should accept two arguments in the fmt format.
+ * It should accept one arguments in the fmt format which is the percent complete
+ * as float32 e.g. "{}%"
  */
 struct ProgressMessageData
 {
@@ -209,7 +212,7 @@ public:
   void sendProgressMessage(usize increment)
   {
     auto func = [this](usize currentProgress, usize maxProgress) {
-      int32 percentComplete = CalculatePercentCompleteAsInt(currentProgress, maxProgress);
+      auto percentComplete = CalculatePercentComplete(currentProgress, maxProgress);
       return fmt::format(fmt::runtime(m_ProgressMessageData->m_MessageTemplate), percentComplete);
     };
 
@@ -270,7 +273,8 @@ public:
 
   /**
    * @brief Sets the progress message template.
-   * E.g. "Completed {}/{}"
+   * Accepts the percent complete as a float32.
+   * E.g. "Completed {}%"
    * @param messageTemplate
    */
   void setProgressMessageTemplate(std::string messageTemplate)

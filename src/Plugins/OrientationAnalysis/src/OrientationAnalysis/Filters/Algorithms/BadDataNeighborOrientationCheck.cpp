@@ -85,7 +85,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   for(size_t i = 0; i < totalPoints; i++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Data '{}'% completed", CalculatePercentCompleteAsInt(i, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(i, totalPoints)); });
 
     if(!maskCompare->isTrue(i))
     {
@@ -154,8 +154,8 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       for(size_t i = 0; i < totalPoints; i++)
       {
         throttledMessenger.sendThrottledMessage([&]() {
-          return fmt::format("Level '{}' of '{}' || Processing Data ('{}') '{}'% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
-                             CalculatePercentCompleteAsInt(i, totalPoints));
+          return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
+                             CalculatePercentComplete(i, totalPoints));
         });
 
         if(neighborCount[i] >= currentLevel && !maskCompare->isTrue(i))

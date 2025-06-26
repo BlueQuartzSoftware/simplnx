@@ -70,10 +70,7 @@ public:
 
       if(counter > increment)
       {
-        progressMessenger.sendProgressMessage(counter, [&](usize currentProgress, usize maxProgress) {
-          int32 percentComplete = CalculatePercentCompleteAsInt(currentProgress, maxProgress);
-          return fmt::format(fmt::runtime(progressMessenger.getProgressMessageData().m_MessageTemplate), percentComplete);
-        });
+        progressMessenger.sendProgressMessage(counter);
         counter = 0;
       }
 
@@ -185,7 +182,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
 
   progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
-  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {}%");
+  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));

@@ -43,7 +43,7 @@ public:
     std::string arrayName = m_DataArrayPtr->getName();
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {}% completed", arrayName, CalculatePercentCompleteAsInt(i, m_TotalPoints)); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
       int64_t neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
@@ -134,7 +134,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     for(size_t i = 0; i < totalPoints; i++)
     {
       throttledMessenger.sendThrottledMessage([&]() {
-        return fmt::format("Level '{}' of '{}' || Processing Data '{}'% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, CalculatePercentCompleteAsInt(i, totalPoints));
+        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, CalculatePercentComplete(i, totalPoints));
       });
 
       if(confidenceIndex[i] < m_InputValues->MinConfidence)

@@ -145,7 +145,7 @@ Result<> ReadStlFile::operator()()
 
   for(int32_t t = 0; t < triCount; ++t)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {}% Complete", CalculatePercentCompleteAsInt(t, triCount)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
     if(m_ShouldCancel)
     {
       return {};

@@ -48,7 +48,7 @@ public:
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {}% completed", arrayName, CalculatePercentCompleteAsInt(i, m_Dims[2])); });
+      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
       if(m_Filter->getCancel())
       {
         return;

@@ -267,7 +267,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
     // Update the global transform
     globalTransform = transform * globalTransform;
 
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Performing Registration Iterations || {}% Completed", CalculatePercentCompleteAsInt(i, iters)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Performing Registration Iterations || {:.2f}% Completed", CalculatePercentComplete(i, iters)); });
   }
 
   auto& transformStore = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStoreRef();

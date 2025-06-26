@@ -39,7 +39,7 @@ public:
     std::string arrayName = m_DataArrayPtr->getName();
     for(usize i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {}% completed", arrayName, CalculatePercentCompleteAsInt(i, m_TotalPoints)); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
 
       const int32 featureName = m_FeatureIds[i];
       const int64 neighbor = m_Neighbors[i];

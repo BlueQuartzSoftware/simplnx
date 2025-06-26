@@ -217,7 +217,7 @@ Result<> ComputeNeighborListStatistics::operator()()
   MessageHelper messageHelper(m_MessageHandler);
   ProgressMessageHelper progresssMessageHelper = messageHelper.createProgressMessageHelper();
   progresssMessageHelper.setMaxProgresss(numTuples);
-  progresssMessageHelper.setProgressMessageTemplate("Finding Statistics || {}% Completed");
+  progresssMessageHelper.setProgressMessageTemplate("Finding Statistics || {:.2f}% Completed");
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

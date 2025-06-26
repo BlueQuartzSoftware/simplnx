@@ -498,7 +498,7 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   MessageHelper messageHelper(m_MessageHandler);
   ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("Finding Distances || {}% Completed");
+  progressMessageHelper.setProgressMessageTemplate("Finding Distances || {:.2f}% Completed");
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

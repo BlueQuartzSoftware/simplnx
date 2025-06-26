@@ -40,7 +40,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {}%", CalculatePercentCompleteAsInt(k, dims[2])); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(k, dims[2])); });
       progressCounter = 0;
     }
     progressCounter++;

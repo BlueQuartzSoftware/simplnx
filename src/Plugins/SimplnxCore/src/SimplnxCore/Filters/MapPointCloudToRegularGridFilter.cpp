@@ -274,7 +274,7 @@ Result<> ProcessVertices(MessageHelper& messageHelper, const VertexGeom& vertice
       count++;
     }
 
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Computing Point Cloud Voxel Indices || {}% Completed", CalculatePercentCompleteAsInt(i, numVerts)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Computing Point Cloud Voxel Indices || {:.2f}% Completed", CalculatePercentComplete(i, numVerts)); });
   }
 
   if constexpr(OutOfBoundsType::UsingWarning)

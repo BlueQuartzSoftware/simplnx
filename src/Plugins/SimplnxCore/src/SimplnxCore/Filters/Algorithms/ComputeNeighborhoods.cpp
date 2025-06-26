@@ -45,7 +45,6 @@ public:
       if(incCount >= increment)
       {
         progressMessenger.sendProgressMessage(incCount, [&](usize currentProgress, usize maxProgress) {
-          int32 percentComplete = CalculatePercentCompleteAsInt(currentProgress, maxProgress);
           return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress);
         });
         incCount = 0;
@@ -144,7 +143,7 @@ Result<> ComputeNeighborhoods::operator()()
 
   ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalFeatures);
-  progressMessageHelper.setProgressMessageTemplate("Finding Feature Neighborhoods: {}");
+  progressMessageHelper.setProgressMessageTemplate("Finding Feature Neighborhoods: {:.2f}%");
 
   m_LocalNeighborhoodList.resize(totalFeatures);
   criticalDistance.resize(totalFeatures);

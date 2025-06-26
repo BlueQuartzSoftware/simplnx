@@ -251,7 +251,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   for(usize i = 1; i < totalFeatures; i++)
   {
     auto now = std::chrono::steady_clock::now();
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {}% Complete", CalculatePercentCompleteAsInt(i, totalFeatures)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
 
     if(shouldCancel)
     {
@@ -270,7 +270,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   // Loop over all points to generate the neighbor lists
   for(usize j = 0; j < totalPoints; j++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {}% Complete", CalculatePercentCompleteAsInt(j, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(j, totalPoints)); });
 
     if(shouldCancel)
     {
@@ -346,7 +346,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Calculating Surface Areas || {}% Complete", CalculatePercentCompleteAsInt(i, totalFeatures)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
 
     if(shouldCancel)
     {

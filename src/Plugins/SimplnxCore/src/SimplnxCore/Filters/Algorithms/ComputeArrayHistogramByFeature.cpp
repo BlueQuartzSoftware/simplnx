@@ -214,7 +214,6 @@ public:
       if(progressCount > progressIncrement)
       {
         progressMessenger.sendProgressMessage(progressCount, [&](usize currentProgress, usize maxProgress) {
-          int32 percentComplete = CalculatePercentCompleteAsInt(currentProgress, maxProgress);
           return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress);
         });
         progressCount = 0;

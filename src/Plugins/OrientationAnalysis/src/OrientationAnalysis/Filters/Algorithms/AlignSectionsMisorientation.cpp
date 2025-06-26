@@ -92,7 +92,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       {
         return {};
       }
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {}% Complete", CalculatePercentCompleteAsInt(iter, dims[2])); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
       if(getCancel())
       {
         return {};
@@ -200,7 +200,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {}% Complete", CalculatePercentCompleteAsInt(iter, dims[2])); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
       if(getCancel())
       {
         return {};
