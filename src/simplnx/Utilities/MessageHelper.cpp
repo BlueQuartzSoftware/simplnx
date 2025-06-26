@@ -150,6 +150,19 @@ private:
 using ThrottleSink_mt = ThrottleSink<std::mutex>;
 using ThrottleSink_st = ThrottleSink<spdlog::details::null_mutex>;
 
+std::shared_ptr<spdlog::details::thread_pool> GetOrCreateThreadPool()
+{
+  auto& registry = spdlog::details::registry::instance();
+  auto& mutex = registry.tp_mutex();
+  std::lock_guard<std::recursive_mutex> lock(mutex);
+  auto threadPool = registry.get_tp();
+  if(threadPool == nullptr)
+  {
+    threadPool = std::make_shared<spdlog::details::thread_pool>(spdlog::details::default_async_q_size, 1U);
+    registry.set_tp(threadPool);
+  }
+  return threadPool;
+}
 } // namespace
 
 struct Messenger::Impl
@@ -160,6 +173,9 @@ struct Messenger::Impl
   std::shared_ptr<spdlog::logger> m_ThrottledLogger = nullptr;
   std::shared_ptr<spdlog::logger> m_MandatoryLogger = nullptr;
 
+  static constexpr StringLiteral k_MandatoryLoggerName = "MessageHandlerMandatoryLogger";
+  static constexpr StringLiteral k_ThrottledLoggerName = "MessageHandlerThrottledLogger";
+
   Impl() = delete;
 
   Impl(const IFilter::MessageHandler& messageHandler, std::chrono::milliseconds throttleRate)
@@ -168,16 +184,12 @@ struct Messenger::Impl
   {
     auto sink = std::make_shared<MessageHandlerSink_mt>(m_MessageHandler);
     auto throttledSink = std::make_shared<ThrottleSink_mt>(m_ThrottleRate, std::vector<std::shared_ptr<spdlog::sinks::sink>>{sink});
-    spdlog::init_thread_pool(spdlog::details::default_async_q_size, 1U);
-    auto threadPool = spdlog::thread_pool();
-    m_MandatoryLogger = std::make_shared<spdlog::async_logger>("MessageHandlerMandatoryLogger", sink, threadPool, spdlog::async_overflow_policy::block);
-    m_ThrottledLogger = std::make_shared<spdlog::async_logger>("MessageHandlerThrottledLogger", throttledSink, threadPool, spdlog::async_overflow_policy::overrun_oldest);
+    auto threadPool = GetOrCreateThreadPool();
+    m_MandatoryLogger = std::make_shared<spdlog::async_logger>(k_MandatoryLoggerName, sink, threadPool, spdlog::async_overflow_policy::block);
+    m_ThrottledLogger = std::make_shared<spdlog::async_logger>(k_ThrottledLoggerName, throttledSink, threadPool, spdlog::async_overflow_policy::overrun_oldest);
   }
 
-  ~Impl() noexcept
-  {
-    spdlog::shutdown();
-  }
+  ~Impl() noexcept = default;
 
   Impl(const Impl&) = delete;
   Impl(Impl&&) noexcept = delete;
