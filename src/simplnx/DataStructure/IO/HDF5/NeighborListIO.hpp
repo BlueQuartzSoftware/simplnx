@@ -38,9 +38,18 @@ public:
   {
     try
     {
+      std::string numNeighborsName;
+      auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
+      if(numNeighborsNameResult.invalid())
+      {
+        return {};
+      }
+      numNeighborsName = std::move(numNeighborsNameResult.value());
+      auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
+
       if(useEmptyDataStore)
       {
-        auto tupleDimsResult = dataReader.readVectorAttribute<uint64>("TupleDimensions");
+        auto tupleDimsResult = numNeighborsReader.readVectorAttribute<uint64>("TupleDimensions");
         if(tupleDimsResult.invalid())
         {
           return nullptr;
@@ -50,15 +59,6 @@ public:
         return std::make_shared<EmptyListStore<T>>(numTuples);
       }
 
-      std::string numNeighborsName;
-      auto numNeighborsNameResult = dataReader.readStringAttribute("Linked NumNeighbors Dataset");
-      if(numNeighborsNameResult.invalid())
-      {
-        return {};
-      }
-      numNeighborsName = std::move(numNeighborsNameResult.value());
-
-      auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
       auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
       auto& numNeighborsStore = *numNeighborsPtr.get();
 
@@ -130,7 +130,7 @@ public:
    * @param dataStructureReader
    * @return Result<>
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -138,13 +138,6 @@ public:
     }
 
     NeighborList<T>& neighborList = dataStructure.getDataRefAs<NeighborList<T>>(dataPath);
-
-    auto parentGroup = dataStructureGroup.openGroup(dataPath.getParent().toString());
-    if(parentGroup.isValid())
-    {
-      return MakeErrorResult(-150201, fmt::format("Failed to open HDF5 parent group for path '{}'", dataPath.toString()));
-    }
-
     auto dataReader = parentGroup.openDataset(dataPath.getTargetName());
 
     std::string numNeighborsName;
