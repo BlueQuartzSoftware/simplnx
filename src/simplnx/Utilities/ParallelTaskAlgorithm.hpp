@@ -53,11 +53,6 @@ public:
     if(getParallelizationEnabled())
     {
       m_TaskGroup.run(body);
-      m_CurThreads++;
-      if(m_CurThreads >= m_MaxThreads)
-      {
-        wait();
-      }
     }
     else
 #endif
@@ -75,7 +70,6 @@ private:
 #ifdef SIMPLNX_ENABLE_MULTICORE
   uint32_t m_MaxThreads = std::thread::hardware_concurrency();
   tbb::task_group m_TaskGroup;
-  uint32_t m_CurThreads = 0;
 #else
   uint32_t m_MaxThreads = 1;
 #endif

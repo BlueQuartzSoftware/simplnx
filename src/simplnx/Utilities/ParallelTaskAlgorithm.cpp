@@ -38,6 +38,5 @@ void ParallelTaskAlgorithm::wait()
 #ifdef SIMPLNX_ENABLE_MULTICORE
   // This will spill over if the number of files to process does not divide evenly by the number of threads.
   m_TaskGroup.wait();
-  m_CurThreads = 0;
 #endif
 }

@@ -99,6 +99,9 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingImageGeomPath_Key, "Image Geometry", "The path to the existing image geometry to use", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType::Image}));
 
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshPartNumbersArrayPath_Key, "Part Numbers", "Array specifying the part number that the triangle belongs to.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
@@ -145,8 +148,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   auto triangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto geometryOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_UseExistingGeometry_Key);
   auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
-
   GeometryOption geometryOption = ConvertIndexToGeometryOption(geometryOptionIndex);
+  auto partNumbersPath = filterArgs.value<DataPath>(k_SurfaceMeshPartNumbersArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -203,7 +206,6 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
     DataPath pSliceDataContainerNameValue({fmt::format(".{}_sliced", triangleGeometryPath.getTargetName())});
     std::string pEdgeAttributeMatrixNameValue("EdgeAttributeMatrix");
     std::string pSliceIdArrayNameValue("SliceIds");
-    DataPath pRegionIdArrayPathValue({"NOT USED"});
     std::string pSliceAttributeMatrixNameValue("SliceAttributeMatrix");
     // create the edge geometry
     {
@@ -225,9 +227,13 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
       auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(featureSliceAttrMatPath, tDims);
       resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
     }
-
-    auto deferredDeleteGeometryAction = std::make_unique<DeleteDataAction>(pSliceDataContainerNameValue);
-    resultOutputActions.value().appendDeferredAction(std::move(deferredDeleteGeometryAction));
+    {
+      DataPath path = pSliceDataContainerNameValue.createChildPath(pEdgeAttributeMatrixNameValue).createChildPath(partNumbersPath.getTargetName());
+      auto createArray = std::make_unique<CreateArrayAction>(DataType::int32, tDims, compDims, path);
+      resultOutputActions.value().appendAction(std::move(createArray));
+    }
+    // auto deferredDeleteGeometryAction = std::make_unique<DeleteDataAction>(pSliceDataContainerNameValue);
+    // resultOutputActions.value().appendDeferredAction(std::move(deferredDeleteGeometryAction));
   }
   /////////////////////////////////////////////////////////////////////////////
 
@@ -269,6 +275,9 @@ Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStru
 
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  // inputValues.FeatureIdsArrayPath =
+  //     filterArgs.value<DataPath>(k_ImageGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  inputValues.SurfaceMeshPartIdsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshPartNumbersArrayPath_Key);
 
   return RegularGridSampleSurfaceMesh(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

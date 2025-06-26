@@ -42,6 +42,7 @@ public:
     UseExisting = 1
   };
 
+  static inline constexpr StringLiteral k_SurfaceMeshPartNumbersArrayPath_Key = "surface_mesh_part_numbers_array_path";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

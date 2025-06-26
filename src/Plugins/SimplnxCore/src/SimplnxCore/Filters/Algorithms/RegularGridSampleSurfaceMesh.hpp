@@ -5,12 +5,10 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SampleSurfaceMesh.hpp"
+
+#include <set>
 
 namespace nx::core
 {
@@ -23,6 +21,7 @@ struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath ImageGeometryOutputPath;
   DataPath FeatureIdsArrayPath;
+  DataPath SurfaceMeshPartIdsArrayPath;
 };
 
 /**
@@ -42,11 +41,11 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-  void sendThreadSafeUpdate(Int32Array& m_FeatureIds, const std::vector<int32>& rasterBuffer, usize offset);
+  void sendThreadSafeUpdate(const std::vector<int32>& rasterBuffer, usize offset);
 
 protected:
   void generatePoints(std::vector<Point3Df>& points) override;
+  void processSlice(int32 m_CurrentSliceId, usize m_ImageGeomIdx, const std::set<int32>& uniquePartIds);
 
 private:
   DataStructure& m_DataStructure;
@@ -56,8 +55,10 @@ private:
 
   // Thread safe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
-  usize m_ProgressCounter = 0;
-  usize m_LastProgressInt = 0;
+  usize m_LayerCompleted = 0;
+  usize m_TotalSlices = 0;
+  // usize m_LastProgressInt = 0;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+  Int32Array* m_FeatureIdsDataStorePtr = nullptr;
 };
 } // namespace nx::core

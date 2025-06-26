@@ -51,6 +51,8 @@ Result<> SliceTriangleGeometry::operator()()
     zEnd = boundingBox.getMaxPoint()[2];
   }
 
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Slicing triangle geometry")});
+
   // The majority of the algorithm to slice the triangle geometry is in this function
   GeometryUtilities::SliceTriangleReturnType sliceTriangleResult =
       GeometryUtilities::SliceTriangleGeometry(triangle, m_ShouldCancel, m_InputValues->SliceRange, zStart, zEnd, m_InputValues->SliceResolution, triRegionIdPtr);
@@ -84,6 +86,8 @@ Result<> SliceTriangleGeometry::operator()()
     triRegionIds->fill(0);
   }
 
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Setting Feature Ids")});
+
   for(usize i = 0; i < numEdges; i++)
   {
     edges[2 * i] = 2 * i;
@@ -101,11 +105,15 @@ Result<> SliceTriangleGeometry::operator()()
     }
   }
 
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Removing duplicate nodes...")});
+
   Result<> result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
   if(result.invalid())
   {
     return result;
   }
+
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Removing duplicate edges...")});
 
   // REMOVE DUPLICATE EDGES FROM THE GENERATED EDGE GEOMETRY
   // Remember to also fix up the sliceIds and regionIds arrays
