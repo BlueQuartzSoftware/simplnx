@@ -150,19 +150,49 @@ private:
 using ThrottleSink_mt = ThrottleSink<std::mutex>;
 using ThrottleSink_st = ThrottleSink<spdlog::details::null_mutex>;
 
-std::shared_ptr<spdlog::details::thread_pool> GetOrCreateThreadPool()
+class ThreadPool
 {
-  auto& registry = spdlog::details::registry::instance();
-  auto& mutex = registry.tp_mutex();
-  std::lock_guard<std::recursive_mutex> lock(mutex);
-  auto threadPool = registry.get_tp();
-  if(threadPool == nullptr)
+public:
+  ThreadPool(const ThreadPool&) = delete;
+  ThreadPool(ThreadPool&&) = delete;
+
+  ThreadPool& operator=(const ThreadPool&) = delete;
+  ThreadPool& operator=(ThreadPool&&) = delete;
+
+  static ThreadPool& GetInstance()
   {
-    threadPool = std::make_shared<spdlog::details::thread_pool>(spdlog::details::default_async_q_size, 1U);
-    registry.set_tp(threadPool);
+    static ThreadPool threadPool;
+    return threadPool;
   }
-  return threadPool;
-}
+
+  std::shared_ptr<spdlog::details::thread_pool> GetOrCreateThreadPool()
+  {
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+
+    if(m_ThreadPool == nullptr)
+    {
+      m_ThreadPool = std::make_shared<spdlog::details::thread_pool>(spdlog::details::default_async_q_size, 1U);
+    }
+
+    return m_ThreadPool;
+  }
+
+  void tryReset()
+  {
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+    if(m_ThreadPool.use_count() == 1)
+    {
+      m_ThreadPool = nullptr;
+    }
+  }
+
+private:
+  ThreadPool() = default;
+  ~ThreadPool() noexcept = default;
+
+  std::shared_ptr<spdlog::details::thread_pool> m_ThreadPool = nullptr;
+  std::recursive_mutex m_Mutex;
+};
 } // namespace
 
 struct Messenger::Impl
@@ -172,6 +202,7 @@ struct Messenger::Impl
 
   std::shared_ptr<spdlog::logger> m_ThrottledLogger = nullptr;
   std::shared_ptr<spdlog::logger> m_MandatoryLogger = nullptr;
+  std::shared_ptr<spdlog::details::thread_pool> m_ThreadPool = nullptr;
 
   static constexpr StringLiteral k_MandatoryLoggerName = "MessageHandlerMandatoryLogger";
   static constexpr StringLiteral k_ThrottledLoggerName = "MessageHandlerThrottledLogger";
@@ -184,12 +215,18 @@ struct Messenger::Impl
   {
     auto sink = std::make_shared<MessageHandlerSink_mt>(m_MessageHandler);
     auto throttledSink = std::make_shared<ThrottleSink_mt>(m_ThrottleRate, std::vector<std::shared_ptr<spdlog::sinks::sink>>{sink});
-    auto threadPool = GetOrCreateThreadPool();
-    m_MandatoryLogger = std::make_shared<spdlog::async_logger>(k_MandatoryLoggerName, sink, threadPool, spdlog::async_overflow_policy::block);
-    m_ThrottledLogger = std::make_shared<spdlog::async_logger>(k_ThrottledLoggerName, throttledSink, threadPool, spdlog::async_overflow_policy::overrun_oldest);
+    m_ThreadPool = ThreadPool::GetInstance().GetOrCreateThreadPool();
+    m_MandatoryLogger = std::make_shared<spdlog::async_logger>(k_MandatoryLoggerName, sink, m_ThreadPool, spdlog::async_overflow_policy::block);
+    m_ThrottledLogger = std::make_shared<spdlog::async_logger>(k_ThrottledLoggerName, throttledSink, m_ThreadPool, spdlog::async_overflow_policy::overrun_oldest);
   }
 
-  ~Impl() noexcept = default;
+  ~Impl() noexcept
+  {
+    // The thread pool can be shared between filters i.e. one filter calls another.
+    // If this is the last instance we can safely destruct the thread pool
+    m_ThreadPool = nullptr;
+    ThreadPool::GetInstance().tryReset();
+  }
 
   Impl(const Impl&) = delete;
   Impl(Impl&&) noexcept = delete;
