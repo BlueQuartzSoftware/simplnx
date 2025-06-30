@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <cstdio>
@@ -137,22 +138,14 @@ Result<> ReadStlFile::operator()()
   uint16_t attr = 0;
   std::vector<uint8_t> triangleAttributeBuffer(std::numeric_limits<uint16_t>::max()); // Just allocate a buffer of max UINT16 elements
 
+  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
   fpos_t pos;
-  auto start = std::chrono::steady_clock::now();
-  int32_t progInt = 0;
 
   for(int32_t t = 0; t < triCount; ++t)
   {
-    progInt = static_cast<float>(t) / static_cast<float>(triCount) * 100.0f;
-
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      std::string message = fmt::format("Reading {}% Complete", progInt);
-      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, progInt});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
     if(m_ShouldCancel)
     {
       return {};

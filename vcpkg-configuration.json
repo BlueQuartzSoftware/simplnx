@@ -27,6 +27,7 @@
         "reproc",
         "snappy",
         "span-lite",
+        "spdlog",
         "tbb",
         "vcpkg-cmake",
         "vcpkg-cmake-config",

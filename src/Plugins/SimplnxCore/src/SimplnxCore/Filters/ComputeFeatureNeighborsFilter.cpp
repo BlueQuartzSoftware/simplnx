@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -244,20 +245,13 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 
   int32 nListSize = 100;
 
-  float progInt = 0.0F;
-  auto start = std::chrono::steady_clock::now();
+  MessageHelper messageHelper(messageHandler);
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   // Initialize the neighbor lists
   for(usize i = 1; i < totalFeatures; i++)
   {
     auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      progInt = static_cast<float>(i) / static_cast<float>(totalFeatures) * 100.0f;
-      std::string message = fmt::format("Initializing Neighbor Lists || {:2.0f}% Complete", progInt);
-      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, static_cast<int32_t>(progInt)});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
 
     if(shouldCancel)
     {
@@ -273,20 +267,10 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
     }
   }
 
-  progInt = 0.0F;
-  start = std::chrono::steady_clock::now();
   // Loop over all points to generate the neighbor lists
   for(usize j = 0; j < totalPoints; j++)
   {
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      progInt = static_cast<float>(j) / static_cast<float>(totalPoints) * 100.0f;
-      std::string message = fmt::format("Determining Neighbor Lists || {:2.0f}% Complete", progInt);
-      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, static_cast<int32_t>(progInt)});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(j, totalPoints)); });
 
     if(shouldCancel)
     {
@@ -359,20 +343,11 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 
   FloatVec3 spacing = imageGeom.getSpacing();
 
-  progInt = 0;
-  start = std::chrono::steady_clock::now();
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      progInt = static_cast<float>(i) / static_cast<float>(totalFeatures) * 100.0f;
-      std::string message = fmt::format("Calculating Surface Areas || {:2.0f}% Complete", progInt);
-      messageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, static_cast<int32>(progInt)});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
+
     if(shouldCancel)
     {
       return {};

@@ -86,7 +86,8 @@ class SampleSurfaceMeshImplByPoints
 {
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3Df>& faceBBs,
-                                const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel)
+                                const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel,
+                                ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -95,12 +96,15 @@ public:
   , m_PolyIds(polyIds)
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
 
   void checkPoints(usize start, usize end) const
   {
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+
     usize iter = m_FeatureId;
 
     // find bounding box for current feature
@@ -125,7 +129,8 @@ public:
       // Send some feedback
       if(pointsVisited % 1000 == 0)
       {
-        m_Filter->sendThreadSafeProgressMessage(m_FeatureId, 1000, m_Points.size());
+        progressMessenger.sendProgressMessage(
+            1000, [&](usize currentProgress, usize maxProgress) { return fmt::format("Feature {} | Points Completed: {} of {}", m_FeatureId, currentProgress, maxProgress); });
       }
       // Check for the filter being cancelled.
       if(m_ShouldCancel)
@@ -149,6 +154,7 @@ private:
   Int32AbstractDataStore& m_PolyIds;
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -157,17 +163,12 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::at
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_MessageHelper(m_MessageHandler)
 {
 }
 
 // -----------------------------------------------------------------------------
 SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
-
-// -----------------------------------------------------------------------------
-void SampleSurfaceMesh::updateProgress(const std::string& progMessage)
-{
-  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
-}
 
 // -----------------------------------------------------------------------------
 Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
@@ -178,7 +179,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   // pull down faces
   usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-  updateProgress("Counting number of Features...");
+  m_MessageHelper.sendMessage("Counting number of Features...");
 
   // walk through faces to see how many features there are
   int32 g1 = 0, g2 = 0;
@@ -207,7 +208,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   usize numFeatures = maxFeatureId + 1;
 
   std::vector<std::vector<int32>> faceLists(numFeatures);
-  updateProgress("Counting number of triangle faces per feature ...");
+  m_MessageHelper.sendMessage("Counting number of triangle faces per feature ...");
 
   // traverse data to determine number of faces belonging to each feature
   for(usize i = 0; i < numFaces; i++)
@@ -230,7 +231,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     return {};
   }
 
-  updateProgress("Allocating triangle faces per feature ...");
+  m_MessageHelper.sendMessage("Allocating triangle faces per feature ...");
 
   // fill out lists with number of references to cells
   std::vector<int32> linkLoc(numFaces, 0);
@@ -268,7 +269,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     return {};
   }
 
-  updateProgress("Vertex Geometry generating sampling points");
+  m_MessageHelper.sendMessage("Vertex Geometry generating sampling points");
 
   // generate the list of sampling points from subclass
   std::vector<Point3Df> points = {};
@@ -277,7 +278,10 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   // create array to hold which polyhedron (feature) each point falls in
   auto& polyIds = m_DataStructure.getDataAs<Int32Array>(inputValues.FeatureIdsArrayPath)->getDataStoreRef();
 
-  updateProgress("Sampling triangle geometry ...");
+  m_MessageHelper.sendMessage("Sampling triangle geometry ...");
+
+  ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(points.size());
 
   // C++11 RIGHT HERE....
   auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
@@ -295,37 +299,11 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     {
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, points.size());
-      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel));
+      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel, progressMessageHelper));
     }
   }
 
-  updateProgress("Complete");
+  m_MessageHelper.sendMessage("Complete");
 
   return {};
-}
-
-// -----------------------------------------------------------------------------
-void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize featureId, usize numCompleted, usize totalFeatures)
-{
-  std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += numCompleted;
-  auto now = std::chrono::steady_clock::now();
-  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(m_InitialTime - now).count();
-  if(diff > 1000)
-  {
-    std::string progMessage = fmt::format("Feature {} | Points Completed: {} of {}", featureId, m_ProgressCounter, totalFeatures);
-    float inverseRate = static_cast<float>(diff) / static_cast<float>(m_ProgressCounter - m_LastProgressInt);
-    auto remainMillis = std::chrono::milliseconds(static_cast<int64>(inverseRate * (totalFeatures - m_ProgressCounter)));
-    auto secs = std::chrono::duration_cast<std::chrono::seconds>(remainMillis);
-    remainMillis -= std::chrono::duration_cast<std::chrono::milliseconds>(secs);
-    auto mins = std::chrono::duration_cast<std::chrono::minutes>(secs);
-    secs -= std::chrono::duration_cast<std::chrono::seconds>(mins);
-    auto hour = std::chrono::duration_cast<std::chrono::hours>(mins);
-    mins -= std::chrono::duration_cast<std::chrono::minutes>(hour);
-    progMessage += fmt::format(" || Est. Time Remain: {} hours {} minutes {} seconds", hour.count(), mins.count(), secs.count());
-    m_MessageHandler({IFilter::Message::Type::Info, progMessage});
-    m_InitialTime = std::chrono::steady_clock::now();
-    m_LastProgressInt = m_ProgressCounter;
-  }
 }

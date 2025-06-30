@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <fmt/format.h>
@@ -93,7 +94,7 @@ private:
 
 public:
   DBSCANTemplate(DBSCAN* filter, const AbstractDataStoreT& inputDataStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, AbstractDataStore<int32>& fIdsDataStore,
-                 float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+                 float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed, MessageHelper& messageHelper)
   : m_Filter(filter)
   , m_InputDataStore(inputDataStore)
   , m_Mask(maskDataArray)
@@ -102,6 +103,7 @@ public:
   , m_MinPoints(minPoints)
   , m_DistMetric(distMetric)
   , m_Seed(seed)
+  , m_MessageHelper(messageHelper)
   {
   }
   ~DBSCANTemplate() = default;
@@ -127,19 +129,19 @@ public:
       // In-memory only with current implementation for speed with std::list
       epsilonNeighborhoods = std::vector<std::list<usize>>(numTuples);
 
-      m_Filter->updateProgress("Finding Neighborhoods in parallel...");
+      m_MessageHelper.sendMessage("Finding Neighborhoods in parallel...");
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0ULL, numTuples);
       dataAlg.execute(FindEpsilonNeighborhoodsImpl<T>(m_Filter, minDist, m_InputDataStore, m_Mask, numCompDims, numTuples, m_DistMetric, epsilonNeighborhoods));
 
-      m_Filter->updateProgress("Neighborhoods found.");
+      m_MessageHelper.sendMessage("Neighborhoods found.");
     }
 
     std::mt19937_64 gen(m_Seed);
     std::uniform_int_distribution<usize> dist(0, numTuples - 1);
 
-    m_Filter->updateProgress("Beginning clustering...");
-    auto start = std::chrono::steady_clock::now();
+    m_MessageHelper.sendMessage("Beginning clustering...");
+    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     usize i = 0;
     uint8 misses = 0;
     while(std::find(visited.begin(), visited.end(), false) != visited.end())
@@ -192,14 +194,11 @@ public:
       if(m_Mask->isTrue(index))
       {
         visited[index] = true;
-        auto now = std::chrono::steady_clock::now();
-        // Only send updates every 1 second
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-        {
+
+        throttledMessenger.sendThrottledMessage([&]() {
           float32 progress = (static_cast<float32>(index) / static_cast<float32>(numTuples)) * 100.0f;
-          m_Filter->updateProgress(fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", index, numTuples, progress));
-          start = std::chrono::steady_clock::now();
-        }
+          return fmt::format("Scanning Data || Visited Point {} of {} || {:.2f}% Completed", index, numTuples, progress);
+        });
 
         std::list<usize> neighbors;
         if constexpr(PrecacheV)
@@ -283,7 +282,7 @@ public:
         visited[index] = true;
       }
     }
-    m_Filter->updateProgress("Clustering Complete!");
+    m_MessageHelper.sendMessage("Clustering Complete!");
   }
 
 private:
@@ -295,34 +294,39 @@ private:
   int32 m_MinPoints;
   ClusterUtilities::DistanceMetric m_DistMetric;
   std::mt19937_64::result_type m_Seed;
+  MessageHelper& m_MessageHelper;
 };
 
 struct DBSCANFunctor
 {
   template <typename T>
   void operator()(bool cache, bool useRandom, DBSCAN* filter, const IDataArray& inputIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, Int32Array& fIds,
-                  float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+                  float32 epsilon, int32 minPoints, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed, MessageHelper& messageHelper)
   {
     if(cache)
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, true, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed,
+                                      messageHelper)();
       }
       else
       {
-        DBSCANTemplate<T, true, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, true, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed,
+                                       messageHelper)();
       }
     }
     else
     {
       if(useRandom)
       {
-        DBSCANTemplate<T, false, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, true>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed,
+                                       messageHelper)();
       }
       else
       {
-        DBSCANTemplate<T, false, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed)();
+        DBSCANTemplate<T, false, false>(filter, inputIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>(), maskCompare, fIds.getDataStoreRef(), epsilon, minPoints, distMetric, seed,
+                                        messageHelper)();
       }
     }
   }
@@ -342,12 +346,6 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 DBSCAN::~DBSCAN() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void DBSCAN::updateProgress(const std::string& message)
-{
-  m_MessageHandler(IFilter::Message::Type::Info, message);
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& DBSCAN::getCancel()
 {
   return m_ShouldCancel;
@@ -356,6 +354,8 @@ const std::atomic_bool& DBSCAN::getCancel()
 // -----------------------------------------------------------------------------
 Result<> DBSCAN::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
@@ -372,9 +372,9 @@ Result<> DBSCAN::operator()()
   }
 
   ExecuteNeighborFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues->AllowCaching, m_InputValues->UseRandom, this, clusteringArray, maskCompare, featureIds, m_InputValues->Epsilon,
-                          m_InputValues->MinPoints, m_InputValues->DistanceMetric, m_InputValues->Seed);
+                          m_InputValues->MinPoints, m_InputValues->DistanceMetric, m_InputValues->Seed, messageHelper);
 
-  updateProgress("Resizing Clustering Attribute Matrix...");
+  messageHelper.sendMessage("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(maxCluster + 1)});

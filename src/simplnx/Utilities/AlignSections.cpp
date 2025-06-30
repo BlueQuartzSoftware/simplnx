@@ -38,20 +38,17 @@ public:
 
   void operator()() const
   {
+    MessageHelper& messageHelper = m_Filter->getMessageHelper();
+
+    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+
     T var = static_cast<T>(0);
 
-    auto start = std::chrono::steady_clock::now();
+    std::string arrayName = m_DataArray.getName();
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      auto now = std::chrono::steady_clock::now();
-      // Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        std::string message = fmt::format("Processing {}: {}% completed", m_DataArray.getName(), static_cast<int32>(100 * (static_cast<float>(i) / static_cast<float>(m_Dims[2]))));
-        m_Filter->updateProgress(message);
-        start = std::chrono::steady_clock::now();
-      }
+      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
       if(m_Filter->getCancel())
       {
         return;
@@ -109,6 +106,7 @@ AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_boo
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_MessageHelper(mesgHandler)
 {
 }
 
@@ -122,9 +120,9 @@ const std::atomic_bool& AlignSections::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void AlignSections::updateProgress(const std::string& progMessage)
+MessageHelper& AlignSections::getMessageHelper()
 {
-  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
+  return m_MessageHelper;
 }
 
 // -----------------------------------------------------------------------------
@@ -158,7 +156,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       return {};
     }
 
-    m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
+    m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }

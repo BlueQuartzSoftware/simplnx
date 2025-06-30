@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -23,8 +24,8 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(NeighborOrientationCorrelation* filterAlg, size_t totalPoints, const std::vector<int64_t>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
-  : m_FilterAlg(filterAlg)
+  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64_t>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
+  : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
   , m_DataArrayPtr(dataArrayPtr)
@@ -38,17 +39,11 @@ public:
 
   void operator()() const
   {
-    auto start = std::chrono::steady_clock::now();
+    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+    std::string arrayName = m_DataArrayPtr->getName();
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
-      auto now = std::chrono::steady_clock::now();
-      //// Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        float progress = static_cast<float>(i) / static_cast<float>(m_TotalPoints) * 100.0f;
-        m_FilterAlg->updateProgress(fmt::format("Processing {}: {}% completed", m_DataArrayPtr->getName(), static_cast<int>(progress)));
-        start = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
       int64_t neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
@@ -58,7 +53,7 @@ public:
   }
 
 private:
-  NeighborOrientationCorrelation* m_FilterAlg = nullptr;
+  MessageHelper& m_MessageHelper;
   size_t m_TotalPoints = 0;
   std::vector<int64_t> m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
@@ -76,18 +71,6 @@ NeighborOrientationCorrelation::NeighborOrientationCorrelation(DataStructure& da
 
 // -----------------------------------------------------------------------------
 NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& NeighborOrientationCorrelation::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void NeighborOrientationCorrelation::updateProgress(const std::string& progMessage)
-{
-  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
-}
 
 // -----------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelation::operator()()
@@ -137,25 +120,22 @@ Result<> NeighborOrientationCorrelation::operator()()
   const int32_t startLevel = 6;
   float* currentQuatPtr = nullptr;
 
+  MessageHelper messageHelper(m_MessageHandler);
+
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
   for(int32_t currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
-    if(getCancel())
+    if(m_ShouldCancel)
     {
       break;
     }
 
-    int64_t progressInt = 0;
-    auto start = std::chrono::steady_clock::now();
     for(size_t i = 0; i < totalPoints; i++)
     {
-      auto now = std::chrono::steady_clock::now();
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        progressInt = static_cast<int64_t>((static_cast<float>(i) / totalPoints) * 100.0f);
-        std::string ss = fmt::format("Level '{}' of '{}' || Processing Data '{}'% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, progressInt);
-        m_MessageHandler({IFilter::Message::Type::Info, ss});
-        start = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() {
+        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, CalculatePercentComplete(i, totalPoints));
+      });
 
       if(confidenceIndex[i] < m_InputValues->MinConfidence)
       {
@@ -293,7 +273,7 @@ Result<> NeighborOrientationCorrelation::operator()()
       }
     }
 
-    if(getCancel())
+    if(m_ShouldCancel)
     {
       return {};
     }
@@ -306,7 +286,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     ParallelTaskAlgorithm parallelTask;
     for(const auto& dataArrayPtr : voxelArrays)
     {
-      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(this, totalPoints, bestNeighbor, dataArrayPtr));
+      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr));
     }
 
     currentLevel = currentLevel - 1;

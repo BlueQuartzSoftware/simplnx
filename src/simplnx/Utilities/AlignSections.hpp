@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
@@ -33,7 +34,7 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  void updateProgress(const std::string& progMessage);
+  MessageHelper& getMessageHelper();
 
 protected:
   /**
@@ -55,6 +56,7 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  MessageHelper m_MessageHelper;
 };
 
 } // namespace nx::core

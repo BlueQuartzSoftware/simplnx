@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -16,13 +17,14 @@ public:
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr)
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
   , m_Neighbors(neighbors)
   , m_DataArrayPtr(dataArrayPtr)
   , m_FeatureIds(featureIds)
+  , m_MessageHelper(messageHelper)
   {
   }
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented
@@ -33,17 +35,11 @@ public:
 
   void operator()() const
   {
-    auto start = std::chrono::steady_clock::now();
+    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+    std::string arrayName = m_DataArrayPtr->getName();
     for(usize i = 0; i < m_TotalPoints; i++)
     {
-      auto now = std::chrono::steady_clock::now();
-      //// Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-      {
-        const float progress = static_cast<float>(i) / static_cast<float>(m_TotalPoints) * 100.0f;
-        m_FilterAlg->updateProgress(fmt::format("Processing {}: {}% completed", m_DataArrayPtr->getName(), static_cast<int>(progress)));
-        start = std::chrono::steady_clock::now();
-      }
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
 
       const int32 featureName = m_FeatureIds[i];
       const int64 neighbor = m_Neighbors[i];
@@ -64,6 +60,7 @@ private:
   std::vector<int64> m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
+  MessageHelper& m_MessageHelper;
 };
 } // namespace
 
@@ -83,12 +80,6 @@ ErodeDilateBadData::~ErodeDilateBadData() noexcept = default;
 const std::atomic_bool& ErodeDilateBadData::getCancel()
 {
   return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void ErodeDilateBadData::updateProgress(const std::string& progMessage)
-{
-  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
 }
 
 // -----------------------------------------------------------------------------
@@ -224,6 +215,8 @@ Result<> ErodeDilateBadData::operator()()
     // Build up a list of the DataArrays that we are going to operate on.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
+    MessageHelper messageHelper(m_MessageHandler);
+
     ParallelTaskAlgorithm taskRunner;
     taskRunner.setParallelizationEnabled(true);
     for(const auto& voxelArray : voxelArrays)
@@ -235,14 +228,14 @@ Result<> ErodeDilateBadData::operator()()
         continue;
       }
 
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray));
+      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray));
+    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
   }
 
   return {};

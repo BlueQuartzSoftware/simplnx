@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <mutex>
 
@@ -43,19 +44,14 @@ public:
   const std::atomic_bool& getCancel();
 
   void updateNeighborHood(usize sourceIndex, usize targetIndex);
-  void updateProgress(float64 counter, const std::chrono::steady_clock::time_point& now = std::chrono::steady_clock::now());
 
 private:
   DataStructure& m_DataStructure;
   const ComputeNeighborhoodsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
   std::mutex m_Mutex;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
-  float64 m_TotalFeatures = 0;
-  float64 m_ProgressCounter = 0;
-
+  MessageHelper m_MessageHelper;
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
 };

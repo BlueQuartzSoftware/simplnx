@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -17,9 +18,9 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(ComputeKernelAvgMisorientations* filter, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
+  FindKernelAvgMisorientationsImpl(ProgressMessageHelper& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
                                    const std::atomic_bool& shouldCancel)
-  : m_Filter(filter)
+  : m_ProgressMessageHelper(progressMessenger)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
@@ -54,7 +55,8 @@ public:
     // messenger values
     usize counter = 0;
     usize increment = (zEnd - zStart) / 100;
-    auto start = std::chrono::steady_clock::now();
+
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
@@ -68,13 +70,8 @@ public:
 
       if(counter > increment)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-        {
-          m_Filter->sendThreadSafeProgressMessage(counter);
-          counter = 0;
-          start = std::chrono::steady_clock::now();
-        }
+        progressMessenger.sendProgressMessage(counter);
+        counter = 0;
       }
 
       for(size_t row = yStart; row < yEnd; row++)
@@ -145,7 +142,7 @@ public:
         }
       }
     }
-    m_Filter->sendThreadSafeProgressMessage(counter);
+    progressMessenger.sendProgressMessage(counter);
   }
 
   void operator()(const Range3D& range) const
@@ -154,7 +151,7 @@ public:
   }
 
 private:
-  ComputeKernelAvgMisorientations* m_Filter = nullptr;
+  ProgressMessageHelper& m_ProgressMessageHelper;
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -176,39 +173,16 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeKernelAvgMisorientations::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void ComputeKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
-  {
-    return;
-  }
-
-  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-  std::string ss = fmt::format("Finding Kernel Average Misorientations || {}%", progressInt);
-  m_MessageHandler(IFilter::Message::Type::Info, ss);
-
-  m_LastProgressInt = progressInt;
-  m_InitialPoint = std::chrono::steady_clock::now();
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
   auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = gridGeom->getDimensions();
 
-  // set up threadsafe messenger
-  m_TotalElements = udims[2] * udims[1] * udims[0];
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+
+  progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
+  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
@@ -220,7 +194,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressMessageHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/RTree.hpp"
 
@@ -305,7 +306,8 @@ class ComputeVertexToTriangleDistancesImpl
 {
 public:
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
-                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree)
+                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
+                                       ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
@@ -314,6 +316,7 @@ public:
   , m_ClosestTri(closestTri)
   , m_Normals(normals)
   , m_RTree(rtree)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
   virtual ~ComputeVertexToTriangleDistancesImpl() = default;
@@ -325,6 +328,8 @@ public:
 
   void compute(usize start, usize end) const
   {
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+
     int64 counter = 0;
     auto progIncrement = static_cast<int64>((end - start) / 100);
 
@@ -406,12 +411,12 @@ public:
 
       if(counter > progIncrement)
       {
-        m_Filter->sendThreadSafeProgressMessage(counter);
+        progressMessenger.sendProgressMessage(counter);
         counter = 0;
       }
       counter++;
     }
-    m_Filter->sendThreadSafeProgressMessage(counter);
+    progressMessenger.sendProgressMessage(counter);
   }
 
 private:
@@ -423,6 +428,7 @@ private:
   Int64AbstractDataStore& m_ClosestTri;
   const Float64AbstractDataStore& m_Normals;
   const RTreeType m_RTree;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 
 void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT& vertList, size_t triId, nonstd::span<float> bounds)
@@ -463,28 +469,11 @@ const std::atomic_bool& ComputeVertexToTriangleDistances::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void ComputeVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-  auto progressInt = static_cast<size_t>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-
-  if(m_ProgressCounter > 1 && m_LastProgressInt != progressInt)
-  {
-    std::string ss = fmt::format("Finding Distances || {}% Completed", progressInt);
-    m_MessageHandler(IFilter::Message::Type::Info, ss);
-  }
-
-  m_LastProgressInt = progressInt;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
   SharedVertexListT& sourceVertices = vertexGeom.getVertices()->getDataStoreRef();
-  m_TotalElements = vertexGeom.getNumberOfVertices();
+  usize totalElements = vertexGeom.getNumberOfVertices();
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
   auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
@@ -506,11 +495,16 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath)->getDataStoreRef();
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(totalElements);
+  progressMessageHelper.setProgressMessageTemplate("Finding Distances || {:.2f}% Completed");
+
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
-  dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree));
+  dataAlg.setRange(0, totalElements);
+  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, progressMessageHelper));
 
   return {};
 }

@@ -89,7 +89,6 @@ public:
 
   void operator()() const
   {
-    auto start = std::chrono::steady_clock::now();
     usize numEdges = m_EdgeGeom.getNumberOfEdges();
     std::vector<usize> edgeIndices;
     edgeIndices.reserve(1024); // Reserve some space in the vector. This is just a guess.

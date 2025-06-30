@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <Eigen/Geometry>
@@ -231,7 +232,8 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
   UmeyamaTransform globalTransform;
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
-  auto start = std::chrono::steady_clock::now();
+  MessageHelper messageHelper(messageHandler);
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   for(usize i = 0; i < iters; i++)
   {
     if(shouldCancel)
@@ -265,12 +267,7 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
     // Update the global transform
     globalTransform = transform * globalTransform;
 
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      messageHandler(fmt::format("Performing Registration Iterations || {}% Completed", static_cast<int64>((static_cast<float>(i) / iters) * 100.0f)));
-      start = now;
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Performing Registration Iterations || {:.2f}% Completed", CalculatePercentComplete(i, iters)); });
   }
 
   auto& transformStore = dataStructure.getDataAs<Float32Array>(transformArrayPath)->getDataStoreRef();

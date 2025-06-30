@@ -45,8 +45,6 @@ public:
 
   Result<> operator()();
 
-  void sendThreadSafeProgressMessage(size_t counter);
-
   const std::atomic_bool& getCancel();
 
 private:
@@ -54,12 +52,6 @@ private:
   const RemoveFlaggedFeaturesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  // Threadsafe Progress Message
-  mutable std::mutex m_ProgressMessage_Mutex;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
-  size_t m_TotalElements = 0;
-  size_t m_ProgressCounter = 0;
 };
 
 } // namespace nx::core

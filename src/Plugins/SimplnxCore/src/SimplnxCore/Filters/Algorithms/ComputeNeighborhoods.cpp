@@ -13,12 +13,14 @@ namespace
 class ComputeNeighborhoodsImpl
 {
 public:
-  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel)
+  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, usize totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel,
+                           ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
   , m_Bins(bins)
   , m_CriticalDistance(criticalDistance)
   , m_ShouldCancel(shouldCancel)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
 
@@ -36,19 +38,14 @@ public:
       start = 1;
     }
 
-    auto startTime = std::chrono::steady_clock::now();
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize featureIdx = start; featureIdx < end; featureIdx++)
     {
       incCount++;
       if(incCount >= increment)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - startTime).count() > 1000)
-        {
-          incCount = 0;
-          m_Filter->updateProgress(incCount, now);
-          startTime = now;
-        }
+        progressMessenger.sendProgressMessage(incCount, [&](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
+        incCount = 0;
       }
 
       if(m_ShouldCancel)
@@ -83,7 +80,7 @@ public:
         }
       }
     }
-    m_Filter->updateProgress(incCount);
+    progressMessenger.sendProgressMessage(incCount);
   }
 
   void operator()(const Range& range) const
@@ -97,6 +94,7 @@ private:
   const std::vector<int64>& m_Bins;
   const std::vector<float32>& m_CriticalDistance;
   const std::atomic_bool& m_ShouldCancel;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -106,6 +104,7 @@ ComputeNeighborhoods::ComputeNeighborhoods(DataStructure& dataStructure, const I
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_MessageHelper(m_MessageHandler)
 {
 }
 
@@ -127,24 +126,6 @@ void ComputeNeighborhoods::updateNeighborHood(usize sourceIndex, usize destIndex
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeNeighborhoods::updateProgress(float64 counter, const std::chrono::steady_clock::time_point& now)
-{
-  const std::lock_guard<std::mutex> lock(m_Mutex);
-
-  m_ProgressCounter += counter;
-
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
-  {
-    auto progressInt = static_cast<int32>((m_ProgressCounter / m_TotalFeatures) * 100.0);
-    std::string progressMessage = "Finding Feature Neighborhoods:";
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, progressInt});
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeNeighborhoods::operator()()
 {
   // m_ProgressCounter initialized to zero on filter creation
@@ -157,7 +138,10 @@ Result<> ComputeNeighborhoods::operator()()
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
   usize totalFeatures = equivalentDiameters.getNumberOfTuples();
-  m_TotalFeatures = static_cast<float64>(totalFeatures); // Pre-cast to save time in lock later
+
+  ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(totalFeatures);
+  progressMessageHelper.setProgressMessageTemplate("Finding Feature Neighborhoods: {:.2f}%");
 
   m_LocalNeighborhoodList.resize(totalFeatures);
   criticalDistance.resize(totalFeatures);
@@ -190,7 +174,7 @@ Result<> ComputeNeighborhoods::operator()()
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, m_ShouldCancel));
+  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, m_ShouldCancel, progressMessageHelper));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);

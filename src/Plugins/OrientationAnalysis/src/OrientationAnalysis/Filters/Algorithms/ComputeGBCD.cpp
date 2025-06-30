@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
@@ -389,11 +390,13 @@ Result<> ComputeGBCD::operator()()
   SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->GBCDRes);
   int32 totalGBCDBins = sizeGbcd.m_GbcdSizes[0] * sizeGbcd.m_GbcdSizes[1] * sizeGbcd.m_GbcdSizes[2] * sizeGbcd.m_GbcdSizes[3] * sizeGbcd.m_GbcdSizes[4] * 2;
 
+  MessageHelper messageHelper(m_MessageHandler);
+
   // create an array to hold the total face area for each phase and initialize the array to 0.0
   std::vector<double> totalFaceArea(totalPhases, 0.0);
-  std::string ss = fmt::format("1/2 Starting GBCD Calculation and Summation Phase");
-  m_MessageHandler({IFilter::Message::Type::Info, ss});
-  auto startMillis = std::chrono::steady_clock::now();
+  auto startTime = std::chrono::steady_clock::now();
+  messageHelper.sendMessage("1/2 Starting GBCD Calculation and Summation Phase");
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
   for(usize i = 0; i < totalFaces; i = i + triangleChunkSize)
   {
@@ -448,19 +451,17 @@ Result<> ComputeGBCD::operator()()
       }
     }
 
-    auto currentMillis = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(currentMillis - startMillis).count() > 1000)
-    {
+    throttledMessenger.sendThrottledMessage([&]() {
+      auto currentTime = throttledMessenger.getLastTime();
       const usize k_LastTriangleIndex = i + triangleChunkSize;
-      float32 currentRate = static_cast<float32>(triangleChunkSize) / static_cast<float32>(std::chrono::duration_cast<std::chrono::milliseconds>(currentMillis - startMillis).count());
+      float32 currentRate = static_cast<float32>(triangleChunkSize) / static_cast<float32>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count());
       uint64 estimatedTime = static_cast<uint64>(totalFaces - k_LastTriangleIndex) / currentRate;
-      ss = fmt::format("Calculating GBCD || Triangles {}/{} Completed || Est. Time Remain: {}", k_LastTriangleIndex, totalFaces, ConvertMillisToHrsMinSecs(estimatedTime));
-      startMillis = std::chrono::steady_clock::now();
-      m_MessageHandler({IFilter::Message::Type::Info, ss});
-    }
+      startTime = currentTime;
+      return fmt::format("Calculating GBCD || Triangles {}/{} Completed || Est. Time Remain: {}", k_LastTriangleIndex, totalFaces, ConvertMillisToHrsMinSecs(estimatedTime));
+    });
   }
 
-  m_MessageHandler({IFilter::Message::Type::Info, "2/2 Starting GBCD Normalization Phase"});
+  messageHelper.sendMessage("2/2 Starting GBCD Normalization Phase");
 
   for(int32 i = 0; i < totalPhases; i++)
   {

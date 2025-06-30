@@ -118,7 +118,8 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
                                                                    Float64Array* principleCurvature1, Float64Array* principleCurvature2, Float64Array* principleDirection1,
                                                                    Float64Array* principleDirection2, Float64Array* gaussianCurvature, Float64Array* meanCurvature, Float64Array* weingartenMatrix,
                                                                    TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
-                                                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+                                                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                                                   ProgressMessageHelper& progressMessageHelper)
 : m_Filter(filter)
 , m_NRing(nring)
 , m_TriangleIds(std::move(triangleIds))
@@ -136,6 +137,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
 , m_SurfaceMeshTriangleCentroids(surfaceMeshTriangleCentroids)
 , m_MessageHandler(messageHandler)
 , m_ShouldCancel(shouldCancel)
+, m_ProgressMessageHelper(progressMessageHelper)
 {
 }
 
@@ -162,6 +164,8 @@ void CalculateTriangleGroupCurvatures::operator()() const
   {
     return;
   }
+
+  ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
   // Instantiate a FindNRingNeighbors class to use during the loop
   auto& faceLabels = m_SurfaceMeshFaceLabels->getDataStoreRef();
@@ -394,6 +398,6 @@ void CalculateTriangleGroupCurvatures::operator()() const
   } // End Loop over this triangle
 
   // Send some feedback
-  m_Filter->sendThreadSafeProgressMessage(1);
+  progressMessenger.sendProgressMessage(1, [&](usize currentProgress, usize maxProgress) { return fmt::format("{}/{}", currentProgress, maxProgress); });
 }
 } // namespace nx::core
