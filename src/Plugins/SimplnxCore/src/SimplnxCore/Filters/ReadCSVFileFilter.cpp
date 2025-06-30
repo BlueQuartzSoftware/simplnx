@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -129,10 +130,13 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
 Result<> cacheFullFile(const ReadCSVData& readCsvData)
 {
   s_HeaderCache[s_InstanceId].FilePath = readCsvData.inputFilePath;
-  auto result = cacheHeaders(readCsvData);
-  if(result.invalid())
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && readCsvData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
   {
-    return result;
+    auto result = cacheHeaders(readCsvData);
+    if(result.invalid())
+    {
+      return result;
+    }
   }
 
   s_HeaderCache[s_InstanceId].TotalLines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
@@ -431,12 +435,19 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
       continue;
     }
 
-    DataType dataType = readCSVData.dataTypes[i];
+    CSVType csvType = readCSVData.dataTypes[i];
     std::string name = headers[i];
 
     DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath));
+    if(csvType == CSVType::string)
+    {
+      resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tupleDims, arrayPath));
+    }
+    else
+    {
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(ConvertCSVTypeToDataType(csvType), tupleDims, std::vector<usize>{1}, arrayPath));
+    }
   }
 
   return {std::move(resultOutputActions), {}};

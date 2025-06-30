@@ -272,8 +272,8 @@ const int32 k_FileNotOpen = -108;
 const int32 k_CannotSkipToLine = -115;
 const int32 k_EmptyLine = -119;
 
-AbstractDataParser::AbstractDataParser(IDataArray& array, const std::string& columnName, usize columnIndex)
-: m_DataArray(array)
+AbstractDataParser::AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex)
+: m_Array(array)
 , m_ColumnName(columnName)
 , m_ColumnIndex(columnIndex)
 {
@@ -289,19 +289,19 @@ usize AbstractDataParser::columnIndex() const
   return m_ColumnIndex;
 }
 
-const IDataArray& AbstractDataParser::dataArray() const
+const IArray& AbstractDataParser::array() const
 {
-  return m_DataArray;
+  return m_Array;
 }
 
-Result<ParsersVector> CreateParsers(const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
                                     DataStructure& dataStructure)
 {
   ParsersVector dataParsers(dataTypes.size());
 
   for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
   {
-    DataType dataType = dataTypes[i];
+    CSVType csvType = dataTypes[i];
     std::string name = headers[i];
     bool skipped = skippedArrays[i];
 
@@ -313,61 +313,66 @@ Result<ParsersVector> CreateParsers(const std::vector<DataType>& dataTypes, cons
     DataPath arrayPath = parentPath;
     arrayPath = arrayPath.createChildPath(name);
 
-    switch(dataType)
+    switch(csvType)
     {
-    case nx::core::DataType::int8: {
+    case nx::core::CSVType::int8: {
       auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::uint8: {
+    case nx::core::CSVType::uint8: {
       auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::int16: {
+    case nx::core::CSVType::int16: {
       auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::uint16: {
+    case nx::core::CSVType::uint16: {
       auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::int32: {
+    case nx::core::CSVType::int32: {
       auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::uint32: {
+    case nx::core::CSVType::uint32: {
       auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::int64: {
+    case nx::core::CSVType::int64: {
       auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::uint64: {
+    case nx::core::CSVType::uint64: {
       auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
       dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::float32: {
+    case nx::core::CSVType::float32: {
       auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::float64: {
+    case nx::core::CSVType::float64: {
       auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
       dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
       break;
     }
-    case nx::core::DataType::boolean: {
+    case nx::core::CSVType::boolean: {
       auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
       dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
+      break;
+    }
+    case nx::core::CSVType::string: {
+      auto& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
+      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
       break;
     }
     default:

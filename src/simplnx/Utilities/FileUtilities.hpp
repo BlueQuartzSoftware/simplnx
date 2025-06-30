@@ -33,9 +33,12 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Parameters/util/ReadCSVData.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <filesystem>
+#include <regex>
 #include <string>
 
 namespace nx::core::FileUtilities
@@ -92,15 +95,15 @@ public:
 
   [[nodiscard]] usize columnIndex() const;
 
-  [[nodiscard]] const IDataArray& dataArray() const;
+  [[nodiscard]] const IArray& array() const;
 
   virtual Result<> parse(const std::string& token, size_t index) = 0;
 
 protected:
-  AbstractDataParser(IDataArray& array, const std::string& columnName, usize columnIndex);
+  AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex);
 
 private:
-  IDataArray& m_DataArray;
+  IArray& m_Array;
   usize m_ColumnIndex = 0;
   std::string m_ColumnName;
 };
@@ -123,13 +126,22 @@ public:
 
   Result<> parse(const std::string& token, size_t index) override
   {
-    Result<T> parseResult = StringInterpretationUtilities::Convert<T>(token);
-    if(parseResult.valid())
+    if constexpr(std::is_same_v<T, std::string>)
     {
+      const std::regex re(R"(^['"]+|['"]+$)"); // Remove quotes and double quotes
+      m_Array[index] = std::regex_replace(token, re, "");
+    }
+    else
+    {
+      Result<T> parseResult = StringInterpretationUtilities::Convert<T>(token);
+      if(parseResult.invalid())
+      {
+        return ConvertResult(std::move(parseResult));
+      }
       m_Array[index] = parseResult.value();
     }
 
-    return ConvertResult(std::move(parseResult));
+    return {};
   }
 
 private:
@@ -153,20 +165,20 @@ using Float64Parser = CSVDataParser<Float64Array, float64>;
 
 using BoolParser = CSVDataParser<BoolArray, bool>;
 
-// using StringParser = Parser<StringArray, std::string>;
+using StringParser = CSVDataParser<StringArray, std::string>;
 
 using ParsersVector = std::vector<std::unique_ptr<AbstractDataParser>>;
 
 /**
  *
- * @param dataTypes
+ * @param csvTypes
  * @param skippedArrays
  * @param parentPath
  * @param headers
  * @param dataStructure
  * @return
  */
-SIMPLNX_EXPORT Result<ParsersVector> CreateParsers(const std::vector<DataType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+SIMPLNX_EXPORT Result<ParsersVector> CreateParsers(const std::vector<CSVType>& csvTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
                                                    DataStructure& dataStructure);
 
 /**

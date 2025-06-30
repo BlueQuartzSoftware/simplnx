@@ -1369,7 +1369,7 @@ General Parameters
       read_csv_data.start_import_row = 2
       read_csv_data.delimiters = [',']
       read_csv_data.custom_headers = []
-      read_csv_data.column_data_types = [nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.float32,nx.DataType.int32]
+      read_csv_data.column_data_types = [nx.CSVType.float32,nx.CSVType.float32,nx.CSVType.float32,nx.CSVType.float32,nx.CSVType.float32,nx.CSVType.float32,nx.CSVType.int32]
       read_csv_data.skipped_array_mask = [False,False,False,False,False,False,False]
       read_csv_data.tuple_dims = [37989]
       read_csv_data.headers_line = 1

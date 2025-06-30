@@ -101,7 +101,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_3_1.dat", unit_test::k_TestFilesDir);
       data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
@@ -121,7 +121,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = outputFile.string();
       data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
@@ -187,7 +187,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_9_1.dat", unit_test::k_TestFilesDir);
       data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
@@ -207,7 +207,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = outputFile.string();
       data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
@@ -273,7 +273,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/small_in100_sigma_11_1.dat", unit_test::k_TestFilesDir);
       data.customHeaders = {k_ExemplarGMT1, k_ExemplarGMT2, k_ExemplarGMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
@@ -293,7 +293,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       ReadCSVData data;
       data.inputFilePath = outputFile.string();
       data.customHeaders = {k_GMT1, k_GMT2, k_GMT3};
-      data.dataTypes = {DataType::float32, DataType::float32, DataType::float32};
+      data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32};
       data.skippedArrayMask = {false, false, false};
       data.startImportRow = 2;
       data.delimiters = {' '};
