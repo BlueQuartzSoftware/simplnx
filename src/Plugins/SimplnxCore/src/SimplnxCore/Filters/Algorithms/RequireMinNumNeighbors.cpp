@@ -17,8 +17,9 @@ Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataAr
   auto arraySize = voxelArray->getSize();
   for(const auto& featureIdIndex : badFeatureIdIndexes)
   {
-    int32 featureName = featureIds.getValue(featureIdIndex);
-    int32 neighbor = neighbors[featureIdIndex];
+    const int32 featureName = featureIds.getValue(featureIdIndex);
+    const int32 neighbor = neighbors[featureIdIndex];
+
     if((neighbor >= arraySize || featureIdIndex >= arraySize) && (featureName < 0 && neighbor >= 0 && featureIds.getValue(neighbor) >= 0))
     {
       const std::string message =
@@ -26,9 +27,13 @@ Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataAr
       mesgHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
       return MakeErrorResult(-55568, message);
     }
-    if(int32 fId = featureIds.getValue(neighbor); featureName < 0 && neighbor >= 0 && fId >= 0)
+
+    if(featureName < 0 && neighbor >= 0)
     {
-      voxelArray->copyTuple(neighbor, featureIdIndex);
+      if(const int32 fId = featureIds.getValue(neighbor); fId >= 0)
+      {
+        voxelArray->copyTuple(neighbor, featureIdIndex);
+      }
     }
   }
   return {};
