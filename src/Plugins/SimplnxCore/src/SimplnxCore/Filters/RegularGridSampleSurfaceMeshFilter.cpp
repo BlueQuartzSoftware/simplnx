@@ -37,7 +37,7 @@ RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(
     return RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting;
   }
   }
-  throw std::runtime_error(fmt::format("RegularGridSampleSurfaceMeshFilter: Invalid value for '{}' GeometryOption", value));
+  throw std::runtime_error(fmt::format("RegularGridSampleSurfaceMeshFilter: Invalid value '{}' for GeometryOption", value));
 }
 } // namespace
 
