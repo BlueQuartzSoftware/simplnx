@@ -308,7 +308,7 @@ void SingleComponentArrayCalculatorTest1()
   {
     int numTuple = 1;
     double value = 12;
-    runTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("(3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
     runTest("(3*4", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::MismatchedParentheses), CalculatorItem::WarningCode::None);
     runTest("3*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::MismatchedParentheses), CalculatorItem::WarningCode::None);
   }
@@ -316,8 +316,31 @@ void SingleComponentArrayCalculatorTest1()
   SECTION("Nested Unary Operator Test")
   {
     int numTuple = 1;
-    double value = sin(pow(fabs(cos(fabs(static_cast<double>(3)) / 4) + 7), 2));
-    runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    float64 value = sin(pow(fabs(cos(fabs(static_cast<float64>(3)) / 4) + 7), 2));
+    runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
+
+    // term1 = (12.5 * (3.14 + 2.718)) / (7 - (8 * (9 + 4)))
+    float64 term1 = (12.5 * (3.14 + 2.718)) / (7.0 - (8.0 * (9.0 + 4.0)));
+
+    // term2_1 = sin(pi / (4 * (2 + 6)))
+    float64 term2_1 = std::sin(3.141592653589793 / (4.0 * (2.0 + 6.0)));
+
+    // term2_2 = pow(base, 1/expArg) where
+    //    base   = 5^(1+2)
+    //    expArg = 10/((3^2)+1)
+    float64 base = std::pow(5.0, 1.0 + 2.0);
+    float64 expArg = 10.0 / ((std::pow(3.0, 2.0) + 1.0));
+    float64 term2_2 = std::pow(base, 1.0 / expArg);
+
+    float64 term2 = std::max(term2_1, term2_2);
+
+    // term3 = abs(-((15+3) - (20/(5+5))))
+    float64 term3 = std::abs(-((15.0 + 3.0) - (20.0 / (5.0 + 5.0))));
+
+    value = std::min(term1, term2) + term3;
+
+    runTest("min(((12.5*(3.14+2.718))/(7-(8*(9+4)))),max(sin(3.141592653589793/(4*(2+6))),root((5^(1+2)),(10/((3^2)+1)))))+abs(-((15+3)-(20/(5+5))))", k_NumericArrayPath,
+            static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
   }
 
   SECTION("Single Array Tests (Force Incorrect Tuple Counts)")
@@ -475,7 +498,7 @@ void SingleComponentArrayCalculatorTest1()
     runTest("cos(" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
 
     value = -0.5;
-    runTest("cos(2*" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value,
+    runTest("cos(2*" + k_Pi_Str + "/3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
@@ -494,10 +517,11 @@ void SingleComponentArrayCalculatorTest1()
     runTest("tan(60)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Degrees);
 
     value = 1;
-    runTest("tan(" + k_Pi_Str + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value, CalculatorParameter::Radians);
+    runTest("tan(" + k_Pi_Str + "/4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value,
+            CalculatorParameter::Radians);
 
     value = -sqrt(static_cast<double>(1) / static_cast<double>(3));
-    runTest("tan(5*" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value,
+    runTest("tan(5*" + k_Pi_Str + "/6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value,
             CalculatorParameter::Radians);
   }
 
@@ -577,7 +601,7 @@ void SingleComponentArrayCalculatorTest1()
     runTest("sqrt(9)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("sqrt(4*4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 3;
     runTest("sqrt(3^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
@@ -597,10 +621,10 @@ void SingleComponentArrayCalculatorTest1()
     runTest("root(9, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("root(4*4, 2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 4;
-    runTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("root(4*4+0, 1*2+0)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
 
     value = 4;
     runTest("root(64, 3)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
@@ -726,7 +750,41 @@ void SingleComponentArrayCalculatorTest1()
     runTest("-(.4564)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
 
     value = 1;
-    runTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+    runTest("-(3-4)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::AmbiguousNameWarning, &numTuple, &value);
+  }
+
+  SECTION("Min Operator")
+  {
+    runTest("min", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoOpeningParen), CalculatorItem::WarningCode::None);
+    runTest("min(", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoClosingParen), CalculatorItem::WarningCode::None);
+    runTest("min)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoOpeningParen), CalculatorItem::WarningCode::None);
+    runTest("min()", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NotEnoughArguments), CalculatorItem::WarningCode::None);
+    runTest("min(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NotEnoughArguments), CalculatorItem::WarningCode::None);
+    runTest("min(,)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NoNumericArguments), CalculatorItem::WarningCode::None);
+
+    int numTuple = 1;
+    double value = 2;
+    runTest("min(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+
+    value = -93;
+    runTest("min(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+  }
+
+  SECTION("Max Operator")
+  {
+    runTest("max", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoOpeningParen), CalculatorItem::WarningCode::None);
+    runTest("max(", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoClosingParen), CalculatorItem::WarningCode::None);
+    runTest("max)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::OperatorNoOpeningParen), CalculatorItem::WarningCode::None);
+    runTest("max()", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NotEnoughArguments), CalculatorItem::WarningCode::None);
+    runTest("max(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NotEnoughArguments), CalculatorItem::WarningCode::None);
+    runTest("max(,)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::NoNumericArguments), CalculatorItem::WarningCode::None);
+
+    int numTuple = 1;
+    double value = 6;
+    runTest("max(2,6)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
+
+    value = -82;
+    runTest("max(-82,-93)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::Success), CalculatorItem::WarningCode::None, &numTuple, &value);
   }
 }
 

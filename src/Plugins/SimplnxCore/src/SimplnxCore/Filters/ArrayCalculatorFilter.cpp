@@ -119,26 +119,45 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   // collect calculated array dimensions, check for consistent array component dimensions in infix expression & make sure it yields a numeric result
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
+  usize calculatedNumOfTuples = 0;
+  bool tupleShapesMatch = true;
   ICalculatorArray::ValueType resultType = ICalculatorArray::ValueType::Unknown;
+
+  // We only check that the arrays have consistent tuple counts and determine the tuple shape based on whether all arrays have
+  // matching tuple shapes or not.  We DO NOT take into account the operator at all; we assume that all operators that input an array
+  // also output an array of the same tuple size.  Adding operators that can take in an array and output an array of a different size
+  // (like finding the minimum or maximum of a single array) will require a significant redesign of this filter since determining the
+  // final output tuple size/shape from an infix equation with those types of operators in it will be significantly more complicated.
   for(const auto& item1 : parsedInfix)
   {
     if(item1->isICalculatorArray())
     {
       ICalculatorArray::Pointer array1 = std::dynamic_pointer_cast<ICalculatorArray>(item1);
+      auto tupleShape = array1->getArray()->getTupleShape();
+      auto compShape = array1->getArray()->getComponentShape();
+      auto numTuples = array1->getArray()->getNumberOfTuples();
       if(item1->isArray())
       {
-        if(!calculatedComponentShape.empty() && resultType == ICalculatorArray::ValueType::Array && calculatedComponentShape != array1->getArray()->getComponentShape())
+        if(resultType == ICalculatorArray::ValueType::Array)
         {
-          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions");
-        }
-        if(!calculatedTupleShape.empty() && resultType == ICalculatorArray::ValueType::Array && calculatedTupleShape[0] != array1->getArray()->getNumberOfTuples())
-        {
-          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples");
+          if(!calculatedComponentShape.empty() && calculatedComponentShape != array1->getArray()->getComponentShape())
+          {
+            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions");
+          }
+          if(!calculatedTupleShape.empty() && calculatedNumOfTuples != array1->getArray()->getNumberOfTuples())
+          {
+            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples");
+          }
+          if(!calculatedTupleShape.empty() && calculatedTupleShape != tupleShape)
+          {
+            tupleShapesMatch = false;
+          }
         }
 
         resultType = ICalculatorArray::ValueType::Array;
-        calculatedComponentShape = array1->getArray()->getComponentShape();
-        calculatedTupleShape = {array1->getArray()->getNumberOfTuples()};
+        calculatedComponentShape = compShape;
+        calculatedTupleShape = tupleShape;
+        calculatedNumOfTuples = numTuples;
       }
       else if(resultType == ICalculatorArray::ValueType::Unknown)
       {
@@ -159,6 +178,10 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
     {
       calculatedTupleShape = attributeMatrix->getShape();
     }
+  }
+  else if(!tupleShapesMatch)
+  {
+    calculatedTupleShape = {calculatedNumOfTuples};
   }
 
   // convert to postfix notation

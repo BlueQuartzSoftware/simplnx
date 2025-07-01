@@ -40,7 +40,6 @@ protected:
   Result<> parseNumericValue(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix, double number);
   Result<> parseMinusSign(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix, int loopIdx);
   Result<> parseIndexOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
-  Result<> parseCommaOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
   Result<> parseArray(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
   Result<> checkForAmbiguousArrayName(const std::string& strItem, std::string warningMsg);
 
