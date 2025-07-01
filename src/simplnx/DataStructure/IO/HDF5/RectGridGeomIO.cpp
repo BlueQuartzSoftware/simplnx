@@ -59,9 +59,12 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
 
   // Required data
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+  }
 
   return {};
 }

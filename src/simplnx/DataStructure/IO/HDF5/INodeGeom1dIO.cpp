@@ -27,11 +27,15 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
   geometry.setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
 
   // Required data
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  }
+
   return {};
 }
 

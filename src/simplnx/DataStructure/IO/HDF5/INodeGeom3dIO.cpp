@@ -26,9 +26,12 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
   geom.setUnsharedFacedId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
 
   // Required data
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
-  dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
+  }
 
   return {};
 }
