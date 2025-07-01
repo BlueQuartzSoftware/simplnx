@@ -77,9 +77,9 @@ public:
   virtual void setInitValue(value_type initValue);
 
   /**
-   * @brief Removes Tuples from the Array. If the size of the vector is Zero nothing is done. If the size of the
+   * @brief Removes Tuples from the Array. If the size of the vector is Zero, nothing is done. If the size of the
    * vector is greater than or Equal to the number of Tuples then the Array is Resized to Zero. If there are
-   * indices that are larger than the size of the original (before erasing operations) then an error code (-100) is
+   * indices that are larger than the size of the original (before erasing operations), then an error code (-100) is
    * returned from the program.
    * @param idxs The indices to remove
    * @return int32 Error code
@@ -92,6 +92,13 @@ public:
    * @param newPos
    */
   void copyTuple(usize currentPos, usize newPos) override;
+
+  /**
+   * @brief Swaps the tuple values between the 2 indices
+   * @param index0 The first index to swap
+   * @param index1 The second index to swap
+   */
+  void swapTuples(usize index0, usize index1) override;
 
   /**
    * @brief getSize Returns the total number of data items that are being stored. This is the sum of all the sizes

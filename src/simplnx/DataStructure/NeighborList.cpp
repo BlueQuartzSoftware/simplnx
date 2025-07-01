@@ -173,6 +173,18 @@ void NeighborList<T>::copyTuple(usize currentPos, usize newPos)
 }
 
 template <typename T>
+void NeighborList<T>::swapTuples(usize index0, usize index1)
+{
+  if(index0 == index1)
+  {
+    return;
+  }
+  auto value0 = m_Store->getList(index0);
+  m_Store->setList(index0, m_Store->getList(index1));
+  m_Store->setList(index1, value0);
+}
+
+template <typename T>
 usize NeighborList<T>::getSize() const
 {
   usize total = 0;

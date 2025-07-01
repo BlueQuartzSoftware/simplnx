@@ -77,6 +77,13 @@ public:
   virtual usize getNumberOfComponents() const = 0;
 
   /**
+   * @brief Swaps the tuple values between the 2 indices
+   * @param index0 The first index to swap
+   * @param index1 The second index to swap
+   */
+  virtual void swapTuples(usize index0, usize index1) = 0;
+
+  /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
    *
    * There are 3 possibilities when using this function:
