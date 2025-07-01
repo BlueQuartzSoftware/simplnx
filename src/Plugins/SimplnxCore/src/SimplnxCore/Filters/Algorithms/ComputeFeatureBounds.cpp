@@ -18,106 +18,98 @@ using namespace nx::core;
 
 namespace
 {
-namespace GeometryGrid
+template <typename T>
+concept GeometryType = std::is_base_of_v<IGeometry, T>;
+
+template <GeometryType GeomT>
+std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureIds, usize numFeatures)
 {
-std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds)
-{
-  float32 maxX = std::numeric_limits<float32>::lowest();
-  float32 maxY = std::numeric_limits<float32>::lowest();
-  float32 maxZ = std::numeric_limits<float32>::lowest();
+  static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
 
-  float32 minX = std::numeric_limits<float32>::max();
-  float32 minY = std::numeric_limits<float32>::max();
-  float32 minZ = std::numeric_limits<float32>::max();
-
-  size_t xPoints = imageGeom.getNumXCells();
-  size_t yPoints = imageGeom.getNumYCells();
-  size_t zPoints = imageGeom.getNumZCells();
-  FloatVec3 spacing = imageGeom.getSpacing();
-  FloatVec3 origin = imageGeom.getOrigin();
-
-  size_t zStride = 0, yStride = 0;
-  for(size_t i = 0; i < zPoints; i++)
+  std::vector<float32> bounds(numFeatures * 6, std::numeric_limits<float32>::quiet_NaN());
+  if constexpr(std::is_same_v<ImageGeom, GeomT>)
   {
-    zStride = i * xPoints * yPoints;
-    for(size_t j = 0; j < yPoints; j++)
+    usize xPoints = geom.getNumXCells();
+    usize yPoints = geom.getNumYCells();
+    usize zPoints = geom.getNumZCells();
+    FloatVec3 spacing = geom.getSpacing();
+    FloatVec3 origin = geom.getOrigin();
+
+    usize zStride = 0, yStride = 0;
+    for(usize i = 0; i < zPoints; i++)
     {
-      yStride = j * xPoints;
-      for(size_t k = 0; k < xPoints; k++)
+      zStride = i * xPoints * yPoints;
+      for(usize j = 0; j < yPoints; j++)
       {
-        if(featureIds[zStride + yStride + k] == activeFeature)
+        yStride = j * xPoints;
+        for(usize k = 0; k < xPoints; k++)
         {
-          // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-          float32 xVal = k * spacing[0] + origin[0] + (0.5f * spacing[0]);
-          float32 yVal = j * spacing[1] + origin[1] + (0.5f * spacing[1]);
-          float32 zVal = i * spacing[2] + origin[2] + (0.5f * spacing[2]);
+          const int32 currentFeatureId = featureIds[zStride + yStride + k];
+          if(currentFeatureId < 0)
+          {
+            continue;
+          }
 
-          minX = std::min(minX, xVal);
-          minY = std::min(minY, yVal);
-          minZ = std::min(minZ, zVal);
+          float32 xValMin = k * spacing[0] + origin[0];
+          float32 yValMin = j * spacing[1] + origin[1];
+          float32 zValMin = i * spacing[2] + origin[2];
 
-          maxX = std::max(maxX, xVal);
-          maxY = std::max(maxY, yVal);
-          maxZ = std::max(maxZ, zVal);
+          float32 xValMax = k * spacing[0] + origin[0] + spacing[0];
+          float32 yValMax = j * spacing[1] + origin[1] + spacing[1];
+          float32 zValMax = i * spacing[2] + origin[2] + spacing[2];
+
+          usize activeIndex = currentFeatureId * 6;
+          bounds[activeIndex + 0] = std::isnan(bounds[activeIndex + 0]) ? xValMin : std::min(bounds[activeIndex + 0], xValMin);
+          bounds[activeIndex + 1] = std::isnan(bounds[activeIndex + 1]) ? yValMin : std::min(bounds[activeIndex + 1], yValMin);
+          bounds[activeIndex + 2] = std::isnan(bounds[activeIndex + 2]) ? zValMin : std::min(bounds[activeIndex + 2], zValMin);
+
+          bounds[activeIndex + 3] = std::isnan(bounds[activeIndex + 3]) ? xValMax : std::max(bounds[activeIndex + 3], xValMax);
+          bounds[activeIndex + 4] = std::isnan(bounds[activeIndex + 4]) ? yValMax : std::max(bounds[activeIndex + 4], yValMax);
+          bounds[activeIndex + 5] = std::isnan(bounds[activeIndex + 5]) ? zValMax : std::max(bounds[activeIndex + 5], zValMax);
         }
       }
     }
   }
-
-  return std::make_pair(Point3Df(minX, minY, minZ), Point3Df(maxX, maxY, maxZ));
-}
-} // namespace GeometryGrid
-namespace Geometry0D
-{
-std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const IGeometry::SharedVertexList::store_type& verts, const Int32AbstractDataStore& featureIds)
-{
-  float32 maxX = std::numeric_limits<float32>::lowest();
-  float32 maxY = std::numeric_limits<float32>::lowest();
-  float32 maxZ = std::numeric_limits<float32>::lowest();
-
-  float32 minX = std::numeric_limits<float32>::max();
-  float32 minY = std::numeric_limits<float32>::max();
-  float32 minZ = std::numeric_limits<float32>::max();
-
-  for(usize i = 0; i < verts.getNumberOfTuples(); i++)
+  if constexpr(std::is_same_v<VertexGeom, GeomT>)
   {
-    if(featureIds[i] == activeFeature)
+    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+
+    for(usize i = 0; i < verts.getNumberOfTuples(); i++)
     {
+      const int32 currentFeatureId = featureIds[i];
+      if(currentFeatureId < 0)
+      {
+        continue;
+      }
+
       float32 xVal = verts[(i * 3) + 0];
       float32 yVal = verts[(i * 3) + 1];
       float32 zVal = verts[(i * 3) + 2];
 
-      minX = std::min(minX, xVal);
-      minY = std::min(minY, yVal);
-      minZ = std::min(minZ, zVal);
+      usize activeIndex = currentFeatureId * 6;
+      bounds[activeIndex + 0] = std::isnan(bounds[activeIndex + 0]) ? xVal : std::min(bounds[activeIndex + 0], xVal);
+      bounds[activeIndex + 1] = std::isnan(bounds[activeIndex + 1]) ? yVal : std::min(bounds[activeIndex + 1], yVal);
+      bounds[activeIndex + 2] = std::isnan(bounds[activeIndex + 2]) ? zVal : std::min(bounds[activeIndex + 2], zVal);
 
-      maxX = std::max(maxX, xVal);
-      maxY = std::max(maxY, yVal);
-      maxZ = std::max(maxZ, zVal);
+      bounds[activeIndex + 3] = std::isnan(bounds[activeIndex + 3]) ? xVal : std::max(bounds[activeIndex + 3], xVal);
+      bounds[activeIndex + 4] = std::isnan(bounds[activeIndex + 4]) ? yVal : std::max(bounds[activeIndex + 4], yVal);
+      bounds[activeIndex + 5] = std::isnan(bounds[activeIndex + 5]) ? zVal : std::max(bounds[activeIndex + 5], zVal);
     }
   }
-
-  return std::make_pair(Point3Df(minX, minY, minZ), Point3Df(maxX, maxY, maxZ));
-}
-} // namespace Geometry0D
-namespace Geometry1D
-{
-std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const IGeometry::SharedVertexList::store_type& verts, const IGeometry::SharedEdgeList::store_type& edges,
-                                                     const Int32AbstractDataStore& featureIds)
-{
-  float32 maxX = std::numeric_limits<float32>::lowest();
-  float32 maxY = std::numeric_limits<float32>::lowest();
-  float32 maxZ = std::numeric_limits<float32>::lowest();
-
-  float32 minX = std::numeric_limits<float32>::max();
-  float32 minY = std::numeric_limits<float32>::max();
-  float32 minZ = std::numeric_limits<float32>::max();
-
-  usize numComp = edges.getNumberOfComponents();
-  for(usize i = 0; i < edges.getNumberOfTuples(); i++)
+  if constexpr(std::is_same_v<EdgeGeom, GeomT>)
   {
-    if(featureIds[i] == activeFeature)
+    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedEdgeList::store_type& edges = geom.getEdgesRef().getDataStoreRef();
+
+    usize numComp = edges.getNumberOfComponents();
+    for(usize i = 0; i < edges.getNumberOfTuples(); i++)
     {
+      const int32 currentFeatureId = featureIds[i];
+      if(currentFeatureId < 0)
+      {
+        continue;
+      }
+
       for(usize comp = 0; comp < numComp; comp++)
       {
         const IGeometry::SharedFaceList::value_type activeVertIndex = edges[(i * numComp) + comp];
@@ -125,38 +117,31 @@ std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const 
         float32 yVal = verts[(activeVertIndex * 3) + 1];
         float32 zVal = verts[(activeVertIndex * 3) + 2];
 
-        minX = std::min(minX, xVal);
-        minY = std::min(minY, yVal);
-        minZ = std::min(minZ, zVal);
+        usize activeIndex = currentFeatureId * 6;
+        bounds[activeIndex + 0] = std::isnan(bounds[activeIndex + 0]) ? xVal : std::min(bounds[activeIndex + 0], xVal);
+        bounds[activeIndex + 1] = std::isnan(bounds[activeIndex + 1]) ? yVal : std::min(bounds[activeIndex + 1], yVal);
+        bounds[activeIndex + 2] = std::isnan(bounds[activeIndex + 2]) ? zVal : std::min(bounds[activeIndex + 2], zVal);
 
-        maxX = std::max(maxX, xVal);
-        maxY = std::max(maxY, yVal);
-        maxZ = std::max(maxZ, zVal);
+        bounds[activeIndex + 3] = std::isnan(bounds[activeIndex + 3]) ? xVal : std::max(bounds[activeIndex + 3], xVal);
+        bounds[activeIndex + 4] = std::isnan(bounds[activeIndex + 4]) ? yVal : std::max(bounds[activeIndex + 4], yVal);
+        bounds[activeIndex + 5] = std::isnan(bounds[activeIndex + 5]) ? zVal : std::max(bounds[activeIndex + 5], zVal);
       }
     }
   }
-
-  return std::make_pair(Point3Df(minX, minY, minZ), Point3Df(maxX, maxY, maxZ));
-}
-} // namespace Geometry1D
-namespace Geometry2D
-{
-std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const IGeometry::SharedVertexList::store_type& verts, const IGeometry::SharedFaceList::store_type& faces,
-                                                     const Int32AbstractDataStore& featureIds)
-{
-  float32 maxX = std::numeric_limits<float32>::lowest();
-  float32 maxY = std::numeric_limits<float32>::lowest();
-  float32 maxZ = std::numeric_limits<float32>::lowest();
-
-  float32 minX = std::numeric_limits<float32>::max();
-  float32 minY = std::numeric_limits<float32>::max();
-  float32 minZ = std::numeric_limits<float32>::max();
-
-  usize numComp = faces.getNumberOfComponents();
-  for(usize i = 0; i < faces.getNumberOfTuples(); i++)
+  if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
   {
-    if(featureIds[i] == activeFeature)
+    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedFaceList::store_type& faces = geom.getFacesRef().getDataStoreRef();
+
+    usize numComp = faces.getNumberOfComponents();
+    for(usize i = 0; i < faces.getNumberOfTuples(); i++)
     {
+      const int32 currentFeatureId = featureIds[i];
+      if(currentFeatureId < 0)
+      {
+        continue;
+      }
+
       for(usize comp = 0; comp < numComp; comp++)
       {
         const IGeometry::SharedFaceList::value_type activeVertIndex = faces[(i * numComp) + comp];
@@ -164,185 +149,45 @@ std::pair<Point3Df, Point3Df> CalculateFeatureBounds(int32 activeFeature, const 
         float32 yVal = verts[(activeVertIndex * 3) + 1];
         float32 zVal = verts[(activeVertIndex * 3) + 2];
 
-        minX = std::min(minX, xVal);
-        minY = std::min(minY, yVal);
-        minZ = std::min(minZ, zVal);
+        usize activeIndex = currentFeatureId * 6;
+        bounds[activeIndex + 0] = std::isnan(bounds[activeIndex + 0]) ? xVal : std::min(bounds[activeIndex + 0], xVal);
+        bounds[activeIndex + 1] = std::isnan(bounds[activeIndex + 1]) ? yVal : std::min(bounds[activeIndex + 1], yVal);
+        bounds[activeIndex + 2] = std::isnan(bounds[activeIndex + 2]) ? zVal : std::min(bounds[activeIndex + 2], zVal);
 
-        maxX = std::max(maxX, xVal);
-        maxY = std::max(maxY, yVal);
-        maxZ = std::max(maxZ, zVal);
+        bounds[activeIndex + 3] = std::isnan(bounds[activeIndex + 3]) ? xVal : std::max(bounds[activeIndex + 3], xVal);
+        bounds[activeIndex + 4] = std::isnan(bounds[activeIndex + 4]) ? yVal : std::max(bounds[activeIndex + 4], yVal);
+        bounds[activeIndex + 5] = std::isnan(bounds[activeIndex + 5]) ? zVal : std::max(bounds[activeIndex + 5], zVal);
       }
     }
   }
 
-  return std::make_pair(Point3Df(minX, minY, minZ), Point3Df(maxX, maxY, maxZ));
+  return bounds;
 }
-} // namespace Geometry2D
 
-template <typename T>
-concept GeometryType = std::is_base_of_v<IGeometry, T>;
-
-template <GeometryType GeomT>
-class ComputeSplitBoundsImpl
-{
-public:
-  ComputeSplitBoundsImpl(const GeomT& geom, const Int32AbstractDataStore& featureIds, Float32AbstractDataStore& minBounds, Float32AbstractDataStore& maxBounds)
-  : m_Geom(geom)
-  , m_FeatureIds(featureIds)
-  , m_MinBounds(minBounds)
-  , m_MaxBounds(maxBounds)
-  {
-  }
-  ~ComputeSplitBoundsImpl() = default;
-
-  // -----------------------------------------------------------------------------
-  void compute(usize start, usize end) const
-  {
-    std::pair<Point3Df, Point3Df> minMax;
-    for(usize feature = start; feature < end; feature++)
-    {
-      if constexpr(std::is_same_v<ImageGeom, GeomT>)
-      {
-        minMax = GeometryGrid::CalculateFeatureBounds(feature, m_Geom, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<VertexGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        minMax = Geometry0D::CalculateFeatureBounds(feature, verts, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<EdgeGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
-        minMax = Geometry1D::CalculateFeatureBounds(feature, verts, edges, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
-        minMax = Geometry2D::CalculateFeatureBounds(feature, verts, faces, m_FeatureIds);
-      }
-
-      // Set Min
-      m_MinBounds[(feature * 3) + 0] = minMax.first.getX();
-      m_MinBounds[(feature * 3) + 1] = minMax.first.getY();
-      m_MinBounds[(feature * 3) + 2] = minMax.first.getZ();
-
-      // Set Max
-      m_MaxBounds[(feature * 3) + 0] = minMax.second.getX();
-      m_MaxBounds[(feature * 3) + 1] = minMax.second.getY();
-      m_MaxBounds[(feature * 3) + 2] = minMax.second.getZ();
-    }
-  }
-
-  // -----------------------------------------------------------------------------
-  void operator()(const Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-private:
-  const GeomT& m_Geom;
-  const Int32AbstractDataStore& m_FeatureIds;
-  Float32AbstractDataStore& m_MinBounds;
-  Float32AbstractDataStore& m_MaxBounds;
-};
-
-template <GeometryType GeomT>
-class ComputeUnifiedBoundsImpl
-{
-public:
-  ComputeUnifiedBoundsImpl(const GeomT& geom, const Int32AbstractDataStore& featureIds, Float32AbstractDataStore& unifiedBounds)
-  : m_Geom(geom)
-  , m_FeatureIds(featureIds)
-  , m_UnifiedBounds(unifiedBounds)
-  {
-  }
-  ~ComputeUnifiedBoundsImpl() = default;
-
-  // -----------------------------------------------------------------------------
-  void compute(usize start, usize end) const
-  {
-    static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
-    std::pair<Point3Df, Point3Df> minMax;
-    for(usize feature = start; feature < end; feature++)
-    {
-      if constexpr(std::is_same_v<ImageGeom, GeomT>)
-      {
-        minMax = GeometryGrid::CalculateFeatureBounds(feature, m_Geom, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<VertexGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        minMax = Geometry0D::CalculateFeatureBounds(feature, verts, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<EdgeGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
-        minMax = Geometry1D::CalculateFeatureBounds(feature, verts, edges, m_FeatureIds);
-      }
-      if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
-      {
-        const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-        const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
-        minMax = Geometry2D::CalculateFeatureBounds(feature, verts, faces, m_FeatureIds);
-      }
-
-      // Set Min
-      m_UnifiedBounds[(feature * 6) + 0] = minMax.first.getX();
-      m_UnifiedBounds[(feature * 6) + 1] = minMax.first.getY();
-      m_UnifiedBounds[(feature * 6) + 2] = minMax.first.getZ();
-
-      // Set Max
-      m_UnifiedBounds[(feature * 6) + 3] = minMax.second.getX();
-      m_UnifiedBounds[(feature * 6) + 4] = minMax.second.getY();
-      m_UnifiedBounds[(feature * 6) + 5] = minMax.second.getZ();
-    }
-  }
-
-  // -----------------------------------------------------------------------------
-  void operator()(const Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-private:
-  const GeomT& m_Geom;
-  const Int32AbstractDataStore& m_FeatureIds;
-  Float32AbstractDataStore& m_UnifiedBounds;
-};
-
-template <template <class> class BodyT, class... ArgsT>
-Result<> ExecuteComputeBounds(const IGeometry& geom, ParallelDataAlgorithm&& dataAlg, ArgsT&&... args)
+template <class... ArgsT>
+std::vector<float32> ExecuteComputeBounds(const IGeometry& geom, ArgsT&&... args)
 {
   switch(geom.getGeomType())
   {
   case IGeometry::Type::Image: {
-    dataAlg.execute(BodyT<ImageGeom>(dynamic_cast<const ImageGeom&>(geom), std::forward<ArgsT>(args)...));
-    break;
+    return ComputeBounds(dynamic_cast<const ImageGeom&>(geom), std::forward<ArgsT>(args)...);
   }
   case IGeometry::Type::Triangle: {
-    dataAlg.execute(BodyT<TriangleGeom>(dynamic_cast<const TriangleGeom&>(geom), std::forward<ArgsT>(args)...));
-    break;
+    return ComputeBounds(dynamic_cast<const TriangleGeom&>(geom), std::forward<ArgsT>(args)...);
   }
   case IGeometry::Type::Vertex: {
-    dataAlg.execute(BodyT<VertexGeom>(dynamic_cast<const VertexGeom&>(geom), std::forward<ArgsT>(args)...));
-    break;
+    return ComputeBounds(dynamic_cast<const VertexGeom&>(geom), std::forward<ArgsT>(args)...);
   }
   case IGeometry::Type::Edge: {
-    dataAlg.execute(BodyT<EdgeGeom>(dynamic_cast<const EdgeGeom&>(geom), std::forward<ArgsT>(args)...));
-    break;
+    return ComputeBounds(dynamic_cast<const EdgeGeom&>(geom), std::forward<ArgsT>(args)...);
   }
   case IGeometry::Type::Quad: {
-    dataAlg.execute(BodyT<QuadGeom>(dynamic_cast<const QuadGeom&>(geom), std::forward<ArgsT>(args)...));
-    break;
+    return ComputeBounds(dynamic_cast<const QuadGeom&>(geom), std::forward<ArgsT>(args)...);
   }
   default: {
-    return MakeErrorResult(-89472, fmt::format("Input geometry must be of type(s) [ Image, Triangle, Vertex, Edge, Quad ]. Supplied geometry name {}", geom.getName()));
+    return {};
   }
   }
-  return {};
 }
 } // namespace
 
@@ -371,21 +216,129 @@ Result<> ComputeFeatureBounds::operator()()
                                                featureAM.getNumTuples(), numFeatures, m_InputValues->FeatureIdsArrayPath.getTargetName()));
   }
 
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, numFeatures);
-
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
+
+  std::vector<float32> bounds = ExecuteComputeBounds(geom, featureIds, numFeatures);
+  if(bounds.empty())
+  {
+    return MakeErrorResult(-89472, fmt::format("Input geometry must be of type(s) [ Image, Triangle, Vertex, Edge, Quad ]. Supplied geometry name {}", geom.getName()));
+  }
+
   switch(static_cast<OutputDataType>(m_InputValues->OutputType))
   {
   case OutputDataType::Split: {
-    auto& minArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MinArrayPath).getDataStoreRef();
-    auto& maxArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MaxArrayPath).getDataStoreRef();
-    return ExecuteComputeBounds<::ComputeSplitBoundsImpl>(geom, std::move(dataAlg), featureIds, minArray, maxArray);
+    auto& minBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MinArrayPath).getDataStoreRef();
+    auto& maxBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MaxArrayPath).getDataStoreRef();
+    for(usize i = 0; i < minBounds.getNumberOfTuples(); i++)
+    {
+      usize activeIndex = i * 6;
+      minBounds.setValue((i * 3) + 0, bounds[activeIndex + 0]);
+      minBounds.setValue((i * 3) + 1, bounds[activeIndex + 1]);
+      minBounds.setValue((i * 3) + 2, bounds[activeIndex + 2]);
+
+      maxBounds.setValue((i * 3) + 0, bounds[activeIndex + 3]);
+      maxBounds.setValue((i * 3) + 1, bounds[activeIndex + 4]);
+      maxBounds.setValue((i * 3) + 2, bounds[activeIndex + 5]);
+    }
+    break;
   }
   case OutputDataType::Unified: {
-    auto& unifiedArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedArrayPath).getDataStoreRef();
-    return ExecuteComputeBounds<::ComputeUnifiedBoundsImpl>(geom, std::move(dataAlg), featureIds, unifiedArray);
+    auto& unifiedBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedArrayPath).getDataStoreRef();
+    for(usize i = 0; i < unifiedBounds.getNumberOfTuples(); i++)
+    {
+      usize activeIndex = i * 6;
+      unifiedBounds.setValue(activeIndex + 0, bounds[activeIndex + 0]);
+      unifiedBounds.setValue(activeIndex + 1, bounds[activeIndex + 1]);
+      unifiedBounds.setValue(activeIndex + 2, bounds[activeIndex + 2]);
+
+      unifiedBounds.setValue(activeIndex + 3, bounds[activeIndex + 3]);
+      unifiedBounds.setValue(activeIndex + 4, bounds[activeIndex + 4]);
+      unifiedBounds.setValue(activeIndex + 5, bounds[activeIndex + 5]);
+    }
+    break;
   }
+  }
+
+  if(m_InputValues->CreateEdgeGeometry)
+  {
+    // define all 12 cube edges as pairs of vertex indices
+    static constexpr std::array<std::pair<int, int>, 12> cubeEdges = {{// bottom face
+                                                                       {0, 1},
+                                                                       {1, 2},
+                                                                       {2, 3},
+                                                                       {3, 0},
+                                                                       // top face
+                                                                       {4, 5},
+                                                                       {5, 6},
+                                                                       {6, 7},
+                                                                       {7, 4},
+                                                                       // vertical sides
+                                                                       {0, 4},
+                                                                       {1, 5},
+                                                                       {2, 6},
+                                                                       {3, 7}}};
+    std::array<usize, 2> vertPair = {0, 0};
+
+    // Compute the number of features which will tell use the number of vertices and edges
+    usize numVerts = numFeatures * 8;
+    usize numEdges = numFeatures * 12;
+
+    auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometryDataPath);
+    edgeGeom.resizeVertexList(numVerts);
+    edgeGeom.resizeEdgeList(numEdges);
+    edgeGeom.getEdgeAttributeMatrix()->resizeTuples({numEdges});
+    edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
+
+    DataPath edgeAmPath = m_InputValues->EdgeGeometryDataPath.createChildPath(m_InputValues->EdgeAttributeMatrixName);
+    auto& edgeFeatureIds = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->FeatureIdsArrayName)).getDataStoreRef();
+    edgeFeatureIds.fill(-1);
+    usize currentOffset = 0;
+    for(usize idx = 0; idx < numFeatures; ++idx)
+    {
+      usize activeIndex = idx * 6;
+      // NaN values mean that there was something wrong with the bounding min/max points.
+      bool foundNAN = false;
+      for(usize i = 0; i < 6; i++)
+      {
+        if(std::isnan(bounds[activeIndex + i]))
+        {
+          foundNAN = true;
+          break;
+        }
+      }
+      if(foundNAN)
+      {
+        continue;
+      }
+
+      // Create the 8 Vertices
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 0, {bounds[activeIndex + 0], bounds[activeIndex + 1], bounds[activeIndex + 2]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 1, {bounds[activeIndex + 3], bounds[activeIndex + 1], bounds[activeIndex + 2]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 2, {bounds[activeIndex + 3], bounds[activeIndex + 4], bounds[activeIndex + 2]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 3, {bounds[activeIndex + 0], bounds[activeIndex + 4], bounds[activeIndex + 2]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 4, {bounds[activeIndex + 0], bounds[activeIndex + 1], bounds[activeIndex + 5]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 5, {bounds[activeIndex + 3], bounds[activeIndex + 1], bounds[activeIndex + 5]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 6, {bounds[activeIndex + 3], bounds[activeIndex + 4], bounds[activeIndex + 5]});
+      edgeGeom.setVertexCoordinate(currentOffset * 8 + 7, {bounds[activeIndex + 0], bounds[activeIndex + 4], bounds[activeIndex + 5]});
+
+      // Create the 12 Edges
+      for(usize edgeIdx = 0; edgeIdx < cubeEdges.size(); ++edgeIdx)
+      {
+        vertPair[0] = currentOffset * 8 + (cubeEdges[edgeIdx].first);
+        vertPair[1] = currentOffset * 8 + (cubeEdges[edgeIdx].second);
+
+        edgeGeom.setEdgePointIds(currentOffset * 12 + edgeIdx, vertPair);
+        edgeFeatureIds[currentOffset * 12 + edgeIdx] = currentOffset;
+      }
+      currentOffset++;
+    }
+
+    currentOffset--;
+    // Update the Edge Geometry sizes
+    edgeGeom.resizeVertexList(currentOffset * 8);
+    edgeGeom.getVertexAttributeMatrix()->resizeTuples({currentOffset * 8});
+    edgeGeom.resizeEdgeList(currentOffset * 12);
+    edgeGeom.getEdgeAttributeMatrix()->resizeTuples({currentOffset * 12});
   }
 
   return {};

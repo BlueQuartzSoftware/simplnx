@@ -28,6 +28,115 @@ const DataPath k_CroppedGeomPath{std::vector<std::string>{"Cropped VertexGeom"}}
 const std::vector<DataPath> targetDataArrays{k_VertexDataPath.createChildPath("DataArray")};
 } // namespace
 
+TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Image Geom/Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
+{
+  DataStructure dataStructure;
+
+  const std::string k_GeomName = "ImageGeom";
+  const DataPath k_GeomPath({k_GeomName});
+  const std::string k_FeatureAMName = "Feature Data";
+  const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t dimsIn[3] = {5, 5, 1};
+  imageGeom->setDimensions(dimsIn);
+  imageGeom->setOrigin({0, 0, 0});
+  imageGeom->setSpacing({1, 1, 1});
+  std::vector<size_t> dims(3, 0);
+  dims[0] = 1;
+  dims[1] = 5;
+  dims[2] = 5;
+
+  const std::string k_CellAMName = "Cell Data";
+  const DataPath k_CellAMPath = k_GeomPath.createChildPath(k_CellAMName);
+  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellAMName, dims, imageGeom->getId());
+
+  Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAm->getId());
+  featureIds->fill(-1);
+  (*featureIds)[6] = 1;
+  (*featureIds)[7] = 1;
+  (*featureIds)[8] = 1;
+  (*featureIds)[11] = 1;
+  (*featureIds)[12] = 1;
+  (*featureIds)[13] = 1;
+  (*featureIds)[16] = 1;
+  (*featureIds)[17] = 1;
+  (*featureIds)[18] = 1;
+
+  dims.resize(1);
+  dims[0] = 2;
+  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeom->getId());
+
+  {
+    // Instantiate the filter, a DataStructure object and an Arguments Object
+    ComputeFeatureBoundsFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeFeatureBounds::OutputDataType::Split)));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAMPath.createChildPath("feature_ids")));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_MinArrayName_Key, std::make_any<std::string>("min"));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
+
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreateEdgeGeometry_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(DataPath({"EdgeGeom"})));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>("EdgeAM"));
+    args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreatedFeatureIdsArrayName_Key, std::make_any<std::string>("feature_ids"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
+  static constexpr std::array<std::array<float32, 3>, 8> expectedVertices = {
+      {{1.0f, 1.0f, 0.0f}, {4.0f, 1.0f, 0.0f}, {4.0f, 4.0f, 0.0f}, {1.0f, 4.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {4.0f, 1.0f, 1.0f}, {4.0f, 4.0f, 1.0f}, {1.0f, 4.0f, 1.0f}}};
+
+  // define all 12 cube edges as pairs of vertex indices
+  static constexpr std::array<std::array<int32, 2>, 12> expectedEdges = {{// bottom face
+                                                                          {0, 1},
+                                                                          {1, 2},
+                                                                          {2, 3},
+                                                                          {3, 0},
+                                                                          // top face
+                                                                          {4, 5},
+                                                                          {5, 6},
+                                                                          {6, 7},
+                                                                          {7, 4},
+                                                                          // vertical sides
+                                                                          {0, 4},
+                                                                          {1, 5},
+                                                                          {2, 6},
+                                                                          {3, 7}}};
+
+  const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
+  const auto& sharedVertList = edgeGeom.getVerticesRef();
+  const auto& sharedEdgeList = edgeGeom.getEdgesRef();
+  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "EdgeAM", "feature_ids"}));
+
+  for(usize i = 0; i < sharedVertList.getNumberOfTuples(); i++)
+  {
+    REQUIRE(sharedVertList[(i * 3) + 0] == expectedVertices[i][0]);
+    REQUIRE(sharedVertList[(i * 3) + 1] == expectedVertices[i][1]);
+    REQUIRE(sharedVertList[(i * 3) + 2] == expectedVertices[i][2]);
+  }
+
+  for(usize i = 0; i < sharedEdgeList.getNumberOfTuples(); i++)
+  {
+    // Start from 1 because feature 0 is junk
+    REQUIRE(edgeFeatureIds[i] == 1);
+
+    REQUIRE(sharedEdgeList[(i * 2) + 0] == expectedEdges[i][0]);
+    REQUIRE(sharedEdgeList[(i * 2) + 1] == expectedEdges[i][1]);
+  }
+}
+
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
 
@@ -89,7 +198,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.5f, 1.5f, 0.5f, 3.5f, 3.5f, 0.5f};
+  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
   const auto& unified = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
@@ -161,7 +270,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.5f, 1.5f, 0.5f, 3.5f, 3.5f, 0.5f};
+  const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
   const auto& min = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("min"));
   const auto& max = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath("max"));
