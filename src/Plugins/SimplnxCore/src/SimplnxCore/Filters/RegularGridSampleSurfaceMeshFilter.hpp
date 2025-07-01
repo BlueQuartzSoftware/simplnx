@@ -39,7 +39,7 @@ public:
   enum GeometryOption : uint64
   {
     Create = 0,
-    UseExisting
+    UseExisting = 1
   };
 
   /**

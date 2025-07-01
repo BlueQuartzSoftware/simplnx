@@ -26,14 +26,14 @@ using namespace nx::core;
 
 namespace
 {
-RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(uint64 value)
+RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(std::underlying_type_t<RegularGridSampleSurfaceMeshFilter::GeometryOption> value)
 {
   switch(value)
   {
-  case 0: {
+  case to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create): {
     return RegularGridSampleSurfaceMeshFilter::GeometryOption::Create;
   }
-  case 1: {
+  case to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting): {
     return RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting;
   }
   }
