@@ -260,9 +260,9 @@ Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStru
   {
     auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(existingImageGeomPathValue);
-    inputValues.Dimensions = imageGeom.getDimensions().toContainer<IArray::ShapeType>();
-    inputValues.Spacing = imageGeom.getSpacing().toContainer<std::vector<float32>>();
-    inputValues.Origin = imageGeom.getOrigin().toContainer<std::vector<float32>>();
+    inputValues.Dimensions = imageGeom.getDimensions().toContainer<VectorUInt64Parameter::ValueType>();
+    inputValues.Spacing = imageGeom.getSpacing().toContainer<VectorFloat32Parameter::ValueType>();
+    inputValues.Origin = imageGeom.getOrigin().toContainer<VectorFloat32Parameter::ValueType>();
     inputValues.ImageGeometryOutputPath = existingImageGeomPathValue;
     inputValues.FeatureIdsArrayPath = imageGeom.getCellDataPath().createChildPath(featureIdsArrayName);
   }
