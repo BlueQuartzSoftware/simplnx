@@ -17,6 +17,8 @@
 #include "SimplnxCore/utils/LnOperator.hpp"
 #include "SimplnxCore/utils/Log10Operator.hpp"
 #include "SimplnxCore/utils/LogOperator.hpp"
+#include "SimplnxCore/utils/MaxOperator.hpp"
+#include "SimplnxCore/utils/MinOperator.hpp"
 #include "SimplnxCore/utils/MultiplicationOperator.hpp"
 #include "SimplnxCore/utils/NegativeOperator.hpp"
 #include "SimplnxCore/utils/PowOperator.hpp"
@@ -95,6 +97,67 @@ struct InitializeArrayFunctor
     }
   }
 };
+
+void WrapFunctionArguments(std::vector<CalculatorItem::Pointer>& tokens)
+{
+  std::vector<CalculatorItem::Pointer> out;
+  out.reserve(tokens.size() * 2);
+
+  for(size_t i = 0; i < tokens.size(); ++i)
+  {
+    const auto& tok = tokens[i];
+    // Function call start: an Identifier followed by '('
+    if(dynamic_cast<UnaryOperator*>(tok.get()) != nullptr && i + 1 < tokens.size() && dynamic_cast<LeftParenthesisItem*>(tokens[i + 1].get()) != nullptr)
+    {
+      // Copy function name and '('
+      out.push_back(tok);
+      out.push_back(tokens[++i]);
+      int depth = 1;
+      size_t argStart = out.size();
+
+      // Process until matching ')'
+      for(++i; i < tokens.size() && depth > 0; ++i)
+      {
+        auto cur = tokens[i];
+        if(dynamic_cast<LeftParenthesisItem*>(cur.get()) != nullptr)
+        {
+          ++depth;
+          out.push_back(cur);
+        }
+        else if(dynamic_cast<RightParenthesisItem*>(cur.get()) != nullptr)
+        {
+          --depth;
+          if(depth == 0)
+          {
+            // Close last argument
+            out.insert(out.begin() + argStart, LeftParenthesisItem::New());
+            out.push_back(RightParenthesisItem::New());
+            break;
+          }
+          out.push_back(cur);
+        }
+        else if(dynamic_cast<CommaSeparator*>(cur.get()) != nullptr && depth == 1)
+        {
+          // Wrap end of this argument, copy comma, start next
+          out.push_back(RightParenthesisItem::New());
+          out.push_back(cur);
+          out.push_back(LeftParenthesisItem::New());
+        }
+        else
+        {
+          out.push_back(cur);
+        }
+      }
+      --i; // we consumed the ')'
+    }
+    else
+    {
+      out.push_back(tok);
+    }
+  }
+
+  tokens.swap(out);
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -280,23 +343,17 @@ Result<> ArrayCalculatorParser::parseInfixEquation(ParsedEquation& parsedInfix)
         itemPtr = m_SymbolMap[strItem];
       }
 
-      if(nullptr != std::dynamic_pointer_cast<CommaSeparator>(itemPtr))
+      if(nullptr != itemPtr)
       {
-        // This is a comma operator
-        auto parsedCommaResults = parseCommaOperator(strItem, parsedInfix);
-        results = MergeResults(results, parsedCommaResults);
+        // This is another type of operator
+        std::string ss = fmt::format("Item '{}' in the infix expression is the name of an array in the selected Attribute Matrix, but it is currently being used as a mathematical operator", strItem);
+        auto checkNameResults = checkForAmbiguousArrayName(strItem, ss);
+        results = MergeResults(results, checkNameResults);
         if(results.invalid())
         {
           parsedInfix.clear();
           return results;
         }
-      }
-      else if(nullptr != itemPtr)
-      {
-        // This is another type of operator
-        std::string ss = fmt::format("Item '{}' in the infix expression is the name of an array in the selected Attribute Matrix, but it is currently being used as a mathematical operator", strItem);
-        auto checkNameResults = checkForAmbiguousArrayName(strItem, ss);
-        results.warnings() = checkNameResults.warnings();
 
         parsedInfix.push_back(itemPtr);
       }
@@ -319,6 +376,8 @@ Result<> ArrayCalculatorParser::parseInfixEquation(ParsedEquation& parsedInfix)
       }
     }
   }
+
+  ::WrapFunctionArguments(parsedInfix);
 
   // Return the parsed infix expression as a vector of CalculatorItems
   return results;
@@ -366,7 +425,7 @@ Result<> ArrayCalculatorParser::parseMinusSign(std::string token, std::vector<Ca
   // This could be either a negative sign or subtraction sign, so we need to figure out which one it is
   if(loopIdx == 0 || (((nullptr != std::dynamic_pointer_cast<CalculatorOperator>(parsedInfix.back()) &&
                         std::dynamic_pointer_cast<CalculatorOperator>(parsedInfix.back())->getOperatorType() == CalculatorOperator::Binary) ||
-                       nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(parsedInfix.back())) &&
+                       nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(parsedInfix.back()) || nullptr != std::dynamic_pointer_cast<CommaSeparator>(parsedInfix.back())) &&
                       nullptr == std::dynamic_pointer_cast<RightParenthesisItem>(parsedInfix.back())))
   {
     // By context, this is a negative sign
@@ -435,40 +494,6 @@ Result<> ArrayCalculatorParser::parseIndexOperator(std::string token, std::vecto
 
   std::string ss = fmt::format("Item '{}' in the infix expression is the name of an array in the selected Attribute Matrix, but it is currently being used as an indexing operator", token);
   return checkForAmbiguousArrayName(token, ss);
-}
-
-// -----------------------------------------------------------------------------
-Result<> ArrayCalculatorParser::parseCommaOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix)
-{
-  std::string ss =
-      fmt::format("Item '{}' in the infix expression is the name of an array in the selected Attribute Matrix, but it is currently being detected as a comma in a mathematical operator", token);
-  Result<> results = checkForAmbiguousArrayName(token, ss);
-
-  // Put parentheses around the entire term so that the RPN parser knows to evaluate the entire expression placed here
-  // For example, if we have root( 4*4, 2*3 ), then we need it to be root( (4*4), (2*3) )
-  parsedInfix.push_back(RightParenthesisItem::New());
-
-  auto iter = parsedInfix.end();
-  iter--;
-  while(iter != parsedInfix.begin())
-  {
-    if(nullptr != std::dynamic_pointer_cast<CommaSeparator>(*iter) || nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(*iter))
-    {
-      iter++;
-      parsedInfix.insert(iter, LeftParenthesisItem::New());
-      break;
-    }
-
-    iter--;
-  }
-
-  CalculatorItem::Pointer itemPtr = nullptr;
-  if(m_SymbolMap.find(token) != m_SymbolMap.end())
-  {
-    itemPtr = m_SymbolMap[token];
-  }
-  parsedInfix.push_back(itemPtr);
-  return results;
 }
 
 // -----------------------------------------------------------------------------
@@ -607,6 +632,18 @@ void ArrayCalculatorParser::createSymbolMap()
   }
   {
     CeilOperator::Pointer symbol = CeilOperator::New();
+    m_SymbolMap[symbol->getInfixToken()] = symbol;
+  }
+  {
+    MinOperator::Pointer symbol = MinOperator::New();
+    m_SymbolMap[symbol->getInfixToken()] = symbol;
+  }
+  {
+    MaxOperator::Pointer symbol = MaxOperator::New();
+    m_SymbolMap[symbol->getInfixToken()] = symbol;
+  }
+  {
+    NegativeOperator::Pointer symbol = NegativeOperator::New();
     m_SymbolMap[symbol->getInfixToken()] = symbol;
   }
 }

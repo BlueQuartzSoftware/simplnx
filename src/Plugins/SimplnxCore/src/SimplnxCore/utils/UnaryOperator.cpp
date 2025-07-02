@@ -48,8 +48,12 @@ CalculatorItem::ErrorCode UnaryOperator::checkValidity(std::vector<CalculatorIte
         // If the left value isn't a negative operator
         if(nullptr == std::dynamic_pointer_cast<NegativeOperator>(infixVector[currentIndex - 1]))
         {
-          errMsg = fmt::format("The operator '{}' does not have a valid 'left' value.", getInfixToken());
-          return CalculatorItem::ErrorCode::OperatorNoLeftValue;
+          // If the left value isn't a comma
+          if(nullptr == std::dynamic_pointer_cast<CommaSeparator>(infixVector[currentIndex - 1]))
+          {
+            errMsg = fmt::format("The operator '{}' does not have a valid 'left' value.", getInfixToken());
+            return CalculatorItem::ErrorCode::OperatorNoLeftValue;
+          }
         }
       }
     }
