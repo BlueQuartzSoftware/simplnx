@@ -33,6 +33,14 @@ public:
   static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
   static inline constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_UseExistingGeometry_Key = "use_existing_geometry_index";
+  static inline constexpr StringLiteral k_ExistingImageGeomPath_Key = "existing_image_geometry_path";
+
+  enum GeometryOption : uint64
+  {
+    Create = 0,
+    UseExisting = 1
+  };
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

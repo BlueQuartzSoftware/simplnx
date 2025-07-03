@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/RegularGridSampleSurfaceMesh.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
@@ -22,6 +23,23 @@
 #include <sstream>
 
 using namespace nx::core;
+
+namespace
+{
+RegularGridSampleSurfaceMeshFilter::GeometryOption ConvertIndexToGeometryOption(std::underlying_type_t<RegularGridSampleSurfaceMeshFilter::GeometryOption> value)
+{
+  switch(value)
+  {
+  case to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create): {
+    return RegularGridSampleSurfaceMeshFilter::GeometryOption::Create;
+  }
+  case to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting): {
+    return RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting;
+  }
+  }
+  throw std::runtime_error(fmt::format("RegularGridSampleSurfaceMeshFilter: Invalid value '{}' for GeometryOption", value));
+}
+} // namespace
 
 namespace nx::core
 {
@@ -62,6 +80,8 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_UseExistingGeometry_Key, "Use existing geometry", "Should the filter create a new geometry or use an existing one",
+                                                                    to_underlying(GeometryOption::Create), ChoicesParameter::Choices{"Create geometry", "Use existing geometry"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
                                                         std::vector<std::string>{"x", "y", "z"}));
   params.insert(
@@ -76,6 +96,8 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingImageGeomPath_Key, "Image Geometry", "The path to the existing image geometry to use", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType::Image}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
@@ -84,13 +106,22 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
 
+  params.linkParameters(k_UseExistingGeometry_Key, k_Dimensions_Key, to_underlying(GeometryOption::Create));
+  params.linkParameters(k_UseExistingGeometry_Key, k_Origin_Key, to_underlying(GeometryOption::Create));
+  params.linkParameters(k_UseExistingGeometry_Key, k_Spacing_Key, to_underlying(GeometryOption::Create));
+  params.linkParameters(k_UseExistingGeometry_Key, k_LengthUnit_Key, to_underlying(GeometryOption::Create));
+  params.linkParameters(k_UseExistingGeometry_Key, k_ImageGeomPath_Key, to_underlying(GeometryOption::Create));
+  params.linkParameters(k_UseExistingGeometry_Key, k_CellAMName_Key, to_underlying(GeometryOption::Create));
+
+  params.linkParameters(k_UseExistingGeometry_Key, k_ExistingImageGeomPath_Key, to_underlying(GeometryOption::UseExisting));
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType RegularGridSampleSurfaceMeshFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -112,42 +143,58 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   auto triangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  auto geometryOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_UseExistingGeometry_Key);
+  auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
+
+  GeometryOption geometryOption = ConvertIndexToGeometryOption(geometryOptionIndex);
 
   nx::core::Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::vector<usize> tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
+  DataPath cellAttributeMatrixPath;
+  std::vector<usize> tupleDims;
 
+  if(geometryOption == GeometryOption::Create)
   {
+    tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
+
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
+
+    cellAttributeMatrixPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
+
+    std::stringstream boxDimensions = std::stringstream();
+
+    std::string lengthUnit = IGeometry::LengthUnitToString(static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
+
+    boxDimensions << "X Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[0] << " to " << std::setprecision(8) << std::noshowpoint
+                  << (pOriginValue[0] + (pDimensionsValue[0] * pSpacingValue[0])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[0] * pSpacingValue[0]) << ") "
+                  << lengthUnit << "\n";
+    boxDimensions << "Y Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[1] << " to " << std::setprecision(8) << std::noshowpoint
+                  << (pOriginValue[1] + (pDimensionsValue[1] * pSpacingValue[1])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[1] * pSpacingValue[1]) << ") "
+                  << lengthUnit << "\n";
+    boxDimensions << "Z Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[2] << " to " << std::setprecision(8) << std::noshowpoint
+                  << (pOriginValue[2] + (pDimensionsValue[2] * pSpacingValue[2])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[2] * pSpacingValue[2]) << ") "
+                  << lengthUnit << "\n";
+
+    float32 vol = (pDimensionsValue[0] * pSpacingValue[0]) * (pDimensionsValue[1] * pSpacingValue[1]) * (pDimensionsValue[2] * pSpacingValue[2]);
+
+    boxDimensions << "Volume: " << std::setprecision(8) << std::noshowpoint << vol << " " << lengthUnit << "s ^3"
+                  << "\n";
+
+    preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions.str()});
   }
-  DataPath featIdsPath = pImageGeomPathValue.createChildPath(pCellAMNameValue).createChildPath(pFeatureIdsArrayNameValue);
+  else
+  {
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(existingImageGeomPathValue);
+    cellAttributeMatrixPath = imageGeom.getCellDataPath();
+    tupleDims = imageGeom.getCellDataRef().getShape();
+  }
+  DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
-
-  std::vector<PreflightValue> preflightUpdatedValues;
-  std::stringstream boxDimensions = std::stringstream();
-
-  std::string lengthUnit = IGeometry::LengthUnitToString(static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
-
-  boxDimensions << "X Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[0] << " to " << std::setprecision(8) << std::noshowpoint
-                << (pOriginValue[0] + (pDimensionsValue[0] * pSpacingValue[0])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[0] * pSpacingValue[0]) << ") "
-                << lengthUnit << "\n";
-  boxDimensions << "Y Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[1] << " to " << std::setprecision(8) << std::noshowpoint
-                << (pOriginValue[1] + (pDimensionsValue[1] * pSpacingValue[1])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[1] * pSpacingValue[1]) << ") "
-                << lengthUnit << "\n";
-  boxDimensions << "Z Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[2] << " to " << std::setprecision(8) << std::noshowpoint
-                << (pOriginValue[2] + (pDimensionsValue[2] * pSpacingValue[2])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[2] * pSpacingValue[2]) << ") "
-                << lengthUnit << "\n";
-
-  float32 vol = (pDimensionsValue[0] * pSpacingValue[0]) * (pDimensionsValue[1] * pSpacingValue[1]) * (pDimensionsValue[2] * pSpacingValue[2]);
-
-  boxDimensions << "Volume: " << std::setprecision(8) << std::noshowpoint << vol << " " << lengthUnit << "s ^3"
-                << "\n";
-
-  preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions.str()});
 
   /////////////////////////////////////////////////////////////////////////////
   // CREATE THE EDGE GEOMETRY THAT WILL BE USED FOR THE POLYGONS
@@ -194,14 +241,34 @@ Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStru
 {
   RegularGridSampleSurfaceMeshInputValues inputValues;
 
-  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto geometryOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_UseExistingGeometry_Key);
+  GeometryOption geometryOption = ConvertIndexToGeometryOption(geometryOptionIndex);
+
+  auto featureIdsArrayName = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
+
+  if(geometryOption == GeometryOption::Create)
+  {
+    auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+
+    inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+    inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+    inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+    inputValues.FeatureIdsArrayPath = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(featureIdsArrayName);
+    inputValues.ImageGeometryOutputPath = imageGeomPath;
+  }
+  else
+  {
+    auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(existingImageGeomPathValue);
+    inputValues.Dimensions = imageGeom.getDimensions().toContainer<VectorUInt64Parameter::ValueType>();
+    inputValues.Spacing = imageGeom.getSpacing().toContainer<VectorFloat32Parameter::ValueType>();
+    inputValues.Origin = imageGeom.getOrigin().toContainer<VectorFloat32Parameter::ValueType>();
+    inputValues.ImageGeometryOutputPath = existingImageGeomPathValue;
+    inputValues.FeatureIdsArrayPath = imageGeom.getCellDataPath().createChildPath(featureIdsArrayName);
+  }
+
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.FeatureIdsArrayPath =
-      filterArgs.value<DataPath>(k_ImageGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
-  inputValues.ImageGeometryOutputPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
   return RegularGridSampleSurfaceMesh(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
