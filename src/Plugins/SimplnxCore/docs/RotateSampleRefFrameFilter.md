@@ -6,7 +6,7 @@ Sampling (Rotating/Transforming)
 
 ## Description
 
-**NOTE: As of July 2023, this filter is only verified to work with a rotation angle of 180 degrees, a rotation axis of (010), and a (0, 0, 0) origin.**
+**NOTE: As of July 2023, this filter is only verified to work with a rotation angle of 90 or 180 degrees, a rotation axis of (010) || (100) || (001) The origin must also be (0, 0, 0).**
 
 This **Filter** will rotate the *spatial reference frame* around a user defined axis, by a user defined angle.  The **Filter** will modify the (X, Y, Z) positions of each **Cell** to correctly represent where the **Cell** sits in the newly defined reference frame. For example, if a user selected a *rotation angle* of 90<sup>o</sup> and a *rotation axis* of (001), then a **Cell** sitting at (10, 0, 0) would be transformed to (0, -10, 0), since the new *reference frame* would have x'=y and y'=-x.
 
@@ -21,6 +21,11 @@ The equivalent rotation matrix for the above rotation would be the following:
 ## Example
 
 When importing EBSD data from EDAX typically the user will need to rotate the sample reference frame about the <010> (Y) axis. This results in the image comparison below. Note that in the original image the origin of the data is at (0, 0) microns but after rotation the origin now becomes (-189, 0) microns. If you need to reset the origin back to (0,0) then the filter "Set Origin & Spacing" can be run.
+
+## Notes
+
+The transformation will most likely create an origin that is different from the input geometry's origin. If you wish to still keep the input geometry's origin
+then there is an option to allow you to do that. By default, the option is OFF so that the origin generated from the transformation is used.
 
 ![Imported EBSD Data Rotated about the <010> axis](Images/RotateSampleRefFrame_1.png)
 
