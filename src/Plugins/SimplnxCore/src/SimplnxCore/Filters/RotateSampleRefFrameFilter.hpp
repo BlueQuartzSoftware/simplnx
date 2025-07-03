@@ -38,6 +38,7 @@ public:
   static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static inline constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static inline constexpr StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -22,69 +22,23 @@ using namespace nx::core;
 
 namespace
 {
-bool AreImageGeomsEqual(const ImageGeom& geom1, const ImageGeom& geom2)
+
+void CompareImageGeometryAlt(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
-  SizeVec3 dims1 = geom1.getDimensions();
-  FloatVec3 origin1 = geom1.getOrigin();
-  FloatVec3 spacing1 = geom1.getSpacing();
+  INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
 
-  SizeVec3 dims2 = geom2.getDimensions();
-  FloatVec3 origin2 = geom2.getOrigin();
-  FloatVec3 spacing2 = geom2.getSpacing();
+  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
+  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
+  REQUIRE(exemplarGeom != nullptr);
+  REQUIRE(computedGeom != nullptr);
 
-  return (dims1 == dims2) && (origin1 == origin2) && (spacing1 == spacing2);
-}
+  const auto exemplarDims = exemplarGeom->getDimensions();
+  const auto computedDims = computedGeom->getDimensions();
+  REQUIRE(exemplarDims == computedDims);
 
-struct AreArraysEqualFunctor
-{
-  template <class T>
-  bool operator()(const IDataStore& array1, const IDataStore& array2) const
-  {
-    const auto& dataStore1 = dynamic_cast<const AbstractDataStore<T>&>(array1);
-    const auto& dataStore2 = dynamic_cast<const AbstractDataStore<T>&>(array2);
-
-    usize size = dataStore1.getSize();
-    bool failed = false;
-    for(usize i = 0; i < size; i++)
-    {
-      T value1 = dataStore1[i];
-      T value2 = dataStore2[i];
-      if(value1 != value2)
-      {
-        UNSCOPED_INFO(fmt::format("index: {}    value1 != value2. {} != {}", i, value1, value2));
-        failed = true;
-        break;
-      }
-    }
-    REQUIRE(!failed);
-    return !failed;
-  }
-};
-
-bool AreArraysEqual(const IDataArray& array1, const IDataArray& array2)
-{
-  const IDataStore& dataStore1 = array1.getIDataStoreRef();
-  const IDataStore& dataStore2 = array1.getIDataStoreRef(); // revert to broken state ---- update coming
-
-  DataType dataType1 = dataStore1.getDataType();
-
-  if(dataType1 != dataStore2.getDataType())
-  {
-    return false;
-  }
-
-  if(dataStore1.getTupleShape() != dataStore2.getTupleShape())
-  {
-    return false;
-  }
-
-  if(dataStore1.getComponentShape() != dataStore2.getComponentShape())
-  {
-    return false;
-  }
-  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", array1.getName(), array2.getName()));
-
-  return ExecuteDataFunction(AreArraysEqualFunctor{}, dataType1, dataStore1, dataStore2);
+  const auto exemplarSpacing = exemplarGeom->getSpacing();
+  const auto computedSpacing = computedGeom->getSpacing();
+  REQUIRE(exemplarSpacing == computedSpacing);
 }
 
 std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& matrix)
@@ -96,24 +50,27 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
     std::vector<float64> row;
     for(Eigen::Index j = 0; j < matrix.cols(); j++)
     {
-      row.push_back(static_cast<float64>(matrix(i, j)));
+      row.push_back(matrix(i, j));
     }
+    row.push_back(0.0);
     data.push_back(row);
   }
 
+  data.push_back({0.0l, 0.0, 0.0, 1.0});
   return data;
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test.tar.gz",
-                                                              "Rotate_Sample_Ref_Frame_Test.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test_v2.tar.gz",
+                                                              "Rotate_Sample_Ref_Frame_Test_v2");
 
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test.dream3d", nx::core::unit_test::k_TestFilesDir)));
+  Result<DataStructure> dataStructureResult =
+      DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test_v2/Rotate_Sample_Ref_Frame_Test_v2.dream3d", nx::core::unit_test::k_TestFilesDir)));
   SIMPLNX_RESULT_REQUIRE_VALID(dataStructureResult);
 
   DataStructure dataStructure = std::move(dataStructureResult.value());
@@ -121,46 +78,26 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
   const auto* originalImageGeom = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
   REQUIRE(originalImageGeom != nullptr);
 
-  std::vector<DataObject*> dataContainers = dataStructure.getTopLevelData();
+  // std::vector<DataObject*> dataContainers = dataStructure.getTopLevelData();
 
-  std::map<std::string, std::vector<float>> axisAngleMapping = {
-      {"Test_1", {1.0F, 0.0F, 0.0F, 90.0F}},
-      {"Test_2", {0.0F, 1.0F, 0.0F, 90.0F}},
-      {"Test_3", {0.0F, 0.0F, 1.0F, 90.0F}},
-      {"Test_4", {0.357407F, 0.862856F, 0.357407F, 64.7368F}},
-  };
+  std::map<std::string, std::vector<float>> axisAngleMapping = {{"Test_1", {1.0F, 0.0F, 0.0F, 90.0F}}, {"Test_2", {0.0F, 1.0F, 0.0F, 90.0F}}, {"Test_3", {0.0F, 0.0F, 1.0F, 90.0F}}};
 
-  for(auto* dc : dataContainers)
+  for(const auto& dcMapEntry : axisAngleMapping)
   {
+    fmt::print("Testing {}\n", dcMapEntry.first);
+    const std::string name = dcMapEntry.first;
+    const auto& dc = dataStructure.getDataAs<DataObject>(std::vector<std::string>{name});
+    DataPath outputImageGeomPath({fmt::format("{}_Test_AxisAngle", name)});
+
     RotateSampleRefFrameFilter filter;
     Arguments args;
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_OriginalGeomPath));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false)); // We need to keep the geometries around.
-
-    REQUIRE(dc != nullptr);
-
-    const std::string name = dc->getName();
-    if(name.find("Rotate_") != 0) // Skip the "Original" Image Geometry
-    {
-      continue;
-    }
-
-    auto* expectedImageGeom = dynamic_cast<ImageGeom*>(dc);
-    REQUIRE(expectedImageGeom != nullptr);
-    DataPath expectedRotatedCellArrayPath({name, "CellData", "Data"});
-
-    const auto* expectedRotatedArray = dataStructure.getDataAs<IDataArray>(expectedRotatedCellArrayPath);
-    REQUIRE(expectedRotatedArray != nullptr);
-
-    const DataPath testAxisAngleGeomPath({fmt::format("{}_Test_AxisAngle", name)});
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(testAxisAngleGeomPath));
-
-    const std::vector<std::string> parts = StringUtilities::split(name, '_');
-    REQUIRE(parts.size() == 5);
-
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngleMapping[name]));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(false));
 
     auto preflightAxisAngleResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightAxisAngleResult.outputActions);
@@ -168,16 +105,18 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     auto executeAxisAngleResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeAxisAngleResult.result);
 
-    auto* testAxisAngleGeom = dataStructure.getDataAs<ImageGeom>(testAxisAngleGeomPath);
-    REQUIRE(testAxisAngleGeom != nullptr);
+    auto* outputImageGeom = dataStructure.getDataAs<ImageGeom>(outputImageGeomPath);
+    REQUIRE(outputImageGeom != nullptr);
 
-    REQUIRE(AreImageGeomsEqual(*testAxisAngleGeom, *expectedImageGeom));
+    {
+      DataPath exemplarGeomPath({name});
 
-    DataPath testAxisAngleArrayPath = testAxisAngleGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
-    auto* testAxisAngleArray = dataStructure.getDataAs<IDataArray>(testAxisAngleArrayPath);
-    REQUIRE(testAxisAngleArray != nullptr);
+      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath);
 
-    REQUIRE(AreArraysEqual(*testAxisAngleArray, *expectedRotatedArray));
+      DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
+      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
+      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
+    }
 
     /* This section will convert the Axis Angle into a Rotation Matrix and send that into the
      * filter as the RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix type
@@ -192,12 +131,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
     std::vector<std::vector<float64>> table = ConvertMatrixToTable(rotationMatrix);
 
-    DataPath testRotationMatrixGeomPath({fmt::format("{}_Test_RotationMatrix", name)});
+    outputImageGeomPath = DataPath({fmt::format("{}_Test_RotationMatrix", name)});
 
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(testRotationMatrixGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
 
     auto preflightRotationMatrixResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightRotationMatrixResult.outputActions);
@@ -205,15 +144,115 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     auto executeRotationMatrixResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeRotationMatrixResult.result);
 
-    auto* testRotationMatrixGeom = dataStructure.getDataAs<ImageGeom>(testRotationMatrixGeomPath);
-    REQUIRE(testRotationMatrixGeom != nullptr);
+    {
+      DataPath exemplarGeomPath({name});
 
-    REQUIRE(AreImageGeomsEqual(*testRotationMatrixGeom, *expectedImageGeom));
+      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath);
 
-    const DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
-    auto* testRotationMatrixArray = dataStructure.getDataAs<IDataArray>(testRotationMatrixArrayPath);
-    REQUIRE(testRotationMatrixArray != nullptr);
+      DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
+      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
+      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
+    }
+  }
+}
 
-    REQUIRE(AreArraysEqual(*testRotationMatrixArray, *expectedRotatedArray));
+TEST_CASE("SimplnxCore::RotateSampleRefFrame-NoOriginUpdate", "[Core][RotateSampleRefFrameFilter]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test_v2.tar.gz",
+                                                              "Rotate_Sample_Ref_Frame_Test_v2");
+
+  const DataPath k_OriginalGeomPath({"Original"});
+  const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
+
+  Result<DataStructure> dataStructureResult =
+      DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test_v2/Rotate_Sample_Ref_Frame_Test_v2.dream3d", nx::core::unit_test::k_TestFilesDir)));
+  SIMPLNX_RESULT_REQUIRE_VALID(dataStructureResult);
+
+  DataStructure dataStructure = std::move(dataStructureResult.value());
+
+  const auto* originalImageGeom = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
+  REQUIRE(originalImageGeom != nullptr);
+
+  // std::vector<DataObject*> dataContainers = dataStructure.getTopLevelData();
+
+  std::map<std::string, std::vector<float>> axisAngleMapping = {{"Test_4", {1.0F, 0.0F, 0.0F, 90.0F}}, {"Test_5", {0.0F, 1.0F, 0.0F, 90.0F}}, {"Test_6", {0.0F, 0.0F, 1.0F, 90.0F}}};
+
+  for(const auto& dcMapEntry : axisAngleMapping)
+  {
+    fmt::print("Testing {}\n", dcMapEntry.first);
+    const std::string name = dcMapEntry.first;
+    const auto& dc = dataStructure.getDataAs<DataObject>(std::vector<std::string>{name});
+    DataPath outputImageGeomPath({fmt::format("{}_Test_AxisAngle", name)});
+
+    RotateSampleRefFrameFilter filter;
+    Arguments args;
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_OriginalGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false)); // We need to keep the geometries around.
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngleMapping[name]));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(true));
+
+    auto preflightAxisAngleResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightAxisAngleResult.outputActions);
+
+    auto executeAxisAngleResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeAxisAngleResult.result);
+
+    auto* outputImageGeom = dataStructure.getDataAs<ImageGeom>(outputImageGeomPath);
+    REQUIRE(outputImageGeom != nullptr);
+
+    {
+      DataPath exemplarGeomPath({name});
+      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      auto* inputImageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
+      auto inputOrigin = inputImageGeomPtr->getOrigin();
+      auto outputOrigin = outputImageGeom->getOrigin();
+      REQUIRE(inputOrigin == outputOrigin);
+
+      DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
+      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
+      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
+    }
+
+    /* This section will convert the Axis Angle into a Rotation Matrix and send that into the
+     * filter as the RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix type
+     */
+    auto axisAngleEntry = axisAngleMapping[name];
+
+    Eigen::Vector3f axis(axisAngleEntry[0], axisAngleEntry[1], axisAngleEntry[2]);
+    float32 angleRadians = axisAngleEntry[3] * (numbers::pi / 180.0F);
+    Eigen::AngleAxisf axisAngle(angleRadians, axis);
+
+    Eigen::Matrix3f rotationMatrix = axisAngle.toRotationMatrix();
+
+    std::vector<std::vector<float64>> table = ConvertMatrixToTable(rotationMatrix);
+
+    outputImageGeomPath = DataPath({fmt::format("{}_Test_RotationMatrix", name)});
+
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
+
+    auto preflightRotationMatrixResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightRotationMatrixResult.outputActions);
+
+    auto executeRotationMatrixResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeRotationMatrixResult.result);
+
+    {
+      DataPath exemplarGeomPath({name});
+      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      auto* inputImageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
+      auto inputOrigin = inputImageGeomPtr->getOrigin();
+      auto outputOrigin = outputImageGeom->getOrigin();
+      REQUIRE(inputOrigin == outputOrigin);
+
+      DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
+      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
+      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
+    }
   }
 }

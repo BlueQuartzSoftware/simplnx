@@ -382,6 +382,7 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
  */
 inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
+  INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
   const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
   const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
   REQUIRE(exemplarGeom != nullptr);
