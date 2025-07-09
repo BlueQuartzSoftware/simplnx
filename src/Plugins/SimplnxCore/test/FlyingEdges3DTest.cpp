@@ -38,7 +38,7 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar_v2.tar.gz",
                                                               "flying_edges_exemplar.dream3d");
 
   // Read Exemplar DREAM3D File Filter
