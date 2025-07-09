@@ -172,16 +172,14 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   {
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
 
-    if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Copy))
+    DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), std::vector<usize>{dataArray.getNumberOfTuples()}, dataArray.getComponentShape(), newDataPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+    
+    if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Move))
     {
-      DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), dataArray.getTupleShape(), dataArray.getComponentShape(), newDataPath);
-      resultOutputActions.value().appendAction(std::move(createArrayAction));
-    }
-    else if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Move))
-    {
-      auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, vertexAttrMatrixPath);
-      resultOutputActions.value().appendAction(std::move(moveDataAction));
+      auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath);
+      resultOutputActions.value().appendDeferredAction(std::move(deleteDataAction));
     }
   }
 
