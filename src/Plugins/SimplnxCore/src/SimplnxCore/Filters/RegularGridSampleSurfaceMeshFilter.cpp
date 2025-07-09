@@ -192,7 +192,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   }
   DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);
   {
-    auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
+    auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{tupleDims.rbegin(), tupleDims.rend()}, std::vector<usize>{1}, featIdsPath);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
