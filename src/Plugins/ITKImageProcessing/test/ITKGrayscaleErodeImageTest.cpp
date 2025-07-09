@@ -52,4 +52,6 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleErodeImageFilter(GrayscaleErode)", "[
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "cb0f49738a99f3467b575bc95a0ace44");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

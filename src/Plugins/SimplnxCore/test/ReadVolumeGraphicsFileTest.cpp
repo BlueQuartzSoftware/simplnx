@@ -77,4 +77,6 @@ TEST_CASE("SimplnxCore::ReadVolumeGraphicsFileFilter - Valid filter execution", 
       REQUIRE(data[i] == 2.0F);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

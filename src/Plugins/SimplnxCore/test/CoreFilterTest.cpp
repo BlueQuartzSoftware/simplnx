@@ -128,6 +128,8 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
       REQUIRE(dataArray[index + 1] == i + 1);
       REQUIRE(dataArray[index + 2] == i + 2);
     }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -147,4 +149,6 @@ TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
   auto* group = dynamic_cast<DataGroup*>(object);
   REQUIRE(group != nullptr);
   REQUIRE(dataStructure.getSize() == path.getLength());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -53,4 +53,6 @@ TEST_CASE("ITKImageProcessing::ITKHConvexImageFilter(HConvex)", "[ITKImageProces
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "f3a7b95a51710d51b3b73e0eb77eb1eb");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -78,6 +78,8 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Valid Filter Execution", "[
   const auto& materialName = dataStructure.getDataRefAs<StringArray>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
   const auto& materialNameExemplar = exemplarDataStructure.getDataRefAs<StringArray>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
   UnitTest::CompareStringArrays(materialNameExemplar, materialName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", "[OrientationAnalysis][ReadH5OimDataFilter]")
@@ -127,4 +129,6 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

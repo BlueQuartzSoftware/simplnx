@@ -49,4 +49,6 @@ TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Exec
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarBCFPath, k_GeneratedBCFPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -178,6 +178,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom Values", "[SimplnxCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32,
@@ -307,6 +309,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64,
@@ -410,6 +414,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 template <typename T>
@@ -712,6 +718,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[Sim
 
     checkMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent", "[SimplnxCore][MultiThresholdObjects]")
@@ -762,4 +770,6 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent"
       REQUIRE_FALSE(value);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

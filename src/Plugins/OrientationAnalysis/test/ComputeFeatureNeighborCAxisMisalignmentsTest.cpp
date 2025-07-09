@@ -52,6 +52,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
                                                             k_CellFeatureDataPath.createChildPath(k_CAxisMisalignmentListNameComputed), UnitTest::EPSILON, true);
   UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsNameExemplar),
                                                 k_CellFeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsNameComputed), UnitTest::EPSILON, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: InValid Filter Execution")
@@ -99,4 +101,6 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

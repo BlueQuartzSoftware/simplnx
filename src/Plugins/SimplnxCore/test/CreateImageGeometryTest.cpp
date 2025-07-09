@@ -70,4 +70,6 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

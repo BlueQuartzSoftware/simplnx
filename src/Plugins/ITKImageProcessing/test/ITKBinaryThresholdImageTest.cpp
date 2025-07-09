@@ -49,6 +49,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(default)", "[ITKIma
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "dbd0ea7d6f16bb93e9c688cb0f1bfd85");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(NarrowThreshold)", "[ITKImageProcessing][ITKBinaryThresholdImage][NarrowThreshold]")
@@ -88,4 +90,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryThresholdImageFilter(NarrowThreshold)", 
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "fc4ce029c088096a69d033ccc5bc1ae2");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

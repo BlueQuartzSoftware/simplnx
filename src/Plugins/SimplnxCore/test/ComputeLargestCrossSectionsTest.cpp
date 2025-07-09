@@ -319,6 +319,8 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Executio
   REQUIRE(std::fabs(crossSection3 - 0.0625f) < UnitTest::EPSILON);
   REQUIRE(std::fabs(crossSection4 - 0.1875f) < UnitTest::EPSILON);
   REQUIRE(std::fabs(crossSection5 - 1.375f) < UnitTest::EPSILON);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execution")
@@ -343,6 +345,7 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execut
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
   SECTION("Invalid Cell Feature Attribute Matrix")
   {
@@ -354,5 +357,6 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execut
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 }

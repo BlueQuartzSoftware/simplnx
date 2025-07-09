@@ -337,6 +337,60 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
   return {childDataObjects};
 }
 
+std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+                                                                   const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    std::vector<std::string> childrenNames;
+    if(parentGroup.empty())
+    {
+      childrenNames = dataStructure.getDataMap().getNames();
+    }
+    else
+    {
+      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(parent == nullptr)
+      {
+        return {};
+      }
+      childrenNames = parent->getDataMap().getNames();
+    }
+
+    for(const auto& childName : childrenNames)
+    {
+      bool ignore = false;
+      DataPath childPath = parentGroup.createChildPath(childName);
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore)
+      {
+        const DataObject* dataObject = dataStructure.getData(childPath);
+        if(dataObject != nullptr && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+        {
+          childDataObjects.push_back(childPath);
+        }
+        auto childPathChildren = GetAllChildDataPathsRecursive(dataStructure, childPath, dataObjectType, ignoredDataPaths);
+        if(childPathChildren.has_value())
+        {
+          childDataObjects.insert(childDataObjects.end(), childPathChildren.value().begin(), childPathChildren.value().end());
+        }
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
+}
+
 bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName)
 {
   try

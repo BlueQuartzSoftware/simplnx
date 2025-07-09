@@ -54,4 +54,6 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleMorphologicalClosingImageFilter(Grays
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "103130cc4caf40d9fb252fbabc531e15");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

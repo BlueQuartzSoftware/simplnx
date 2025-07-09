@@ -83,4 +83,6 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
 
     UnitTest::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

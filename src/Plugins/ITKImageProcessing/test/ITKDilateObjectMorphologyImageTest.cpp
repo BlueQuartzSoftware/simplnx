@@ -54,6 +54,8 @@ TEST_CASE("ITKImageProcessing::ITKDilateObjectMorphologyImageFilter(float)", "[I
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKDilateObjectMorphologyImageFilter(short)", "[ITKImageProcessing][ITKDilateObjectMorphologyImage][short]")
@@ -92,4 +94,6 @@ TEST_CASE("ITKImageProcessing::ITKDilateObjectMorphologyImageFilter(short)", "[I
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

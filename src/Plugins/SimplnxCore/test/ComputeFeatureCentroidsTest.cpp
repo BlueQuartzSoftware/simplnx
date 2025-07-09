@@ -66,4 +66,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter", "[SimplnxCore][ComputeFe
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -53,4 +53,6 @@ TEST_CASE("ITKImageProcessing::ITKHMinimaImageFilter(HMinima)", "[ITKImageProces
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "7778067eeb752b6ac396dd9e362e8346");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

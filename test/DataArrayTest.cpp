@@ -53,6 +53,8 @@ TEST_CASE("DataArrayCreation")
   DataStoreType data_array = DataStoreType(nx::core::IDataStore::ShapeType{0}, nx::core::IDataStore::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
@@ -95,6 +97,8 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   REQUIRE(dataArray[12] == 1);
   REQUIRE(dataArray[13] == 1);
   REQUIRE(dataArray[14] == 1);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStore Test")

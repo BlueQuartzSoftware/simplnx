@@ -40,6 +40,8 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths"
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[RobustAutomaticThresholdFilter]")
@@ -64,4 +66,6 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[Robus
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

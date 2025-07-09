@@ -134,6 +134,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Filter Error", "[SimplnxCore][C
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(CropEdgeGeometry::ErrorCodes::OutsideVertexError));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Ignore Edges", "[SimplnxCore][CropEdgeGeometryFilter]")
@@ -195,6 +197,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Ignore Edges", "[SimplnxCore][C
   auto& int64Array = dataStructure.getDataRefAs<Int64Array>(k_Int64ArrayPath);
   REQUIRE(int64Array.getNumberOfTuples() == 1);
   REQUIRE(int64Array[0] == 24);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Interpolate Outside Vertices", "[SimplnxCore][CropEdgeGeometryFilter]")
@@ -273,6 +277,8 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Interpolate Outside Vertices", 
   REQUIRE(int64Array[0] == 24);
   REQUIRE(int64Array[1] == 124);
   REQUIRE(int64Array[2] == 786);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Invalid Params", "[SimplnxCore][CropEdgeGeometryFilter]")
@@ -338,4 +344,6 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter - Invalid Params", "[SimplnxCore]
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == errCode);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

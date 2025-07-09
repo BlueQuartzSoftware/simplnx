@@ -550,6 +550,8 @@ void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
   // Test two 0D node-based geometries
   CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry1Path, k_InputGeometry2Path, k_OutputGeometryPath4, dataStructure);
 
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
   SUCCEED("Test completed successfully.");
 }
 
@@ -569,6 +571,8 @@ void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
     // Test two 1D node-based geometries that do not share anything
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry2Path, k_InputGeometry3Path, k_OutputGeometryPath4, dataStructure);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -594,6 +598,8 @@ void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
     // Test two 2D node-based geometries that do not share anything
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry3Path, k_InputGeometry4Path, k_OutputGeometryPath4, dataStructure);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -624,6 +630,8 @@ void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
     // Test two 3D node-based geometries that do not share anything
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry4Path, k_InputGeometry5Path, k_OutputGeometryPath4, dataStructure);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -1007,4 +1015,6 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(errorCode));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

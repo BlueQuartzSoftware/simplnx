@@ -52,4 +52,6 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleDilateImageFilter(GrayscaleDilate)", 
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "cb692559f1eb21e4c932f6bbb3850ad3");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -3071,4 +3071,6 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -241,6 +241,8 @@ void RunTest(char sep, int delimiter)
       index++;
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")

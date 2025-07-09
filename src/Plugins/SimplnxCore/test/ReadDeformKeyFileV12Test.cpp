@@ -192,6 +192,8 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12: Case 0", "[Core][ReadDeformKeyFile
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_import_deform_key_v12_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: Case 1", "[Core][ReadDeformKeyFileV12Filter]")
@@ -231,4 +233,6 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: Case 1", "[Core][ReadDeformK
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_import_deform_key_v12_1_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

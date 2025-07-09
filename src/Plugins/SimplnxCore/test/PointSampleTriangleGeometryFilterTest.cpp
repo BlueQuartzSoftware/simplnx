@@ -226,4 +226,6 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     REQUIRE(minMaxVerts[4] >= -0.5f);
     REQUIRE(minMaxVerts[5] <= 3.7f);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

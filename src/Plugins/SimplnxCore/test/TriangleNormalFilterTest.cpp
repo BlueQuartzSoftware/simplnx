@@ -97,4 +97,6 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
       REQUIRE(result < ::k_max_difference);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

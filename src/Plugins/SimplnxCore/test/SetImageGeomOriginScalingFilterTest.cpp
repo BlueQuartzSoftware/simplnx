@@ -29,6 +29,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter(Instantiate)", "[Simplnx
 
   auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Valid Execution", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
@@ -60,6 +62,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Valid Execution", "[Sim
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom.getOrigin() == FloatVec3{7, 6, 5});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
@@ -92,6 +96,8 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{0.0f, 0.0f, 0.0f});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin", "[SimplnxCore][SetImageGeomOriginScalingFilter]")
@@ -124,4 +130,6 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin",
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{7.0, 6.0, 5.0});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

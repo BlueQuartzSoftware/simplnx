@@ -51,6 +51,8 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "084cdd1d64664ebfab26c2e0ed382e14");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPeak2)", "[ITKImageProcessing][ITKGrayscaleGrindPeakImage][GrayscaleGrindPeak2]")
@@ -88,4 +90,6 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleGrindPeakImageFilter(GrayscaleGrindPe
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "b18d75cccb9361c65b40bb5c0d3c6e0d");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

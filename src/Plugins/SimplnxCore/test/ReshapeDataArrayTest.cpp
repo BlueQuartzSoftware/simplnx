@@ -409,4 +409,6 @@ TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid Tuple Dimensions", "[Si
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

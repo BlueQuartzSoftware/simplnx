@@ -187,6 +187,8 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal2ArrayPath, triNormal2ArrayPath, k_EPSILON);
     UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarSurfaceAreaArrayPath, surfaceAreaArrayPath, k_EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter execution")
@@ -242,4 +244,6 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

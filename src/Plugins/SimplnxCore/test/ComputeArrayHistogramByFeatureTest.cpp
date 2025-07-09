@@ -220,4 +220,6 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     REQUIRE(modalBinRange2[2] == 15);
     REQUIRE(modalBinRange2[3] == 17);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

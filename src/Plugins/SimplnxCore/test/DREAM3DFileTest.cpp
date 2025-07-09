@@ -299,6 +299,8 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
     REQUIRE(pipeline.size() == 3);
     REQUIRE(pipeline[0]->getName() == DataNames::k_CreateDataFilterName.str());
     REQUIRE(pipeline[2]->getName() == DataNames::k_ExportD3DFilterName.str());
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -321,6 +323,8 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
     REQUIRE(dataArray != nullptr);
     REQUIRE(dataArray->getIDataStoreAs<AbstractDataStore<int8>>() != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(importDataStructure);
   }
   {
     auto importPipeline = CreateImportPipeline();
@@ -332,6 +336,8 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
     REQUIRE(dataArray != nullptr);
     REQUIRE(dataArray->template getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(importDataStructure);
   }
 }
 
@@ -350,6 +356,8 @@ TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
   REQUIRE(size == 2);
   REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
   REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group2Name})) != nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(importDataStructure);
 }
 
 TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
@@ -401,6 +409,8 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     auto executeResult = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
@@ -505,4 +515,6 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData"})));
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

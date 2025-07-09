@@ -87,4 +87,6 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
     DataPath computedDataArray = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

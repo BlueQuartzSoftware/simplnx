@@ -107,4 +107,6 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
       REQUIRE(result1 < ::k_MaxDifference);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

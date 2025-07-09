@@ -139,6 +139,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 #if 0
@@ -175,6 +177,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Bad Phase Number", "[Requi
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Phase Array", "[RequireMinNumNeighborsFilter]")
@@ -211,5 +215,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Phase Array", "[RequireMin
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 #endif

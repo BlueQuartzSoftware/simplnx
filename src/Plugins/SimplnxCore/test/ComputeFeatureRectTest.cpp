@@ -135,4 +135,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[Sim
       REQUIRE(coordsDataStore.getComponentValue(tuple, comp) == exemplaryCoordsDataStore.getComponentValue(tuple, comp));
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -50,6 +50,8 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(defaults)", "[ITKImag
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(longer)", "[ITKImageProcessing][ITKCurvatureFlowImage][longer]")
@@ -88,4 +90,6 @@ TEST_CASE("ITKImageProcessing::ITKCurvatureFlowImageFilter(longer)", "[ITKImageP
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

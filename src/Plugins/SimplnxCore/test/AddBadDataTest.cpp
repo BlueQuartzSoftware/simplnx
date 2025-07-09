@@ -45,4 +45,6 @@ TEST_CASE("SimplnxCore::AddBadDataFilter: Valid Filter Execution", "[SimplnxCore
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellDataAM, Constants::k_SmallIN100);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

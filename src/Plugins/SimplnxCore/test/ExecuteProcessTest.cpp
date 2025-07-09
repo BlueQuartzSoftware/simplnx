@@ -56,6 +56,8 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
   firstLine = StringUtilities::trimmed(outputLines[0]);
   const std::string correctOutput = fmt::format("nxrunner: Version {} Build Date:{}", nx::core::Version::Package(), nx::core::Version::BuildDate());
   REQUIRE(firstLine == correctOutput);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
@@ -98,4 +100,6 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
     auto executeResult = filter.execute(ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

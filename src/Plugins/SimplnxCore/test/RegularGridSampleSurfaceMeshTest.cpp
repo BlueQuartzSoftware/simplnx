@@ -81,6 +81,8 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
   UnitTest::CompareImageGeometry(dataStructure, ::k_ExemplarImageGeomPath, ::k_GeneratedImageGeomPath);
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarFeatureIdsPath, ::k_GeneratedFeatureIdsPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter::ExistingGeom", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")

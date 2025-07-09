@@ -52,6 +52,8 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", 
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "406079d7904d4e9ab0b5f29f7a3a1ea8");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][level_1]")
@@ -91,4 +93,6 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "a204ce7cf8ec4e7bc6538f0515a8910e");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

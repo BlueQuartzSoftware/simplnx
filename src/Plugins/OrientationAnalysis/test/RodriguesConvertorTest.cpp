@@ -67,4 +67,6 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
 
     UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

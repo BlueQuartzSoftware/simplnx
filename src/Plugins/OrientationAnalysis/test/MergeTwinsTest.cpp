@@ -248,4 +248,6 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     REQUIRE(activeTupleShape[0] == 4507);
     REQUIRE(activeNumComps == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

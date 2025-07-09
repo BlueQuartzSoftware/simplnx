@@ -103,6 +103,8 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
     INFO(fmt::format("i = {}", i));
     REQUIRE(static_cast<int8>(surfaceFeatures[i]) == surfaceFeaturesExemplary[i]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -151,6 +153,8 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
       REQUIRE(value == createdFeatureArray[i]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")

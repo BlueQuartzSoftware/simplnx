@@ -49,4 +49,6 @@ TEST_CASE("ITKImageProcessing::ITKInvertIntensityImageFilter(3d)", "[ITKImagePro
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "76765a57f26a7979f33efc8ed9801a55");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -160,6 +160,8 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
   // compare results
   UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
   UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Execution")
@@ -245,4 +247,6 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Exe
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

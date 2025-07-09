@@ -219,4 +219,6 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
       currentLine++;
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

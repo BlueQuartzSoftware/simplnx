@@ -81,4 +81,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes", "[SimplnxCore][ComputeFeatureSizes
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

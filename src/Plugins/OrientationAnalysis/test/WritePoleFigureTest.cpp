@@ -112,6 +112,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
@@ -166,6 +168,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
@@ -220,4 +224,6 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

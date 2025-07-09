@@ -56,6 +56,8 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: Valid filter execution", "[Sim
   {
     REQUIRE(d3dFeatureCountsArrayRef[index] == nxFeatureCountsArrayRef[index]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: InValid filter execution", "[SimplnxCore][ComputeNumFeaturesFilter]")
@@ -91,4 +93,6 @@ TEST_CASE("SimplnxCore::ComputeNumFeaturesFilter: InValid filter execution", "[S
   {
     REQUIRE(d3dFeatureCountsArrayRef[index] != nxFeatureCountsArrayRef[index]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

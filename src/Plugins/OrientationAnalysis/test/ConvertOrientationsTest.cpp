@@ -139,6 +139,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     REQUIRE(errors[0].code == nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error);
     REQUIRE(!preflightResult.outputActions.valid());
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -222,6 +224,8 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
           REQUIRE(absDif < 0.0001);
         }
       }
+
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }

@@ -129,4 +129,6 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/ApproximatePointCloudHullFilter.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

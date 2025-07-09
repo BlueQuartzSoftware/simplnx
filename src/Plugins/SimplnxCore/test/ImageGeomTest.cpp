@@ -1,5 +1,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -53,6 +54,8 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeo
   coords[2] = 2000.0f;
   err = imageGeom->computeCellIndex(coords, indices);
   REQUIRE(err == ImageGeom::ErrorType::ZOutOfBoundsHigh);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]")
@@ -141,4 +144,6 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(!result.has_value());
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

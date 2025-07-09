@@ -93,4 +93,6 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

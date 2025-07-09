@@ -52,4 +52,6 @@ TEST_CASE("ITKImageProcessing::ITKLabelContourImageFilter(default)", "[ITKImageP
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "d742c05a8d8aa9b41f58b8d2aad6b5d0");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

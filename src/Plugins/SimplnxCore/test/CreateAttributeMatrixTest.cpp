@@ -27,6 +27,8 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Instantiate)", "[SimplnxCore
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[SimplnxCore][CreateAttributeMatrixFilter]")
@@ -56,4 +58,6 @@ TEST_CASE("SimplnxCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Simp
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

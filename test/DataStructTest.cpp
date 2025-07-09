@@ -74,6 +74,8 @@ TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
   std::cout << outputPath << std::endl;
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsGraphViz(output);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // This test will ensure we don't run into runtime exceptions trying to run the functions
@@ -86,6 +88,8 @@ TEST_CASE("SimplnxCore::exportHierarchyAsText")
   std::cout << outputPath << std::endl;
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsText(output);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 DataStructure createTestDataStructure()
@@ -864,6 +868,8 @@ TEST_CASE("DataStructureDuplicateNames")
 
   DataGroup* childGroup2 = DataGroup::Create(dataStructure, name, group1->getId());
   REQUIRE(group2 == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStructureAddingObjectToNonBaseGroup")
@@ -875,6 +881,8 @@ TEST_CASE("DataStructureAddingObjectToNonBaseGroup")
 
   DataGroup* group = DataGroup::Create(dataStructure, "bar", dataArray->getId());
   REQUIRE(group == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataObjectsDeepCopyTest")

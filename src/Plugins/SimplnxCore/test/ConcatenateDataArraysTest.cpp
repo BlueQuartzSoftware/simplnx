@@ -337,6 +337,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
   REQUIRE(outputArray.getTupleShape() == std::vector<usize>{2});
   REQUIRE(outputArray[0] == value1);
   REQUIRE(outputArray[1] == value2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
@@ -369,6 +371,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
   REQUIRE(outputArray[1] == value2);
   REQUIRE(outputArray[2] == value3);
   REQUIRE(outputArray[3] == value4);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
@@ -405,6 +409,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
   REQUIRE(outputArray[3] == value4);
   REQUIRE(outputArray[4] == value5);
   REQUIRE(outputArray[5] == value6);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[SimplnxCore][ConcatenateDataArraysFilter]")
@@ -481,4 +487,6 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     REQUIRE(result.result.errors().size() == 1);
     REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

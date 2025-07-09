@@ -177,6 +177,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm", "[Simplnx
     REQUIRE(std::fabs(stand8 - -.4f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -.33f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -400,6 +402,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index", 
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Ignore 0", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -615,6 +619,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Shrink to Fit", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -852,6 +858,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Padded Custom Range", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -1085,6 +1093,8 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - Custom Range", "[SimplnxCore][ComputeArrayStatisticsFilter]")
@@ -1280,4 +1290,6 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     REQUIRE(std::fabs(stand8 - 1.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stand9 - -1.0f) < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

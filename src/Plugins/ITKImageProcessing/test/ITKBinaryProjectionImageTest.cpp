@@ -49,6 +49,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(defaults)", "[ITKI
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "3fc3603b27bf51df592190227d6cd6ed");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(another_dimension)", "[ITKImageProcessing][ITKBinaryProjectionImage][another_dimension]")
@@ -86,4 +88,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryProjectionImageFilter(another_dimension)
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "827f263ef9fb63d05499d14fcef32f60");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

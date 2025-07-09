@@ -172,6 +172,8 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
 
     nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadStringDataArrayFilter]")
@@ -203,4 +205,6 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

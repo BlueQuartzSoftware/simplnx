@@ -48,4 +48,6 @@ TEST_CASE("ITKImageProcessing::ITKNotImageFilter(defaults)", "[ITKImageProcessin
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "2004dccdb2d68b953fd858a5b6a37d35");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

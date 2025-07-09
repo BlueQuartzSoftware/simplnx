@@ -66,6 +66,8 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
 
     CompareImageGeometry(exemplarPtr, computedPtr);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAnalysis][ReadChannel5Data]")
@@ -121,4 +123,6 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
 
     CompareImageGeometry(exemplarPtr, computedPtr);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

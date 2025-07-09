@@ -29,6 +29,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Invalid Execution", "[O
   args.insertOrAssign(ChangeAngleRepresentationFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
@@ -78,6 +80,8 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Degrees To Radians")
       REQUIRE((*angles)[t * componentShape[0] + c] == static_cast<float>(t * c) * d2r);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
@@ -127,4 +131,6 @@ TEST_CASE("SimplnxCore::ChangeAngleRepresentationFilter: Radians To Degrees")
       REQUIRE((*angles)[t * componentShape[0] + c] == static_cast<float>(t * c) * r2d);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

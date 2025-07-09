@@ -58,6 +58,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
                                                 UnitTest::EPSILON, false);
   UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_FeatStDevCAxisMisExemplar), k_CellFeatureDataPath.createChildPath(k_FeatStDevCAxisMisComputed),
                                                 UnitTest::EPSILON, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: InValid Filter Execution", "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter]")
@@ -95,4 +97,6 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

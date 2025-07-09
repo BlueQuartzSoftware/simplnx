@@ -83,6 +83,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
   UnitTest::CompareNeighborLists<float64>(dataStructure, k_UniformFaceAreasExemplar, k_UniformFaceAreasComputed);
   UnitTest::CompareNeighborLists<uint64>(dataStructure, k_UniformVoxelIndicesExemplar, k_UniformVoxelIndicesComputed);
   UnitTest::CompareNeighborLists<float32>(dataStructure, k_UniformKernalDistancesExemplar, k_UniformKernalDistancesComputed);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter Execution - Gaussian Inpterpolation", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -123,6 +125,8 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
   UnitTest::CompareNeighborLists<float64>(dataStructure, k_GaussianFaceAreasExemplar, k_GaussianFaceAreasComputed);
   UnitTest::CompareNeighborLists<uint64>(dataStructure, k_GaussianVoxelIndicesExemplar, k_GaussianVoxelIndicesComputed);
   UnitTest::CompareNeighborLists<float32>(dataStructure, k_GaussianKernalDistancesExemplar, k_GaussianKernalDistancesComputed);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter Execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -175,4 +179,6 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

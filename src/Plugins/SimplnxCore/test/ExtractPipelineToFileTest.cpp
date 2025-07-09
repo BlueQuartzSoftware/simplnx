@@ -49,6 +49,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
   REQUIRE(fs::exists(k_NXOutputFile));
 
   fs::remove(k_NXOutputFile);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -79,6 +81,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
   REQUIRE(fs::exists(k_NXOutputFile));
 
   fs::remove(k_NXOutputFile);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missing output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -106,6 +110,8 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   REQUIRE(!fs::exists(k_JsonOutputFile));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invalid input file format", "[SimplnxCore][ExtractPipelineToFileFilter]")
@@ -142,4 +148,6 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
   REQUIRE(!fs::exists(k_JsonOutputFile));
 
   fs::remove(testInvalidInputFile);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

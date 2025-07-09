@@ -76,4 +76,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter", "[SimplnxCore][ComputeFe
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

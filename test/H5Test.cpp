@@ -662,6 +662,8 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
       REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
       REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
     }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 #endif
@@ -721,6 +723,8 @@ TEST_CASE("ImageGeometryIO")
     auto cellDataShape = std::vector<usize>(dims.crbegin(), dims.crend());
 
     REQUIRE(cellData->getShape() == cellDataShape);
+
+    UnitTest::CheckArraysInheritTupleDims(newDataStructure);
   }
 }
 
@@ -764,6 +768,8 @@ TEST_CASE("Node Based Geometry IO")
     DataStructure dataStructure = std::move(readResult.value());
 
     checkNodeGeomData(dataStructure, nodeData);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -806,6 +812,8 @@ TEST_CASE("NeighborList IO")
     // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
     auto neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -879,6 +887,8 @@ TEST_CASE("DataArray<bool> IO")
     StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
     REQUIRE(stringArray != nullptr);
     REQUIRE(stringArray->size() == 3);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -909,6 +919,8 @@ TEST_CASE("xdmf")
   auto* data = DataArray<int32>::Create(dataStructure, "Data", std::move(vertexAssociatedData), vertexData->getId());
   Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("H5 Utilities")
@@ -936,6 +948,8 @@ TEST_CASE("HDF5ImplicitCopyReaderTest")
 
     Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
   auto fileReader = HDF5::FileIO::ReadFile(filePath);
   HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileReader), "HDF5::FileIO");
@@ -989,6 +1003,8 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
 
     Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   auto file1 = HDF5::FileIO::ReadFile(filePath);
@@ -1053,6 +1069,8 @@ TEST_CASE("DataStructureAppend")
     const DataObject& exemplarObject = exemplarDataStructure.getDataRef(path);
 
     REQUIRE(UnitTest::Comparison::CompareDataObject(exemplarObject, appendedObject));
+
+    UnitTest::CheckArraysInheritTupleDims(appendedDataStructure);
   }
 
   // Failure states

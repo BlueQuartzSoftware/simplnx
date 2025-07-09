@@ -52,6 +52,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeome
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeometriesFilter]")
@@ -77,6 +79,8 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeome
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometriesFilter]")
@@ -107,4 +111,6 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometri
   auto& targetGeom = dataStructure.getDataRefAs<ImageGeom>(targetGeomPath);
 
   REQUIRE(movingGeom.getOrigin() == targetGeom.getOrigin());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

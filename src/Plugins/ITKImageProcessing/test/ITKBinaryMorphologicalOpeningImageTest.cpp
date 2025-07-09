@@ -54,4 +54,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalOpeningImageFilter(BinaryMo
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "bc97d7cbf9d3779070373f7a28b932a2");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

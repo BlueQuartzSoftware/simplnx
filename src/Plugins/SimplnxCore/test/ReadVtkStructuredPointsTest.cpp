@@ -100,6 +100,8 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
   validateReadVtkStructuredPointsFilter<int64>(ds, cellAttrMatrixPath.createChildPath("cell_i64_data"), 9, pointAttrMatrixPath.createChildPath("point_i64_data"), 7);
   validateReadVtkStructuredPointsFilter<float32>(ds, cellAttrMatrixPath.createChildPath("cell_float_data"), 3, pointAttrMatrixPath.createChildPath("point_float_data"), 8);
   validateReadVtkStructuredPointsFilter<float64>(ds, cellAttrMatrixPath.createChildPath("cell_double_data"), 1, pointAttrMatrixPath.createChildPath("point_double_data"), 9);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dimensions Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")

@@ -91,6 +91,8 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(alteredDs);
 }
 
 TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution", "[SimplnxCore][ExtractComponentAsArrayFilter]")
@@ -115,4 +117,6 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution"
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

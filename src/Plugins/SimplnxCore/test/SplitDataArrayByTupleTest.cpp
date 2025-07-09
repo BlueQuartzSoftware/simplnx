@@ -153,6 +153,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     // Original array still present
     REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("Existing Data Group")
@@ -219,6 +221,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     REQUIRE(arr3[5] == inputArrayVals[19]);
 
     REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) == nullptr); // deleted
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("New Attribute Matrix")
@@ -257,6 +261,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     compareSplitArray(inputArray, arr1, {0, 0, 0});
     compareSplitArray(inputArray, arr2, {0, 0, 2});
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("Existing Attribute Matrix")
@@ -308,6 +314,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     compareSplitArray(inputArray, arr3, {0, 6, 0});
     compareSplitArray(inputArray, arr4, {0, 9, 0});
     compareSplitArray(inputArray, arr5, {0, 12, 0});
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("2D Tuple Shape")
@@ -347,6 +355,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     compareSplitArray(inputArray, arr1, {0, 0});
     compareSplitArray(inputArray, arr2, {0, 5});
     compareSplitArray(inputArray, arr3, {0, 11});
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("3D Tuple Shape")
@@ -386,6 +396,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     compareSplitArray(inputArray, arr1, {0, 0, 0});
     compareSplitArray(inputArray, arr2, {0, 0, 7});
     compareSplitArray(inputArray, arr3, {0, 0, 9});
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("NeighborList")
@@ -435,6 +447,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     // Original NeighborList still exists
     REQUIRE(ds.getDataAs<NeighborList<T>>(DataPath({k_AttributeMatrixName, "Input NL"})) != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("String Array")
@@ -486,6 +500,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
 
     // Original StringArray still exists
     REQUIRE(ds.getDataAs<StringArray>(DataPath({k_AttributeMatrixName, "Input Strings"})) != nullptr);
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 }
 
@@ -513,6 +529,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("Tuple shapes do not sum to input tuple shape")
@@ -531,6 +549,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("New Attribute Matrix tuple shape contains non‑positive value")
@@ -548,6 +568,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("New Attribute Matrix tuple shape does not divide input in only one dimension")
@@ -565,6 +587,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("Existing Attribute Matrix tuple shape does not divide input")
@@ -581,6 +605,8 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 
   SECTION("New Attribute Matrix tuple shape has non-positive value")
@@ -598,5 +624,7 @@ TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Invalid Execution", "[Simp
     SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
     REQUIRE(preflight.outputActions.errors().size() == 1);
     REQUIRE(preflight.outputActions.errors()[0].code == to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative));
+
+    UnitTest::CheckArraysInheritTupleDims(ds);
   }
 }

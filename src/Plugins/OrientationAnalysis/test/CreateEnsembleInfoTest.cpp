@@ -77,6 +77,8 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
@@ -143,4 +145,6 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Valid filter execution
     REQUIRE((*phaseTypes)[i] == exemplarPhaseTypes[i]);
     REQUIRE((*phaseNames)[i] == exemplarPhaseNames[i]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

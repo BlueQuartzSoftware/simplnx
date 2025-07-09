@@ -53,6 +53,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImage
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "3921141f21fcb41e6d4af197e48ffbb5");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
@@ -92,4 +94,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageP
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "09212e4d204a0ed90a445dc832047b22");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

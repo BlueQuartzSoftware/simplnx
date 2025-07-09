@@ -61,6 +61,8 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
     REQUIRE(copiedDataGroup != nullptr);
     REQUIRE(copiedArray != nullptr);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore][CopyDataObjectFilter]")
@@ -123,4 +125,6 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -46,4 +46,6 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnal
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

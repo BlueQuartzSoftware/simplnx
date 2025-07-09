@@ -71,6 +71,8 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   UnitTest::CompareImageGeometry(dataStructure, k_ManualImageGeomPathExemplar, k_ManualImageGeomPathComputed);
   UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualExemplar, k_VoxelIndicesManualComputed);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Manual Geometry with Mask", "[MapPointCloudToRegularGridFilter]")
@@ -109,6 +111,8 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   UnitTest::CompareImageGeometry(dataStructure, k_ManualMaskImageGeomPathExemplar, k_ManualMaskImageGeomPathComputed);
   UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualMaskExemplar, k_VoxelIndicesManualMaskComputed);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Existing Geometry with Mask", "[MapPointCloudToRegularGridFilter]")
@@ -143,6 +147,8 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesExistingMaskExemplar, k_VoxelIndicesExistingMaskComputed);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Execution", "[MapPointCloudToRegularGridFilter]")
@@ -190,4 +196,6 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Executi
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -43,6 +43,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter : Valid filter execution", "[Simpln
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   CompareExemplarToGeneratedData(dataStructure, dataStructure, Constants::k_CellAttributeMatrix, k_ExemplarDataContainerName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter : Invalid filter execution", "[SimplnxCore][IdentifySampleFilter]")
@@ -70,4 +72,6 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter : Invalid filter execution", "[Simp
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

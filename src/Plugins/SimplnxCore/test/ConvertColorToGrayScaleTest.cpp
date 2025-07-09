@@ -329,6 +329,8 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
   }
 
   CompareResults(algoMapIndex, dataStruct);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStruct);
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Valid Execution", "[SimplnxCore][ConvertColorToGrayScaleFilter]")

@@ -116,6 +116,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -156,6 +158,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -195,6 +199,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -232,6 +238,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -292,6 +300,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(!executeResult.result.warnings().empty());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -338,6 +348,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(!executeResult.result.warnings().empty());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -434,6 +446,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
     REQUIRE(mask[23] == 1);
     REQUIRE(mask[24] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -529,6 +543,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
     REQUIRE(mask[23] == 1);
     REQUIRE(mask[24] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -581,6 +597,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rec
     REQUIRE(mask[6] == 1);
     REQUIRE(mask[7] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -631,6 +649,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
     REQUIRE(mask[6] == 1);
     REQUIRE(mask[7] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -690,6 +710,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
     REQUIRE(mask[6] == 1);
     REQUIRE(mask[7] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -748,6 +770,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
     REQUIRE(mask[6] == 1);
     REQUIRE(mask[7] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -793,6 +817,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - R
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -837,6 +863,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -882,6 +910,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Recta
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
@@ -926,4 +956,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

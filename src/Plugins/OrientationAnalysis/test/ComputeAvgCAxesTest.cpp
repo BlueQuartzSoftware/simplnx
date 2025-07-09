@@ -46,6 +46,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Valid Filter Execution", 
 
   UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_AvgCAxesExemplar), k_CellFeatureDataPath.createChildPath(k_AvgCAxesComputed), UnitTest::EPSILON,
                                                 false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Invalid Filter Execution", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
@@ -80,4 +82,6 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Invalid Filter Execution"
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

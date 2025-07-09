@@ -60,6 +60,8 @@ TEST_CASE("Test Loading Plugins")
     REQUIRE(filter2->humanName() == "Test Filter 2");
     filter2->execute(dataStructure, {});
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Test Singleton")
@@ -105,4 +107,6 @@ TEST_CASE("Test Singleton")
 
   Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

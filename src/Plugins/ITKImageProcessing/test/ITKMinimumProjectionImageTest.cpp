@@ -47,6 +47,8 @@ TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: Default Test", "
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "5591e0307db733396e8cc8143e7f29f7");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: New Geometry Default Test", "[ITKImageProcessing][ITKMinimumProjectionImage][defaults]")
@@ -83,6 +85,8 @@ TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: New Geometry Def
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "5591e0307db733396e8cc8143e7f29f7");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: Dimensional Test", "[ITKImageProcessing][ITKMinimumProjectionImage][defaults]")
@@ -116,6 +120,8 @@ TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: Dimensional Test
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "6c16b87a823ca190294ac8b678ba4300");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: Image Short Test", "[ITKImageProcessing][ITKMinimumProjectionImage][defaults]")
@@ -149,6 +155,8 @@ TEST_CASE("ITKImageProcessing::ITKMinimumProjectionImageFilter: Image Short Test
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "c4d83f61ffd5cc3a163155bb5d6a0698");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**

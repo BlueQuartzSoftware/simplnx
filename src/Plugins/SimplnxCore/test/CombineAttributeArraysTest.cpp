@@ -83,6 +83,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
   array4->fill(static_cast<uint8>(3));
   preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 template <typename T>
@@ -143,6 +145,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<uint8_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT8")
@@ -166,6 +170,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<int8_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT16")
@@ -189,6 +195,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<uint16_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT16")
@@ -212,6 +220,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<int16_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT32")
@@ -235,6 +245,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<uint32_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT32")
@@ -258,6 +270,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<int32_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT64")
@@ -281,6 +295,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<uint64_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT64")
@@ -304,6 +320,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<int64_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("FLOAT32")
@@ -327,6 +345,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<float32>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("DOUBLE")
@@ -350,6 +370,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<float64>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("BOOL")
@@ -373,5 +395,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
 
     Result<> validationResult = ValidateFilterOutput<bool>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

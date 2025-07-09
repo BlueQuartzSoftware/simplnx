@@ -255,4 +255,6 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame-NoOriginUpdate", "[Core][RotateSamp
       UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

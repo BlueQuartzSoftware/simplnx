@@ -114,4 +114,6 @@ TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
     REQUIRE(errors.size() == 1);
     REQUIRE(errors[0].code == k_ExecuteError);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

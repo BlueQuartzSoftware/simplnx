@@ -125,6 +125,8 @@ void TestCase1_Execute(NumericType scalarType)
     }
   }
   REQUIRE(isSame);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -170,6 +172,8 @@ void TestCase2_Execute()
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(errors[0].code == k_RbrWrongType);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -206,6 +210,8 @@ void TestCase3_Execute()
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(errors[0].code == k_RbrNumComponentsError);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -260,6 +266,8 @@ void TestCase4_Execute(NumericType scalarType)
     }
   }
   REQUIRE(isSame);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -295,6 +303,8 @@ void TestCase5_Execute(NumericType scalarType)
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(errors[0].code == k_RbrSkippedTooMuch);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

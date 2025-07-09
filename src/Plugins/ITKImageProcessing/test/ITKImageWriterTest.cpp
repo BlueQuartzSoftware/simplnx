@@ -194,4 +194,6 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
 
     validateOutputFiles(imageDims[0], offset, tempDirName, tempDirPath);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

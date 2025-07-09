@@ -40,4 +40,6 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Valid Filter Execution", "[Si
   }
 
   UnitTest::CompareArrays<uint8>(dataStructure, ebsdPath.createChildPath("VectorColor"), ebsdPath.createChildPath(k_VecColorsNX));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

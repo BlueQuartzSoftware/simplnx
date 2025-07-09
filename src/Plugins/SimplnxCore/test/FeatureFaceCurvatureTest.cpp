@@ -145,4 +145,6 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
     DataPath path1 = faceAttribMatrixPath.createChildPath("MeanCurvatures");
     ::CompareDataArrays(dataStructure, path1, k_MeanCurvature_Path);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

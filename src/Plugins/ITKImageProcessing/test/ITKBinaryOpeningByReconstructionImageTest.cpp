@@ -58,4 +58,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryOpeningByReconstructionImageFilter(Binar
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "2dff38c9c5d2f516e7435f3e2291d6c1");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
