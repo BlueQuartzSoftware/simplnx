@@ -5,6 +5,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
@@ -23,11 +24,12 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel)
+  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_CellEulerAngles(data)
   , m_AxisAngle(rotAxis)
   , m_Angle(angle)
   , m_ShouldCancel(shouldCancel)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
   virtual ~RotateEulerRefFrameImpl() = default;
@@ -38,12 +40,21 @@ public:
 
     OrientationUtilities::Matrix3fR rotMat = OrientationUtilities::OrientationMatrixToGMatrix(om);
 
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+
+    usize counter = 0;
+    usize counterIncrement = (end - start) / 100;
     float ea1 = 0, ea2 = 0, ea3 = 0;
     for(size_t i = start; i < end; i++)
     {
       if(m_ShouldCancel)
       {
         return;
+      }
+      if(counter >= counterIncrement)
+      {
+        progressMessenger.sendProgressMessage(counter);
+        counter = 0;
       }
       ea1 = m_CellEulerAngles[3 * i + 0];
       ea2 = m_CellEulerAngles[3 * i + 1];
@@ -56,7 +67,9 @@ public:
       m_CellEulerAngles[3 * i] = eu[0];
       m_CellEulerAngles[3 * i + 1] = eu[1];
       m_CellEulerAngles[3 * i + 2] = eu[2];
+      counter++;
     }
+    progressMessenger.sendProgressMessage(counter);
   }
 
   void operator()(const Range& range) const
@@ -69,6 +82,7 @@ private:
   std::vector<float> m_AxisAngle;
   float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -94,15 +108,20 @@ Result<> RotateEulerRefFrame::operator()()
 
   nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
 
-  size_t m_TotalElements = eulerAngles.getNumberOfTuples();
+  size_t totalElements = eulerAngles.getNumberOfTuples();
 
   std::vector<float> axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
   MatrixMath::Normalize3x1(axis.data());
 
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(totalElements);
+  progressMessageHelper.setProgressMessageTemplate("RotateEulerRefFrame: {:.2f}% complete");
+
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel));
+  dataAlg.setRange(0, totalElements);
+  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressMessageHelper));
   return {};
 }
 
