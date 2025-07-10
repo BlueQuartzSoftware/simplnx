@@ -229,7 +229,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     pageHeight = pageHeight + subCanvasHeight * 2.0f;
   }
   {
-    const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
+    const std::vector<size_t> dims = {1ULL, static_cast<usize>(pageHeight), static_cast<usize>(pageWidth)};
     auto createImageGeometryAction =
         std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
@@ -253,17 +253,18 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
                                                                                  std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
     resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
+    const std::vector<size_t> intensityImageArrayDims = std::vector<usize>{intensityImageDims.rbegin(), intensityImageDims.rend()};
     std::vector<size_t> cDims = {1ULL};
     DataPath path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot1Name));
-    auto createArray1 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    auto createArray1 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageArrayDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray1));
 
     path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot2Name));
-    auto createArray2 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    auto createArray2 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageArrayDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray2));
 
     path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(fmt::format("Phase_{}_{}", 1, pIntensityPlot3Name));
-    auto createArray3 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageDims, cDims, path);
+    auto createArray3 = std::make_unique<CreateArrayAction>(DataType::float64, intensityImageArrayDims, cDims, path);
     resultOutputActions.value().appendAction(std::move(createArray3));
 
     path = pOutputIntensityGeometryPath.createChildPath(write_pole_figure::k_MetaDataName);
