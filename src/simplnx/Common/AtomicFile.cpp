@@ -4,9 +4,14 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <fmt/format.h>
+#include <fmt/std.h>
 
 #include <iostream>
 #include <random>
+
+#if defined(__linux__) || defined(__APPLE__)
+#include <sys/xattr.h>
+#endif
 
 using namespace nx::core;
 
@@ -28,6 +33,44 @@ std::string CreateRandomDirName()
   }
   return randomDir;
 }
+
+bool SetExtendedAttribute(const fs::path& path, const std::string& key, const std::string& value)
+{
+#ifdef _WIN32
+  // Set-Content -Path <path> -Stream <name> -Value <value>
+  // Set-Content appends "/r/n" to the stream. Omitting this doesn't seem to affect the result
+  // but we keep it here to stay as close as possible to the command example from Dropbox.
+  // Opening an alternate data stream is done with a path of the form "<path>:<stream>"
+  fs::path newPath = path;
+  newPath += ":" + key;
+  std::ofstream file(newPath);
+  file << value << "\n";
+  return file.good();
+#elif defined(__linux__)
+  // attr -s <name> -V <value> <path>
+  // the `attr` command automatically prepends "user." to the key
+  std::string newKey = "user." + key;
+  return setxattr(path.c_str(), newKey.c_str(), value.data(), value.size(), 0) == 0;
+#elif defined(__APPLE__)
+  // xattr -w <name> <value> <path>
+  return setxattr(path.c_str(), key.c_str(), value.data(), value.size(), 0, 0) == 0;
+#endif
+}
+
+bool SetIgnoreFileSyncAttributes(const fs::path& path)
+{
+  // https://help.dropbox.com/sync/ignored-files
+  bool result = SetExtendedAttribute(path, "com.dropbox.ignored", "1");
+
+  // Dropbox notes that if you're using Dropbox for macOS on File Provider
+  // you should use the following attribute instead. Since we don't have a good
+  // way to detect that, we set both.
+#ifdef __APPLE__
+  result = result && SetExtendedAttribute(path, "com.apple.fileprovider.ignore#P", "1");
+#endif
+
+  return result;
+}
 } // namespace
 
 Result<AtomicFile> AtomicFile::Create(fs::path filename)
@@ -47,7 +90,7 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
   }
 
   // Validate write permissions
-  { // Scope to avoid accessing result after it's no longer guaranteed by the move
+  {
     auto result = FileUtilities::ValidateDirectoryWritePermission(atomicFile.m_FilePath, true);
     if(result.invalid())
     {
@@ -56,13 +99,23 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
   }
 
   atomicFile.m_TempFilePath = fs::path(fmt::format("{}/{}/{}", atomicFile.m_FilePath.parent_path().string(), ::CreateRandomDirName(), atomicFile.m_FilePath.filename().string()));
-  { // Scope to avoid accessing result after it's no longer guaranteed by the move
-    // Make sure any directory path is also available as the user may have just typed
+
+  {
+    auto parentPath = atomicFile.m_TempFilePath.parent_path();
+
+    // Make sure any directory path is available as the user may have just typed
     // in a path without actually creating the full path
-    auto result = CreateOutputDirectories(atomicFile.m_TempFilePath.parent_path());
+    auto result = CreateOutputDirectories(parentPath);
     if(result.invalid())
     {
       return ConvertInvalidResult<AtomicFile>(std::move(result));
+    }
+    // The temporary directory that AtomicFile creates should not be synced to cloud services
+    // Since this is only necessary in synced folders if we fail we report and continue
+    // rather than force a hard error.
+    if(!SetIgnoreFileSyncAttributes(parentPath))
+    {
+      fmt::print("AtomicFile::Create: Unable to set ignore file sync attributes for '{}'", parentPath);
     }
   }
 
