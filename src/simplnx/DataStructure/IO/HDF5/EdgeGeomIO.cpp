@@ -61,13 +61,6 @@ Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const Dat
     return MakeErrorResult(-25070, fmt::format("Failed to finish importing geometry at path '{}'. Geometry does not exist or is of wrong type.", dataPath.toString()));
   }
 
-  auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
-  geometry->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
-  geometry->setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
-  geometry->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
-  geometry->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
-  geometry->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
-
   return {};
 }
 

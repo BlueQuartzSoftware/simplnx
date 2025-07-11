@@ -95,11 +95,6 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
     const std::vector<size_t> volumeDimensions = std::move(volumeDimensionsResult.value());
 
     geom->setDimensions(volumeDimensions);
-
-    // Read DataObject IDs
-    geom->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
-    geom->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
-    geom->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
   }
 
   return IGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);

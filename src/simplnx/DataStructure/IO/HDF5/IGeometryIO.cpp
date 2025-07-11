@@ -33,9 +33,6 @@ Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, cons
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing IGeometry at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
 
-  auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
-  geom->setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
-
   return {};
 }
 

@@ -44,13 +44,6 @@ Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructu
     return MakeErrorResult(-50591, fmt::format("Failed to finish importing INodeGeometry2D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
 
-  {
-    auto groupReader = dataStructureGroup.openGroup(dataPath.toString());
-    geom->setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
-    geom->setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
-    geom->setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
-  }
-
   return INodeGeom1dIO::FinishImportingNodeGeom1dData(dataStructure, dataPath, dataStructureGroup);
 }
 

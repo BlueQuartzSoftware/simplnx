@@ -55,9 +55,6 @@ Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructu
       auto value = unitsAttr.value();
       geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
     }
-
-    geom->setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
-    geom->setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
   }
 
   return IGeometryIO::FinishImportingGeomData(dataStructure, dataPath, dataStructureGroup);
