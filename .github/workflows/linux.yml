@@ -18,15 +18,15 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
         cxx:
           - g++-11
-          - clang++-14
+          - clang++-17
         include:
           - cxx: g++-11
             cc: gcc-11
-          - cxx: clang++-14
-            cc: clang-14
+          - cxx: clang++-17
+            cc: clang-17
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -45,7 +45,7 @@ jobs:
         uses: ammaraskar/gcc-problem-matcher@0.2.0
       - name: Install Dependencies - 2
         run: |
-          sudo apt-get -y install ninja-build
+          sudo apt-get -y install ninja-build mono-complete libltdl-dev
       - name: Install Sphinx
         run: |
           sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
