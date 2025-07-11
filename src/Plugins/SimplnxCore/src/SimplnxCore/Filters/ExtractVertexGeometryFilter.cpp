@@ -175,7 +175,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), std::vector<usize>{dataArray.getNumberOfTuples()}, dataArray.getComponentShape(), newDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
-    
+
     if(pArrayHandlingValue == to_underlying(ArrayHandlingType::Move))
     {
       auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath);
