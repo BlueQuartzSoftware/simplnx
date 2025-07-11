@@ -2,8 +2,8 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -23,10 +23,18 @@ namespace
 template <typename T>
 struct StatsCache
 {
+  using value_type = T;
   T minValue = std::numeric_limits<T>::quiet_NaN();
   T maxValue = std::numeric_limits<T>::quiet_NaN();
   usize count = 0;
   T summationValue = static_cast<T>(0);
+};
+
+template <typename T>
+struct CompleteStatsCache : StatsCache<T>
+{
+  float32 medianValue = std::numeric_limits<float32>::quiet_NaN();
+  usize uniqueValCount = 0;
 };
 
 /**
@@ -117,17 +125,17 @@ private:
 };
 
 /**
- * @brief This computes the basic stats and mode by bounding box that can be derived in a single pass
+ * @brief This computes the basic stats, frequency map stats, and mode by bounding box that can be derived in a single pass
  * @tparam T the type of data for the stats to work from (bool invalid since we are working with NeighborList as a variable type)
  * @warning Class assumes that the size of statsVector and modesList is equivalent to numTuples in unifiedBounds to maintain parallel nature
  */
 template <typename T>
-class ComputeBaseStatsAndModeImpl
+class ComputeAllStatsImpl
 {
 public:
   // It is expected that the size of statsVector is equivalent to numTuples in unifiedBounds
-  ComputeBaseStatsAndModeImpl(const ImageGeom& geom, const AbstractDataStore<T>& inputArray, const Float32AbstractDataStore& unifiedBounds, std::vector<StatsCache<T>>& statsVector,
-                              NeighborList<T>& modesList)
+  ComputeAllStatsImpl(const ImageGeom& geom, const AbstractDataStore<T>& inputArray, const Float32AbstractDataStore& unifiedBounds, std::vector<CompleteStatsCache<T>>& statsVector,
+                      NeighborList<T>& modesList)
   : m_Geom(geom)
   , m_InputArray(inputArray)
   , m_UnifiedBounds(unifiedBounds)
@@ -135,7 +143,7 @@ public:
   , m_ModesList(modesList)
   {
   }
-  ~ComputeBaseStatsAndModeImpl() = default;
+  ~ComputeAllStatsImpl() = default;
 
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
@@ -166,7 +174,7 @@ public:
       T summationValue = static_cast<T>(0);
 
       // specialization also calculates mode
-      std::map<T, uint64> modalMap = {};
+      std::map<T, uint64> frequencyMap = {};
 
       usize zStride = 0, yStride = 0;
       for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
@@ -185,7 +193,7 @@ public:
             summationValue += value;
 
             // modes
-            modalMap[value]++;
+            frequencyMap[value]++;
           }
         }
       }
@@ -197,17 +205,53 @@ public:
       m_StatsVector[targetBoundsIndex].summationValue = summationValue;
 
       // Output the mode
-      if(!modalMap.empty())
+      if(!frequencyMap.empty())
       {
         continue;
       }
 
+      // Find Number of Unique Values from Frequency Map
+      m_StatsVector[targetBoundsIndex].uniqueValCount = frequencyMap.size();
+
+      // Calculate the median
+      usize medianPosition = count / 2;
+      usize cumulativeFrequency = 0;
+      for(auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it)
+      {
+        cumulativeFrequency += it->second;
+
+        // DO NOT TOUCH LESS THAN CHECK, basis of assumption for next frequency ifs
+        if(cumulativeFrequency < medianPosition)
+        {
+          continue;
+        }
+
+        if(count % 2 == 0 && cumulativeFrequency == medianPosition)
+        {
+          // If we reached this point the frequency of this number is 1,
+          // meaning the previous key contains the n-1 value
+          auto upper = static_cast<float32>(it->first);
+          --it;
+          m_StatsVector[targetBoundsIndex].medianValue = (static_cast<float32>(it->first) + upper) / 2.0f;
+        }
+        else
+        {
+          // If we reached this point the number of values is either
+          // - uneven, meaning this is the exact median
+          // - even, but the frequency of the key value is greater than 1
+          // meaning that both n and n-1 are the same number
+          m_StatsVector[targetBoundsIndex].medianValue = static_cast<float32>(it->first);
+        }
+
+        break;
+      }
+
       // Find the maximum occurrence
-      auto pr = std::max_element(modalMap.begin(), modalMap.end(), [](const auto& x, const auto& y) { return x.second < y.second; });
+      auto pr = std::max_element(frequencyMap.begin(), frequencyMap.end(), [](const auto& x, const auto& y) { return x.second < y.second; });
       int maxCount = pr->second;
 
       // Store all values that have this maximum occurrence under the proper feature id
-      for(const auto& modalPair : modalMap)
+      for(const auto& modalPair : frequencyMap)
       {
         if(modalPair.second == maxCount)
         {
@@ -227,21 +271,159 @@ private:
   const ImageGeom& m_Geom;
   const AbstractDataStore<T>& m_InputArray;
   const Float32AbstractDataStore& m_UnifiedBounds;
-  std::vector<StatsCache<T>>& m_StatsVector;
+  std::vector<CompleteStatsCache<T>>& m_StatsVector;
   NeighborList<T>& m_ModesList;
 };
+
+/**
+ * @brief This computes the basic and frequency map stats by bounding box that can be derived in a single pass
+ * @tparam T the type of data for the stats to work from (bool invalid since we are working with NeighborList as a variable type)
+ * @warning Class assumes that the size of statsVector and modesList is equivalent to numTuples in unifiedBounds to maintain parallel nature
+ */
+template <typename T>
+class ComputeBasicAndFrequencyStatsImpl
+{
+public:
+  // It is expected that the size of statsVector is equivalent to numTuples in unifiedBounds
+  ComputeBasicAndFrequencyStatsImpl(const ImageGeom& geom, const AbstractDataStore<T>& inputArray, const Float32AbstractDataStore& unifiedBounds, std::vector<CompleteStatsCache<T>>& statsVector)
+  : m_Geom(geom)
+  , m_InputArray(inputArray)
+  , m_UnifiedBounds(unifiedBounds)
+  , m_StatsVector(statsVector)
+  {
+  }
+  ~ComputeBasicAndFrequencyStatsImpl() = default;
+
+  // -----------------------------------------------------------------------------
+  void compute(usize start, usize end) const
+  {
+    FloatVec3 spacing = m_Geom.getSpacing();
+    FloatVec3 origin = m_Geom.getOrigin();
+
+    usize xPoints = m_Geom.getNumXCells();
+    usize yPoints = m_Geom.getNumYCells();
+
+    for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
+    {
+      // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
+
+      // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
+      auto minXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 0) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0]));
+      auto minYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 1) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1]));
+      auto minZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 2) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2]));
+
+      auto maxXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 3) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0])) + 1;
+      auto maxYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 4) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1])) + 1;
+      auto maxZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 5) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2])) + 1;
+
+      // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
+      usize count = 0;
+      T minValue = std::numeric_limits<T>::quiet_NaN();
+      T maxValue = std::numeric_limits<T>::quiet_NaN();
+      T summationValue = static_cast<T>(0);
+
+      // specialization also calculates mode
+      std::map<T, uint64> frequencyMap = {};
+
+      usize zStride = 0, yStride = 0;
+      for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
+      {
+        zStride = zIndex * xPoints * yPoints;
+        for(usize yIndex = minYVoxel; yIndex < maxYVoxel; yIndex++)
+        {
+          yStride = yIndex * xPoints;
+          for(usize xIndex = minXVoxel; xIndex < maxXVoxel; xIndex++)
+          {
+            usize tup = zStride + yStride + xIndex;
+            T value = m_InputArray.getValue(tup);
+            count++;
+            minValue = std::min(minValue, value);
+            maxValue = std::max(maxValue, value);
+            summationValue += value;
+
+            // modes
+            frequencyMap[value]++;
+          }
+        }
+      }
+
+      // Copy primitives of base stats in the output vector
+      m_StatsVector[targetBoundsIndex].count = count;
+      m_StatsVector[targetBoundsIndex].minValue = minValue;
+      m_StatsVector[targetBoundsIndex].maxValue = maxValue;
+      m_StatsVector[targetBoundsIndex].summationValue = summationValue;
+
+      // Output the mode
+      if(!frequencyMap.empty())
+      {
+        continue;
+      }
+
+      // Find Number of Unique Values from Frequency Map
+      m_StatsVector[targetBoundsIndex].uniqueValCount = frequencyMap.size();
+
+      // Calculate the median
+      usize medianPosition = count / 2;
+      usize cumulativeFrequency = 0;
+      for(auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it)
+      {
+        cumulativeFrequency += it->second;
+
+        // DO NOT TOUCH LESS THAN CHECK, basis of assumption for next frequency ifs
+        if(cumulativeFrequency < medianPosition)
+        {
+          continue;
+        }
+
+        if(count % 2 == 0 && cumulativeFrequency == medianPosition)
+        {
+          // If we reached this point the frequency of this number is 1,
+          // meaning the previous key contains the n-1 value
+          auto upper = static_cast<float32>(it->first);
+          --it;
+          m_StatsVector[targetBoundsIndex].medianValue = (static_cast<float32>(it->first) + upper) / 2.0f;
+        }
+        else
+        {
+          // If we reached this point the number of values is either
+          // - uneven, meaning this is the exact median
+          // - even, but the frequency of the key value is greater than 1
+          // meaning that both n and n-1 are the same number
+          m_StatsVector[targetBoundsIndex].medianValue = static_cast<float32>(it->first);
+        }
+
+        break;
+      }
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  void operator()(const Range& range) const
+  {
+    compute(range.min(), range.max());
+  }
+
+private:
+  const ImageGeom& m_Geom;
+  const AbstractDataStore<T>& m_InputArray;
+  const Float32AbstractDataStore& m_UnifiedBounds;
+  std::vector<CompleteStatsCache<T>>& m_StatsVector;
+};
+
+template <class Cache>
+concept CacheType = std::is_base_of_v<StatsCache<typename Cache::value_type>, Cache>;
 
 /**
  * @brief This computes the standard deviation by bounding box that can be derived from precalculated base stats
  * @tparam T the type of data for the stats to work from
  * @warning Class assumes that the size of statsVector is equivalent to numTuples in unifiedBounds to maintain parallel nature
  */
-template <typename T>
+template <typename T, CacheType CacheT>
 class ComputeStdDevImpl
 {
 public:
   // It is expected that the size of statsVector is equivalent to numTuples in unifiedBounds
-  ComputeStdDevImpl(const ImageGeom& geom, const AbstractDataStore<T>& inputArray, const Float32AbstractDataStore& unifiedBounds, const std::vector<StatsCache<T>>& statsVector,
+  ComputeStdDevImpl(const ImageGeom& geom, const AbstractDataStore<T>& inputArray, const Float32AbstractDataStore& unifiedBounds, const std::vector<CacheT>& statsVector,
                     Float32AbstractDataStore& stdDevArray)
   : m_Geom(geom)
   , m_InputArray(inputArray)
@@ -315,12 +497,12 @@ private:
   const ImageGeom& m_Geom;
   const AbstractDataStore<T>& m_InputArray;
   const Float32AbstractDataStore& m_UnifiedBounds;
-  const std::vector<StatsCache<T>>& m_StatsVector;
+  const std::vector<CacheT>& m_StatsVector;
   Float32AbstractDataStore& m_StdDevArray;
 };
 
-template <typename T>
-Result<> FillStatsArrays(const std::vector<StatsCache<T>>& statsVector, DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues)
+template <typename T, CacheType StatsCacheT>
+Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues)
 {
   AbstractDataStore<bool>* boundsHasDataArray = dataStructure.getDataRefAs<BoolArray>(inputValues->BoundsHasDataPath).getDataStore();
   if(boundsHasDataArray == nullptr)
@@ -333,6 +515,8 @@ Result<> FillStatsArrays(const std::vector<StatsCache<T>>& statsVector, DataStru
   AbstractDataStore<T>* maxArray = nullptr;
   AbstractDataStore<T>* summationArray = nullptr;
   AbstractDataStore<float32>* meanArray = nullptr;
+  AbstractDataStore<float32>* medianArray = nullptr;
+  AbstractDataStore<int32>* numUniqueValuesArray = nullptr;
 
   if(inputValues->CalculateLength)
   {
@@ -374,6 +558,25 @@ Result<> FillStatsArrays(const std::vector<StatsCache<T>>& statsVector, DataStru
       return MakeErrorResult(-69314, fmt::format("Mean array from path {} invalid", inputValues->MeanPath.toString()));
     }
   }
+  if constexpr(std::is_same_v<StatsCacheT, CompleteStatsCache<typename StatsCacheT::value_type>>)
+  {
+    if(inputValues->CalculateMedian)
+    {
+      medianArray = dataStructure.getDataRefAs<Float32Array>(inputValues->MedianPath).getDataStore();
+      if(meanArray == nullptr)
+      {
+        return MakeErrorResult(-69315, fmt::format("Median array from path {} invalid", inputValues->MedianPath.toString()));
+      }
+    }
+    if(inputValues->CalculateNumUniqueValues)
+    {
+      numUniqueValuesArray = dataStructure.getDataRefAs<Int32Array>(inputValues->NumUniqueValuesPath).getDataStore();
+      if(numUniqueValuesArray == nullptr)
+      {
+        return MakeErrorResult(-69316, fmt::format("Number of Unique Value array from path {} invalid", inputValues->MedianPath.toString()));
+      }
+    }
+  }
 
   for(usize i = 0; i < statsVector.size(); i++)
   {
@@ -409,6 +612,17 @@ Result<> FillStatsArrays(const std::vector<StatsCache<T>>& statsVector, DataStru
         }
         meanArray->setValue(i, meanValue);
       }
+      if constexpr(std::is_same_v<StatsCacheT, CompleteStatsCache<typename StatsCacheT::value_type>>)
+      {
+        if(medianArray != nullptr)
+        {
+          medianArray->setValue(i, statsVector[i].medianValue);
+        }
+        if(numUniqueValuesArray != nullptr)
+        {
+          numUniqueValuesArray->setValue(i, statsVector[i].uniqueValCount);
+        }
+      }
     }
   }
 
@@ -424,9 +638,6 @@ struct ExecuteBoundsStatsCalculations
   {
     usize numTuples = unifiedBounds.getNumberOfTuples();
 
-    // Initialize StatsCache vector
-    std::vector<StatsCache<T>> statsVector(numTuples);
-
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numTuples);
 
@@ -434,21 +645,47 @@ struct ExecuteBoundsStatsCalculations
 
     if constexpr(UseModeV)
     {
+      std::vector<CompleteStatsCache<T>> statsVector(numTuples);
       auto& modeList = dataStructure.getDataRefAs<NeighborList<T>>(inputValues->ModePath);
-      dataAlg.execute(ComputeBaseStatsAndModeImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector, modeList));
+      dataAlg.execute(ComputeAllStatsImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector, modeList));
+
+      if(inputValues->CalculateStdDev)
+      {
+        auto& stdDevArray = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
+        dataAlg.execute(ComputeStdDevImpl<T, CompleteStatsCache<T>>(imageGeom, inputArray, unifiedBounds, statsVector, stdDevArray));
+      }
+
+      return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
     }
     else
     {
-      dataAlg.execute(ComputeBaseStatsImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector));
-    }
+      if(inputValues->CalculateMedian || inputValues->CalculateNumUniqueValues)
+      {
+        std::vector<CompleteStatsCache<T>> statsVector(numTuples);
+        dataAlg.execute(ComputeBasicAndFrequencyStatsImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector));
 
-    if(inputValues->CalculateStdDev)
-    {
-      auto& stdDevArray = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef(); // get abstract data store
-      dataAlg.execute(ComputeStdDevImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector, stdDevArray));
-    }
+        if(inputValues->CalculateStdDev)
+        {
+          auto& stdDevArray = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
+          dataAlg.execute(ComputeStdDevImpl<T, CompleteStatsCache<T>>(imageGeom, inputArray, unifiedBounds, statsVector, stdDevArray));
+        }
 
-    return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
+        return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
+      }
+      else
+      {
+        std::vector<StatsCache<T>> statsVector(numTuples);
+        dataAlg.execute(ComputeBaseStatsImpl<T>(imageGeom, inputArray, unifiedBounds, statsVector));
+
+        if(inputValues->CalculateStdDev)
+        {
+          auto& stdDevArray = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
+          dataAlg.execute(ComputeStdDevImpl<T, StatsCache<T>>(imageGeom, inputArray, unifiedBounds, statsVector, stdDevArray));
+        }
+
+        return FillStatsArrays<T>(statsVector, dataStructure, inputValues);
+      }
+    }
   }
 };
 } // namespace

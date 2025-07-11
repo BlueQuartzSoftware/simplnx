@@ -17,7 +17,9 @@ struct SIMPLNXCORE_EXPORT ComputeBoundingBoxStatsInputValues
   bool CalculateMax;
   bool CalculateSummation;
   bool CalculateMean;
+  bool CalculateMedian;
   bool CalculateMode;
+  bool CalculateNumUniqueValues;
   bool CalculateStdDev;
 
   // Input
@@ -32,7 +34,9 @@ struct SIMPLNXCORE_EXPORT ComputeBoundingBoxStatsInputValues
   DataPath MaxPath;
   DataPath SummationPath;
   DataPath MeanPath;
+  DataPath MedianPath;
   DataPath ModePath;
+  DataPath NumUniqueValuesPath;
   DataPath StdDevPath;
 };
 
