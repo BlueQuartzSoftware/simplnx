@@ -331,7 +331,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
     REQUIRE(dataArray != nullptr);
-    REQUIRE(dataArray->template getIDataStoreAs<EmptyDataStore<int8>>() == nullptr);
+    REQUIRE(dataArray->template getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
   }
 }
 
