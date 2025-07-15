@@ -61,6 +61,13 @@ public:
   StringArray& operator=(StringArray&& rhs) noexcept;
 
   /**
+   * @brief Swaps the tuple values between the 2 indices
+   * @param index0 The first index to swap
+   * @param index1 The second index to swap
+   */
+  void swapTuples(usize index0, usize index1) override;
+
+  /**
    * @brief Returns the number of elements.
    * @return usize
    */

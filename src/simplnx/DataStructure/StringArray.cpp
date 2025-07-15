@@ -222,4 +222,16 @@ void StringArray::resizeTuples(const std::vector<usize>& tupleShape)
     m_Strings->resize(numTuples);
   }
 }
+
+void StringArray::swapTuples(usize index0, usize index1)
+{
+  if(index0 == index1)
+  {
+    return;
+  }
+  auto value = (*m_Strings)[index0];
+  (*m_Strings)[index0] = (*m_Strings)[index1];
+  (*m_Strings)[index1] = value;
+}
+
 } // namespace nx::core

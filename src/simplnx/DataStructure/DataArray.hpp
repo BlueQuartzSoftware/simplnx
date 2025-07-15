@@ -331,6 +331,29 @@ public:
   }
 
   /**
+   * @brief Swaps the tuple values between the 2 indices
+   * @param index0 The first index to swap
+   * @param index1 The second index to swap
+   */
+  void swapTuples(usize index0, usize index1) override
+  {
+    if(index0 == index1)
+    {
+      return;
+    }
+    const auto numComponents = getNumberOfComponents();
+    for(usize i = 0; i < numComponents; i++)
+    {
+      usize fromCompIndex = index0 * numComponents + i;
+      usize toCompIndex = index1 * numComponents + i;
+      auto valueIdx0 = m_DataStore->getValue(fromCompIndex);
+      auto valueIdx1 = m_DataStore->getValue(toCompIndex);
+      m_DataStore->setValue(toCompIndex, valueIdx0);
+      m_DataStore->setValue(fromCompIndex, valueIdx1);
+    }
+  }
+
+  /**
    * @brief Byte swaps all elements in the data array
    */
   void byteSwapElements()
