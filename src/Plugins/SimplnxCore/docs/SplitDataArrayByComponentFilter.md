@@ -22,8 +22,9 @@ There is an alternative option which allows the user to select a subset of compo
 
 This **Filter** is the opposite operation of the Combine Attribute Arrays **Filter**, and the generalized version of the Extract Component as Attribute Array **Filter**.
 
-> **Looking to split by *tuples* instead?**  
-> See the *[Split Data Array (By Tuple)](SplitDataArrayByTupleFilter.md)* filter that separates a data array into several smaller data arrays based on the tuple layout.
+**Looking to split by *tuples* instead?**  
+
+See the *[Split Data Array (By Tuple)](SplitDataArrayByTupleFilter.md)* filter that separates a data array into several smaller data arrays based on the tuple layout.
 
 % Auto generated parameter table will be inserted here
 

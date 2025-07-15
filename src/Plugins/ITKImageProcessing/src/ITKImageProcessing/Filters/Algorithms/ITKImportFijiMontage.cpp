@@ -254,7 +254,7 @@ private:
 
         // This same filter was used to preflight so as long as nothing changes on disk this really should work....
         Arguments colorToGrayscaleArgs;
-        colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
+        colorToGrayscaleArgs.insertOrAssign("conversion_algorithm_index", std::make_any<ChoicesParameter::ValueType>(0));
         colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(m_InputValues->colorWeights));
         colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataPath}));
         colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));

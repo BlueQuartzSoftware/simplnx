@@ -25,13 +25,10 @@ namespace fs = std::filesystem;
 namespace AlignSectionsFeatureCentroidFilter
 {
 // Parameter Keys
-static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
-static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
 static inline constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
 static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
 static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 } // namespace AlignSectionsFeatureCentroidFilter
 
 namespace ReadTextDataArrayFilter
@@ -207,13 +204,10 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
 
   Arguments args;
   // Create default Parameters for the filter.
-  args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_WriteAlignmentShifts_Key, std::make_any<bool>(true));
-  args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(shiftsFile));
   args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
   args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_ReferenceSlice_Key, std::make_any<int32>(0));
   args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
   args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-  args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedCellDataGroup_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

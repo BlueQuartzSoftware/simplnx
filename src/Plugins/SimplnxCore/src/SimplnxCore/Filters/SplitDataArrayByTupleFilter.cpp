@@ -337,7 +337,7 @@ Parameters SplitDataArrayByTupleFilter::parameters() const
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Split Data Array {}"));
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Split Dimension Count"}));
-    params.insert(std::make_unique<DynamicTableParameter>(k_SplitDimensionCounts_Key, "Split Arrays – Split Dimension Counts",
+    params.insert(std::make_unique<DynamicTableParameter>(k_SplitDimensionCounts_Key, "Split Arrays: Split Dimension Counts",
                                                           "How many tuples each output array should contain along the split "
                                                           "dimension only.\n\n"
                                                           "• Enter one value per row; each row becomes a new split array.\n"

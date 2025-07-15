@@ -6,7 +6,7 @@ Geometry
 
 ## Description
 
-This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibility, while leveraging existing algorithms. This filter doesn't modify the input geometry in any way if you wish to modify the data within the bounding box, consider using one of the cleanup filters on the marked values. See _Remove Flagged Vertices/Edges/Triangles_ for an example of a potential followup filter.
+This filter produces a mask that marks cells that fall inside or outside a given bounding shape within a supplied geometry. The filter outputs a mask to provide the greatest flexibility, while leveraging existing algorithms. This filter doesn't modify the input geometry in any way if you wish to modify the data within the bounding box, consider using one of the cleanup filters on the marked values. See *Remove Flagged Vertices/Edges/Triangles* for an example of a potential followup filter.
 
 This filter has a check at runtime (during the execute phase, before individual mask value determination begins) that will return a warning (not error) if the bounds don't intersect any cells in the geometry. The intention of this is to alert the user that the mask will contain the same value throughout to allow the user to adapt the pipeline/parameters accordingly. When this check causes early bailout and warning, the mask will still be filled with outside bounds flag at every value. `ImageGeom` is the exception to this as it has checks done at preflight to prevent this from occurring.
 

@@ -42,7 +42,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
   const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_SimplnxCorePluginId);
 
   // Parameter Keys
-  constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
+  constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm_index";
   constexpr StringLiteral k_ColorWeights_Key = "color_weights";
   constexpr StringLiteral k_ColorChannel_Key = "color_channel";
   constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_paths";

@@ -302,6 +302,13 @@ General Parameters
    each value in its output array as "True" if **both** of the ArrayThreshold Objects evaluate to True. Specifically, the "Confidence Index" and "Image Quality"
    array MUST have the same number of Tuples and the output "Mask" array will also have the same number of tuples.
 
+
+   If you need to do a logical **OR** operation then you need to change the value on the `nx.ArrayThreshold` object:
+
+  .. code:: python
+
+   threshold_2.union_op = nx.IArrayThreshold.UnionOperator.Or 
+   
   .. code:: python
 
    threshold_1 = nx.ArrayThreshold()
@@ -313,14 +320,19 @@ General Parameters
    threshold_2.array_path = nx.DataPath("Small IN100/Scan Data/Image Quality")
    threshold_2.comparison = nx.ArrayThreshold.ComparisonType.GreaterThan
    threshold_2.value = 120
+   # This will create a logical AND of the pair of nx.ArrayThreshold objects
+   # If you want to use a logical OR use `nx.IArrayThreshold.UnionOperator.Or` instead
+   threshold_2.union_op = nx.IArrayThreshold.UnionOperator.And
 
    threshold_set = nx.ArrayThresholdSet()
-   threshold_set.thresholds = [threshold_1, threshold_2]
-   threshold_set.union_op = nx.IArrayThreshold.UnionOperator.And
+   threshold_set.thresholds = [threshold_2, threshold_1]
+
    result = nx.MultiThresholdObjectsFilter.execute(data_structure=data_structure,
                                        array_thresholds=threshold_set, 
                                        created_data_path="Mask",
                                        created_mask_type=nx.DataType.boolean)
+
+
 
 .. _AttributeMatrixSelectionParameter:
 .. py:class:: AttributeMatrixSelectionParameter
@@ -451,12 +463,12 @@ General Parameters
 
    :ivar file_path: Path to the .dream3d file on the file system
    :ivar path_import_policy: The import policy that governs how the DataPaths will be processed.
-     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
-                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
-                     All -> Imports all possible data and ignores the DataPaths list.
-     *               Defaults to PathImportPolicy.All.
-   :ivar data_paths: List of :ref:`DataPath <DataPath>`s of objects to include/exclude during the import process. Defaults to an empty vector.
-     *                  If the path import policy is set to 'All', this parameter is ignored.
+            * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+            * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+            * All -> Imports all possible data and ignores the DataPaths list.
+            * Defaults to PathImportPolicy::All.
+   :ivar data_paths: List of :ref:`DataPath <DataPath>` of objects to include/exclude during the import process. Defaults to an empty vector.
+            * If the path import policy is set to 'All', this parameter is ignored.
 
 .. code:: python
 

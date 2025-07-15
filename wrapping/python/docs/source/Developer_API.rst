@@ -791,12 +791,12 @@ General Parameters
       - **Internal Data**:
          - **file_path**: Path to the .dream3d file on the file system
          - **path_import_policy**: The import policy that governs how the DataPaths will be processed.
-     *               IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
-                     ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
-                     All -> Imports all possible data and ignores the DataPaths list.
-     *               Defaults to PathImportPolicy::All.
-         - **data_paths**: List of :ref:`DataPath <DataPath>`s of objects to include/exclude during the import process. Defaults to an empty vector.
-     *                  If the path import policy is set to 'All', this parameter is ignored.
+            * IncludeList -> Treats the DataPaths as a list of paths to import.  If DataPaths is empty, nothing will be imported.
+            * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty, everything will be imported.
+            * All -> Imports all possible data and ignores the DataPaths list.
+            * Defaults to PathImportPolicy::All.
+         - **data_paths**: List of :ref:`DataPath <DataPath>` of objects to include/exclude during the import process. Defaults to an empty vector.
+            * If the path import policy is set to 'All', this parameter is ignored.
 
    Usage
    ~~~~~~

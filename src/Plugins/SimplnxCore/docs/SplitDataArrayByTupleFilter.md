@@ -2,7 +2,7 @@
 
 ## Group (Subgroup)
 
-DREAM3D Review (Memory/Management)
+Data Manipulation (Memory/Management)
 
 ## Description
 
@@ -37,8 +37,9 @@ with tuples for the output arrays set to 2 & 1 and split dimension set to 1 prod
 
 If you choose *Existing Data Group or Existing Attribute Matrix* the split arrays are placed into a pre‑existing container.  Otherwise the filter can create a *new* Data Group or *new* Attribute Matrix to hold the results.  An optional flag allows you to delete the original input array after splitting.
 
-> **Looking to split by _components_ instead?**  
-> See the *[Split Data Array (By Component)](SplitDataArrayByComponentFilter.md)* filter that separates each component into its own scalar array.
+**Looking to split by _components_ instead?**  
+
+See the *[Split Data Array (By Component)](SplitDataArrayByComponentFilter.md)* filter that separates each component into its own scalar array.
 
 % Auto generated parameter table will be inserted here
 
