@@ -1,5 +1,6 @@
 #include "INodeGeom2dIO.hpp"
 
+#include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -24,7 +25,26 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
   geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
   geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
 
+  // Required data
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
+  }
+
   return {};
+}
+
+Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50591, fmt::format("Failed to finish importing INodeGeometry2D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  return INodeGeom1dIO::FinishImportingNodeGeom1dData(dataStructure, dataPath, dataStructureGroup);
 }
 
 Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, group_writer_type& parentGroupWriter, bool importable)

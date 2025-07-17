@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/AbstractListStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <memory>
 #include <vector>
@@ -258,7 +259,30 @@ public:
     m_Array = lists;
   }
 
+  void readHdf5(const HDF5::DatasetIO& datasetReader) override
+  {
+    throw std::runtime_error("ListStore cannot read from HDF5");
+  }
+
+  void writeHdf5(HDF5::DatasetIO& datasetReader) override
+  {
+    throw std::runtime_error("ListStore cannot write to HDF5");
+  }
+
 private:
   std::vector<std::vector<T>> m_Array;
 };
+
+using UInt8ListStore = ListStore<uint8>;
+using UInt16ListStore = ListStore<uint16>;
+using UInt32ListStore = ListStore<uint32>;
+using UInt64ListStore = ListStore<uint64>;
+
+using Int8ListStore = ListStore<int8>;
+using Int16ListStore = ListStore<int16>;
+using Int32ListStore = ListStore<int32>;
+using Int64ListStore = ListStore<int64>;
+
+using Float32ListStore = ListStore<float32>;
+using Float64ListStore = ListStore<float64>;
 } // namespace nx::core

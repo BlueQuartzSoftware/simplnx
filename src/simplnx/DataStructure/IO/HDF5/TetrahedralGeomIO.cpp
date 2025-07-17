@@ -27,6 +27,17 @@ Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const
   auto* geometry = TetrahedralGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
+
+Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
+  auto* geom = dataStructure.getDataAs<TetrahedralGeom>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50595, fmt::format("Failed to finish importing TetrahedraldGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+  return INodeGeom3dIO::FinishImportingNodeGeom3dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, group_writer_type& parentGroup, bool importable) const
 {
   return INodeGeom3dIO::WriteNodeGeom3dData(dataStructureWriter, geometry, parentGroup, importable);

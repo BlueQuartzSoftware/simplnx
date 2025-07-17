@@ -1,5 +1,6 @@
 #include "IDataIO.hpp"
 
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
@@ -51,6 +52,11 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());
 
+  return {};
+}
+
+Result<> IDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
   return {};
 }
 } // namespace nx::core::HDF5

@@ -26,6 +26,18 @@ Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_
   auto* geometry = QuadGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
+
+Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
+  auto* geom = dataStructure.getDataAs<QuadGeom>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50590, fmt::format("Failed to finish importing QuadGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> QuadGeomIO::writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geom, group_writer_type& parentGroup, bool importable) const
 {
   return INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geom, parentGroup, importable);

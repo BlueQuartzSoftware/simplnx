@@ -1,5 +1,6 @@
 #include "INodeGeom1dIO.hpp"
 
+#include "DataStructureReader.hpp"
 #include "DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
@@ -25,8 +26,30 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
   geometry.setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
   geometry.setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
 
+  // Required data
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  }
+
   return {};
 }
+
+Result<> INodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<INodeGeometry1D>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50590, fmt::format("Failed to finish importing INodeGeometry1D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
+}
+
 Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, group_writer_type& parentGroupWriter, bool importable)
 {
   Result<> result = INodeGeom0dIO::WriteNodeGeom0dData(dataStructureWriter, geometry, parentGroupWriter, importable);

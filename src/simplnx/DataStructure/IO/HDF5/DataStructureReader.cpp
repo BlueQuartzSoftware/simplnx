@@ -28,7 +28,79 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO
 {
   DataStructureReader dataStructureReader;
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
-  return dataStructureReader.readGroup(groupReader, useEmptyDataStores);
+  auto result = dataStructureReader.readGroup(groupReader, useEmptyDataStores);
+
+  if(result.valid())
+  {
+    dataStructureReader.loadRequiredData(fileReader);
+  }
+  return result;
+}
+
+Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
+{
+  std::string parentPathString = Constants::k_DataStructureTag;
+  parentPathString += dataPath.getParent().toString();
+
+  DataStructureReader dataStructureReader;
+  auto parentGroupReader = fileReader.openGroup(parentPathString);
+
+  if(Result<> importResult = dataStructureReader.readObjectFromGroup(parentGroupReader, dataPath.getTargetName()); importResult.invalid())
+  {
+    return ConvertInvalidResult<std::shared_ptr<DataObject>>(std::move(importResult));
+  }
+
+  const DataStructure& dataStructure = dataStructureReader.getDataStructure();
+  const DataMap& dataMap = dataStructure.getDataMap();
+  if(dataMap.getSize() == 0)
+  {
+    return MakeErrorResult<std::shared_ptr<DataObject>>(-69040, fmt::format("Failed to import DataObject at path '{}'", dataPath.toString()));
+  }
+
+  auto item = dataMap.begin();
+  return {(*item).second};
+}
+
+Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
+{
+  std::shared_ptr<IDataIO> factory = nullptr;
+
+  std::string parentPathString = Constants::k_DataStructureTag;
+  parentPathString += "/" + dataPath.getParent().toString();
+
+  DataStructureReader dataStructureReader;
+  auto parentGroupReader = fileReader.openGroup(parentPathString);
+  bool isGroup = parentGroupReader.isGroup(dataPath.getTargetName());
+  if(isGroup)
+  {
+    auto childObj = parentGroupReader.openGroup(dataPath.getTargetName());
+    auto attrResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(attrResult.invalid())
+    {
+      return ConvertResult(std::move(attrResult));
+    }
+    std::string typeName = std::move(attrResult.value());
+
+    factory = dataStructureReader.getDataFactory(typeName);
+  }
+  else
+  {
+    auto childObj = parentGroupReader.openDataset(dataPath.getTargetName());
+    auto typeNameResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(typeNameResult.invalid())
+    {
+      return ConvertResult(std::move(typeNameResult));
+    }
+    std::string typeName = std::move(typeNameResult.value());
+
+    factory = dataStructureReader.getDataFactory(typeName);
+  }
+
+  if(factory == nullptr)
+  {
+    return MakeErrorResult(-23405, fmt::format("Failed to determine import factory type for path '{}'", dataPath.toString()));
+  }
+  return factory->finishImportingData(dataStructure, dataPath, parentGroupReader);
 }
 
 Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores)
@@ -196,4 +268,38 @@ std::shared_ptr<IDataIO> DataStructureReader::getDataFactory(typename IDataIOMan
   return getDataReader()->getFactoryAs<IDataIO>(typeName);
 }
 
+void DataStructureReader::addRequiredPath(const DataPath& requiredDataPath)
+{
+  m_RequiredPaths.push_back(requiredDataPath);
+}
+
+void DataStructureReader::addRequiredId(DataObject::IdType requiredDataId)
+{
+  m_RequiredIds.push_back(requiredDataId);
+}
+
+void DataStructureReader::addRequiredId(DataObject::OptionalId requiredDataId)
+{
+  if(requiredDataId.has_value())
+  {
+    m_RequiredIds.push_back(requiredDataId.value());
+  }
+}
+
+void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileReader)
+{
+  for(auto& id : m_RequiredIds)
+  {
+    auto* requiredObject = m_CurrentStructure.getData(id);
+    if(requiredObject != nullptr)
+    {
+      addRequiredPath(requiredObject->getDataPaths()[0]);
+    }
+  }
+
+  for(const auto& dataPath : m_RequiredPaths)
+  {
+    FinishImportingObject(m_CurrentStructure, fileReader, dataPath);
+  }
+}
 } // namespace nx::core::HDF5

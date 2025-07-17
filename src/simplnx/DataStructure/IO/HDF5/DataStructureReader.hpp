@@ -37,6 +37,10 @@ public:
    */
   static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
+  static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+
+  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+
   /**
    * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupIO.
    * Returns any HDF5 error code that occur by reference. Otherwise, this value
@@ -70,6 +74,10 @@ public:
    */
   void clearDataStructure();
 
+  void addRequiredPath(const DataPath& requiredDataPath);
+  void addRequiredId(DataObject::IdType requiredDataId);
+  void addRequiredId(DataObject::OptionalId requiredDataId);
+
 protected:
   /**
    * @brief Returns a pointer to the nx::core::HDF5::DataFactoryManager used for finding the
@@ -86,8 +94,12 @@ protected:
    */
   std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
 
+  void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
+
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
+  std::vector<DataPath> m_RequiredPaths;
+  std::vector<DataObject::IdType> m_RequiredIds;
 };
 } // namespace nx::core::HDF5

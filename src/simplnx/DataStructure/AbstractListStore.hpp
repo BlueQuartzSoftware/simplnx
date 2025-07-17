@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/IListStore.hpp"
 
 #include <memory>
 #include <numeric>
@@ -11,7 +12,7 @@
 namespace nx::core
 {
 template <class T>
-class AbstractListStore
+class AbstractListStore : public IListStore
 {
 public:
   /////////////////////////////////
@@ -536,30 +537,9 @@ public:
   using reference = value_type&;
   using const_reference = const value_type&;
 
-  virtual ~AbstractListStore() = default;
+  ~AbstractListStore() override = default;
 
   virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
-
-  /**
-   * @brief This method sets the shape of the dimensions to `tupleShape`.
-   *
-   * There are 3 possibilities when using this function:
-   * [1] The number of tuples of the new shape is *LESS* than the original. In this
-   * case a memory allocation will take place and the first 'N' elements of data
-   * will be copied into the new array. The remaining data is *LOST*
-   *
-   * [2] The number of tuples of the new shape is *EQUAL* to the original. In this
-   * case the shape is set and the function returns.
-   *
-   * [3] The number of tuples of the new shape is *GREATER* than the original. In
-   * this case a new array is allocated and all the data from the original array
-   * is copied into the new array and the remaining elements are initialized to
-   * the default initialization value.
-   *
-   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
-   * from *slowest* to *fastest*.
-   */
-  virtual void resizeTuples(usize tupleCount) = 0;
 
   /**
    * @brief addEntry
@@ -567,11 +547,6 @@ public:
    * @param value
    */
   virtual void addEntry(int32 grainId, value_type value) = 0;
-
-  /**
-   * @brief Clear All Lists
-   */
-  virtual void clearAllLists() = 0;
 
   /**
    * @brief setList
@@ -594,8 +569,6 @@ public:
    */
   virtual vector_type getList(int32 grainId) const = 0;
 
-  virtual usize getListSize(usize grainId) const = 0;
-
   /**
    * @brief copyOfList
    * @param grainId
@@ -613,17 +586,6 @@ public:
   virtual T getValue(int32 grainId, int32 index, bool& ok) const = 0;
 
   virtual void setValue(int32 grainId, usize index, T value) = 0;
-
-  /**
-   * @brief getNumberOfLists
-   * @return int32
-   */
-  virtual uint64 getNumberOfLists() const = 0;
-
-  uint64 size() const
-  {
-    return getNumberOfLists();
-  }
 
   /**
    * @brief operator []
@@ -682,11 +644,6 @@ public:
   {
     return const_iterator(*this, size());
   }
-
-  /**
-   * @brief Clears the array.
-   */
-  virtual void clear() = 0;
 
   virtual void setData(const std::vector<shared_vector_type>& lists) = 0;
 

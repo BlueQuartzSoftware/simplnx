@@ -41,7 +41,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   bool preflighting = (mode == Mode::Preflight);
 
   auto fileReader = nx::core::HDF5::FileIO::ReadFile(m_H5FilePath);
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, preflighting);
+  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
   if(dataStructureResult.invalid())
   {
     return ConvertResult(std::move(dataStructureResult));
@@ -67,14 +67,16 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       importGroup->clear();
     }
 
-    if(dataStructure.getDataAs<DataObject>(targetPath) != nullptr)
-    {
-      return MakeErrorResult(-6203, fmt::format("{}Unable to import DataObject at '{}' because an object already exists there. Consider a rename of existing object.", prefix, targetPath.toString()));
-    }
-
     if(!dataStructure.insert(importData, targetPath.getParent()))
     {
       return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString()));
+    }
+    if(mode == Mode::Execute)
+    {
+      if(auto result = DREAM3D::FinishImportingObject(dataStructure, targetPath, fileReader); result.invalid())
+      {
+        return result;
+      }
     }
   }
   if(!errorMessages.str().empty())

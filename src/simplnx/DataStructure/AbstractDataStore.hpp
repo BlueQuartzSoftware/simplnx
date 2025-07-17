@@ -6,7 +6,6 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -18,6 +17,11 @@
 
 namespace nx::core
 {
+namespace HDF5
+{
+class DatasetIO;
+}
+
 /**
  * @class AbstractDataStore
  * @brief The AbstractDataStore class serves as an interface class for the

@@ -38,4 +38,19 @@ void IDataIOManager::addDataStoreCreationFnc(const std::string& type, DataStoreC
 {
   m_DataStoreCreationMap[type] = creationFnc;
 }
+
+bool IDataIOManager::hasListStoreCreationFnc(const std::string& type) const
+{
+  return m_ListStoreCreationMap.find(type) != m_ListStoreCreationMap.end();
+}
+
+IDataIOManager::ListStoreCreateFnc IDataIOManager::listStoreCreationFnc(const std::string& type) const
+{
+  return m_ListStoreCreationMap.at(type);
+}
+
+void IDataIOManager::addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc)
+{
+  m_ListStoreCreationMap[type] = creationFnc;
+}
 } // namespace nx::core

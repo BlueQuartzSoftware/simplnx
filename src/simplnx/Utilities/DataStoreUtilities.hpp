@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
+#include "simplnx/DataStructure/EmptyListStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Filter/Output.hpp"
 
@@ -55,6 +56,27 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
     auto ioCollection = GetIOCollection();
     ioCollection->checkStoreDataFormat(dataSize, dataFormat);
     return ioCollection->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
+  }
+  default: {
+    throw std::runtime_error("Invalid mode");
+  }
+  }
+}
+
+template <class T>
+std::shared_ptr<AbstractListStore<T>> CreateListStore(usize tupleCount, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
+{
+  switch(mode)
+  {
+  case IDataAction::Mode::Preflight: {
+    return std::make_unique<EmptyListStore<T>>(tupleCount);
+  }
+  case IDataAction::Mode::Execute: {
+    uint64 dataSize = CalculateDataSize<T>({tupleCount}, {10});
+    TryForceLargeDataFormatFromPrefs(dataFormat);
+    auto ioCollection = GetIOCollection();
+    ioCollection->checkStoreDataFormat(dataSize, dataFormat);
+    return ioCollection->createListStoreWithType<T>(dataFormat, tupleCount);
   }
   default: {
     throw std::runtime_error("Invalid mode");

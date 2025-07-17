@@ -26,6 +26,24 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore, IdType importId)
+: INeighborList(dataStructure, name, dataStore->size(), importId)
+, m_Store(dataStore)
+, m_IsAllocated(true)
+, m_InitValue(static_cast<T>(0.0))
+{
+}
+
+template <typename T>
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore)
+: INeighborList(dataStructure, name, dataStore->size())
+, m_Store(dataStore)
+, m_IsAllocated(true)
+, m_InitValue(static_cast<T>(0.0))
+{
+}
+
+template <typename T>
 NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, numTuples));
@@ -37,9 +55,36 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std
 }
 
 template <typename T>
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId)
+{
+  if(listStore == nullptr)
+  {
+    return nullptr;
+  }
+
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, listStore));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+template <typename T>
 NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataVector, importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
+  {
+    return nullptr;
+  }
+  return data.get();
+}
+
+template <typename T>
+NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& dataStore, const std::optional<IdType>& parentId)
+{
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataStore, importId));
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -394,6 +439,12 @@ template <typename T>
 std::shared_ptr<typename NeighborList<T>::store_type> NeighborList<T>::getStore() const
 {
   return m_Store;
+}
+
+template <typename T>
+void NeighborList<T>::setStore(const std::shared_ptr<store_type>& store)
+{
+  m_Store = store;
 }
 
 template <typename T>

@@ -16,9 +16,11 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/NeighborListIO.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/StringStore.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -884,6 +886,19 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
   return {};
 }
 
+Result<> finishImportingLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& dataArrayReader, const DataPath& dataPath)
+{
+  auto* existingArray = dataStructure.getDataAs<StringArray>(dataPath);
+  if(existingArray == nullptr)
+  {
+    return MakeErrorResult(-4210428, fmt::format("Failed to finish importing legacy StringArray at path '{}'. Imported StringArray not found.", dataPath.toString()));
+  }
+
+  const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
+  existingArray->setStore(std::make_shared<StringStore>(strings));
+  return {};
+}
+
 Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   auto dataTypeResult = dataArrayReader.getDataType();
@@ -958,6 +973,90 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
   return daResult;
 }
 
+template <typename T>
+Result<> finishImportingLegacyDataArrayImpl(DataStructure& dataStructure, const HDF5::DatasetIO& dataSetIO, const DataPath& dataPath)
+{
+  auto* existingArray = dataStructure.getDataAs<DataArray<T>>(dataPath);
+  if(existingArray == nullptr)
+  {
+    return MakeErrorResult(-4210423, fmt::format("Failed to finish importing legacy DataArray at path '{}'. Imported DataArray not found.", dataPath.toString()));
+  }
+
+  auto tupleShape = nx::core::HDF5::IDataStoreIO::ReadTupleShape(dataSetIO);
+  auto componentShape = nx::core::HDF5::IDataStoreIO::ReadComponentShape(dataSetIO);
+
+  auto dataStorePtr = dataSetIO.readAsDataStore<T>(tupleShape, componentShape);
+  if(dataStorePtr == nullptr)
+  {
+    return MakeErrorResult(-4210424, fmt::format("Failed to finish importing legacy DataArray at path '{}'. Could not import data from HDF5.", dataPath.toString()));
+  }
+
+  existingArray->setDataStore(dataStorePtr);
+  return {};
+}
+
+Result<> finishImportingLegacyDataArray(DataStructure& dataStructure, const HDF5::DatasetIO& dataSetIO, const DataPath& dataPath)
+{
+  auto dataTypeResult = dataSetIO.getDataType();
+  if(dataTypeResult.invalid())
+  {
+    auto errors = dataTypeResult.errors();
+    return MakeErrorResult(errors[0].code, errors[0].message);
+  }
+  auto dataType = std::move(dataTypeResult.value());
+  switch(dataType)
+  {
+  case DataType::float32:
+    return finishImportingLegacyDataArrayImpl<float32>(dataStructure, dataSetIO, dataPath);
+  case DataType::float64:
+    return finishImportingLegacyDataArrayImpl<float64>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::int8:
+    return finishImportingLegacyDataArrayImpl<int8>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::int16:
+    return finishImportingLegacyDataArrayImpl<int16>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::int32:
+    return finishImportingLegacyDataArrayImpl<int32>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::int64:
+    return finishImportingLegacyDataArrayImpl<int64>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::boolean:
+    [[fallthrough]];
+  case DataType::uint8: {
+    std::string typeTag;
+    auto typeTagResult = dataSetIO.readStringAttribute(Constants::k_ObjectTypeTag);
+    if(typeTagResult.invalid())
+    {
+      return ConvertInvalidResult<void, std::string>(std::move(typeTagResult));
+    }
+    typeTag = std::move(typeTagResult.value());
+    if(typeTag == "DataArray<bool>")
+    {
+      return finishImportingLegacyDataArrayImpl<bool>(dataStructure, dataSetIO, dataPath);
+    }
+    else
+    {
+      return finishImportingLegacyDataArrayImpl<uint8>(dataStructure, dataSetIO, dataPath);
+    }
+    break;
+  }
+  case DataType::uint16:
+    return finishImportingLegacyDataArrayImpl<uint16>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::uint32:
+    return finishImportingLegacyDataArrayImpl<uint32>(dataStructure, dataSetIO, dataPath);
+    break;
+  case DataType::uint64:
+    return finishImportingLegacyDataArrayImpl<uint64>(dataStructure, dataSetIO, dataPath);
+    break;
+  }
+
+  return {};
+}
+
 Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const HDF5::GroupIO& geomGroup, const std::string& arrayName, bool preflight = false)
 {
   HDF5::DatasetIO dataArrayReader = geomGroup.openDataset(arrayName);
@@ -987,16 +1086,13 @@ template <typename T>
 Result<> createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const nx::core::HDF5::GroupIO& parentReader, const nx::core::HDF5::DatasetIO& datasetReader,
                                   const std::vector<usize>& tupleDims)
 {
-  auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
-
-  auto data = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
-  auto* neighborList = NeighborList<T>::Create(dataStructure, datasetReader.getName(), numTuples, parentId);
+  auto listStore = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
+  auto* neighborList = NeighborList<T>::Create(dataStructure, datasetReader.getName(), listStore, parentId);
   if(neighborList == nullptr)
   {
     std::string ss = fmt::format("Failed to create NeighborList: '{}'", datasetReader.getName());
     return MakeErrorResult(Legacy::k_FailedCreatingNeighborList_Code, ss);
   }
-  neighborList->getStore()->setData(data);
   return {};
 }
 
@@ -1054,6 +1150,71 @@ Result<> readLegacyNeighborList(DataStructure& dataStructure, const nx::core::HD
   return result;
 }
 
+template <typename T>
+Result<> finishImportingLegacyNeighborListImpl(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const HDF5::DatasetIO& datasetReader, const DataPath& dataPath)
+{
+  auto* existingList = dataStructure.getDataAs<NeighborList<T>>(dataPath);
+  if(existingList == nullptr)
+  {
+    return MakeErrorResult(-4210426, fmt::format("Failed to finish importing legacy NeighborList at path '{}'. Imported NeighborList not found.", dataPath.toString()));
+  }
+
+  auto listStore = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
+  if(listStore == nullptr)
+  {
+    return MakeErrorResult(-4210427, fmt::format("Failed to finish importing legacy NeighborList at path '{}'. Failed to import HDF5 data.", dataPath.toString()));
+  }
+  existingList->setStore(listStore);
+  return {};
+}
+
+Result<> finishImportingLegacyNeighborList(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const HDF5::DatasetIO& datasetReader, const DataPath& dataPath)
+{
+  auto dataTypeResult = datasetReader.getDataType();
+  if(dataTypeResult.invalid())
+  {
+    return ConvertResult(std::move(dataTypeResult));
+  }
+  auto dataType = dataTypeResult.value();
+  switch(dataType)
+  {
+  case DataType::float32:
+    return finishImportingLegacyNeighborListImpl<float32>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::float64:
+    return finishImportingLegacyNeighborListImpl<float64>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::boolean:
+    [[fallthrough]];
+  case DataType::int8:
+    return finishImportingLegacyNeighborListImpl<int8>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::int16:
+    return finishImportingLegacyNeighborListImpl<int16>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::int32:
+    return finishImportingLegacyNeighborListImpl<int32>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::int64:
+    return finishImportingLegacyNeighborListImpl<int64>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::uint8:
+    return finishImportingLegacyNeighborListImpl<uint8>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::uint16:
+    return finishImportingLegacyNeighborListImpl<uint16>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::uint32:
+    return finishImportingLegacyNeighborListImpl<uint32>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  case DataType::uint64:
+    return finishImportingLegacyNeighborListImpl<uint64>(dataStructure, parentReader, datasetReader, dataPath);
+    break;
+  }
+
+  return MakeErrorResult(-4210429, fmt::format("Failed to finish importing legacy NeighborList at path '{}'. Type could not be determined", dataPath.toString()));
+}
+
 bool isLegacyNeighborList(const nx::core::HDF5::DatasetIO& arrayReader)
 {
   auto objectTypeResult = arrayReader.readStringAttribute("ObjectType");
@@ -1074,7 +1235,43 @@ bool isLegacyStringArray(const nx::core::HDF5::DatasetIO& arrayReader)
   return objectTypeResult.value() == "StringDataArray";
 }
 
-Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& amGroupReader, DataObject& parent, bool preflight = false)
+Result<> readLegacyArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& amGroupReader, const std::string& arrayName, bool preflight)
+{
+  auto dataArraySet = amGroupReader.openDataset(arrayName);
+  if(isLegacyNeighborList(dataArraySet))
+  {
+    return readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, 0);
+  }
+  else if(isLegacyStringArray(dataArraySet))
+  {
+    return readLegacyStringArray(dataStructure, dataArraySet, preflight);
+  }
+  else
+  {
+    return ConvertResult<>(std::move(readLegacyDataArray(dataStructure, dataArraySet, preflight)));
+  }
+}
+
+Result<> finishImportingLegacyArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
+{
+  auto dcGroup = parentReader.openGroup(dataPath[0]);
+  auto amGroup = dcGroup.openGroup(dataPath[1]);
+  auto dataArraySet = amGroup.openDataset(dataPath.getTargetName());
+  if(isLegacyNeighborList(dataArraySet))
+  {
+    return finishImportingLegacyNeighborList(dataStructure, parentReader, dataArraySet, dataPath);
+  }
+  else if(isLegacyStringArray(dataArraySet))
+  {
+    return finishImportingLegacyStringArray(dataStructure, dataArraySet, dataPath);
+  }
+  else
+  {
+    return finishImportingLegacyDataArray(dataStructure, dataArraySet, dataPath);
+  }
+}
+
+Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& amGroupReader, DataObject& parent, bool preflight = false, bool importChildren = true)
 {
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
@@ -1090,10 +1287,12 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, reversedTDims, parentId);
 
   std::vector<Result<>> daResults;
-  auto dataArrayNames = amGroupReader.getChildNames();
-  for(const auto& daName : dataArrayNames)
+  if(importChildren)
   {
-    auto dataArraySet = amGroupReader.openDataset(daName);
+    auto dataArrayNames = amGroupReader.getChildNames();
+    for(const auto& daName : dataArrayNames)
+    {
+      auto dataArraySet = amGroupReader.openDataset(daName);
 #if 0
     if(!dataArraySet.isValid())
     {
@@ -1104,18 +1303,19 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     }
 #endif
 
-    if(isLegacyNeighborList(dataArraySet))
-    {
-      daResults.push_back(readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, attributeMatrix->getId()));
-    }
-    else if(isLegacyStringArray(dataArraySet))
-    {
-      daResults.push_back(readLegacyStringArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
-    }
-    else
-    {
-      Result<> result = ConvertResult(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
-      daResults.push_back(result);
+      if(isLegacyNeighborList(dataArraySet))
+      {
+        daResults.push_back(readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, attributeMatrix->getId()));
+      }
+      else if(isLegacyStringArray(dataArraySet))
+      {
+        daResults.push_back(readLegacyStringArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
+      }
+      else
+      {
+        Result<> result = ConvertResult(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
+        daResults.push_back(result);
+      }
     }
   }
 
@@ -1333,7 +1533,7 @@ DataObject* readLegacyImageGeom(DataStructure& dataStructure, const nx::core::HD
 }
 // End legacy Geometry importing
 
-Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& dcGroup, bool preflight = false)
+Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& dcGroup, bool preflight = false, bool importChildren = true)
 {
   DataObject* container = nullptr;
   const std::string dcName = dcGroup.getName();
@@ -1355,31 +1555,31 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
     }
     else if(geomName == Legacy::Type::EdgeGeom)
     {
-      container = readLegacyEdgeGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyEdgeGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::HexGeom)
     {
-      container = readLegacyHexGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyHexGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::QuadGeom)
     {
-      container = readLegacyQuadGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyQuadGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::RectGridGeom)
     {
-      container = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::TetrahedralGeom)
     {
-      container = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::TriangleGeom)
     {
-      container = readLegacyTriangleGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyTriangleGeom(dataStructure, geomGroup, dcName, false);
     }
     else if(geomName == Legacy::Type::VertexGeom)
     {
-      container = readLegacyVertexGeom(dataStructure, geomGroup, dcName, preflight);
+      container = readLegacyVertexGeom(dataStructure, geomGroup, dcName, false);
     }
   }
 
@@ -1387,6 +1587,11 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
   if(!container)
   {
     container = DataGroup::Create(dataStructure, dcName);
+  }
+
+  if(!importChildren)
+  {
+    return {};
   }
 
   std::vector<Result<>> amResults;
@@ -1403,6 +1608,234 @@ Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::core::H
     amResults.push_back(readLegacyAttributeMatrix(dataStructure, attributeMatrixGroup, *container, preflight));
   }
   return nx::core::MergeResults(amResults);
+}
+
+Result<> finishImportingLegacyImageGeom(DataStructure& dataStructure, IGeometry* geometry, const HDF5::GroupIO& geometryReader)
+{
+  auto* imageGeom = dynamic_cast<ImageGeom*>(geometry);
+  if(imageGeom == nullptr)
+  {
+    return MakeErrorResult(-502678, "Failed to finish importing legacy Image Geometry. Existing geometry is not of the correct type");
+  }
+
+  return {};
+}
+
+Result<> finishImportingLegacyEdgeGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* edgeGeom = dynamic_cast<EdgeGeom*>(geometryPtr);
+  if(edgeGeom == nullptr)
+  {
+    return MakeErrorResult(-502677, "Failed to finish importing legacy Edge Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(edgeGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyHexGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* hexGeom = dynamic_cast<HexahedralGeom*>(geometryPtr);
+  if(hexGeom == nullptr)
+  {
+    return MakeErrorResult(-502676, "Failed to finish importing legacy Hex Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(hexGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyQuadGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* quadGeom = dynamic_cast<QuadGeom*>(geometryPtr);
+  if(quadGeom == nullptr)
+  {
+    return MakeErrorResult(-502675, "Failed to finish importing legacy Quad Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(quadGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyRectGridGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* rectGridGeom = dynamic_cast<RectGridGeom*>(geometryPtr);
+  if(rectGridGeom == nullptr)
+  {
+    return MakeErrorResult(-502674, "Failed to finish importing legacy RectGrid Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(rectGridGeom, geomGroup);
+
+  // DIMENSIONS array
+  {
+    auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
+    auto dims = dimsDataset.readAsVector<int64>();
+    rectGridGeom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
+  }
+
+  return {};
+}
+
+Result<> finishImportingLegacyTetrahedralGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* tetrahedralGeom = dynamic_cast<TetrahedralGeom*>(geometryPtr);
+  if(tetrahedralGeom == nullptr)
+  {
+    return MakeErrorResult(-502673, "Failed to finish importing legacy Tetrahedral Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(tetrahedralGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyTriangleGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* triangleGeom = dynamic_cast<TriangleGeom*>(geometryPtr);
+  if(triangleGeom == nullptr)
+  {
+    return MakeErrorResult(-502672, "Failed to finish importing legacy Triangle Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(triangleGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyVertexGeom(DataStructure& dataStructure, IGeometry* geometryPtr, const HDF5::GroupIO& geomGroup)
+{
+  auto* vertexGeom = dynamic_cast<VertexGeom*>(geometryPtr);
+  if(vertexGeom == nullptr)
+  {
+    return MakeErrorResult(-502671, "Failed to finish importing legacy Vertex Geometry. Existing geometry is not of the correct type");
+  }
+
+  readGenericGeomDims(vertexGeom, geomGroup);
+  return {};
+}
+
+Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure, const HDF5::GroupIO& parentReader, const DataPath& dataPath)
+{
+  std::string dcName = dataPath[0];
+  auto dcGroup = parentReader.openGroup(dcName);
+
+  // Check for geometry
+  auto geomGroup = dcGroup.openGroup(Legacy::GeometryTag.c_str());
+  if(geomGroup.isValid())
+  {
+    auto* geometryPtr = dataStructure.getDataAs<IGeometry>(dataPath);
+    if(geometryPtr == nullptr)
+    {
+      return MakeErrorResult(-502679, fmt::format("Failed to finish importing of geometry at path '{}'. Existing geometry not found.", dataPath.toString()));
+    }
+
+    std::string geomName;
+    auto geomNameResult = geomGroup.readStringAttribute(Legacy::GeometryTypeNameTag);
+    if(geomNameResult.invalid())
+    {
+      return ConvertResult(std::move(geomNameResult));
+    }
+    geomName = std::move(geomNameResult.value());
+    if(geomName == Legacy::Type::ImageGeom)
+    {
+      return finishImportingLegacyImageGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::EdgeGeom)
+    {
+      return finishImportingLegacyEdgeGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::HexGeom)
+    {
+      return finishImportingLegacyHexGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::QuadGeom)
+    {
+      return finishImportingLegacyQuadGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::RectGridGeom)
+    {
+      return finishImportingLegacyRectGridGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::TetrahedralGeom)
+    {
+      return finishImportingLegacyTetrahedralGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::TriangleGeom)
+    {
+      return finishImportingLegacyTriangleGeom(dataStructure, geometryPtr, geomGroup);
+    }
+    else if(geomName == Legacy::Type::VertexGeom)
+    {
+      return finishImportingLegacyVertexGeom(dataStructure, geometryPtr, geomGroup);
+    }
+  }
+
+  return {};
+}
+
+Result<std::vector<std::shared_ptr<DataObject>>> ImportLegacyDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
+{
+  DataStructure dataStructure;
+  auto dcaGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
+
+  Result<> result;
+  switch(dataPath.getLength())
+  {
+  case 1: {
+    auto dcGroup = dcaGroup.openGroup(dataPath.toString());
+    result = readLegacyDataContainer(dataStructure, dcGroup, false, false);
+    break;
+  }
+  case 2: {
+    auto attributeMatrixGroup = dcaGroup.openGroup(dataPath.toString());
+    DataPath dcPath({dataPath[0]});
+    dataStructure.makePath(dcPath);
+    auto& container = dataStructure.getDataRef(dcPath);
+    result = readLegacyAttributeMatrix(dataStructure, attributeMatrixGroup, container, false, false);
+    break;
+  }
+  case 3: {
+    auto dcGroup = dcaGroup.openGroup(dataPath[0]);
+    auto attributeMatrixGroup = dcGroup.openGroup(dataPath[1]);
+    result = readLegacyArray(dataStructure, attributeMatrixGroup, dataPath[2], false);
+    break;
+  }
+  default:
+    return MakeErrorResult<std::vector<std::shared_ptr<DataObject>>>(-59040,
+                                                                     fmt::format("Failed to import DataObject at path '{}'. DataPath not supported by legacy DataStructure.", dataPath.toString()));
+  }
+
+  if(result.invalid())
+  {
+    return ConvertInvalidResult<std::vector<std::shared_ptr<DataObject>>>(std::move(result));
+  }
+
+  const DataMap& dataMap = dataStructure.getDataMap();
+  if(dataMap.getSize() == 0)
+  {
+    return MakeErrorResult<std::vector<std::shared_ptr<DataObject>>>(-69040, fmt::format("Failed to import DataObject at path '{}'", dataPath.toString()));
+  }
+
+  auto item = dataMap.begin();
+  return {std::vector<std::shared_ptr<DataObject>>{(*item).second}};
+}
+
+Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
+{
+  switch(dataPath.getLength())
+  {
+  case 1:
+    finishImportingLegacyDataContainer(dataStructure, parentReader, dataPath);
+    break;
+  case 2:
+    break;
+  case 3:
+    finishImportingLegacyArray(dataStructure, parentReader, dataPath);
+    break;
+  default:
+    return MakeErrorResult(-520156, fmt::format("Could not read legacy DREAM3D data at path '{}'", dataPath.toString()));
+    break;
+  }
+  return {};
 }
 
 Result<DataStructure> ImportLegacyDataStructure(const nx::core::HDF5::FileIO& fileReader, bool preflight)
@@ -1515,6 +1948,67 @@ Result<nlohmann::json> DREAM3D::ImportPipelineJsonFromFile(const std::filesystem
   }
 
   return ImportPipelineJsonFromFile(fileReader);
+}
+
+Result<std::shared_ptr<DataObject>> DREAM3D::ImportDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
+{
+  const auto fileVersion = GetFileVersion(fileReader);
+  if(fileVersion == k_CurrentFileVersion)
+  {
+    return HDF5::DataStructureReader::ReadObject(fileReader, dataPath);
+  }
+  else if(fileVersion == k_LegacyFileVersion)
+  {
+    auto result = ImportLegacyDataObjectFromFile(fileReader, dataPath);
+    if(result.invalid())
+    {
+      return ConvertInvalidResult<std::shared_ptr<DataObject>>(std::move(result));
+    }
+    std::vector<std::shared_ptr<DataObject>> value = result.value();
+    if(value.size() != 0)
+    {
+      return MakeErrorResult<std::shared_ptr<DataObject>>(-48264, fmt::format("Error extracting a single DataObject from legacy DREAM3D file at path '{}'", dataPath.toString()));
+    }
+    return {result.value().front()};
+  }
+  return MakeErrorResult<std::shared_ptr<DataObject>>(-523242, fmt::format("Error extracting a single DataObject from legacy DREAM3D file at path '{}'", dataPath.toString()));
+}
+
+Result<std::vector<std::shared_ptr<DataObject>>> DREAM3D::ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths)
+{
+  std::vector<std::shared_ptr<DataObject>> dataObjects;
+  for(const DataPath& dataPath : dataPaths)
+  {
+    auto importResult = ImportDataObjectFromFile(fileReader, dataPath);
+    if(importResult.invalid())
+    {
+      return ConvertInvalidResult<std::vector<std::shared_ptr<DataObject>>>(std::move(importResult));
+    }
+    dataObjects.push_back(std::move(importResult.value()));
+  }
+
+  return {dataObjects};
+}
+
+Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader)
+{
+  auto dataPtr = dataStructure.getSharedData(dataPath);
+  if(dataPtr == nullptr)
+  {
+    return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at path '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
+  }
+
+  const auto fileVersion = GetFileVersion(fileReader);
+  if(fileVersion == k_CurrentFileVersion)
+  {
+    return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
+  }
+  else if(fileVersion == k_LegacyFileVersion)
+  {
+    auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
+    return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
+  }
+  return {};
 }
 
 Result<DREAM3D::FileData> DREAM3D::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool preflight)

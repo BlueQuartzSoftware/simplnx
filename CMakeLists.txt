@@ -455,9 +455,11 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyListStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IListStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.hpp

@@ -124,6 +124,8 @@ public:
    */
   void resizeTuples(const std::vector<usize>& tupleShape) override;
 
+  void setStore(const std::shared_ptr<AbstractStringStore>& newStore);
+
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
   StringArray(DataStructure& dataStructure, std::string name, collection_type strings);

@@ -30,6 +30,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 {
   auto& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
 
+  if(surfaceMesh.getVertices() == nullptr)
+  {
+    return MakeErrorResult(-559, "Error finding TriangleGeom vertices.");
+  }
+
   Float32AbstractDataStore& verts = surfaceMesh.getVertices()->getDataStoreRef();
 
   IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();

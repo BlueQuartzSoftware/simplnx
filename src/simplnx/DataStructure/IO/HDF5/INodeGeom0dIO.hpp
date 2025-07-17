@@ -45,6 +45,8 @@ protected:
    * @return Result<>
    */
   static Result<> WriteNodeGeom0dData(DataStructureWriter& dataStructureWriter, const INodeGeometry0D& geometry, group_writer_type& parentGroup, bool importable);
+
+  static Result<> FinishImportingNodeGeom0dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
 };
 } // namespace HDF5
 } // namespace nx::core

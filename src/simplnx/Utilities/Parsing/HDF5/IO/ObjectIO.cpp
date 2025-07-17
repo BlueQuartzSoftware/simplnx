@@ -51,6 +51,7 @@ bool ObjectIO::isValid() const
 
 std::string ObjectIO::getName() const
 {
+  open();
   return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
 }
 
@@ -210,6 +211,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   std::vector<char> attributeOutput;
   Result<std::string> returnResult = {};
 
+  open();
   if(!hasAttribute(attributeName))
   {
     return MakeErrorResult<std::string>(-445, fmt::format("Attribute '{}' does not exist in Object '{}'", attributeName, getName()));

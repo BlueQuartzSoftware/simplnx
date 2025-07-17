@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>

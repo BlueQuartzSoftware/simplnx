@@ -25,6 +25,18 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
 
   return {};
 }
+
+Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<IGridGeometry>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50594, fmt::format("Failed to finish importing IGridGeometry at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  return {};
+}
+
 Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable)
 {
   auto result = IGeometryIO::WriteGeometryData(dataStructureWriter, geometry, parentGroup, importable);
