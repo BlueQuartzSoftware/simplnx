@@ -100,7 +100,7 @@ IFilter::PreflightResult readHeaders(const std::string& inputFilePath, usize hea
   return {};
 }
 
-Result<> cacheHeaders(const ReadCSVData& readCsvData)
+Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 {
   std::fstream in(readCsvData.inputFilePath.c_str(), std::ios_base::in);
   if(!in.is_open())
@@ -118,8 +118,8 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
     if(currentLine == readCsvData.headersLine)
     {
       auto headers = StringUtilities::split(line, readCsvData.delimiters, readCsvData.consecutiveDelimiters);
-      s_HeaderCache[s_InstanceId].Headers = headers;
-      s_HeaderCache[s_InstanceId].HeadersLine = readCsvData.headersLine;
+      s_HeaderCache[instanceId].Headers = headers;
+      s_HeaderCache[instanceId].HeadersLine = readCsvData.headersLine;
       break;
     }
   }
@@ -127,20 +127,20 @@ Result<> cacheHeaders(const ReadCSVData& readCsvData)
   return {};
 }
 
-Result<> cacheFullFile(const ReadCSVData& readCsvData)
+Result<> cacheFullFile(int32 instanceId, const ReadCSVData& readCsvData)
 {
-  s_HeaderCache[s_InstanceId].FilePath = readCsvData.inputFilePath;
-  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && readCsvData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
+  s_HeaderCache[instanceId].FilePath = readCsvData.inputFilePath;
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE)
   {
-    auto result = cacheHeaders(readCsvData);
+    auto result = cacheHeaders(instanceId, readCsvData);
     if(result.invalid())
     {
       return result;
     }
   }
 
-  s_HeaderCache[s_InstanceId].TotalLines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
-  s_HeaderCache[s_InstanceId].LastModifiedTime = fs::last_write_time(readCsvData.inputFilePath);
+  s_HeaderCache[instanceId].TotalLines = nx::core::FileUtilities::LinesInFile(readCsvData.inputFilePath);
+  s_HeaderCache[instanceId].LastModifiedTime = fs::last_write_time(readCsvData.inputFilePath);
 
   return {};
 }
@@ -260,27 +260,27 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
 
   std::vector<std::string> headers;
   auto lastModifiedTime = fs::last_write_time(readCSVData.inputFilePath);
-  if(readCSVData.inputFilePath != s_HeaderCache[s_InstanceId].FilePath || lastModifiedTime > s_HeaderCache[s_InstanceId].LastModifiedTime)
+  if(readCSVData.inputFilePath != s_HeaderCache[m_InstanceId].FilePath || lastModifiedTime != s_HeaderCache[m_InstanceId].LastModifiedTime)
   {
     // File path changed or file was modified
-    auto result = cacheFullFile(readCSVData);
+    auto result = cacheFullFile(m_InstanceId, readCSVData);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(result)), {})};
     }
   }
-  else if(headerMode == ReadCSVData::HeaderMode::LINE && readCSVData.headersLine != s_HeaderCache[s_InstanceId].HeadersLine)
+  else if(headerMode == ReadCSVData::HeaderMode::LINE && readCSVData.headersLine != s_HeaderCache[m_InstanceId].HeadersLine)
   {
     // We are in header line mode and the header line number changed
-    auto result = cacheHeaders(readCSVData);
+    auto result = cacheHeaders(m_InstanceId, readCSVData);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(result)), {})};
     }
   }
 
-  headers = (headerMode == ReadCSVData::HeaderMode::LINE) ? s_HeaderCache[s_InstanceId].Headers : readCSVData.customHeaders;
-  usize totalLines = s_HeaderCache[s_InstanceId].TotalLines;
+  headers = (headerMode == ReadCSVData::HeaderMode::LINE) ? s_HeaderCache[m_InstanceId].Headers : readCSVData.customHeaders;
+  usize totalLines = s_HeaderCache[m_InstanceId].TotalLines;
 
   // Check that we have a valid start import row
   if(readCSVData.startImportRow == 0)
@@ -462,7 +462,7 @@ Result<> ReadCSVFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   auto selectedDataGroupOrAM = filterArgs.value<DataPath>(k_SelectedAttributeMatrixPath_Key);
   auto createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
 
-  std::vector<std::string> headers = s_HeaderCache[s_InstanceId].Headers;
+  std::vector<std::string> headers = s_HeaderCache[m_InstanceId].Headers;
 
   if(readCSVData.headerMode == ReadCSVData::HeaderMode::CUSTOM)
   {
