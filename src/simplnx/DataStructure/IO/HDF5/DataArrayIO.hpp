@@ -80,10 +80,9 @@ public:
     }
 
     auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
-    std::string dataTypeStr;
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
-    dataTypeStr = std::move(dataTypeStrResult.value());
-    const bool isBoolArray = (dataTypeStr.compare("DataArray<bool>") == 0);
+    std::string dataTypeStr = std::move(dataTypeStrResult.value());
+    const bool isBoolArray = dataTypeStr == "DataArray<bool>";
 
     auto typeResult = datasetReader.getDataType();
     const auto type = std::move(typeResult.value());

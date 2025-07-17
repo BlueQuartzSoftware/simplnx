@@ -261,12 +261,12 @@ public:
 
   void readHdf5(const HDF5::DatasetIO& datasetReader) override
   {
-    throw std::runtime_error("EmptyListStore cannot read from HDF5");
+    throw std::runtime_error("ListStore cannot read from HDF5");
   }
 
   void writeHdf5(HDF5::DatasetIO& datasetReader) override
   {
-    throw std::runtime_error("EmptyListStore cannot write to HDF5");
+    throw std::runtime_error("ListStore cannot write to HDF5");
   }
 
 private:

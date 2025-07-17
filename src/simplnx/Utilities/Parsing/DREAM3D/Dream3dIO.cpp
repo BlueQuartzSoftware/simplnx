@@ -1629,14 +1629,7 @@ Result<> finishImportingLegacyEdgeGeom(DataStructure& dataStructure, IGeometry* 
     return MakeErrorResult(-502677, "Failed to finish importing legacy Edge Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(edgeGeom, geomGroup);
-  auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, edgeGeom, geomGroup, Legacy::VertexListName, preflight);
-  auto sharedEdgeList = readLegacyNodeConnectivityList(dataStructure, edgeGeom, geomGroup, Legacy::EdgeListName, preflight);
-
-  edgeGeom->setVertices(*sharedVertexList.value());
-  edgeGeom->setEdgeList(*sharedEdgeList.value());
-
   return {};
 }
 
@@ -1648,14 +1641,7 @@ Result<> finishImportingLegacyHexGeom(DataStructure& dataStructure, IGeometry* g
     return MakeErrorResult(-502676, "Failed to finish importing legacy Hex Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(hexGeom, geomGroup);
-  auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, hexGeom, geomGroup, Legacy::VertexListName, preflight);
-  auto sharedHexList = readLegacyNodeConnectivityList(dataStructure, hexGeom, geomGroup, Legacy::HexListName, preflight);
-
-  hexGeom->setVertices(*sharedVertexList.value());
-  hexGeom->setPolyhedraList(*sharedHexList.value());
-
   return {};
 }
 
@@ -1667,14 +1653,7 @@ Result<> finishImportingLegacyQuadGeom(DataStructure& dataStructure, IGeometry* 
     return MakeErrorResult(-502675, "Failed to finish importing legacy Quad Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(quadGeom, geomGroup);
-  auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, quadGeom, geomGroup, Legacy::VertexListName, preflight);
-  auto sharedQuadList = readLegacyNodeConnectivityList(dataStructure, quadGeom, geomGroup, Legacy::QuadListName, preflight);
-
-  quadGeom->setVertices(*sharedVertexList.value());
-  quadGeom->setFaceList(*sharedQuadList.value());
-
   return {};
 }
 
@@ -1686,7 +1665,6 @@ Result<> finishImportingLegacyRectGridGeom(DataStructure& dataStructure, IGeomet
     return MakeErrorResult(-502674, "Failed to finish importing legacy RectGrid Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(rectGridGeom, geomGroup);
 
   // DIMENSIONS array
@@ -1695,12 +1673,6 @@ Result<> finishImportingLegacyRectGridGeom(DataStructure& dataStructure, IGeomet
     auto dims = dimsDataset.readAsVector<int64>();
     rectGridGeom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
-
-  auto xBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, rectGridGeom, geomGroup, Legacy::XBoundsName, preflight);
-  auto yBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, rectGridGeom, geomGroup, Legacy::YBoundsName, preflight);
-  auto zBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, rectGridGeom, geomGroup, Legacy::ZBoundsName, preflight);
-
-  rectGridGeom->setBounds(xBoundsArray.value(), yBoundsArray.value(), zBoundsArray.value());
 
   return {};
 }
@@ -1713,14 +1685,7 @@ Result<> finishImportingLegacyTetrahedralGeom(DataStructure& dataStructure, IGeo
     return MakeErrorResult(-502673, "Failed to finish importing legacy Tetrahedral Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(tetrahedralGeom, geomGroup);
-  auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, tetrahedralGeom, geomGroup, Legacy::VertexListName, preflight);
-  auto sharedTetList = readLegacyNodeConnectivityList(dataStructure, tetrahedralGeom, geomGroup, Legacy::TetraListName, preflight);
-
-  tetrahedralGeom->setVertices(*sharedVertexList.value());
-  tetrahedralGeom->setPolyhedraList(*sharedTetList.value());
-
   return {};
 }
 
@@ -1732,14 +1697,7 @@ Result<> finishImportingLegacyTriangleGeom(DataStructure& dataStructure, IGeomet
     return MakeErrorResult(-502672, "Failed to finish importing legacy Triangle Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(triangleGeom, geomGroup);
-  auto sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, triangleGeom, geomGroup, Legacy::VertexListName, preflight);
-  auto sharedTriList = readLegacyNodeConnectivityList(dataStructure, triangleGeom, geomGroup, Legacy::TriListName, preflight);
-
-  triangleGeom->setVertices(*sharedVertexList.value());
-  triangleGeom->setFaceList(*sharedTriList.value());
-
   return {};
 }
 
@@ -1751,12 +1709,7 @@ Result<> finishImportingLegacyVertexGeom(DataStructure& dataStructure, IGeometry
     return MakeErrorResult(-502671, "Failed to finish importing legacy Vertex Geometry. Existing geometry is not of the correct type");
   }
 
-  const bool preflight = false;
   readGenericGeomDims(vertexGeom, geomGroup);
-  Result<Float32Array*> sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, vertexGeom, geomGroup, Legacy::VertexListName, preflight);
-
-  vertexGeom->setVertices(*sharedVertexList.value());
-
   return {};
 }
 
@@ -2053,9 +2006,6 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const Data
   else if(fileVersion == k_LegacyFileVersion)
   {
     auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-    // std::string parentPathStr = dataPath.getParent().toString();
-    // auto parentGroup = dataStructureReader.openGroup(dataPath.getParent().toString());
-
     return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
   }
   return {};
