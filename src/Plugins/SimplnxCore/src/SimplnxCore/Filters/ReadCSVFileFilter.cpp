@@ -130,7 +130,7 @@ Result<> cacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 Result<> cacheFullFile(int32 instanceId, const ReadCSVData& readCsvData)
 {
   s_HeaderCache[instanceId].FilePath = readCsvData.inputFilePath;
-  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE)
+  if(readCsvData.headerMode == ReadCSVData::HeaderMode::LINE && readCsvData.headersLine != s_HeaderCache[instanceId].HeadersLine)
   {
     auto result = cacheHeaders(instanceId, readCsvData);
     if(result.invalid())
@@ -262,7 +262,8 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   auto lastModifiedTime = fs::last_write_time(readCSVData.inputFilePath);
   if(readCSVData.inputFilePath != s_HeaderCache[m_InstanceId].FilePath || lastModifiedTime != s_HeaderCache[m_InstanceId].LastModifiedTime)
   {
-    // File path changed or file was modified
+    // File path changed or file was modified, so clear the cache and cache the full file again
+    s_HeaderCache[m_InstanceId] = ReadCSVFileFilterCache{};
     auto result = cacheFullFile(m_InstanceId, readCSVData);
     if(result.invalid())
     {
