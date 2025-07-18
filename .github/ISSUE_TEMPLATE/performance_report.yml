@@ -34,7 +34,7 @@ body:
         2. Select the `About DREAM3D-NX` option near the bottom of the dropdown submenu
         3. Click the `Copy Info` button from the pop-up window to copy it to your clipboard
         4. Paste the information here, using `ctrl-v` on the keyboard or by left-clicking and selecting `paste`
-
+        ---
         This is what the copied info looks like:
         DREAM3D-NX Build Revision: cba61ebbca
         DREAM3D-NX Build Date: 2025/07/18
