@@ -31,7 +31,7 @@ struct IsIntegerType
   }
 };
 
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args, std::vector<usize> tupleDims, const DataPath& outputAMPath)
+void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& args, std::vector<usize> tupleDims, const DataPath& outputAMPath)
 {
   auto calculateLength = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
   auto calculateMin = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);
@@ -46,71 +46,67 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto* inputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
   DataType dataType = inputArray->getDataType();
 
-  OutputActions actions;
-
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_BoundsHasDataName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   if(calculateLength)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_LengthName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMin)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MinName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMax)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MaxName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMean)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MeanName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMedian)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MedianName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMode)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_ModeName_Key);
     usize tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
     auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateStdDeviation)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_StdDevName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateSummation)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_SummationName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateNumUniqueValuesValue)
   {
     auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_NumUniqueValuesName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
-    actions.appendAction(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
-
-  return actions;
 }
 } // namespace
 
@@ -164,7 +160,7 @@ Parameters ComputeBoundingBoxStatsFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CreateNewAM_Key, "Create New AM For Statistics Arrays",
                                       "If true new Attribute Matrix will be created to store statistics, else you will be prompted to select existing AM matching unified bounds tuple count", false));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_OutputAM_Key, "Output Statistics Attribute Matrix Path",
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_OutputAMPath_Key, "Output Statistics Attribute Matrix Path",
                                                                     "The output Attribute Matrix that the statistics arrays will be placed into. Must match unified bounds array tuple count.",
                                                                     DataPath{}));
   params.insert(
@@ -207,6 +203,9 @@ Parameters ComputeBoundingBoxStatsFilter::parameters() const
                                                           "Number of Unique Values Per Bound"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_CreateNewAM_Key, k_NewAMName_Key, true);
+  params.linkParameters(k_CreateNewAM_Key, k_OutputAMPath_Key, false);
+
   params.linkParameters(k_CalculateLength_Key, k_LengthName_Key, true);
   params.linkParameters(k_CalculateMin_Key, k_MinName_Key, true);
   params.linkParameters(k_CalculateMax_Key, k_MaxName_Key, true);
@@ -273,12 +272,12 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   }
   else
   {
-    outputAMPath = filterArgs.value<DataPath>(k_OutputAM_Key);
+    outputAMPath = filterArgs.value<DataPath>(k_OutputAMPath_Key);
     const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(outputAMPath);
     if(unifiedBoundsPtr->getNumberOfTuples() != amPtr->getNumTuples())
     {
-      MakePreflightErrorResult(-59201, fmt::format("The number of tuples in the Unified Bounds Array ({}) does not match supplied Attribute Matrix tuple count ({})",
-                                                   unifiedBoundsPtr->getNumberOfTuples(), amPtr->getNumTuples()));
+      return MakePreflightErrorResult(-59201, fmt::format("The number of tuples in the Unified Bounds Array ({}) does not match supplied Attribute Matrix tuple count ({})",
+                                                          unifiedBoundsPtr->getNumberOfTuples(), amPtr->getNumTuples()));
     }
   }
 
@@ -295,7 +294,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
     return MakePreflightErrorResult(-59203, "Calculating the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).");
   }
 
-  resultOutputActions.value().actions = CreateCompatibleArrays(dataStructure, filterArgs, unifiedBoundsPtr->getTupleShape(), outputAMPath).actions;
+  CreateCompatibleArrays(resultOutputActions, dataStructure, filterArgs, unifiedBoundsPtr->getTupleShape(), outputAMPath);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions)};
@@ -329,7 +328,7 @@ Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure
   }
   else
   {
-    outputAMPath = filterArgs.value<DataPath>(k_OutputAM_Key);
+    outputAMPath = filterArgs.value<DataPath>(k_OutputAMPath_Key);
   }
 
   inputValues.BoundsHasDataPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundsHasDataName_Key));

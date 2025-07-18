@@ -12,6 +12,64 @@ using namespace nx::core;
 
 namespace
 {
+constexpr usize k_MinXIndex = 0;
+constexpr usize k_MinYIndex = 1;
+constexpr usize k_MinZIndex = 2;
+constexpr usize k_MaxXIndex = 3;
+constexpr usize k_MaxYIndex = 4;
+constexpr usize k_MaxZIndex = 5;
+
+std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStore& unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
+{
+  std::array<usize, 6> voxelIndices = {};
+
+  // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
+  FloatVec3 spacing = image.getSpacing();
+  FloatVec3 origin = image.getOrigin();
+  SizeVec3 dims = image.getDimensions();
+
+  // The lower bound from input is expected to be the lower corner of the voxel
+  for(usize i = 0; i < 3; i++)
+  {
+    float32 minVoxel = unifiedBounds.getValue((targetBoundsIndex * 6) + i);
+    float32 maxDim = (spacing[i] * static_cast<float32>(dims[i])) + origin[i];
+    if(minVoxel < origin[i])
+    {
+      voxelIndices[i] = 0;
+    }
+    else if(minVoxel > maxDim)
+    {
+      voxelIndices[i] = std::floor((maxDim - origin[i]) / spacing[i]);
+    }
+    else
+    {
+      voxelIndices[i] = std::floor((minVoxel - origin[i]) / spacing[i]);
+    }
+  }
+
+  // The upper bound from input is expected to be the upper corner of the voxel
+  for(usize i = 0; i < 3; i++)
+  {
+    usize offset = i + 3;
+    float32 maxVoxel = unifiedBounds.getValue((targetBoundsIndex * 6) + offset);
+    float32 maxDim = (spacing[i] * static_cast<float32>(dims[i])) + origin[i];
+    if(maxVoxel < origin[i])
+    {
+      voxelIndices[offset] = 0;
+    }
+    else if(maxVoxel > maxDim)
+    {
+      voxelIndices[offset] = std::floor((maxDim - origin[i]) / spacing[i]);
+    }
+    else
+    {
+      voxelIndices[offset] = std::floor((maxVoxel - origin[i]) / spacing[i]);
+    }
+  }
+
+  return voxelIndices;
+}
+
 /** Mode and Std dev are left out of cache intentionally, every other stat can be derived from these.
  * Reasoning:
  * 1. In order to calculate mode you must create a data container to keep track of instances of a value,
@@ -59,39 +117,27 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    FloatVec3 spacing = m_Geom.getSpacing();
-    FloatVec3 origin = m_Geom.getOrigin();
-
     usize xPoints = m_Geom.getNumXCells();
     usize yPoints = m_Geom.getNumYCells();
 
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
-      // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
-
-      // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-      auto minXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 0) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0]));
-      auto minYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 1) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1]));
-      auto minZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 2) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2]));
-
-      auto maxXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 3) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0])) + 1;
-      auto maxYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 4) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1])) + 1;
-      auto maxZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 5) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2])) + 1;
+      std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
       usize count = 0;
-      T minValue = std::numeric_limits<T>::quiet_NaN();
-      T maxValue = std::numeric_limits<T>::quiet_NaN();
+      T minValue = std::numeric_limits<T>::max();
+      T maxValue = std::numeric_limits<T>::lowest();
       T summationValue = static_cast<T>(0);
 
       usize zStride = 0, yStride = 0;
-      for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
+      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
       {
         zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = minYVoxel; yIndex < maxYVoxel; yIndex++)
+        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
         {
           yStride = yIndex * xPoints;
-          for(usize xIndex = minXVoxel; xIndex < maxXVoxel; xIndex++)
+          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
           {
             usize tup = zStride + yStride + xIndex;
             T value = m_InputArray.getValue(tup);
@@ -101,6 +147,12 @@ public:
             summationValue += value;
           }
         }
+      }
+
+      if(count == 0)
+      {
+        minValue = std::numeric_limits<T>::quiet_NaN();
+        maxValue = std::numeric_limits<T>::quiet_NaN();
       }
 
       // Copy primitives of base stats in the output vector
@@ -148,42 +200,30 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    FloatVec3 spacing = m_Geom.getSpacing();
-    FloatVec3 origin = m_Geom.getOrigin();
-
     usize xPoints = m_Geom.getNumXCells();
     usize yPoints = m_Geom.getNumYCells();
 
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
-      // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
-
-      // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-      auto minXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 0) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0]));
-      auto minYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 1) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1]));
-      auto minZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 2) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2]));
-
-      auto maxXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 3) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0])) + 1;
-      auto maxYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 4) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1])) + 1;
-      auto maxZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 5) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2])) + 1;
+      std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
       usize count = 0;
-      T minValue = std::numeric_limits<T>::quiet_NaN();
-      T maxValue = std::numeric_limits<T>::quiet_NaN();
+      T minValue = std::numeric_limits<T>::max();
+      T maxValue = std::numeric_limits<T>::lowest();
       T summationValue = static_cast<T>(0);
 
-      // specialization also calculates mode
+      // specialization also calculates value based statistics
       std::map<T, uint64> frequencyMap = {};
 
       usize zStride = 0, yStride = 0;
-      for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
+      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
       {
         zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = minYVoxel; yIndex < maxYVoxel; yIndex++)
+        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
         {
           yStride = yIndex * xPoints;
-          for(usize xIndex = minXVoxel; xIndex < maxXVoxel; xIndex++)
+          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
           {
             usize tup = zStride + yStride + xIndex;
             T value = m_InputArray.getValue(tup);
@@ -198,14 +238,19 @@ public:
         }
       }
 
+      if(count == 0)
+      {
+        minValue = std::numeric_limits<T>::quiet_NaN();
+        maxValue = std::numeric_limits<T>::quiet_NaN();
+      }
+
       // Copy primitives of base stats in the output vector
       m_StatsVector[targetBoundsIndex].count = count;
       m_StatsVector[targetBoundsIndex].minValue = minValue;
       m_StatsVector[targetBoundsIndex].maxValue = maxValue;
       m_StatsVector[targetBoundsIndex].summationValue = summationValue;
 
-      // Output the mode
-      if(!frequencyMap.empty())
+      if(frequencyMap.empty())
       {
         continue;
       }
@@ -214,7 +259,7 @@ public:
       m_StatsVector[targetBoundsIndex].uniqueValCount = frequencyMap.size();
 
       // Calculate the median
-      usize medianPosition = count / 2;
+      usize medianPosition = (count / 2) + 1;
       usize cumulativeFrequency = 0;
       for(auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it)
       {
@@ -297,42 +342,30 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    FloatVec3 spacing = m_Geom.getSpacing();
-    FloatVec3 origin = m_Geom.getOrigin();
-
     usize xPoints = m_Geom.getNumXCells();
     usize yPoints = m_Geom.getNumYCells();
 
     for(usize targetBoundsIndex = start; targetBoundsIndex < end; targetBoundsIndex++)
     {
-      // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
-
-      // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-      auto minXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 0) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0]));
-      auto minYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 1) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1]));
-      auto minZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 2) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2]));
-
-      auto maxXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 3) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0])) + 1;
-      auto maxYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 4) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1])) + 1;
-      auto maxZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 5) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2])) + 1;
+      std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
       usize count = 0;
-      T minValue = std::numeric_limits<T>::quiet_NaN();
-      T maxValue = std::numeric_limits<T>::quiet_NaN();
+      T minValue = std::numeric_limits<T>::max();
+      T maxValue = std::numeric_limits<T>::lowest();
       T summationValue = static_cast<T>(0);
 
-      // specialization also calculates mode
+      // specialization also calculates value based statistics
       std::map<T, uint64> frequencyMap = {};
 
       usize zStride = 0, yStride = 0;
-      for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
+      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
       {
         zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = minYVoxel; yIndex < maxYVoxel; yIndex++)
+        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
         {
           yStride = yIndex * xPoints;
-          for(usize xIndex = minXVoxel; xIndex < maxXVoxel; xIndex++)
+          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
           {
             usize tup = zStride + yStride + xIndex;
             T value = m_InputArray.getValue(tup);
@@ -347,14 +380,19 @@ public:
         }
       }
 
+      if(count == 0)
+      {
+        minValue = std::numeric_limits<T>::quiet_NaN();
+        maxValue = std::numeric_limits<T>::quiet_NaN();
+      }
+
       // Copy primitives of base stats in the output vector
       m_StatsVector[targetBoundsIndex].count = count;
       m_StatsVector[targetBoundsIndex].minValue = minValue;
       m_StatsVector[targetBoundsIndex].maxValue = maxValue;
       m_StatsVector[targetBoundsIndex].summationValue = summationValue;
 
-      // Output the mode
-      if(!frequencyMap.empty())
+      if(frequencyMap.empty())
       {
         continue;
       }
@@ -363,7 +401,7 @@ public:
       m_StatsVector[targetBoundsIndex].uniqueValCount = frequencyMap.size();
 
       // Calculate the median
-      usize medianPosition = count / 2;
+      usize medianPosition = (count / 2) + 1;
       usize cumulativeFrequency = 0;
       for(auto it = frequencyMap.begin(); it != frequencyMap.end(); ++it)
       {
@@ -437,9 +475,6 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    FloatVec3 spacing = m_Geom.getSpacing();
-    FloatVec3 origin = m_Geom.getOrigin();
-
     usize xPoints = m_Geom.getNumXCells();
     usize yPoints = m_Geom.getNumYCells();
 
@@ -451,29 +486,20 @@ public:
         continue;
       }
 
-      // Preflight handles checking that we don't divide by 0 by validating spacing, cutting extra checks here
-
-      // We are inlining the calculations here to leverage the speed of primitives (no Point object or vector from the API)
-      auto minXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 0) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0]));
-      auto minYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 1) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1]));
-      auto minZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 2) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2]));
-
-      auto maxXVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 3) - ((spacing[0] * 0.5f) + origin[0])) / spacing[0])) + 1;
-      auto maxYVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 4) - ((spacing[1] * 0.5f) + origin[1])) / spacing[1])) + 1;
-      auto maxZVoxel = static_cast<usize>(std::floor((m_UnifiedBounds.getValue((targetBoundsIndex * 6) + 5) - ((spacing[2] * 0.5f) + origin[2])) / spacing[2])) + 1;
+      std::array<usize, 6> voxelIndices = GetVoxelIndices(m_UnifiedBounds, targetBoundsIndex, m_Geom);
 
       // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
       float64 sumOfDiffs = 0.0f;
       float32 meanValue = m_StatsVector[targetBoundsIndex].summationValue / static_cast<float32>(m_StatsVector[targetBoundsIndex].count);
 
       usize zStride = 0, yStride = 0;
-      for(usize zIndex = minZVoxel; zIndex < maxZVoxel; zIndex++)
+      for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
       {
         zStride = zIndex * xPoints * yPoints;
-        for(usize yIndex = minYVoxel; yIndex < maxYVoxel; yIndex++)
+        for(usize yIndex = voxelIndices[k_MinYIndex]; yIndex < voxelIndices[k_MaxYIndex]; yIndex++)
         {
           yStride = yIndex * xPoints;
-          for(usize xIndex = minXVoxel; xIndex < maxXVoxel; xIndex++)
+          for(usize xIndex = voxelIndices[k_MinXIndex]; xIndex < voxelIndices[k_MaxXIndex]; xIndex++)
           {
             usize tup = zStride + yStride + xIndex;
             T value = m_InputArray.getValue(tup);
@@ -513,7 +539,7 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
   AbstractDataStore<uint64>* lengthArray = nullptr;
   AbstractDataStore<T>* minArray = nullptr;
   AbstractDataStore<T>* maxArray = nullptr;
-  AbstractDataStore<T>* summationArray = nullptr;
+  AbstractDataStore<float32>* summationArray = nullptr;
   AbstractDataStore<float32>* meanArray = nullptr;
   AbstractDataStore<float32>* medianArray = nullptr;
   AbstractDataStore<int32>* numUniqueValuesArray = nullptr;
@@ -544,7 +570,7 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
   }
   if(inputValues->CalculateSummation)
   {
-    summationArray = dataStructure.getDataRefAs<DataArray<T>>(inputValues->SummationPath).getDataStore();
+    summationArray = dataStructure.getDataRefAs<DataArray<float32>>(inputValues->SummationPath).getDataStore();
     if(summationArray == nullptr)
     {
       return MakeErrorResult(-69313, fmt::format("Summation array from path {} invalid", inputValues->SummationPath.toString()));

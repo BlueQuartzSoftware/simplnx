@@ -39,7 +39,7 @@ public:
   static inline constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
 
   static inline constexpr StringLiteral k_CreateNewAM_Key = "create_new_am";
-  static inline constexpr StringLiteral k_OutputAM_Key = "output_am";
+  static inline constexpr StringLiteral k_OutputAMPath_Key = "output_am_path";
   static inline constexpr StringLiteral k_NewAMName_Key = "new_am_name";
 
   static inline constexpr StringLiteral k_BoundsHasDataName_Key = "bounds_has_data_name";

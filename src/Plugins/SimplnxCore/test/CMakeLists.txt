@@ -25,6 +25,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeBiasedFeaturesTest.cpp
   ComputeBoundaryCellsTest.cpp
   ComputeBoundaryElementFractionsTest.cpp
+  ComputeBoundingBoxStatsTest.cpp
   ComputeCoordinatesImageGeomTest.cpp
   ComputeCoordinateThresholdTest.cpp
   ComputeDifferencesMapTest.cpp
