@@ -108,6 +108,19 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
 
   const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
 
+  std::vector<PreflightValue> preflightUpdatedValues;
+  if(geom.getGeomType() == IGeometry::Type::Image)
+  {
+    const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
+    FloatVec3 origin = imageGeom.getOrigin();
+    FloatVec3 spacing = imageGeom.getSpacing();
+    SizeVec3 dims = imageGeom.getDimensions();
+    preflightUpdatedValues.push_back({.name = "Image Origin [XYZ]:", .value = fmt::format("{:.2f}, {:.2f}, {:.2f}", origin[0], origin[1], origin[2])});
+    preflightUpdatedValues.push_back({.name = "Max Image Coordinate [XYZ]:",
+                                      .value = fmt::format("{:.2f}, {:.2f}, {:.2f}", (spacing[0] * static_cast<float32>(dims[0])) + origin[0], (spacing[1] * static_cast<float32>(dims[1])) + origin[1],
+                                                           (spacing[2] * static_cast<float32>(dims[2])) + origin[2])});
+  }
+
   usize numCells = geom.getNumberOfCells();
 
   switch(static_cast<ComputeCoordinateThreshold::BoundsType>(pContainerShapeTypeValue))
@@ -183,7 +196,7 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
