@@ -23,41 +23,27 @@ body:
       value: "This profile shows..."
     validations:
       required: true
-  - type: dropdown
-    id: version
+  - type: textarea
+    id: system-information
     attributes:
-      label: Version
-      description: What version of our software are you running? [Further details may be required during triage process]
-      options:
-        - DREAM3D NX (version 7)
-        - NXRunner built from source - Please provide git hash of commit in description
-        - other (Please enter in the extended description at the bottom)
-    validations:
-      required: true
-  - type: dropdown
-    id: operating-system
-    attributes:
-      label: What operating system are you seeing the problem on? [Further details may be required during triage process]
-      options:
-        - Windows 10
-        - Windows 11
-        - macOS 11.00 Big Sur
-        - macOS 12.00 Monterey
-        - macOS 13.00 Ventura
-        - Linux - Ubuntu 20.04 LTS
-        - Linux - Ubuntu 22.04 LTS
-        - other (Please enter in the extended description at the bottom)
-    validations:
-      required: true
-  - type: dropdown
-    id: hardware-architecture
-    attributes:
-      label: What hardware architecture are you using? [Further details may be required during triage process]
-      options:
-        - x86_64
-        - x64
-        - ARM64
-        - other (Please enter in the extended description at the bottom)
+      label: Platform and Version Information
+      description: |
+        Please complete the following steps and paste it in the box below:
+
+        1. Select the `Help` dropdown from the taskbar at the top left side of the application
+        2. Select the `About DREAM3D-NX` option near the bottom of the dropdown submenu
+        3. Click the `Copy Info` button from the pop-up window to copy it to your clipboard
+        4. Paste the information in the box below, using `ctrl-v` on the keyboard or by left-clicking and selecting `paste`
+
+        Example copied information shown in the preview.
+      placeholder: |
+        DREAM3D-NX Build Revision: cba61ebbca
+        DREAM3D-NX Build Date: 2025/07/18
+        Operating System: Ubuntu 22.04.5 LTS
+        Architecture: x86_64
+        System Locale: en_US
+        Installed RAM: 62.5 GB
+        Built and maintained by BlueQuartz Software, LLC.
     validations:
       required: true
   - type: dropdown
