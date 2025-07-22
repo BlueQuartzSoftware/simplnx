@@ -103,19 +103,19 @@ IFilter::UniquePointer ComputeFeatureNeighborsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
-  auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
-  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
-  auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
-  auto neighborListName = args.value<std::string>(k_NeighborListName_Key);
-  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceAreaName_Key);
-  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
-  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
+  auto storeBoundaryCells = filterArgs.value<bool>(k_StoreBoundary_Key);
+  auto storeSurfaceFeatures = filterArgs.value<bool>(k_StoreSurface_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto boundaryCellsName = filterArgs.value<std::string>(k_BoundaryCellsName_Key);
+  auto numNeighborsName = filterArgs.value<std::string>(k_NumNeighborsName_Key);
+  auto neighborListName = filterArgs.value<std::string>(k_NeighborListName_Key);
+  auto sharedSurfaceAreaName = filterArgs.value<std::string>(k_SharedSurfaceAreaName_Key);
+  auto surfaceFeaturesName = filterArgs.value<std::string>(k_SurfaceFeaturesName_Key);
+  auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesPath_Key);
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
@@ -174,19 +174,19 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
-  auto storeSurfaceFeatures = args.value<bool>(k_StoreSurface_Key);
-  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  auto boundaryCellsName = args.value<std::string>(k_BoundaryCellsName_Key);
-  auto numNeighborsName = args.value<std::string>(k_NumNeighborsName_Key);
-  auto neighborListName = args.value<std::string>(k_NeighborListName_Key);
-  auto sharedSurfaceAreaName = args.value<std::string>(k_SharedSurfaceAreaName_Key);
-  auto surfaceFeaturesName = args.value<std::string>(k_SurfaceFeaturesName_Key);
-  auto featureAttrMatrixPath = args.value<DataPath>(k_CellFeaturesPath_Key);
+  auto storeBoundaryCells = filterArgs.value<bool>(k_StoreBoundary_Key);
+  auto storeSurfaceFeatures = filterArgs.value<bool>(k_StoreSurface_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto boundaryCellsName = filterArgs.value<std::string>(k_BoundaryCellsName_Key);
+  auto numNeighborsName = filterArgs.value<std::string>(k_NumNeighborsName_Key);
+  auto neighborListName = filterArgs.value<std::string>(k_NeighborListName_Key);
+  auto sharedSurfaceAreaName = filterArgs.value<std::string>(k_SharedSurfaceAreaName_Key);
+  auto surfaceFeaturesName = filterArgs.value<std::string>(k_SurfaceFeaturesName_Key);
+  auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesPath_Key);
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
   DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);

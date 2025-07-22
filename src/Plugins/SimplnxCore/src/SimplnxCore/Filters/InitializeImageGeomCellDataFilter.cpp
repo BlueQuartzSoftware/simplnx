@@ -230,17 +230,17 @@ IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
-  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
-  auto initTypeIndex = args.value<uint64>(k_InitType_Key);
-  auto initValue = args.value<float64>(k_InitValue_Key);
-  auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
-  auto pSeedArrayNameValue = args.value<std::string>(k_SeedArrayName_Key);
+  auto cellArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto minPoint = filterArgs.value<std::vector<uint64>>(k_MinPoint_Key);
+  auto maxPoint = filterArgs.value<std::vector<uint64>>(k_MaxPoint_Key);
+  auto initTypeIndex = filterArgs.value<uint64>(k_InitType_Key);
+  auto initValue = filterArgs.value<float64>(k_InitValue_Key);
+  auto initRangeVec = filterArgs.value<std::vector<float64>>(k_InitRange_Key);
+  auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
 
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);
@@ -326,25 +326,25 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeometryPath_Key);
-  auto minPoint = args.value<std::vector<uint64>>(k_MinPoint_Key);
-  auto maxPoint = args.value<std::vector<uint64>>(k_MaxPoint_Key);
-  auto initTypeIndex = args.value<uint64>(k_InitType_Key);
-  auto initValue = args.value<float64>(k_InitValue_Key);
-  auto initRangeVec = args.value<std::vector<float64>>(k_InitRange_Key);
+  auto cellArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  auto minPoint = filterArgs.value<std::vector<uint64>>(k_MinPoint_Key);
+  auto maxPoint = filterArgs.value<std::vector<uint64>>(k_MaxPoint_Key);
+  auto initTypeIndex = filterArgs.value<uint64>(k_InitType_Key);
+  auto initValue = filterArgs.value<float64>(k_InitValue_Key);
+  auto initRangeVec = filterArgs.value<std::vector<float64>>(k_InitRange_Key);
 
-  auto seed = args.value<std::mt19937_64::result_type>(k_SeedValue_Key);
-  if(!args.value<bool>(k_UseSeed_Key))
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_UseSeed_Key))
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({args.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);

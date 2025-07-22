@@ -348,16 +348,16 @@ IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
 }
 
 // -----------------------------------------------------------------------------
-IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
-  auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);
-  auto maskArrayType = args.value<DataType>(k_CreatedMaskType_Key);
-  auto useCustomTrueValue = args.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
-  auto useCustomFalseValue = args.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
-  auto customTrueValue = args.value<NumberParameter<float64>::ValueType>(k_CustomTrueValue);
-  auto customFalseValue = args.value<NumberParameter<float64>::ValueType>(k_CustomFalseValue);
+  auto thresholdsObject = filterArgs.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
+  auto maskArrayName = filterArgs.value<std::string>(k_CreatedDataName_Key);
+  auto maskArrayType = filterArgs.value<DataType>(k_CreatedMaskType_Key);
+  auto useCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
+  auto useCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
+  auto customTrueValue = filterArgs.value<NumberParameter<float64>::ValueType>(k_CustomTrueValue);
+  auto customFalseValue = filterArgs.value<NumberParameter<float64>::ValueType>(k_CustomFalseValue);
 
   auto thresholdPaths = thresholdsObject.getRequiredPaths();
   // If the paths are empty just return now.
@@ -440,16 +440,16 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
 }
 
 // -----------------------------------------------------------------------------
-Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
-  auto maskArrayName = args.value<std::string>(k_CreatedDataName_Key);
-  auto maskArrayType = args.value<DataType>(k_CreatedMaskType_Key);
-  auto useCustomTrueValue = args.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
-  auto useCustomFalseValue = args.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
-  auto customTrueValue = args.value<NumberParameter<float64>::ValueType>(k_CustomTrueValue);
-  auto customFalseValue = args.value<NumberParameter<float64>::ValueType>(k_CustomFalseValue);
+  auto thresholdsObject = filterArgs.value<ArrayThresholdSet>(k_ArrayThresholdsObject_Key);
+  auto maskArrayName = filterArgs.value<std::string>(k_CreatedDataName_Key);
+  auto maskArrayType = filterArgs.value<DataType>(k_CreatedMaskType_Key);
+  auto useCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
+  auto useCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
+  auto customTrueValue = filterArgs.value<NumberParameter<float64>::ValueType>(k_CustomTrueValue);
+  auto customFalseValue = filterArgs.value<NumberParameter<float64>::ValueType>(k_CustomFalseValue);
 
   float64 trueValue = useCustomTrueValue ? customTrueValue : 1.0;
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;

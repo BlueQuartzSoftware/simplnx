@@ -166,13 +166,13 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ConcatenateDataArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ConcatenateDataArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ConcatenateDataArraysInputValues inputValues;
 
-  inputValues.InputArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
-  inputValues.OutputArrayPath = args.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
+  inputValues.InputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
+  inputValues.OutputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
 
   return ConcatenateDataArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

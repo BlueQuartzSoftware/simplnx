@@ -146,7 +146,7 @@ public:
 
   /**
    * @brief Returns parameters version integer.
-   * Initial version should always be 1.
+   * The Initial version should always be 1.
    * Should be incremented everytime the parameters change.
    * @return VersionType
    */
@@ -181,7 +181,7 @@ public:
    * @param shouldCancel
    * @return ExecuteResult
    */
-  ExecuteResult execute(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
+  ExecuteResult execute(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
                         const std::atomic_bool& shouldCancel = false, const ExecutionContext& executionContext = ExecutionContext()) const;
 
   /**
@@ -216,7 +216,7 @@ protected:
    * @param shouldCancel
    * @return PreflightResult
    */
-  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                         const ExecutionContext& executionContext) const = 0;
 
   /**
@@ -229,8 +229,8 @@ protected:
    * @param shouldCancel
    * @return Result<>
    */
-  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                               const ExecutionContext& executionContext) const = 0;
+  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const = 0;
 };
 
 using FilterCreationFunc = std::function<IFilter::UniquePointer()>;

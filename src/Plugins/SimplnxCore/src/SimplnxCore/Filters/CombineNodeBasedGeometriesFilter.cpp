@@ -526,11 +526,11 @@ IFilter::UniquePointer CombineNodeBasedGeometriesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputGeometryPaths = args.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
-  auto outputGeometryPath = args.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
+  auto inputGeometryPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
+  auto outputGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
 
   if(inputGeometryPaths.empty())
   {
@@ -945,13 +945,13 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CombineNodeBasedGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   CombineNodeBasedGeometriesInputValues inputValues;
 
-  inputValues.InputGeometryPaths = args.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
-  inputValues.OutputGeometryPath = args.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
+  inputValues.InputGeometryPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_InputGeometries_Key);
+  inputValues.OutputGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputGeometryPath_Key);
 
   return CombineNodeBasedGeometries(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

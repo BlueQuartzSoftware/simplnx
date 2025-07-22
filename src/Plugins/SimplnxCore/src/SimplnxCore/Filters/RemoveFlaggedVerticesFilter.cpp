@@ -214,12 +214,12 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   return {std::move(resultOutputActions)};
 }
 
-Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
-  auto reducedVertexPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
+  auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
 
   const VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();

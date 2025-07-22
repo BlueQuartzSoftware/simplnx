@@ -122,10 +122,10 @@ IFilter::UniquePointer ReadDREAM3DFilter::clone() const
   return std::make_unique<ReadDREAM3DFilter>();
 }
 
-IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                           const ExecutionContext& executionContext) const
 {
-  auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
+  auto importData = filterArgs.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   if(importData.FilePath.empty())
   {
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
@@ -203,7 +203,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   return {result};
 }
 
-Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
@@ -216,7 +216,7 @@ nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
   // when the pipeline reads and writes to the same file
   // See https://github.com/BlueQuartzSoftware/simplnx/pull/1033
 
-  // auto importData = args.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
+  // auto importData = filterArgs.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
   // if(!importData.FilePath.empty())
   // {
   //   auto d3dReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);

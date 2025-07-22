@@ -116,27 +116,27 @@ IFilter::UniquePointer EBSDSegmentFeaturesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                                  const ExecutionContext& executionContext) const
+IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pQuatsArrayPathValue = args.value<DataPath>(k_QuatsArrayPath_Key);
-  auto pCellPhasesArrayPathValue = args.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pCrystalStructuresArrayPathValue = args.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   // Validate the tolerance != 0
-  auto tolerance = args.value<float32>(k_MisorientationTolerance_Key);
+  auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
     return {MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
   }
 
   // Validate the Grid Geometry
-  auto gridGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
-  auto featureIdsPath = inputCellDataPath.createChildPath(args.value<std::string>(k_FeatureIdsArrayName_Key));
-  auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
-  auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
+  auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
+  auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
   std::vector<DataPath> dataPaths;
 
@@ -144,11 +144,11 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
   // Validate the GoodVoxels/Mask Array combination
-  bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
+  bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
   DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    goodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
+    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
     const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)

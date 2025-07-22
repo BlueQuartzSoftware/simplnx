@@ -159,12 +159,12 @@ IFilter::UniquePointer ComputeDifferencesMapFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
-  auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
-  auto differenceMapArrayPath = args.value<DataPath>(k_DifferenceMapArrayPath_Key);
+  auto firstInputArrayPath = filterArgs.value<DataPath>(k_FirstInputArrayPath_Key);
+  auto secondInputArrayPath = filterArgs.value<DataPath>(k_SecondInputArrayPath_Key);
+  auto differenceMapArrayPath = filterArgs.value<DataPath>(k_DifferenceMapArrayPath_Key);
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -230,12 +230,12 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
-  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
-  auto* differenceMapArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
+  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_FirstInputArrayPath_Key));
+  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_SecondInputArrayPath_Key));
+  auto* differenceMapArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_DifferenceMapArrayPath_Key));
 
   ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, firstInputArray->getDataType(), firstInputArray, secondInputArray, differenceMapArray);
 

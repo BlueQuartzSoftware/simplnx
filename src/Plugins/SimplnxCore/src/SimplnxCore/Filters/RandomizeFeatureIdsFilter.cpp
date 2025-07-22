@@ -77,10 +77,10 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIds_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
 
   Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();

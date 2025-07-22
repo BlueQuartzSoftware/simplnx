@@ -310,15 +310,15 @@ IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
   return std::make_unique<RequireMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeomPath_Key);
-  auto numCellsPath = args.value<DataPath>(k_NumCellsPath_Key);
-  auto applyToSinglePhase = args.value<bool>(k_ApplySinglePhase_Key);
-  auto minAllowedFeatureSize = args.value<int64>(k_MinAllowedFeaturesSize_Key);
+  auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+  auto numCellsPath = filterArgs.value<DataPath>(k_NumCellsPath_Key);
+  auto applyToSinglePhase = filterArgs.value<bool>(k_ApplySinglePhase_Key);
+  auto minAllowedFeatureSize = filterArgs.value<int64>(k_MinAllowedFeaturesSize_Key);
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -378,16 +378,16 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 }
 
 // -----------------------------------------------------------------------------
-Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  auto imageGeomPath = args.value<DataPath>(k_ImageGeomPath_Key);
-  auto numCellsPath = args.value<DataPath>(k_NumCellsPath_Key);
-  auto applyToSinglePhase = args.value<bool>(k_ApplySinglePhase_Key);
-  auto minAllowedFeatureSize = args.value<int64>(k_MinAllowedFeaturesSize_Key);
-  auto phaseNumber = args.value<int64>(k_PhaseNumber_Key);
+  auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+  auto numCellsPath = filterArgs.value<DataPath>(k_NumCellsPath_Key);
+  auto applyToSinglePhase = filterArgs.value<bool>(k_ApplySinglePhase_Key);
+  auto minAllowedFeatureSize = filterArgs.value<int64>(k_MinAllowedFeaturesSize_Key);
+  auto phaseNumber = filterArgs.value<int64>(k_PhaseNumber_Key);
 
   PhasesArrayType::store_type* featurePhases = applyToSinglePhase ? dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath)->getDataStore() : nullptr;
 

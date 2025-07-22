@@ -68,7 +68,7 @@ public:
 
   /**
    * @brief Returns parameters version integer.
-   * Initial version should always be 1.
+   * The Initial version should always be 1.
    * Should be incremented everytime the parameters change.
    * @return VersionType
    */

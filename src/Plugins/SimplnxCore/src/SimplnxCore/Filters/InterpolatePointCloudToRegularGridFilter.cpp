@@ -229,20 +229,20 @@ IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto useMask = args.value<bool>(k_UseMask_Key);
-  auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
-  auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndicesPath_Key);
-  auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
-  auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
-  auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
-  auto sigmas = args.value<std::vector<float32>>(k_GaussianSigmas_Key);
+  auto useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto storeKernelDistances = filterArgs.value<bool>(k_StoreKernelDistances_Key);
+  auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto interpolatedGroupName = filterArgs.value<std::string>(k_InterpolatedGroupName_Key);
+  auto voxelIndicesPath = filterArgs.value<DataPath>(k_VoxelIndicesPath_Key);
+  auto interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  auto copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
+  auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
+  auto sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
 
   OutputActions actions;
 
@@ -323,7 +323,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // validate the input arrays have matching tuples (i.e. it should all come from the input vertex geometry's vertex data)
   if(useMask)
   {
-    dataArrays.push_back(args.value<DataPath>(k_InputMaskPath_Key));
+    dataArrays.push_back(filterArgs.value<DataPath>(k_InputMaskPath_Key));
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
@@ -335,7 +335,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // Create the neighbor list array for storing the kernel distances
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArrayName_Key)));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(filterArgs.value<std::string>(k_KernelDistancesArrayName_Key)));
     actions.appendAction(std::move(action));
   }
 
@@ -343,22 +343,22 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 }
 
 //------------------------------------------------------------------------------
-Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto useMask = args.value<bool>(k_UseMask_Key);
-  auto storeKernelDistances = args.value<bool>(k_StoreKernelDistances_Key);
-  auto interpolationTechnique = args.value<uint64>(k_InterpolationTechnique_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto interpolatedGroupName = args.value<std::string>(k_InterpolatedGroupName_Key);
-  auto interpolatedDataPaths = args.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
-  auto copyDataPaths = args.value<std::vector<DataPath>>(k_CopyArrays_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndicesPath_Key);
-  auto kernelSize = args.value<std::vector<float32>>(k_KernelSize_Key);
+  auto useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto storeKernelDistances = filterArgs.value<bool>(k_StoreKernelDistances_Key);
+  auto interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto interpolatedGroupName = filterArgs.value<std::string>(k_InterpolatedGroupName_Key);
+  auto interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  auto copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
+  auto voxelIndicesPath = filterArgs.value<DataPath>(k_VoxelIndicesPath_Key);
+  auto kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
 
   const DataPath interpolatedGroupPath = imageGeomPath.createChildPath(interpolatedGroupName);
-  const auto sigmas = args.value<std::vector<float32>>(k_GaussianSigmas_Key);
+  const auto sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
 
   auto vertices = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   auto image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
@@ -377,7 +377,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   BoolArray::store_type* mask = nullptr;
   if(useMask)
   {
-    mask = dataStructure.getDataAs<BoolArray>(args.value<DataPath>(k_InputMaskPath_Key))->getDataStore();
+    mask = dataStructure.getDataAs<BoolArray>(filterArgs.value<DataPath>(k_InputMaskPath_Key))->getDataStore();
   }
 
   auto& voxelIndices = dataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
@@ -491,7 +491,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 
     if(storeKernelDistances)
     {
-      const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArrayName_Key));
+      const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(filterArgs.value<std::string>(k_KernelDistancesArrayName_Key));
       InitializeNeighborList(dataStructure, kernelDistPath);
       auto* kernelDistances = dataStructure.getDataAs<Float32NeighborList>(kernelDistPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernel, kernelNumVoxels, dims.data(), x, y, z);

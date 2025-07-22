@@ -73,11 +73,11 @@ IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+  const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
   Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
@@ -116,11 +116,11 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto importFile = args.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  auto outputFile = args.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+  const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
   Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())

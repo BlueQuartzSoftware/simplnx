@@ -88,12 +88,12 @@ IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
-  auto hullVertexGeomPath = args.value<DataPath>(k_HullVertexGeomPath_Key);
+  auto gridResolution = filterArgs.value<std::vector<float32>>(k_GridResolution_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
+  auto hullVertexGeomPath = filterArgs.value<DataPath>(k_HullVertexGeomPath_Key);
 
   if(gridResolution[0] <= 0.0f || gridResolution[1] <= 0.0f || gridResolution[2] <= 0.0f)
   {
@@ -113,13 +113,13 @@ IFilter::PreflightResult ApproximatePointCloudHullFilter::preflightImpl(const Da
 }
 
 //------------------------------------------------------------------------------
-Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
-  auto numberOfEmptyNeighbors = args.value<uint64>(k_MinEmptyNeighbors_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_VertexGeomPath_Key);
-  auto hullVertexGeomPath = args.value<DataPath>(k_HullVertexGeomPath_Key);
+  auto gridResolution = filterArgs.value<std::vector<float32>>(k_GridResolution_Key);
+  auto numberOfEmptyNeighbors = filterArgs.value<uint64>(k_MinEmptyNeighbors_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath_Key);
+  auto hullVertexGeomPath = filterArgs.value<DataPath>(k_HullVertexGeomPath_Key);
 
   float inverseResolution[3] = {1.0f / gridResolution[0], 1.0f / gridResolution[1], 1.0f / gridResolution[2]};
 

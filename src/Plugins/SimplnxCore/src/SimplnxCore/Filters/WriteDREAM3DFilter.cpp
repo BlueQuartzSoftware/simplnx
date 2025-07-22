@@ -76,10 +76,10 @@ IFilter::UniquePointer WriteDREAM3DFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                            const ExecutionContext& executionContext) const
 {
-  auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
+  auto exportFilePath = filterArgs.value<std::filesystem::path>(k_ExportFilePath);
   if(exportFilePath.empty())
   {
     return MakePreflightErrorResult(k_NoExportPathError, "Export file path not provided.");
@@ -88,10 +88,10 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto atomicFileResult = AtomicFile::Create(args.value<FileSystemPathParameter::ValueType>(k_ExportFilePath));
+  auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath));
   if(atomicFileResult.invalid())
   {
     return ConvertResult(std::move(atomicFileResult));
@@ -99,7 +99,7 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
   auto exportFilePath = atomicFile.tempFilePath();
-  auto writeXdmf = args.value<bool>(k_WriteXdmf);
+  auto writeXdmf = filterArgs.value<bool>(k_WriteXdmf);
 
   Pipeline pipeline;
 
@@ -126,7 +126,7 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
     {
       fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
       std::error_code errorCode;
-      fs::rename(xdmfFilePath, args.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"), errorCode);
+      fs::rename(xdmfFilePath, filterArgs.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"), errorCode);
       if(errorCode)
       {
         std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());

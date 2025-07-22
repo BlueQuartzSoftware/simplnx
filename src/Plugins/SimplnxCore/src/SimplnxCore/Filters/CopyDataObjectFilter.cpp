@@ -78,12 +78,12 @@ IFilter::UniquePointer CopyDataObjectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                             const ExecutionContext& executionContext) const
+IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto dataArrayPaths = args.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
-  auto useNewParent = args.value<bool>(k_UseNewParent_Key);
-  auto suffix = args.value<std::string>(k_NewPathSuffix_Key);
+  auto dataArrayPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
+  auto useNewParent = filterArgs.value<bool>(k_UseNewParent_Key);
+  auto suffix = filterArgs.value<std::string>(k_NewPathSuffix_Key);
 
   if(!useNewParent && suffix.empty())
   {
@@ -97,7 +97,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
     DataPath parentPath = dataArrayPath.getParent();
     if(useNewParent)
     {
-      parentPath = args.value<DataPath>(k_NewPath_Key);
+      parentPath = filterArgs.value<DataPath>(k_NewPath_Key);
       // Scope AM check since we fully expect it to be a nullptr
       {
         const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(parentPath);
@@ -144,7 +144,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CopyDataObjectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};
