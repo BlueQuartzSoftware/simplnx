@@ -25,6 +25,7 @@ set(FilterList
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
   ComputeBoundaryElementFractionsFilter
+  ComputeBoundingBoxStatsFilter
   ComputeCoordinatesImageGeomFilter
   ComputeCoordinateThresholdFilter
   ComputeDifferencesMapFilter
@@ -175,6 +176,7 @@ set(AlgorithmList
   ComputeArrayStatistics
   ComputeBiasedFeatures
   ComputeBoundaryCells
+  ComputeBoundingBoxStats
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
   ComputeEuclideanDistMap
