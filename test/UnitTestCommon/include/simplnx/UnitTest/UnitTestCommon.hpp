@@ -1342,20 +1342,16 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
 inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure)
 {
-  auto amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
+  std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
   REQUIRE(amPathsOpt.has_value());
-  auto amPaths = amPathsOpt.value();
-  //  REQUIRE(amPaths.size() > 0);
-  for(const auto& amPath : amPaths)
+  for(const auto& amPath : amPathsOpt.value())
   {
-    auto attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
-    auto daPathsOpt = GetAllChildDataPaths(dataStructure, amPath, DataObject::Type::DataArray);
+    const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildDataPaths(dataStructure, amPath, DataObject::Type::DataArray);
     REQUIRE(daPathsOpt.has_value());
-    auto daPaths = daPathsOpt.value();
-    //    REQUIRE(daPaths.size() > 0);
-    for(const auto& daPath : daPaths)
+    for(const auto& daPath : daPathsOpt.value())
     {
-      auto arr = dataStructure.getDataAs<IArray>(daPath);
+     const auto& arr = dataStructure.getDataAs<IArray>(daPath);
       REQUIRE(attrMatrix.getShape() == arr->getTupleShape());
     }
   }
