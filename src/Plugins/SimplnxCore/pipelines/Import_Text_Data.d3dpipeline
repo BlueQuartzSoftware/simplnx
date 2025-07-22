@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "Import Text Data Files",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -250,5 +251,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

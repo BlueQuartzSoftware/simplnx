@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "CreateEdgeGeom.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -473,5 +474,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

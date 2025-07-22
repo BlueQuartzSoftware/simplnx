@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ComputeGBCD-GBPDMetricBased.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -66,9 +67,10 @@
               "TriangleDataContainer/Face Data/FaceIPFColors",
               "TriangleDataContainer/Face Data/FaceMisorientationColors"
             ],
-            "file_path": "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+            "file_path": "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -278,5 +280,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

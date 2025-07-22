@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ComputeBiasedFeatures.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -40,9 +41,10 @@
               "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
               "DataContainer/Cell Data/KernelAverageMisorientations"
             ],
-            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -120,6 +122,10 @@
         },
         "input_image_geometry_path": {
           "value": "DataContainer",
+          "version": 1
+        },
+        "is_periodic": {
+          "value": false,
           "version": 1
         },
         "parameters_version": 1
@@ -217,5 +223,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ImportEdaxOIMData.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -89,6 +90,10 @@
           "value": "ImageGeom",
           "version": 1
         },
+        "keep_input_geometry_origin": {
+          "value": false,
+          "version": 1
+        },
         "output_image_geometry_path": {
           "value": "",
           "version": 1
@@ -172,5 +177,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

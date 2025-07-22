@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(05) Small IN100 Crystallographic Statistics.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -46,9 +47,10 @@
               "DataContainer/Cell Data/QPManhattanDistances",
               "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio"
             ],
-            "file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d"
+            "file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -132,7 +134,7 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ComputeMisorientationsFilter",
+        "name": "nx::core::ComputeFeatureNeighborMisorientationsFilter",
         "uuid": "0b68fe25-b5ef-4805-ae32-20acb8d4e823"
       },
       "isDisabled": false
@@ -326,5 +328,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

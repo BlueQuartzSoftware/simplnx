@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "AvizoWriters.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -38,9 +39,10 @@
               "DataContainer/Cell Feature Data/NumNeighbors",
               "DataContainer/Cell Data/IPFColors"
             ],
-            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -114,5 +116,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

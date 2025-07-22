@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "AlignSectionsMutualInformation.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -54,6 +55,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Image Quality",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -62,6 +64,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Confidence Index",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -71,7 +74,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -135,12 +138,20 @@
     },
     {
       "args": {
+        "alignment_attribute_matrix_name": {
+          "value": "Alignment Shifts Data",
+          "version": 1
+        },
         "cell_phases_array_path": {
           "value": "DataContainer/Cell Data/Phases",
           "version": 1
         },
         "crystal_structures_array_path": {
           "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
+          "version": 1
+        },
+        "cumulative_shifts_array_name": {
+          "value": "Cumulative Shifts",
           "version": 1
         },
         "input_image_geometry_path": {
@@ -155,8 +166,21 @@
           "value": 5.0,
           "version": 1
         },
+        "parameters_version": 2,
         "quats_array_path": {
           "value": "DataContainer/Cell Data/Quats",
+          "version": 1
+        },
+        "relative_shifts_array_name": {
+          "value": "Relative Shifts",
+          "version": 1
+        },
+        "slices_array_name": {
+          "value": "Slice Indices",
+          "version": 1
+        },
+        "store_alignment_shifts": {
+          "value": false,
           "version": 1
         },
         "use_mask": {
@@ -191,5 +215,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

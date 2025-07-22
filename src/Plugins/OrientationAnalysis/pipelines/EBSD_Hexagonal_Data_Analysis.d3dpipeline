@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "EBSD Hexagonal Data Analysis",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -33,6 +34,10 @@
       "args": {
         "input_image_geometry_path": {
           "value": "DataContainer",
+          "version": 1
+        },
+        "keep_input_geometry_origin": {
+          "value": false,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -131,6 +136,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Confidence Index",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -140,7 +146,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -310,7 +316,11 @@
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "quats_array_path": {
           "value": "DataContainer/Cell Data/Quats",
           "version": 1
@@ -449,6 +459,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Confidence Index",
                 "comparison": 1,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -458,7 +469,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -739,5 +750,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

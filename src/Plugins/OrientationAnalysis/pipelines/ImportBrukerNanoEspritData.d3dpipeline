@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ImportBrukerNanoEspritData.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -75,5 +76,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

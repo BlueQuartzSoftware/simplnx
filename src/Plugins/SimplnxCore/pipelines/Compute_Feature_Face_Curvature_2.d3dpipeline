@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "Compute_Feature_Face_Curvature_2.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -518,5 +519,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(03) Small IN100 Mesh Statistics.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -60,9 +61,10 @@
               "TriangleDataContainer/QM Face Feature Data",
               "TriangleDataContainer/Shared Edge List"
             ],
-            "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
+            "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -216,5 +218,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }
