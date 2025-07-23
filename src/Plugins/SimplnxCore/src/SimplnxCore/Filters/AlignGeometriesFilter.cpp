@@ -442,12 +442,12 @@ IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto movingGeometryPath = args.value<DataPath>(k_MovingGeometry_Key);
-  auto targetGeometryPath = args.value<DataPath>(k_TargetGeometry_Key);
-  auto alignmentType = args.value<uint64>(k_AlignmentType_Key);
+  auto movingGeometryPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
+  auto targetGeometryPath = filterArgs.value<DataPath>(k_TargetGeometry_Key);
+  auto alignmentType = filterArgs.value<uint64>(k_AlignmentType_Key);
 
   auto& moving = dataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
   auto& target = dataStructure.getDataRefAs<IGeometry>(targetGeometryPath);

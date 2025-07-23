@@ -61,7 +61,7 @@ public:
 
   /**
    * @brief Returns version integer.
-   * Initial version should always be 1.
+   * The Initial version should always be 1.
    * Should be incremented everytime the json format changes.
    * @return uint64
    */

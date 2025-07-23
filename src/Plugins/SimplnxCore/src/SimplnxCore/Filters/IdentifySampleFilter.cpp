@@ -485,11 +485,11 @@ IFilter::UniquePointer IdentifySampleFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                             const ExecutionContext& executionContext) const
+IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
+  const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   const auto& inputData = dataStructure.getDataRefAs<IDataArray>(goodVoxelsArrayPath);
   const DataType arrayType = inputData.getDataType();
@@ -504,14 +504,14 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto fillHoles = args.value<bool>(k_FillHoles_Key);
-  const auto sliceBySlice = args.value<bool>(k_SliceBySlice_Key);
-  const auto sliceBySlicePlane = static_cast<IdentifySampleSliceBySliceFunctor::Plane>(args.value<ChoicesParameter::ValueType>(k_SliceBySlicePlane_Key));
-  const auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto goodVoxelsArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
+  const auto fillHoles = filterArgs.value<bool>(k_FillHoles_Key);
+  const auto sliceBySlice = filterArgs.value<bool>(k_SliceBySlice_Key);
+  const auto sliceBySlicePlane = static_cast<IdentifySampleSliceBySliceFunctor::Plane>(filterArgs.value<ChoicesParameter::ValueType>(k_SliceBySlicePlane_Key));
+  const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   auto* inputData = dataStructure.getDataAs<IDataArray>(goodVoxelsArrayPath);
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imageGeomPath);

@@ -101,15 +101,15 @@ IFilter::UniquePointer CropVertexGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                                 const ExecutionContext& executionContext) const
+IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
-  auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
-  auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
-  auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
-  auto vertexDataName = args.value<std::string>(k_VertexAttributeMatrixName_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto croppedGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  auto posMin = filterArgs.value<std::vector<float32>>(k_MinPos_Key);
+  auto posMax = filterArgs.value<std::vector<float32>>(k_MaxPos_Key);
+  auto targetArrays = filterArgs.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -200,15 +200,15 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto croppedGeomPath = args.value<DataPath>(k_CreatedVertexGeometryPath_Key);
-  auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
-  auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
-  auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
-  auto vertexDataName = args.value<std::string>(k_VertexAttributeMatrixName_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto croppedGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  auto posMin = filterArgs.value<std::vector<float32>>(k_MinPos_Key);
+  auto posMax = filterArgs.value<std::vector<float32>>(k_MaxPos_Key);
+  auto targetArrays = filterArgs.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];

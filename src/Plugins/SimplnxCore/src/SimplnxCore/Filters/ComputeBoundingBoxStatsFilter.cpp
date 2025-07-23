@@ -31,79 +31,79 @@ struct IsIntegerType
   }
 };
 
-void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& args, std::vector<usize> tupleDims, const DataPath& outputAMPath)
+void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, std::vector<usize> tupleDims, const DataPath& outputAMPath)
 {
-  auto calculateLength = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
-  auto calculateMin = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);
-  auto calculateMax = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMax_Key);
-  auto calculateMean = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMean_Key);
-  auto calculateMedian = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMedian_Key);
-  auto calculateMode = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMode_Key);
-  auto calculateStdDeviation = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateStandardDeviation_Key);
-  auto calculateSummation = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key);
-  auto calculateNumUniqueValuesValue = args.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateUniqueValues_Key);
+  auto calculateLength = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
+  auto calculateMin = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);
+  auto calculateMax = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMax_Key);
+  auto calculateMean = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMean_Key);
+  auto calculateMedian = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMedian_Key);
+  auto calculateMode = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMode_Key);
+  auto calculateStdDeviation = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateStandardDeviation_Key);
+  auto calculateSummation = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key);
+  auto calculateNumUniqueValuesValue = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateUniqueValues_Key);
 
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(args.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
+  auto* inputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
   DataType dataType = inputArray->getDataType();
 
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_BoundsHasDataName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_BoundsHasDataName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   if(calculateLength)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_LengthName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_LengthName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMin)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MinName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_MinName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMax)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MaxName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_MaxName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMean)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MeanName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_MeanName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMedian)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_MedianName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_MedianName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateMode)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_ModeName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_ModeName_Key);
     usize tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
     auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateStdDeviation)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_StdDevName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_StdDevName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateSummation)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_SummationName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_SummationName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateNumUniqueValuesValue)
   {
-    auto arrayPath = args.value<std::string>(ComputeBoundingBoxStatsFilter::k_NumUniqueValuesName_Key);
+    auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_NumUniqueValuesName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }

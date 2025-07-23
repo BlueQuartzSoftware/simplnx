@@ -91,14 +91,14 @@ IFilter::UniquePointer ReadStringDataArrayFilter::clone() const
   return std::make_unique<ReadStringDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                                  const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
+  auto arrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
 
-  auto useDims = args.value<bool>(k_SetTupleDimensions);
-  auto tableData = args.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
-  auto dataFormat = args.value<std::string>(k_DataFormat_Key);
+  auto useDims = filterArgs.value<bool>(k_SetTupleDimensions);
+  auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 

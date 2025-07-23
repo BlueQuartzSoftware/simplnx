@@ -92,16 +92,16 @@ IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  DataPath selectedGeometryPath = args.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
-  bool writeNodeFile = args.value<BoolParameter::ValueType>(k_WriteNodeFile);
-  bool numberNodes = args.value<BoolParameter::ValueType>(k_NumberNodes);
-  fs::path nodeFilePath = args.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
-  bool writeElementFile = args.value<BoolParameter::ValueType>(k_WriteElementFile);
-  bool numberElements = args.value<BoolParameter::ValueType>(k_NumberElements);
-  fs::path elementFilePath = args.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
+  DataPath selectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
+  bool writeNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
+  bool numberNodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
+  fs::path nodeFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
+  bool writeElementFile = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
+  bool numberElements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
+  fs::path elementFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
 
   if(!writeNodeFile && !writeElementFile)
   {
@@ -121,20 +121,20 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   WriteNodesAndElementsFilesInputValues inputValues;
 
-  inputValues.SelectedGeometryPath = args.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
-  inputValues.WriteNodeFile = args.value<BoolParameter::ValueType>(k_WriteNodeFile);
-  inputValues.NumberNodes = args.value<BoolParameter::ValueType>(k_NumberNodes);
-  inputValues.IncludeNodeFileHeader = args.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
-  inputValues.NodeFilePath = args.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
-  inputValues.WriteElementFile = args.value<BoolParameter::ValueType>(k_WriteElementFile);
-  inputValues.NumberElements = args.value<BoolParameter::ValueType>(k_NumberElements);
-  inputValues.IncludeElementFileHeader = args.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
-  inputValues.ElementFilePath = args.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
+  inputValues.SelectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
+  inputValues.WriteNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
+  inputValues.NumberNodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
+  inputValues.IncludeNodeFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
+  inputValues.NodeFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
+  inputValues.WriteElementFile = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
+  inputValues.NumberElements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
+  inputValues.IncludeElementFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
+  inputValues.ElementFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
 
   return WriteNodesAndElementsFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

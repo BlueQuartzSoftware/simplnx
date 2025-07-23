@@ -91,12 +91,12 @@ IFilter::UniquePointer ErrorWarningFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto preflightWarning = args.value<bool>(k_PreflightWarning_Key);
-  auto preflightError = args.value<bool>(k_PreflightError_Key);
-  auto preflightException = args.value<bool>(k_PreflightException_Key);
+  auto preflightWarning = filterArgs.value<bool>(k_PreflightWarning_Key);
+  auto preflightError = filterArgs.value<bool>(k_PreflightError_Key);
+  auto preflightException = filterArgs.value<bool>(k_PreflightException_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -117,12 +117,12 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto executeWarning = args.value<bool>(k_ExecuteWarning_Key);
-  auto executeError = args.value<bool>(k_ExecuteError_Key);
-  auto executeException = args.value<bool>(k_ExecuteException_Key);
+  auto executeWarning = filterArgs.value<bool>(k_ExecuteWarning_Key);
+  auto executeError = filterArgs.value<bool>(k_ExecuteError_Key);
+  auto executeException = filterArgs.value<bool>(k_ExecuteException_Key);
 
   nx::core::Result<> resultActions;
 

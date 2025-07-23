@@ -106,16 +106,16 @@ IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
   return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                                const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto numericType = args.value<NumericType>(k_ScalarType_Key);
-  auto arrayPath = args.value<DataPath>(k_DataArrayPath_Key);
-  auto nComp = args.value<uint64>(k_NComp_Key);
+  auto numericType = filterArgs.value<NumericType>(k_ScalarType_Key);
+  auto arrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
+  auto nComp = filterArgs.value<uint64>(k_NComp_Key);
 
-  auto useDims = args.value<bool>(k_AdvancedOptions_Key);
-  auto tableData = args.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
-  auto dataFormat = args.value<std::string>(k_DataFormat_Key);
+  auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
+  auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_NTuples_Key);
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -163,13 +163,13 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
   return {std::move(resultOutputActions)};
 }
 
-Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputFilePath = args.value<fs::path>(k_InputFile_Key);
-  auto skipLines = args.value<uint64>(k_NSkipLines_Key);
-  auto choiceIndex = args.value<uint64>(k_DelimiterChoice_Key);
-  auto path = args.value<DataPath>(k_DataArrayPath_Key);
+  auto inputFilePath = filterArgs.value<fs::path>(k_InputFile_Key);
+  auto skipLines = filterArgs.value<uint64>(k_NSkipLines_Key);
+  auto choiceIndex = filterArgs.value<uint64>(k_DelimiterChoice_Key);
+  auto path = filterArgs.value<DataPath>(k_DataArrayPath_Key);
 
   char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
 

@@ -89,16 +89,16 @@ IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
   return std::make_unique<ComputeFeatureSizesFilter>();
 }
 
-IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                                  const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
+  auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
 
-  auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto volumesName = args.value<std::string>(k_VolumesName_Key);
-  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersName_Key);
-  auto numElementsName = args.value<std::string>(k_NumElementsName_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto featureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto volumesName = filterArgs.value<std::string>(k_VolumesName_Key);
+  auto equivalentDiametersName = filterArgs.value<std::string>(k_EquivalentDiametersName_Key);
+  auto numElementsName = filterArgs.value<std::string>(k_NumElementsName_Key);
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
@@ -141,16 +141,16 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
-Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
+  auto saveElementSizes = filterArgs.value<bool>(k_SaveElementSizes_Key);
 
-  auto featureIdsArrayPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto featureIdsArrayPtr = dataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
   const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
   {
-    auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+    auto featureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, messageHandler);
     if(validateNumFeatResult.invalid())
     {
@@ -159,18 +159,18 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   }
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
-  auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
+  auto geomPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
 
   // If the geometry is an ImageGeometry or a RectilinearGeometry
   auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
   if(nullptr != imageGeom)
   {
-    auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+    auto featureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
-    auto& volumes = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_VolumesName_Key)))->getDataStoreRef();
-    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_EquivalentDiametersName_Key)))->getDataStoreRef();
-    auto& numElements = dataStructure.getDataAs<Int32Array>(featureAttributeMatrixPath.createChildPath(args.value<std::string>(k_NumElementsName_Key)))->getDataStoreRef();
+    auto& volumes = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_VolumesName_Key)))->getDataStoreRef();
+    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_EquivalentDiametersName_Key)))->getDataStoreRef();
+    auto& numElements = dataStructure.getDataAs<Int32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_NumElementsName_Key)))->getDataStoreRef();
 
     usize featureIdsMaxIdx = std::distance(featureIdsStoreRef.begin(), std::max_element(featureIdsStoreRef.cbegin(), featureIdsStoreRef.cend()));
     usize maxValue = featureIdsStoreRef[featureIdsMaxIdx];
@@ -251,9 +251,9 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   }
   else
   {
-    auto& volumes = dataStructure.getDataAs<Float32Array>(args.value<DataPath>(k_VolumesName_Key))->getDataStoreRef();
-    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(args.value<DataPath>(k_EquivalentDiametersName_Key))->getDataStoreRef();
-    auto& numElements = dataStructure.getDataAs<Int32Array>(args.value<DataPath>(k_NumElementsName_Key))->getDataStoreRef();
+    auto& volumes = dataStructure.getDataAs<Float32Array>(filterArgs.value<DataPath>(k_VolumesName_Key))->getDataStoreRef();
+    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(filterArgs.value<DataPath>(k_EquivalentDiametersName_Key))->getDataStoreRef();
+    auto& numElements = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_NumElementsName_Key))->getDataStoreRef();
 
     usize numFeatures = volumes.getNumberOfTuples();
 

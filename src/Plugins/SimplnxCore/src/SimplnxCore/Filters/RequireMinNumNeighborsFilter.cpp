@@ -100,16 +100,16 @@ IFilter::UniquePointer RequireMinNumNeighborsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto imageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto applyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
-  auto phaseNumber = args.value<uint64>(k_PhaseNumber_Key);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  auto featurePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
-  auto numNeighborsPath = args.value<DataPath>(k_NumNeighborsPath_Key);
-  auto minNumNeighbors = args.value<uint64>(k_MinNumNeighbors_Key);
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  auto applyToSinglePhase = filterArgs.value<bool>(k_ApplyToSinglePhase_Key);
+  auto phaseNumber = filterArgs.value<uint64>(k_PhaseNumber_Key);
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  auto numNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
+  auto minNumNeighbors = filterArgs.value<uint64>(k_MinNumNeighbors_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -162,19 +162,19 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 }
 
 //------------------------------------------------------------------------------
-Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   RequireMinNumNeighborsInputValues inputValues;
 
-  inputValues.ApplyToSinglePhase = args.value<bool>(k_ApplyToSinglePhase_Key);
-  inputValues.FeaturePhasesPath = args.value<DataPath>(k_FeaturePhasesPath_Key);
-  inputValues.PhaseNumber = args.value<uint64>(k_PhaseNumber_Key);
-  inputValues.MinNumNeighbors = args.value<uint64>(k_MinNumNeighbors_Key);
-  inputValues.ImageGeomPath = args.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.FeatureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
-  inputValues.NumNeighborsPath = args.value<DataPath>(k_NumNeighborsPath_Key);
-  inputValues.IgnoredVoxelArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
+  inputValues.ApplyToSinglePhase = filterArgs.value<bool>(k_ApplyToSinglePhase_Key);
+  inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  inputValues.PhaseNumber = filterArgs.value<uint64>(k_PhaseNumber_Key);
+  inputValues.MinNumNeighbors = filterArgs.value<uint64>(k_MinNumNeighbors_Key);
+  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  inputValues.NumNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
+  inputValues.IgnoredVoxelArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
 
   return RequireMinNumNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

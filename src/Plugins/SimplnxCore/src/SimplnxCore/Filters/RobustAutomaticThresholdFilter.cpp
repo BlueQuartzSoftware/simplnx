@@ -103,12 +103,12 @@ IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
   return std::make_unique<RobustAutomaticThresholdFilter>();
 }
 
-IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
-  auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
-  auto createdMaskName = args.value<std::string>(k_ArrayCreationName_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
+  auto gradientArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudePath_Key);
+  auto createdMaskName = filterArgs.value<std::string>(k_ArrayCreationName_Key);
 
   const DataPath createdMaskPath = inputArrayPath.replaceName(createdMaskName);
 
@@ -149,12 +149,12 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   return {std::move(actions)};
 }
 
-Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputArrayPath = args.value<DataPath>(k_InputArrayPath_Key);
-  auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath_Key);
-  auto createdMaskName = args.value<std::string>(k_ArrayCreationName_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
+  auto gradientArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudePath_Key);
+  auto createdMaskName = filterArgs.value<std::string>(k_ArrayCreationName_Key);
 
   const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
   const auto& gradientStore = dataStructure.getDataAs<Float32Array>(gradientArrayPath)->getDataStoreRef();

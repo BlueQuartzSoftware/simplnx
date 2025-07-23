@@ -101,16 +101,16 @@ IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
   return std::make_unique<ScalarSegmentFeaturesFilter>();
 }
 
-IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
-  auto featureIdsName = args.value<std::string>(k_FeatureIdsName_Key);
-  auto cellFeaturesName = args.value<std::string>(k_CellFeatureName_Key);
-  auto activeArrayName = args.value<std::string>(k_ActiveArrayName_Key);
+  auto inputDataPath = filterArgs.value<DataPath>(k_InputArrayPathKey);
+  auto featureIdsName = filterArgs.value<std::string>(k_FeatureIdsName_Key);
+  auto cellFeaturesName = filterArgs.value<std::string>(k_CellFeatureName_Key);
+  auto activeArrayName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
   DataPath featureIdsPath = inputDataPath.replaceName(featureIdsName);
 
-  auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+  auto gridGeomPath = filterArgs.value<DataPath>(k_GridGeomPath_Key);
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
@@ -141,11 +141,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   // Validate the GoodVoxels/Mask Array combination
-  bool useGoodVoxels = args.value<bool>(k_UseMask_Key);
+  bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
   DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    goodVoxelsPath = args.value<DataPath>(k_MaskArrayPath_Key);
+    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
     const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
     if(nullptr == goodVoxelsArray)
@@ -183,21 +183,21 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 }
 
 // -----------------------------------------------------------------------------
-Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ScalarSegmentFeaturesInputValues inputValues;
 
-  inputValues.InputDataPath = args.value<DataPath>(k_InputArrayPathKey);
-  inputValues.ScalarTolerance = args.value<int>(k_ScalarToleranceKey);
-  inputValues.RandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.InputDataPath.replaceName(args.value<std::string>(k_FeatureIdsName_Key));
-  inputValues.UseMask = args.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = args.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ImageGeometryPath = args.value<DataPath>(k_GridGeomPath_Key);
-  inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(args.value<std::string>(k_CellFeatureName_Key));
-  inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
-  inputValues.IsPeriodic = args.value<bool>(k_IsPeriodic_Key);
+  inputValues.InputDataPath = filterArgs.value<DataPath>(k_InputArrayPathKey);
+  inputValues.ScalarTolerance = filterArgs.value<int>(k_ScalarToleranceKey);
+  inputValues.RandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
+  inputValues.FeatureIdsArrayPath = inputValues.InputDataPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsName_Key));
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GridGeomPath_Key);
+  inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureName_Key));
+  inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

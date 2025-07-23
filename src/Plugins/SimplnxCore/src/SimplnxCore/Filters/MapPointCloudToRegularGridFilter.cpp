@@ -45,19 +45,19 @@ constexpr int64 k_ErrorOutOfBounds = -2607;
 constexpr int64 k_WarningOutOfBounds = -2608;
 constexpr int64 k_InvalidHandlingValue = -2609;
 
-Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& args)
+Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filterArgs)
 {
-  const auto samplingGridType = args.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
+  const auto samplingGridType = filterArgs.value<uint64>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key);
 
   if(samplingGridType == 1)
   {
     return {};
   }
 
-  const auto vertexGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key);
-  const auto newImageGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key);
-  const auto useMask = args.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key);
-  const auto maskArrayPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key);
+  const auto vertexGeomPath = filterArgs.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key);
+  const auto newImageGeomPath = filterArgs.value<DataPath>(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key);
+  const auto useMask = filterArgs.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key);
+  const auto maskArrayPath = filterArgs.value<DataPath>(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key);
 
   const auto* pointCloud = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   auto* image = dataStructure.getDataAs<ImageGeom>(newImageGeomPath);
@@ -381,21 +381,21 @@ IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
-  auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto useMask = args.value<bool>(k_UseMask_Key);
-  auto voxelIndicesName = args.value<std::string>(k_VoxelIndicesName_Key);
+  auto samplingGridType = filterArgs.value<uint64>(k_SamplingGridType_Key);
+  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  auto useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto voxelIndicesName = filterArgs.value<std::string>(k_VoxelIndicesName_Key);
 
   OutputActions actions;
 
   if(samplingGridType == 0)
   {
-    auto newImageGeomPath = args.value<DataPath>(k_CreatedImageGeometryPath_Key);
-    auto cellDataName = args.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
-    auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);
+    auto newImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+    auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
+    auto gridDimensions = filterArgs.value<std::vector<int32>>(k_GridDimensions_Key);
 
     if(gridDimensions[0] <= 0 || gridDimensions[1] <= 0 || gridDimensions[2] <= 0)
     {
@@ -422,7 +422,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 
   if(useMask)
   {
-    auto maskArrayPath = args.value<DataPath>(k_InputMaskPath_Key);
+    auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
     const auto numMaskTuples = dataStructure.getDataRefAs<IDataArray>(maskArrayPath).getNumberOfTuples();
     const auto numVoxelTuples = vertexData->getNumTuples();
     if(numMaskTuples != numVoxelTuples)
@@ -450,32 +450,32 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 }
 
 //------------------------------------------------------------------------------
-Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   // Get the target image as a pointer
-  const auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
+  const auto samplingGridType = filterArgs.value<uint64>(k_SamplingGridType_Key);
   const ImageGeom* image = nullptr;
   if(samplingGridType == 0)
   {
     // Create the regular grid
     messageHandler("Creating Regular Grid");
-    auto result = CreateRegularGrid(dataStructure, args);
+    auto result = CreateRegularGrid(dataStructure, filterArgs);
     if(result.invalid())
     {
       return result;
     }
-    image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_CreatedImageGeometryPath_Key));
+    image = dataStructure.getDataAs<ImageGeom>(filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key));
   }
   else if(samplingGridType == 1)
   {
-    image = dataStructure.getDataAs<ImageGeom>(args.value<DataPath>(k_SelectedImageGeometryPath_Key));
+    image = dataStructure.getDataAs<ImageGeom>(filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key));
   }
 
   // Create the Mask
-  const auto useMask = args.value<bool>(k_UseMask_Key);
-  auto maskPath = args.value<DataPath>(k_InputMaskPath_Key);
-  if(!args.value<bool>(k_UseMask_Key))
+  const auto useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto maskPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
+  if(!filterArgs.value<bool>(k_UseMask_Key))
   {
     maskPath = DataPath({k_MaskName});
   }
@@ -492,16 +492,16 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   }
 
   // Cache all the needed objects for ::ProcessVertices
-  const auto vertexGeomPath = args.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  const auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(args.value<std::string>(k_VoxelIndicesName_Key));
+  const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(filterArgs.value<std::string>(k_VoxelIndicesName_Key));
   auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
-  auto outOfBoundsValue = args.value<uint64>(k_OutOfBoundsValue_Key);
+  auto outOfBoundsValue = filterArgs.value<uint64>(k_OutOfBoundsValue_Key);
 
   MessageHelper messageHelper(messageHandler);
 
   // Execute the correct ::ProcessVertices, else error out
-  switch(args.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key))
+  switch(filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key))
   {
   case k_SilentModeIndex: {
     if(useMask)
@@ -535,7 +535,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
   }
   default: {
     return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handing Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})",
-                                                               args.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key), k_SilentMode, k_SilentModeIndex, k_WarningMode,
+                                                               filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key), k_SilentMode, k_SilentModeIndex, k_WarningMode,
                                                                k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
   }
   }

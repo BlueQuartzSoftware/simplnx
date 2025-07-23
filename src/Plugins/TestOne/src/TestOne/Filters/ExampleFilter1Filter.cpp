@@ -179,7 +179,7 @@ IFilter::PreflightResult ExampleFilter1Filter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> ExampleFilter1Filter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ExampleFilter1Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return MakeWarningVoidResult(-100, "Example Warning from within an execute message");

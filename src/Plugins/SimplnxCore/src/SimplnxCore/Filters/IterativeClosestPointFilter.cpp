@@ -130,13 +130,13 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
-  auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);
-  auto numIterations = args.value<uint64>(k_NumIterations_Key);
-  auto transformArrayPath = args.value<DataPath>(k_TransformArrayPath_Key);
+  auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
+  auto targetVertexPath = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
+  auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
+  auto transformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
 
   if(dataStructure.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
   {
@@ -165,14 +165,14 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
-  auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);
-  auto numIterations = args.value<uint64>(k_NumIterations_Key);
-  auto applyTransformation = args.value<bool>(k_ApplyTransformation_Key);
-  auto transformArrayPath = args.value<DataPath>(k_TransformArrayPath_Key);
+  auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
+  auto targetVertexPath = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
+  auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
+  auto applyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
+  auto transformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
 
   auto movingVertexGeom = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
   auto targetVertexGeom = dataStructure.getDataAs<VertexGeom>(targetVertexPath);

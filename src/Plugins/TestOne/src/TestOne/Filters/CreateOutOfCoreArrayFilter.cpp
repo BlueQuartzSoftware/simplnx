@@ -115,12 +115,12 @@ IFilter::PreflightResult CreateOutOfCoreArray::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
-Result<> CreateOutOfCoreArray::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CreateOutOfCoreArray::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto numericType = args.value<NumericType>(k_NumericType_Key);
-  auto path = args.value<DataPath>(k_DataPath_Key);
-  auto initValue = args.value<std::string>(k_InitilizationValue_Key);
+  auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
+  auto path = filterArgs.value<DataPath>(k_DataPath_Key);
+  auto initValue = filterArgs.value<std::string>(k_InitilizationValue_Key);
 
   switch(numericType)
   {

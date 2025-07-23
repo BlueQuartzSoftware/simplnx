@@ -75,7 +75,7 @@ public:
 
   /**
    * @brief Returns parameters version integer.
-   * Initial version should always be 1.
+   * The Initial version should always be 1.
    * Should be incremented everytime the parameters change.
    * @return VersionType
    */
@@ -106,7 +106,7 @@ protected:
    * @param messageHandler
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                        const ExecutionContext& executionContext) const override;
 };
 } // namespace nx::core

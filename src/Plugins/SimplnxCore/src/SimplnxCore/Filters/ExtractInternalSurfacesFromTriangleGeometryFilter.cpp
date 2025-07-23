@@ -261,18 +261,18 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
+                                                                        const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto nodeTypesArrayPath = args.value<DataPath>(k_NodeTypesPath_Key);
-  auto triangleGeomPath = args.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  auto internalTrianglesPath = args.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  auto copyVertexPaths = args.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
-  auto copyTrianglePaths = args.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
-  auto vertexDataName = args.value<std::string>(k_VertexAttributeMatrixName_Key);
-  auto faceDataName = args.value<std::string>(k_TriangleAttributeMatrixName_Key);
+  auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
+  auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  auto internalTrianglesPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
+  auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  auto faceDataName = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
 
-  auto minMaxNodeValues = args.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
+  auto minMaxNodeValues = filterArgs.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
 
   auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
   auto& internalTriangleGeom = dataStructure.getDataRefAs<TriangleGeom>(internalTrianglesPath);

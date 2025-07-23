@@ -19,17 +19,17 @@ constexpr int64 k_NoAction = -6800;
 constexpr int64 k_MissingInputArray = -6801;
 
 //------------------------------------------------------------------------------
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& args)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs)
 {
-  auto findLength = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindLength_Key);
-  auto findMin = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMinimum_Key);
-  auto findMax = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMaximum_Key);
-  auto findMean = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMean_Key);
-  auto findMedian = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMedian_Key);
-  auto findStdDeviation = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindStandardDeviation_Key);
-  auto findSummation = args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindSummation_Key);
+  auto findLength = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindLength_Key);
+  auto findMin = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMinimum_Key);
+  auto findMax = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMaximum_Key);
+  auto findMean = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMean_Key);
+  auto findMedian = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMedian_Key);
+  auto findStdDeviation = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindStandardDeviation_Key);
+  auto findSummation = filterArgs.value<bool>(ComputeNeighborListStatisticsFilter::k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key);
   auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
@@ -38,43 +38,43 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   OutputActions actions;
   if(findLength)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_LengthName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_LengthName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MinimumName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_MinimumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MaximumName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_MaximumName_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MeanName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_MeanName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MedianName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_MedianName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_StandardDeviationName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_StandardDeviationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_SummationName_Key));
+    auto arrayPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(ComputeNeighborListStatisticsFilter::k_SummationName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.appendAction(std::move(action));
   }
@@ -166,18 +166,18 @@ IFilter::UniquePointer ComputeNeighborListStatisticsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
+IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto findLength = args.value<bool>(k_FindLength_Key);
-  auto findMin = args.value<bool>(k_FindMinimum_Key);
-  auto findMax = args.value<bool>(k_FindMaximum_Key);
-  auto findMean = args.value<bool>(k_FindMean_Key);
-  auto findMedian = args.value<bool>(k_FindMedian_Key);
-  auto findStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
-  auto findSummation = args.value<bool>(k_FindSummation_Key);
+  auto findLength = filterArgs.value<bool>(k_FindLength_Key);
+  auto findMin = filterArgs.value<bool>(k_FindMinimum_Key);
+  auto findMax = filterArgs.value<bool>(k_FindMaximum_Key);
+  auto findMean = filterArgs.value<bool>(k_FindMean_Key);
+  auto findMedian = filterArgs.value<bool>(k_FindMedian_Key);
+  auto findStdDeviation = filterArgs.value<bool>(k_FindStandardDeviation_Key);
+  auto findSummation = filterArgs.value<bool>(k_FindSummation_Key);
 
-  auto inputArrayPath = args.value<DataPath>(k_InputNeighborListPath_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_InputNeighborListPath_Key);
 
   if(!findMin && !findMax && !findMean && !findMedian && !findStdDeviation && !findSummation && !findLength)
   {
@@ -194,58 +194,58 @@ IFilter::PreflightResult ComputeNeighborListStatisticsFilter::preflightImpl(cons
 
   dataArrayPaths.push_back(inputArrayPath);
 
-  return {CreateCompatibleArrays(dataStructure, args)};
+  return {CreateCompatibleArrays(dataStructure, filterArgs)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ComputeNeighborListStatisticsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeNeighborListStatisticsInputValues inputValues;
 
-  inputValues.FindLength = args.value<bool>(k_FindLength_Key);
-  inputValues.FindMin = args.value<bool>(k_FindMinimum_Key);
-  inputValues.FindMax = args.value<bool>(k_FindMaximum_Key);
-  inputValues.FindMean = args.value<bool>(k_FindMean_Key);
-  inputValues.FindMedian = args.value<bool>(k_FindMedian_Key);
-  inputValues.FindStdDeviation = args.value<bool>(k_FindStandardDeviation_Key);
-  inputValues.FindSummation = args.value<bool>(k_FindSummation_Key);
+  inputValues.FindLength = filterArgs.value<bool>(k_FindLength_Key);
+  inputValues.FindMin = filterArgs.value<bool>(k_FindMinimum_Key);
+  inputValues.FindMax = filterArgs.value<bool>(k_FindMaximum_Key);
+  inputValues.FindMean = filterArgs.value<bool>(k_FindMean_Key);
+  inputValues.FindMedian = filterArgs.value<bool>(k_FindMedian_Key);
+  inputValues.FindStdDeviation = filterArgs.value<bool>(k_FindStandardDeviation_Key);
+  inputValues.FindSummation = filterArgs.value<bool>(k_FindSummation_Key);
 
   if(!inputValues.FindMin && !inputValues.FindMax && !inputValues.FindMean && !inputValues.FindMedian && !inputValues.FindStdDeviation && !inputValues.FindSummation && !inputValues.FindLength)
   {
     return {};
   }
 
-  inputValues.TargetNeighborListPath = args.value<DataPath>(k_InputNeighborListPath_Key);
+  inputValues.TargetNeighborListPath = filterArgs.value<DataPath>(k_InputNeighborListPath_Key);
   const DataPath outputGroupPath = inputValues.TargetNeighborListPath.getParent();
 
   if(inputValues.FindLength)
   {
-    inputValues.LengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_LengthName_Key));
+    inputValues.LengthPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_LengthName_Key));
   }
   if(inputValues.FindMin)
   {
-    inputValues.MinPath = outputGroupPath.createChildPath(args.value<std::string>(k_MinimumName_Key));
+    inputValues.MinPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_MinimumName_Key));
   }
   if(inputValues.FindMax)
   {
-    inputValues.MaxPath = outputGroupPath.createChildPath(args.value<std::string>(k_MaximumName_Key));
+    inputValues.MaxPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_MaximumName_Key));
   }
   if(inputValues.FindMean)
   {
-    inputValues.MeanPath = outputGroupPath.createChildPath(args.value<std::string>(k_MeanName_Key));
+    inputValues.MeanPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_MeanName_Key));
   }
   if(inputValues.FindMedian)
   {
-    inputValues.MedianPath = outputGroupPath.createChildPath(args.value<std::string>(k_MedianName_Key));
+    inputValues.MedianPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_MedianName_Key));
   }
   if(inputValues.FindStdDeviation)
   {
-    inputValues.StdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviationName_Key));
+    inputValues.StdDeviationPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_StandardDeviationName_Key));
   }
   if(inputValues.FindSummation)
   {
-    inputValues.SummationPath = outputGroupPath.createChildPath(args.value<std::string>(k_SummationName_Key));
+    inputValues.SummationPath = outputGroupPath.createChildPath(filterArgs.value<std::string>(k_SummationName_Key));
   }
 
   return ComputeNeighborListStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();

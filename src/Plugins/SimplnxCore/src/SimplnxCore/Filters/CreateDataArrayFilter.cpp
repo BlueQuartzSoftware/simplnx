@@ -166,7 +166,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   return {};

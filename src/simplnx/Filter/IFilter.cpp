@@ -30,12 +30,12 @@ void moveResult(nx::core::Result<T>& result, std::vector<nx::core::Error>& error
   }
 }
 
-std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& args, const Parameters& params, const IFilter& filter, const ExecutionContext& executionContext)
+std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& filterArgs, const Parameters& params, const IFilter& filter, const ExecutionContext& executionContext)
 {
   Arguments resolvedArgs;
   std::vector<Warning> warnings;
 
-  for(const auto& [name, arg] : args)
+  for(const auto& [name, arg] : filterArgs)
   {
     if(!params.contains(name))
     {
@@ -49,7 +49,7 @@ std::pair<Arguments, std::vector<Warning>> GetResolvedArgs(const Arguments& args
 
   for(const auto& [name, parameter] : params)
   {
-    if(!args.contains(name))
+    if(!filterArgs.contains(name))
     {
       resolvedArgs.insert(name, parameter->defaultValue());
     }
@@ -195,10 +195,10 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
   return implResult;
 }
 
-IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
+IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  PreflightResult preflightResult = preflight(dataStructure, args, messageHandler, shouldCancel, executionContext);
+  PreflightResult preflightResult = preflight(dataStructure, filterArgs, messageHandler, shouldCancel, executionContext);
   if(preflightResult.outputActions.invalid())
   {
     return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
@@ -219,7 +219,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   Parameters params = parameters();
   // We can discard the warnings since they're already reported in preflight
-  auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this, executionContext);
+  auto [resolvedArgs, warnings] = GetResolvedArgs(filterArgs, params, *this, executionContext);
 
   Result<> executeImplResult = executeImpl(dataStructure, resolvedArgs, pipelineFilter, messageHandler, shouldCancel, executionContext);
   if(shouldCancel)
