@@ -171,11 +171,19 @@
           "value": "RoboMet.3D Image Stack",
           "version": 1
         },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
         "mask_path": {
           "value": "RoboMet.3D Image Stack/Optical Data/Mask",
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "randomize_features": {
           "value": true,
           "version": 1
@@ -237,6 +245,10 @@
         "parameters_version": 1,
         "relaxation_factor": {
           "value": 0.5,
+          "version": 1
+        },
+        "repair_triangle_winding": {
+          "value": true,
           "version": 1
         },
         "smoothing_iterations": {

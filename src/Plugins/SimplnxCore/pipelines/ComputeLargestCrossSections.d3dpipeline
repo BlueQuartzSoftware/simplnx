@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ComputeLargestCrossSections.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -54,6 +55,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Image Quality",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -62,6 +64,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Confidence Index",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -71,7 +74,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -167,11 +170,19 @@
           "value": "DataContainer",
           "version": 1
         },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
         "misorientation_tolerance": {
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "randomize_features": {
           "value": true,
           "version": 1
@@ -239,5 +250,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

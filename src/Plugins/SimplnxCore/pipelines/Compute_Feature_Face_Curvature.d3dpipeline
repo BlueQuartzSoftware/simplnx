@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "Compute_Feature_Face_Curvature.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -54,9 +55,10 @@
               "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
               "DataContainer/Cell Data/KernelAverageMisorientations"
             ],
-            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -172,10 +174,6 @@
           "value": "DataContainer/Cell Data/FeatureIds",
           "version": 1
         },
-        "input_data_array_paths": {
-          "value": [],
-          "version": 1
-        },
         "input_grid_geometry_path": {
           "value": "DataContainer",
           "version": 1
@@ -195,6 +193,10 @@
         "parameters_version": 1,
         "relaxation_factor": {
           "value": 0.5,
+          "version": 1
+        },
+        "repair_triangle_winding": {
+          "value": true,
           "version": 1
         },
         "smoothing_iterations": {
@@ -397,5 +399,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

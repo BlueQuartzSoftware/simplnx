@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "TxCopper_Unexposed.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -41,6 +42,10 @@
       "args": {
         "input_image_geometry_path": {
           "value": "Cugrid_after 2nd_15kv_2kx_2",
+          "version": 1
+        },
+        "keep_input_geometry_origin": {
+          "value": false,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -189,6 +194,7 @@
               {
                 "array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Error",
                 "comparison": 2,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -198,7 +204,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -411,5 +417,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

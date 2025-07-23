@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "aptr12_Analysis.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -41,6 +42,10 @@
       "args": {
         "input_image_geometry_path": {
           "value": "fw-ar-IF1-aptr12-corr",
+          "version": 1
+        },
+        "keep_input_geometry_origin": {
+          "value": false,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -115,6 +120,7 @@
               {
                 "array_path": "fw-ar-IF1-aptr12-corr/Cell Data/Error",
                 "comparison": 2,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -124,7 +130,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -473,11 +479,19 @@
           "value": "fw-ar-IF1-aptr12-corr",
           "version": 1
         },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
         "misorientation_tolerance": {
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "randomize_features": {
           "value": true,
           "version": 1
@@ -766,6 +780,10 @@
           "value": "fw-ar-IF1-aptr12-corr",
           "version": 1
         },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
         "parameters_version": 1
       },
       "comments": "",
@@ -914,6 +932,10 @@
     },
     {
       "args": {
+        "calculate_modal_bin_ranges": {
+          "value": false,
+          "version": 1
+        },
         "create_new_data_group": {
           "value": true,
           "version": 1
@@ -924,6 +946,18 @@
         },
         "histogram_bin_range_name": {
           "value": "Bin Ranges",
+          "version": 1
+        },
+        "histogram_modal_bin_ranges_name": {
+          "value": "Modal Bin Ranges",
+          "version": 1
+        },
+        "histogram_most_populated_bin_name": {
+          "value": "Most Populated Bin",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
           "version": 1
         },
         "max_range": {
@@ -946,11 +980,15 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "selected_array_paths": {
           "value": [
             "fw-ar-IF1-aptr12-corr/Cell Feature Data/EquivalentDiameters"
           ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
           "version": 1
         },
         "user_defined_range": {
@@ -1031,5 +1069,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

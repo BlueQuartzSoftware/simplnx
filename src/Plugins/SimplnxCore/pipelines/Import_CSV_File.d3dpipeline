@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "Import CSV File",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -304,5 +305,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

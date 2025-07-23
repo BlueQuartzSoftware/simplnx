@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(01) Small IN100 Quick Mesh.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -55,9 +56,10 @@
               "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
               "DataContainer/Cell Data/KernelAverageMisorientations"
             ],
-            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+            "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -214,7 +216,11 @@
           "value": "TriangleDataContainer",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "repair_triangle_winding": {
+          "value": true,
+          "version": 1
+        },
         "vertex_data_group_name": {
           "value": "Vertex Data",
           "version": 1
@@ -247,5 +253,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

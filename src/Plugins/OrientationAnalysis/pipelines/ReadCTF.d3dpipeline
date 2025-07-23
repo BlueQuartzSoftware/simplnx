@@ -43,6 +43,10 @@
           "value": "DataContainer",
           "version": 1
         },
+        "keep_input_geometry_origin": {
+          "value": false,
+          "version": 1
+        },
         "output_image_geometry_path": {
           "value": "",
           "version": 1
@@ -115,6 +119,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Error",
                 "comparison": 2,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -124,7 +129,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -203,5 +208,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

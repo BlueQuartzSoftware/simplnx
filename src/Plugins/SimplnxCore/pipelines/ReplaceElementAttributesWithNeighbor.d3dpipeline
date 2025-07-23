@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "ReplaceElementAttributesWithNeighbor.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -38,6 +39,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Confidence Index",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -46,6 +48,7 @@
               {
                 "array_path": "DataContainer/Cell Data/Image Quality",
                 "comparison": 0,
+                "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
@@ -55,7 +58,7 @@
             "type": "collection",
             "union": 0
           },
-          "version": 1
+          "version": 2
         },
         "created_mask_type": {
           "value": 10,
@@ -94,6 +97,10 @@
       "args": {
         "input_image_geometry_path": {
           "value": "DataContainer",
+          "version": 1
+        },
+        "keep_input_geometry_origin": {
+          "value": false,
           "version": 1
         },
         "output_image_geometry_path": {
@@ -394,5 +401,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

@@ -171,11 +171,19 @@
           "value": "ImageDataContainer",
           "version": 1
         },
+        "is_periodic": {
+          "value": false,
+          "version": 1
+        },
         "mask_path": {
           "value": "ImageDataContainer/Cell Data/Mask",
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "randomize_features": {
           "value": true,
           "version": 1
@@ -383,6 +391,10 @@
         },
         "input_image_geometry_path": {
           "value": "ImageDataContainer",
+          "version": 1
+        },
+        "is_periodic": {
+          "value": false,
           "version": 1
         },
         "parameters_version": 1

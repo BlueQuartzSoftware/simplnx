@@ -283,11 +283,12 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
   std::vector<std::string> paramKeyNotFound;
   std::vector<std::string> jsonKeyNotFound;
 
+  // Check that each key from the filter's parameters appears in the JSON.
   for(const auto& [name, param] : params)
   {
     if(!json.contains(name))
     {
-      // warnings.push_back(Warning{-5432, fmt::format("PARAMETER_KEY_NOT_FOUND_IN_JSON | '{}' | Parameter Key '{}' missing from the JSON", className(), name)});
+      warnings.push_back(Warning{-5432, fmt::format("Parameter key not found in JSON for filter: '{}'\n    Parameter Key '{}' missing from the JSON", className(), name)});
       args.insert(name, param->defaultValue());
       paramKeyNotFound.push_back(name);
       continue;
@@ -302,26 +303,30 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
     args.insert(name, std::move(jsonResult.value()));
   }
 
+  // Check if any keys from the JSON do NOT appear in the Filter's set of parameters
   for(auto& [key, val] : json.items())
   {
-    if(!params.contains(key))
+    if(key != "parameters_version" && !params.contains(key))
     {
-      // warnings.push_back(Warning{-5433, fmt::format("JSON_KEY_NOT_FOUND_IN_PARAMETER | '{}' | JSON Key '{}' missing from the parameter list", className(), key)});
+      warnings.push_back(
+          Warning{-5433, fmt::format("JSON has parameter key that does not exist in filter '{}' parameter key set.\n    JSON Key '{}' missing from the parameter list", className(), key)});
       jsonKeyNotFound.push_back(key);
-      continue;
     }
   }
 
+  // Now run an N^2 comparison between those to try and find any commonality, i.e.,
+  // is one of the keys pretty "close" to another key. That is what is going to be
+  // suggested below. This relies on an algorithm to determine what is "close". This
+  // may not be correct or even remotely close.
   auto bestMatches = StringUtilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
   for(const auto& match : bestMatches)
   {
     if(!std::get<0>(match).empty() && !std::get<1>(match).empty())
     {
-      warnings.push_back(Warning{
-          -5434, fmt::format(
-                     "Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
-                     "'{}' with a match distance of {}.\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    Open the JSON file in a text editor and make the suggested changes.",
-                     className(), std::get<0>(match), std::get<1>(match), std::get<2>(match), std::get<0>(match), std::get<1>(match))});
+      warnings.push_back(Warning{-5434, fmt::format("Filter '{}': JSON Parameter Warning\n    JSON Parameter Key '{}' is not an accepted Parameter Key for the filter. Closest match is "
+                                                    "'{}' with a match distance of {}.\n    Suggested change is '{}' ==> '{}' (This is *ONLY* a suggestion.)\n    You can open the pipeline file in a "
+                                                    "text editor and make the changes if those changes make sense.",
+                                                    className(), std::get<0>(match), std::get<1>(match), std::get<2>(match), std::get<0>(match), std::get<1>(match))});
     }
   }
 

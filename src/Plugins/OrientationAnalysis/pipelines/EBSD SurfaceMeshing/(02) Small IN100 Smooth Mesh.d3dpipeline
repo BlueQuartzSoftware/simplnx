@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(02) SmallIN100 Smooth Mesh.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -59,9 +60,10 @@
               "TriangleDataContainer/Face Data/FaceLabels",
               "TriangleDataContainer/QM Face Feature Data"
             ],
-            "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+            "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -147,5 +149,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

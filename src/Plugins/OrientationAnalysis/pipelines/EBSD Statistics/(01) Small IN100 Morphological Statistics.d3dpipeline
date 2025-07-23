@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "(01) Small IN100 Morphological Statistics.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -28,9 +29,10 @@
               "DataContainer/NewGrain Data/Active",
               "DataContainer/Cell Data/IPFColors"
             ],
-            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+            "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d",
+            "path_import_policy": 1
           },
-          "version": 1
+          "version": 2
         },
         "parameters_version": 1
       },
@@ -84,6 +86,10 @@
         },
         "input_image_geometry_path": {
           "value": "DataContainer",
+          "version": 1
+        },
+        "is_periodic": {
+          "value": false,
           "version": 1
         },
         "parameters_version": 1
@@ -377,5 +383,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "CreateVertexGeom.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -395,5 +396,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }

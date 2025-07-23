@@ -1,6 +1,7 @@
 {
   "isDisabled": false,
   "name": "AppendImageGeometry.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
     {
       "args": {
@@ -485,6 +486,10 @@
           "value": true,
           "version": 1
         },
+        "default_value": {
+          "value": "0",
+          "version": 1
+        },
         "destination_image_geometry_path": {
           "value": "CroppedTopHalf",
           "version": 1
@@ -538,5 +543,6 @@
       "isDisabled": false
     }
   ],
-  "version": 1
+  "version": 1,
+  "workflowParams": []
 }
