@@ -160,6 +160,8 @@ void TestCase_TestPrimitives(nonstd::span<std::string> values)
     const auto& testValue = array->at(i);
     REQUIRE(testValue == exemplaryValue);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -288,6 +290,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Ski
   // Check that the array does not exist
   const IDataArray* array = dataStructure.getDataAs<IDataArray>(arrayPath);
   REQUIRE(array == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 3): Invalid filter execution - Out of Bounds")
@@ -553,6 +557,8 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 7): Valid filter execution - Str
       REQUIRE(array->at(i) == v[i]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mixed quoted strings and integers")
@@ -618,4 +624,6 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 8): Valid filter execution - Mix
   {
     REQUIRE(numArray->at(i) == std::get<2>(rows[i]));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

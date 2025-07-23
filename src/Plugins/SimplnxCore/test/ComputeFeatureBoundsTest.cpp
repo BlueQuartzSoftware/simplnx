@@ -135,6 +135,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     REQUIRE(sharedEdgeList[(i * 2) + 0] == expectedEdges[i][0]);
     REQUIRE(sharedEdgeList[(i * 2) + 1] == expectedEdges[i][1]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -206,6 +208,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
   {
     REQUIRE(unified[6 + j] == expectedValues[j]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -285,6 +289,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
       REQUIRE(max[3 + j - 3] == expectedValues[j]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -342,6 +348,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
       REQUIRE(unified[(i * 6) + j] == expectedValues[i - 1][j]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -408,6 +416,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -480,6 +490,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
       REQUIRE(unified[(i * 6) + j] == expectedValues[i - 1][j]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -561,6 +573,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -632,6 +646,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
       REQUIRE(unified[(i * 6) + j] == expectedValues[i - 1][j]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -712,6 +728,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -783,6 +801,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
       REQUIRE(unified[(i * 6) + j] == expectedValues[i - 1][j]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -863,6 +883,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpected Feature Id Size", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -907,6 +929,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM Size Invalid", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -967,4 +991,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

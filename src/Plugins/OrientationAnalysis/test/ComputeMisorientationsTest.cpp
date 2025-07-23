@@ -179,6 +179,8 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:MakeTestData", "[Or
 {
   GenerateTestDataInputArrays();
   GenerateReferenceOrientationTestData();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 #endif
 
@@ -220,6 +222,8 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_reference_orientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Reconstruction][ComputeMisorientationsFilter]")
@@ -264,4 +268,6 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

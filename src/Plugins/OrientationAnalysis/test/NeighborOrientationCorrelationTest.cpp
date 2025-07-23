@@ -192,4 +192,6 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

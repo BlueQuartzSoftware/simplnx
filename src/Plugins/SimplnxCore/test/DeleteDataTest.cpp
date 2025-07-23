@@ -53,6 +53,8 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
   DataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
   REQUIRE(removedDataArray == nullptr);
   REQUIRE(dataStructure.getData(selectedDataPath2) == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][DeleteDataFilter]")
@@ -88,6 +90,8 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 
   DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**This code is commented out due to the current state of dataStructure management for the

@@ -50,6 +50,8 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImageFilter(defaults)", "[I
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImageFilter(vector)", "[ITKImageProcessing][ITKNormalizeToConstantImage][vector]")
@@ -87,4 +89,6 @@ TEST_CASE("ITKImageProcessing::ITKNormalizeToConstantImageFilter(vector)", "[ITK
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

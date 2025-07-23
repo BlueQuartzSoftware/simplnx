@@ -49,6 +49,8 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_SampledVertexAMPath, k_ExemplarySampledVertexGeomPath.getTargetName());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
@@ -74,4 +76,6 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution"
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

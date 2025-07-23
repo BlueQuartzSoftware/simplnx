@@ -92,4 +92,6 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom", "[OrientationAnalysi
                                    k_FaceFeatureAttributeMatrixPath.createChildPath(k_ExemplarAxisEulerAnglesArrayName));
   UnitTest::CompareArrays<float32>(exemplarDataStructure, k_FaceFeatureAttributeMatrixPath.createChildPath(k_AspectRatiosArrayName),
                                    k_FaceFeatureAttributeMatrixPath.createChildPath(k_ExemplarAspectRatiosArrayName));
+
+  UnitTest::CheckArraysInheritTupleDims(exemplarDataStructure);
 }

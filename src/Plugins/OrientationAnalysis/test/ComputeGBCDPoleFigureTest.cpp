@@ -160,4 +160,6 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/gbcd_pole_figure.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

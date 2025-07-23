@@ -90,4 +90,6 @@ TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTrian
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_triangle_areas.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -44,6 +44,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: Valid Filter Execut
 
   UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellAttributeMatrix.createChildPath(k_CAxisLocationsExemplar), k_CellAttributeMatrix.createChildPath(k_CAxisLocationsComputed),
                                                 UnitTest::EPSILON, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Execution")
@@ -76,4 +78,6 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Exec
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

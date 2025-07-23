@@ -98,4 +98,6 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter", "[OrientationAnalysis][Co
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_schmids.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

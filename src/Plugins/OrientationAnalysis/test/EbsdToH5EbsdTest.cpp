@@ -231,4 +231,6 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::TraverseFile(k_ExemplarFilePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

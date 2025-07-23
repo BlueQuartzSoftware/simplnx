@@ -142,6 +142,8 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   REQUIRE(sumVal1 == 10146.0f);
   REQUIRE(sumVal2 == 24753.0f);
   REQUIRE(sumVal3 == 22391.0f);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array", "[ComputeNeighborListStatisticsFilter]")
@@ -198,4 +200,6 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

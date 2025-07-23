@@ -94,6 +94,8 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[S
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_list/relative_align_sections_list.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "[SimplnxCore][AlignSectionsListFilter]")
@@ -161,4 +163,6 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_list/cumulative_align_sections_list.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

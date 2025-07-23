@@ -68,4 +68,6 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   {
     UnitTest::CompareImageGeometry(exemplarDataStructure.getDataAs<ImageGeom>(exemplarGroup[i]), dataStructure.getDataAs<ImageGeom>(generatedGroup[i]));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

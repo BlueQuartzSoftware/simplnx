@@ -448,7 +448,7 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
 
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   auto createArrayAction =
-      std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, std::vector<usize>{1}, dap);
+      std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[2], metadata.Dimensions[1], metadata.Dimensions[0]}, std::vector<usize>{1}, dap);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions)};

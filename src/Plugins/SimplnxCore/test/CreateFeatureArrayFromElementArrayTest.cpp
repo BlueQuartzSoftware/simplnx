@@ -70,6 +70,8 @@ void testElementArray(const DataPath& cellDataPath)
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

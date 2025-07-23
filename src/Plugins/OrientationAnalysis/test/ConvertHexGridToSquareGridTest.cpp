@@ -92,6 +92,8 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Single File Va
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   REQUIRE(::CompareFiles(fmt::format("{}/{}/single/exemplar/Sqr_SIMPL_hex_grid.ang", nx::core::unit_test::k_TestFilesDir, ::k_HexToSqrTestFilesDir), k_OutPath.string() + "/Sqr_hex_grid.ang"));
@@ -143,6 +145,8 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGridFilter: Multiple File 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   REQUIRE((fs::exists(k_OutPath) && fs::is_directory(k_OutPath)));

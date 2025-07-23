@@ -77,6 +77,8 @@ TEST_CASE("SimplnxCore::MoveDataFilter Successful", "[Simplnx::Core][MoveDataFil
 
   const DataPath newGroup4Path = k_Group1Path.createChildPath(k_Group4Name);
   REQUIRE(dataStructure.getDataAs<DataGroup>(newGroup4Path) != nullptr);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataFilter]")
@@ -115,6 +117,8 @@ TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataF
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure", "[Simplnx::Core][MoveDataFilter]")
@@ -149,4 +153,6 @@ TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -78,6 +78,8 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[
 
     UnitTest::CompareArrays<bool>(dataStructure, k_ExemplarBiasedFeatures2DPath, k_ComputedBiasedFeatures2DPath);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", "[ComputeBiasedFeaturesFilter]")
@@ -110,4 +112,6 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

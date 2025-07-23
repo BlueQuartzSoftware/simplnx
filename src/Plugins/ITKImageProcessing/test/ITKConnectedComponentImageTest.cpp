@@ -49,6 +49,8 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(default)", "[ITK
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "548f5184428db10d93e3bf377dee5253");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKImageProcessing][ITKConnectedComponentImageFilter][mask]")
@@ -84,6 +86,8 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(mask)", "[ITKIma
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "769315132e427a391edd779191db446d");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)", "[ITKImageProcessing][ITKConnectedComponentImageFilter][fullyconnected]")
@@ -120,4 +124,6 @@ TEST_CASE("ITKImageProcessing::ITKConnectedComponentImageFilter(fullyconnected)"
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "e40b7cdfc1b34ae2e6b13660d626cc29");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

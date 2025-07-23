@@ -40,4 +40,6 @@ TEST_CASE("Filter List Instantiation")
     auto preflightResult = filter->preflight(dataStructure, args);
     REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

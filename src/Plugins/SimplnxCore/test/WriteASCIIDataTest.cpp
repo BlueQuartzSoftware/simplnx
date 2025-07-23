@@ -219,4 +219,6 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Valid filter execution")
   RunASCIIDataTest<uint32>(dataStructure).execute();
   RunASCIIDataTest<float32>(dataStructure).execute();
   RunASCIIDataTest<float64>(dataStructure).execute();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case

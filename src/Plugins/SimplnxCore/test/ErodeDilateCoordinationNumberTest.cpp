@@ -59,4 +59,6 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter", "[SimplnxCore][Ero
   }
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

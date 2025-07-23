@@ -73,6 +73,8 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
   const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate)", "[SimplnxCore][ErodeDilateBadDataFilter]")
@@ -115,4 +117,6 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate)", "[SimplnxCore][ErodeD
   }
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

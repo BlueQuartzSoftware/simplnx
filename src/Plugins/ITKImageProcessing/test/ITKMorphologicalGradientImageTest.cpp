@@ -54,4 +54,6 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalGradientImageFilter(Morphological
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "57167a1d86b60fbf9e040d9441676876");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

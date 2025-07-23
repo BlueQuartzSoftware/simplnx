@@ -146,6 +146,8 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
       REQUIRE(UnitTest::CloseEnough<double>(arrayPtr->at(i), value, 0.01));
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -278,6 +280,8 @@ void MultiComponentArrayCalculatorTest()
     SIMPLNX_RESULT_REQUIRE_INVALID(results.result);
     REQUIRE(results.result.errors()[0].code == static_cast<int32>(CalculatorItem::ErrorCode::ComponentOutOfRange));
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -858,6 +862,8 @@ void SingleComponentArrayCalculatorTest2()
       REQUIRE(arrayPtr->at(i) == value);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")

@@ -102,4 +102,6 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis]
     auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_Exemplar1}));
     UnitTest::CompareDataArrays<float32>(*quats, outputArray);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

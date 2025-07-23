@@ -92,6 +92,8 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
   }
 
   REQUIRE(count == 4);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[SimplnxCore][IdentifyDuplicateVerticesFilter]")
@@ -129,4 +131,6 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[Simpl
   }
 
   REQUIRE(count == 0);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

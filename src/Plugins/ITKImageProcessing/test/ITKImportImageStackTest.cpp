@@ -172,6 +172,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoInput", "[ITKImagePr
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -188,6 +190,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoImageGeometry", "[IT
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoFiles", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -212,6 +216,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoFiles", "[ITKImagePr
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -236,6 +242,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: FileDoesNotExist", "[I
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -301,6 +309,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKIm
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
     REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Even X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -323,6 +333,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Eve
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Odd X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -345,6 +357,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Odd
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Even X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -367,6 +381,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Even
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd X/Y", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -389,6 +405,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
 
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -455,6 +473,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[I
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
     REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -521,6 +541,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProces
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
     REQUIRE(md5Hash == "8b0b0393d6779156c88544bc4d75d3fc");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -590,6 +612,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[I
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
     REQUIRE(md5Hash == "5969f0ae7507bfae14de3cb470d53e60");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -658,4 +682,6 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims",
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
     REQUIRE(md5Hash == "e1e892c7e11eb55a57919053eee66f22");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

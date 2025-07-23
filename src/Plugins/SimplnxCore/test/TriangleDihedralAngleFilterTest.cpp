@@ -113,4 +113,6 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   REQUIRE(std::isnan(calculatedDihedralAngleMinimums[2]));
   auto result4 = fabs(officialDihedralAngleMinimums[3] - calculatedDihedralAngleMinimums[3]);
   REQUIRE(result4 < ::k_max_difference);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

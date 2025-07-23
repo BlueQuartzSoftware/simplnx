@@ -157,6 +157,8 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   float32 value2 = (*omega2)[1];
   REQUIRE(std::fabs(value1 - 0.95493) < 0.00001);
   REQUIRE(std::fabs(value2 - 0.911891) < 0.00001);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
@@ -186,4 +188,6 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

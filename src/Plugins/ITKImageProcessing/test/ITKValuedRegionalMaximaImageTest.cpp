@@ -51,4 +51,6 @@ TEST_CASE("ITKImageProcessing::ITKValuedRegionalMaximaImageFilter(defaults)", "[
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "c94b3702844c508818e4718a75102472");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

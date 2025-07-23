@@ -270,6 +270,8 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
   RunBinaryTest<uint64>(dsRef).execute();
   RunBinaryTest<float32>(dsRef).execute();
   RunBinaryTest<float64>(dsRef).execute();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case
 
 //
@@ -334,4 +336,6 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

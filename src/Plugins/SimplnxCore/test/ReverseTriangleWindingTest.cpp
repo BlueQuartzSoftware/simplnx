@@ -45,4 +45,6 @@ TEST_CASE("SimplnxCore::ReverseTriangleWindingFilter: Valid Filter Execution", "
   auto& generatedTriGeom = exemplarDataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
 
   UnitTest::CompareDataArrays<TriangleGeom::MeshIndexType>(exemplarTriGeom.getFacesRef(), generatedTriGeom.getFacesRef());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -95,4 +95,6 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   REQUIRE(fs::exists(exemplarPath));
 
   REQUIRE(readIn(file) == readIn(exemplarPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

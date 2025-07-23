@@ -31,12 +31,13 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   const CreateImageGeometryAction::DimensionType dims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
+  const CreateImageGeometryAction::DimensionType attrMatrixDims = {dims.rbegin(), dims.rend()};
 
   auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName, IGeometry::LengthUnit::Micrometer);
   Result<> sampleActionResult = sampleAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleActionResult);
 
-  auto sampleDataAction = CreateArrayAction(DataType::float64, {25}, {1}, sampleDataArrayPath);
+  auto sampleDataAction = CreateArrayAction(DataType::float64, attrMatrixDims, {1}, sampleDataArrayPath);
   Result<> sampleDataActionResult = sampleDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleDataActionResult);
 
@@ -47,7 +48,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   Result<> refActionResult = refAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refActionResult);
 
-  auto refDataAction = CreateArrayAction(DataType::int32, {25}, {1}, refDataArrayPath);
+  auto refDataAction = CreateArrayAction(DataType::int32, attrMatrixDims, {1}, refDataArrayPath);
   Result<> refDataActionResult = refDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refDataActionResult);
 
@@ -113,6 +114,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
   REQUIRE(copiedArray[22] == 9.8);
   REQUIRE(copiedArray[23] == 9.8);
   REQUIRE(copiedArray[24] == 9.8);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
@@ -149,6 +152,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Exe
   {
     REQUIRE(value == 9.8);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
@@ -206,6 +211,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
   REQUIRE(copiedArray[22] == 12.0);
   REQUIRE(copiedArray[23] == 12.0);
   REQUIRE(copiedArray[24] == 13.0);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
@@ -263,6 +270,8 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
   REQUIRE(copiedArray[22] == 9.8);
   REQUIRE(copiedArray[23] == 9.8);
   REQUIRE(copiedArray[24] == 9.8);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
@@ -296,4 +305,6 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

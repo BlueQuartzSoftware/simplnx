@@ -18,6 +18,7 @@
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -1339,6 +1340,23 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   return dataStructure;
 }
 
+inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure)
+{
+  std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
+  REQUIRE(amPathsOpt.has_value());
+  for(const auto& amPath : amPathsOpt.value())
+  {
+    const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildDataPaths(dataStructure, amPath, DataObject::Type::DataArray);
+    REQUIRE(daPathsOpt.has_value());
+    for(const auto& daPath : daPathsOpt.value())
+    {
+      const auto& arr = dataStructure.getDataAs<IArray>(daPath);
+      REQUIRE(attrMatrix.getShape() == arr->getTupleShape());
+    }
+  }
+}
+
 } // namespace UnitTest
 
 // Make sure we can load the needed filters from the plugins
@@ -1392,7 +1410,8 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1418,7 +1437,7 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
 
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
-
 } // namespace SmallIn100

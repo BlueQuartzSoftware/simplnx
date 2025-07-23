@@ -91,4 +91,6 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Valid Filter Execution", "[Simp
   }
 
   ::CompareResults();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

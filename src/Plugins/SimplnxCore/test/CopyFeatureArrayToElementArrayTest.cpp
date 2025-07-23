@@ -50,6 +50,8 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", 
   {
     REQUIRE(err.code == nx::core::FilterParameter::Constants::k_Validate_Empty_Value);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;

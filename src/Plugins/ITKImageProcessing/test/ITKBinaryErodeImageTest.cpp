@@ -55,4 +55,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryErodeImageFilter(BinaryErode)", "[ITKIma
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "9e37516c795d7f25847851666ef53ef9");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -63,6 +63,8 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
 
   UnitTest::CompareArrays<float64>(dataStructure, k_ExemplarTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals),
                                    k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
@@ -90,4 +92,6 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

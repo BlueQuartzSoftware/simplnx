@@ -53,6 +53,8 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "095f00a68a84df4396914fa758f34dcc");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWithBorder)",
@@ -93,4 +95,6 @@ TEST_CASE("ITKImageProcessing::ITKBinaryMorphologicalClosingImageFilter(BinaryMo
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "506d365dd92db16c2ade264fca46890c");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

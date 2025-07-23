@@ -45,4 +45,6 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesBinaryFilter: Valid Filter Execution
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, k_ExemplarArray, k_GeneratedArray);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

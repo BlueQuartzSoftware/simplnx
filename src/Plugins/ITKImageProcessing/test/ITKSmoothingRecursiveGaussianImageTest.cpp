@@ -51,6 +51,8 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(default)
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(rgb_image)", "[ITKImageProcessing][ITKSmoothingRecursiveGaussianImage][rgb_image]")
@@ -92,4 +94,6 @@ TEST_CASE("ITKImageProcessing::ITKSmoothingRecursiveGaussianImageFilter(rgb_imag
   const Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_BaselineDataPath);
   Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, cellDataPath.createChildPath(outputArrayName), 1e-05);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -48,6 +48,8 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[C
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   UnitTest::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_ComputedBoundaryCellsPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "[ComputeBoundaryCellsFilter]")
@@ -85,4 +87,6 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

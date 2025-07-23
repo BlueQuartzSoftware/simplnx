@@ -74,4 +74,6 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[Orientation
     auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
     UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

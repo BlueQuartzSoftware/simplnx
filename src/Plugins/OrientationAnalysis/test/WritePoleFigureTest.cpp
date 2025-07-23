@@ -65,10 +65,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v3/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -112,16 +112,18 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v3/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -166,16 +168,18 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v3.tar.gz", "PoleFigure_Exemplars_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v3/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -220,4 +224,6 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
   CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

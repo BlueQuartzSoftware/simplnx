@@ -50,4 +50,6 @@ TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Single File Valid", "[SimplnxCo
   std::ifstream exemplarFile1(k_ExemplarFilePath);
 
   UnitTest::CompareAsciiFiles(computedFile1, exemplarFile1, {0});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

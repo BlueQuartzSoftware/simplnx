@@ -1,6 +1,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -40,4 +41,6 @@ TEST_CASE("GridMontage")
   REQUIRE(montage->getGeometry(&index00) == tile1);
   REQUIRE(montage->getGeometry(&index10) == tile2);
   REQUIRE(montage->getGeometry({0, 1, 0}) == tile3);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

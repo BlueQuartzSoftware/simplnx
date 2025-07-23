@@ -72,9 +72,13 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter", "[
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // TODO: needs to be implemented. This will need the input .dream3d file to be regenerated with the missing data generated using DREAM3D 6.6
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Misorientation Per Feature", "[OrientationAnalysis][ComputeFeatureNeighborMisorientations][.][UNIMPLEMENTED][!mayfail]")
 {
+
+  //  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

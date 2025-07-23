@@ -53,6 +53,8 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Medoids Test", "[SimplnxCore][Silhouet
   }
 
   UnitTest::CompareArrays<float64>(dataStructure, k_MedoidsSilhouettePath, k_MedoidsSilhouettePathNX);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SilhouetteFilter: Means Test", "[SimplnxCore][SilhouetteFilter]")
@@ -83,4 +85,6 @@ TEST_CASE("SimplnxCore::SilhouetteFilter: Means Test", "[SimplnxCore][Silhouette
   }
 
   UnitTest::CompareArrays<float64>(dataStructure, k_MeansSilhouettePath, k_MeansSilhouettePathNX);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

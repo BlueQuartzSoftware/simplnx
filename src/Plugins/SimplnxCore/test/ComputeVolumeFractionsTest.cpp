@@ -56,6 +56,8 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "
     float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result < UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
@@ -93,4 +95,6 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution",
     float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result > UnitTest::EPSILON);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

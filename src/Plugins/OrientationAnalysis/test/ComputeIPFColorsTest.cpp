@@ -115,4 +115,6 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
     }
     REQUIRE(valid == true);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -80,6 +80,8 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: Valid Filter Execution",
   REQUIRE((*phaseTypes)[0] == 999);
   REQUIRE((*phaseTypes)[1] == 0);
   REQUIRE((*phaseTypes)[2] == 3);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution")
@@ -192,4 +194,6 @@ TEST_CASE("OrientationAnalysis::ReadEnsembleInfoFilter: InValid Filter Execution
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

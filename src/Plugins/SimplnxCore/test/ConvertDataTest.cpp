@@ -106,6 +106,8 @@ void TestInt8Signed()
   TestConversion<int8, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<int8, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int8, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -120,6 +122,8 @@ void TestInt8Unsigned()
   TestConversion<int8, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<int8, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int8, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -137,6 +141,8 @@ void TestUInt8Signed()
   TestConversion<uint8, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<uint8, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint8, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -151,6 +157,8 @@ void TestUInt8Unsigned()
   TestConversion<uint8, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<uint8, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint8, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -168,6 +176,8 @@ void TestInt16Signed()
   TestConversion<int16, float>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<int16, double>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int16, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -182,6 +192,8 @@ void TestInt16Unsigned()
   TestConversion<int16, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<int16, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int16, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -199,6 +211,8 @@ void TestUInt16Signed()
   TestConversion<uint16, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<uint16, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint16, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -213,6 +227,8 @@ void TestUInt16Unsigned()
   TestConversion<uint16, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<uint16, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint16, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -230,6 +246,8 @@ void TestInt32Signed()
   TestConversion<int32, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<int32, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int32, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -244,6 +262,8 @@ void TestInt32Unsigned()
   TestConversion<int32, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<int32, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int32, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -261,6 +281,8 @@ void TestUInt32Signed()
   TestConversion<uint32, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<uint32, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint32, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -275,6 +297,8 @@ void TestUInt32Unsigned()
   TestConversion<uint32, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<uint32, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint32, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -292,6 +316,8 @@ void TestInt64Signed()
   TestConversion<int64, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<int64, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int64, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -306,6 +332,8 @@ void TestInt64Unsigned()
   TestConversion<int64, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<int64, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int64, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -323,6 +351,8 @@ void TestUInt64Signed()
   TestConversion<uint64, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<uint64, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint64, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -337,6 +367,8 @@ void TestUInt64Unsigned()
   TestConversion<uint64, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<uint64, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint64, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -354,6 +386,8 @@ void TestFloat()
   TestConversion<float32, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<float32, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<float, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -371,6 +405,8 @@ void TestDouble()
   TestConversion<float64, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<float64, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<double, bool>(dataStructure, filter, DataArrayName, DataType::boolean, "NewArrayBool");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -387,6 +423,8 @@ void TestBoolSigned()
 
   TestConversion<bool, float32>(dataStructure, filter, DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<bool, float64>(dataStructure, filter, DataArrayName, DataType::float64, "NewArrayDouble");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -400,6 +438,8 @@ void TestBoolUnsigned()
   TestConversion<bool, uint16>(dataStructure, filter, DataArrayName, DataType::uint16, "NewArrayUShort");
   TestConversion<bool, uint32>(dataStructure, filter, DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<bool, uint64>(dataStructure, filter, DataArrayName, DataType::uint64, "NewArrayULong");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

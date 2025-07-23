@@ -99,6 +99,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[Simpln
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/dummy_node", unit_test::k_TestFilesDir));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
@@ -134,4 +136,6 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCo
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/raw", unit_test::k_TestFilesDir));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

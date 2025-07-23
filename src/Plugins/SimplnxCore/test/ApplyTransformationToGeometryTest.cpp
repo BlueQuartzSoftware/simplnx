@@ -100,6 +100,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -146,6 +148,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -193,6 +197,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -243,6 +249,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -292,6 +300,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
 
   auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /*******************************************************************************
@@ -337,6 +347,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -378,6 +390,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linea
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -421,6 +435,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear",
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -466,6 +482,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear"
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -511,6 +529,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Li
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /*******************************************************************************
@@ -557,6 +577,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -599,6 +621,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", 
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -643,6 +667,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[S
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -689,6 +715,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
@@ -748,4 +776,6 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
 
     UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

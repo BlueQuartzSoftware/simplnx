@@ -145,6 +145,8 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCor
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));                                                 // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
@@ -181,6 +183,8 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCor
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
@@ -218,4 +222,6 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[S
     REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));                                          // No bool
     REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

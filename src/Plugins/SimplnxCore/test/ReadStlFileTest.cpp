@@ -51,6 +51,8 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFil
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:STLParseError", "[SimplnxCore][ReadStlFileFilter]")
@@ -81,6 +83,8 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:STLParseError", "[SimplnxCore][ReadStl
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
   REQUIRE(executeResult.result.errors().front().code == -1108);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:TriangleParseError", "[SimplnxCore][ReadStlFileFilter]")
@@ -111,6 +115,8 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:TriangleParseError", "[SimplnxCore][Re
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
   REQUIRE(executeResult.result.errors().front().code == -1106);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][ReadStlFileFilter]")
@@ -141,4 +147,6 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][R
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
   REQUIRE(executeResult.result.errors().front().code == -1107);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

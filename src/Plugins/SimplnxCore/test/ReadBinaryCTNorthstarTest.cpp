@@ -112,6 +112,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution")
   {
     REQUIRE(densityResult[i] == i);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
@@ -161,6 +163,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Valid filter execution with
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
@@ -186,6 +190,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38705);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
@@ -211,6 +217,8 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38704);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
@@ -315,4 +323,6 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38718);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

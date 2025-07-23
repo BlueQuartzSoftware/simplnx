@@ -321,6 +321,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
       CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, exemplarGeometryPath.getTargetName());
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
@@ -400,4 +402,6 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -102,6 +102,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: Counts & Bins Only", "[SimplnxCor
     compareHistograms(dataStruct.getDataAs<UInt32Array>(histogramPath.createChildPath(std::string{k_BinRangesName}))->getDataStoreRef(), binRangesSet);
     compareHistograms(dataStruct.getDataAs<UInt64Array>(histogramPath.createChildPath(std::string{k_BinCountsName}))->getDataStoreRef(), binCountsSet);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStruct);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[SimplnxCore][ComputeArrayHistogram]")
@@ -217,4 +219,6 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogram: All Histogram Calculations", "[Si
     REQUIRE((*mostPopulatedBinArray)[0] == 0);
     REQUIRE((*mostPopulatedBinArray)[1] == 4);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

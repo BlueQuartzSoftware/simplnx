@@ -985,6 +985,9 @@ Result<> finishImportingLegacyDataArrayImpl(DataStructure& dataStructure, const 
   auto tupleShape = nx::core::HDF5::IDataStoreIO::ReadTupleShape(dataSetIO);
   auto componentShape = nx::core::HDF5::IDataStoreIO::ReadComponentShape(dataSetIO);
 
+  // Reverse the tuple shape because the attribute tuple dimensions was written in reverse for these legacy data arrays
+  tupleShape = {tupleShape.rbegin(), tupleShape.rend()};
+
   auto dataStorePtr = dataSetIO.readAsDataStore<T>(tupleShape, componentShape);
   if(dataStorePtr == nullptr)
   {

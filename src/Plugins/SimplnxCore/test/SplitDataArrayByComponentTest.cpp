@@ -172,4 +172,6 @@ TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArra
   TestSplitByType<uint64>(dataStructure, "uint64");
   TestSplitByType<float>(dataStructure, "float");
   TestSplitByType<double>(dataStructure, "double");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

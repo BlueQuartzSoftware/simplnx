@@ -66,4 +66,6 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Exec
   std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
   std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
   UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

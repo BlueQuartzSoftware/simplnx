@@ -153,6 +153,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
   const auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
   const auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
   ValidateResults(featureIdsResult, cellFeatureAMResult, testArrayResult);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
@@ -192,6 +194,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
   auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
   ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
@@ -229,4 +233,6 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
   auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
   ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

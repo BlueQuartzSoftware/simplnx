@@ -49,7 +49,7 @@ const DataPath k_GeneratedIncoherencePath = k_FaceDataPath.createChildPath(k_Gen
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
                                                               "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
@@ -97,11 +97,13 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/base_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
                                                               "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
@@ -160,11 +162,13 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/no_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
                                                               "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
@@ -213,4 +217,6 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check",
 
     REQUIRE(found);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

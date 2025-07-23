@@ -51,4 +51,6 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImageFilter(d
 
   const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "c32759ecb10cbff555c750b8b7a8d32e");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

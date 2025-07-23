@@ -52,6 +52,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Physical", "[SimplnxCore][C
   }
 
   UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][ComputeCoordinatesImageGeom]")
@@ -79,6 +81,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][Co
   }
 
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Both", "[SimplnxCore][ComputeCoordinatesImageGeom]")
@@ -108,4 +112,6 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Both", "[SimplnxCore][Compu
 
   UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

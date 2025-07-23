@@ -124,4 +124,6 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternions", "[OrientationAnalysis][Co
     }
   }
   REQUIRE(misMatchIndices.size() == 0);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

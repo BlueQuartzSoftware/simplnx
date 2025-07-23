@@ -69,4 +69,6 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/vertex_to_triangle_distances.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

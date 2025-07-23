@@ -63,4 +63,6 @@ TEST_CASE("SimplnxCore::CreatePythonSkeleton")
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

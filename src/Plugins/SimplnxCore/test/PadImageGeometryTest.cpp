@@ -369,5 +369,6 @@ TEST_CASE("SimplnxCore::PadImageGeometryFilter: Valid Filter Execution", "[Simpl
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     CompareExemplarToGenerateAttributeMatrix(exemplarDataStructure, pad_image_geometry::k_AttributeMatrixPath, dataStructure, pad_image_geometry::k_AttributeMatrixPath);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

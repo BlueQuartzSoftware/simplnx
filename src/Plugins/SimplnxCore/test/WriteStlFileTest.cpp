@@ -139,6 +139,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore]
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareMultipleResults();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
@@ -167,6 +169,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][W
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareSingleResult();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStlFileFilter]")
@@ -236,6 +240,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
   fileContents = readIn(writtenFilePath);
   md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "d45a0d99495df506384fdbbb46a79f5c");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
@@ -266,6 +272,8 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Single File Valid", "[Simpl
   const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/single");
 
   ::CompareDirectories(exemplarDirPath, computedDirPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
@@ -297,4 +305,6 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Multiple File Valid", "[Sim
   const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/multiple");
 
   ::CompareDirectories(exemplarDirPath, computedDirPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -199,6 +199,8 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Valid Execution", "[Si
 
   // Clean up the files
   Cleanup();
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Invalid Execution", "[SimplnxCore][WriteNodesAndElementsFilesFilter]")
@@ -244,4 +246,6 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Invalid Execution", "[
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

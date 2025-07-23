@@ -54,6 +54,8 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(defaults)", "[ITKImageProces
     // REQUIRE(md5Hash == "3d91602f6080b45a5431b80d1f78c0a0");
     REQUIRE(md5Hash == "cbc59611297961dea9f872282534f3df");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing][ITKMedianImageFilter][by23]")
@@ -91,4 +93,6 @@ TEST_CASE("ITKImageProcessing::ITKMedianImageFilter(by23)", "[ITKImageProcessing
     // REQUIRE(md5Hash == "03610a1cb421d145fe985478d4eb9c0a");
     REQUIRE(md5Hash == "4afeba184100773dc279a776b1ae493b");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

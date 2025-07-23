@@ -43,10 +43,11 @@ DataStructure CreateDataStructure()
   TriangleGeom::Create(dataStructure, k_WrongGeometryName);
 
   // Create the Cell AttributeMatrix
-  AttributeMatrix* cellAttrMat = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, dims, imageGeom->getId());
+  auto cellAttrMatrixDims = std::vector<usize>(dims.rbegin(), dims.rend());
+  AttributeMatrix* cellAttrMat = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, cellAttrMatrixDims, imageGeom->getId());
 
   // Generate a "mask"
-  BoolArray* maskData = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, {cellCount}, {1}, cellAttrMat->getId());
+  BoolArray* maskData = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, cellAttrMatrixDims, {1}, cellAttrMat->getId());
   maskData->fill(true);
   (*maskData)[1] = false;
   (*maskData)[4] = false;
@@ -54,13 +55,13 @@ DataStructure CreateDataStructure()
   (*maskData)[13] = false;
   (*maskData)[14] = false;
 
-  AttributeMatrix* cellAttrMat2 = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, dims, imageGeom->getId());
+  AttributeMatrix* cellAttrMat2 = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, cellAttrMatrixDims, imageGeom->getId());
 
   // Create a cell attribute array
-  Float32Array* f32Data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, cellAttrMat->getId());
+  Float32Array* f32Data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMat->getId());
   f32Data->fill(45.243f);
 
-  Float32Array* f32Data2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, cellAttrMat2->getId());
+  Float32Array* f32Data2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMat2->getId());
   f32Data2->fill(45.243f);
 
   AttributeMatrix* wrongTuplesAttrMatrix = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, {3}, imageGeom->getId());
@@ -98,6 +99,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2006);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")
@@ -122,6 +125,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().size() == 1);
   REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
@@ -154,6 +159,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 
   REQUIRE_THROWS(dataStructure.getDataRefAs<Float32Array>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_FloatArrayName}}));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexDataPath.createChildPath(k_FloatArrayName)));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
@@ -191,7 +198,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 
   const Float32Array& srcDataArray = dataStructure.getDataRefAs<Float32Array>(floatArrayDataPath);
   const Float32Array& destDataArray = dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName));
-  REQUIRE(srcDataArray.getTupleShape() == destDataArray.getTupleShape());
+  REQUIRE(std::vector<usize>{srcDataArray.getNumberOfTuples()} == destDataArray.getTupleShape());
   REQUIRE(srcDataArray.getComponentShape() == destDataArray.getComponentShape());
   REQUIRE(srcDataArray.getSize() == destDataArray.getSize());
 
@@ -199,6 +206,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
   {
     REQUIRE(srcDataArray[i] == destDataArray[i]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
@@ -234,6 +243,8 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(vertexAttrMatDataPath.createChildPath(k_FloatArrayName)));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
@@ -291,4 +302,6 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
       destIdx++;
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

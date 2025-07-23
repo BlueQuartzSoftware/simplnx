@@ -100,4 +100,6 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReaderFilter: Read 2D & 3D Image Data",
   REQUIRE(tMatrixPtr->getTupleShape() == exemplaryTMatrixPtr->getTupleShape());
   REQUIRE(tMatrixPtr->getComponentShape() == exemplaryTMatrixPtr->getComponentShape());
   REQUIRE(std::equal(tMatrixPtr->begin(), tMatrixPtr->end(), exemplaryTMatrixPtr->begin(), exemplaryTMatrixPtr->end()));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

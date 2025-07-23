@@ -135,6 +135,8 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
   const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
 
   UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64Array>(normalsPath), exemplarDataStructure.getDataRefAs<Float64Array>(normalsPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
@@ -246,6 +248,8 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
   const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
 
   UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64Array>(normalsPath), exemplarDataStructure.getDataRefAs<Float64Array>(normalsPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", "[SimplnxCore][VerifyTriangleWindingFilter]")
@@ -308,4 +312,6 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

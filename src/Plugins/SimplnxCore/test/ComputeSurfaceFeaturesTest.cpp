@@ -23,7 +23,7 @@ const DataPath k_SurfaceFeaturesArrayPath = k_CellFeatureAMPath.createChildPath(
 const std::string k_FeatureIds2DFileName = "FindSurfaceFeaturesTest/FeatureIds_2D.raw";
 const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTest/SurfaceFeatures2D.raw";
 
-void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
+void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, const std::string& exemplaryFileName)
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz",
@@ -45,7 +45,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(featureIdsFileName));
   rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
   rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, NumericType::int32);
-  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{static_cast<double>(featureIdsSize)}}));
+  rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({std::vector<float64>(geometryDims.rbegin(), geometryDims.rend())}));
   rbrArgs.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
@@ -103,6 +103,8 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
     INFO(fmt::format("i = {}", i));
     REQUIRE(static_cast<int8>(surfaceFeatures[i]) == surfaceFeaturesExemplary[i]);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -151,25 +153,27 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
       REQUIRE(value == createdFeatureArray[i]);
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
 
-  test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
+  test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
 
-  test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
+  test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
 
-  test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
+  test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }

@@ -66,4 +66,6 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F1spts"), faceDataPath.createChildPath(k_f1spts));
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("F7s"), faceDataPath.createChildPath(k_f7s));
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("mPrimes"), faceDataPath.createChildPath(k_mPrimes));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

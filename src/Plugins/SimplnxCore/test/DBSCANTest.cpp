@@ -70,6 +70,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_precached_iterative_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "[SimplnxCore][DBSCAN]")
@@ -109,6 +111,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_uncached_iterative_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[SimplnxCore][DBSCAN]")
@@ -150,6 +154,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[S
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_precached_random_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[SimplnxCore][DBSCAN]")
@@ -191,6 +197,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[Si
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_uncached_random_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)", "[SimplnxCore][DBSCAN]")
@@ -232,4 +240,6 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_detailed_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

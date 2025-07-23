@@ -209,6 +209,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
     {
       s_FileSentinel = nullptr;
     }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -308,6 +310,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
     {
       s_FileSentinel = nullptr;
     }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -405,6 +409,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
     {
       s_FileSentinel = nullptr;
     }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -528,6 +534,8 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     const int32_t exemplaryId = exemplaryPartitionIdsStore[i];
     REQUIRE(partitionId == exemplaryId);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
@@ -585,4 +593,6 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

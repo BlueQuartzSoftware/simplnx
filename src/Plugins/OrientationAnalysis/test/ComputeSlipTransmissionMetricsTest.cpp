@@ -64,4 +64,6 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filt
   UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F1sptList"), grainDataPath.createChildPath(k_f1spts));
   UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F7List"), grainDataPath.createChildPath(k_f7s));
   UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("mPrimeList"), grainDataPath.createChildPath(k_mPrimes));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

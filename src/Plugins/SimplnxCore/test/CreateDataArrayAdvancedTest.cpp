@@ -29,6 +29,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
@@ -139,4 +141,6 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
     result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

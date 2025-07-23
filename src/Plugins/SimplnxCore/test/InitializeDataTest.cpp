@@ -84,6 +84,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 1: Single Component Fill Initializa
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -114,6 +116,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 2: Multi Component Single-Value Fil
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -144,6 +148,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 3: Multi Component Multi-Value Fill
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -176,6 +182,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 4: Single Component Incremental-Add
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -208,6 +216,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 5: Multi Component Single-Value Inc
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -240,6 +250,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 6: Multi Component Multi-Value Incr
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -272,6 +284,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 7: Single Component Incremental-Sub
   }
 
   UnitTest::CompareArrays<float32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -304,6 +318,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 8: Multi Component Single-Value Inc
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -336,6 +352,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 9: Multi Component Multi-Value Incr
   }
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -371,6 +389,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 10: Single Component Random-With-Ra
   }
 
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {2.62f, 6666.66f});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -406,6 +426,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 11: Multi Component Single-Value St
   }
 
   ::BoundsCheck<float32, true>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath), {-6.283185f, 6.283185f, -6.28318f, 6.283185f, -6.28318f, 6.283185f});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -441,6 +463,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 12: Multi Component Single-Value No
   }
 
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-1000, 1000, -1000, 1000, -1000, 1000});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non-Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -476,6 +500,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 13: Multi Component Multi-Value Non
   }
 
   ::BoundsCheck<int32, false>(dataStructure.getDataRefAs<Int32Array>(::k_BaselinePath), {-500, -1, 0, 0, 19, 1000});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-Value Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -506,6 +532,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 14: Boolean Multi Component Single-
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Incremental-Addition Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -538,6 +566,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 15: Boolean Multi Component Increme
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Incremental-Subtraction Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -570,6 +600,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 16: Boolean Multi Component Increme
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standardized Random-With-Range Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -605,6 +637,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 17: Boolean Multi Component Standar
   }
 
   ::BoundsCheck<bool, true>(dataStructure.getDataRefAs<BoolArray>(::k_BaselinePath), {false, true, false, false, false, true});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -638,6 +672,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 18: Single Component Random Initial
   }
 
   ::BoundsCheck<uint8, false>(dataStructure.getDataRefAs<UInt8Array>(::k_BaselinePath), {std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -672,6 +708,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
 
   ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32Array>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(),
                                                                                           std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardized-Random Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -707,6 +745,8 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 20: Multi Component Non-Standardize
   ::BoundsCheck<float32, false>(dataStructure.getDataRefAs<Float32Array>(::k_BaselinePath),
                                 {(-1 * (std::numeric_limits<float32>::max() - 1)), std::numeric_limits<float32>::max(), (-1 * (std::numeric_limits<float32>::max() - 1)),
                                  std::numeric_limits<float32>::max(), (-1 * (std::numeric_limits<float32>::max() - 1)), std::numeric_limits<float32>::max()});
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill Initialization", "[SimplnxCore][InitializeDataFilter]")
@@ -737,4 +777,6 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 21: Boolean Single Component Fill I
   }
 
   UnitTest::CompareArrays<bool>(dataStructure, ::k_ExemplarPath, ::k_BaselinePath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

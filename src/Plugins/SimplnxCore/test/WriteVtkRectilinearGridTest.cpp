@@ -69,6 +69,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   // Remove the test files since they can get quite large.
   std::error_code errorCode;
   std::filesystem::remove_all(fmt::format("{}/vtk_rectilinear_grid_writer", unit_test::k_BinaryTestOutputDir), errorCode);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
@@ -112,4 +114,6 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution"
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

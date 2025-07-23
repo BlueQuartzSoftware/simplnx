@@ -32,6 +32,8 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Instantiate Filter", "[Comp
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeDifferencesMapFilter]")
@@ -66,4 +68,6 @@ TEST_CASE("SimplnxCore::ComputeDifferencesMapFilter: Test Algorithm", "[ComputeD
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -40,7 +40,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
    */
 
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files_v2.tar.gz",
                                                               "7_0_SurfaceMesh_Test_Files");
   auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
 
@@ -81,6 +81,8 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
   UnitTest::CompareImageGeometry(dataStructure, ::k_ExemplarImageGeomPath, ::k_GeneratedImageGeomPath);
 
   UnitTest::CompareArrays<int32>(dataStructure, ::k_ExemplarFeatureIdsPath, ::k_GeneratedFeatureIdsPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter::ExistingGeom", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
@@ -94,7 +96,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter::ExistingGeom", "[Sim
    */
 
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files_v2.tar.gz",
                                                               "7_0_SurfaceMesh_Test_Files");
   auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
 

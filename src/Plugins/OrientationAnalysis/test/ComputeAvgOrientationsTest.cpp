@@ -190,4 +190,6 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][
       }
     }
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -67,6 +67,8 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read PNG", "[ITKImageProces
   std::vector<usize> arrayComponentDims = dataStore.getComponentShape();
   const std::vector<usize> expectedArrayComponentDims = {3};
   REQUIRE(arrayComponentDims == expectedArrayComponentDims);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
@@ -116,6 +118,8 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override Origin", "[ITKImag
 
   std::vector<float64> imageSpacing = imageGeom->getSpacing().toContainer<std::vector<float64>>();
   REQUIRE(imageSpacing == k_Spacing);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering Origin in Geometry", "[ITKImageProcessing][ITKImageReaderFilter]")
@@ -164,4 +168,6 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering Origin in Geometr
 
   std::vector<float64> imageSpacing = imageGeom->getSpacing().toContainer<std::vector<float64>>();
   REQUIRE(imageSpacing == k_Spacing);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

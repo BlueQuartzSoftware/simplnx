@@ -67,4 +67,6 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Valid Filter Executio
   std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
   std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
   UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

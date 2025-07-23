@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -165,6 +166,8 @@ TEST_CASE("EdgeGeomTest")
   {
     REQUIRE(geom->getTypeName() == "EdgeGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("HexahedralGeomTest")
@@ -178,6 +181,8 @@ TEST_CASE("HexahedralGeomTest")
   {
     REQUIRE(geom->getTypeName() == "HexahedralGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("ImageGeomTest")
@@ -191,6 +196,8 @@ TEST_CASE("ImageGeomTest")
   {
     REQUIRE(geom->getTypeName() == "ImageGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("QuadGeomTest")
@@ -204,6 +211,8 @@ TEST_CASE("QuadGeomTest")
   {
     REQUIRE(geom->getTypeName() == "QuadGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("RectGridGeomTest")
@@ -217,6 +226,8 @@ TEST_CASE("RectGridGeomTest")
   {
     REQUIRE(geom->getTypeName() == "RectGridGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("TetrahedralGeomTest")
@@ -230,6 +241,8 @@ TEST_CASE("TetrahedralGeomTest")
   {
     REQUIRE(geom->getTypeName() == "TetrahedralGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("TriangleGeomTest")
@@ -243,6 +256,8 @@ TEST_CASE("TriangleGeomTest")
   {
     REQUIRE(geom->getTypeName() == "TriangleGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("VertexGeomTest")
@@ -256,4 +271,6 @@ TEST_CASE("VertexGeomTest")
   {
     REQUIRE(geom->getTypeName() == "VertexGeom");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

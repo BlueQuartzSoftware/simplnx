@@ -53,4 +53,6 @@ TEST_CASE("ITKImageProcessing::ITKWhiteTopHatImageFilter(WhiteTopHatErode)", "[I
     const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
     REQUIRE(md5Hash == "e784daff43d09a18e20556729afc0c9d");
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

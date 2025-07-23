@@ -23,6 +23,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
 
   auto result = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][RenameDataAction]")
@@ -44,6 +46,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][RenameDataAction]")
@@ -71,6 +75,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
   REQUIRE(dataObject != nullptr);
 
   REQUIRE(dataObject->getName() == k_NewName);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][RenameDataAction]")
@@ -127,6 +133,8 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
     auto* dataObject = dataStructure.getData(oldHChildPath);
     REQUIRE(dataObject == nullptr);
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][RenameDataAction]")
@@ -160,4 +168,6 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
     }
   }
   REQUIRE(errorFound);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
