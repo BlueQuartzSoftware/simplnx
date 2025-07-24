@@ -88,8 +88,8 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
 Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featureIdsPath = args.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
-  auto featureAMPath = args.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
+  auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
+  auto featureAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
