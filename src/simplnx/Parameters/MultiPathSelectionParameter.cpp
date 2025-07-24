@@ -309,7 +309,7 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::conv
 
               if(IsFlagged(daIter))
               {
-                DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value()), std::move(dataArrayNameResult.value())});
+                DataPath dataPath({dataContainerNameResult.value(), attributeMatrixNameResult.value(), dataArrayNameResult.value()});
                 value.push_back(std::move(dataPath));
               }
             }
