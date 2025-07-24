@@ -6,16 +6,9 @@ Core (Filters)
 
 ## Description
 
-This filter will randomize a user selected "FeatureIds" array. This is not generating random data but instead
-it is using the existing values and swapping the positions of the values in the array.
-This can be useful when visualizing some kinds of data so that the data does not
-appear as a smooth gradient.
+***WARNING:** This filter can throw a pipeline terminating error (at runtime) if the number of tuples in the supplied Feature `Attribute Matrix` is less than the max value in the Feature Ids `DataArray`*
 
-## IMPORTANT NOTE
-
-If you already have a feature attribute matrix and you run this filter on the cell level 
-'featureIds' array, *EVERY* array inside of the Feature level attribute matrix should
-be deleted.
+This filter will randomize a user selected "Feature Ids" array and update every container (`DataArray`, `NeighborList`, and `StringArray`) in the feature `Attribute Matrix`. This does not generate random data but instead uses the existing values and swaps the positions of the values in the array. The intended use case is primarily for visualization, so feature data does not appear as a smooth gradient.
 
 % Auto generated parameter table will be inserted here
 

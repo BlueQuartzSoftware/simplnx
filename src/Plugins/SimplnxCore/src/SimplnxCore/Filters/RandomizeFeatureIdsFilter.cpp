@@ -1,6 +1,7 @@
 #include "RandomizeFeatureIdsFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -93,7 +94,14 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
-  usize totalFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end());
+  usize totalFeatures = (*std::max_element(featureIdsStore.begin(), featureIdsStore.end())) + 1;
+
+  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  if(totalFeatures > featureAM->getNumTuples())
+  {
+    return MakeErrorResult(
+        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumTuples(), totalFeatures - 1));
+  }
 
   std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);
 
@@ -106,7 +114,7 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  ClusterUtilities::RandomizeFeatureIds(featureIdsStore, (totalFeatures + 1), featureIArrays);
+  ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
 
   return {};
 }
