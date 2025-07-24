@@ -4,19 +4,18 @@
 
 #include <random>
 
-namespace nx::core::ClusterUtilities
+using namespace nx::core;
+
+namespace
 {
-void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures)
+std::vector<int32> CreateRandomizedIdsList(usize totalFeatures)
 {
   const usize rangeMin = 1;
   const usize rangeMax = totalFeatures - 1;
   auto gen = std::mt19937_64(std::mt19937_64::default_seed);
   std::uniform_real_distribution<float64> dist(0, 1);
 
-  IDataStore::ShapeType tupleShape{totalFeatures};
-  IDataStore::ShapeType componentShape{1};
-  std::shared_ptr<AbstractDataStore<int32>> randomIdsPtr = nx::core::DataStoreUtilities::CreateDataStore<int32>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  Int32AbstractDataStore& randomIds = *randomIdsPtr.get();
+  std::vector<int32> randomIds(totalFeatures);
   std::iota(randomIds.begin(), randomIds.end(), 0);
 
   //--- Shuffle elements by randomly exchanging each with one other.
@@ -28,10 +27,18 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
       continue;
     }
 
-    int32 randId_i = randomIds[i];
-    randomIds[i] = randomIds[r];
-    randomIds[r] = randId_i;
+    std::swap(randomIds[i], randomIds[r]);
   }
+
+  return randomIds;
+}
+} // namespace
+
+namespace nx::core::ClusterUtilities
+{
+void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures)
+{
+  std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
   // Now adjust all the Grain ID values for each Voxel
   // instead of taking total points as an input just extract the size, so we don't walk off
@@ -39,6 +46,30 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
   for(int64 i = 0; i < totalPoints; ++i)
   {
     featureIdsStore[i] = randomIds[featureIdsStore[i]];
+  }
+}
+
+void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
+{
+  std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
+
+  // Now adjust all the Grain ID values for each Voxel
+  // instead of taking total points as an input just extract the size, so we don't walk off
+  usize totalPoints = featureIdsStore.getSize();
+  for(int64 i = 0; i < totalPoints; ++i)
+  {
+    featureIdsStore[i] = randomIds[featureIdsStore[i]];
+  }
+
+  if(!featureIArrays.empty())
+  {
+    for(usize i = 0; i < totalFeatures; i++)
+    {
+      for(auto* iArray : featureIArrays)
+      {
+        iArray->swapTuples(i, randomIds[i]);
+      }
+    }
   }
 }
 } // namespace nx::core::ClusterUtilities

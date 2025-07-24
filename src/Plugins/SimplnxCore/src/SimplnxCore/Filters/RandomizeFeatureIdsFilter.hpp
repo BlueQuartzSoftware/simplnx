@@ -21,7 +21,8 @@ public:
   RandomizeFeatureIdsFilter& operator=(RandomizeFeatureIdsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureAMPath_Key = "feature_am_path";
 
   /**
    * @brief Returns the filter's name.
