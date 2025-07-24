@@ -63,8 +63,18 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
 
   if(!featureIArrays.empty())
   {
-    for(usize i = 0; i < totalFeatures; i++)
+    // We use a visitation pattern to prevent reverting swaps
+    std::vector<bool> visited(randomIds.size(), false);
+    for(usize i = 0; i < randomIds.size(); i++)
     {
+      if(visited[i])
+      {
+        continue;
+      }
+
+      visited[i] = true;
+      visited[randomIds[i]] = true;
+
       for(auto* iArray : featureIArrays)
       {
         iArray->swapTuples(i, randomIds[i]);
