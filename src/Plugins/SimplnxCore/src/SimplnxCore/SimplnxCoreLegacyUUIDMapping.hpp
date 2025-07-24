@@ -58,6 +58,7 @@
 #include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateDataGroupFilter.hpp"
 #include "SimplnxCore/Filters/CreateFeatureArrayFromElementArrayFilter.hpp"
+#include "SimplnxCore/Filters/CreateGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CropVertexGeometryFilter.hpp"
@@ -155,6 +156,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("77f392fb-c1eb-57da-a1b1-e7acf9239fb8").value(), {nx::core::FilterTraits<CreateDataArrayFilter>::uuid, &CreateDataArrayFilter::FromSIMPLJson}}, // CreateDataArrayFilter
     {nx::core::Uuid::FromString("816fbe6b-7c38-581b-b149-3f839fb65b93").value(), {nx::core::FilterTraits<CreateDataGroupFilter>::uuid, &CreateDataGroupFilter::FromSIMPLJson}}, // CreateDataContainer
     {nx::core::Uuid::FromString("94438019-21bb-5b61-a7c3-66974b9a34dc").value(), {nx::core::FilterTraits<CreateFeatureArrayFromElementArrayFilter>::uuid, &CreateFeatureArrayFromElementArrayFilter::FromSIMPLJson}}, // CreateFeatureArrayFromElementArrayFilter
+    {nx::core::Uuid::FromString("9ac220b9-14f9-581a-9bac-5714467589cc").value(), {nx::core::FilterTraits<CreateGeometryFilter>::uuid, &CreateGeometryFilter::FromSIMPLJson}}, // CreateGeometryFilter
     {nx::core::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), {nx::core::FilterTraits<CreateImageGeometryFilter>::uuid, &CreateImageGeometryFilter::FromSIMPLJson}}, // CreateImageGeometryFilter
     {nx::core::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), {nx::core::FilterTraits<CropImageGeometryFilter>::uuid, &CropImageGeometryFilter::FromSIMPLJson}}, // CropImageGeometryFilter
     {nx::core::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), {nx::core::FilterTraits<CropVertexGeometryFilter>::uuid, &CropVertexGeometryFilter::FromSIMPLJson}}, // CropVertexGeometryFilter
