@@ -105,14 +105,13 @@ namespace SIMPLConversion
 {
 Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::convert(const nlohmann::json& json)
 {
-  auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerCreationFilterParameter");
-  if(dataContainerNameResult.invalid())
+  if(!json.is_string())
   {
-    return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    return MakeErrorResult<DataContainerCreationFilterParameterConverter::ValueType>(-2, fmt::format("DataContainerCreationFilterParameter value '{}' is not a string", json.dump()));
   }
 
-  DataPath dataPath({std::move(dataContainerNameResult.value())});
-
+  auto dataContainerName = json.get<std::string>();
+  DataPath dataPath({dataContainerName});
   return {std::move(dataPath)};
 }
 
