@@ -490,7 +490,30 @@ namespace
 {
 namespace SIMPL
 {
+constexpr StringLiteral k_AutomaticAttrMatrixKey = "Wizard_AutomaticAM";
 constexpr StringLiteral k_SelectedPathKey = "Wizard_SelectedPath";
+
+std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
+{
+  std::vector<CSVType> output;
+
+  for(usize i = 0; i < dataTypes.size(); i++)
+  {
+    try
+    {
+      output.push_back(nx::core::StringToCSVType(dataTypes[i]));
+    } catch(const std::exception& e)
+    {
+    }
+  }
+
+  return output;
+}
+
+std::vector<char> ConvertToChars(const std::string& string)
+{
+  return std::vector<char>(string.begin(), string.end());
+}
 } // namespace SIMPL
 } // namespace
 
@@ -500,9 +523,38 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  // Wizard Data parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
-  // Tuple Dims parameter is not applicable in NX
+  // Convert the wizard data
+  {
+    auto result = SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter::convert(json);
+    if(result.valid())
+    {
+      args.insertOrAssign(k_ReadCSVData_Key, std::make_any<typename SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter::ValueType>(std::move(result.value())));
+    }
+    results.push_back(ConvertResult(std::move(result)));
+  }
+
+  // Convert the existing attr matrix boolean
+  {
+    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[SIMPL::k_AutomaticAttrMatrixKey]);
+    if(result.invalid())
+    {
+      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+    }
+    else
+    {
+      auto isCreatedDataGroup = result.value();
+      if(isCreatedDataGroup)
+      {
+        results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_CreatedDataGroup_Key));
+      }
+      else
+      {
+        results.push_back(
+            SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedPathKey, k_SelectedAttributeMatrixPath_Key));
+      }
+    }
+    results.push_back(ConvertResult(std::move(result)));
+  }
 
   Result<> conversionResult = MergeResults(std::move(results));
 

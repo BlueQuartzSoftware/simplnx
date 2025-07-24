@@ -31,6 +31,7 @@
 #include "ReadCSVFileParameter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
@@ -115,6 +116,7 @@ constexpr StringLiteral k_HeaderLineKey = "Wizard_HeaderLine";
 constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
 constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
 constexpr StringLiteral k_ConsecutiveDelimitersKey = "Wizard_ConsecutiveDelimiters";
+constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
 
 std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
 {
@@ -127,6 +129,7 @@ std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataT
       output.push_back(nx::core::StringToCSVType(dataTypes[i]));
     } catch(const std::exception& e)
     {
+      output.push_back(CSVType::int8);
     }
   }
 
@@ -142,17 +145,12 @@ std::vector<char> ConvertToChars(const std::string& string)
 Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::convert(const nlohmann::json& json)
 {
   std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
-  for(auto& dataTypeStr : dataTypeStrings)
+  auto result = SIMPLConversion::ConvertDataTypeStrings(dataTypeStrings);
+  if(result.invalid())
   {
-    if(dataTypeStr == "double")
-    {
-      dataTypeStr = "float64";
-    }
-    else if(dataTypeStr == "float")
-    {
-      dataTypeStr = "float32";
-    }
+    return ConvertResultTo<ReadASCIIWizardDataFilterParameterConverter::ValueType>(ConvertResult(std::move(result)), {});
   }
+  dataTypeStrings = result.value();
 
   ValueType value;
   value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
@@ -160,7 +158,13 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   value.startImportRow = json[k_BeginIndexKey].get<int32>();
   value.dataTypes = ConvertCSVTypeStrings(dataTypeStrings);
   value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
-  value.headersLine = json[k_HeaderLineKey].get<int32>();
+  int64 headersLineNum = json[k_HeaderLineKey].get<int64>();
+  headersLineNum = headersLineNum < 0 ? 0 : headersLineNum;
+  value.headersLine = static_cast<usize>(headersLineNum);
+  value.tupleDims = json[k_TupleDimsKey].get<std::vector<usize>>();
+
+  value.skippedArrayMask.resize(dataTypeStrings.size());
+  std::transform(dataTypeStrings.begin(), dataTypeStrings.end(), value.skippedArrayMask.begin(), [](auto const& s) { return s == "Skip"; });
 
   bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
   // bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
