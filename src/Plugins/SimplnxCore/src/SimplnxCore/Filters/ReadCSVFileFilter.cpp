@@ -200,10 +200,6 @@ Parameters ReadCSVFileFilter::parameters() const
 
   params.insert(std::make_unique<ReadCSVFileParameter>(k_ReadCSVData_Key, "CSV Importer Data", "Holds all relevant csv file data collected from the custom interface", ReadCSVData()));
 
-  DynamicTableInfo tableInfo;
-  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "Value {}"));
-  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
-
   params.insertSeparator(Parameters::Separator{"Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Data Group or Attribute Matrix",
                                                                  "Store the imported CSV data arrays in an existing data group or attribute matrix.", false));
