@@ -459,7 +459,7 @@ public:
     }
 
     IDataStore::ShapeType upperBounds(getTupleShape());
-    for(auto value : upperBounds)
+    for(auto& value : upperBounds)
     {
       value -= 1;
     }
