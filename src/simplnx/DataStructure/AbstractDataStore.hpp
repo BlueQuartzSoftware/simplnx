@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <mutex>
 #include <vector>
 
 namespace nx::core
@@ -737,15 +736,11 @@ public:
    */
   virtual void fill(value_type value)
   {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-
     std::fill(begin(), end(), value);
   }
 
   virtual bool copy(const AbstractDataStore& other)
   {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-
     if(getSize() != other.getSize())
     {
       return false;
@@ -804,8 +799,6 @@ public:
    */
   Result<> copyFrom(usize destTupleOffset, const AbstractDataStore& source, usize srcTupleOffset, usize totalSrcTuples)
   {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-
     if(destTupleOffset >= getNumberOfTuples())
     {
       return MakeErrorResult(-14600, fmt::format("The destination tuple offset ({}) is out of range of the number of available tuples in the data store ({}). Please ensure the destination tuple "
@@ -1113,8 +1106,6 @@ protected:
   : IDataStore(std::move(other))
   {
   }
-
-  mutable std::mutex m_Mutex;
 };
 
 using UInt8AbstractDataStore = AbstractDataStore<uint8>;
