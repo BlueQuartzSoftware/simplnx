@@ -2,7 +2,7 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D-NX Python Docs (v25.03.06)
+DREAM3D-NX Python Docs (v25.07.23)
 ===================================
 
 .. image:: https://anaconda.org/bluequartzsoftware/dream3dnx/badges/version.svg   
@@ -102,6 +102,7 @@ How to use SIMPLNX from Python
    :maxdepth: 1
    :caption: Release Notes
 
+   release_notes/ReleaseNotes_250723
    release_notes/ReleaseNotes_250306
    release_notes/ReleaseNotes_250224
    release_notes/ReleaseNotes_241111

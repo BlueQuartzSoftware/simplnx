@@ -370,7 +370,7 @@ DataStore Example Usage
 .. _NeighborList:
 
 NeighborList
------------
+-------------
 
 .. py:class:: NeighborList[T]
 

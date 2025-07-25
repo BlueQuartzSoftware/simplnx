@@ -6,7 +6,7 @@ Geometry
 
 ## Description
 
-**Warning**: _Potential Runtime Error_ - It is expected that the max feature id plus one (`max_feature_id_value` + 1) is equal to or less than the number of tuples in the supplied feature Attribute Matrix. This cannot be checked in preflight and will terminate the pipeline if encountered.
+**Warning**: *Potential Runtime Error* - It is expected that the max feature id plus one (`max_feature_id_value` + 1) is equal to or less than the number of tuples in the supplied feature Attribute Matrix. This cannot be checked in preflight and will terminate the pipeline if encountered.
 
 This filter calculates the bounding boxes for each feature given Feature Ids and Geometry (refer to table below for supported geometry types and their corresponding feature id sizing). _**This filter does output `NaN`s for empty features**_, cases where a point can not be associated to a feature. The bounding boxes are defined and stored as two points in space, a lower and upper point. The optimal storage solution is use case defined, and as such there are two options provided `split` and `unified`.
 

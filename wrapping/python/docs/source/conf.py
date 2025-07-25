@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SIMPLNX Python Docs'
-copyright = '2024, BlueQuartz Software, LLC'
+copyright = '2025, BlueQuartz Software, LLC'
 author = 'BlueQuartz Software, LLC'
-release = '24.11.11'
+release = '25.07.23'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

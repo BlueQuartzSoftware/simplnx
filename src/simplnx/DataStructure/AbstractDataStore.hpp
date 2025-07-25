@@ -1,16 +1,13 @@
 #pragma once
 
-#include "simplnx/Common/IteratorUtility.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <iterator>
 #include <mutex>
 #include <vector>
@@ -26,7 +23,7 @@ class DatasetIO;
  * @class AbstractDataStore
  * @brief The AbstractDataStore class serves as an interface class for the
  * various types of data stores used in DataArrays. The basic API and iterators
- * are defined but the specifics relating to how data is stored are implemented
+ * are defined, but the specifics relating to how data is stored are implemented
  * in subclasses.
  * @tparam T
  */
@@ -681,7 +678,7 @@ public:
   virtual reference operator[](usize index) = 0;
 
   /**
-   * @brief Returns an Iterator to the begining of the DataStore.
+   * @brief Returns an Iterator to the beginning of the DataStore.
    * @return Iterator
    */
   Iterator begin()
@@ -699,7 +696,7 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the begining of the DataStore.
+   * @brief Returns a ConstIterator to the beginning of the DataStore.
    * @return ConstIterator
    */
   ConstIterator begin() const
@@ -708,7 +705,7 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the end of the DataArray.
+   * @brief Returns a ConstIterator to the end of the DataArray.
    * @return ConstIterator
    */
   ConstIterator end() const
@@ -717,7 +714,7 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the begining of the DataStore.
+   * @brief Returns a ConstIterator to the beginning of the DataStore.
    * @return ConstIterator
    */
   ConstIterator cbegin() const
@@ -726,7 +723,7 @@ public:
   }
 
   /**
-   * @brief Returns an ConstIterator to the end of the DataStore.
+   * @brief Returns a ConstIterator to the end of the DataStore.
    * @return ConstIterator
    */
   ConstIterator cend() const
@@ -789,15 +786,15 @@ public:
    * totalSrcTuples value starting from the source tuple offset value in <b>sourceArray</b>
    * into the current array starting at the target destination tuple offset value.
    *
-   * For example if the DataStore has 10 tuples, the source DataArray has 10 tuples,
+   * For example, if the DataStore has 10 tuples, the source DataArray has 10 tuples,
    *  the destTupleOffset = 5, the srcTupleOffset = 5, and the totalSrcTuples = 3,
    *  then tuples 5, 6, and 7 will be copied from the source into tuples 5, 6, and 7
-   * of the destination array. In psuedo code it would be the following:
+   * of the destination array. In pseudocode, it would be the following:
    * @code
    *  destArray[5] = sourceArray[5];
    *  destArray[6] = sourceArray[6];
    *  destArray[7] = sourceArray[7];
-   *  .....
+   *  ...
    * @endcode
    * @param destTupleOffset
    * @param source
@@ -841,7 +838,7 @@ public:
   }
 
   /**
-   * @brief Sets all the components of tuple i to value.
+   * @brief Sets all the components of tuple tupleIndex to value.
    * @param tupleIndex
    * @param value
    */
@@ -1041,7 +1038,7 @@ public:
   /**
    * @brief Returns a vector containing the tuple extents for a specified chunk.
    * The returned values are formatted as [min, max] in the order of the tuple
-   * dimensions. For instance, a single chunk with tuple dimensions {X, Y, Z} will
+   * dimensions. For instance, a single chunk with tuple dimensions {X, Y, Z}
    * will result in an extent of [0, X-1, 0, Y-1, 0, Z-1].
    * Returns an empty vector if the chunk requested is beyond the scope of the
    * available chunks.

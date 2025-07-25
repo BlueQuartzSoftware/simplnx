@@ -746,8 +746,9 @@ void GeneratePythonRstFiles()
         rstStream << ", ";
 
         rstStream << parameterPair.first;
-        memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": "
-                     << anyParameter->helpText() << "\n";
+        std::string helpText = anyParameter->helpText();
+        helpText = StringUtilities::replace(helpText, "\n", " ");
+        memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": " << helpText << "\n";
       }
       rstStream << ")\n\n";
 

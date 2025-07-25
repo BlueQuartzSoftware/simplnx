@@ -313,20 +313,20 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
   if(pUsePhysicalBounds)
   {
-    auto max = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MaxCoord_Key);
-    auto min = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MinCoord_Key);
+    auto maxCropCoord = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MaxCoord_Key);
+    auto minCropCoord = filterArgs.value<VectorFloat64Parameter::ValueType>(k_MinCoord_Key);
 
     // Validate basic information about the coordinates
     bool equalCoords = true;
-    if(pCropXDim && min[0] != max[0])
+    if(pCropXDim && minCropCoord[0] != maxCropCoord[0])
     {
       equalCoords = false;
     }
-    if(pCropYDim && min[1] != max[1])
+    if(pCropYDim && minCropCoord[1] != maxCropCoord[1])
     {
       equalCoords = false;
     }
-    if(pCropZDim && min[2] != max[2])
+    if(pCropZDim && minCropCoord[2] != maxCropCoord[2])
     {
       equalCoords = false;
     }
@@ -344,14 +344,14 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     std::vector<bool> dimEnabled = {pCropXDim, pCropYDim, pCropZDim};
     for(uint8 i = 0; i < 3; i++)
     {
-      if(dimEnabled[i] && max[i] < min[i])
+      if(dimEnabled[i] && maxCropCoord[i] < minCropCoord[i])
       {
-        const std::string errMsg =
-            fmt::format("The max value {} ({}) is lower then the min value {} ({}). Please ensure the maximum value is greater than the minimum value.", errLabels[i], max[i], errLabels[i], min[i]);
+        const std::string errMsg = fmt::format("The max value {} ({}) is lower then the min value {} ({}). Please ensure the maximum value is greater than the minimum value.", errLabels[i],
+                                               maxCropCoord[i], errLabels[i], minCropCoord[i]);
         return {MakeErrorResult<OutputActions>(-50559, errMsg), preflightUpdatedValues};
       }
 
-      if(dimEnabled[i] && max[i] < minPoint[i] && min[i] < minPoint[i])
+      if(dimEnabled[i] && maxCropCoord[i] < minPoint[i] && minCropCoord[i] < minPoint[i])
       {
         const std::string errMsg = fmt::format(
             "Both the Minimum and Maximum {} crop values are less than the minimum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
@@ -359,7 +359,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         return {MakeErrorResult<OutputActions>(-50560, errMsg), preflightUpdatedValues};
       }
 
-      if(dimEnabled[i] && max[i] > maxPoint[i] && min[i] > maxPoint[i])
+      if(dimEnabled[i] && maxCropCoord[i] > maxPoint[i] && minCropCoord[i] > maxPoint[i])
       {
         const std::string errMsg = fmt::format(
             "Both the Minimum and Maximum {} crop values are greater than the maximum {} bounds ({}). Please ensure at least part of the crop is within the bounding box of min=[{}] and max=[{}]",
@@ -367,29 +367,29 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
         return {MakeErrorResult<OutputActions>(-50560, errMsg), preflightUpdatedValues};
       }
 
-      if(dimEnabled[i] && min[i] < minPoint[i])
+      if(dimEnabled[i] && minCropCoord[i] < minPoint[i])
       {
         resultOutputActions.m_Warnings.push_back(
-            Warning({-50503, fmt::format("The {} minimum crop value {} is less than the {} minimum bounds value of {}. The filter will use the minimum bounds value instead.", errLabels[i], min[i],
-                                         errLabels[i], minPoint[i])}));
+            Warning({-50503, fmt::format("The {} minimum crop value {} is less than the {} minimum bounds value of {}. The filter will use the minimum bounds value instead.", errLabels[i],
+                                         minCropCoord[i], errLabels[i], minPoint[i])}));
       }
-      if(dimEnabled[i] && max[i] > maxPoint[i])
+      if(dimEnabled[i] && maxCropCoord[i] > maxPoint[i])
       {
         resultOutputActions.m_Warnings.push_back(
-            Warning({-50503, fmt::format("The {} maximum crop value {} is greater than the {} maximum bounds value of {}. The filter will use the maximum bounds value instead.", errLabels[i], max[i],
-                                         errLabels[i], maxPoint[i])}));
+            Warning({-50503, fmt::format("The {} maximum crop value {} is greater than the {} maximum bounds value of {}. The filter will use the maximum bounds value instead.", errLabels[i],
+                                         maxCropCoord[i], errLabels[i], maxPoint[i])}));
       }
     }
 
     // if we have made it here the coordinate bounds are valid so figure out and assign index values to xMax, xMin, ...
     auto srcSpacing = srcImageGeomPtr->getSpacing();
-    xMin = (pCropXDim && min[0] >= srcOrigin[0]) ? static_cast<uint64>(std::floor((min[0] - srcOrigin[0]) / spacing[0])) : 0;
-    yMin = (pCropYDim && min[1] >= srcOrigin[1]) ? static_cast<uint64>(std::floor((min[1] - srcOrigin[1]) / spacing[1])) : 0;
-    zMin = (pCropZDim && min[2] >= srcOrigin[2]) ? static_cast<uint64>(std::floor((min[2] - srcOrigin[2]) / spacing[2])) : 0;
+    xMin = (pCropXDim && minCropCoord[0] >= srcOrigin[0]) ? static_cast<uint64>(std::floor((minCropCoord[0] - srcOrigin[0]) / spacing[0])) : 0;
+    yMin = (pCropYDim && minCropCoord[1] >= srcOrigin[1]) ? static_cast<uint64>(std::floor((minCropCoord[1] - srcOrigin[1]) / spacing[1])) : 0;
+    zMin = (pCropZDim && minCropCoord[2] >= srcOrigin[2]) ? static_cast<uint64>(std::floor((minCropCoord[2] - srcOrigin[2]) / spacing[2])) : 0;
 
-    xMax = (pCropXDim && max[0] <= maxPoint[0]) ? static_cast<uint64>(std::floor((max[0] - srcOrigin[0]) / spacing[0])) : srcImageGeomPtr->getNumXCells() - 1;
-    yMax = (pCropYDim && max[1] <= maxPoint[1]) ? static_cast<uint64>(std::floor((max[1] - srcOrigin[1]) / spacing[1])) : srcImageGeomPtr->getNumYCells() - 1;
-    zMax = (pCropZDim && max[2] <= maxPoint[2]) ? static_cast<uint64>(std::floor((max[2] - srcOrigin[2]) / spacing[2])) : srcImageGeomPtr->getNumZCells() - 1;
+    xMax = (pCropXDim && maxCropCoord[0] <= maxPoint[0]) ? static_cast<uint64>(std::floor((maxCropCoord[0] - srcOrigin[0]) / spacing[0])) : srcImageGeomPtr->getNumXCells() - 1;
+    yMax = (pCropYDim && maxCropCoord[1] <= maxPoint[1]) ? static_cast<uint64>(std::floor((maxCropCoord[1] - srcOrigin[1]) / spacing[1])) : srcImageGeomPtr->getNumYCells() - 1;
+    zMax = (pCropZDim && maxCropCoord[2] <= maxPoint[2]) ? static_cast<uint64>(std::floor((maxCropCoord[2] - srcOrigin[2]) / spacing[2])) : srcImageGeomPtr->getNumZCells() - 1;
   }
 
   if(pCropXDim && xMax > srcImageGeomPtr->getNumXCells() - 1)

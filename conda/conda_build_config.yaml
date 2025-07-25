@@ -2,7 +2,7 @@
 # DO NOT CHANGE THIS Value unless those clients are able to move up to a newer
 # toolset. There is no ETA on this.
 cxx_compiler:
-  - vs2019 # [win]
+  - vs2022 # [win]
 
 # The OS X compiler version needs to stay at 16.0.6 due to issues generating code
 # with anything newer. If you _THINK_ you want to update this compiler version

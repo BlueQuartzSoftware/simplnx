@@ -94,7 +94,7 @@ if(WIN32)
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "${SPHINX_MAKE_BAT_FILE}" clean
     COMMAND "${SPHINX_MAKE_BAT_FILE}" html
-    COMMENT "SIMPLNX Python Docs: Generating Python HTML Documentation"
+    COMMENT "SIMPLNX Python Docs: Generating Python HTML Documentation into ${SIMPLNX_SPHINX_DOCS_DIR}"
     WORKING_DIRECTORY "${SIMPLNX_SPHINX_DOCS_DIR}"
   )
 else()
@@ -102,7 +102,7 @@ else()
     DEPENDS sphinx_generate_plugin_rst
     COMMAND "/usr/bin/make" clean
     COMMAND "/usr/bin/make" html
-    COMMENT "SIMPLNX Python Docs: Generating Python HTML Documentation"
+    COMMENT "SIMPLNX Python Docs: Generating Python HTML Documentation into ${SIMPLNX_SPHINX_DOCS_DIR}"
     WORKING_DIRECTORY "${SIMPLNX_SPHINX_DOCS_DIR}"
   )
 endif()
