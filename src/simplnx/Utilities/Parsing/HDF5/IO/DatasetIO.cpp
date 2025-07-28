@@ -1089,7 +1089,7 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
         hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
 
         // Read hyperslab from the dataset
-        error = H5Dread(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
+        error = H5Dread(h5Id, HdfTypeForPrimitive<T>(), memspace_id, dataspaceId, H5P_DEFAULT, data);
 
         H5Sclose(memspace_id);
         if(error < 0)
@@ -1177,7 +1177,7 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
         hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
 
         // Read hyperslab from the dataset
-        error = H5Dwrite(h5Id, H5T_NATIVE_INT, memspace_id, dataspaceId, H5P_DEFAULT, data);
+        error = H5Dwrite(h5Id, HdfTypeForPrimitive<T>(), memspace_id, dataspaceId, H5P_DEFAULT, data);
 
         H5Sclose(memspace_id);
 
