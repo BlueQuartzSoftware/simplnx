@@ -1,4 +1,4 @@
-# Matrix Calculator
+# Combine Transformation Matrices Filter
 
 ## Group (Subgroup)
 

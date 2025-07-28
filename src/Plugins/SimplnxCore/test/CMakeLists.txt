@@ -19,6 +19,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CombineAttributeArraysTest.cpp
   CombineNodeBasedGeometriesTest.cpp
   CombineStlFilesTest.cpp
+  CombineTransformationMatricesTest.cpp
   ComputeArrayHistogramByFeatureTest.cpp
   ComputeArrayHistogramTest.cpp
   ComputeArrayStatisticsTest.cpp
@@ -96,7 +97,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
-  MatrixCalculatorTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp
   NearestPointFuseRegularGridsTest.cpp

@@ -1,17 +1,13 @@
-#include "MatrixCalculatorFilter.hpp"
+#include "CombineTransformationMatricesFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/MatrixCalculator.hpp"
+#include "SimplnxCore/Filters/Algorithms/CombineTransformationMatrices.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <random>
@@ -21,43 +17,42 @@ using namespace nx::core;
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-std::string MatrixCalculatorFilter::name() const
+std::string CombineTransformationMatricesFilter::name() const
 {
-  return FilterTraits<MatrixCalculatorFilter>::name.str();
+  return FilterTraits<CombineTransformationMatricesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string MatrixCalculatorFilter::className() const
+std::string CombineTransformationMatricesFilter::className() const
 {
-  return FilterTraits<MatrixCalculatorFilter>::className;
+  return FilterTraits<CombineTransformationMatricesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid MatrixCalculatorFilter::uuid() const
+Uuid CombineTransformationMatricesFilter::uuid() const
 {
-  return FilterTraits<MatrixCalculatorFilter>::uuid;
+  return FilterTraits<CombineTransformationMatricesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string MatrixCalculatorFilter::humanName() const
+std::string CombineTransformationMatricesFilter::humanName() const
 {
-  return "Matrix Calculator";
+  return "Combine Transformation Matrices";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> MatrixCalculatorFilter::defaultTags() const
+std::vector<std::string> CombineTransformationMatricesFilter::defaultTags() const
 {
   return {className(), "Matrix", "Calculate", "Multiplication"};
 }
 
 //------------------------------------------------------------------------------
-Parameters MatrixCalculatorFilter::parameters() const
+Parameters CombineTransformationMatricesFilter::parameters() const
 {
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ChoicesParameter>(k_OperationChoice_Key, "Matrix Operation", "", 2, nx::core::matrix_calculator::constants::k_OperationChoices));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{}, MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -69,24 +64,23 @@ Parameters MatrixCalculatorFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::VersionType MatrixCalculatorFilter::parametersVersion() const
+IFilter::VersionType CombineTransformationMatricesFilter::parametersVersion() const
 {
   return 1;
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MatrixCalculatorFilter::clone() const
+IFilter::UniquePointer CombineTransformationMatricesFilter::clone() const
 {
-  return std::make_unique<MatrixCalculatorFilter>();
+  return std::make_unique<CombineTransformationMatricesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MatrixCalculatorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
   auto outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
-  auto operationIdx = filterArgs.value<ChoicesParameter::ValueType>(k_OperationChoice_Key);
 
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
@@ -94,12 +88,12 @@ IFilter::PreflightResult MatrixCalculatorFilter::preflightImpl(const DataStructu
 
   if(inputArrayPaths.empty())
   {
-    return MakePreflightErrorResult(to_underlying(MatrixCalculator::ErrorCodes::EmptyInputArrays), "No input arrays have been selected.  Please select at least 2 input arrays.");
+    return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::EmptyInputArrays), "No input arrays have been selected.  Please select at least 2 input arrays.");
   }
 
   if(inputArrayPaths.size() == 1)
   {
-    return MakePreflightErrorResult(to_underlying(MatrixCalculator::ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
+    return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
   }
 
   // Check for unequal array types, data types, and component dimensions
@@ -118,7 +112,7 @@ IFilter::PreflightResult MatrixCalculatorFilter::preflightImpl(const DataStructu
 
       if(inputDataArray.getDataType() != inputDataArray2.getDataType())
       {
-        return MakePreflightErrorResult(to_underlying(MatrixCalculator::ErrorCodes::TypeNameMismatch),
+        return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::TypeNameMismatch),
                                         fmt::format("Input array '{}' has array type '{}', but input array '{}' has array type '{}'.  The array types must match.", inputArrayPaths[i].toString(),
                                                     inputDataArray.getTypeName(), inputArrayPaths[j].toString(), inputDataArray2.getTypeName()));
       }
@@ -126,7 +120,7 @@ IFilter::PreflightResult MatrixCalculatorFilter::preflightImpl(const DataStructu
       if(inputDataArray.getNumberOfComponents() != 1)
 
       {
-        return MakePreflightErrorResult(to_underlying(MatrixCalculator::ErrorCodes::ComponentShapeMismatch),
+        return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::ComponentShapeMismatch),
                                         fmt::format("Input array '{}' has component shape '{}'. Input arrays must only have a single component.", inputArrayPaths[i].toString(),
                                                     fmt::join(inputDataArray.getComponentShape(), ","), inputArrayPaths[j].toString()));
       }
@@ -152,27 +146,13 @@ IFilter::PreflightResult MatrixCalculatorFilter::preflightImpl(const DataStructu
 }
 
 //------------------------------------------------------------------------------
-Result<> MatrixCalculatorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel) const
+Result<> CombineTransformationMatricesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  MatrixCalculatorInputValues inputValues;
-  inputValues.Operation = filterArgs.value<ChoicesParameter::ValueType>(k_OperationChoice_Key);
+  CombineTransformationMatricesInputValues inputValues;
   inputValues.SelectedPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
   inputValues.OutputPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
 
-  return MatrixCalculator(dataStructure, messageHandler, shouldCancel, &inputValues)();
-}
-
-namespace
-{
-namespace SIMPL
-{
-
-} // namespace SIMPL
-} // namespace
-
-Result<Arguments> MatrixCalculatorFilter::FromSIMPLJson(const nlohmann::json& json)
-{
-  return {};
+  return CombineTransformationMatrices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core
