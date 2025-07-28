@@ -201,6 +201,60 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale: Origin_And_Spacing Check", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::string k_SelectedImageGeomName = "Image Geometry";
+  const DataPath k_SelectedImageGeomPath = DataPath({k_SelectedImageGeomName});
+  const std::string k_SelectedAttrMatrixName = "Cell Data";
+  const DataPath k_SelectedAttrMatrixPath = DataPath({k_SelectedImageGeomName, k_SelectedAttrMatrixName});
+
+  DataStructure ds;
+  ImageGeom* geom = ImageGeom::Create(ds, "Image Geometry");
+
+  Vec3<float32> origin = {51.0F, 23.0F, -64.0F};
+  Vec3<float32> spacing = {3.0F, 5.0F, 8.0F};
+  std::vector<float32> scaleFactor;
+  SECTION("Scale Increasing")
+  {
+    scaleFactor = {2.0F, 2.0F, 2.0F};
+  }
+  SECTION("Scale Decreasing")
+  {
+    scaleFactor = {0.4F, 0.4F, 0.4F};
+  }
+  geom->setOrigin(origin);
+  geom->setSpacing(spacing);
+  AttributeMatrix* cellAM = AttributeMatrix::Create(ds, "Cell Data", {}, geom->getId());
+
+  const ApplyTransformationToGeometryFilter filter;
+  Arguments args;
+
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedImageGeomPath));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(k_SelectedAttrMatrixPath));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>(scaleFactor));
+  args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(0));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  Vec3<float32> newOrigin = {1.0f, 1.0f, 1.0f};
+  std::transform(origin.begin(), origin.end(), scaleFactor.begin(), newOrigin.begin(), std::multiplies<>());
+  Vec3<float32> newSpacing = {1.0f, 1.0f, 1.0f};
+  std::transform(spacing.begin(), spacing.end(), scaleFactor.begin(), newSpacing.begin(), std::multiplies<>());
+  REQUIRE(geom->getOrigin() == newOrigin);
+  REQUIRE(geom->getSpacing() == newSpacing);
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();

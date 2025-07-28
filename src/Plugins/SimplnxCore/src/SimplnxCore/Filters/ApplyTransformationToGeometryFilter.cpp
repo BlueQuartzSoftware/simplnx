@@ -325,14 +325,15 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     }
     else if(pTransformationMatrixTypeValue == detail::k_ScaleIdx)
     {
-      // If the user is purely doing a scaling then just adjust the spacing and be done.
+      // If the user is purely doing a scaling then just adjust the spacing and origin and be done.
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
       FloatVec3 spacingVec = imageGeomPtr->getSpacing();
       spacingVec = {spacingVec[0] * pScaleValue[0], spacingVec[1] * pScaleValue[1], spacingVec[2] * pScaleValue[2]};
-      auto originVec = imageGeomPtr->getOrigin();
+      auto minMaxCoords = ImageRotationUtilities::DetermineMinMaxCoords(*imageGeomPtr, transformationMatrix);
+      std::vector<float32> originVec = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
-    else // We are Rotating or scaling, manual transformation or precomputed. we need to create a brand new Image Geometry
+    else // We are Rotating or manual transformation or precomputed. we need to create a brand new Image Geometry
     {
       auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
 
