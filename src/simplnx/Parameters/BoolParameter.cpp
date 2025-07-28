@@ -79,7 +79,7 @@ namespace SIMPLConversion
 {
 Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::convert(const nlohmann::json& json)
 {
-  if(!json.is_number_integer() || !json.is_number_unsigned())
+  if(!json.is_number_integer() && !json.is_number_unsigned() && !json.is_boolean())
   {
     return MakeErrorResult<ValueType>(-1, fmt::format("BooleanFilterParameter json '{}' is not a boolean", json.dump()));
   }

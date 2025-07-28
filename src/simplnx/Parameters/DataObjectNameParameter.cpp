@@ -125,24 +125,26 @@ Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFi
 
 Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::convert(const nlohmann::json& json)
 {
-  auto nameResult = ReadAttributeMatrixName(json, "AttributeMatrixNameFilterParameterConverter");
-  if(nameResult.invalid())
+  if(!json.is_string())
   {
-    return ConvertInvalidResult<ValueType>(std::move(nameResult));
+    return MakeErrorResult<std::string>(-4, fmt::format("AttributeMatrixNameFilterParameterConverter value '{}' is not a string", json.dump()));
   }
 
-  return {std::move(nameResult.value())};
+  auto attributeMatrixName = json.get<std::string>();
+
+  return {attributeMatrixName};
 }
 
 Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::convert(const nlohmann::json& json)
 {
-  auto nameResult = ReadDataArrayName(json, "DataArrayNameFilterParameterConverter");
-  if(nameResult.invalid())
+  if(!json.is_string())
   {
-    return ConvertInvalidResult<ValueType>(std::move(nameResult));
+    return MakeErrorResult<std::string>(-6, fmt::format("DataArrayNameFilterParameterConverter value '{}' is not a string", json.dump()));
   }
 
-  return {std::move(nameResult.value())};
+  auto dataArrayName = json.get<std::string>();
+
+  return {dataArrayName};
 }
 } // namespace SIMPLConversion
 } // namespace nx::core

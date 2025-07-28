@@ -99,4 +99,10 @@ SIMPLNX_EXPORT Result<ChoicesParameter::ValueType> ConvertChoicesParameter(const
 
 //------------------------------------------------------------------------------
 SIMPLNX_EXPORT Result<FileSystemPathParameter::ValueType> ReadInputFilePath(const nlohmann::json& json, std::string_view parameterName);
+
+//------------------------------------------------------------------------------
+SIMPLNX_EXPORT Result<std::string> ConvertDataTypeString(const std::string& simplDataTypeString);
+
+//------------------------------------------------------------------------------
+SIMPLNX_EXPORT Result<std::vector<std::string>> ConvertDataTypeStrings(const std::vector<std::string>& simplDataTypeStrings);
 } // namespace nx::core::SIMPLConversion

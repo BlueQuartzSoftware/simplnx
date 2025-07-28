@@ -30,7 +30,7 @@ Result<std::string> ReadDataContainerName(const nlohmann::json& json, std::strin
 
   if(!dataContainerNameJson.is_string())
   {
-    return MakeErrorResult<std::string>(-2, fmt::format("{} '{}' value '{}' is not a string", parameterName, k_DataContainerNameKey, dataContainerNameJson.dump()));
+    return MakeErrorResult<std::string>(-2, fmt::format("{} '{}' value '{}' is not a string", parameterName, k_DataContainerNameKey, json.dump()));
   }
 
   auto dataContainerName = dataContainerNameJson.get<std::string>();
@@ -109,5 +109,42 @@ Result<FileSystemPathParameter::ValueType> ReadInputFilePath(const nlohmann::jso
   auto value = json.get<std::string>();
 
   return {ParameterType::ValueType(value)};
+}
+
+//------------------------------------------------------------------------------
+Result<std::string> ConvertDataTypeString(const std::string& simplDataTypeString)
+{
+  // Convert simpl data type strings to simplnx data type strings
+  auto dataTypeStr = simplDataTypeString;
+  if(dataTypeStr == "double")
+  {
+    return {"float64"};
+  }
+  if(dataTypeStr == "float")
+  {
+    return {"float32"};
+  }
+  if(dataTypeStr.ends_with("_t"))
+  {
+    dataTypeStr.erase(dataTypeStr.size() - 2);
+  }
+  return {dataTypeStr};
+}
+
+//------------------------------------------------------------------------------
+Result<std::vector<std::string>> ConvertDataTypeStrings(const std::vector<std::string>& simplDataTypeStrings)
+{
+  std::vector<std::string> dataTypeStrings;
+  dataTypeStrings.reserve(simplDataTypeStrings.size());
+  for(auto& simplDataTypeStr : simplDataTypeStrings)
+  {
+    auto result = ConvertDataTypeString(simplDataTypeStr);
+    if(result.invalid())
+    {
+      return ConvertResultTo<std::vector<std::string>>(ConvertResult(std::move(result)), {});
+    }
+    dataTypeStrings.push_back(result.value());
+  }
+  return {dataTypeStrings};
 }
 } // namespace nx::core::SIMPLConversion
