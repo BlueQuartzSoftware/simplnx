@@ -8,23 +8,22 @@
 namespace nx::core
 {
 /**
- * @class MatrixCalculatorFilter
+ * @class CombineTransformationMatricesFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT MatrixCalculatorFilter : public IFilter
+class SIMPLNXCORE_EXPORT CombineTransformationMatricesFilter : public IFilter
 {
 public:
-  MatrixCalculatorFilter() = default;
-  ~MatrixCalculatorFilter() noexcept override = default;
+  CombineTransformationMatricesFilter() = default;
+  ~CombineTransformationMatricesFilter() noexcept override = default;
 
-  MatrixCalculatorFilter(const MatrixCalculatorFilter&) = delete;
-  MatrixCalculatorFilter(MatrixCalculatorFilter&&) noexcept = delete;
+  CombineTransformationMatricesFilter(const CombineTransformationMatricesFilter&) = delete;
+  CombineTransformationMatricesFilter(CombineTransformationMatricesFilter&&) noexcept = delete;
 
-  MatrixCalculatorFilter& operator=(const MatrixCalculatorFilter&) = delete;
-  MatrixCalculatorFilter& operator=(MatrixCalculatorFilter&&) noexcept = delete;
+  CombineTransformationMatricesFilter& operator=(const CombineTransformationMatricesFilter&) = delete;
+  CombineTransformationMatricesFilter& operator=(CombineTransformationMatricesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OperationChoice_Key = "operation_index";
   static inline constexpr StringLiteral k_InputArrays_Key = "input_arrays";
   static inline constexpr StringLiteral k_OutputArray_Key = "output_array_path";
   /**
@@ -94,7 +93,8 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -104,10 +104,10 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                       const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override;
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, MatrixCalculatorFilter, "B44c33d1-a095-5e33-871c-c7688d89a011");
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, CombineTransformationMatricesFilter, "d279a254-ced7-4541-95c1-bd3e59c5b697");
 /* LEGACY UUID FOR THIS FILTER ac99b706-d1e0-5f78-9246-fbbe1efd93d2 */

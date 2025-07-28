@@ -1,8 +1,7 @@
-#include "MatrixCalculator.hpp"
+#include "CombineTransformationMatrices.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
@@ -26,7 +25,7 @@ Eigen::Matrix<T, 4, 4, Eigen::RowMajor> CreateEigenMatrix(const AbstractDataStor
 struct MatrixOperationFunctor
 {
   template <typename ScalarType>
-  Result<> operator()(const IDataArray& array1, const IDataArray& array2, IDataArray& outputArray, ChoicesParameter::ValueType opIdx)
+  Result<> operator()(const IDataArray& array1, const IDataArray& array2, IDataArray& outputArray)
   {
     using MatrixType = Eigen::Matrix<ScalarType, 4, 4, Eigen::RowMajor>;
     using StoreType = AbstractDataStore<ScalarType>;
@@ -36,20 +35,7 @@ struct MatrixOperationFunctor
     auto eigenMatrix1 = CreateEigenMatrix<ScalarType>(array1StoreRef);
     auto eigenMatrix2 = CreateEigenMatrix<ScalarType>(array2StoreRef);
 
-    MatrixType output;
-
-    if(opIdx == matrix_calculator::constants::k_MultiplicationIdx)
-    {
-      output = eigenMatrix1 * eigenMatrix2;
-    }
-    else if(opIdx == matrix_calculator::constants::k_AdditionIdx)
-    {
-      output = eigenMatrix1 + eigenMatrix2;
-    }
-    else if(opIdx == matrix_calculator::constants::k_SubtractionIdx)
-    {
-      output = eigenMatrix1 - eigenMatrix2;
-    }
+    MatrixType output = eigenMatrix1 * eigenMatrix2;
 
     auto& dataStore = outputArray.getIDataStoreRefAs<StoreType>();
 
@@ -77,7 +63,8 @@ struct MatrixOperationFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-MatrixCalculator::MatrixCalculator(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MatrixCalculatorInputValues* inputValues)
+CombineTransformationMatrices::CombineTransformationMatrices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                             CombineTransformationMatricesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -86,35 +73,33 @@ MatrixCalculator::MatrixCalculator(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-MatrixCalculator::~MatrixCalculator() noexcept = default;
+CombineTransformationMatrices::~CombineTransformationMatrices() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& MatrixCalculator::getCancel()
+const std::atomic_bool& CombineTransformationMatrices::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> MatrixCalculator::operator()()
+Result<> CombineTransformationMatrices::operator()()
 {
-
   auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->OutputPath);
-  const auto& array1Ref = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedPaths[0]);
-  const auto& array2Ref = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedPaths[1]);
+  auto pathsIter = m_InputValues->SelectedPaths.begin();
 
-  if(array1Ref.getDataType() != array2Ref.getDataType())
+  const auto& array1 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
+  const auto& array2 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
+  if(array1.getDataType() != array2.getDataType())
   {
     return MakeErrorResult(-89750, "DataType mismatch");
   }
+  // Combine first two matrices: second * first
+  ExecuteDataFunction(MatrixOperationFunctor{}, array1.getDataType(), array2, array1, outputArray);
 
-  ExecuteDataFunction(MatrixOperationFunctor{}, array1Ref.getDataType(), array1Ref, array2Ref, outputArray, m_InputValues->Operation);
-
-  for(usize selectedArrayIdx = 2; selectedArrayIdx < m_InputValues->SelectedPaths.size(); selectedArrayIdx++)
+  for(; pathsIter != m_InputValues->SelectedPaths.end(); ++pathsIter)
   {
-
-    const auto& arrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedPaths[selectedArrayIdx]);
-
-    ExecuteDataFunction(MatrixOperationFunctor{}, outputArray.getDataType(), outputArray, arrayRef, outputArray, m_InputValues->Operation);
+    const auto& arrayRef = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter);
+    ExecuteDataFunction(MatrixOperationFunctor{}, outputArray.getDataType(), arrayRef, outputArray, outputArray);
   }
 
   return {};

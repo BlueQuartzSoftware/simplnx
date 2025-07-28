@@ -19,6 +19,7 @@ set(FilterList
   CombineAttributeArraysFilter
   CombineNodeBasedGeometriesFilter
   CombineStlFilesFilter
+  CombineTransformationMatricesFilter
   ComputeArrayHistogramByFeatureFilter
   ComputeArrayHistogramFilter
   ComputeArrayStatisticsFilter
@@ -94,7 +95,6 @@ set(FilterList
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
   MapPointCloudToRegularGridFilter
-  MatrixCalculatorFilter
   MoveDataFilter
   MultiThresholdObjectsFilter
   NearestPointFuseRegularGridsFilter
@@ -153,7 +153,6 @@ set(FilterList
   WriteLosAlamosFFTFilter
   WriteNodesAndElementsFilesFilter
   WriteSPParksSitesFilter
-  WriteSPParksSitesFilter
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
@@ -173,6 +172,7 @@ set(AlgorithmList
   CombineAttributeArrays
   CombineNodeBasedGeometries
   CombineStlFiles
+  CombineTransformationMatrices
   ComputeArrayHistogram
   ComputeArrayHistogramByFeature
   ComputeArrayStatistics
@@ -219,7 +219,6 @@ set(AlgorithmList
   InitializeData
   LabelTriangleGeometry
   LaplacianSmoothing
-  MatrixCalculator
   NearestPointFuseRegularGrids
   PadImageGeometry
   PartitionGeometry
@@ -259,7 +258,6 @@ set(AlgorithmList
   WriteAvizoUniformCoordinate
   WriteLosAlamosFFT
   WriteNodesAndElementsFiles
-  WriteSPParksSites
   WriteSPParksSites
   WriteStlFile
   WriteVtkRectilinearGrid
