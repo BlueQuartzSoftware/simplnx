@@ -1,4 +1,5 @@
 #include "ComputeFeatureReferenceMisorientationsFilter.hpp"
+
 #include "OrientationAnalysis/Filters/Algorithms/ComputeFeatureReferenceMisorientations.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -8,10 +9,8 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 

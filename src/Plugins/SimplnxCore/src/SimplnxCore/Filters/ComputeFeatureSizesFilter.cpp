@@ -1,8 +1,8 @@
 #include "ComputeFeatureSizesFilter.hpp"
 
-#include "simplnx/Common/Numbers.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeFeatureSizes.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -13,8 +13,6 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <cmath>
-
 namespace nx::core
 {
 namespace
@@ -22,8 +20,6 @@ namespace
 constexpr nx::core::int32 k_MissingGeometry = -73225;
 constexpr nx::core::int32 k_MissingFeatureIds = -74789;
 constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -74769;
-constexpr nx::core::int32 k_BadFeatureCount = -78231;
-constexpr nx::core::float32 k_PI = numbers::pi_v<nx::core::float32>;
 } // namespace
 
 std::string ComputeFeatureSizesFilter::name() const
@@ -144,154 +140,15 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
 Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto saveElementSizes = filterArgs.value<bool>(k_SaveElementSizes_Key);
-
-  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto featureIdsArrayPtr = dataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
-  const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
-  {
-    auto featureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, messageHandler);
-    if(validateNumFeatResult.invalid())
-    {
-      return validateNumFeatResult;
-    }
-  }
-  usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
-
-  auto geomPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  auto* geom = dataStructure.getDataAs<IGeometry>(geomPath);
-
-  // If the geometry is an ImageGeometry or a RectilinearGeometry
-  auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
-  if(nullptr != imageGeom)
-  {
-    auto featureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-
-    auto& volumes = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_VolumesName_Key)))->getDataStoreRef();
-    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_EquivalentDiametersName_Key)))->getDataStoreRef();
-    auto& numElements = dataStructure.getDataAs<Int32Array>(featureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_NumElementsName_Key)))->getDataStoreRef();
-
-    usize featureIdsMaxIdx = std::distance(featureIdsStoreRef.begin(), std::max_element(featureIdsStoreRef.cbegin(), featureIdsStoreRef.cend()));
-    usize maxValue = featureIdsStoreRef[featureIdsMaxIdx];
-    usize numFeatures = maxValue + 1;
-
-    std::vector<uint64> featureCounts(numFeatures, 0);
-
-    for(size_t j = 0; j < totalPoints; j++)
-    {
-      int32_t gnum = featureIdsStoreRef[j];
-      auto temp = featureCounts[gnum] + 1;
-      featureCounts[gnum] = temp;
-    }
-
-    FloatVec3 spacing = imageGeom->getSpacing();
-
-    if(imageGeom->getNumXCells() == 1 || imageGeom->getNumYCells() == 1 || imageGeom->getNumZCells() == 1)
-    {
-      float res_scalar = 0.0f;
-      if(imageGeom->getNumXCells() == 1)
-      {
-        res_scalar = spacing[1] * spacing[2];
-      }
-      else if(imageGeom->getNumYCells() == 1)
-      {
-        res_scalar = spacing[0] * spacing[2];
-      }
-      else if(imageGeom->getNumZCells() == 1)
-      {
-        res_scalar = spacing[0] * spacing[1];
-      }
-
-      for(size_t i = 1; i < numFeatures; i++)
-      {
-        numElements[i] = static_cast<int32_t>(featureCounts[i]);
-        if(featureCounts[i] > 9007199254740992ULL)
-        {
-          std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return MakeErrorResult(k_BadFeatureCount, ss);
-        }
-        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
-
-        float32 rad = volumes[i] / k_PI;
-        float32 diameter = (2 * sqrtf(rad));
-        equivalentDiameters[i] = diameter;
-      }
-    }
-    else
-    {
-      float32 res_scalar = spacing[0] * spacing[1] * spacing[2];
-      float vol_term = (4.0f / 3.0f) * k_PI;
-      for(usize i = 1; i < numFeatures; i++)
-      {
-        numElements[i] = static_cast<int32>(featureCounts[i]);
-        if(featureCounts[i] > 9007199254740992ULL)
-        {
-          std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return MakeErrorResult(k_BadFeatureCount, ss);
-        }
-
-        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
-
-        float32 rad = volumes[i] / vol_term;
-        float32 diameter = 2.0f * powf(rad, 0.3333333333f);
-        equivalentDiameters[i] = diameter;
-      }
-    }
-
-    if(saveElementSizes)
-    {
-      int32 err = imageGeom->findElementSizes(false);
-      if(err < 0)
-      {
-        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", imageGeom->getTypeName());
-        return MakeErrorResult(err, ss);
-      }
-    }
-  }
-  else
-  {
-    auto& volumes = dataStructure.getDataAs<Float32Array>(filterArgs.value<DataPath>(k_VolumesName_Key))->getDataStoreRef();
-    auto& equivalentDiameters = dataStructure.getDataAs<Float32Array>(filterArgs.value<DataPath>(k_EquivalentDiametersName_Key))->getDataStoreRef();
-    auto& numElements = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_NumElementsName_Key))->getDataStoreRef();
-
-    usize numFeatures = volumes.getNumberOfTuples();
-
-    int32_t err = geom->findElementSizes(false);
-    if(err < 0)
-    {
-      std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", geom->getTypeName());
-      return MakeErrorResult(err, ss);
-    }
-
-    const Float32Array* elemSizes = geom->getElementSizes();
-
-    std::vector<float> featureCounts(numFeatures, 1);
-
-    for(size_t j = 0; j < totalPoints; j++)
-    {
-      int32 gnum = featureIdsStoreRef[j];
-      auto temp = featureCounts[gnum] + 1;
-      featureCounts[gnum] = temp;
-      auto temp2 = volumes[gnum];
-      volumes[gnum] = temp2 + (*elemSizes)[j];
-    }
-    float vol_term = (4.0f / 3.0f) * k_PI;
-    for(size_t i = 1; i < numFeatures; i++)
-    {
-      numElements[i] = static_cast<int32>(featureCounts[i]);
-      float rad = volumes[i] / vol_term;
-      float diameter = 2.0f * powf(rad, 0.3333333333f);
-      equivalentDiameters[i] = diameter;
-    }
-
-    if(!saveElementSizes)
-    {
-      geom->deleteElementSizes();
-    }
-  }
-
-  return {};
+  ComputeFeatureSizesInputValues inputValues;
+  inputValues.EquivalentDiametersName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EquivalentDiametersName_Key);
+  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_GeometryPath_Key);
+  inputValues.NumElementsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_NumElementsName_Key);
+  inputValues.SaveElementSizes = filterArgs.value<BoolParameter::ValueType>(k_SaveElementSizes_Key);
+  inputValues.VolumesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesName_Key);
+  return ComputeFeatureSizes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

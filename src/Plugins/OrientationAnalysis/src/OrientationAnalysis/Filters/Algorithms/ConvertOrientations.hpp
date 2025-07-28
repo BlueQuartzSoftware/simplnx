@@ -2,11 +2,9 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -17,12 +15,16 @@
 
 namespace nx::core
 {
+
+namespace convert_orientations_constants
+{
 // Error Code constants
-constexpr nx::core::int32 k_InputRepresentationTypeError = -67001;
-constexpr nx::core::int32 k_OutputRepresentationTypeError = -67002;
-constexpr nx::core::int32 k_InputComponentDimensionError = -67003;
-constexpr nx::core::int32 k_InputComponentCountError = -67004;
-constexpr nx::core::int32 k_MatchingTypesError = -67005;
+constexpr int32 k_InputRepresentationTypeError = -67001;
+constexpr int32 k_OutputRepresentationTypeError = -67002;
+constexpr int32 k_InputComponentDimensionError = -67003;
+constexpr int32 k_InputComponentCountError = -67004;
+constexpr int32 k_MatchingTypesError = -67005;
+} // namespace convert_orientations_constants
 
 struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsInputValues
 {
@@ -33,8 +35,10 @@ struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsInputValues
 };
 
 /**
- * @class
+ * @class ConvertOrientations
+ * @brief This algorithm implements support code for the ConvertOrientationsFilter
  */
+
 class ORIENTATIONANALYSIS_EXPORT ConvertOrientations
 {
 public:
@@ -47,8 +51,6 @@ public:
   ConvertOrientations& operator=(ConvertOrientations&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

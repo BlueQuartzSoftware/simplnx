@@ -164,13 +164,16 @@ set(ActionList
 )
 
 set(AlgorithmList
+  AlignGeometries
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
   AppendImageGeometry
   ApplyTransformationToGeometry
+  ApproximatePointCloudHull
   ArrayCalculator
   CalculateTriangleGroupCurvatures
+  ChangeAngleRepresentation
   CombineAttributeArrays
   CombineNodeBasedGeometries
   CombineStlFiles
@@ -183,44 +186,76 @@ set(AlgorithmList
   ComputeBoundingBoxStats
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
+  ComputeBoundaryElementFractions
+  ComputeDifferencesMap
   ComputeEuclideanDistMap
   ComputeFeatureBounds
   ComputeFeatureCentroids
   ComputeFeatureClustering
+  ComputeFeatureNeighbors
+  ComputeFeaturePhases
+  ComputeFeaturePhasesBinary
   ComputeFeatureRect
+  ComputeFeatureSizes
   ComputeKMeans
   ComputeKMedoids
   ComputeLargestCrossSections
   ComputeMomentInvariants2D
   ComputeNeighborhoods
   ComputeNeighborListStatistics
+#  ComputeNumFeatures
   ComputeSurfaceAreaToVolume
+  ComputeSurfaceFeatures
+#  ComputeTriangleAreas
   ComputeTriangleGeomCentroids
   ComputeTriangleGeomVolumes
   ComputeVectorColors
   ComputeVertexToTriangleDistances
+#  ComputeVolumeFractions
   ConcatenateDataArrays
+  ConditionalSetValue
   ConvertColorToGrayScale
   ConvertData
+  CopyDataObject
+  CopyFeatureArrayToElementArray
   CreateAMScanPaths
+  CreateAttributeMatrix
   CreateColorMap
+  CreateDataArray
+  CreateDataArrayAdvanced
+  CreateDataGroup
+  CreateFeatureArrayFromElementArray
+  CreateGeometry
+  CreateImageGeometry
   CreatePythonSkeleton
   CropEdgeGeometry
+  CropImageGeometry
+  CropVertexGeometry
   DBSCAN
+  DeleteData
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
   ExecuteProcess
   ExtractComponentAsArray
+  ExtractInternalSurfacesFromTriangleGeometry
+  ExtractPipelineToFile
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
   FindNRingNeighbors
   FlyingEdges3D
   IdentifyDuplicateVertices
+  IdentifySample
   InitializeData
+  InitializeImageGeomCellData
+  InterpolatePointCloudToRegularGrid
+  IterativeClosestPoint
   LabelTriangleGeometry
   LaplacianSmoothing
+  MapPointCloudToRegularGrid
+  MoveData
+  MultiThresholdObjects
   NearestPointFuseRegularGrids
   PadImageGeometry
   PartitionGeometry
@@ -230,9 +265,12 @@ set(AlgorithmList
   ReadBinaryCTNorthstar
   ReadCSVFile
   ReadDeformKeyFileV12
+  ReadDREAM3D
+  ReadHDF5Dataset
   ReadRawBinary
   ReadStlFile
   ReadStringDataArray
+  ReadTextDataArray
   ReadVolumeGraphicsFile
   ReadVtkStructuredPoints
   ReadZeissTxmFile
@@ -240,12 +278,18 @@ set(AlgorithmList
   RemoveFlaggedEdges
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles
+  RemoveFlaggedVertices
+  RenameDataObject
   ReplaceElementAttributesWithNeighborValues
   RequireMinNumNeighbors
   ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
+  ReverseTriangleWinding
+  RobustAutomaticThreshold
+  RotateSampleRefFrame
   ScalarSegmentFeatures
+  SetImageGeomOriginScaling
   SharedFeatureFace
   Silhouette
   SliceTriangleGeometry
@@ -253,13 +297,19 @@ set(AlgorithmList
   SplitDataArrayByTuple
   SurfaceNets
   TriangleCentroid
+  TriangleDihedralAngle
+  TriangleNormal
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
   VerifyTriangleWinding
   WriteAbaqusHexahedron
+  WriteASCIIData
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate
   WriteLAMMPSFile
+  WriteBinaryData
+  WriteDREAM3D
+  WriteFeatureDataCSV
   WriteLosAlamosFFT
   WriteNodesAndElementsFiles
   WriteSPParksSites

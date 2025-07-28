@@ -1,5 +1,7 @@
 #include "IdentifySampleFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/IdentifySample.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"

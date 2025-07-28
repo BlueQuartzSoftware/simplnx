@@ -1,5 +1,7 @@
 #include "MapPointCloudToRegularGridFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/MapPointCloudToRegularGrid.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -15,8 +17,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
@@ -32,8 +32,6 @@ constexpr nx::core::StringLiteral k_WarningMode = "Warning with Count";
 constexpr nx::core::StringLiteral k_ErrorMode = "Error at First Instance";
 const nx::core::ChoicesParameter::Choices k_OutOfBoundsHandlingChoices = {k_SilentMode, k_WarningMode, k_ErrorMode};
 const nx::core::ChoicesParameter::ValueType k_SilentModeIndex = 0;
-const nx::core::ChoicesParameter::ValueType k_WarningModeIndex = 1;
-const nx::core::ChoicesParameter::ValueType k_ErrorModeIndex = 2;
 
 constexpr int64 k_BadGridDimensions = -2601;
 constexpr int64 k_InvalidVertexGeometry = -2602;
@@ -41,9 +39,6 @@ constexpr int64 k_IncompatibleMaskVoxelArrays = -2603;
 constexpr int64 k_MaskSelectedArrayInvalid = -2604;
 constexpr int64 k_MaskCompareInvalid = -2605;
 constexpr int64 k_InvalidImageGeometry = -2606;
-constexpr int64 k_ErrorOutOfBounds = -2607;
-constexpr int64 k_WarningOutOfBounds = -2608;
-constexpr int64 k_InvalidHandlingValue = -2609;
 
 Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filterArgs)
 {
@@ -76,8 +71,8 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   std::vector<float32> meshMinExtents;
   for(size_t i = 0; i < 3; i++)
   {
-    meshMaxExtents.push_back(std::numeric_limits<float>::lowest());
-    meshMinExtents.push_back(std::numeric_limits<float>::max());
+    meshMaxExtents.push_back(std::numeric_limits<float32>::lowest());
+    meshMinExtents.push_back(std::numeric_limits<float32>::max());
   }
 
   for(int64_t i = 0; i < numVerts; i++)
@@ -132,7 +127,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   }
   else
   {
-    iRes[0] = 1.25f * (meshMaxExtents[0] - meshMinExtents[0]) / (static_cast<float>(iDims[0]));
+    iRes[0] = 1.25f * (meshMaxExtents[0] - meshMinExtents[0]) / (static_cast<float32>(iDims[0]));
     if(iRes[0] == 0.0f)
     {
       iRes[0] = 1.0f;
@@ -204,86 +199,6 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   image->setSpacing(iRes[0], iRes[1], iRes[2]);
   image->setOrigin(iOrigin[0], iOrigin[1], iOrigin[2]);
   image->getCellData()->resizeTuples({iDims[2], iDims[1], iDims[0]});
-
-  return {};
-}
-
-template <bool UseSilent, bool UseWarning, bool UseError>
-struct OutOfBoundsType
-{
-  // Compile time checks for bounding, no runtime overhead
-  static_assert((UseSilent && !UseWarning && !UseError) || (!UseSilent && UseWarning && !UseError) || (!UseSilent && !UseWarning && UseError),
-                "struct `OutOfBoundsType` can only have one true bool in its instantiation");
-
-  static constexpr bool UsingSilent = UseSilent;
-  static constexpr bool UsingWarning = UseWarning;
-  static constexpr bool UsingError = UseError;
-};
-
-using SilentType = OutOfBoundsType<true, false, false>;
-using WarningType = OutOfBoundsType<false, true, false>;
-using ErrorType = OutOfBoundsType<false, false, true>;
-
-template <class OutOfBoundsType = SilentType, bool UseMask = false>
-Result<> ProcessVertices(MessageHelper& messageHelper, const VertexGeom& vertices, const ImageGeom* image, UInt64AbstractDataStore& voxelIndices,
-                         const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
-{
-  // Validation
-  if(image == nullptr)
-  {
-    return MakeErrorResult(k_InvalidImageGeometry, fmt::format("{}({}): Function {}: Error. Supplied `image` is a nullptr", "::ProcessVertices", __FILE__, __LINE__));
-  }
-
-  // Out of Bounds Counter
-  usize count = 0;
-
-  // Execution
-  usize numVerts = vertices.getNumberOfVertices();
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  for(int64 i = 0; i < numVerts; i++)
-  {
-    if constexpr(UseMask)
-    {
-      if(!maskCompare->isTrue(i))
-      {
-        continue;
-      }
-    }
-
-    auto coords = vertices.getVertexCoordinate(i);
-    const auto indexResult = image->getIndex(coords[0], coords[1], coords[2]);
-    if(indexResult.has_value())
-    {
-      voxelIndices[i] = indexResult.value();
-    }
-    else
-    {
-      if constexpr(OutOfBoundsType::UsingError)
-      {
-        BoundingBox3Df imageBounds = image->getBoundingBoxf();
-        const Point3Df& minPoint = imageBounds.getMinPoint();
-        const Point3Df& maxPoint = imageBounds.getMaxPoint();
-        return MakeErrorResult(
-            k_ErrorOutOfBounds,
-            fmt::format("Out of bounds value encountered.\nVertex Index: {}\nVertex Coordinates [X,Y,Z]: [{},{},{}]\nImage Coordinate Bounds:\nX: {} to {}\nY: {} to {}\nZ: {} to {}", i, coords[0],
-                        coords[1], coords[2], minPoint.getX(), maxPoint.getX(), minPoint.getY(), maxPoint.getY(), minPoint.getZ(), maxPoint.getZ()));
-      }
-
-      // Out of bounds value
-      voxelIndices[i] = outOfBoundsValue;
-      count++;
-    }
-
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Computing Point Cloud Voxel Indices || {:.2f}% Completed", CalculatePercentComplete(i, numVerts)); });
-  }
-
-  if constexpr(OutOfBoundsType::UsingWarning)
-  {
-    if(count > 0)
-    {
-      return MakeWarningVoidResult(k_WarningOutOfBounds, fmt::format("Mapping Complete. Number of value outside image bounds: {}", count));
-    }
-  }
 
   return {};
 }
@@ -453,9 +368,9 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
 Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  // Get the target image as a pointer
-  const auto samplingGridType = filterArgs.value<uint64>(k_SamplingGridType_Key);
-  const ImageGeom* image = nullptr;
+  MapPointCloudToRegularGridInputValues inputValues;
+
+  auto samplingGridType = filterArgs.value<ChoicesParameter::ValueType>(k_SamplingGridType_Key);
   if(samplingGridType == 0)
   {
     // Create the regular grid
@@ -465,80 +380,30 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
     {
       return result;
     }
-    image = dataStructure.getDataAs<ImageGeom>(filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key));
+    inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   }
   else if(samplingGridType == 1)
   {
-    image = dataStructure.getDataAs<ImageGeom>(filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key));
+    inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   }
 
-  // Create the Mask
-  const auto useMask = filterArgs.value<bool>(k_UseMask_Key);
-  auto maskPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
-  if(!filterArgs.value<bool>(k_UseMask_Key))
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
+  if(!inputValues.UseMask)
   {
-    maskPath = DataPath({k_MaskName});
-  }
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  try
-  {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, maskPath);
-  } catch(const std::out_of_range& exception)
-  {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskPath.toString());
-    return MakeErrorResult(k_MaskCompareInvalid, message);
+    inputValues.MaskArrayPath = DataPath({k_MaskName});
   }
 
-  // Cache all the needed objects for ::ProcessVertices
-  const auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  const auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(filterArgs.value<std::string>(k_VoxelIndicesName_Key));
-  auto& voxelIndices = dataStructure.getDataAs<UInt64Array>(voxelIndicesPath)->getDataStoreRef();
-  auto outOfBoundsValue = filterArgs.value<uint64>(k_OutOfBoundsValue_Key);
+  inputValues.VertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.VertexGeomPath);
+  const AttributeMatrix* vertexData = vertexGeom.getVertexAttributeMatrix();
+  const DataPath vertexDataPath = inputValues.VertexGeomPath.createChildPath(vertexData->getName());
+  inputValues.VoxelIndicesPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_VoxelIndicesName_Key));
 
-  MessageHelper messageHelper(messageHandler);
+  inputValues.OutOfBoundsHandling = filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key);
+  inputValues.OutOfBoundsValue = filterArgs.value<uint64>(k_OutOfBoundsValue_Key);
 
-  // Execute the correct ::ProcessVertices, else error out
-  switch(filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key))
-  {
-  case k_SilentModeIndex: {
-    if(useMask)
-    {
-      return ProcessVertices<SilentType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-    else
-    {
-      return ProcessVertices<SilentType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-  }
-  case k_WarningModeIndex: {
-    if(useMask)
-    {
-      return ProcessVertices<WarningType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-    else
-    {
-      return ProcessVertices<WarningType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-  }
-  case k_ErrorModeIndex: {
-    if(useMask)
-    {
-      return ProcessVertices<ErrorType, true>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-    else
-    {
-      return ProcessVertices<ErrorType, false>(messageHelper, vertices, image, voxelIndices, maskCompare, outOfBoundsValue);
-    }
-  }
-  default: {
-    return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handing Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})",
-                                                               filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key), k_SilentMode, k_SilentModeIndex, k_WarningMode,
-                                                               k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
-  }
-  }
+  return MapPointCloudToRegularGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

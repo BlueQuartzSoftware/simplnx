@@ -103,17 +103,20 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(static_cast<int>(inputType) < 0 || inputType >= ebsdlib::orientations::Type::Unknown)
   {
-    return {MakeErrorResult<OutputActions>(nx::core::k_InputRepresentationTypeError, fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputType)))};
+    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputRepresentationTypeError,
+                                           fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputType)))};
   }
 
   if(static_cast<int>(outputType) < 0 || outputType >= ebsdlib::orientations::Type::Unknown)
   {
-    return {MakeErrorResult<OutputActions>(nx::core::k_OutputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(outputType)))};
+    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_OutputRepresentationTypeError,
+                                           fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(outputType)))};
   }
 
   if(inputType == outputType)
   {
-    return {MakeErrorResult<OutputActions>(::k_MatchingTypesError, fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
+    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
+                                           fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
@@ -122,7 +125,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputCompShape.size() > 1)
   {
-    return {MakeErrorResult<OutputActions>(nx::core::k_InputComponentDimensionError,
+    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
                                            fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
@@ -134,7 +137,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<size_t>(inputType)] << " should have "
             << representationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(nx::core::k_InputComponentCountError, message.str())};
+    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 

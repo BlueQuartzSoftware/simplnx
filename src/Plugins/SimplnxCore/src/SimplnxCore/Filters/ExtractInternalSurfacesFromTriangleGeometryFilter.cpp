@@ -1,22 +1,14 @@
 #include "ExtractInternalSurfacesFromTriangleGeometryFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ExtractInternalSurfacesFromTriangleGeometry.hpp"
+
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
-
-#include <limits>
-#include <unordered_map>
 
 using namespace nx::core;
 
@@ -27,65 +19,6 @@ constexpr int32 k_MissingTriangleFacesArray = -352;
 constexpr int32 k_NoNodeTypesArray = -353;
 constexpr int32 k_MissingVertexArray = -354;
 constexpr int32 k_MissingTriangleArray = -355;
-
-template <class T>
-void hashCombine(usize& seed, const T& obj)
-{
-  std::hash<T> hasher;
-  seed ^= hasher(obj) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
-struct CopyDataFunctor
-{
-  template <typename T>
-  void operator()(IDataArray* inDataPtr, IDataArray* outDataPtr, std::unordered_map<int64, int64>& elementMap) const
-  {
-    auto& inputData = inDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& outputData = outDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    usize nTuples = outDataPtr->getNumberOfTuples();
-    usize nComps = inDataPtr->getNumberOfComponents();
-    usize tmpIndex = 0;
-    usize ptrIndex = 0;
-
-    for(usize i = 0; i < nTuples; i++)
-    {
-      for(usize d = 0; d < nComps; d++)
-      {
-        tmpIndex = nComps * i + d;
-        ptrIndex = nComps * elementMap[i] + d;
-        outputData[tmpIndex] = inputData[ptrIndex];
-      }
-    }
-  }
-};
-
-struct RemoveFlaggedVerticesFunctor
-{
-  // copy data to masked geometry
-  template <class T>
-  void operator()(IDataArray* inputDataPtr, IDataArray* outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
-  {
-    auto& inputData = inputDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& outputData = outputDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    usize nComps = inputData.getNumberOfComponents();
-    IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
-
-    for(usize i = 0; i < indexMapping.size(); i++)
-    {
-      IGeometry::MeshIndexType newIndex = indexMapping[i];
-      if(newIndex != notSeen)
-      {
-        for(usize compIdx = 0; compIdx < nComps; compIdx++)
-        {
-          usize destinationIndex = newIndex * nComps + compIdx;
-          usize sourceIndex = i * nComps + compIdx;
-          outputData[destinationIndex] = inputData[sourceIndex];
-        }
-      }
-    }
-  }
-};
 
 } // namespace
 
@@ -285,149 +218,16 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
                                                                         const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
-  auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  auto internalTrianglesPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
-  auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
-  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
-  auto faceDataName = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
-
-  auto minMaxNodeValues = filterArgs.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
-
-  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
-  auto& internalTriangleGeom = dataStructure.getDataRefAs<TriangleGeom>(internalTrianglesPath);
-  auto& vertices = *triangleGeom.getVertices();
-  auto& triangles = *triangleGeom.getFaces();
-  auto numVerts = triangleGeom.getNumberOfVertices();
-  auto numTris = triangleGeom.getNumberOfFaces();
-
-  auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(nodeTypesArrayPath);
-
-  auto internalVerticesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedVertexListName);
-  internalTriangleGeom.setVertices(*dataStructure.getDataAs<Float32Array>(internalVerticesPath));
-
-  auto internalFacesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedFacesListName);
-  internalTriangleGeom.setFaceList(*dataStructure.getDataAs<UInt64Array>(internalFacesPath));
-
-  // int64 progIncrement = numTris / 100;
-  // int64 prog = 1;
-  // int64 progressInt = 0;
-  // int64 counter = 0;
-  using MeshIndexType = IGeometry::MeshIndexType;
-
-  const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
-
-  std::vector<MeshIndexType> vertNewIndex(numVerts, notSeen);
-  std::vector<MeshIndexType> triNewIndex(numTris, notSeen);
-  MeshIndexType currentNewTriIndex = 0;
-  MeshIndexType currentNewVertIndex = 0;
-
-  // Loop over all the triangles mapping the triangle and the vertices to the new array locations
-  for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
-  {
-    MeshIndexType v0Index = triangles[3 * triIndex + 0];
-    MeshIndexType v1Index = triangles[3 * triIndex + 1];
-    MeshIndexType v2Index = triangles[3 * triIndex + 2];
-    // Check if the NodeType is either 2, 3, 4
-    if((nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
-       (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]))
-    {
-      // All Nodes are the correct type
-      triNewIndex[triIndex] = currentNewTriIndex;
-      currentNewTriIndex++; // increment the index into which this triangle would be place in the new triangle array
-      // Now figure out if we have seen each vertex
-      if(vertNewIndex[v0Index] == notSeen)
-      {
-        vertNewIndex[v0Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-      if(vertNewIndex[v1Index] == notSeen)
-      {
-        vertNewIndex[v1Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-      if(vertNewIndex[v2Index] == notSeen)
-      {
-        vertNewIndex[v2Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-    }
-
-    if(shouldCancel)
-    {
-      return {};
-    }
-  }
-
-  // Resize the vertex and triangle arrays
-  internalTriangleGeom.resizeVertexList(currentNewVertIndex);
-  internalTriangleGeom.resizeFaceList(currentNewTriIndex);
-  internalTriangleGeom.getVertexAttributeMatrix()->resizeTuples({currentNewVertIndex});
-  internalTriangleGeom.getFaceAttributeMatrix()->resizeTuples({currentNewTriIndex});
-
-  IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
-  IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
-
-  // Transfer the data from the old SharedVertexList to the new VertexList
-  for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)
-  {
-    MeshIndexType mappedIndex = vertNewIndex[vertIndex];
-    if(mappedIndex != notSeen)
-    {
-      // Get the actual XYZ coordinate
-      float x = vertices[vertIndex * 3 + 0];
-      float y = vertices[vertIndex * 3 + 1];
-      float z = vertices[vertIndex * 3 + 2];
-
-      (*internalVerts)[mappedIndex * 3 + 0] = x;
-      (*internalVerts)[mappedIndex * 3 + 1] = y;
-      (*internalVerts)[mappedIndex * 3 + 2] = z;
-    }
-  }
-
-  // Transfer the data from the old SharedTriangleList to the new TriangleList
-  for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
-  {
-    MeshIndexType mappedIndex = triNewIndex[triIndex];
-    if(mappedIndex != notSeen)
-    {
-      // Get the 3 original vertex indices for this triangle
-      MeshIndexType v0 = triangles[triIndex * 3 + 0];
-      MeshIndexType v1 = triangles[triIndex * 3 + 1];
-      MeshIndexType v2 = triangles[triIndex * 3 + 2];
-
-      MeshIndexType v0New = vertNewIndex[v0];
-      MeshIndexType v1New = vertNewIndex[v1];
-      MeshIndexType v2New = vertNewIndex[v2];
-
-      (*internalTriangles)[mappedIndex * 3 + 0] = v0New;
-      (*internalTriangles)[mappedIndex * 3 + 1] = v1New;
-      (*internalTriangles)[mappedIndex * 3 + 2] = v2New;
-    }
-  }
-
-  // Copy any Vertex and Triangle DataArrays to extracted surface mesh
-  for(const auto& targetArrayPath : copyVertexPaths)
-  {
-    DataPath destinationPath = internalTrianglesPath.createChildPath(vertexDataName).createChildPath(targetArrayPath.getTargetName());
-    auto* src = dataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* dest = dataStructure.getDataAs<IDataArray>(destinationPath);
-
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, vertNewIndex);
-  }
-
-  for(const auto& targetArrayPath : copyTrianglePaths)
-  {
-    DataPath destinationPath = internalTrianglesPath.createChildPath(faceDataName).createChildPath(targetArrayPath.getTargetName());
-    auto* src = dataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* dest = dataStructure.getDataAs<IDataArray>(destinationPath);
-    dest->resizeTuples({currentNewTriIndex});
-
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, triNewIndex);
-  }
-
-  return {};
+  ExtractInternalSurfacesFromTriangleGeometryInputValues inputValues;
+  inputValues.CopyTriangleArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyTrianglePaths_Key);
+  inputValues.CopyVertexArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
+  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.NodeTypeRange = filterArgs.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
+  inputValues.NodeTypesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_NodeTypesPath_Key);
+  inputValues.OutputTriangleGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.TriangleAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_TriangleAttributeMatrixName_Key);
+  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  return ExtractInternalSurfacesFromTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

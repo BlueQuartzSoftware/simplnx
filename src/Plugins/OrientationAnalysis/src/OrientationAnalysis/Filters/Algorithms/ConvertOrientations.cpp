@@ -1,11 +1,7 @@
 #include "ConvertOrientations.hpp"
 
-#include "simplnx/Common/Result.hpp"
-#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -211,12 +207,6 @@ ConvertOrientations::ConvertOrientations(DataStructure& dataStructure, const IFi
 ConvertOrientations::~ConvertOrientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ConvertOrientations::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ConvertOrientations::operator()()
 {
   using ValidateInputDataFunctionType = std::function<void(float32*)>;
@@ -226,16 +216,16 @@ Result<> ConvertOrientations::operator()()
   auto outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
   size_t totalPoints = inputArray.getNumberOfTuples();
 
-  const ValidateInputDataFunctionType euCheck = EulerCheck<float32>();
-  const ValidateInputDataFunctionType omCheck = OrientationMatrixCheck<float32>();
-  const ValidateInputDataFunctionType quCheck = QuaternionCheck<float32>();
-  const ValidateInputDataFunctionType axCheck = AxisAngleCheck<float32>();
-  const ValidateInputDataFunctionType roCheck = RodriguesCheck<float32>();
-  const ValidateInputDataFunctionType hoCheck = HomochoricCheck<float32>();
-  const ValidateInputDataFunctionType cuCheck = CubochoricCheck<float32>();
-  const ValidateInputDataFunctionType stCheck = StereographicCheck<float32>();
+  const ValidateInputDataFunctionType euCheck = EulerCheck<float>();
+  const ValidateInputDataFunctionType omCheck = OrientationMatrixCheck<float>();
+  const ValidateInputDataFunctionType quCheck = QuaternionCheck<float>();
+  const ValidateInputDataFunctionType axCheck = AxisAngleCheck<float>();
+  const ValidateInputDataFunctionType roCheck = RodriguesCheck<float>();
+  const ValidateInputDataFunctionType hoCheck = HomochoricCheck<float>();
+  const ValidateInputDataFunctionType cuCheck = CubochoricCheck<float>();
+  const ValidateInputDataFunctionType stCheck = StereographicCheck<float>();
 
-  // This next block of code was generated from the ConvertOrientationsTest::_make_code() function.
+  // Allow data-based parallelization
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, totalPoints);
 

@@ -1,5 +1,8 @@
 #include "ComputeFZQuaternionsFilter.hpp"
 
+#include "OrientationAnalysis/Filters/Algorithms/ComputeFZQuaternions.hpp"
+
+#include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"

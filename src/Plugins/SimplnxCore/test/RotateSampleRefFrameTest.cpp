@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.hpp"
 #include "SimplnxCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -108,8 +109,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
     DataPath outputImageGeomPath = DataPath({fmt::format("{}_Test_AxisAngle", exemplaryGeomPath.getTargetName())});
 
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
-                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::AxisAngle)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_OriginalGeomPath));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false)); // We need to keep the geometries around.
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
@@ -145,7 +145,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     outputImageGeomPath = DataPath({fmt::format("{}_Test_RotationMatrix", exemplaryGeomPath.getTargetName())});
 
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
-                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
 

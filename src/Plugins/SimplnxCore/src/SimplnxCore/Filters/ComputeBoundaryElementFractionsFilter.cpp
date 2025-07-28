@@ -1,15 +1,14 @@
 #include "ComputeBoundaryElementFractionsFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ComputeBoundaryElementFractions.hpp"
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -107,31 +106,14 @@ IFilter::PreflightResult ComputeBoundaryElementFractionsFilter::preflightImpl(co
 Result<> ComputeBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
-  auto& boundaryCells = dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_BoundaryCellsArrayPath_Key));
-  auto& boundaryCellFractions =
-      dataStructure.getDataRefAs<Float32Array>(filterArgs.value<DataPath>(k_FeatureDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_BoundaryCellFractionsArrayName_Key)));
+  ComputeBoundaryElementFractionsInputValues inputValues;
+  // Replace the keys below with the variables from the header.
+  inputValues.BoundaryCellFractionsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellFractionsArrayName_Key);
+  inputValues.BoundaryCellsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_BoundaryCellsArrayPath_Key);
+  inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureDataAMPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
 
-  usize totalPoints = featureIds.getNumberOfTuples();
-  usize numFeatures = boundaryCellFractions.getNumberOfTuples();
-
-  std::vector<float32> surfVoxCounts(numFeatures, 0);
-  std::vector<float32> voxCounts(numFeatures, 0);
-
-  for(usize j = 0; j < totalPoints; j++)
-  {
-    int32 gnum = featureIds[j];
-    voxCounts[gnum]++;
-    if(boundaryCells[j] > 0)
-    {
-      surfVoxCounts[gnum]++;
-    }
-  }
-  for(usize i = 1; i < numFeatures; i++)
-  {
-    boundaryCellFractions[i] = surfVoxCounts[i] / voxCounts[i];
-  }
-  return {};
+  return ComputeBoundaryElementFractions(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
