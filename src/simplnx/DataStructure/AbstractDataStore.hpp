@@ -49,43 +49,13 @@ public:
     using reference = T&;
     using const_reference = const T&;
 
-    Iterator()
-    : m_DataStore(nullptr)
-    , m_Index(0)
-    {
-    }
+    Iterator() = default;
 
     Iterator(AbstractDataStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
-
-    Iterator(const Iterator& other)
-    : m_DataStore(other.m_DataStore)
-    , m_Index(other.m_Index)
-    {
-    }
-    Iterator(Iterator&& other) noexcept
-    : m_DataStore(other.m_DataStore)
-    , m_Index(other.m_Index)
-    {
-    }
-
-    Iterator& operator=(const Iterator& rhs)
-    {
-      m_DataStore = rhs.m_DataStore;
-      m_Index = rhs.m_Index;
-      return *this;
-    }
-    Iterator& operator=(Iterator&& rhs) noexcept
-    {
-      m_DataStore = rhs.m_DataStore;
-      m_Index = rhs.m_Index;
-      return *this;
-    }
-
-    ~Iterator() noexcept = default;
 
     inline bool isValid() const
     {
@@ -185,7 +155,7 @@ public:
     }
 
   private:
-    AbstractDataStore* m_DataStore;
+    AbstractDataStore* m_DataStore = nullptr;
     usize m_Index = 0;
   };
 
@@ -198,44 +168,13 @@ public:
     using pointer = const T*;
     using reference = const T&;
 
-    ConstIterator()
-    : m_DataStore(nullptr)
-    , m_Index(0)
-    {
-    }
+    ConstIterator() = default;
 
     ConstIterator(const AbstractDataStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
-
-    ConstIterator(const ConstIterator& other)
-    : m_DataStore(other.m_DataStore)
-    , m_Index(other.m_Index)
-    {
-    }
-
-    ConstIterator(ConstIterator&& other) noexcept
-    : m_DataStore(other.m_DataStore)
-    , m_Index(other.m_Index)
-    {
-    }
-
-    ConstIterator& operator=(const ConstIterator& rhs)
-    {
-      m_DataStore = rhs.m_DataStore;
-      m_Index = rhs.m_Index;
-      return *this;
-    }
-    ConstIterator& operator=(ConstIterator&& rhs) noexcept
-    {
-      m_DataStore = rhs.m_DataStore;
-      m_Index = rhs.m_Index;
-      return *this;
-    }
-
-    ~ConstIterator() noexcept = default;
 
     bool isValid() const
     {
