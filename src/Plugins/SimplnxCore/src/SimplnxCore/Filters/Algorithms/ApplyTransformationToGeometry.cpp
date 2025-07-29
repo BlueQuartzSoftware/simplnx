@@ -185,6 +185,18 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   }
 
+  // Apply geometry transformation
+  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
+  auto* nodeGeometry0D = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  if(m_InputValues->TranslateGeometryToGlobalOrigin)
+  {
+    auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0D->getBoundingBox();
+    Point3Df minPoint = boundingBox.getMinPoint();
+    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
+    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
+    m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
+  }
+
   // If asked to do so, save the transformation matrix as a flattened 1x16 array where we raster
   // along the columns the fastest then the the rows (Same as an image with its origin in the upper left
   if(m_InputValues->SaveTransformMatrix)
@@ -200,20 +212,8 @@ Result<> ApplyTransformationToGeometry::operator()()
     }
   }
 
-  // Apply geometry transformation
-  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
   if(imageGeometryPtr == nullptr)
   {
-    if(m_InputValues->TranslateGeometryToGlobalOrigin)
-    {
-      auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
-      auto boundingBox = nodeGeometry0D.getBoundingBox();
-      Point3Df minPoint = boundingBox.getMinPoint();
-      const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
-      const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
-      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
-    }
-
     applyNodeGeometryTransformation();
   }
   else

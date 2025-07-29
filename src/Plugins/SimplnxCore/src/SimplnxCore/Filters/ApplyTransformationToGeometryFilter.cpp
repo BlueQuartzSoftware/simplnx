@@ -185,6 +185,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
   if(imageGeomPtr != nullptr)
   {
+    auto origin = imageGeomPtr->getOrigin();
+    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+
     switch(pTransformationMatrixTypeValue)
     {
     case detail::k_NoTransformIdx: // No-Op
@@ -217,6 +221,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
       }
       transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
+      if(pTranslateGeometryToGlobalOrigin)
+      {
+        transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      }
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
@@ -224,6 +232,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
       transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+      if(pTranslateGeometryToGlobalOrigin)
+      {
+        transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      }
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
@@ -231,6 +243,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
       transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
+      if(pTranslateGeometryToGlobalOrigin)
+      {
+        transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      }
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
@@ -238,20 +254,16 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
       transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
+      if(pTranslateGeometryToGlobalOrigin)
+      {
+        transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      }
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     default: {
       return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
     }
-    }
-
-    if(pTranslateGeometryToGlobalOrigin)
-    {
-      auto origin = imageGeomPtr->getOrigin();
-      const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
-      const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
-      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
     }
 
     preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
@@ -344,10 +356,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
       const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
       const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
-      auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-      origin[0] = rotateArgs.xMinNew;
-      origin[1] = rotateArgs.yMinNew;
-      origin[2] = rotateArgs.zMinNew;
+      auto originVec = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
+      originVec[0] = rotateArgs.xMinNew;
+      originVec[1] = rotateArgs.yMinNew;
+      originVec[2] = rotateArgs.zMinNew;
 
       if(pRemoveOriginalGeometry)
       {
@@ -370,7 +382,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This is needed so that we don't attempt to copy it later on
         // Create the new Image Geometry
-        resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
+        resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, originVec, spacing, cellDataName));
 
         // Create a DataPath object that points to the Cell AttributeMatrix in the new ImageGeometry
         const DataPath targetCellAttrMatrix = destImagePath.createChildPath(cellDataName);
@@ -402,7 +414,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         {
           preflightUpdatedValues.push_back(
               {"Transformed Image Geometry Info",
-               nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeomPtr->getUnits())});
+               nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, originVec, srcImageGeomPtr->getUnits())});
         }
       }
 
