@@ -8,6 +8,7 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <compare>
 #include <iterator>
 #include <vector>
 
@@ -119,34 +120,14 @@ public:
       return (*m_DataStore)[m_Index];
     }
 
-    bool operator==(const Iterator& rhs) const
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs)
     {
-      return m_Index == rhs.m_Index;
+      return lhs.m_Index == rhs.m_Index;
     }
 
-    bool operator!=(const Iterator& rhs) const
+    friend std::strong_ordering operator<=>(const Iterator& lhs, const Iterator& rhs)
     {
-      return !(*this == rhs);
-    }
-
-    bool operator<(const Iterator& rhs) const
-    {
-      return m_Index < rhs.m_Index;
-    }
-
-    bool operator>(const Iterator& rhs) const
-    {
-      return m_Index > rhs.m_Index;
-    }
-
-    bool operator<=(const Iterator& rhs) const
-    {
-      return m_Index <= rhs.m_Index;
-    }
-
-    bool operator>=(const Iterator& rhs) const
-    {
-      return m_Index >= rhs.m_Index;
+      return lhs.m_Index <=> rhs.m_Index;
     }
 
   private:
@@ -233,34 +214,14 @@ public:
       return (*m_DataStore)[m_Index];
     }
 
-    bool operator==(const ConstIterator& rhs) const
+    friend bool operator==(const ConstIterator& lhs, const ConstIterator& rhs)
     {
-      return m_Index == rhs.m_Index;
+      return lhs.m_Index == rhs.m_Index;
     }
 
-    bool operator!=(const ConstIterator& rhs) const
+    friend std::strong_ordering operator<=>(const ConstIterator& lhs, const ConstIterator& rhs)
     {
-      return m_Index != rhs.m_Index;
-    }
-
-    bool operator<(const ConstIterator& rhs) const
-    {
-      return m_Index < rhs.m_Index;
-    }
-
-    bool operator>(const ConstIterator& rhs) const
-    {
-      return m_Index > rhs.m_Index;
-    }
-
-    bool operator<=(const ConstIterator& rhs) const
-    {
-      return m_Index <= rhs.m_Index;
-    }
-
-    bool operator>=(const ConstIterator& rhs) const
-    {
-      return m_Index >= rhs.m_Index;
+      return lhs.m_Index <=> rhs.m_Index;
     }
 
   private:
