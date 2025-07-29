@@ -7,15 +7,22 @@
 #ifndef MM_CELL_MAP_H
 #define MM_CELL_MAP_H
 
+#include "simplnx/DataStructure/DataArray.hpp"
+
 #include "MMCellFlag.h"
 #include "MMSurfaceNet.h"
+
+#include <array>
 
 class MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3]);
+  MMCellMap(int arraySize[3], float voxelSize[3]);
+
   ~MMCellMap();
+
+  void init(Int32Array& labels);
 
   // Relax vertex positions using relaxation attributes or reset to cell centers
   void relax(MMSurfaceNet::RelaxAttrs relaxAttrs);
@@ -27,8 +34,8 @@ public:
   int numVertices();
   int numEdgeCrossings();
   MMCellFlag::VertexType vertexType(int vertexIndex);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2]);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], usize quadNxArrayIndices[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2], usize quadNxArrayIndices[2]);
   void getVertexPosition(int vertexIndex, float position[3]);
 
   MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
@@ -39,6 +46,7 @@ public:
     int vertexIndex;
     float vertexOffset[3];
   };
+
   struct Vertex
   {
     int cellIndex[3];
@@ -52,21 +60,14 @@ public:
   int cellArrayIndex(int cellIndex[3]);
 
 private:
-  // Use of C-style arrays. C-style arrays are used deliberately for cell indices,
-  // vertex positions, cells in the cell map, vertices, etc. This was done after
-  // careful comparison of SurfaceNet construction and relaxation speeds with C-style
-  // arrays vs. std library vectors and arrays. Although the latter approach is
-  // encouraged with C++ and simplifies some implementation details, it was found
-  // to negatively impact construction and relaxation times in both Debug and Release
-  // modes in Visual Studio 2015.
-  int m_arraySize[3];
-  float m_voxelSize[3];
+  std::array<int32_t, 3> m_arraySize = {0, 0, 0};
+  std::array<float, 3> m_voxelSize = {1.0f, 1.0f, 1.0f};
 
+  std::array<int32_t, 3> m_NxDims = {0, 0, 0};
   Cell* m_cellArray;
 
   int m_numVertices;
   Vertex* m_vertices;
-  void initCell(Cell* cell, int32_t label);
   void setCellVertices();
 
   // Access cell map
@@ -74,9 +75,11 @@ private:
   int cellArrayIndex(int i, int j, int k);
   void getCellLabels(Cell* cell, int32_t labels[8]);
   bool isEdgeCrossing(int cellArrayIndex, MMCellFlag::Edge edge);
-  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2]);
+  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], usize quadNxArrayIndices[2]);
   void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]);
   void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, int quadVtxIndices[4]);
+
+  usize getNxCellArrayIndex(int vertexIndex);
 
   // Access vertex data
   void getVertexPosition(int cellIndex[3], float position[3]);
