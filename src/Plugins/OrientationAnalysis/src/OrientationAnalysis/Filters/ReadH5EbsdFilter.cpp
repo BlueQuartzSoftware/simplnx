@@ -2,6 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ReadH5Ebsd.hpp"
 #include "OrientationAnalysis/Parameters/ReadH5EbsdFileParameter.h"
+#include "OrientationAnalysis/utilities/EbsdReaderUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -93,17 +94,13 @@ IFilter::UniquePointer ReadH5EbsdFilter::clone() const
 IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                          const ExecutionContext& executionContext) const
 {
-
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   DataPath cellAttributeMatrixPath = imageGeomPath.createChildPath(pCellAttributeMatrixNameValue);
   auto pCellEnsembleAttributeMatrixNameValue = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
 
-  PreflightResult preflightResult;
-
   nx::core::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
 
   H5EbsdVolumeReader::Pointer reader = H5EbsdVolumeReader::New();
@@ -148,6 +145,9 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     reader = H5AngVolumeReader::New();
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
+
+    EbsdReaderUtilities::GeneratePreflightScanInformation<H5AngVolumeReader>(dynamic_cast<H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5AngVolumeReader>(dynamic_cast<H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else if(m_Manufacturer == EbsdLib::OEM::Oxford)
   {
@@ -155,6 +155,8 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     reader = H5CtfVolumeReader::New();
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
+    EbsdReaderUtilities::GeneratePreflightScanInformation<H5CtfVolumeReader>(dynamic_cast<H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5CtfVolumeReader>(dynamic_cast<H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else
   {
