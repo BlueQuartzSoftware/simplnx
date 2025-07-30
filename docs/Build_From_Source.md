@@ -15,7 +15,7 @@
 | pybind11  | <https://github.com/pybind/pybind11.git>  | 2.12 |
 | span-lite  | <https://github.com/martinmoene/span-lite>  | 0.10.3 |
 | tbb  | <https://github.com/oneapi-src/onetbb>  | 2021.4.0 |
-| ebsdlib  | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.30 |
+| ebsdlib  | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.39 |
 | h5support  | <https://www.github.com/bluequartzsoftware/H5Support>  | 1.0.13 |
 | nod  | <https://github.com/fr00b0/nod.git>  | 0.5.4 |
 | reproc  | <https://github.com/DaanDeMeyer/reproc>  | 14.2.4 |
