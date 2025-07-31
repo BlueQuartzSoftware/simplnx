@@ -7,8 +7,10 @@
 #include <EbsdLib/IO/BrukerNano/H5EspritReader.h>
 #include <EbsdLib/IO/HKL/CprReader.h>
 #include <EbsdLib/IO/HKL/CtfReader.h>
+#include <EbsdLib/IO/HKL/H5CtfVolumeReader.h>
 #include <EbsdLib/IO/HKL/H5OINAReader.h>
 #include <EbsdLib/IO/TSL/AngReader.h>
+#include <EbsdLib/IO/TSL/H5AngVolumeReader.h>
 #include <EbsdLib/IO/TSL/H5OIMReader.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -159,6 +161,48 @@ struct ReaderTraits<GrainMapper3DUtilities::GrainMapperReader>
   }
 };
 
+template <>
+struct ReaderTraits<H5AngVolumeReader>
+{
+  static auto getCols()
+  {
+    return std::mem_fn(&H5AngVolumeReader::getNumEvenCols);
+  }
+  static auto getRows()
+  {
+    return std::mem_fn(&H5AngVolumeReader::getNumRows);
+  }
+  static auto getXSpacing()
+  {
+    return std::mem_fn(&H5AngVolumeReader::getXStep);
+  }
+  static auto getYSpacing()
+  {
+    return std::mem_fn(&H5AngVolumeReader::getYStep);
+  }
+};
+
+template <>
+struct ReaderTraits<H5CtfVolumeReader>
+{
+  static auto getCols()
+  {
+    return std::mem_fn(&H5CtfVolumeReader::getXCells);
+  }
+  static auto getRows()
+  {
+    return std::mem_fn(&H5CtfVolumeReader::getYCells);
+  }
+  static auto getXSpacing()
+  {
+    return std::mem_fn(&H5CtfVolumeReader::getXStep);
+  }
+  static auto getYSpacing()
+  {
+    return std::mem_fn(&H5CtfVolumeReader::getYStep);
+  }
+};
+
 template <typename ReaderType>
 void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
@@ -205,13 +249,13 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
   for(const auto& phaseInfo : phaseInfos)
   {
 
-    if constexpr(std::is_same_v<ReaderType, AngReader> || std::is_same_v<ReaderType, H5OIMReader>)
+    if constexpr(std::is_same_v<ReaderType, AngReader> || std::is_same_v<ReaderType, H5OIMReader> || std::is_same_v<ReaderType, H5AngVolumeReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
                                                                                        phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
     }
 
-    if constexpr(std::is_same_v<ReaderType, CtfReader> || std::is_same_v<ReaderType, H5OINAReader> || std::is_same_v<ReaderType, CprReader>)
+    if constexpr(std::is_same_v<ReaderType, CtfReader> || std::is_same_v<ReaderType, H5OINAReader> || std::is_same_v<ReaderType, CprReader> || std::is_same_v<ReaderType, H5CtfVolumeReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
                                                                                        laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
