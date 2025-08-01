@@ -48,7 +48,6 @@ public:
     using difference_type = int64;
     using pointer = T*;
     using reference = T&;
-    using const_reference = const T&;
 
     Iterator() = default;
 
