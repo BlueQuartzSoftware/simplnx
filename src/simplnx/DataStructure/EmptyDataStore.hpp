@@ -23,7 +23,6 @@ class EmptyDataStore : public AbstractDataStore<T>
 public:
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
-  using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
 
   /**
@@ -164,33 +163,131 @@ public:
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target getSize.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  const_reference at(usize index) const override
+  value_type at(usize index) const override
   {
     throw std::runtime_error("EmptyDataStore::at() is not implemented");
   }
 
   /**
-   * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target getSize.
-   * @param  index
-   * @return const_reference
+   * @brief Adds value to value at index (equivalent to +=)
+   * @param index
+   * @param value
    */
-  const_reference operator[](usize index) const override
+  void add(usize index, value_type value) override
   {
-    throw std::runtime_error("EmptyDataStore::operator[]() is not implemented");
+    throw std::runtime_error("EmptyDataStore::add() is not implemented");
   }
 
   /**
-   * @brief Throws an exception because this should never be called. The
-   * EmptyDataStore class contains no data other than its target getSize.
-   * @param  index
-   * @return reference
+   * @brief Subtracts value to value at index (equivalent to -=)
+   * @param index
+   * @param value
    */
-  reference operator[](usize index) override
+  void sub(usize index, value_type value) override
   {
-    throw std::runtime_error("EmptyDataStore::operator[]() is not implemented");
+    throw std::runtime_error("EmptyDataStore::sub() is not implemented");
+  }
+
+  /**
+   * @brief Multiplies value at index by value (equivalent to *=)
+   * @param index
+   * @param value
+   */
+  void mul(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::mul() is not implemented");
+  }
+
+  /**
+   * @brief Divides value at index by value (equivalent to /=)
+   * @param index
+   * @param value
+   */
+  void div(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::div() is not implemented");
+  }
+
+  /**
+   * @brief Takes remainder of value at index divided by value (equivalent to %=)
+   * @param index
+   * @param value
+   */
+  void rem(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::rem() is not implemented");
+  }
+
+  /**
+   * @brief Bitwise AND of value at index with value (equivalent to &=)
+   * @param index
+   * @param value
+   */
+  void bitwiseAND(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::bitwiseAND() is not implemented");
+  }
+
+  /**
+   * @brief Bitwise OR of value at index with value (equivalent to |=)
+   * @param index
+   * @param value
+   */
+  void bitwiseOR(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::bitwiseOR() is not implemented");
+  }
+
+  /**
+   * @brief Bitwise XOR of value at index with value (equivalent to ^=)
+   * @param index
+   * @param value
+   */
+  void bitwiseXOR(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::bitwiseXOR() is not implemented");
+  }
+
+  /**
+   * @brief Bitwise left shift of value at index with value (equivalent to <<=)
+   * @param index
+   * @param value
+   */
+  void bitwiseLShift(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::bitwiseLShift() is not implemented");
+  }
+
+  /**
+   * @brief Bitwise right shift of value at index with value (equivalent to >>=)
+   * @param index
+   * @param value
+   */
+  void bitwiseRShift(usize index, value_type value) override
+  {
+    throw std::runtime_error("EmptyDataStore::bitwiseRShift() is not implemented");
+  }
+
+  /**
+   * @brief Swaps bytes of value at index
+   * @param index
+   * @param value
+   */
+  void byteSwap(usize index) override
+  {
+    throw std::runtime_error("EmptyDataStore::byteSwap() is not implemented");
+  }
+
+  /**
+   * @brief Swaps values at index1 and index2
+   * @param index1
+   * @param index2
+   */
+  void swap(usize index1, usize index2) override
+  {
+    throw std::runtime_error("EmptyDataStore::swap() is not implemented");
   }
 
   /**

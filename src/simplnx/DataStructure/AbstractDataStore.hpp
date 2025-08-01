@@ -32,10 +32,130 @@ class AbstractDataStore : public IDataStore
 {
 public:
   using value_type = T;
-  using reference = T&;
-  using const_reference = const T&;
   using ShapeType = typename IDataStore::ShapeType;
   using index_type = uint64;
+
+  class ValueProxy
+  {
+  public:
+    ValueProxy(AbstractDataStore<T>& dataStore, usize index)
+    : m_DataStore(&dataStore)
+    , m_Index(index)
+    {
+    }
+
+    ValueProxy& operator=(T value)
+    {
+      setValue(value);
+      return *this;
+    }
+
+    ValueProxy& operator+=(T value)
+    {
+      m_DataStore->add(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator-=(T value)
+    {
+      m_DataStore->sub(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator*=(T value)
+    {
+      m_DataStore->mul(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator/=(T value)
+    {
+      m_DataStore->div(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator%=(T value)
+    {
+      m_DataStore->rem(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator&=(T value)
+    {
+      m_DataStore->bitwiseAND(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator|=(T value)
+    {
+      m_DataStore->bitwiseOR(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator^=(T value)
+    {
+      m_DataStore->bitwiseXOR(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator<<=(T value)
+    {
+      m_DataStore->bitwiseLShift(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator>>=(T value)
+    {
+      m_DataStore->bitwiseRShift(m_Index, value);
+      return *this;
+    }
+
+    ValueProxy& operator=(const ValueProxy& value)
+    {
+      return *this = static_cast<T>(value);
+    }
+
+    void inc()
+    {
+      m_DataStore->add(m_Index, 1);
+    }
+
+    void dec()
+    {
+      m_DataStore->sub(m_Index, 1);
+    }
+
+    void byteSwap()
+    {
+      m_DataStore->byteSwap(m_Index);
+    }
+
+    operator T() const
+    {
+      return getValue();
+    }
+
+    T getValue() const
+    {
+      return m_DataStore->getValue(m_Index);
+    }
+
+    void setValue(T value)
+    {
+      m_DataStore->setValue(m_Index, value);
+    }
+
+    friend void swap(ValueProxy lhs, ValueProxy rhs)
+    {
+      lhs.m_DataStore->swap(lhs.m_Index, rhs.m_Index);
+    }
+
+  private:
+    AbstractDataStore<T>* m_DataStore = nullptr;
+    usize m_Index = 0;
+  };
+
+  using reference = ValueProxy;
 
   /////////////////////////////////
   // Begin std::iterator support  //
@@ -47,7 +167,7 @@ public:
     using value_type = T;
     using difference_type = int64;
     using pointer = T*;
-    using reference = T&;
+    using reference = ValueProxy;
 
     Iterator() = default;
 
@@ -151,7 +271,7 @@ public:
     using value_type = T;
     using difference_type = int64;
     using pointer = const T*;
-    using reference = const T&;
+    using reference = T;
 
     ConstIterator() = default;
 
@@ -198,7 +318,7 @@ public:
     // postfix
     ConstIterator operator++(int)
     {
-      Iterator iter = *this;
+      ConstIterator iter = *this;
       m_Index++;
       return iter;
     }
@@ -225,7 +345,7 @@ public:
 
     reference operator*() const
     {
-      return (*m_DataStore)[m_Index];
+      return m_DataStore->getValue(m_Index);
     }
 
     reference operator[](difference_type n) const
@@ -272,25 +392,115 @@ public:
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  virtual const_reference operator[](usize index) const = 0;
+  value_type operator[](usize index) const
+  {
+    return getValue(index);
+  }
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  virtual const_reference at(usize index) const = 0;
+  virtual value_type at(usize index) const = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This can be used to edit the value found at the specified index.
    * @param  index
-   * @return T&
+   * @return reference
    */
-  virtual reference operator[](usize index) = 0;
+  reference operator[](usize index)
+  {
+    return ValueProxy(*this, index);
+  }
+
+  /**
+   * @brief Adds value to value at index (equivalent to +=)
+   * @param index
+   * @param value
+   */
+  virtual void add(usize index, value_type value) = 0;
+
+  /**
+   * @brief Subtracts value to value at index (equivalent to -=)
+   * @param index
+   * @param value
+   */
+  virtual void sub(usize index, value_type value) = 0;
+
+  /**
+   * @brief Multiplies value at index by value (equivalent to *=)
+   * @param index
+   * @param value
+   */
+  virtual void mul(usize index, value_type value) = 0;
+
+  /**
+   * @brief Divides value at index by value (equivalent to /=)
+   * @param index
+   * @param value
+   */
+  virtual void div(usize index, value_type value) = 0;
+
+  /**
+   * @brief Takes remainder of value at index divided by value (equivalent to %=)
+   * @param index
+   * @param value
+   */
+  virtual void rem(usize index, value_type value) = 0;
+
+  /**
+   * @brief Bitwise AND of value at index with value (equivalent to &=)
+   * @param index
+   * @param value
+   */
+  virtual void bitwiseAND(usize index, value_type value) = 0;
+
+  /**
+   * @brief Bitwise OR of value at index with value (equivalent to |=)
+   * @param index
+   * @param value
+   */
+  virtual void bitwiseOR(usize index, value_type value) = 0;
+
+  /**
+   * @brief Bitwise XOR of value at index with value (equivalent to ^=)
+   * @param index
+   * @param value
+   */
+  virtual void bitwiseXOR(usize index, value_type value) = 0;
+
+  /**
+   * @brief Bitwise left shift of value at index with value (equivalent to <<=)
+   * @param index
+   * @param value
+   */
+  virtual void bitwiseLShift(usize index, value_type value) = 0;
+
+  /**
+   * @brief Bitwise right shift of value at index with value (equivalent to >>=)
+   * @param index
+   * @param value
+   */
+  virtual void bitwiseRShift(usize index, value_type value) = 0;
+
+  /**
+   * @brief Swaps bytes of value at index
+   * @param index
+   * @param value
+   */
+  virtual void byteSwap(usize index) = 0;
+
+  /**
+   * @brief Swaps values at index1 and index2
+   * @param index1
+   * @param index2
+   */
+  virtual void swap(usize index1, usize index2) = 0;
 
   /**
    * @brief Returns an Iterator to the beginning of the DataStore.

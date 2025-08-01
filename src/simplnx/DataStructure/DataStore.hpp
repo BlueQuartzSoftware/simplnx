@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
@@ -31,7 +32,6 @@ public:
   using parent_type = AbstractDataStore<T>;
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
-  using const_reference = typename AbstractDataStore<T>::const_reference;
   using ShapeType = typename IDataStore::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
@@ -301,40 +301,209 @@ public:
   }
 
   /**
-   * @brief Returns the value found at the specified index of the DataStore.
-   * This cannot be used to edit the value found at the specified index.
-   * @param  index
-   * @return const_reference
-   */
-  const_reference operator[](usize index) const override
-  {
-    return m_Data.get()[index];
-  }
-
-  /**
-   * @brief Returns the value found at the specified index of the DataStore.
-   * This can be used to edit the value found at the specified index.
-   * @param  index
-   * @return reference
-   */
-  reference operator[](usize index) override
-  {
-    return m_Data.get()[index];
-  }
-
-  /**
-   * @brief Returns the value found at the specified index of the DataStore.
+   * @brief Returns the value found at the specified index of sthe DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  const_reference at(usize index) const override
+  value_type at(usize index) const override
   {
     if(index >= this->getSize())
     {
       throw std::out_of_range(fmt::format("DataStore::at({}) is out of bounds. Size={}", index, this->getSize()));
     }
     return m_Data.get()[index];
+  }
+
+  /**
+   * @brief Adds value to value at index (equivalent to +=)
+   * @param index
+   * @param value
+   */
+  void add(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool>)
+    {
+      m_Data.get()[index] += value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore<bool>::add() invalid operator");
+    }
+  }
+
+  /**
+   * @brief Subtracts value to value at index (equivalent to -=)
+   * @param index
+   * @param value
+   */
+  void sub(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool>)
+    {
+      m_Data.get()[index] -= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore<bool>::sub() invalid operator");
+    }
+  }
+
+  /**
+   * @brief Multiplies value at index by value (equivalent to *=)
+   * @param index
+   * @param value
+   */
+  void mul(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool>)
+    {
+      m_Data.get()[index] *= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore<bool>::mul() invalid operator");
+    }
+  }
+
+  /**
+   * @brief Divides value at index by value (equivalent to /=)
+   * @param index
+   * @param value
+   */
+  void div(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool>)
+    {
+      m_Data.get()[index] /= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore<bool>::div() invalid operator");
+    }
+  }
+
+  /**
+   * @brief Takes remainder of value at index divided by value (equivalent to %=)
+   * @param index
+   * @param value
+   */
+  void rem(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] %= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::rem() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Bitwise AND of value at index with value (equivalent to &=)
+   * @param index
+   * @param value
+   */
+  void bitwiseAND(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] &= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::bitwiseAND() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Bitwise OR of value at index with value (equivalent to |=)
+   * @param index
+   * @param value
+   */
+  void bitwiseOR(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] |= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::bitwiseOR() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Bitwise XOR of value at index with value (equivalent to ^=)
+   * @param index
+   * @param value
+   */
+  void bitwiseXOR(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] ^= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::bitwiseXOR() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Bitwise left shift of value at index with value (equivalent to <<=)
+   * @param index
+   * @param value
+   */
+  void bitwiseLShift(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] <<= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::bitwiseLShift() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Bitwise right shift of value at index with value (equivalent to >>=)
+   * @param index
+   * @param value
+   */
+  void bitwiseRShift(usize index, value_type value) override
+  {
+    if constexpr(!std::is_same_v<T, bool> && !std::is_floating_point_v<T>)
+    {
+      m_Data.get()[index] >>= value;
+    }
+    else
+    {
+      throw std::runtime_error("DataStore::bitwiseRShift() invalid operator for bool or floating point");
+    }
+  }
+
+  /**
+   * @brief Swaps bytes of value at index
+   * @param index
+   * @param value
+   */
+  void byteSwap(usize index) override
+  {
+    T& element = m_Data.get()[index];
+    element = nx::core::byteswap(element);
+  }
+
+  /**
+   * @brief Swaps values at index1 and index2
+   * @param index1
+   * @param index2
+   */
+  void swap(usize index1, usize index2) override
+  {
+    std::swap(m_Data.get()[index1], m_Data.get()[index2]);
   }
 
   /**
