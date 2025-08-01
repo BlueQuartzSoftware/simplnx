@@ -63,6 +63,11 @@ public:
       return Iterator(*m_DataStore, m_Index + offset);
     }
 
+    friend Iterator operator+(usize offset, const Iterator& iter)
+    {
+      return iter + offset;
+    }
+
     Iterator operator-(usize offset) const
     {
       return Iterator(*m_DataStore, m_Index - offset);
@@ -120,6 +125,11 @@ public:
       return (*m_DataStore)[m_Index];
     }
 
+    reference operator[](difference_type n) const
+    {
+      return *(*this + n);
+    }
+
     friend bool operator==(const Iterator& lhs, const Iterator& rhs)
     {
       return lhs.m_Index == rhs.m_Index;
@@ -155,6 +165,11 @@ public:
     ConstIterator operator+(usize offset) const
     {
       return ConstIterator(*m_DataStore, m_Index + offset);
+    }
+
+    friend ConstIterator operator+(usize offset, const ConstIterator& iter)
+    {
+      return iter + offset;
     }
 
     ConstIterator operator-(usize offset) const
@@ -212,6 +227,11 @@ public:
     reference operator*() const
     {
       return (*m_DataStore)[m_Index];
+    }
+
+    reference operator[](difference_type n) const
+    {
+      return *(*this + n);
     }
 
     friend bool operator==(const ConstIterator& lhs, const ConstIterator& rhs)
