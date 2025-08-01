@@ -1,16 +1,29 @@
 #pragma once
+/**
+ * This file should hold constants that are needed for the unit test. There are
+ * a few prepopulated constants for your use. Feel free to add more to this file
+ * as your unit test suite grows.
+ */
+
+// -----------------------------------------------------------------------------------
+// This file was auto generated from the template file 
+// "@PLUGIN_SOURCE_DIR_NORM@/test/simplnx_test_dirs.hpp.in", 
+// if you need to change something in here, change that file instead
+// -----------------------------------------------------------------------------------
 
 #include "simplnx/Common/StringLiteral.hpp"
 
 #cmakedefine SIMPLNX_WRITE_TEST_OUTPUT
 
-
-namespace nx::core::unit_test
+namespace nx::core
 {
-inline constexpr StringLiteral k_ComplexSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_ComplexTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
-inline constexpr StringLiteral k_ComplexTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
+namespace unit_test
+{
+inline constexpr StringLiteral k_SimplnxSourceDIr = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_SimplnxTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
+inline constexpr StringLiteral k_SimplnxTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
 inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
+inline constexpr StringLiteral k_DataDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
 inline constexpr StringLiteral k_TestDataSourceDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
 inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
 inline constexpr StringLiteral k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
@@ -18,4 +31,5 @@ inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
 inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
 inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
 inline constexpr StringLiteral k_CMakeExecutable = "@CMAKE_COMMAND_NORM@";
-} // namespace nx::core::unit_test
+}
+} // namespace nx::core
