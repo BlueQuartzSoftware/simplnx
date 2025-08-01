@@ -42,7 +42,8 @@ public:
     TypeNameMismatch = -2353,
     ComponentShapeMismatch = -2354,
     InputArraysEqualAny = -2355,
-    InputArraysUnsupported = -2356
+    InputArraysUnsupported = -2356,
+    WrongElementCount = -2357
   };
 
   Result<> operator()();

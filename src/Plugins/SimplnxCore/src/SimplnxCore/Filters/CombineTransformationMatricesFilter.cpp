@@ -55,7 +55,7 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}, MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the output from the operations.", DataPath({""})));
@@ -106,6 +106,14 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
   {
     const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[i]);
 
+    auto totalElements = inputDataArray.getNumberOfTuples() * inputDataArray.getNumberOfComponents();
+    if(totalElements != 16)
+    {
+      return {MakeErrorResult<OutputActions>(to_underlying(CombineTransformationMatrices::ErrorCodes::WrongElementCount),
+                                             fmt::format("Input transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
+                                                         inputArrayPaths[i].toString(), totalElements, inputDataArray.getNumberOfTuples(), inputDataArray.getNumberOfComponents()))};
+    }
+
     for(usize j = i + 1; j < inputArrayPaths.size(); ++j)
     {
       const auto& inputDataArray2 = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[j]);
@@ -137,7 +145,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
 
   // create the destination array for the calculated results
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, IArray::ShapeType{numTuples}, IArray::ShapeType{1}, outputArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, IArray::ShapeType{16}, IArray::ShapeType{1}, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

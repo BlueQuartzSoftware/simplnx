@@ -205,6 +205,13 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         return {
             MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
       }
+      auto totalElements = precomputedMatrixPtr->getNumberOfTuples() * precomputedMatrixPtr->getNumberOfComponents();
+      if(totalElements != 16)
+      {
+        return {MakeErrorResult<OutputActions>(
+            -82019, fmt::format("Precomputed transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
+                                pComputedTransformationMatrixPath.toString(), totalElements, precomputedMatrixPtr->getNumberOfTuples(), precomputedMatrixPtr->getNumberOfComponents()))};
+      }
       transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
       break;
     }
