@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CopyArrayInstanceAction.hpp"
+#include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
@@ -61,16 +62,19 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
   params.insert(std::make_unique<BoolParameter>(k_RepairTriangleWinding_Key, "Attempt to Make Windings Consistent",
                                                 "If true, attempts to repair the windings for the mesh. This may not be possible. See help page.", true));
-  params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
-
-  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
+  // params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
-      k_SelectedDataArrayPaths_Key, "Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
+      k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
+  params.insert(std::make_unique<MultiArraySelectionParameter>(
+      k_SelectedFeatureDataArrayPaths_Key, "Feature Attribute Arrays to Transfer", "The paths to the Arrays specifying which feature Attribute Arrays to transfer to the created Triangle Geometry",
       MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
@@ -89,9 +93,6 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                           INodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
                                                           "The name of the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
-  params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry2D::k_FaceFeatureAttributeMatrixName));
 
   return params;
 }
@@ -127,6 +128,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
 
+  auto pFeatureDataPaths = filterArgs.value<std::vector<DataPath>>(k_SelectedFeatureDataArrayPaths_Key);
+
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
@@ -138,6 +141,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   {
     return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
   }
+
+  const usize elementTupleCount = gridGeom->getCellData()->getNumTuples();
   constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays
@@ -165,6 +170,13 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
+    // Check that the feature array has the correct tuple count to avoid crashing in execute.
+    const IDataArray* elementArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+    if(elementArray->getNumberOfTuples() != elementTupleCount)
+    {
+      return {MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
+    }
+
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
     const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
     auto compShape = iDataArray.getComponentShape();
@@ -176,10 +188,21 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
 
   {
-    auto faceFeatureAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FaceFeatureAttributeMatrixName_Key);
-    DataPath pFaceFeatureAttrMatrixPath = pTriangleGeometryPath.createChildPath(faceFeatureAttributeMatrixName);
-    auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pFaceFeatureAttrMatrixPath, std::vector<usize>{1});
-    resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
+    // usize featureTupleCount = 1;
+    // bool firstValue = true;
+    for(const DataPath& selectedDataPath : pFeatureDataPaths)
+    {
+      // Check that the feature array has the correct tuple count to avoid crashing in execute.
+      const IDataArray* featureArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+      DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
+      const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+      auto compShape = iDataArray.getComponentShape();
+      // Double the size of the DataArray because we need the value from both sides of the triangle.
+      compShape.insert(compShape.begin(), 2);
+
+      auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, createdDataPath, dataStoreFormat);
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -191,13 +214,14 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
 {
   nx::core::QuickSurfaceMeshInputValues inputValues;
 
-  inputValues.GenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
+  // inputValues.GenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   inputValues.FixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
 
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.SelectedCellDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.SelectedFeatureDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureDataArrayPaths_Key);
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   inputValues.VertexGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
   inputValues.NodeTypesDataPath = inputValues.VertexGroupDataPath.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
@@ -205,7 +229,12 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.FaceLabelsDataPath = inputValues.FaceGroupDataPath.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
-  for(const auto& selectedDataPath : inputValues.SelectedDataArrayPaths)
+  for(const auto& selectedDataPath : inputValues.SelectedCellDataArrayPaths)
+  {
+    DataPath createdDataPath = inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
+    createdDataPaths.push_back(createdDataPath);
+  }
+  for(const auto& selectedDataPath : inputValues.SelectedFeatureDataArrayPaths)
   {
     DataPath createdDataPath = inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
     createdDataPaths.push_back(createdDataPath);
@@ -247,8 +276,6 @@ Result<Arguments> QuickSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& js
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureAttributeMatrixNameKey, k_FaceFeatureAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

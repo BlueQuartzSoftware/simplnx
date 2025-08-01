@@ -210,10 +210,6 @@
           "value": "Face Data",
           "version": 1
         },
-        "face_feature_attribute_matrix_name": {
-          "value": "Face Feature Data",
-          "version": 1
-        },
         "face_labels_array_name": {
           "value": "FaceLabels",
           "version": 1
@@ -224,10 +220,6 @@
         },
         "fix_problem_voxels": {
           "value": true,
-          "version": 1
-        },
-        "generate_triple_lines": {
-          "value": false,
           "version": 1
         },
         "input_data_array_paths": {

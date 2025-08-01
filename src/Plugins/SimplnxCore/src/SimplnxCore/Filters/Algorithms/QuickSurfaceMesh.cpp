@@ -1016,10 +1016,17 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
+  for(size_t i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+  }
+
+  for(size_t i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  {
+    // Associate these arrays with the Triangle Face Data.
+    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i + m_InputValues->SelectedCellDataArrayPaths.size()],
+                                      m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
   }
 
   // Cycle through again assigning coordinates to each node and assigning node numbers and feature labels to each triangle
@@ -1060,9 +1067,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1073,9 +1080,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1109,9 +1116,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1122,9 +1129,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1158,9 +1165,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1171,9 +1178,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1207,9 +1214,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1220,9 +1227,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1264,9 +1271,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh1];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh1, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1284,9 +1291,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh1];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh1, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1320,9 +1327,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1333,9 +1340,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1376,9 +1383,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh2];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh2, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1396,9 +1403,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh2];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh2, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1432,9 +1439,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1445,9 +1452,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
           faceLabelsStore[triangleIndex * 2] = -1;
           faceLabelsStore[triangleIndex * 2 + 1] = featureIds[point];
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1488,9 +1495,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh3];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh3, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1508,9 +1515,9 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
             faceLabelsStore[triangleIndex * 2 + 1] = featureIds[neigh3];
           }
 
-          for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+          for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunctions[dataVectorIndex]->transfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->transfer(triangleIndex, neigh3, point, faceLabelsStore);
           }
 
           triangleIndex++;
