@@ -158,14 +158,14 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
   ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(selectedImageGeom, rotationMatrix);
-  const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
-  const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
+  const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputXDim), static_cast<usize>(rotateArgs.outputYDim), static_cast<usize>(rotateArgs.outputZDim)};
+  const std::vector<float32> spacing = {rotateArgs.outputXSpacing, rotateArgs.outputYSpacing, rotateArgs.outputZSpacing};
   auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
   if(!keepInputGeometryOrigin)
   {
-    origin[0] += rotateArgs.xMinNew;
-    origin[1] += rotateArgs.yMinNew;
-    origin[2] += rotateArgs.zMinNew;
+    origin[0] += rotateArgs.outputMinXCoord;
+    origin[1] += rotateArgs.outputMinYCoord;
+    origin[2] += rotateArgs.outputMinZCoord;
   }
 
   std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)

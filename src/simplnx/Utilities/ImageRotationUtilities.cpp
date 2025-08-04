@@ -47,7 +47,8 @@ FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, cons
 FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
 {
   auto origImageGeomBox = imageGeometry.getBoundingBoxf();
-  return DetermineMinMaxCoords(origImageGeomBox, transformationMatrix);
+  FloatVec6 result = DetermineMinMaxCoords(origImageGeomBox, transformationMatrix);
+  return result;
 }
 
 //------------------------------------------------------------------------------
@@ -69,36 +70,34 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 //------------------------------------------------------------------------------
 RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix)
 {
-  const SizeVec3 origDims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3 inputDims = imageGeom.getDimensions();
+  const FloatVec3 inputSpacing = imageGeom.getSpacing();
 
   const Matrix3fR rotationMatrix = transformationMatrix.block(0, 0, 3, 3);
 
+  // Get the Bounding Box for the new image geometry
   FloatVec6 minMaxCoords = DetermineMinMaxCoords(imageGeom, transformationMatrix);
 
-  const Eigen::Vector3f xAxisNew = rotationMatrix * k_XAxis;
-  const Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
-  const Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
+  // Compute the actual spacing on the new geometry
+  FloatVec3 rotatedSpacing = {DetermineSpacing(inputSpacing, k_XAxis) * (rotationMatrix * k_XAxis).norm(), DetermineSpacing(inputSpacing, k_YAxis) * (rotationMatrix * k_YAxis).norm(),
+                              DetermineSpacing(inputSpacing, k_ZAxis) * (rotationMatrix * k_ZAxis).norm()};
 
-  const float xResNew = DetermineSpacing(spacing, xAxisNew);
-  const float yResNew = DetermineSpacing(spacing, yAxisNew);
-  const float zResNew = DetermineSpacing(spacing, zAxisNew);
+  // Compute the Number of Voxels along each axis of the output image geometry
+  USizeVec3 outputDims = {static_cast<usize>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / rotatedSpacing[0])),
+                          static_cast<usize>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / rotatedSpacing[1])),
+                          static_cast<usize>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / rotatedSpacing[2]))};
 
-  IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
-  IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
-  IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
-
-  if(xpNew == 0)
+  if(outputDims[0] == 0)
   {
-    xpNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[0] = static_cast<IGeometry::MeshIndexType>(1);
   }
-  if(ypNew == 0)
+  if(outputDims[1] == 0)
   {
-    ypNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[1] = static_cast<IGeometry::MeshIndexType>(1);
   }
-  if(zpNew == 0)
+  if(outputDims[2] == 0)
   {
-    zpNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[2] = static_cast<IGeometry::MeshIndexType>(1);
   }
 
   RotateArgs params;
@@ -107,26 +106,26 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   params.OriginalSpacing = imageGeom.getSpacing();
   params.OriginalOrigin = imageGeom.getOrigin();
 
-  params.xp = static_cast<int64>(origDims[0]);
-  params.xRes = spacing[0];
-  params.yp = static_cast<int64>(origDims[1]);
-  params.yRes = spacing[1];
-  params.zp = static_cast<int64>(origDims[2]);
-  params.zRes = spacing[2];
+  params.xp = static_cast<int64>(inputDims[0]);
+  params.xRes = inputSpacing[0];
+  params.yp = static_cast<int64>(inputDims[1]);
+  params.yRes = inputSpacing[1];
+  params.zp = static_cast<int64>(inputDims[2]);
+  params.zRes = inputSpacing[2];
 
-  params.TransformedDims = {xpNew, ypNew, zpNew};
-  params.TransformedSpacing = {xResNew, yResNew, zResNew};
+  params.TransformedDims = outputDims;
+  params.TransformedSpacing = rotatedSpacing;
   params.TransformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
 
-  params.xpNew = static_cast<int64>(xpNew);
-  params.xResNew = xResNew;
-  params.xMinNew = minMaxCoords[0];
-  params.ypNew = static_cast<int64>(ypNew);
-  params.yResNew = yResNew;
-  params.yMinNew = minMaxCoords[2];
-  params.zpNew = static_cast<int64>(zpNew);
-  params.zResNew = zResNew;
-  params.zMinNew = minMaxCoords[4];
+  params.outputXDim = static_cast<int64>(outputDims[0]);
+  params.outputXSpacing = rotatedSpacing[0];
+  params.outputMinXCoord = minMaxCoords[0];
+  params.outputYDim = static_cast<int64>(outputDims[1]);
+  params.outputYSpacing = rotatedSpacing[1];
+  params.outputMinYCoord = minMaxCoords[2];
+  params.outputZDim = static_cast<int64>(outputDims[2]);
+  params.outputZSpacing = rotatedSpacing[2];
+  params.outputMinZCoord = minMaxCoords[4];
 
   return params;
 }
