@@ -52,7 +52,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
   {
     Arguments args;
     ReadStlFileFilter filter;
-    std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
+    std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_SimplnxTestDataSourceDir.view());
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));

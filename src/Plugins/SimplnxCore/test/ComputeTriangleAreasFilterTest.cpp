@@ -34,7 +34,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTrian
 
     DataPath triangleGeomDataPath({triangleGeometryName});
 
-    std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_ComplexTestDataSourceDir.view());
+    std::string inputFile = fmt::format("{}/ASTMD638_specimen.stl", unit_test::k_SimplnxTestDataSourceDir.view());
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));

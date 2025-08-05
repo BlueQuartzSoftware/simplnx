@@ -1,5 +1,15 @@
 #pragma once
+/**
+ * This file should hold constants that are needed for the unit test. There are
+ * a few prepopulated constants for your use. Feel free to add more to this file
+ * as your unit test suite grows.
+ */
 
+// -----------------------------------------------------------------------------------
+// This file was auto generated from the template file 
+// "@SIMPLNX_SOURCE_DIR_NORM@/test/simplnx_test_dirs.hpp.in", 
+// if you need to change something in here, change that file instead
+// -----------------------------------------------------------------------------------
 #include "simplnx/Common/StringLiteral.hpp"
 
 namespace nx::core

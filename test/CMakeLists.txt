@@ -9,6 +9,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/DownloadTestData.cmake")
 set(SIMPLNX_TEST_DIRS_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/unit_test/simplnx_test_dirs.hpp)
 
 configure_file(${simplnx_SOURCE_DIR}/test/simplnx_test_dirs.hpp.in ${SIMPLNX_TEST_DIRS_HEADER} @ONLY)
+file(MAKE_DIRECTORY "${simplnx_BINARY_DIR}/simplnx/test_output")
 
 find_package(Catch2 CONFIG REQUIRED)
 
