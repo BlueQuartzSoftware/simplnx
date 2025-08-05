@@ -25,12 +25,14 @@ public:
 
   // Parameter Keys
 
-  static inline constexpr StringLiteral k_GenerateTripleLines_Key = "generate_triple_lines";
+  // static inline constexpr StringLiteral k_GenerateTripleLines_Key = "generate_triple_lines";
   static inline constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
   static inline constexpr StringLiteral k_FixProblemVoxels_Key = "fix_problem_voxels";
   static inline constexpr StringLiteral k_GridGeometryDataPath_Key = "input_grid_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+
+  static inline constexpr StringLiteral k_SelectedFeatureDataArrayPaths_Key = "input_feature_data_array_paths";
 
   static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
 
@@ -39,7 +41,6 @@ public:
 
   static inline constexpr StringLiteral k_FaceDataGroupName_Key = "face_data_group_name";
   static inline constexpr StringLiteral k_FaceLabelsArrayName_Key = "face_labels_array_name";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

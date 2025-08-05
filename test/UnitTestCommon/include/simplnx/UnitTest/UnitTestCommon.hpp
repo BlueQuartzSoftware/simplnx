@@ -530,19 +530,18 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+  INFO(fmt::format("Exemplary Data Array:'{}'  Computed DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
 
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
-  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
-
-  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+  const auto& computedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(exemplaryDataArray.getNumberOfTuples() == computedDataArray.getNumberOfTuples());
 
   usize start = 0;
   usize end = exemplaryDataArray.getSize();
   for(usize i = start; i < end; i++)
   {
     auto oldVal = exemplaryDataArray[i];
-    auto newVal = generatedDataArray[i];
+    auto newVal = computedDataArray[i];
     if(oldVal != newVal)
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
@@ -1052,28 +1051,36 @@ inline void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& image
 }
 
 inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataStructure, const DataPath& exemplarAttributeMatrix, const DataStructure& computedDataStructure,
-                                                     const DataPath& computedAttributeMatrix)
+                                                     const DataPath& computedAttributeMatrix, bool allMustMatch = false)
 {
-  auto& cellDataGroup = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
+  auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
   // std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of all cell DataPaths from the exemplar data structure
-  for(auto& child : cellDataGroup)
+  for(auto& exemplarArrayPath : exemplarAttrMatr)
   {
-    DataPath exemplarDataArrayPath = exemplarAttributeMatrix.createChildPath(child.second->getName());
-    DataPath computedDataArrayPath = computedAttributeMatrix.createChildPath(child.second->getName());
+
+    DataPath exemplarDataArrayPath = exemplarAttributeMatrix.createChildPath(exemplarArrayPath.second->getName());
+    DataPath computedDataArrayPath = computedAttributeMatrix.createChildPath(exemplarArrayPath.second->getName());
+    INFO(fmt::format("Exemplar Array:'{}'  Computed Array: '{}'", exemplarDataArrayPath.toString(), computedDataArrayPath.toString()));
 
     const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
     const auto* computedArrayPtr = computedDataStructure.getDataAs<IArray>(computedDataArrayPath);
 
     // Check to see if there is something to compare against in the exemplar file.
-    if(nullptr == exemplarArrayPtr)
+    if(nullptr == exemplarArrayPtr && !allMustMatch)
     {
       continue;
     }
-    if(nullptr == computedArrayPtr)
+    if(nullptr == computedArrayPtr && !allMustMatch)
     {
       continue;
+    }
+
+    if(allMustMatch)
+    {
+      REQUIRE(exemplarArrayPtr != nullptr);
+      REQUIRE(computedArrayPtr != nullptr);
     }
 
     DataType type = DataType::int8;

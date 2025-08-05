@@ -22,7 +22,8 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
+  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
+  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
   DataPath TriangleGeometryPath;
   DataPath VertexGroupDataPath;
   DataPath NodeTypesDataPath;

@@ -8,56 +8,9 @@
         "import_data_object": {
           "value": {
             "data_paths": [
-              "DataContainer/Cell Ensemble Data",
-              "DataContainer/Cell Ensemble Data/CrystalStructures",
-              "DataContainer/Cell Ensemble Data/LatticeConstants",
-              "DataContainer/Cell Ensemble Data/MaterialName",
-              "DataContainer",
-              "DataContainer/Cell Data",
-              "DataContainer/Cell Data/Confidence Index",
-              "DataContainer/Cell Data/EulerAngles",
-              "DataContainer/Cell Data/Fit",
-              "DataContainer/Cell Data/Image Quality",
-              "DataContainer/Cell Data/Phases",
-              "DataContainer/Cell Data/SEM Signal",
-              "DataContainer/Cell Data/Mask",
-              "DataContainer/Cell Data/Quats",
-              "DataContainer/Cell Feature Data",
-              "DataContainer/Cell Data/FeatureIds",
-              "DataContainer/Cell Feature Data/Phases",
-              "DataContainer/NewGrain Data",
-              "DataContainer/Cell Data/ParentIds",
-              "DataContainer/NewGrain Data/Active",
-              "DataContainer/Cell Data/IPFColors",
-              "DataContainer/Cell Feature Data/Centroids",
-              "DataContainer/Cell Feature Data/EquivalentDiameters",
-              "DataContainer/Cell Feature Data/NumElements",
-              "DataContainer/Cell Feature Data/Omega3s",
-              "DataContainer/Cell Feature Data/AxisLengths",
-              "DataContainer/Cell Feature Data/AxisEulerAngles",
-              "DataContainer/Cell Feature Data/AspectRatios",
-              "DataContainer/Cell Feature Data/Shape Volumes",
-              "DataContainer/Cell Feature Data/NumNeighbors",
-              "DataContainer/Cell Feature Data/NeighborList",
-              "DataContainer/Cell Feature Data/SharedSurfaceAreaList",
-              "DataContainer/Cell Feature Data/Neighborhoods",
-              "DataContainer/Cell Feature Data/NeighborhoodList",
-              "DataContainer/Cell Data/GBManhattanDistances",
-              "DataContainer/Cell Data/TJManhattanDistances",
-              "DataContainer/Cell Data/QPManhattanDistances",
-              "DataContainer/Cell Feature Data/SurfaceAreaVolumeRatio",
-              "DataContainer/Cell Feature Data/AvgQuats",
-              "DataContainer/Cell Feature Data/AvgEulerAngles",
-              "DataContainer/Cell Feature Data/MisorientationList",
-              "DataContainer/Cell Feature Data/Schmids",
-              "DataContainer/Cell Feature Data/SlipSystems",
-              "DataContainer/Cell Feature Data/Poles",
-              "DataContainer/Cell Data/FeatureReferenceMisorientations",
-              "DataContainer/Cell Feature Data/FeatureAvgMisorientations",
-              "DataContainer/Cell Data/KernelAverageMisorientations"
             ],
             "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
-            "path_import_policy": 1
+            "path_import_policy": 0
           },
           "version": 2
         },
@@ -180,10 +133,6 @@
           "value": "Face Data",
           "version": 1
         },
-        "face_feature_attribute_matrix_name": {
-          "value": "QM Face Feature Data",
-          "version": 1
-        },
         "face_labels_array_name": {
           "value": "FaceLabels",
           "version": 1
@@ -193,10 +142,6 @@
           "version": 1
         },
         "fix_problem_voxels": {
-          "value": false,
-          "version": 1
-        },
-        "generate_triple_lines": {
           "value": false,
           "version": 1
         },
