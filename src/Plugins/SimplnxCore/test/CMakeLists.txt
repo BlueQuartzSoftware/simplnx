@@ -105,6 +105,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PointSampleEdgeGeometryTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
+  RandomizeFeatureIdsTest.cpp
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
   ReadHDF5DatasetTest.cpp

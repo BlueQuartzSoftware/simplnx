@@ -1,9 +1,12 @@
 #include "RandomizeFeatureIdsFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 
 #include <stdexcept>
 
@@ -51,8 +54,9 @@ Parameters RandomizeFeatureIdsFilter::parameters() const
 {
   Parameters params;
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs Array", "Array storing the Feature IDs", DataPath(),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs Array", "Array storing the Feature IDs", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAMPath_Key, "Feature Attribute Matrix", "The path to the Feature Attribute Matrix, so it can be updated", DataPath{}));
 
   return params;
 }
@@ -60,7 +64,12 @@ Parameters RandomizeFeatureIdsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType RandomizeFeatureIdsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change 1:
+  // Added - k_FeatureAMPath_Key = "feature_am_path";
+  // Solution - supply a valid Feature Attribute Matrix;
 }
 
 //------------------------------------------------------------------------------
@@ -80,13 +89,32 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
 Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
+  auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
+  auto featureAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
 
-  Int32Array& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
-  usize totalFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end());
+  usize totalFeatures = (*std::max_element(featureIdsStore.begin(), featureIdsStore.end())) + 1;
 
-  ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures);
+  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  if(totalFeatures > featureAM->getNumTuples())
+  {
+    return MakeErrorResult(
+        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumTuples(), totalFeatures - 1));
+  }
+
+  std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);
+
+  std::vector<IArray*> featureIArrays = {};
+  if(amChildPaths.has_value())
+  {
+    for(const auto& childPath : amChildPaths.value())
+    {
+      featureIArrays.push_back(dataStructure.getDataAs<IArray>(childPath));
+    }
+  }
+
+  ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
 
   return {};
 }

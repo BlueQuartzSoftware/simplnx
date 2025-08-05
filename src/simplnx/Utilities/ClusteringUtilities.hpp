@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <cmath>
@@ -138,8 +139,22 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
 
 /**
  * @brief Randomize the provided Feature IDs.
- * @param featureIds
- * @param totalFeatures
+ * @param featureIds the array that maps cell data to feature data via IDs
+ * @param totalFeatures the total feature count in the feature ids array (equivalent to max value in feature ids + 1)
+ * (Note: this can be derived implicitly, however,the calling functions should have already have this value so we are saving additional parsing)
+ * @return void
  */
 SIMPLNX_EXPORT void RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures);
+
+/**
+ * @brief Randomize the provided Feature IDs and update supplied feature IArray data.
+ * Assumption: Every array in `featureIArrays` are at least the length of totalFeatures
+ * @param featureIds the array that maps cell data to feature data via IDs
+ * @param totalFeatures the total feature count in the feature ids array (equivalent to max value in feature ids + 1)
+ * (Note: this can be derived implicitly, however,the calling functions should have already have this value so we are saving additional parsing)
+ * @param featureIArrays a vector of pointers to the IArrays in the Feature Attribute Matrix
+ * (Note: These are not found from a datapath, so calling functions can threshold out feature arrays if necessary)
+ * @return void
+ */
+SIMPLNX_EXPORT void RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
 } // namespace nx::core::ClusterUtilities
