@@ -396,15 +396,17 @@ void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t q
 
 usize MMCellMap::getNxCellArrayIndex(int vertexIndex)
 {
+  usize nxArrayIdx = std::numeric_limits<usize>::max();
+  if(vertexIndex < 0)
+  {
+    return nxArrayIdx;
+  }
   std::array<int, 3> cellIndex = {0, 0, 0};
   getVertexCellIndex(vertexIndex, cellIndex.data());
-
-  usize nxArrayIdx = std::numeric_limits<usize>::max();
   if(cellIndex[0] - 1 >= 0 && cellIndex[0] - 1 < m_arraySize[0] - 1 && cellIndex[1] - 1 > 0 && cellIndex[1] - 1 < m_arraySize[1] - 1 && cellIndex[2] - 1 > 0 && cellIndex[2] - 1 < m_arraySize[2] - 1)
   {
     nxArrayIdx = ((cellIndex[2] - 1) * m_NxDims[1] * m_NxDims[0]) + ((cellIndex[1] - 1) * m_NxDims[0]) + (cellIndex[0] - 1);
   }
-
   return nxArrayIdx;
 }
 

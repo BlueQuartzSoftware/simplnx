@@ -218,12 +218,22 @@ Result<> SurfaceNets::operator()()
   auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
   faceLabels.resizeTuples({triangleCount});
 
-  // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
+  // Create a vector of TupleTransferFunctions for each of the Triangle Face
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
+  for(size_t i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+  }
+
+  auto numSelectedCellArrayPaths = m_InputValues->SelectedCellDataArrayPaths.size();
+
+  for(size_t i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  {
+    // Associate these arrays with the Triangle Face Data.
+    auto selectedPath = m_InputValues->SelectedFeatureDataArrayPaths[i];
+    auto createdPath = m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths];
+    ::AddFeatureTupleTransferInstance(m_DataStructure, selectedPath, createdPath, m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
   }
 
   usize faceIndex = 0;
@@ -275,9 +285,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
 
       faceIndex++;
@@ -294,9 +304,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }
@@ -334,9 +344,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
 
@@ -352,9 +362,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }
@@ -392,9 +402,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
 
@@ -410,9 +420,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadNxArrayIndices[0], quadNxArrayIndices[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }

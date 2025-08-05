@@ -86,7 +86,6 @@ result = nx_filter.execute(
     data_structure=data_structure,
     apply_smoothing=True,
     face_data_group_name="Face Data",
-    face_feature_attribute_matrix_name="Face Feature Data",
     face_labels_array_name="FaceLabels",
     feature_ids_path=nx.DataPath("RoboMet.3D Image Stack/Optical Data/FeatureIds"),
     input_grid_geometry_path=nx.DataPath("RoboMet.3D Image Stack"),

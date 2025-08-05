@@ -158,7 +158,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     // Transfer the face data to the vertex data
     for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
     {
-      tupleTransferFunctions[dataVectorIndex]->transfer(randomTri, curVertex);
+      tupleTransferFunctions[dataVectorIndex]->pointSampleTransfer(randomTri, curVertex);
     }
 
     if(counter > prog)

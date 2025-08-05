@@ -5,7 +5,8 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/Utilities/TemplateHelpers.hpp"
+
+#include <array>
 
 namespace nx::core
 {
@@ -28,14 +29,24 @@ public:
    * @brief
    * @param faceIndex
    * @param firstcIndex
-   * @param secondcIndex
-   * @param forceSecondToZero
    */
-  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero) = 0;
+  virtual void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) = 0;
 
-  virtual void transfer(size_t faceIndex, size_t firstcIndex) = 0;
+  /**
+   * @brief
+   * @param faceIndex
+   * @param firstcIndex
+   * @param secondcIndex
+   * @param faceLabels
+   */
+  virtual void quickSurfaceTransfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) = 0;
 
-  virtual void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) = 0;
+  /**
+   * @brief
+   * @param faceIndex
+   * @param quadNxArrayIndices
+   */
+  virtual void surfaceNetsTransfer(size_t faceIndex, const std::array<usize, 2>& quadNxArrayIndices) = 0;
 
 protected:
   AbstractTupleTransfer() = default;
@@ -76,29 +87,11 @@ public:
   TransferTuple& operator=(TransferTuple&&) noexcept = delete;
 
   /**
-   * @brief This method does the actual copying of the Tuple values from one DataArray to the other DataArray
+   * @brief
    * @param faceIndex
    * @param firstcIndex
-   * @param secondcIndex
-   * @param forceSecondToZero
    */
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero) override
-  {
-    for(size_t i = 0; i < m_NumComps; i++)
-    {
-      m_FaceRef[faceIndex * m_NumComps + i] = m_CellRef[firstcIndex * m_NumComps + i];
-    }
-
-    if(!forceSecondToZero)
-    {
-      for(size_t i = 0; i < m_NumComps; i++)
-      {
-        m_FaceRef[faceIndex + i + m_NumComps] = m_CellRef[secondcIndex + i];
-      }
-    }
-  }
-
-  void transfer(size_t faceIndex, size_t firstcIndex) override
+  void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) override
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
@@ -106,7 +99,14 @@ public:
     }
   }
 
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) override
+  /**
+   * @brief
+   * @param faceIndex
+   * @param firstcIndex
+   * @param secondcIndex
+   * @param faceLabels
+   */
+  void quickSurfaceTransfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) override
   {
     // Only copy the data if the FaceLabel is NOT -1, indicating that the data is NOT on the exterior
     if(faceLabels[faceIndex * 2] != -1)
@@ -123,6 +123,32 @@ public:
       {
         size_t index = (faceIndex * m_NumComps * 2) + m_NumComps + i;
         m_FaceRef[index] = m_CellRef[secondcIndex * m_NumComps + i];
+      }
+    }
+  }
+
+  /**
+   * @brief
+   * @param faceIndex
+   * @param quadNxArrayIndices
+   */
+  void surfaceNetsTransfer(size_t faceIndex, const std::array<usize, 2>& quadNxArrayIndices) override
+  {
+    // Only copy the data if the quadNxArrayIndices is NOT UINT64_MAX, indicating that the data is NOT on the exterior
+    if(quadNxArrayIndices[0] != std::numeric_limits<usize>::max())
+    {
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        m_FaceRef[faceIndex * m_NumComps * 2 + i] = m_CellRef[quadNxArrayIndices[0] * m_NumComps + i];
+      }
+    }
+
+    if(quadNxArrayIndices[1] != std::numeric_limits<usize>::max())
+    {
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        size_t index = (faceIndex * m_NumComps * 2) + m_NumComps + i;
+        m_FaceRef[index] = m_CellRef[quadNxArrayIndices[1] * m_NumComps + i];
       }
     }
   }
@@ -166,33 +192,11 @@ public:
   TransferFeatureTuple& operator=(TransferFeatureTuple&&) noexcept = delete;
 
   /**
-   * @brief This method does the actual copying of the Tuple values from one DataArray to the other DataArray
+   * @brief
    * @param faceIndex
    * @param firstcIndex
-   * @param secondcIndex
-   * @param forceSecondToZero
    */
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, bool forceSecondToZero) override
-  {
-    // FeatureIds is assumed to be an Int32 array with a single component.
-    K firstFeatureId = m_FeatureIdsRef[firstcIndex];
-    K secondFeatureId = m_FeatureIdsRef[secondcIndex];
-
-    for(size_t i = 0; i < m_NumComps; i++)
-    {
-      m_FaceRef[faceIndex * m_NumComps + i] = m_FeatureDataRef[firstFeatureId * m_NumComps + i];
-    }
-
-    if(!forceSecondToZero)
-    {
-      for(size_t i = 0; i < m_NumComps; i++)
-      {
-        m_FaceRef[faceIndex + i + m_NumComps] = m_FeatureDataRef[secondFeatureId + i];
-      }
-    }
-  }
-
-  void transfer(size_t faceIndex, size_t firstcIndex) override
+  void pointSampleTransfer(size_t faceIndex, size_t firstcIndex) override
   {
     // FeatureIds is assumed to be an Int32 array with a single component.
     K firstFeatureId = m_FeatureIdsRef[firstcIndex];
@@ -202,15 +206,20 @@ public:
     }
   }
 
-  void transfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) override
+  /**
+   * @brief
+   * @param faceIndex
+   * @param firstcIndex
+   * @param secondcIndex
+   * @param faceLabels
+   */
+  void quickSurfaceTransfer(size_t faceIndex, size_t firstcIndex, size_t secondcIndex, AbstractDataStore<int32>& faceLabels) override
   {
     // FeatureIds is assumed to be an Int32 array with a single component.
-    K firstFeatureId = m_FeatureIdsRef[firstcIndex];
-    K secondFeatureId = m_FeatureIdsRef[secondcIndex];
-
     // Only copy the data if the FaceLabel is NOT -1, indicating that the data is NOT on the exterior
     if(faceLabels[faceIndex * 2] != -1)
     {
+      K firstFeatureId = m_FeatureIdsRef[firstcIndex];
       for(size_t i = 0; i < m_NumComps; i++)
       {
         m_FaceRef[faceIndex * m_NumComps * 2 + i] = m_FeatureDataRef[firstFeatureId * m_NumComps + i];
@@ -219,6 +228,38 @@ public:
 
     if(faceLabels[faceIndex * 2 + 1] != -1)
     {
+      K secondFeatureId = m_FeatureIdsRef[secondcIndex];
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        size_t index = (faceIndex * m_NumComps * 2) + m_NumComps + i;
+        m_FaceRef[index] = m_FeatureDataRef[secondFeatureId * m_NumComps + i];
+      }
+    }
+  }
+
+  /**
+   * @brief
+   * @param faceIndex
+   * @param quadNxArrayIndices
+   */
+  void surfaceNetsTransfer(size_t faceIndex, const std::array<usize, 2>& quadNxArrayIndices) override
+  {
+    // FeatureIds is assumed to be an Int32 array with a single component.
+    // Only copy the data if the quadNxArrayIndices is NOT UINT64_MAX, indicating that the data is NOT on the exterior
+    if(quadNxArrayIndices[0] != std::numeric_limits<usize>::max())
+    {
+      usize firstcIndex = quadNxArrayIndices[0];
+      K firstFeatureId = m_FeatureIdsRef[firstcIndex];
+      for(size_t i = 0; i < m_NumComps; i++)
+      {
+        m_FaceRef[faceIndex * m_NumComps * 2 + i] = m_FeatureDataRef[firstFeatureId * m_NumComps + i];
+      }
+    }
+
+    if(quadNxArrayIndices[1] != std::numeric_limits<usize>::max())
+    {
+      usize secondcIndex = quadNxArrayIndices[1];
+      K secondFeatureId = m_FeatureIdsRef[secondcIndex];
       for(size_t i = 0; i < m_NumComps; i++)
       {
         size_t index = (faceIndex * m_NumComps * 2) + m_NumComps + i;
