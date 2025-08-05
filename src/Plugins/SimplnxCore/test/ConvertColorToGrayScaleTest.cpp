@@ -282,7 +282,7 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
 {
   DataStructure dataStruct;
   const std::vector<size_t> tDims{numTuples};
-  const std::vector<size_t> cDims{3, 1, 1};
+  const std::vector<size_t> cDims{3};
 
   // NOTE: This filter has no geometry requirements
   VertexGeom* vertexGeo = createVertexGeometry(dataStruct, tDims, cDims);
