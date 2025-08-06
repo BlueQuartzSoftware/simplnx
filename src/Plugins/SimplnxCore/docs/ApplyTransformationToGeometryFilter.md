@@ -6,9 +6,11 @@ Rotation, Scale & Transformation
 
 ## Description
 
+This **Filter** applies a spatial transformation to either an unstructured **Geometry** or an **Image Geometry**.
+
 ### Unstructured Grid Geometries
 
-This **Filter** applies a spatial transformation to either and unstructured **Geometry** or an **Image Geometry**. An "unstructured" **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
+ An "unstructured" **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
 
 - **NO** interpolation will take place as the only changes that take place are the actual coordinates of the vertices.
 
@@ -22,10 +24,6 @@ If the user selects an **Image Geometry** then there are 2 additional required f
 The linear/Bi-Linear/Tri-Linear Interpolation is adapted from the equations presented
 in [https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36}](https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf)
 
-### Caveats
-
-- The **Scale** and **Rotation** transformation types will automatically translate the volume to (0, 0, 0), apply the scaling/rotation, and then translate the volume back to its original location.  If the **Manual Transformation Matrix** or **Pre-Computed Transformation Matrix** types are selected, then it is up to the user to make sure that those translations are included, if necessary.
-
 ## Example Image Geometry Transformations
 
 | Description | Example Output Image |
@@ -33,6 +31,54 @@ in [https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36}]
 | Input Image |  ![Input Image](Images/ApplyTransformation_AsRead.png) |
 | After Rotation of 45 Degrees around the <001> axis | ![Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_Rotated.png) |
 | Scaled by 2x in the X and Y axis  | ![Scaled by 2x in the X and Y axis.](Images/ApplyTransformation_Scaled.png) |
+
+## Image Geometry Caveat
+
+Using this filter several times in a row to apply several transforms in succession to the same image geometry is highly likely to result in visual artifacts related to the intermediate re-gridding of the image geometry between transformations.  For example, let's rotate an image geometry 90 degrees along the Z axis:
+
+| Description | Image |
+|-------------|----------------------|
+| Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom.png) |
+| After Rotation of 90 Degrees around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
+
+You would think that rotating this same image geometry 45 degrees along the Z axis two times would produce the same output as above (rotating it 90 degrees along the Z axis once), but this is not the case...
+
+| Description | Image |
+|-------------|----------------------|
+| Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom.png) |
+| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate.png) |
+| After 2nd Rotation of 45 Degrees around the <001> axis | ![2nd Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final_Artifacts.png) |
+
+Why does this happen?  Let's overlay the centers of each cell on top of the original image geometry.
+
+| Description | Image |
+|-------------|----------------------|
+| Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom_WithVertices.png) |
+| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate_WithVertices.png) |
+
+The green vertices refer to the center of each image geometry cell.  As you can see, after the first 45 degree rotation, the image geometry is re-gridded and now the transformed green vertices are no longer in the center of each cell.
+
+On the 2nd and final 45 degree rotation, the image geometry is going to double in size because the algorithm doesn't know the final image geometry's exact size and doubles its size to account for the worst case scenario.
+
+Let's see how the transformed green vertices overlay on the intermediate image geometry when the field of vertices has doubled in size but the image geometry hasn't actually been transformed a 2nd time yet.
+
+| Description | Image |
+|-------------|----------------------|
+| After 1st Rotation of 45 Degrees around the <001> axis | ![1st Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Intermediate_WithVertices2.png) |
+
+The cell circled in purple has two green vertices inside it.  This means that once the 2nd 45 degree transformation is completed, the final image geometry will have that orange color shifted outside where we would expect it to be.  And sure enough:
+
+| Description | Image |
+|-------------|----------------------|
+| After 2nd Rotation of 45 Degrees around the <001> axis | ![2nd Rotation of 45 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final_Artifacts2.png) |
+
+To avoid this problem, it is considered best practice to use the *[Combine Transformation Matrices](CombineTransformationMatricesFilter.md)* filter to combine all transforms together into one transform before applying the transform to an image geometry.
+
+| Description | Image |
+|-------------|----------------------|
+| After combining both 45 degree rotations and applying around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
+
+*NOTE*: This caveat is ONLY for image geometries.  Multiple transformations can be applied in succession to unstructured grid geometries without any issue.
 
 ## Transformation Information
 
@@ -46,6 +92,8 @@ The user may select from a variety of options for the type of transformation to 
 | 3          | Rotation                           | Rotation about the supplied axis-angle <x,y,z> (Angle in Degrees).                   |
 | 4          | Translation                        | Translation by the supplied (x, y, z) values                                         |
 | 5          | Scale                              | Scaling by the supplied (x, y, z) values                                             |
+
+The **Translate Geometry To Global Origin Before Transformation** option must be selected if the user wants to translate their volume to (0, 0, 0), apply the transform, and then translate the volume back to its original location.
 
 ## Saving the final transformation Matrix.
 
