@@ -6,11 +6,11 @@ Rotation, Scale & Transformation
 
 ## Description
 
-This **Filter** applies a spatial transformation to either an unstructured **Geometry** or an **Image Geometry**.
+This **Filter** applies a spatial transformation to either a node **Geometry** or an **Image Geometry**.
 
-### Unstructured Grid Geometries
+### Node Geometries
 
- An "unstructured" **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
+ A node **Geometry** is any geometry that requires explicit definition of **Vertex** positions. Specifically, **Vertex**, **Edge**, **Triangle**, **Quadrilateral**, and **Tetrahedral** **Geometries** may be transformed by this **Filter**. The transformation is applied in place, so the input **Geometry** will be modified.
 
 - **NO** interpolation will take place as the only changes that take place are the actual coordinates of the vertices.
 
@@ -41,7 +41,7 @@ Using this filter several times in a row to apply several transforms in successi
 | Input Image |  ![Input Image](Images/ApplyTransformation_ImageGeom.png) |
 | After Rotation of 90 Degrees around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
 
-You would think that rotating this same image geometry 45 degrees along the Z axis two times would produce the same output as above (rotating it 90 degrees along the Z axis once), but this is not the case...
+Instead of using a single rotation of 90 degrees, if the user has a need to instead apply several rotations that still add up to 90 degrees, for example a pair of 45 degree rotations, potential unwanted artifacts can occur due to the intermediate regridding for each rotation.
 
 | Description | Image |
 |-------------|----------------------|
@@ -78,7 +78,16 @@ To avoid this problem, it is considered best practice to use the *[Combine Trans
 |-------------|----------------------|
 | After combining both 45 degree rotations and applying around the <001> axis | ![Rotation of 90 Degrees around the <0,0,1> axis](Images/ApplyTransformation_ImageGeom_Final.png) |
 
-*NOTE*: This caveat is ONLY for image geometries.  Multiple transformations can be applied in succession to unstructured grid geometries without any issue.
+## NOTE: 
+
+This caveat is ONLY for image geometries.  Multiple transformations can be applied in succession to any of the "Node" based geometries without any issues. Those are:
+
+- Vertex
+- Edge
+- Triangle
+- Quad
+- Tetrahedral
+- Hexahedral
 
 ## Transformation Information
 
