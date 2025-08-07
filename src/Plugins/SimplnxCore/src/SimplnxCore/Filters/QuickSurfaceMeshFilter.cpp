@@ -188,8 +188,6 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
 
   {
-    // usize featureTupleCount = 1;
-    // bool firstValue = true;
     for(const DataPath& selectedDataPath : pFeatureDataPaths)
     {
       // Check that the feature array has the correct tuple count to avoid crashing in execute.

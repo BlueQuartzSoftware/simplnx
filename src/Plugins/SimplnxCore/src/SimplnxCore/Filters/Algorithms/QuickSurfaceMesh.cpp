@@ -1069,7 +1069,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1082,7 +1082,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1118,7 +1118,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1131,7 +1131,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1167,7 +1167,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1180,7 +1180,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1216,7 +1216,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1229,7 +1229,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1273,7 +1273,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh1, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1293,7 +1293,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh1, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh1, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1329,7 +1329,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1342,7 +1342,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1385,7 +1385,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh2, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1405,7 +1405,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh2, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh2, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1441,7 +1441,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1454,7 +1454,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, point, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, point, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1497,7 +1497,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh3, point, faceLabelsStore);
           }
 
           triangleIndex++;
@@ -1517,7 +1517,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
           for(const auto& tupleTransferFunction : tupleTransferFunctions)
           {
-            tupleTransferFunction->transfer(triangleIndex, neigh3, point, faceLabelsStore);
+            tupleTransferFunction->quickSurfaceTransfer(triangleIndex, neigh3, point, faceLabelsStore);
           }
 
           triangleIndex++;

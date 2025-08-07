@@ -106,7 +106,7 @@ uint32_t FaceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
 
 void MMCellFlag::set(const int32_t cellLabels[8])
 {
-  // By default the cell has no vertex and no face or edge crossings
+  // By default, the cell has no vertex and no face or edge crossings
   m_BitFlag = 0;
 
   // Find edge crossings

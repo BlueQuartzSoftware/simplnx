@@ -48,17 +48,24 @@
 #ifndef MM_SURFACE_NET_H
 #define MM_SURFACE_NET_H
 
+#include "simplnx/DataStructure/DataArray.hpp"
+
 #include <limits>
-#include <string>
-#include <vector>
+#include <memory>
+
+using namespace nx::core;
 
 class MMCellMap;
 
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
+
+  // I am unsure of the ownership model of the underlying code, so I am making this
+  // a shared_ptr<> instead of a unique_ptr<>
+  using MMCellMapPtr = std::shared_ptr<MMCellMap>;
 
   // Surface smoothing (relaxation)
   struct RelaxAttrs
@@ -70,25 +77,22 @@ public:
   void relax(const RelaxAttrs relaxAttrs);
   void reset();
 
-  // Get the unique material labels for this SurfaceNet
-  std::vector<int> labels();
-
   // Label used internally. Not available as a material index.
   enum ReservedLabel
   {
     Padding = std::numeric_limits<int32_t>::max()
   };
 
-  MMCellMap* getCellMap() const
+  MMCellMapPtr getCellMap() const
   {
     return m_cellMap;
   }
 
 private:
-  friend class MMGeometryGL;
-  friend class MMGeometryOBJ;
+  // friend class MMGeometryGL;
+  // friend class MMGeometryOBJ;
 
-  MMCellMap* m_cellMap;
+  MMCellMapPtr m_cellMap = nullptr;
 };
 
 #endif

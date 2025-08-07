@@ -106,16 +106,9 @@ Result<> SurfaceNets::operator()()
 
   IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
 
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-
   using LabelType = int32;
-  std::vector<LabelType> labels(featureIds.getNumberOfTuples());
-  for(size_t idx = 0; idx < featureIds.getNumberOfTuples(); idx++)
-  {
-    labels[idx] = static_cast<LabelType>(featureIds[idx]);
-  }
 
-  MMSurfaceNet surfaceNet(labels.data(), arraySize.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), arraySize.data(), voxelSize.data());
 
   // Use current parameters to relax the SurfaceNet
   if(m_InputValues->ApplySmoothing)
@@ -128,7 +121,7 @@ Result<> SurfaceNets::operator()()
     surfaceNet.relax(relaxAttrs);
   }
 
-  auto* cellMapPtr = surfaceNet.getCellMap();
+  auto cellMapPtr = surfaceNet.getCellMap();
   const int nodeCount = cellMapPtr->numVertices();
 
   std::array<int, 3> arraySize2 = {0, 0, 0};
@@ -156,12 +149,14 @@ Result<> SurfaceNets::operator()()
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
   }
   usize triangleCount = 0;
+  std::array<usize, 2> quadNxArrayIndices = {0, 0};
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
     std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
     std::array<LabelType, 2> quadLabels = {0, 0};
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -179,7 +174,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -197,7 +192,7 @@ Result<> SurfaceNets::operator()()
       }
       triangleCount += 2;
     }
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
@@ -223,12 +218,22 @@ Result<> SurfaceNets::operator()()
   auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
   faceLabels.resizeTuples({triangleCount});
 
-  // Create a vector of TupleTransferFunctions for each of the Triangle Face to VertexType Data Arrays
+  // Create a vector of TupleTransferFunctions for each of the Triangle Face
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(size_t i = 0; i < m_InputValues->SelectedDataArrayPaths.size(); i++)
+  for(size_t i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
   {
     // Associate these arrays with the Triangle Face Data.
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+  }
+
+  auto numSelectedCellArrayPaths = m_InputValues->SelectedCellDataArrayPaths.size();
+
+  for(size_t i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  {
+    // Associate these arrays with the Triangle Face Data.
+    auto selectedPath = m_InputValues->SelectedFeatureDataArrayPaths[i];
+    auto createdPath = m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths];
+    ::AddFeatureTupleTransferInstance(m_DataStructure, selectedPath, createdPath, m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
   }
 
   usize faceIndex = 0;
@@ -241,10 +246,13 @@ Result<> SurfaceNets::operator()()
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
   std::array<LabelType, 2> quadLabels = {0, 0};
   std::array<VertexData, 4> vData{};
+  std::array<int, 3> cellIndex = {0, 0, 0};
+
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
+    cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
     // Back-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -277,9 +285,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
 
       faceIndex++;
@@ -296,15 +304,15 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }
 
     // Left-bottom edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -336,9 +344,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
 
@@ -354,15 +362,15 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }
 
     // Left-back edge
-    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
+    if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       vData[0] = {vertexIndices[0], 00.0f, 0.0f, 0.0f};
       vData[1] = {vertexIndices[1], 00.0f, 0.0f, 0.0f};
@@ -394,9 +402,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
 
@@ -412,9 +420,9 @@ Result<> SurfaceNets::operator()()
         faceLabels[faceIndex * 2 + 1] = quadLabels[0];
       }
       // Copy any Cell Data to the Triangle Mesh
-      for(size_t dataVectorIndex = 0; dataVectorIndex < m_InputValues->SelectedDataArrayPaths.size(); dataVectorIndex++)
+      for(const auto& tupleTransferFunction : tupleTransferFunctions)
       {
-        tupleTransferFunctions[dataVectorIndex]->transfer(faceIndex, quadLabels[0], quadLabels[1], faceLabels);
+        tupleTransferFunction->surfaceNetsTransfer(faceIndex, quadNxArrayIndices);
       }
       faceIndex++;
     }

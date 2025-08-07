@@ -4,30 +4,25 @@
 //
 // Sarah Frisken, Brigham and Women's Hospital, Boston MA USA
 
+#include "MMCellMap.h"
+// #include "MMGeometryGL.h"
+// #include "MMGeometryOBJ.h"
+#include "MMSurfaceNet.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <set>
 #include <string>
+
 #include <time.h>
 
-#include "MMCellMap.h"
-#include "MMGeometryGL.h"
-#include "MMGeometryOBJ.h"
-#include "MMSurfaceNet.h"
+MMSurfaceNet::MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3])
+{
+  m_cellMap = std::make_shared<MMCellMap>(arraySize, voxelSize);
+  m_cellMap->init(labels);
+}
 
-MMSurfaceNet::MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3])
-: m_cellMap(nullptr)
-{
-  if(m_cellMap != NULL)
-    delete m_cellMap;
-  m_cellMap = new MMCellMap(labels, arraySize, voxelSize);
-}
-MMSurfaceNet::~MMSurfaceNet()
-{
-  // Delete cellMap if it exists
-  if(m_cellMap)
-    delete m_cellMap;
-}
+MMSurfaceNet::~MMSurfaceNet() = default;
 
 // Surface smoothing (relaxation)
 void MMSurfaceNet::relax(const RelaxAttrs relaxAttrs)
@@ -43,6 +38,7 @@ void MMSurfaceNet::reset()
   m_cellMap->reset();
 }
 
+#if 0
 std::vector<int> MMSurfaceNet::labels()
 {
   std::vector<int> labels;
@@ -83,3 +79,4 @@ std::vector<int> MMSurfaceNet::labels()
 
   return labels;
 }
+#endif

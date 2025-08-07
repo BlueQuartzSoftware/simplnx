@@ -162,10 +162,6 @@
           "value": "Face Data",
           "version": 1
         },
-        "face_feature_attribute_matrix_name": {
-          "value": "Face Feature Data",
-          "version": 1
-        },
         "face_labels_array_name": {
           "value": "FaceLabels",
           "version": 1

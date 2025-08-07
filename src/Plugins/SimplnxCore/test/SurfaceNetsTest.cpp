@@ -13,54 +13,67 @@ using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v2.tar.gz", "SurfaceNetsTest_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v2/SurfaceNetsTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath gridGeomDataPath({k_DataContainer});
+  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  DataPath ebsdCellDataPath({k_DataContainer, k_CellData});
+  DataPath ebsdFeatureDataPath({k_DataContainer, k_CellFeatureData});
 
-  const DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  const DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
   // DataPath triangleParentGroup({k_DataContainer});
-  const DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
-  const std::string exemplarGeometryPath("SurfaceNets Mesh");
+  DataPath computedTriangleGeomPath({"Computed SurfaceNets"});
+  DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+  DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+
+  DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets"});
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
     SurfaceNetsFilter const filter;
 
+    auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
+    MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
+    for(const auto& child : voxelCellAttrMat)
+    {
+      selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
+    }
+
+    auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
+    MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
+    for(const auto& child : voxelFeatureAttrMat)
+    {
+      selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
+    }
+
     // Create default Parameters for the filter.
 
+    args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
-    args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0f));
     args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5f));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
 
-    const DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-    //    const MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
-    //                                                                        ebsdSanDataPath.createChildPath("IPFColors")};
-    //
-    //    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedCellArrayPaths));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedFeatureArrayPaths));
 
-    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
-
-    const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(computedTriangleGeomPath));
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
-
-    const DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
-
-    const DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-
-    const DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
 
     // Preflight the filter and check result
@@ -71,78 +84,93 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: NO Smoothing", "[SimplnxCore][Surface
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // Check a few things about the generated data.
-    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
-
-    REQUIRE(trianglePtr->getNumberOfTuples() == 63804);
-    REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
-
-    // Compare the shift values
-    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName), DataPath({exemplarGeometryPath, "SharedTriList"}));
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
-  }
-
-  CompareExemplarToGeneratedData(dataStructure, dataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), exemplarGeometryPath);
-
-// Write the DataStructure out to the file system
+    // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/surface_nets.dream3d", unit_test::k_BinaryTestOutputDir)));
+    WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/SurfaceNetsFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+  }
+  // Check a few things about the generated data.
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
+  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+
+  REQUIRE(triangle->getNumberOfTuples() == 63440);
+  REQUIRE(vertices->getNumberOfTuples() == 28910);
+
+  // Compare the shared vertex list and shared triangle list
+  CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
+  CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
+
+  DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
+
+  DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::SurfaceNetsFilter: With Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v2.tar.gz", "SurfaceNetsTest_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v2/SurfaceNetsTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath gridGeomDataPath({k_DataContainer});
+  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  DataPath ebsdCellDataPath({k_DataContainer, k_CellData});
+  DataPath ebsdFeatureDataPath({k_DataContainer, k_CellFeatureData});
 
-  const DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  const DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
   // DataPath triangleParentGroup({k_DataContainer});
-  const DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
-  const std::string exemplarGeometryPath("SurfaceNets Mesh Smooth");
+  DataPath computedTriangleGeomPath({"Computed SurfaceNets"});
+  DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+  DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+
+  DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Smoothing"});
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
     SurfaceNetsFilter const filter;
+
+    auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
+    MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
+    for(const auto& child : voxelCellAttrMat)
+    {
+      selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
+    }
+
+    auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
+    MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
+    for(const auto& child : voxelFeatureAttrMat)
+    {
+      selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
+    }
 
     // Create default Parameters for the filter.
 
-    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(true));
     args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(true));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0f));
     args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5f));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
 
-    const DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedCellArrayPaths));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedFeatureArrayPaths));
 
-    //    MultiArraySelectionParameter::ValueType const selectedArrayPaths = {ebsdSanDataPath.createChildPath("BoundaryCells"), ebsdSanDataPath.createChildPath("ConfidenceIndex"),
-    //                                                                        ebsdSanDataPath.createChildPath("IPFColors")};
-    //
-    //    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
-
-    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
-
-    const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(computedTriangleGeomPath));
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
-
-    const DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
-
-    const DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-
-    const DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
 
     // Preflight the filter and check result
@@ -153,70 +181,93 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: With Smoothing", "[SimplnxCore][Surfa
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // Check a few things about the generated data.
-    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
-
-    REQUIRE(trianglePtr->getNumberOfTuples() == 63804);
-    REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
-
-    // Compare the shift values
-    CompareArrays<IGeometry::MeshIndexType>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName), DataPath({exemplarGeometryPath, "SharedTriList"}));
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
-  }
-
-  CompareExemplarToGeneratedData(dataStructure, dataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), exemplarGeometryPath);
-
-// Write the DataStructure out to the file system
+    // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/surface_nets_smoothing.dream3d", unit_test::k_BinaryTestOutputDir)));
+    WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/SurfaceNetsFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+  }
+  // Check a few things about the generated data.
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
+  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+
+  REQUIRE(triangle->getNumberOfTuples() == 63440);
+  REQUIRE(vertices->getNumberOfTuples() == 28910);
+
+  // Compare the shared vertex list and shared triangle list
+  CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
+  CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
+
+  DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
+
+  DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding and Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceMeshTest.tar.gz", "SurfaceMeshTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v2.tar.gz", "SurfaceNetsTest_v2");
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceMeshTest/SurfaceMeshTest.dream3d", nx::core::unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v2/SurfaceNetsTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath gridGeomDataPath({k_DataContainer});
+  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  DataPath ebsdCellDataPath({k_DataContainer, k_CellData});
+  DataPath ebsdFeatureDataPath({k_DataContainer, k_CellFeatureData});
 
-  const DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  const DataPath ebsdSanDataPath({k_DataContainer, k_CellData});
-  const DataPath triangleGeometryPath({"SurfaceNets Mesh Test"});
-  const std::string exemplarGeometryPath("SurfaceNets Mesh Smooth");
+  // DataPath triangleParentGroup({k_DataContainer});
+  DataPath computedTriangleGeomPath({"Computed SurfaceNets"});
+  DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+  DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+
+  DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding"});
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
     SurfaceNetsFilter const filter;
 
-    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(true));
+    auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
+    MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
+    for(const auto& child : voxelCellAttrMat)
+    {
+      selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
+    }
+
+    auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
+    MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
+    for(const auto& child : voxelFeatureAttrMat)
+    {
+      selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
+    }
+
+    // Create default Parameters for the filter.
+
     args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0f));
     args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5f));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
 
-    const DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedCellArrayPaths));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedFeatureArrayPaths));
 
-    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
-
-    const DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(computedTriangleGeomPath));
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
-
-    const DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
-
-    const DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-
-    const DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
 
     // Preflight the filter and check result
@@ -227,33 +278,125 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding and Smoothing", "[SimplnxCore
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // Check a few things about the generated data.
-    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
-
-    REQUIRE(trianglePtr->getNumberOfTuples() == 63804);
-    REQUIRE(verticesPtr->getNumberOfTuples() == 28894);
-
-    // Compare the shift values
-    CompareArrays<float32>(dataStructure, triangleGeometryPath.createChildPath(TriangleGeom::k_SharedVertexListName), DataPath({exemplarGeometryPath, "SharedVertexList"}));
+    // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+    WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/SurfaceNetsFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
   }
+  // Check a few things about the generated data.
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
+  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "winding_surface_nets.tar.gz",
-                                                               "winding_surface_nets.dream3d");
+  REQUIRE(triangle->getNumberOfTuples() == 63440);
+  REQUIRE(vertices->getNumberOfTuples() == 28910);
+
+  // Compare the shared vertex list and shared triangle list
+  CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
+  CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
+
+  DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
+
+  DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v2.tar.gz", "SurfaceNetsTest_v2");
 
   // Read the Small IN100 Data set
-  auto exemplarFilePath = fs::path(fmt::format("{}/winding_surface_nets.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v2/SurfaceNetsTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataPath gridGeomDataPath({k_DataContainer});
+  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
+  DataPath ebsdCellDataPath({k_DataContainer, k_CellData});
+  DataPath ebsdFeatureDataPath({k_DataContainer, k_CellFeatureData});
 
-  const DataPath facesPath = triangleGeometryPath.createChildPath(TriangleGeom::k_SharedFacesListName);
-  CompareDataArrays<IGeometry::MeshIndexType>(dataStructure.getDataRefAs<IDataArray>(facesPath), exemplarDataStructure.getDataRefAs<IDataArray>(facesPath));
-  CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, triangleGeometryPath.createChildPath(k_FaceDataGroupName), triangleGeometryPath.toString());
+  // DataPath triangleParentGroup({k_DataContainer});
+  DataPath computedTriangleGeomPath({"Computed SurfaceNets"});
+  DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
+  DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
 
-// Write the DataStructure out to the file system
+  DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding Smoothing"});
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+
+  {
+    Arguments args;
+    SurfaceNetsFilter const filter;
+
+    auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
+    MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
+    for(const auto& child : voxelCellAttrMat)
+    {
+      selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
+    }
+
+    auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
+    MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
+    for(const auto& child : voxelFeatureAttrMat)
+    {
+      selectedFeatureArrayPaths.push_back(ebsdFeatureDataPath.createChildPath(child.second->getName()));
+    }
+
+    // Create default Parameters for the filter.
+
+    args.insertOrAssign(SurfaceNetsFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+    args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(true));
+    args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0f));
+    args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5f));
+    args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
+
+    args.insertOrAssign(SurfaceNetsFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedCellArrayPaths));
+    args.insertOrAssign(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedFeatureArrayPaths));
+
+    args.insertOrAssign(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(computedTriangleGeomPath));
+    args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+    args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/winding_surface_nets.dream3d", unit_test::k_BinaryTestOutputDir)));
+    WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/SurfaceNetsFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
+  }
+  // Check a few things about the generated data.
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
+  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+
+  REQUIRE(triangle->getNumberOfTuples() == 63440);
+  REQUIRE(vertices->getNumberOfTuples() == 28910);
+
+  // Compare the shared vertex list and shared triangle list
+  CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
+  CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
+
+  DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFaceAttrMatPath, dataStructure, faceGroupDataPath, true);
+
+  DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

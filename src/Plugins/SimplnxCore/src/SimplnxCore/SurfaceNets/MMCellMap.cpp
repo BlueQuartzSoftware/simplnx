@@ -11,12 +11,28 @@
 #include "MMCellMap.h"
 #include "MMSurfaceNet.h"
 
-// Basic cell map containing material labels
-MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
-: m_cellArray(NULL)
-, m_numVertices(0)
-, m_vertices(NULL)
+namespace
 {
+
+void initCell(MMCellMap::Cell& cell, int32_t label)
+{
+  cell.label = label;
+  cell.flag.clear();
+  cell.vertexIndex = -1;
+  cell.vertexOffset[0] = 0.5f;
+  cell.vertexOffset[1] = 0.5f;
+  cell.vertexOffset[2] = 0.5f;
+}
+
+} // namespace
+
+// Basic cell map containing material labels
+MMCellMap::MMCellMap(int arraySize[3], float voxelSize[3])
+: m_cellArray(nullptr)
+, m_numVertices(0)
+, m_vertices(nullptr)
+{
+  m_NxDims = {arraySize[0], arraySize[1], arraySize[2]};
   // Allocate memory for the cell map. To ensure closed shapes and sharp corners
   // and edges at volume faces, faces are padded by one voxel with a reserved
   // label.
@@ -31,15 +47,17 @@ MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
     m_cellArray = new Cell[numCells];
   } catch(std::bad_alloc& ba)
   {
-    m_cellArray = NULL;
+    m_cellArray = nullptr;
     return;
   }
+}
 
+void MMCellMap::init(Int32Array& labels)
+{
   // Initialize interior cell contents. Each cell stores the label of it's bottom, left, back
   // corner.
-  Cell* pCell = m_cellArray;
-  int32_t* pLabel = labels;
-  int32_t padLabel = (int32_t)MMSurfaceNet::ReservedLabel::Padding;
+  usize cellIndex = 0;
+  usize labelIndex = 0;
   for(int k = 0; k < m_arraySize[2]; k++)
   {
     for(int j = 0; j < m_arraySize[1]; j++)
@@ -48,11 +66,11 @@ MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
       {
         if(i == 0 || i == m_arraySize[0] - 1 || j == 0 || j == m_arraySize[1] - 1 || k == 0 || k == m_arraySize[2] - 1)
         {
-          initCell(pCell++, padLabel);
+          initCell(m_cellArray[cellIndex++], static_cast<int32_t>(MMSurfaceNet::ReservedLabel::Padding));
         }
         else
         {
-          initCell(pCell++, *pLabel++);
+          initCell(m_cellArray[cellIndex++], labels[labelIndex++]);
         }
       }
     }
@@ -61,12 +79,11 @@ MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
   // Set the cell vertices
   setCellVertices();
 }
+
 MMCellMap::~MMCellMap()
 {
-  if(m_cellArray)
-    delete[] m_cellArray;
-  if(m_vertices)
-    delete[] m_vertices;
+  delete[] m_cellArray;
+  delete[] m_vertices;
 }
 
 // Relax vertex positions using relaxation attributes or reset to cell centers
@@ -208,7 +225,7 @@ MMCellFlag::VertexType MMCellMap::vertexType(int vertexIndex)
 // [x0, y0, z0, x1, y1 ...] in clockwise order and the quad face labels are inserted
 // into quadLabels as [labelTopFaceOfQuad, labelBottomFaceOfQuad]. If there is no edge
 // crossing, quadCorners and quadLabels will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], usize quadNxArrayIndices[2])
 {
   int cellIndex[3];
   getVertexCellIndex(vertexIndex, cellIndex);
@@ -219,7 +236,7 @@ bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCo
 
   // Because there is an edge crossing, cell map access in the following will be
   // in-bounds by construction of the cell map.
-  getEdgeLabels(cellIndex, edge, quadLabels);
+  getEdgeLabels(cellIndex, edge, quadLabels, quadNxArrayIndices);
   getEdgeQuadPositions(cellIndex, edge, quadCorners);
   return true;
 }
@@ -229,7 +246,7 @@ bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCo
 // and the quad face labels are inserted into quadLabels as [labelTopFaceOfQuad,
 // labelBottomFaceOfQuad]. If there is no edge crossing, quadCorners and quadLabels
 // will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2], usize quadNxArrayIndices[2])
 {
   int cellIndex[3];
   getVertexCellIndex(vertexIndex, cellIndex);
@@ -240,7 +257,7 @@ bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxI
 
   // Because there is an edge crossing, cell map access in the following will be
   // in-bounds by construction of the cell map.
-  getEdgeLabels(cellIndex, edge, quadLabels);
+  getEdgeLabels(cellIndex, edge, quadLabels, quadNxArrayIndices);
   getEdgeQuadVtxIndices(cellIndex, edge, quadVtxIndices);
   return true;
 }
@@ -248,16 +265,6 @@ bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxI
 void MMCellMap::getVertexPosition(int vertexIndex, float position[3])
 {
   getVertexPosition(m_vertices[vertexIndex].cellIndex, position);
-}
-
-void MMCellMap::initCell(Cell* cell, int32_t label)
-{
-  cell->label = label;
-  cell->flag.clear();
-  cell->vertexIndex = -1;
-  cell->vertexOffset[0] = 0.5f;
-  cell->vertexOffset[1] = 0.5f;
-  cell->vertexOffset[2] = 0.5f;
 }
 
 void MMCellMap::setCellVertices()
@@ -286,15 +293,15 @@ void MMCellMap::setCellVertices()
   // Create cell vertices. There are no vertices in right, front, top faces.
   try
   {
-    if(m_vertices != NULL)
+    if(m_vertices != nullptr)
       delete[] m_vertices;
     m_vertices = new Vertex[m_numVertices];
   } catch(std::bad_alloc& ba)
   {
     delete[] m_cellArray;
-    m_cellArray = NULL;
+    m_cellArray = nullptr;
     m_numVertices = 0;
-    m_vertices = NULL;
+    m_vertices = nullptr;
     return;
   }
   int idxVtx = 0;
@@ -308,10 +315,10 @@ void MMCellMap::setCellVertices()
         if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
         {
           pCell->vertexIndex = idxVtx;
-          Vertex* pVtx = &m_vertices[idxVtx++];
-          pVtx->cellIndex[0] = i;
-          pVtx->cellIndex[1] = j;
-          pVtx->cellIndex[2] = k;
+          m_vertices[idxVtx].cellIndex[0] = i;
+          m_vertices[idxVtx].cellIndex[1] = j;
+          m_vertices[idxVtx].cellIndex[2] = k;
+          idxVtx++;
         }
       }
     }
@@ -319,7 +326,7 @@ void MMCellMap::setCellVertices()
 }
 
 // The caller is responsible for bounds checking to allow for optimal performance.
-void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2])
+void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], usize quadNxArrayIndices[2])
 {
   Cell* pCell = getCell(cellIndex);
   Cell* pCellFirstLabel;
@@ -379,8 +386,28 @@ void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t q
     pCellSecondLabel = pCell;
     break;
   }
+
+  quadNxArrayIndices[0] = getNxCellArrayIndex(pCellFirstLabel->vertexIndex);
+  quadNxArrayIndices[1] = getNxCellArrayIndex(pCellSecondLabel->vertexIndex);
+
   quadLabels[0] = pCellFirstLabel->label;
   quadLabels[1] = pCellSecondLabel->label;
+}
+
+usize MMCellMap::getNxCellArrayIndex(int vertexIndex)
+{
+  usize nxArrayIdx = std::numeric_limits<usize>::max();
+  if(vertexIndex < 0)
+  {
+    return nxArrayIdx;
+  }
+  std::array<int, 3> cellIndex = {0, 0, 0};
+  getVertexCellIndex(vertexIndex, cellIndex.data());
+  if(cellIndex[0] - 1 >= 0 && cellIndex[0] - 1 < m_arraySize[0] - 1 && cellIndex[1] - 1 > 0 && cellIndex[1] - 1 < m_arraySize[1] - 1 && cellIndex[2] - 1 > 0 && cellIndex[2] - 1 < m_arraySize[2] - 1)
+  {
+    nxArrayIdx = ((cellIndex[2] - 1) * m_NxDims[1] * m_NxDims[0]) + ((cellIndex[1] - 1) * m_NxDims[0]) + (cellIndex[0] - 1);
+  }
+  return nxArrayIdx;
 }
 
 // The caller is responsible for bounds checking to allow for optimal performance.
