@@ -145,7 +145,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
 
   // create the destination array for the calculated results
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, IArray::ShapeType{16}, IArray::ShapeType{1}, outputArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, IArray::ShapeType{4, 4}, IArray::ShapeType{1}, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

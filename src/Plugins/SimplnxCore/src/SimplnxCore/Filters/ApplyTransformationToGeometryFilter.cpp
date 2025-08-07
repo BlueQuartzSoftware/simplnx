@@ -481,7 +481,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       return {MakeErrorResult<OutputActions>(-5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
     }
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{16}, std::vector<usize>{1}, transformMatrixDataPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformMatrixDataPath));
   }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
