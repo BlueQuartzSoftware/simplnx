@@ -15,6 +15,442 @@ using namespace nx::core;
 
 namespace
 {
+struct GridBitMapFactory;
+
+struct GridBitMap
+{
+  friend GridBitMapFactory;
+
+  std::vector<uint8> gridTable = {};
+  usize numGrids = 0;
+  usize numPositions = 0;
+
+  // This value represents the number of bytes allocated
+  // to each row in the map
+  // Reason: stored to speed up indexing and access
+  usize rowLength = 0;
+
+private:
+  GridBitMap() = default;
+};
+
+struct GridBitMapFactory
+{
+  /**
+   * Note here we can pack it slightly tighter by not adding buffers at the end of each row (for grid counts not divisible by 8)
+   * but this will make calculations more difficult and costly during neighbor search
+   * At most this saves 7/8s of a byte per position worth of space for significant calculation
+   * and parse cost incursion
+   */
+  static GridBitMap createGridBitMap(usize numGrids, usize numPositons)
+  {
+    GridBitMap gridBitMap = {};
+
+    usize bitPackSize = numGrids / 8;
+    bitPackSize += static_cast<usize>((numGrids % 8 > 0)); // Cast to avoid if/else branch
+
+    gridBitMap.numGrids = numGrids;
+    gridBitMap.numPositions = numPositons;
+    gridBitMap.rowLength = bitPackSize;
+
+    gridBitMap.gridTable.resize(bitPackSize * numPositons);
+
+    return gridBitMap;
+  }
+};
+
+class HyperGridBitMap
+{
+public:
+  struct GridCell
+  {
+    std::vector<usize> pointIndices = {};
+  };
+
+  // Grid Cells
+  std::vector<GridCell> gridVoxels = {};
+
+protected:
+  HyperGridBitMap() = default;
+};
+
+class HyperGridBitMap3D : HyperGridBitMap
+{
+public:
+  static constexpr float32 Dimensions = 3;
+
+  GridBitMap xTable;
+  GridBitMap yTable;
+  GridBitMap zTable;
+
+  HyperGridBitMap3D() = delete;
+
+  template <typename T>
+  HyperGridBitMap3D(const AbstractDataStore<T>& inputArray, float32 epsilon)
+  : HyperGridBitMap()
+  {
+    /*
+     * TODO:
+     *  - Swap input array to datastore
+     *  - Validate epsilon is not negative
+     */
+
+    // Load array bounds
+    std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
+                                     std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
+    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
+    {
+      float32 xVal = inputArray.getValue((i * 3) + 0);
+      float32 yVal = inputArray.getValue((i * 3) + 1);
+      float32 zVal = inputArray.getValue((i * 3) + 2);
+
+      bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
+      bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
+      bounds[2] = std::isnan(bounds[2]) ? zVal : std::min(bounds[2], zVal);
+
+      bounds[3] = std::isnan(bounds[3]) ? xVal : std::max(bounds[3], xVal);
+      bounds[4] = std::isnan(bounds[4]) ? yVal : std::max(bounds[4], yVal);
+      bounds[5] = std::isnan(bounds[5]) ? zVal : std::max(bounds[5], zVal);
+    }
+
+    // Grid Info
+    float32 sideLength = epsilon / std::sqrt(Dimensions);
+    std::array<float32, 3> spacing = {sideLength, sideLength, sideLength};
+
+    float32 buffer = sideLength * 0.5f;
+    std::array<float32, 3> origin = {};
+    origin[0] = static_cast<float32>(bounds[0]) - buffer;
+    origin[1] = static_cast<float32>(bounds[1]) - buffer;
+    origin[2] = static_cast<float32>(bounds[2]) - buffer;
+
+    std::array<usize, 3> dims = {};
+    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]);
+    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]);
+    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]);
+
+    // Fill the BitMap
+    {
+      std::vector<std::array<usize, 3>> positions = {};
+      // Build a set of non-empty grids and temporarily store their positions
+      {
+        std::vector<GridCell> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()));
+        // Load grid cells
+        for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
+        {
+          // Determine the voxel
+          usize pointIdx = tup * inputArray.getNumberOfTuples();
+          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+          usize zPos = std::floor((inputArray.getValue(pointIdx + 2) - origin[2]) / spacing[2]);
+
+          usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
+
+          grids[bin].pointIndices.push_back(tup);
+        }
+
+        usize zSize = dims[1] * dims[0];
+        usize ySize = dims[0];
+        for(usize i = 0; i < grids.size(); i++)
+        {
+          if(!grids[i].pointIndices.empty())
+          {
+            gridVoxels.push_back(std::move(grids[i]));
+
+            std::array<usize, 3> position = {}; // Trivially copyable
+            position[2] = i / zSize;
+            usize zRemdr = i % zSize; // Modern compilers will extract the result from previous instruction
+            position[1] = zRemdr / ySize;
+            position[0] = zRemdr % ySize; // Modern compilers will extract the result from previous instruction
+            positions.push_back(position);
+          }
+        }
+      } // End of filling non-empty grids and positions vector
+
+      /**
+       * This could be modified to 3 passes on the positions vector with custom predicates and ths std::sort function,
+       * but we are sacrificing space for speed, because its a subset of a known predefined grid
+       */
+      // Make sets to bin grids
+      std::set<usize> xSet = {};
+      std::set<usize> ySet = {};
+      std::set<usize> zSet = {};
+
+      for(const auto& position : positions)
+      {
+        xSet.insert(position[0]);
+        ySet.insert(position[1]);
+        zSet.insert(position[2]);
+      }
+
+      // Set up hyper bit map
+      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
+      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+      zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
+
+      // Not the most efficient fill but due to the random access nature of position
+      // we can't load one consecutive mask
+      for(usize gridId = 0; gridId < positions.size(); gridId++)
+      {
+        usize relativeGridBytePos = gridId / 8;
+        uint8 bitGridOffset = gridId % 8;
+
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
+        usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * zTable.rowLength;
+
+        usize xBytePos = xPos + relativeGridBytePos;
+        uint8 xMask = 1;
+        xMask <<= bitGridOffset;
+        xTable.gridTable[xBytePos] |= xMask;
+
+        usize yBytePos = yPos + relativeGridBytePos;
+        uint8 yMask = 1;
+        yMask <<= bitGridOffset;
+        yTable.gridTable[yBytePos] |= yMask;
+
+        usize zBytePos = zPos + relativeGridBytePos;
+        uint8 zMask = 1;
+        zMask <<= bitGridOffset;
+        zTable.gridTable[zBytePos] |= zMask;
+      }
+    }
+  }
+};
+
+class HyperGridBitMap2D : HyperGridBitMap
+{
+public:
+  static constexpr float32 Dimensions = 2;
+
+  GridBitMap xTable;
+  GridBitMap yTable;
+
+  HyperGridBitMap2D() = delete;
+
+  template <typename T>
+  HyperGridBitMap2D(const AbstractDataStore<T>& inputArray, float32 epsilon)
+  : HyperGridBitMap()
+  {
+    /*
+     * TODO:
+     *  - Swap input array to datastore
+     *  - Validate epsilon is not negative
+     */
+
+    // Load array bounds
+    std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
+                                     std::numeric_limits<float32>::quiet_NaN()};
+    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
+    {
+      // Determine the voxel
+      usize pointIdx = i * inputArray.getNumberOfTuples();
+      float32 xVal = inputArray.getValue((pointIdx * 2) + 0);
+      float32 yVal = inputArray.getValue((pointIdx * 2) + 1);
+
+      bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
+      bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
+
+      bounds[2] = std::isnan(bounds[2]) ? xVal : std::max(bounds[2], xVal);
+      bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
+    }
+
+    // Grid Info
+    float32 sideLength = epsilon / std::sqrt(Dimensions);
+    std::array<float32, 2> spacing = {sideLength, sideLength};
+
+    float32 buffer = sideLength * 0.5f;
+    std::array<float32, 2> origin = {};
+    origin[0] = static_cast<float32>(bounds[0]) - buffer;
+    origin[1] = static_cast<float32>(bounds[1]) - buffer;
+
+    std::array<usize, 2> dims = {};
+    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]);
+    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]);
+
+    // Fill the BitMap
+    {
+      std::vector<std::array<usize, 2>> positions = {};
+      // Build a set of non-empty grids and temporarily store their positions
+      {
+        std::vector<GridCell> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()));
+        // Load grid cells
+        for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
+        {
+          // Determine the voxel
+          usize pointIdx = tup * inputArray.getNumberOfTuples();
+          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+
+          usize bin = (yPos * dims[0]) + xPos;
+
+          grids[bin].pointIndices.push_back(tup);
+        }
+
+        usize ySize = dims[0];
+        for(usize i = 0; i < grids.size(); i++)
+        {
+          if(!grids[i].pointIndices.empty())
+          {
+            gridVoxels.push_back(std::move(grids[i]));
+
+            std::array<usize, 2> position = {}; // Trivially copyable
+            position[1] = i / ySize;
+            position[0] = i % ySize; // Modern compilers will extract the result from previous instruction
+            positions.push_back(position);
+          }
+        }
+      } // End of filling non-empty grids and positions vector
+
+      /**
+       * This could be modified to 3 passes on the positions vector with custom predicates and ths std::sort function,
+       * but we are sacrificing space for speed, because its a subset of a known predefined grid
+       */
+      // Make sets to bin grids
+      std::set<usize> xSet = {};
+      std::set<usize> ySet = {};
+
+      for(const auto& position : positions)
+      {
+        xSet.insert(position[0]);
+        ySet.insert(position[1]);
+      }
+
+      // Set up hyper bit map
+      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
+      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+
+      // Not the most efficient fill but due to the random access nature of position
+      // we can't load one consecutive mask
+      for(usize gridId = 0; gridId < positions.size(); gridId++)
+      {
+        usize relativeGridBytePos = gridId / 8;
+        uint8 bitGridOffset = gridId % 8;
+
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
+
+        usize xBytePos = xPos + relativeGridBytePos;
+        uint8 xMask = 1;
+        xMask <<= bitGridOffset;
+        xTable.gridTable[xBytePos] |= xMask;
+
+        usize yBytePos = yPos + relativeGridBytePos;
+        uint8 yMask = 1;
+        yMask <<= bitGridOffset;
+        yTable.gridTable[yBytePos] |= yMask;
+      }
+    }
+  }
+};
+
+void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace, usize targetPosition, const GridBitMap& selectedTable)
+{
+  std::vector<uint8> tempGridMask(selectedTable.rowLength, 0);
+
+  // Find indices to search space
+  usize xStart = (targetPosition < searchSpace) ? 0 : targetPosition - searchSpace;
+  usize xEnd = (targetPosition + searchSpace < selectedTable.numPositions) ? targetPosition + searchSpace + 1 : selectedTable.numPositions;
+
+  // Store all grids in the positions within the dimensional search space
+  for(usize pos = xStart; pos < xEnd; pos++)
+  {
+    for(usize i = 0; i < selectedTable.rowLength; i++)
+    {
+      tempGridMask[i] |= selectedTable.gridTable[(pos * selectedTable.rowLength) + i];
+    }
+  }
+
+  // Narrow down search by overlaying this dimension's search space
+  // onto previous dimensions search space
+  for(usize i = 0; selectedTable.rowLength; i++)
+  {
+    outputGridMask[i] &= tempGridMask[i];
+  }
+}
+
+template <class HGBMT>
+concept IsHGBP = std::is_base_of_v<HyperGridBitMap, HGBMT>;
+
+template <IsHGBP HGBPT>
+std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridBitMap)
+{
+  usize searchSpace = std::ceil(std::sqrt(HGBPT::Dimensions));
+
+  std::vector<usize> neighborGridIds = {};
+
+  // check adjacent positions in the table by sqrt(Dimensions) for grid ids
+  std::vector<uint8> finalGridMask(hyperGridBitMap.gridVoxels.size(), std::numeric_limits<uint8>::max());
+
+  // The search loops to find xyzPos can be cut if we opt to store the
+  // positions for each grid cell within each cell or in a separate vector
+  usize relativeGridBytePos = targetGridId / 8;
+  uint8 bitGridOffset = targetGridId % 8;
+
+  usize xPos = 0;
+  for(usize i = 0; i < hyperGridBitMap.xTable.numPositions; i++)
+  {
+    usize gridPos = (i * hyperGridBitMap.xTable.rowLength) + relativeGridBytePos;
+    uint8 mask = 1;
+    mask <<= bitGridOffset;
+    uint8 result = hyperGridBitMap.xTable.gridTable[gridPos] & mask;
+    if(result > 0)
+    {
+      xPos = i;
+      break;
+    }
+  }
+  SearchTablePositions(finalGridMask, searchSpace, xPos, hyperGridBitMap.xTable);
+
+  usize yPos = 0;
+  for(usize i = 0; i < hyperGridBitMap.yTable.numPositions; i++)
+  {
+    usize gridPos = (i * hyperGridBitMap.yTable.rowLength) + relativeGridBytePos;
+    uint8 mask = 1;
+    mask <<= bitGridOffset;
+    uint8 result = hyperGridBitMap.yTable.gridTable[gridPos] & mask;
+    if(result > 0)
+    {
+      yPos = i;
+      break;
+    }
+  }
+  SearchTablePositions(finalGridMask, searchSpace, yPos, hyperGridBitMap.yTable);
+
+  if constexpr(HGBPT::Dimensions == 3)
+  {
+    usize zPos = 0;
+    for(usize i = 0; i < hyperGridBitMap.zTable.numPositions; i++)
+    {
+      usize gridPos = (i * hyperGridBitMap.zTable.rowLength) + relativeGridBytePos;
+      uint8 mask = 1;
+      mask <<= bitGridOffset;
+      uint8 result = hyperGridBitMap.zTable.gridTable[gridPos] & mask;
+      if(result > 0)
+      {
+        zPos = i;
+        break;
+      }
+    }
+    SearchTablePositions(finalGridMask, searchSpace, zPos, hyperGridBitMap.zTable);
+  }
+
+  for(usize i = 0; i < finalGridMask.size(); i++)
+  {
+    if(finalGridMask[i] > 0)
+    {
+      for(uint8 bit = 0; bit < 8; bit++)
+      {
+        if((finalGridMask[i] & (1 << bit)) != 0)
+        {
+          neighborGridIds.push_back((i * 8) + bit);
+        }
+      }
+    }
+  }
+
+  return neighborGridIds;
+}
+
 template <typename T>
 class FindEpsilonNeighborhoodsImpl
 {
