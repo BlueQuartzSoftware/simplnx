@@ -55,7 +55,7 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedDataTypes{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the output from the operations.", DataPath({""})));
