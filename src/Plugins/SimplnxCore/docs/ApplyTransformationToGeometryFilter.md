@@ -97,7 +97,7 @@ The **Translate Geometry To Global Origin Before Transformation** option must be
 
 ## Saving the final transformation Matrix.
 
-There is an option to save the final transformation matrix into its own array. The format of the output DataArra is a
+There is an option to save the final transformation matrix into its own array. The format of the output DataArray is a
 flattened array 16 elements in size that represents a 4x4 matrix. The elements are encoded in a ROW MAJOR array, i.e., 
 
     1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16

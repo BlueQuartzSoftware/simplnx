@@ -39,6 +39,20 @@ geometry, based on the criteria set for minimizing the differences between them.
 ICP has a number of advantages, such as robustness to noise and no requirement that the two sets of points to be the same
 size.  However, performance may suffer if the two sets of points are of significantly different size.
 
+## Saving the Output Transformation Matrix.
+
+The format of the output DataArray is a flattened array 16 elements in size that represents a 4x4 matrix.
+The elements are encoded in a ROW MAJOR array, i.e., 
+
+    1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+
+represents the following 4x4 Matrix
+
+    1   2   3   4
+    5   6   7   8
+    9   10  11  12
+    13  14  15  16
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
