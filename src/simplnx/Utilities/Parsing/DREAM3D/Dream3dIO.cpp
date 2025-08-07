@@ -1295,6 +1295,16 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     auto dataArrayNames = amGroupReader.getChildNames();
     for(const auto& daName : dataArrayNames)
     {
+      // Check if child is a Dataset.
+      // Stats data is not supported in simplnx.
+      // TODO: LEGACY SYNTHETIC MICROSTRUCTURE SUPPORT
+      if(!amGroupReader.isDataset(daName))
+      {
+        Result<> unsupportedDataResult = MakeWarningVoidResult(-298012, fmt::format("DataObject '{}' is not a supported simplnx data type", daName));
+        daResults.push_back(unsupportedDataResult);
+        continue;
+      }
+
       auto dataArraySet = amGroupReader.openDataset(daName);
 #if 0
     if(!dataArraySet.isValid())
