@@ -76,12 +76,12 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   {
     // Adjust the destination objects because we didn't have the transformation matrix values during preflight
     auto& destCellDataAM = destImageGeom.getCellDataRef();
-    const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputXDim), static_cast<usize>(rotateArgs.outputYDim), static_cast<usize>(rotateArgs.outputZDim)};
-    const std::vector<float32> spacing = {rotateArgs.outputXSpacing, rotateArgs.outputYSpacing, rotateArgs.outputZSpacing};
+    const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
+    const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
     auto origin = srcImageGeom.getOrigin().toContainer<std::vector<float32>>();
-    origin[0] = rotateArgs.outputMinXCoord;
-    origin[1] = rotateArgs.outputMinYCoord;
-    origin[2] = rotateArgs.outputMinZCoord;
+    origin[0] = rotateArgs.xMinNew;
+    origin[1] = rotateArgs.yMinNew;
+    origin[2] = rotateArgs.zMinNew;
 
     std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX), opposite of ImageGeometry dimensions
     destImageGeom.setDimensions(dims);
@@ -183,7 +183,6 @@ Result<> ApplyTransformationToGeometry::operator()()
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
     break;
   }
-  default:;
   }
 
   // Apply geometry transformation

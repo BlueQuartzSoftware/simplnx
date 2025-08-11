@@ -361,12 +361,12 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pRemoveOriginalGeometry = true;           // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
       const auto& selectedImageGeom = *imageGeomPtr; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputXDim), static_cast<usize>(rotateArgs.outputYDim), static_cast<usize>(rotateArgs.outputZDim)};
-      const std::vector<float32> spacing = {rotateArgs.outputXSpacing, rotateArgs.outputYSpacing, rotateArgs.outputZSpacing};
+      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
+      const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
       auto originVec = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-      originVec[0] = rotateArgs.outputMinXCoord;
-      originVec[1] = rotateArgs.outputMinYCoord;
-      originVec[2] = rotateArgs.outputMinZCoord;
+      originVec[0] = rotateArgs.xMinNew;
+      originVec[1] = rotateArgs.yMinNew;
+      originVec[2] = rotateArgs.zMinNew;
 
       if(pRemoveOriginalGeometry)
       {
