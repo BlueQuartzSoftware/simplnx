@@ -80,9 +80,11 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   const Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
   const Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
 
-  const float xResNew = DetermineSpacing(spacing, xAxisNew);
-  const float yResNew = DetermineSpacing(spacing, yAxisNew);
-  const float zResNew = DetermineSpacing(spacing, zAxisNew);
+  FloatVec3 transformScale = {(rotationMatrix * k_XAxis).norm(), (rotationMatrix * k_YAxis).norm(), (rotationMatrix * k_ZAxis).norm()};
+
+  const float xResNew = DetermineSpacing(spacing, xAxisNew) * transformScale[0];
+  const float yResNew = DetermineSpacing(spacing, yAxisNew) * transformScale[1];
+  const float zResNew = DetermineSpacing(spacing, zAxisNew) * transformScale[2];
 
   IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
   IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
