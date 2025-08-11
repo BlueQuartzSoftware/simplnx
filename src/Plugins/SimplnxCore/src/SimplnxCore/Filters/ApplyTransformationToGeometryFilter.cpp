@@ -361,8 +361,8 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pRemoveOriginalGeometry = true;           // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
       const auto& selectedImageGeom = *imageGeomPtr; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputXDim), static_cast<usize>(rotateArgs.outputYDim), static_cast<usize>(rotateArgs.outputZDim)};
-      const std::vector<float32> spacing = {rotateArgs.outputXSpacing, rotateArgs.outputYSpacing, rotateArgs.outputZSpacing};
+      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
+      const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
       auto originVec = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
       originVec[0] = rotateArgs.outputXMin;
       originVec[1] = rotateArgs.outputYMin;

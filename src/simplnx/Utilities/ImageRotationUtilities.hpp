@@ -44,12 +44,10 @@ struct RotateArgs
   USizeVec3 TransformedDims;
   FloatVec3 TransformedSpacing;
   FloatVec3 TransformedOrigin;
-  int64_t outputXDim = 0;
-  int64_t outputYDim = 0;
-  int64_t outputZDim = 0;
-  float outputXSpacing = 0.0f;
-  float outputYSpacing = 0.0f;
-  float outputZSpacing = 0.0f;
+
+  USizeVec3 outputDims;
+  FloatVec3 outputSpacing;
+
   float outputXMin = 0.0f;
   float outputYMin = 0.0f;
   float outputZMin = 0.0f;
@@ -453,19 +451,19 @@ public:
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
 
-    for(int64_t k = 0; k < m_Params.outputZDim; k++)
+    for(int64_t k = 0; k < m_Params.outputDims[2]; k++)
     {
       if(m_FilterCallback->getCancel())
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputZDim));
-      int64_t ktot = (m_Params.outputXDim * m_Params.outputYDim) * k;
+      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      int64_t ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
 
-      for(int64_t j = 0; j < m_Params.outputYDim; j++)
+      for(int64_t j = 0; j < m_Params.outputDims[1]; j++)
       {
-        int64_t jtot = (m_Params.outputXDim) * j;
-        for(int64_t i = 0; i < m_Params.outputXDim; i++)
+        int64_t jtot = (m_Params.outputDims[0]) * j;
+        for(int64_t i = 0; i < m_Params.outputDims[0]; i++)
         {
           int64_t destIndex = ktot + jtot + i;
           Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
@@ -557,19 +555,19 @@ public:
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
-    for(int64 k = 0; k < m_Params.outputZDim; k++)
+    for(int64 k = 0; k < m_Params.outputDims[2]; k++)
     {
       if(m_FilterCallback->getCancel())
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputZDim));
+      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
 
-      int64 const ktot = (m_Params.outputXDim * m_Params.outputYDim) * k;
-      for(int64 j = 0; j < m_Params.outputYDim; j++)
+      int64 const ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
+      for(int64 j = 0; j < m_Params.outputDims[1]; j++)
       {
-        int64 jtot = (m_Params.outputXDim) * j;
-        for(int64 i = 0; i < m_Params.outputXDim; i++)
+        int64 jtot = (m_Params.outputDims[0]) * j;
+        for(int64 i = 0; i < m_Params.outputDims[0]; i++)
         {
           const int64 destIndex = ktot + jtot + i;
           Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
