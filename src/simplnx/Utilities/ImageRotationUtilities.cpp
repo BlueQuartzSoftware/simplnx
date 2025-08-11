@@ -82,25 +82,23 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
 
   FloatVec3 transformScale = {(rotationMatrix * k_XAxis).norm(), (rotationMatrix * k_YAxis).norm(), (rotationMatrix * k_ZAxis).norm()};
 
-  const float xResNew = DetermineSpacing(spacing, xAxisNew) * transformScale[0];
-  const float yResNew = DetermineSpacing(spacing, yAxisNew) * transformScale[1];
-  const float zResNew = DetermineSpacing(spacing, zAxisNew) * transformScale[2];
+  FloatVec3 outputSpacing = {DetermineSpacing(spacing, xAxisNew) * transformScale[0], DetermineSpacing(spacing, yAxisNew) * transformScale[1], DetermineSpacing(spacing, zAxisNew) * transformScale[2]};
 
-  IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
-  IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
-  IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
+  USizeVec3 outputDims = {static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / outputSpacing[0])),
+                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),
+                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / outputSpacing[2]))};
 
-  if(xpNew == 0)
+  if(outputDims[0] == 0)
   {
-    xpNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[0] = static_cast<IGeometry::MeshIndexType>(1);
   }
-  if(ypNew == 0)
+  if(outputDims[1] == 0)
   {
-    ypNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[1] = static_cast<IGeometry::MeshIndexType>(1);
   }
-  if(zpNew == 0)
+  if(outputDims[2] == 0)
   {
-    zpNew = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[2] = static_cast<IGeometry::MeshIndexType>(1);
   }
 
   RotateArgs params;
@@ -116,18 +114,15 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   params.zp = static_cast<int64>(origDims[2]);
   params.zRes = spacing[2];
 
-  params.TransformedDims = {xpNew, ypNew, zpNew};
-  params.TransformedSpacing = {xResNew, yResNew, zResNew};
+  params.TransformedDims = outputDims;       //{xpNew, ypNew, zpNew};
+  params.TransformedSpacing = outputSpacing; //{xResNew, yResNew, zResNew};
   params.TransformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
 
-  params.outputDims[0] = static_cast<int64>(xpNew);
-  params.outputSpacing[0] = xResNew;
+  params.outputDims = outputDims;
+  params.outputSpacing = outputSpacing;
+
   params.outputXMin = minMaxCoords[0];
-  params.outputDims[1] = static_cast<int64>(ypNew);
-  params.outputSpacing[1] = yResNew;
   params.outputYMin = minMaxCoords[2];
-  params.outputDims[2] = static_cast<int64>(zpNew);
-  params.outputSpacing[2] = zResNew;
   params.outputZMin = minMaxCoords[4];
 
   return params;
