@@ -2,14 +2,12 @@
 
 #include "SimplnxCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "SimplnxCore/Filters/CombineTransformationMatricesFilter.hpp"
-#include "SimplnxCore/Filters/ConvertDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -30,28 +28,47 @@ const std::string k_StepByStepGeomName = "Step-By-Step Geometry";
 const DataPath k_StepByStepGeomPath({k_StepByStepGeomName});
 const std::string k_CombinedGeomName = "Combined Geometry";
 const DataPath k_CombinedGeomPath({k_CombinedGeomName});
+const std::string k_CombinedGeom2Name = "Combined Geometry 2";
+const DataPath k_CombinedGeom2Path({k_CombinedGeom2Name});
+const std::string k_CombinedGeom3Name = "Combined Geometry 3";
+const DataPath k_CombinedGeom3Path({k_CombinedGeom3Name});
+const std::string k_CombinedGeom4Name = "Combined Geometry 4";
+const DataPath k_CombinedGeom4Path({k_CombinedGeom4Name});
+const DataPath k_ExemplaryGeomPath({"Exemplary Geometry"});
+const DataPath k_ExemplaryGeom2Path({"Exemplary Geometry 2"});
+const DataPath k_ExemplaryGeom3Path({"Exemplary Geometry 3"});
+const DataPath k_ExemplaryGeom4Path({"Exemplary Geometry 4"});
 const std::string k_CellAttrMatrixName = "Cell Data";
 const std::string k_CellArrayName = "Test Array";
 const DataPath k_StepByStepCellAttrMatrixPath = k_StepByStepGeomPath.createChildPath(k_CellAttrMatrixName);
 const DataPath k_StepByStepCellArrayPath = k_StepByStepCellAttrMatrixPath.createChildPath(k_CellArrayName);
 const DataPath k_CombinedCellAttrMatrixPath = k_CombinedGeomPath.createChildPath(k_CellAttrMatrixName);
 const DataPath k_CombinedCellArrayPath = k_CombinedCellAttrMatrixPath.createChildPath(k_CellArrayName);
-const std::string k_Rotation90TransformName = "Rotation90";
-const DataPath k_Rotation90TransformPath({k_Rotation90TransformName});
-const std::string k_Rotation45TransformName = "Rotation45";
-const DataPath k_Rotation45TransformPath({k_Rotation45TransformName});
-const std::string k_Scale1TransformName = "Scale1";
-const DataPath k_Scale1TransformPath({k_Scale1TransformName});
-const std::string k_Scale2TransformName = "Scale2";
-const DataPath k_Scale2TransformPath({k_Scale2TransformName});
-const std::string k_Translation1TransformName = "Translation1";
-const DataPath k_Translation1TransformPath({k_Translation1TransformName});
-const std::string k_Translation2TransformName = "Translation2";
-const DataPath k_Translation2TransformPath({k_Translation2TransformName});
-const std::string k_FreestyleTransformName = "Freestyle";
-const DataPath k_FreestyleTransformPath({k_FreestyleTransformName});
-const std::string k_CombinedTransformName = "Combined Transform";
+const std::string k_ImportedTransformsGroupName = "Imported Transforms";
+const std::string k_Scalex2TransformName = "Transform Scale x2";
+const DataPath k_Scalex2TransformPath({k_ImportedTransformsGroupName, k_Scalex2TransformName});
+const std::string k_ScaleReduceTransformName = "Transform Scale Reduce";
+const DataPath k_ScaleReduceTransformPath({k_ImportedTransformsGroupName, k_ScaleReduceTransformName});
+const std::string k_Translation1TransformName = "Transform Translation 1";
+const DataPath k_Translation1TransformPath({k_ImportedTransformsGroupName, k_Translation1TransformName});
+const std::string k_Translation2TransformName = "Transform Translation 2";
+const DataPath k_Translation2TransformPath({k_ImportedTransformsGroupName, k_Translation2TransformName});
+const std::string k_X45TransformName = "Transform X-45";
+const DataPath k_X45TransformPath({k_ImportedTransformsGroupName, k_X45TransformName});
+const std::string k_Y45TransformName = "Transform Y-45";
+const DataPath k_Y45TransformPath({k_ImportedTransformsGroupName, k_Y45TransformName});
+const std::string k_Z45TransformName = "Transform Z-45";
+const DataPath k_Z45TransformPath({k_ImportedTransformsGroupName, k_Z45TransformName});
+const std::string k_FreestyleTransformName = "Transform Freestyle";
+const DataPath k_FreestyleTransformPath({k_ImportedTransformsGroupName, k_FreestyleTransformName});
+const std::string k_CombinedTransformName = "Transform Combined";
 const DataPath k_CombinedTransformPath({k_CombinedTransformName});
+const std::string k_Combined2TransformName = "Transform Combined 2";
+const DataPath k_Combined2TransformPath({k_Combined2TransformName});
+const std::string k_Combined3TransformName = "Transform Combined 3";
+const DataPath k_Combined3TransformPath({k_Combined3TransformName});
+const std::string k_Combined4TransformName = "Transform Combined 4";
+const DataPath k_Combined4TransformPath({k_Combined4TransformName});
 
 void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& geomName, const Vec3<usize>& dims, const Vec3<float32>& origin, const Vec3<float32>& spacing,
                              const std::vector<usize>& cDims)
@@ -66,7 +83,9 @@ void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& ge
   AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, amDims, geom->getId());
   geom->setCellData(*am);
   UInt32Array* testArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_CellArrayName, amDims, cDims, am->getId());
-  std::iota(testArray->begin(), testArray->end(), 0.0f);
+
+  auto numComps = std::accumulate(cDims.begin(), cDims.end(), 1, std::multiplies<>());
+  std::generate(testArray->begin(), testArray->end(), [n = 0, numComps]() mutable { return 1 + (n++ / numComps); });
 }
 
 void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& geomName)
@@ -81,50 +100,43 @@ void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& g
   std::iota(testArray->begin(), testArray->end(), 0.0f);
 }
 
-Float32Array* ConvertToTransformArray(DataStructure& dataStructure, const std::string& arrayName, const ImageRotationUtilities::Matrix4fR& transformMatrix)
+void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemplaryGeomPath, const DataPath& resultGeomPath)
 {
-  auto transformMatrixArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, arrayName, {4, 4}, {1});
-  std::copy(transformMatrix.data(), transformMatrix.data() + transformMatrix.size(), transformMatrixArray->begin());
-  return transformMatrixArray;
-}
+  auto exemplaryGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
+  auto resultGeom = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
+  UnitTest::CompareImageGeometry(exemplaryGeom, resultGeom);
 
-void CreateScaleTransformationMatrix(DataStructure& dataStructure, const std::string& arrayName, const VectorFloat32Parameter::ValueType& pScaleValue)
-{
-  auto scaleMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
-  ConvertToTransformArray(dataStructure, arrayName, scaleMatrix);
-}
+  REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
+  REQUIRE_NOTHROW(resultGeom->getCellDataRef());
+  auto exemplaryAM = exemplaryGeom->getCellDataRef();
+  auto resultAM = resultGeom->getCellDataRef();
+  REQUIRE(exemplaryAM.getShape() == resultAM.getShape());
 
-void CreateRotationTransformationMatrix(DataStructure& dataStructure, const std::string& arrayName, const VectorFloat32Parameter::ValueType& pRotationValue)
-{
-  auto rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
-  ConvertToTransformArray(dataStructure, arrayName, rotationMatrix);
-}
-
-void CreateTranslationTransformationMatrix(DataStructure& dataStructure, const std::string& arrayName, const VectorFloat32Parameter::ValueType& pTranslationValue)
-{
-  auto translationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
-  ConvertToTransformArray(dataStructure, arrayName, translationMatrix);
-}
-
-void CreateManualTransformationMatrix(DataStructure& dataStructure, const std::string& arrayName, const VectorFloat32Parameter::ValueType& pManualValue)
-{
-  auto transformMatrixArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, arrayName, {4, 4}, {1});
-  std::copy(pManualValue.begin(), pManualValue.end(), transformMatrixArray->begin());
+  auto exemplaryCellArrayPath = exemplaryGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
+  auto resultCellArrayPath = resultGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath));
+  auto exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
+  auto resultCellArray = dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath);
+  UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, resultCellArray);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - Scaling & Translating", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
-  DataStructure dataStructure;
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
+                                                              "combine_transformation_matrices_test.dream3d");
+
+  auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
+
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
   CreateTestImageGeometry(dataStructure, k_StepByStepGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
   CreateTestImageGeometry(dataStructure, k_CombinedGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
 
-  CreateScaleTransformationMatrix(dataStructure, k_Scale1TransformName, {2, 3, 4});
-  CreateScaleTransformationMatrix(dataStructure, k_Scale2TransformName, {0.5, 0.3, 0.2});
-  CreateTranslationTransformationMatrix(dataStructure, k_Translation1TransformName, {-12, 57, 32});
-  CreateTranslationTransformationMatrix(dataStructure, k_Translation2TransformName, {42, -67, -89});
-
-  std::vector<DataPath> testTransformPaths = {k_Scale1TransformPath, k_Scale2TransformPath, k_Translation1TransformPath, k_Translation2TransformPath};
+  std::vector<DataPath> testTransformPaths = {k_Scalex2TransformPath, k_ScaleReduceTransformPath, k_Translation1TransformPath, k_Translation2TransformPath};
   for(const auto& testTransformPath : testTransformPaths)
   {
     ApplyTransformationToGeometryFilter filter;
@@ -193,25 +205,190 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - Rotating & Freestyle", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
+                                                              "combine_transformation_matrices_test.dream3d");
+
+  auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
+
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  CreateTestImageGeometry(dataStructure, k_CombinedGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
+  CreateTestImageGeometry(dataStructure, k_CombinedGeom2Name, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
+  CreateTestImageGeometry(dataStructure, k_CombinedGeom3Name, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
+  CreateTestImageGeometry(dataStructure, k_CombinedGeom4Name, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
+
+  // Create Combined Transform 1 and Apply
+  std::vector<DataPath> testTransformPaths = {k_Z45TransformPath, k_Y45TransformPath, k_X45TransformPath};
+  {
+    CombineTransformationMatricesFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_InputArrays_Key, std::make_any<nx::core::MultiArraySelectionParameter::ValueType>(testTransformPaths));
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_OutputArray_Key, std::make_any<nx::core::ArrayCreationParameter::ValueType>(k_CombinedTransformPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  {
+    ApplyTransformationToGeometryFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeomPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_NearestNeighborInterpolationIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(k_CombinedCellAttrMatrixPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(k_CombinedTransformPath));
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // Create Combined Transform 2
+  testTransformPaths = {k_Scalex2TransformPath, k_Y45TransformPath};
+  {
+    CombineTransformationMatricesFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_InputArrays_Key, std::make_any<nx::core::MultiArraySelectionParameter::ValueType>(testTransformPaths));
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_OutputArray_Key, std::make_any<nx::core::ArrayCreationParameter::ValueType>(k_Combined2TransformPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  {
+    ApplyTransformationToGeometryFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom2Path));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_NearestNeighborInterpolationIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(k_CombinedGeom2Path.createChildPath(k_CellAttrMatrixName)));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(k_Combined2TransformPath));
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // Create Combined Transform 3
+  testTransformPaths = {k_Translation1TransformPath, k_X45TransformPath};
+  {
+    CombineTransformationMatricesFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_InputArrays_Key, std::make_any<nx::core::MultiArraySelectionParameter::ValueType>(testTransformPaths));
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_OutputArray_Key, std::make_any<nx::core::ArrayCreationParameter::ValueType>(k_Combined3TransformPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  {
+    ApplyTransformationToGeometryFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom3Path));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_NearestNeighborInterpolationIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(k_CombinedGeom3Path.createChildPath(k_CellAttrMatrixName)));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(k_Combined3TransformPath));
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // Create Combined Transform 4
+  testTransformPaths = {k_Translation2TransformPath, k_Scalex2TransformPath, k_X45TransformPath};
+  {
+    CombineTransformationMatricesFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_InputArrays_Key, std::make_any<nx::core::MultiArraySelectionParameter::ValueType>(testTransformPaths));
+    args.insertOrAssign(CombineTransformationMatricesFilter::k_OutputArray_Key, std::make_any<nx::core::ArrayCreationParameter::ValueType>(k_Combined4TransformPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  {
+    ApplyTransformationToGeometryFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_CombinedGeom4Path));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_PrecomputedTransformationMatrixIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(k_NearestNeighborInterpolationIdx));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(k_CombinedGeom4Path.createChildPath(k_CellAttrMatrixName)));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(k_Combined4TransformPath));
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  CompareGeometries(dataStructure, k_ExemplaryGeomPath, k_CombinedGeomPath);
+  CompareGeometries(dataStructure, k_ExemplaryGeom2Path, k_CombinedGeom2Path);
+  CompareGeometries(dataStructure, k_ExemplaryGeom3Path, k_CombinedGeom3Path);
+  CompareGeometries(dataStructure, k_ExemplaryGeom4Path, k_CombinedGeom4Path);
+
+  auto exemplaryGeom = dataStructure.getDataAs<ImageGeom>(k_ExemplaryGeomPath);
+  auto combinedGeom = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
+  UnitTest::CompareImageGeometry(exemplaryGeom, combinedGeom);
+
+  REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
+  REQUIRE_NOTHROW(combinedGeom->getCellDataRef());
+  auto exemplaryAM = exemplaryGeom->getCellDataRef();
+  auto combinedAM = combinedGeom->getCellDataRef();
+  REQUIRE(exemplaryAM.getShape() == combinedAM.getShape());
+
+  auto exemplaryCellArrayPath = k_ExemplaryGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
+  auto combinedCellArrayPath = k_CombinedGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(combinedCellArrayPath));
+  auto exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
+  auto combinedCellArray = dataStructure.getDataRefAs<UInt32Array>(combinedCellArrayPath);
+  UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, combinedCellArray);
 }
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
-  DataStructure dataStructure;
+  // This test case only tests vertex geometries because the transformations only affect the vertices, NOT the topology.
+
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
+                                                              "combine_transformation_matrices_test.dream3d");
+
+  auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
+
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
   CreateTestVertexGeometry(dataStructure, k_StepByStepGeomName);
   CreateTestVertexGeometry(dataStructure, k_CombinedGeomName);
 
-  CreateRotationTransformationMatrix(dataStructure, k_Rotation90TransformName, {0, 0, 1, 90});
-  CreateRotationTransformationMatrix(dataStructure, k_Rotation45TransformName, {0, 0, 1, 45});
-  CreateScaleTransformationMatrix(dataStructure, k_Scale1TransformName, {2, 3, 4});
-  CreateScaleTransformationMatrix(dataStructure, k_Scale2TransformName, {0.5, 0.3, 0.2});
-  CreateTranslationTransformationMatrix(dataStructure, k_Translation1TransformName, {-12, 57, 32});
-  CreateTranslationTransformationMatrix(dataStructure, k_Translation2TransformName, {42, -67, -89});
-  CreateManualTransformationMatrix(dataStructure, k_FreestyleTransformName,
-                                   {0.42402405f, 0.0f, 0.26495963f, -12.0f, 0.033052925f, 0.2934443f, -0.05289574f, 50.0f, -1.0366786f, 0.4158234f, 1.6590325f, 2.0f, 0.0f, 0.0f, 0.0f, 1.0});
-
-  std::vector<DataPath> testTransformPaths = {k_Rotation90TransformPath,   k_Rotation45TransformPath,   k_Scale1TransformPath,   k_Scale2TransformPath,
-                                              k_Translation1TransformPath, k_Translation2TransformPath, k_FreestyleTransformPath};
+  std::vector<DataPath> testTransformPaths = {k_X45TransformPath,          k_Y45TransformPath,          k_Z45TransformPath,         k_Scalex2TransformPath,
+                                              k_Translation1TransformPath, k_Translation2TransformPath, k_ScaleReduceTransformPath, k_FreestyleTransformPath};
   for(const auto& testTransformPath : testTransformPaths)
   {
     ApplyTransformationToGeometryFilter filter;
