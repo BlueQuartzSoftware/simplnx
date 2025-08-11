@@ -118,15 +118,15 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
   params.TransformedSpacing = {xResNew, yResNew, zResNew};
   params.TransformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
 
-  params.xpNew = static_cast<int64>(xpNew);
-  params.xResNew = xResNew;
-  params.xMinNew = minMaxCoords[0];
-  params.ypNew = static_cast<int64>(ypNew);
-  params.yResNew = yResNew;
-  params.yMinNew = minMaxCoords[2];
-  params.zpNew = static_cast<int64>(zpNew);
-  params.zResNew = zResNew;
-  params.zMinNew = minMaxCoords[4];
+  params.outputXDim = static_cast<int64>(xpNew);
+  params.outputXSpacing = xResNew;
+  params.outputXMin = minMaxCoords[0];
+  params.outputYDim = static_cast<int64>(ypNew);
+  params.outputYSpacing = yResNew;
+  params.outputYMin = minMaxCoords[2];
+  params.outputZDim = static_cast<int64>(zpNew);
+  params.outputZSpacing = zResNew;
+  params.outputZMin = minMaxCoords[4];
 
   return params;
 }
