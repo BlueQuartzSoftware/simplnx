@@ -201,6 +201,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   auto stepByStepCellArray = dataStructure.getDataRefAs<UInt32Array>(k_StepByStepCellArrayPath);
   auto combinedCellArray = dataStructure.getDataRefAs<UInt32Array>(k_CombinedCellArrayPath);
   UnitTest::CompareDataArrays<uint32>(stepByStepCellArray, combinedCellArray);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - Rotating & Freestyle", "[SimplnxCore][CombineTransformationMatricesFilter]")
@@ -369,6 +371,8 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   auto exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
   auto combinedCellArray = dataStructure.getDataRefAs<UInt32Array>(combinedCellArrayPath);
   UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, combinedCellArray);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries", "[SimplnxCore][CombineTransformationMatricesFilter]")
@@ -456,4 +460,6 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
   auto stepByStepCellArray = dataStructure.getDataRefAs<Int64Array>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
   auto combinedCellArray = dataStructure.getDataRefAs<Int64Array>(k_CombinedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
   UnitTest::CompareDataArrays<int64>(stepByStepCellArray, combinedCellArray);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
