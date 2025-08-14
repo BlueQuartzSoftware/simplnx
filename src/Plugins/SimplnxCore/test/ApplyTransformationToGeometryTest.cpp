@@ -38,22 +38,62 @@ const nx::core::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 
 const nx::core::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 
 const std::string k_InputGeometryName("InputData");
+const std::string k_InputNodeGeometryName("InputNodeData");
 const DataPath k_InputCellAttrMatrixPath(DataPath({k_InputGeometryName, "VertexData"}));
-const std::string k_RotationGeometryName("6_6_Rotation");
-const std::string k_ScaleGeometryName("6_6_Scale");
-const std::string k_TranslationGeometryName("6_6_Translation");
-const std::string k_ManualGeometryName("6_6_Manual");
-const std::string k_PrecomputedGeometryName("6_6_Precomputed");
-
-const std::string k_RotationGeometryName66("6_6_Rotation");
-const std::string k_ScaleGeometryName66("6_6_Scale");
-const std::string k_TranslationGeometryName66("6_6_Translation");
-const std::string k_ManualGeometryName66("6_6_Manual");
-const std::string k_PrecomputedGeometryName66("6_6_Precomputed");
+const std::string k_Rotation45XGeometryName("Rotation45X");
+const std::string k_Rotation45YGeometryName("Rotation45Y");
+const std::string k_Rotation45ZGeometryName("Rotation45Z");
+const std::string k_Rotation90XGeometryName("Rotation90X");
+const std::string k_Rotation90YGeometryName("Rotation90Y");
+const std::string k_Rotation90ZGeometryName("Rotation90Z");
+const std::string k_ScaleGeometryName("Scale");
+const std::string k_ScaleNodeGeometryName("Scale_Node");
+const std::string k_TranslationGeometryName("Translation");
+const std::string k_TranslationNodeGeometryName("Translation_Node");
+const std::string k_ManualGeometryName("Manual");
+const std::string k_ManualNodeGeometryName("Manual_Node");
+const std::string k_PrecomputedGeometryName("Precomputed");
+const std::string k_PrecomputedNodeGeometryName("Precomputed_Node");
+const std::string k_Rotation45XNodeGeometryName("Rotation_45X_Node");
+const std::string k_Rotation45YNodeGeometryName("Rotation_45Y_Node");
+const std::string k_Rotation45ZNodeGeometryName("Rotation_45Z_Node");
+const std::string k_Rotation90XNodeGeometryName("Rotation_90X_Node");
+const std::string k_Rotation90YNodeGeometryName("Rotation_90Y_Node");
+const std::string k_Rotation90ZNodeGeometryName("Rotation_90Z_Node");
+const std::string k_Rotation45XGlobalGeometryName("Rotation45X_Global");
+const std::string k_Rotation45YGlobalGeometryName("Rotation45Y_Global");
+const std::string k_Rotation45ZGlobalGeometryName("Rotation45Z_Global");
+const std::string k_Rotation90XGlobalGeometryName("Rotation90X_Global");
+const std::string k_Rotation90YGlobalGeometryName("Rotation90Y_Global");
+const std::string k_Rotation90ZGlobalGeometryName("Rotation90Z_Global");
+const std::string k_ScaleGlobalGeometryName("Scale_Global");
+const std::string k_TranslationGlobalGeometryName("Translation_Global");
+const std::string k_ManualGlobalGeometryName("Manual_Global");
+const std::string k_PrecomputedGlobalGeometryName("Precomputed_Global");
+const DataPath k_PrecomputedTransformationMatrixPath({"Transformation Matrices", "Precomputed"});
+const std::string k_ExemplaryNNDataName("Data_NN");
+const std::string k_ExemplaryLinearDataName("Data_L");
 
 const std::string k_SharedVertexListName("SharedVertexList");
 
 const int32 k_CellAttrMatrixUnusedWarning = -5555;
+
+void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom& exemplaryGeom, const ImageGeom& calculatedGeom, const std::string& exemplaryDataName)
+{
+  UnitTest::CompareImageGeometry(&exemplaryGeom, &calculatedGeom);
+
+  REQUIRE_NOTHROW(exemplaryGeom.getCellDataRef());
+  REQUIRE_NOTHROW(calculatedGeom.getCellDataRef());
+  auto exemplaryAM = exemplaryGeom.getCellDataRef();
+  auto calculatedAM = calculatedGeom.getCellDataRef();
+  REQUIRE(exemplaryAM.getShape() == calculatedAM.getShape());
+
+  const DataPath exemplarPath({exemplaryGeom.getName(), k_Cell_Data, exemplaryDataName});
+  const DataPath calculatedPath({calculatedGeom.getName(), k_Cell_Data, "Data"});
+  const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
+  const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+  UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
+}
 
 } // namespace apply_transformation_to_geometry
 
@@ -61,12 +101,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputNodeGeometryName});
   {
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
@@ -90,8 +130,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
   {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
@@ -108,12 +148,24 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputNodeGeometryName});
+
+  VectorFloat32Parameter::ValueType rotation45X = {1.0F, 0.0F, 0.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation45Y = {0.0F, 1.0F, 0.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation45Z = {0.0F, 0.0F, 1.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation90X = {1.0F, 0.0F, 0.0F, 90.0F};
+  VectorFloat32Parameter::ValueType rotation90Y = {0.0F, 1.0F, 0.0F, 90.0F};
+  VectorFloat32Parameter::ValueType rotation90Z = {0.0F, 0.0F, 1.0F, 90.0F};
+  auto [exemplaryGeomName, rotation] = GENERATE_REF(
+      std::make_tuple(apply_transformation_to_geometry::k_Rotation45XNodeGeometryName, rotation45X), std::make_tuple(apply_transformation_to_geometry::k_Rotation45YNodeGeometryName, rotation45Y),
+      std::make_tuple(apply_transformation_to_geometry::k_Rotation45ZNodeGeometryName, rotation45Z), std::make_tuple(apply_transformation_to_geometry::k_Rotation90XNodeGeometryName, rotation90X),
+      std::make_tuple(apply_transformation_to_geometry::k_Rotation90YNodeGeometryName, rotation90Y), std::make_tuple(apply_transformation_to_geometry::k_Rotation90ZNodeGeometryName, rotation90Z));
+
   {
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
@@ -121,7 +173,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>(rotation));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(true));
 
     // Preflight the filter and check result
@@ -138,8 +190,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
   {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath exemplarPath({exemplaryGeomName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
@@ -156,12 +208,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputNodeGeometryName});
   {
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
@@ -187,8 +239,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
 #endif
 
   {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
@@ -259,12 +311,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputNodeGeometryName});
   {
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
@@ -293,8 +345,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
 #endif
 
   {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
@@ -311,12 +363,12 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputNodeGeometryName});
   {
     const ApplyTransformationToGeometryFilter filter;
     Arguments args;
@@ -325,7 +377,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
-    const DataPath precomputedPath({apply_transformation_to_geometry::k_InputGeometryName, "Precomputed AM", "TransformationMatrix"});
+    const DataPath precomputedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, "Precomputed AM", "TransformationMatrix"});
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(precomputedPath));
 
     // Preflight the filter and check result
@@ -344,8 +396,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
 #endif
 
   {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
+    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
@@ -359,477 +411,369 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
 }
 
 /*******************************************************************************
- * @brief This section is for Image Geometry with Linear Interpolation
- ******************************************************************************/
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
-
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
-  {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(true));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
-
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
-  {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
-
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
-  {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.5F, 1.5F, 10.0F}));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
-
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
-  {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath)); // This should reflect the geometry across the x-axis.
-    const DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<nx::core::DynamicTableParameter::ValueType>(dynamicTable));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Linear", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
-
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
-  {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    const DataPath precomputedPath({apply_transformation_to_geometry::k_InputGeometryName, "Precomputed AM", "TransformationMatrix"});
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(precomputedPath));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-/*******************************************************************************
  * @brief This section is for Image Geometry with Nearest Neighbor Interpolation
  ******************************************************************************/
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
+
+  auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
+      GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_TranslationGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_TranslationGlobalGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_TranslationGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_TranslationGlobalGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+
+  std::string interpolationTypeStr;
+  std::string exemplaryDataName;
+  if(interpolationIdx == apply_transformation_to_geometry::k_LinearInterpolationIdx)
   {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(true));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    interpolationTypeStr = "Linear";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryLinearDataName;
   }
+  else
+  {
+    interpolationTypeStr = "Nearest Neighbor";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryNNDataName;
+  }
+
+  DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName, interpolationTypeStr, translateGeomToGlobalOrigin))
+  {
+    const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
+    const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+
+    {
+      const ApplyTransformationToGeometryFilter filter;
+      Arguments args;
+
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(interpolationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({-10.0F, 10.0F, 20.0F}));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(translateGeomToGlobalOrigin));
+
+      // Preflight the filter and check result
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+    WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
+    auto exemplaryGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName}));
+    auto calculatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+    apply_transformation_to_geometry::CompareImageGeometries(dataStructure, exemplaryGeom, calculatedGeom, exemplaryDataName);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+
+  VectorFloat32Parameter::ValueType rotation45X = {1.0F, 0.0F, 0.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation45Y = {0.0F, 1.0F, 0.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation45Z = {0.0F, 0.0F, 1.0F, 45.0F};
+  VectorFloat32Parameter::ValueType rotation90X = {1.0F, 0.0F, 0.0F, 90.0F};
+  VectorFloat32Parameter::ValueType rotation90Y = {0.0F, 1.0F, 0.0F, 90.0F};
+  VectorFloat32Parameter::ValueType rotation90Z = {0.0F, 0.0F, 1.0F, 90.0F};
+  auto [translateGeomToGlobalOrigin, exemplaryGeomName, rotation, interpolationIdx] =
+      GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45XGeometryName, rotation45X, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45XGlobalGeometryName, rotation45X, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45YGeometryName, rotation45Y, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45YGlobalGeometryName, rotation45Y, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45ZGeometryName, rotation45Z, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45ZGlobalGeometryName, rotation45Z, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90XGeometryName, rotation90X, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90XGlobalGeometryName, rotation90X, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90YGeometryName, rotation90Y, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90YGlobalGeometryName, rotation90Y, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90ZGeometryName, rotation90Z, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90ZGlobalGeometryName, rotation90Z, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45XGeometryName, rotation45X, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45XGlobalGeometryName, rotation45X, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45YGeometryName, rotation45Y, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45YGlobalGeometryName, rotation45Y, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation45ZGeometryName, rotation45Z, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation45ZGlobalGeometryName, rotation45Z, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90XGeometryName, rotation90X, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90XGlobalGeometryName, rotation90X, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90YGeometryName, rotation90Y, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90YGlobalGeometryName, rotation90Y, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_Rotation90ZGeometryName, rotation90Z, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_Rotation90ZGlobalGeometryName, rotation90Z, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+
+  std::string interpolationTypeStr;
+  std::string exemplaryDataName;
+  if(interpolationIdx == apply_transformation_to_geometry::k_LinearInterpolationIdx)
   {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    interpolationTypeStr = "Linear";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryLinearDataName;
   }
+  else
+  {
+    interpolationTypeStr = "Nearest Neighbor";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryNNDataName;
+  }
+
+  DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Rotation = [{}, {}, {}, {}], Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName, rotation[0], rotation[1], rotation[2],
+                              rotation[3], interpolationTypeStr, translateGeomToGlobalOrigin))
+  {
+    {
+      const ApplyTransformationToGeometryFilter filter;
+      Arguments args;
+
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(interpolationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>(rotation));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(translateGeomToGlobalOrigin));
+
+      // Preflight the filter and check result
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+    WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
+    auto exemplaryGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName}));
+    auto calculatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+    apply_transformation_to_geometry::CompareImageGeometries(dataStructure, exemplaryGeom, calculatedGeom, exemplaryDataName);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+
+  auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
+      GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_ScaleGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_ScaleGlobalGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_ScaleGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_ScaleGlobalGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+
+  std::string interpolationTypeStr;
+  std::string exemplaryDataName;
+  if(interpolationIdx == apply_transformation_to_geometry::k_LinearInterpolationIdx)
   {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.5F, 1.5F, 10.0F}));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    interpolationTypeStr = "Linear";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryLinearDataName;
   }
+  else
+  {
+    interpolationTypeStr = "Nearest Neighbor";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryNNDataName;
+  }
+
+  DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName, interpolationTypeStr, translateGeomToGlobalOrigin))
+  {
+    {
+      const ApplyTransformationToGeometryFilter filter;
+      Arguments args;
+
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(interpolationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<nx::core::VectorFloat32Parameter::ValueType>({0.05F, 0.05F, 0.05F}));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(translateGeomToGlobalOrigin));
+
+      // Preflight the filter and check result
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+    WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
+    auto exemplaryGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName}));
+    auto calculatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+    apply_transformation_to_geometry::CompareImageGeometries(dataStructure, exemplaryGeom, calculatedGeom, exemplaryDataName);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+
+  auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
+      GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_ManualGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_ManualGlobalGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_ManualGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_ManualGlobalGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+
+  std::string interpolationTypeStr;
+  std::string exemplaryDataName;
+  if(interpolationIdx == apply_transformation_to_geometry::k_LinearInterpolationIdx)
   {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath)); // This should reflect the geometry across the x-axis.
-    const DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<nx::core::DynamicTableParameter::ValueType>(dynamicTable));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    interpolationTypeStr = "Linear";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryLinearDataName;
   }
+  else
+  {
+    interpolationTypeStr = "Nearest Neighbor";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryNNDataName;
+  }
+
+  DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName, interpolationTypeStr, translateGeomToGlobalOrigin))
+  {
+    {
+      const ApplyTransformationToGeometryFilter filter;
+      Arguments args;
+
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
+                          std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(interpolationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath)); // This should reflect the geometry across the x-axis.
+      const DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<nx::core::DynamicTableParameter::ValueType>(dynamicTable));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(translateGeomToGlobalOrigin));
+
+      // Preflight the filter and check result
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+    WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-  }
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
+    auto exemplaryGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName}));
+    auto calculatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+    apply_transformation_to_geometry::CompareImageGeometries(dataStructure, exemplaryGeom, calculatedGeom, exemplaryDataName);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
-TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
+TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", "[SimplnxCore][ApplyTransformationToGeometryFilter]")
 {
   UnitTest::LoadPlugins();
 
-  //  {
-  //    DataStructure ds;
-  //    ImageGeom* imageGeom = ImageGeom::Create(ds, "IG");
-  //    imageGeom->setDimensions({3, 4, 5});
-  //    imageGeom->setSpacing({1.0F, 1.0F, 1.0F});
-  //    imageGeom->setOrigin({0.0F, 0.0F, 0.0F});
-  //
-  //    Point3Df coordsOld = {3.0F, 3.0F, 4.1667F};
-  //    SizeVec3 oldGeomIndices = {0, 0, 0};
-  //    auto result = imageGeom->computeCellIndex(coordsOld, oldGeomIndices);
-  //    std::cout << oldGeomIndices[0] << ", " << oldGeomIndices[1] << ", " << oldGeomIndices[2] << std::endl;
-  //  }
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_apply_transformation_to_geometry.tar.gz",
-                                                               "6_6_apply_transformation_to_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "apply_transformation_to_geometry.tar.gz",
+                                                               "apply_transformation_to_geometry.dream3d");
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  const DataPath inputGeometryPath({"InputData"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellData);
+  const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+
+  auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
+      GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_PrecomputedGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_PrecomputedGlobalGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
+                   std::make_tuple(false, apply_transformation_to_geometry::k_PrecomputedGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx),
+                   std::make_tuple(true, apply_transformation_to_geometry::k_PrecomputedGlobalGeometryName, apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
+
+  std::string interpolationTypeStr;
+  std::string exemplaryDataName;
+  if(interpolationIdx == apply_transformation_to_geometry::k_LinearInterpolationIdx)
   {
-    const ApplyTransformationToGeometryFilter filter;
-    Arguments args;
-
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key,
-                        std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
-    const DataPath precomputedPath({apply_transformation_to_geometry::k_InputGeometryName, "Precomputed AM", "TransformationMatrix"});
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(precomputedPath));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    interpolationTypeStr = "Linear";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryLinearDataName;
   }
+  else
+  {
+    interpolationTypeStr = "Nearest Neighbor";
+    exemplaryDataName = apply_transformation_to_geometry::k_ExemplaryNNDataName;
+  }
+
+  DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Precomputed Matrix Path = {}, Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName,
+                              apply_transformation_to_geometry::k_PrecomputedTransformationMatrixPath.toString(), interpolationTypeStr, translateGeomToGlobalOrigin))
+  {
+    {
+      const ApplyTransformationToGeometryFilter filter;
+      Arguments args;
+
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputGeometryPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
+                          std::make_any<nx::core::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<nx::core::ChoicesParameter::ValueType>(interpolationIdx));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixPath));
+      args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<nx::core::BoolParameter::ValueType>(translateGeomToGlobalOrigin));
+
+      // Preflight the filter and check result
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+    WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  {
-    const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName66, k_CellData, "Data"});
-    const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
+    auto exemplaryGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({exemplaryGeomName}));
+    auto calculatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
+    apply_transformation_to_geometry::CompareImageGeometries(dataStructure, exemplaryGeom, calculatedGeom, exemplaryDataName);
 
-    UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
