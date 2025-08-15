@@ -5,6 +5,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <filesystem>
@@ -33,7 +34,7 @@ const DataPath k_ClusterIdsPath = k_CellPath.createChildPath(k_ClusterIdsName);
 const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameNX);
 } // namespace
 
-TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", "[SimplnxCore][DBSCAN]")
+TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
   UnitTest::LoadPlugins();
 
@@ -46,8 +47,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::Iterative)));
-    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(true));
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01f));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(50));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
@@ -74,7 +74,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (Precached, Iterative)", 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "[SimplnxCore][DBSCAN]")
+TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
   UnitTest::LoadPlugins();
 
@@ -87,8 +87,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Iterative)", "
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::Iterative)));
-    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(false));
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(50));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
@@ -128,9 +127,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (precached, Random)", "[S
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::SeededRandom)));
     args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(true));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(50));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
@@ -171,9 +169,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Filter Execution (uncached, Random)", "[Si
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::SeededRandom)));
     args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(false));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.01));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(50));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
@@ -214,9 +211,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Valid Detailed Filter Execution (cached, Random)
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(DBSCANFilter::k_InitTypeIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AlgType::SeededRandom)));
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::SeededRandom)));
     args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
-    args.insertOrAssign(DBSCANFilter::k_UsePrecaching_Key, std::make_any<bool>(true));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.06));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(100));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
