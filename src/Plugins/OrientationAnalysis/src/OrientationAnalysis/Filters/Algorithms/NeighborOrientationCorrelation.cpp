@@ -112,8 +112,6 @@ Result<> NeighborOrientationCorrelation::operator()()
   neighpoints[4] = static_cast<int64_t>(dims[0]);
   neighpoints[5] = static_cast<int64_t>(dims[0] * dims[1]);
 
-  uint32_t phase1 = 0;
-
   std::vector<int32_t> neighborDiffCount(totalPoints, 0);
   std::vector<int32_t> neighborSimCount(6, 0);
   std::vector<int64_t> bestNeighbor(totalPoints, -1);
@@ -172,13 +170,13 @@ Result<> NeighborOrientationCorrelation::operator()()
           }
           if(good)
           {
-            phase1 = crystalStructures[cellPhases[i]];
+            uint32 laueClass = crystalStructures[cellPhases[i]];
             QuatF quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
             QuatF quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
             OrientationD axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
             if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
             {
-              axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+              axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
             }
             if(axisAngle[3] > misorientationToleranceR)
             {
@@ -214,13 +212,13 @@ Result<> NeighborOrientationCorrelation::operator()()
               }
               if(good2)
               {
-                phase1 = crystalStructures[cellPhases[neighbor2]];
+                laueClass = crystalStructures[cellPhases[neighbor2]];
                 quat1 = QuatF(quats[neighbor2 * 4], quats[neighbor2 * 4 + 1], quats[neighbor2 * 4 + 2], quats[neighbor2 * 4 + 3]);
                 quat2 = QuatF(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
                 axisAngle = OrientationD(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
                 if(cellPhases[neighbor2] == cellPhases[neighbor] && cellPhases[neighbor2] > 0)
                 {
-                  axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                  axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
                 }
                 if(axisAngle[3] < misorientationToleranceR)
                 {

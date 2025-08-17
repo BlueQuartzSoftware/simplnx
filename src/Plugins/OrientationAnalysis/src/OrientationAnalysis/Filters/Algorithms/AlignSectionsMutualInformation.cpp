@@ -402,7 +402,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
           auto q1TupleIndex = currentpoint * 4;
           QuatF quat1(quats[q1TupleIndex], quats[q1TupleIndex + 1], quats[q1TupleIndex + 2], quats[q1TupleIndex + 3]);
-          uint32_t phase1 = m_CrystalStructures[m_CellPhases[currentpoint]];
+          uint32_t laueClass1 = m_CrystalStructures[m_CellPhases[currentpoint]];
           for(int32_t i = 0; i < 4; i++)
           {
             int64 neighbor = currentpoint + neighborPoints[i];
@@ -429,9 +429,9 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
               QuatF quat2(quats[q2TupleIndex], quats[q2TupleIndex + 1], quats[q2TupleIndex + 2], quats[q2TupleIndex + 3]);
               uint32_t phase2 = m_CrystalStructures[m_CellPhases[neighbor]];
 
-              if(phase1 == phase2)
+              if(laueClass1 == phase2)
               {
-                OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 angle = axisAngle[3];
               }
               if(angle < misorientationTolerance)

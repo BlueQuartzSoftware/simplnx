@@ -90,7 +90,6 @@ public:
             q1[2] = quats[quatIndex + 2];
             q1[3] = quats[quatIndex + 3];
 
-            uint32_t phase1 = crystalStructures[cellPhases[point]];
             for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
             {
 
@@ -120,7 +119,8 @@ public:
                     q2[1] = quats[quatIndex + 1];
                     q2[2] = quats[quatIndex + 2];
                     q2[3] = quats[quatIndex + 3];
-                    OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
+                    uint32_t laueClass = crystalStructures[cellPhases[point]];
+                    OrientationF axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
                     totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiF);
                     numVoxel++;
                   }

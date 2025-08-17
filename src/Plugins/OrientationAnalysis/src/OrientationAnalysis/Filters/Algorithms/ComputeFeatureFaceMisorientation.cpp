@@ -76,7 +76,7 @@ public:
           quat2 = m_Quats[feature2 * 4 + 2];
           quat3 = m_Quats[feature2 * 4 + 3];
           QuatD q2(quat0, quat1, quat2, quat3);
-          OrientationD axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
+          OrientationD axisAngle = m_OrientationOps[m_CrystalStructures[phase1]]->calculateMisorientation(q1, q2);
 
           m_Colors[3 * i + 0] = axisAngle[0] * (axisAngle[3] * Constants::k_180OverPiD);
           m_Colors[3 * i + 1] = axisAngle[1] * (axisAngle[3] * Constants::k_180OverPiD);

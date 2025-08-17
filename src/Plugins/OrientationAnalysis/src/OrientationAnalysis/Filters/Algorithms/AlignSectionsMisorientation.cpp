@@ -140,12 +140,12 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                       if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
                       {
                         QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                        auto phase1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
+                        auto laueClass1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
                         QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                        auto phase2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
-                        if(phase1 == phase2 && phase1 < static_cast<uint32_t>(orientationOps.size()))
+                        auto laueClass2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
+                        if(laueClass1 == laueClass2 && laueClass1 < static_cast<uint32_t>(orientationOps.size()))
                         {
-                          OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                          OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                           angle = axisAngle[3];
                         }
                       }
@@ -248,12 +248,12 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                       if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
                       {
                         QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                        auto phase1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
+                        auto laueClass1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
                         QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
-                        auto phase2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
-                        if(phase1 == phase2 && phase1 < static_cast<uint32_t>(orientationOps.size()))
+                        auto laueClass2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
+                        if(laueClass1 == laueClass2 && laueClass1 < static_cast<uint32_t>(orientationOps.size()))
                         {
-                          OrientationF axisAngle = orientationOps[phase1]->calculateMisorientation(quat1, quat2);
+                          OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                           angle = axisAngle[3];
                         }
                       }

@@ -75,8 +75,8 @@ Result<> ComputeSchmids::operator()()
 
   for(size_t i = 1; i < totalFeatures; i++)
   {
-    uint32_t xtal = crystalStructures[featurePhases[i]];
-    if(xtal >= EbsdLib::CrystalStructure::LaueGroupEnd)
+    uint32_t laueClass = crystalStructures[featurePhases[i]];
+    if(laueClass >= EbsdLib::CrystalStructure::LaueGroupEnd)
     {
       continue;
     }
@@ -86,11 +86,11 @@ Result<> ComputeSchmids::operator()()
 
     if(!m_InputValues->OverrideSystem)
     {
-      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading.data(), schmid, angleComps, slipSystem);
+      orientationOps[laueClass]->getSchmidFactorAndSS(crystalLoading.data(), schmid, angleComps, slipSystem);
     }
     else
     {
-      orientationOps[xtal]->getSchmidFactorAndSS(crystalLoading.data(), plane.data(), direction.data(), schmid, angleComps, slipSystem);
+      orientationOps[laueClass]->getSchmidFactorAndSS(crystalLoading.data(), plane.data(), direction.data(), schmid, angleComps, slipSystem);
     }
 
     schmidArray[i] = static_cast<float>(schmid);
