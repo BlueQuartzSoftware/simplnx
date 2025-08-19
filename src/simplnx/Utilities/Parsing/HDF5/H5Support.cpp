@@ -1,5 +1,7 @@
 #include "H5Support.hpp"
 
+#include "simplnx/Utilities/Parsing/HDF5/H5AutoClosers.hpp"
+
 #include <cstring>
 #include <iostream>
 
@@ -48,28 +50,6 @@ std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
   }
 
   return objectPath;
-}
-
-hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
-{
-  H5SUPPORT_MUTEX_LOCK()
-
-  herr_t error = 0;
-  herr_t returnError = 0;
-  hid_t datasetId = -1;
-  /* Open the dataset. */
-  if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
-  {
-    return -1;
-  }
-  /* Get an identifier for the datatype. */
-  hid_t typeId = H5Dget_type(datasetId);
-  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
-  if(returnError < 0)
-  {
-    return static_cast<hid_t>(returnError);
-  }
-  return typeId;
 }
 
 herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
@@ -227,25 +207,3 @@ std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
     return "UNKNOWN";
   }
 }
-
-#if 0
-hid_t Support::getDatasetType(hid_t locationID, const std::string& datasetName)
-{
-  herr_t error = 0;
-  herr_t returnError = 0;
-  hid_t datasetID = -1;
-  /* Open the dataset. */
-  if((datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT)) < 0)
-  {
-    return -1;
-  }
-  /* Get an identifier for the datatype. */
-  hid_t typeID = H5Dget_type(datasetID);
-  H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
-  if(returnError < 0)
-  {
-    return static_cast<hid_t>(returnError);
-  }
-  return typeID;
-}
-#endif

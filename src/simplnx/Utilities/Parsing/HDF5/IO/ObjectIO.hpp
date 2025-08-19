@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5AutoClosers.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <H5Apublic.h>
@@ -171,17 +172,17 @@ public:
     }
 
     HDF_ERROR_HANDLER_OFF
-    hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
+    H5AttributeCloser attrIdCloser(H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT));
     HDF_ERROR_HANDLER_ON
-    if(attribId < 0)
+    if(attrIdCloser.invalid())
     {
-      return MakeErrorResult<std::vector<T>>(attribId, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
+      return MakeErrorResult<std::vector<T>>(attrIdCloser.id, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
     }
-    hid_t typeId = H5Aget_type(attribId);
-    std::vector<T> values(getNumElementsInAttribute(attribId));
+    H5DatatypeCloser attrTypeIdCloser(H5Aget_type(attrIdCloser.id));
 
-    herr_t error = H5Aread(attribId, typeId, values.data());
-    H5Aclose(attribId);
+    std::vector<T> values(getNumElementsInAttribute(attrIdCloser.id));
+
+    herr_t error = H5Aread(attrIdCloser.id, attrTypeIdCloser.id, values.data());
     if(error != 0)
     {
       std::string ss = fmt::format("Error Reading Vector Attribute '{}'.", attributeName);
@@ -208,40 +209,28 @@ public:
     /* Create the data space for the attribute. */
     int32_t rank = 1;
     hsize_t dims = 1;
-    hid_t dataspaceId = H5Screate_simple(rank, &dims, nullptr);
-    if(dataspaceId >= 0)
+    H5DataspaceCloser dataSpaceCloser(H5Screate_simple(rank, &dims, nullptr));
+    if(dataSpaceCloser.valid())
     {
       // Delete existing attribute
       deleteAttribute(attributeName);
       {
         /* Create the attribute. */
-        hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-        if(attributeId >= 0)
+        H5AttributeCloser attributeIdCloser(H5Acreate(getId(), attributeName.c_str(), dataType, dataSpaceCloser.id, H5P_DEFAULT, H5P_DEFAULT));
+        if(attributeIdCloser.valid())
         {
           /* Write the attribute data. */
-          error = H5Awrite(attributeId, dataType, &value);
+          error = H5Awrite(attributeIdCloser.id, dataType, &value);
           if(error < 0)
           {
             returnError = MakeErrorResult(error, "Error Writing Attribute");
           }
         }
-        /* Close the attribute. */
-        error = H5Aclose(attributeId);
-        if(error < 0)
-        {
-          returnError = MakeErrorResult(error, "Error Closing Attribute");
-        }
-      }
-      /* Close the dataspace. */
-      error = H5Sclose(dataspaceId);
-      if(error < 0)
-      {
-        returnError = MakeErrorResult(error, "Error Closing Dataspace");
       }
     }
     else
     {
-      returnError = MakeErrorResult(dataspaceId, "Invalid Dataspace ID");
+      returnError = MakeErrorResult(dataSpaceCloser.id, "Invalid Dataspace ID");
     }
 
     return returnError;
@@ -263,40 +252,29 @@ public:
     }
     std::vector<hsize_t> hDims(dims.size());
     std::transform(dims.begin(), dims.end(), hDims.begin(), [](usize x) { return static_cast<hsize_t>(x); });
-    hid_t dataspaceId = H5Screate_simple(rank, hDims.data(), nullptr);
-    if(dataspaceId >= 0)
+    H5DataspaceCloser dataSpaceCloser(H5Screate_simple(rank, hDims.data(), nullptr));
+
+    if(dataSpaceCloser.valid())
     {
       // Delete any existing attribute
       deleteAttribute(attributeName);
       {
         /* Create the attribute. */
-        hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-        if(attributeId >= 0)
+        H5AttributeCloser attributeIdCloser(H5Acreate(getId(), attributeName.c_str(), dataType, dataSpaceCloser.id, H5P_DEFAULT, H5P_DEFAULT));
+        if(attributeIdCloser.valid())
         {
           /* Write the attribute data. */
-          error = H5Awrite(attributeId, dataType, static_cast<const void*>(value.data()));
+          error = H5Awrite(attributeIdCloser.id, dataType, static_cast<const void*>(value.data()));
           if(error < 0)
           {
             returnError = MakeErrorResult(error, "Error Writing Attribute");
           }
         }
-        /* Close the attribute. */
-        error = H5Aclose(attributeId);
-        if(error < 0)
-        {
-          returnError = MakeErrorResult(error, "Error Closing Attribute");
-        }
-      }
-      /* Close the dataspace. */
-      error = H5Sclose(dataspaceId);
-      if(error < 0)
-      {
-        returnError = MakeErrorResult(error, "Error Closing Dataspace");
       }
     }
     else
     {
-      returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace ID");
+      returnError = MakeErrorResult(dataSpaceCloser.id, "Error Opening Dataspace ID");
     }
 
     return returnError;

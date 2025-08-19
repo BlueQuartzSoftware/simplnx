@@ -8,12 +8,12 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5AutoClosers.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include "H5Support/H5Lite.h"
-#include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
 
 #include <fmt/format.h>
@@ -106,23 +106,20 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     return {};
   }
 
-  hid_t labDctGid = H5Gopen(fileId, GM3DConst::k_LabDCTGroupName.c_str(), H5P_DEFAULT);
-  if(labDctGid < 0)
+  H5GroupCloser labDctGid(H5Gopen(fileId, GM3DConst::k_LabDCTGroupName.c_str(), H5P_DEFAULT));
+  if(labDctGid.invalid())
   {
     return MakeErrorResult(-89300, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_LabDCTGroupName));
   }
-  auto groupSentinel = H5Support::H5ScopedGroupSentinel(labDctGid, true);
-
   // Now check that each of the known data sets exist
   // Get the Image Geometry Dimensions
-  hid_t dataGid = H5Gopen(labDctGid, GM3DConst::k_DataGroupName.c_str(), H5P_DEFAULT);
-  if(dataGid < 0)
+  H5GroupCloser dataGid(H5Gopen(labDctGid.id, GM3DConst::k_DataGroupName.c_str(), H5P_DEFAULT));
+  if(dataGid.invalid())
   {
     return MakeErrorResult(-89301, fmt::format("ReadGrainMapper3D: Error opening '/LabDCT/{}' group.", GM3DConst::k_DataGroupName));
   }
-  groupSentinel.addGroupId(dataGid);
 
-  reader.findAvailableDctDatasets(labDctGid);
+  reader.findAvailableDctDatasets(labDctGid.id);
   auto dctDataSets = reader.getDctDatasetNames();
 
   std::set<std::string> floatDataSets;
@@ -153,7 +150,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   {
     uint8DataSets.erase(GM3DConst::k_PhaseIdName); // Pop off the PhaseIdName data set since we are specifically reading it here.
     std::vector<uint8> phaseU8;
-    herr_t error = H5Lite::readVectorDataset(dataGid, GM3DConst::k_PhaseIdName, phaseU8);
+    herr_t error = H5Lite::readVectorDataset(dataGid.id, GM3DConst::k_PhaseIdName, phaseU8);
     if(error < 0)
     {
       return MakeErrorResult(-89302, fmt::format("ReadGrainMapper3D: Error reading '/LabDCT/Data/{}' dataset.", GM3DConst::k_PhaseIdName));
@@ -170,7 +167,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   {
     floatDataSets.erase(GM3DConst::k_RodriguesName); // Pop off the Rodrigues data set since we are specifically reading it here.
     std::vector<float32> gm3dRoData;
-    herr_t error = H5Lite::readVectorDataset(dataGid, GM3DConst::k_RodriguesName, gm3dRoData);
+    herr_t error = H5Lite::readVectorDataset(dataGid.id, GM3DConst::k_RodriguesName, gm3dRoData);
     if(error < 0)
     {
       return MakeErrorResult(-89303, fmt::format("ReadGrainMapper3D: Error reading '/LabDCT/Data/{}' dataset.", GM3DConst::k_RodriguesName));
@@ -201,7 +198,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     {
       floatDataSets.erase(dataSetName); // Pop off the PhaseIdName data set since we are specifically reading it here.
       std::vector<float32> ipfFloat;
-      herr_t error = H5Lite::readVectorDataset(dataGid, dataSetName, ipfFloat);
+      herr_t error = H5Lite::readVectorDataset(dataGid.id, dataSetName, ipfFloat);
       if(error < 0)
       {
         return MakeErrorResult(-89302, fmt::format("ReadGrainMapper3D: Error reading '/LabDCT/Data/{}' dataset.", dataSetName));
@@ -224,7 +221,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   {
     DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
 
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, dataSetName);
+    nx::core::HDF5::DatasetIO datasetReader(dataGid.id, dataSetName);
 
     if(std::count(floatDataSets.begin(), floatDataSets.end(), dataSetName) > 0)
     {
@@ -274,17 +271,15 @@ Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t 
   {
     return {};
   }
-  hid_t gid = H5Gopen(fileId, GM3DConst::k_AbsorptionCTName.c_str(), H5P_DEFAULT);
-  if(gid < 0)
+  H5GroupCloser gid(H5Gopen(fileId, GM3DConst::k_AbsorptionCTName.c_str(), H5P_DEFAULT));
+  if(gid.invalid())
   {
     return MakeErrorResult(-89350, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_AbsorptionCTName));
   }
-  auto groupSentinel = H5Support::H5ScopedGroupSentinel(gid, true);
-
   DataPath dataArrayPath =
       m_InputValues->AbsorptionImageGeometryPath.createChildPath(m_InputValues->AbsorptionCellAttributeMatrixName).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName);
 
-  nx::core::HDF5::DatasetIO datasetReader(gid, GM3DConst::k_DataGroupName);
+  nx::core::HDF5::DatasetIO datasetReader(gid.id, GM3DConst::k_DataGroupName);
 
   return nx::core::HDF5::Support::FillDataArray<uint16>(m_DataStructure, dataArrayPath, datasetReader);
 }
@@ -294,16 +289,15 @@ Result<> ReadGrainMapper3D::operator()()
 {
   GrainMapperReader reader(m_InputValues->InputFile.string(), m_InputValues->ReadDctData, m_InputValues->ReadAbsorptionData);
 
-  hid_t fileId = H5Support::H5Utilities::openFile(m_InputValues->InputFile.string(), true);
-  if(fileId < 0)
+  H5FileCloser fileId(H5Support::H5Utilities::openFile(m_InputValues->InputFile.string(), true));
+  if(fileId.invalid())
   {
     return MakeErrorResult(-89350, fmt::format("Grain Mapper 3D File '{}' could not be opened.", m_InputValues->InputFile.string()));
   }
-  auto sentinel = H5Support::H5ScopedFileSentinel(fileId, false);
 
   // ***********************************************************************
   // Read the Phase Information
-  Result<> result = copyPhaseInformation(reader, fileId);
+  Result<> result = copyPhaseInformation(reader, fileId.id);
   if(result.invalid())
   {
     return result;
@@ -311,7 +305,7 @@ Result<> ReadGrainMapper3D::operator()()
 
   // ***********************************************************************
   // Read the LabDCT Information
-  result = copyDctData(reader, fileId);
+  result = copyDctData(reader, fileId.id);
   if(result.invalid())
   {
     return result;
@@ -319,7 +313,7 @@ Result<> ReadGrainMapper3D::operator()()
 
   // ***********************************************************************
   // Read the Absorption Data Information
-  result = copyAbsorptionData(reader, fileId);
+  result = copyAbsorptionData(reader, fileId.id);
   if(result.invalid())
   {
     return result;

@@ -12,22 +12,6 @@
 
 namespace nx::core::HDF5
 {
-IdType getGroupId(IdType parentId, const std::string& groupName)
-{
-  // Check if group exists
-  HDF_ERROR_HANDLER_OFF
-  auto status = H5Gget_objinfo(parentId, groupName.c_str(), 0, NULL);
-  HDF_ERROR_HANDLER_ON
-
-  if(status == 0) // if group exists...
-  {
-    return H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
-  }
-  else // if group does not exist...
-  {
-    return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  }
-}
 
 GroupIO::GroupIO() = default;
 

@@ -163,18 +163,18 @@ int TraverseFile(const std::string& fileName)
   /*
    * Open file
    */
-  hid_t file = H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  REQUIRE(file > 0);
+  H5FileCloser file(H5Fopen(fileName.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT));
+  REQUIRE(file.valid());
   /*
    * Begin iteration using H5Ovisit
    */
-  herr_t status = H5Ovisit(file, H5_INDEX_NAME, H5_ITER_NATIVE, VisitorFunction, nullptr);
+  herr_t status = H5Ovisit(file.id, H5_INDEX_NAME, H5_ITER_NATIVE, VisitorFunction, nullptr);
   REQUIRE(status >= 0);
 
   /*
    * Close and release resources.
    */
-  status = H5Fclose(file);
+  status = file.close();
   REQUIRE(status >= 0);
 
   return 0;

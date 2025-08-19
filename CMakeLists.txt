@@ -582,6 +582,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AutoClosers.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStore.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp

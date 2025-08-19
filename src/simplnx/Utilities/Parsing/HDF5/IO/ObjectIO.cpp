@@ -1,6 +1,7 @@
 #include "ObjectIO.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5AutoClosers.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
@@ -180,11 +181,10 @@ std::vector<std::string> ObjectIO::getAttributeNames() const
 
 std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
 {
-  hid_t attrId = H5Aopen_idx(getId(), idx);
+  H5AttributeCloser attrIdCloser(H5Aopen_idx(getId(), idx));
   const size_t size = 1024;
   char buffer[size];
-  H5Aget_name(attrId, size, buffer);
-  H5Aclose(attrId);
+  H5Aget_name(attrIdCloser.id, size, buffer);
   return GetNameFromBuffer(buffer);
 }
 
@@ -217,24 +217,22 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
     return MakeErrorResult<std::string>(-445, fmt::format("Attribute '{}' does not exist in Object '{}'", attributeName, getName()));
   }
 
-  hid_t attribId = H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT);
-  hid_t attrTypeId = H5Aget_type(attribId);
-  auto isVariableString = H5Tis_variable_str(attrTypeId); // Test if the string is variable length
+  H5AttributeCloser attrIdCloser(H5Aopen(getId(), attributeName.c_str(), H5P_DEFAULT));
+  H5DatatypeCloser attrTypeIdCloser(H5Aget_type(attrIdCloser.id));
+  auto isVariableString = H5Tis_variable_str(attrTypeIdCloser.id); // Test if the string is variable length
   if(isVariableString == 1)
   {
-    H5Aclose(attribId);
-
     data.clear();
     std::string ss = fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName);
     return MakeErrorResult<std::string>(-440, ss);
   }
-  if(attribId >= 0)
+  if(attrIdCloser.valid())
   {
-    hsize_t size = H5Aget_storage_size(attribId);
+    hsize_t size = H5Aget_storage_size(attrIdCloser.id);
     attributeOutput.resize(static_cast<size_t>(size)); // Resize the vector to the proper length
-    if(attrTypeId >= 0)
+    if(attrTypeIdCloser.valid())
     {
-      herr_t error = H5Aread(attribId, attrTypeId, attributeOutput.data());
+      herr_t error = H5Aread(attrIdCloser.id, attrTypeIdCloser.id, attributeOutput.data());
       if(error < 0)
       {
         std::string ss = fmt::format("Error reading attribute: '{}'", attributeName);
@@ -253,7 +251,6 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
       }
     }
   }
-  H5Aclose(attribId);
   return returnResult;
 }
 
@@ -264,24 +261,23 @@ Result<> ObjectIO::writeStringAttribute(const std::string& attributeName, const 
 
   deleteAttribute(attributeName);
 
-  hid_t attributeType = H5Tcopy(H5T_C_S1);
-  H5Tset_size(attributeType, size);
-  H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
-  hid_t attributeSpaceID = H5Screate(H5S_SCALAR);
-  hid_t attributeId = H5Acreate(getId(), attributeName.c_str(), attributeType, attributeSpaceID, H5P_DEFAULT, H5P_DEFAULT);
-  if(attributeId < 0)
+  H5DatatypeCloser attributeTypeCloser(H5Tcopy(H5T_C_S1));
+  H5Tset_size(attributeTypeCloser.id, size);
+  H5Tset_strpad(attributeTypeCloser.id, H5T_STR_NULLTERM);
+  H5DataspaceCloser attributeSpaceCloser(H5Screate(H5S_SCALAR));
+
+  H5AttributeCloser attributeIdCloser(H5Acreate(getId(), attributeName.c_str(), attributeTypeCloser.id, attributeSpaceCloser.id, H5P_DEFAULT, H5P_DEFAULT));
+
+  if(attributeIdCloser.invalid())
   {
-    returnError = MakeErrorResult(attributeId, "Error Creating String Attribute");
+    returnError = MakeErrorResult(attributeIdCloser.id, "Error Creating String Attribute");
   }
 
-  herr_t error = H5Awrite(attributeId, attributeType, text.c_str());
+  herr_t error = H5Awrite(attributeIdCloser.id, attributeTypeCloser.id, text.c_str());
   if(error < 0)
   {
     returnError = MakeErrorResult(error, "Error Writing String Attribute");
   }
-  H5Aclose(attributeId);
-  H5Sclose(attributeSpaceID);
-  H5Tclose(attributeType);
 
   return returnError;
 }
@@ -303,12 +299,14 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
 
 usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
 {
-  size_t typeSize = H5Tget_size(H5Aget_type(attribId));
+  H5DatatypeCloser attrTypeIdCloser(H5Aget_type(attribId));
+
+  size_t typeSize = H5Tget_size(attrTypeIdCloser.id);
   std::vector<hsize_t> dims;
-  hid_t dataspaceId = H5Aget_space(attribId);
-  if(dataspaceId >= 0)
+  H5DataspaceCloser dataspaceIdCloser(H5Aget_space(attribId));
+  if(dataspaceIdCloser.valid())
   {
-    Type type = getTypeFromId(H5Aget_type(attribId));
+    Type type = getTypeFromId(attrTypeIdCloser.id);
     if(type == Type::string)
     {
       size_t rank = 1;
@@ -317,10 +315,10 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
     }
     else
     {
-      size_t rank = H5Sget_simple_extent_ndims(dataspaceId);
+      size_t rank = H5Sget_simple_extent_ndims(dataspaceIdCloser.id);
       std::vector<hsize_t> hdims(rank, 0);
       /* Get dimensions */
-      herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
+      herr_t error = H5Sget_simple_extent_dims(dataspaceIdCloser.id, hdims.data(), nullptr);
       if(error < 0)
       {
         std::cout << "Error Getting Attribute dims" << std::endl;

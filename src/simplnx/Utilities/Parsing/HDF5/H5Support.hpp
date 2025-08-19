@@ -77,6 +77,73 @@ namespace nx::core::HDF5
 {
 namespace Support
 {
+
+#if 0
+// Generic RAII wrapper for HDF5 hid_t objects
+template<herr_t (*Closer)(hid_t)>
+class H5Handle {
+public:
+  hid_t id;  // exposed publicly
+
+  // Construct empty
+  H5Handle() : id(-1) {}
+
+  // Construct with an already-opened ID
+  explicit H5Handle(hid_t handle) : id(handle) {}
+
+  // Movable, not copyable
+  H5Handle(const H5Handle&) = delete;
+  H5Handle& operator=(const H5Handle&) = delete;
+
+  H5Handle(H5Handle&& other) noexcept : id(other.id) {
+    other.id = -1;
+  }
+
+  H5Handle& operator=(H5Handle&& other) noexcept {
+    if (this != &other) {
+      close();
+      id = other.id;
+      other.id = -1;
+    }
+    return *this;
+  }
+
+  // Destructor — automatically closes if valid
+  ~H5Handle() {
+    close();
+  }
+
+  // Manual close
+  void close() {
+    if (id > 0) {  // Only close valid IDs
+      Closer(id);
+      id = -1;
+    }
+  }
+
+  // Release ownership without closing
+  void reset() {
+    id = 0;  // 0 treated as "not owned"
+  }
+
+  // Access underlying ID
+  hid_t value() const { return id; }
+
+  // Check if valid
+  bool valid() const { return id > 0; }
+};
+
+// Convenient type aliases for common HDF5 objects
+using H5AttributeCloser = H5Handle<H5Aclose>;
+using H5DatasetCloser   = H5Handle<H5Dclose>;
+using H5GroupCloser     = H5Handle<H5Gclose>;
+using H5FileCloser      = H5Handle<H5Fclose>;
+using H5DatatypeCloser  = H5Handle<H5Tclose>;
+using H5DataspaceCloser = H5Handle<H5Sclose>;
+using H5PropListCloser = H5Handle<H5Pclose>;
+
+#endif
+
 /**
  * @brief Returns if a given hdf5 object is a group
  * @param objectId The hdf5 object that contains an object with name objectName
@@ -255,36 +322,12 @@ inline std::string HdfTypeForPrimitiveAsStr()
   }
 }
 
-#if 0
-/**
- * @brief Returns the H5T value for a given dataset.
- *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
- * on the returned value or resource leaks will occur.
- * @param locationId A Valid H5 file or group identifier.
- * @param datasetName Path to the dataset
- * @return
- */
-hid_t SIMPLNX_EXPORT getDatasetType(hid_t locationId, const std::string& datasetName);
-#endif
-
 /**
  * @brief Returns the path to an object
  * @param objectId The HDF5 identifier of the object
  * @return  The path to the object relative to the objectId
  */
 std::string SIMPLNX_EXPORT GetObjectPath(hid_t locationId);
-
-/**
- * @brief Returns the H5T value for a given dataset.
- *
- * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
- * on the returned value or resource leaks will occur.
- * @param locationId A Valid HDF5 file or group identifier.
- * @param datasetName Path to the dataset
- * @return
- */
-hid_t SIMPLNX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName);
 
 /**
  * @brief Returns a string version of the HDF Type
