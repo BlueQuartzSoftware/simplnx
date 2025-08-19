@@ -510,13 +510,13 @@ void DataStructure::dataDeleted(DataObject::IdType identifier, const std::string
 
 std::vector<DataObject*> DataStructure::getTopLevelData() const
 {
-  std::vector<DataObject*> topLevel;
+  std::vector<DataObject*> topLevel(m_RootGroup.getSize(), nullptr);
+  usize index = 0;
   for(auto& iter : m_RootGroup)
   {
     auto obj = iter.second;
-    topLevel.push_back(obj.get());
+    topLevel[index++] = (obj.get());
   }
-
   return topLevel;
 }
 
