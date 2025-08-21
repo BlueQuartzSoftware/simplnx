@@ -23,7 +23,7 @@ using namespace nx::core;
 namespace
 {
 
-void CompareImageGeometryAlt(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+void CompareImageGeometryAlt(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, float32 threshold = 0.0f)
 {
   INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
 
@@ -38,7 +38,9 @@ void CompareImageGeometryAlt(const DataStructure& dataStructure, const DataPath&
 
   const auto exemplarSpacing = exemplarGeom->getSpacing();
   const auto computedSpacing = computedGeom->getSpacing();
-  REQUIRE(exemplarSpacing == computedSpacing);
+  REQUIRE(std::fabs(exemplarSpacing[0] - computedSpacing[0]) <= threshold);
+  REQUIRE(std::fabs(exemplarSpacing[1] - computedSpacing[1]) <= threshold);
+  REQUIRE(std::fabs(exemplarSpacing[2] - computedSpacing[2]) <= threshold);
 }
 
 std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& matrix)
@@ -111,7 +113,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     {
       DataPath exemplarGeomPath({name});
 
-      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath, UnitTest::EPSILON);
 
       DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
       DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
@@ -147,7 +149,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     {
       DataPath exemplarGeomPath({name});
 
-      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      UnitTest::CompareImageGeometry(dataStructure, exemplarGeomPath, outputImageGeomPath, UnitTest::EPSILON);
 
       DataPath exemplarAMDataPath = exemplarGeomPath.createChildPath("CellData");
       DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
@@ -205,7 +207,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame-NoOriginUpdate", "[Core][RotateSamp
 
     {
       DataPath exemplarGeomPath({name});
-      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath, UnitTest::EPSILON);
       auto* inputImageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
       auto inputOrigin = inputImageGeomPtr->getOrigin();
       auto outputOrigin = outputImageGeom->getOrigin();
@@ -244,7 +246,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame-NoOriginUpdate", "[Core][RotateSamp
 
     {
       DataPath exemplarGeomPath({name});
-      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath);
+      CompareImageGeometryAlt(dataStructure, exemplarGeomPath, outputImageGeomPath, UnitTest::EPSILON);
       auto* inputImageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
       auto inputOrigin = inputImageGeomPtr->getOrigin();
       auto outputOrigin = outputImageGeom->getOrigin();

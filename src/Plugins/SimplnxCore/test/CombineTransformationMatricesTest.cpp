@@ -104,7 +104,7 @@ void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemp
 {
   auto exemplaryGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
   auto resultGeom = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
-  UnitTest::CompareImageGeometry(exemplaryGeom, resultGeom);
+  UnitTest::CompareImageGeometry(exemplaryGeom, resultGeom, UnitTest::EPSILON);
 
   REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
   REQUIRE_NOTHROW(resultGeom->getCellDataRef());

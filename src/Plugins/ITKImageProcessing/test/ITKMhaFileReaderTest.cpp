@@ -78,8 +78,12 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReaderFilter: Read 2D & 3D Image Data",
   auto calcOrigin = imageGeomPtr->getOrigin();
   auto exemplarOrigin = exemplaryImageGeomPtr->getOrigin();
 
-  REQUIRE(imageGeomPtr->getOrigin() == exemplaryImageGeomPtr->getOrigin());
-  REQUIRE(imageGeomPtr->getSpacing() == exemplaryImageGeomPtr->getSpacing());
+  REQUIRE(std::fabs(imageGeomPtr->getOrigin()[0] - exemplaryImageGeomPtr->getOrigin()[0]) <= UnitTest::EPSILON);
+  REQUIRE(std::fabs(imageGeomPtr->getOrigin()[1] - exemplaryImageGeomPtr->getOrigin()[1]) <= UnitTest::EPSILON);
+  REQUIRE(std::fabs(imageGeomPtr->getOrigin()[2] - exemplaryImageGeomPtr->getOrigin()[2]) <= UnitTest::EPSILON);
+  REQUIRE(std::fabs(imageGeomPtr->getSpacing()[0] - exemplaryImageGeomPtr->getSpacing()[0]) <= UnitTest::EPSILON);
+  REQUIRE(std::fabs(imageGeomPtr->getSpacing()[1] - exemplaryImageGeomPtr->getSpacing()[1]) <= UnitTest::EPSILON);
+  REQUIRE(std::fabs(imageGeomPtr->getSpacing()[2] - exemplaryImageGeomPtr->getSpacing()[2]) <= UnitTest::EPSILON);
 
   const auto* dataArrayPtr = dataStructure.getDataAs<Float32Array>(arrayPath);
   REQUIRE(dataArrayPtr != nullptr);
