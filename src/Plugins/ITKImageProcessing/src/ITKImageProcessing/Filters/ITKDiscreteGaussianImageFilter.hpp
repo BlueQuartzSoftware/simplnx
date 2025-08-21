@@ -142,4 +142,12 @@ protected:
 };
 } // namespace nx::core
 
-SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKDiscreteGaussianImageFilter, "025edc1a-986d-4005-92d1-545dfdc13abd");
+// SIMPLNX_DEF_FILTER_TRAITS(nx::core, ITKDiscreteGaussianImageFilter, "025edc1a-986d-4005-92d1-545dfdc13abd");
+
+template <>
+struct nx::core::FilterTraits<nx::core::ITKDiscreteGaussianImageFilter>
+{
+  static inline constexpr nx::core::StringLiteral className = "ITKDiscreteGaussianImageFilter";
+  static inline constexpr nx::core::StringLiteral name = "nx::core::ITKDiscreteGaussianImageFilter";
+  static inline constexpr nx::core::Uuid uuid = *nx::core::Uuid::FromString("025edc1a-986d-4005-92d1-545dfdc13abd");
+};
