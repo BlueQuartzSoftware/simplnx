@@ -34,6 +34,7 @@ public:
   static inline constexpr StringLiteral k_ReadAbsorptionCT_Key = "read_absorption_ct_data";
   static inline constexpr StringLiteral k_CreatedAbsorptionGeometryPath_Key = "output_absorption_image_geometry_path";
   static inline constexpr StringLiteral k_CellAbsorptionAttributeMatrixName_Key = "cell_absorption_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ConvertIPFColorData_Key = "convert_ipfcolor_data";
 
   /**
    * @brief Returns the name of the filter.

@@ -270,7 +270,7 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
     if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                                       phaseInfo.UniversalHermannMauguin, phaseInfo.SpaceGroup)});
+                                                                                       LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
 }

@@ -125,15 +125,33 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   reader.findAvailableDctDatasets(labDctGid);
   auto dctDataSets = reader.getDctDatasetNames();
 
-  std::vector<std::string> floatDataSets = {GM3DConst::k_CompletenessName, GM3DConst::k_EulerZXZName, GM3DConst::k_EulerZYZName, GM3DConst::k_QuaternionName, GM3DConst::k_RodriguesName};
-  std::vector<std::string> in32DataSets = {GM3DConst::k_GrainIdName};
-  std::vector<std::string> uint8DataSets = {GM3DConst::k_MaskName, GM3DConst::k_IPF001Name, GM3DConst::k_IPF010Name, GM3DConst::k_IPF100Name, GM3DConst::k_PhaseIdName};
+  std::set<std::string> floatDataSets;
+  std::set<std::string> in32DataSets;
+  std::set<std::string> uint8DataSets;
+
+  auto nameToDataTypeMap = reader.getNameToDataTypeMap();
+  for(const auto& entry : nameToDataTypeMap)
+  {
+    if(entry.second == DataType::uint8)
+    {
+      uint8DataSets.insert(entry.first);
+    }
+    if(entry.second == DataType::int32)
+    {
+      in32DataSets.insert(entry.first);
+    }
+    if(entry.second == DataType::float32)
+    {
+      floatDataSets.insert(entry.first);
+    }
+  }
+
   Result<> result;
 
-  // We need to special case this because we are converting from a uint8 value to an int32 value.
+  // We need to special case this because we are converting from an uint8 value to an int32 value.
   if(m_InputValues->ConvertPhaseData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_PhaseIdName) > 0))
   {
-    uint8DataSets.pop_back(); // Pop off the PhaseIdName data set since we are specifically reading it here.
+    uint8DataSets.erase(GM3DConst::k_PhaseIdName); // Pop off the PhaseIdName data set since we are specifically reading it here.
     std::vector<uint8> phaseU8;
     herr_t error = H5Lite::readVectorDataset(dataGid, GM3DConst::k_PhaseIdName, phaseU8);
     if(error < 0)
@@ -150,7 +168,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   // We need to special case this because we are converting from a 3 component to a 4 component
   if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_RodriguesName) > 0))
   {
-    floatDataSets.pop_back(); // Pop off the Rodrigues data set since we are specifically reading it here.
+    floatDataSets.erase(GM3DConst::k_RodriguesName); // Pop off the Rodrigues data set since we are specifically reading it here.
     std::vector<float32> gm3dRoData;
     herr_t error = H5Lite::readVectorDataset(dataGid, GM3DConst::k_RodriguesName, gm3dRoData);
     if(error < 0)
@@ -173,6 +191,31 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
       rodData[t * 4 + 1] = r1 / length;
       rodData[t * 4 + 2] = r2 / length;
       rodData[t * 4 + 3] = length;
+    }
+  }
+
+  if(m_InputValues->ConvertIPFColors && nameToDataTypeMap[GM3DConst::k_IPF001Name] == DataType::float32)
+  {
+    std::vector<std::string> ipfDataSets = {GM3DConst::k_IPF001Name, GM3DConst::k_IPF010Name, GM3DConst::k_IPF100Name};
+    for(const auto& dataSetName : ipfDataSets)
+    {
+      floatDataSets.erase(dataSetName); // Pop off the PhaseIdName data set since we are specifically reading it here.
+      std::vector<float32> ipfFloat;
+      herr_t error = H5Lite::readVectorDataset(dataGid, dataSetName, ipfFloat);
+      if(error < 0)
+      {
+        return MakeErrorResult(-89302, fmt::format("ReadGrainMapper3D: Error reading '/LabDCT/Data/{}' dataset.", dataSetName));
+      }
+      DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
+
+      auto& ipfUint8 = m_DataStructure.getDataAs<UInt8Array>(dataArrayPath)->getDataStoreRef();
+      // Copy the data from the temp buffer into the final spot.
+      for(size_t t = 0; t < ipfUint8.getNumberOfTuples(); t++)
+      {
+        ipfUint8.setComponent(t, 0, ipfFloat[t * 3] * 255.0f);
+        ipfUint8.setComponent(t, 1, ipfFloat[t * 3 + 1] * 255.0f);
+        ipfUint8.setComponent(t, 2, ipfFloat[t * 3 + 2] * 255.0f);
+      }
     }
   }
 
@@ -275,7 +318,7 @@ Result<> ReadGrainMapper3D::operator()()
   }
 
   // ***********************************************************************
-  // Read the LabDCT Information
+  // Read the Absorption Data Information
   result = copyAbsorptionData(reader, fileId);
   if(result.invalid())
   {

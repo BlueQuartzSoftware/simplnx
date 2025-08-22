@@ -75,6 +75,7 @@ Parameters ReadGrainMapper3DFilter::parameters() const
       std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Create Compatible Phase Data", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
   params.insert(std::make_unique<BoolParameter>(k_ConvertOrientationData_Key, "Create Compatible Orientation Data",
                                                 "Orientation data such as Quaternions and Rodrigues vectors will be converted to be DREAM3D-NX compatible", true));
+  params.insert(std::make_unique<BoolParameter>(k_ConvertIPFColorData_Key, "Create Compatible IPFColor Data", "If the IPF Color data is float32, it will be converted to uint8", true));
 
   params.insertSeparator(Parameters::Separator{"LabDCT Data"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadLabDCT_Key, "Read LabDCT Data", "Read the LabDCT Data", true));
@@ -110,7 +111,9 @@ IFilter::UniquePointer ReadGrainMapper3DFilter::clone() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadGrainMapper3DFilter::parametersVersion() const
 {
-  return 1;
+  // Version 1: initial filter
+  // Version 2: Added k_ConvertIPFColorData_Key with a default of true
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -120,6 +123,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pConvertPhaseData = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
   auto pConvertOrientationData = filterArgs.value<bool>(k_ConvertOrientationData_Key);
+  auto pConvertIPFColorData = filterArgs.value<bool>(k_ConvertIPFColorData_Key);
 
   auto pReadLabDCT = filterArgs.value<bool>(k_ReadLabDCT_Key);
   auto pLabDCTImageGeometryPath = filterArgs.value<DataPath>(k_CreatedDCTImageGeometryPath_Key);
@@ -180,6 +184,21 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
       else if(pConvertOrientationData && dataSetName == GrainMapper3DUtilities::Constants::k_RodriguesName)
       {
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nameToDataTypeMap[dataSetName], tupleDims, std::vector<usize>{4}, cellAMPath.createChildPath(dataSetName)));
+      }
+      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF001Name)
+      {
+        resultOutputActions.value().appendAction(
+            std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
+      }
+      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF010Name)
+      {
+        resultOutputActions.value().appendAction(
+            std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
+      }
+      else if(pConvertIPFColorData && dataSetName == GrainMapper3DUtilities::Constants::k_IPF100Name)
+      {
+        resultOutputActions.value().appendAction(
+            std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
       }
       else
       {
@@ -256,6 +275,7 @@ Result<> ReadGrainMapper3DFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.DctCellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
   inputValues.ConvertPhaseData = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
   inputValues.ConvertOrientationData = filterArgs.value<bool>(k_ConvertOrientationData_Key);
+  inputValues.ConvertIPFColors = filterArgs.value<bool>(k_ConvertIPFColorData_Key);
 
   inputValues.ReadAbsorptionData = filterArgs.value<bool>(k_ReadAbsorptionCT_Key);
   inputValues.AbsorptionImageGeometryPath = filterArgs.value<DataPath>(k_CreatedAbsorptionGeometryPath_Key);
