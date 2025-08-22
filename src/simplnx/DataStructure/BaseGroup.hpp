@@ -67,7 +67,7 @@ public:
    * the provided BaseGroup.
    * @param other The BaseGroup to move from
    */
-  BaseGroup(BaseGroup&& other);
+  BaseGroup(BaseGroup&& other) noexcept;
 
   /**
    * @brief Destroys the BaseGroup and removes it from the list of it's
@@ -279,7 +279,7 @@ public:
   /**
    * @brief Clears the group of all children.
    */
-  void clear();
+  virtual void clear();
 
   /**
    * @brief Returns an iterator to the beginning of the container.

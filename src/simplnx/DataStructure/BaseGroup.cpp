@@ -1,6 +1,7 @@
 #include "BaseGroup.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -21,7 +22,7 @@ BaseGroup::BaseGroup(const BaseGroup& other)
 {
 }
 
-BaseGroup::BaseGroup(BaseGroup&& other)
+BaseGroup::BaseGroup(BaseGroup&& other) noexcept
 : DataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {
@@ -102,6 +103,11 @@ const DataObject& BaseGroup::at(const std::string& name) const
 bool BaseGroup::canInsert(const DataObject* obj) const
 {
   if(obj == nullptr)
+  {
+    return false;
+  }
+  // Do not allow adding a DataStructure to a BaseGroup
+  if(dynamic_cast<const DataStructure*>(obj) != nullptr)
   {
     return false;
   }
