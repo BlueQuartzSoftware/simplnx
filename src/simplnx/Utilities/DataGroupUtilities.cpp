@@ -186,7 +186,12 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
     }
     else
     {
-      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parentGroup).getDataMap().getNames();
+      const auto* baseGroup = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(baseGroup == nullptr)
+      {
+        return {};
+      }
+      childrenNames = baseGroup->getDataMap().getNames();
     }
 
     for(const auto& childName : childrenNames)
