@@ -25,7 +25,7 @@
 In order to compile `simplnx` you will need a C++20 compiler suite installed on your computer.
 
 + Compiler
-  + Windows Visual Studio 2019 v142 toolset
+  + Windows Visual Studio 2022 v143 toolset
   + macOS 12.5 and Xcode 14.2 or higher
   + Linux with GCC Version 11.0 or higher or clang 14.
 
@@ -70,7 +70,7 @@ set VCPKG_INSTALL_ROOT=C:/Appications/vcpkg
 cd simplnx
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
-cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel"  -DDREAM3D_Data_Dir=../../DREAM3D_Data ../simplnx
+cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_ROOT%/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=%BUILD_DIR% -DVCPKG_MANIFEST_FEATURES="tests;parallel"  -DDREAM3D_Data_Dir=../../DREAM3D_Data ../simplnx
 ```
 
 ### Windows with Ninja and IDE of choice (QtCreator, CLion, command line) ###
