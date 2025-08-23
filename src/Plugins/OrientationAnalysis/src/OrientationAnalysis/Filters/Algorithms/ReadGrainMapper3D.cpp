@@ -132,17 +132,17 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   auto nameToDataTypeMap = reader.getNameToDataTypeMap();
   for(const auto& entry : nameToDataTypeMap)
   {
-    if(entry.second == DataType::uint8)
-    {
-      uint8DataSets.insert(entry.first);
-    }
-    if(entry.second == DataType::int32)
-    {
-      in32DataSets.insert(entry.first);
-    }
     if(entry.second == DataType::float32)
     {
       floatDataSets.insert(entry.first);
+    }
+    else if(entry.second == DataType::uint8)
+    {
+      uint8DataSets.insert(entry.first);
+    }
+    else if(entry.second == DataType::int32)
+    {
+      in32DataSets.insert(entry.first);
     }
   }
 
