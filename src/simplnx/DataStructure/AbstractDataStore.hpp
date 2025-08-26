@@ -35,6 +35,29 @@ public:
   using ShapeType = typename IDataStore::ShapeType;
   using index_type = uint64;
 
+  /**
+   * @brief ValueProxy replaces actual references in AbstractDataStore.
+   * DEVELOPER NOTES:
+   *   - Non-const iterators and operator[] will use ValueProxy.
+   *   - Since ValueProxy does not return a modifiable reference changes
+   * are done via `dataStore.setValue(index, value)`. This means code may have
+   * addition function calls.
+   *   - Common operators like +=, -=, etc. have convenience functions
+   * that reduce the number of functions calls. Instead of
+   * `dataStore[i] += 42` being equivalent to
+   * `dataStore.setValue(i, dataStore.getValue(i) + 42)` it's instead
+   * just one virtual function `dataStore.add(i, 42)`.
+   *   - ValueProxy does convert to T but is not the same type T. This is
+   * relevant when passing to templated functions. They may deduce the type
+   * as ValueProxy rather than the intended T. i.e. `std::max(dataStore[i], 42)`
+   * will not compile but `std::max<int32>(dataStore[i], 42)` will.
+   *   - auto will also have deduce the type as ValueProxy instead of T so
+   * `T value = dataStore[i]` should be preferred.
+   *   - Since iterators use ValueProxy, it also affects range based for loops.
+   * Previously loops would be typically be written like `for(auto& value : dataStore)`.
+   * Now they should be `for(auto value : dataStore)`. The ProxyValue should be taken by
+   * value in this case. The old version will fail to compile.
+   */
   class ValueProxy
   {
   public:
