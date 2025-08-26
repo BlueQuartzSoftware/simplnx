@@ -80,8 +80,8 @@ Result<> WriteLosAlamosFFT::operator()()
         phi1 = cellEulerAngles[index * 3] * 180.0f * Constants::k_1OverPiF;
         phi = cellEulerAngles[index * 3 + 1] * 180.0f * Constants::k_1OverPiF;
         phi2 = cellEulerAngles[index * 3 + 2] * 180.0f * Constants::k_1OverPiF;
-        file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<::ull>(x + 1), static_cast<::ull>(y + 1), static_cast<::ull>(z + 1), featureIds[index],
-                            cellPhases[index]);
+        file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<::ull>(x + 1), static_cast<::ull>(y + 1), static_cast<::ull>(z + 1), featureIds.getValue(index),
+                            cellPhases.getValue(index));
       }
     }
   }

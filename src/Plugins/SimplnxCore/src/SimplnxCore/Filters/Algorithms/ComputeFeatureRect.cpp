@@ -95,11 +95,11 @@ Result<> ComputeFeatureRect::operator()()
         {
           if(l > 2)
           {
-            cornersStore[featureShift + l] = std::max(cornersStore[featureShift + l], indices[l - 3]);
+            cornersStore[featureShift + l] = std::max(cornersStore.getValue(featureShift + l), indices[l - 3]);
           }
           else
           {
-            cornersStore[featureShift + l] = std::min(cornersStore[featureShift + l], indices[l]);
+            cornersStore[featureShift + l] = std::min(cornersStore.getValue(featureShift + l), indices[l]);
           }
         }
       }

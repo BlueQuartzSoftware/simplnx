@@ -188,11 +188,11 @@ struct WriteVtkDataArrayFunctor
         }
         else if constexpr(std::is_floating_point_v<T>)
         {
-          buffer.append(fmt::format(" {:f}", dataStore[i]));
+          buffer.append(fmt::format(" {:f}", dataStore.getValue(i)));
         }
         else
         {
-          buffer.append(fmt::format(" {}", dataStore[i]));
+          buffer.append(fmt::format(" {}", dataStore.getValue(i)));
         }
         // If the buffer is within 32 bytes of the reserved size, then dump
         // the contents to the file.
@@ -319,7 +319,7 @@ struct WriteVtkDataFunctor
         }
         else if constexpr(std::is_same_v<T, float32> || std::is_same_v<T, float64>)
         {
-          outStrm << fmt::format("{}", dataArrayRef[idx]);
+          outStrm << fmt::format("{}", dataArrayRef.getValue(idx));
         }
         else
         {

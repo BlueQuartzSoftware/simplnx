@@ -767,7 +767,7 @@ TEST_CASE("DataStoreTest")
   {
     const int32 initVal = -30;
     int32 x = initVal;
-    for(auto& value : store)
+    for(auto value : store)
     {
       value = x++;
     }
@@ -813,7 +813,7 @@ TEST_CASE("DataArrayTest")
     {
       const int32 initVal = -30;
       int32 x = initVal;
-      for(auto& value : *dataArr)
+      for(auto value : *dataArr)
       {
         value = x++;
       }

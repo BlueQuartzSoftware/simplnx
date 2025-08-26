@@ -261,7 +261,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin].inc();
         }
       }
     }
@@ -280,7 +280,7 @@ Result<> ComputeFeatureClustering::operator()()
           {
             bin = m_InputValues->NumberOfBins - 1;
           }
-          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin]++;
+          rdfStore[(m_InputValues->NumberOfBins * ensemble) + bin].inc();
         }
       }
     }

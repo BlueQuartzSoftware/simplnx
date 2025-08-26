@@ -145,11 +145,25 @@ Result<> ComputeAvgCAxes::operator()()
     }
     else
     {
-      avgCAxes[tupleIndex] /= counter[i];
-      avgCAxes[tupleIndex + 1] /= counter[i];
-      avgCAxes[tupleIndex + 2] /= counter[i];
+      float32 a = avgCAxes.getValue(tupleIndex);
+      float32 b = avgCAxes.getValue(tupleIndex + 1);
+      float32 c = avgCAxes.getValue(tupleIndex + 2);
 
-      MatrixMath::Normalize3x1(avgCAxes[tupleIndex], avgCAxes[tupleIndex + 1], avgCAxes[tupleIndex + 2]);
+      a /= counter[i];
+      b /= counter[i];
+      c /= counter[i];
+
+      float32 denom = std::sqrt(((a * a) + (b * b) + (c * c)));
+      if(denom != 0)
+      {
+        a /= denom;
+        b /= denom;
+        c /= denom;
+      }
+
+      avgCAxes.setValue(tupleIndex, a);
+      avgCAxes.setValue(tupleIndex + 1, b);
+      avgCAxes.setValue(tupleIndex + 2, c);
     }
   }
   return result;
