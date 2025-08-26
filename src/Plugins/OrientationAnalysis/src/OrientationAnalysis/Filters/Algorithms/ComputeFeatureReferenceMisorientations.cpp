@@ -81,7 +81,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     {
       QuatF q1(quats[point * 4 + 0], quats[point * 4 + 1], quats[point * 4 + 2], quats[point * 4 + 3]);
       QuatF q2;
-      uint32 phase1 = crystalStructures[cellPhases[point]];
+      uint32 laueClass1 = crystalStructures[cellPhases[point]];
       if(m_InputValues->ReferenceOrientation == 0)
       {
         auto gnum = static_cast<size_t>(featureIds[point]);
@@ -94,7 +94,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
         q2 = QuatF(avgQuats[centerGNum * 4 + 0], avgQuats[centerGNum * 4 + 1], avgQuats[centerGNum * 4 + 2], avgQuats[centerGNum * 4 + 3]);
       }
 
-      OrientationD axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
+      OrientationD axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
 
       featureReferenceMisorientations[point] = static_cast<float>((180.0 / nx::core::numbers::pi) * axisAngle[3]); // convert to degrees
       int32_t idx = featureIds[point] * 2;

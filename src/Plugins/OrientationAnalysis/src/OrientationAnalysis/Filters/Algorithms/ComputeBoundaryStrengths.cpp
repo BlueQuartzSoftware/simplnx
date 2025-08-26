@@ -69,14 +69,15 @@ Result<> ComputeBoundaryStrengths::operator()()
       }
       if(crystalStructures[laueClassG1] == crystalStructures[laueClassG2] && featurePhases[gName1] > 0)
       {
-        mPrime_1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getmPrime(q1, q2, LD));
-        mPrime_2 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getmPrime(q2, q1, LD));
-        F1_1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF1(q1, q2, LD, true));
-        F1_2 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF1(q2, q1, LD, true));
-        F1spt_1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF1spt(q1, q2, LD, true));
-        F1spt_2 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF1spt(q2, q1, LD, true));
-        F7_1 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF7(q1, q2, LD, true));
-        F7_2 = static_cast<float32>(orientationOps[crystalStructures[featurePhases[gName1]]]->getF7(q2, q1, LD, true));
+        LaueOps::Pointer laueClass = orientationOps[crystalStructures[featurePhases[gName1]]];
+        mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD));
+        mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD));
+        F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD, true));
+        F1_2 = static_cast<float32>(laueClass->getF1(q2, q1, LD, true));
+        F1spt_1 = static_cast<float32>(laueClass->getF1spt(q1, q2, LD, true));
+        F1spt_2 = static_cast<float32>(laueClass->getF1spt(q2, q1, LD, true));
+        F7_1 = static_cast<float32>(laueClass->getF7(q1, q2, LD, true));
+        F7_2 = static_cast<float32>(laueClass->getF7(q2, q1, LD, true));
       }
       else
       {

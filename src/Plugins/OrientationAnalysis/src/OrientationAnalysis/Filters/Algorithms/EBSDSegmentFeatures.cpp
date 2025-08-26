@@ -117,10 +117,10 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighbor
   // Get the phases for each voxel
   nx::core::AbstractDataStore<int32>* cellPhases = m_CellPhases->getDataStore();
 
-  int32_t phase1 = (*m_CrystalStructures)[(*cellPhases)[referencePoint]];
-  int32_t phase2 = (*m_CrystalStructures)[(*cellPhases)[neighborPoint]];
+  int32_t laueClass1 = (*m_CrystalStructures)[(*cellPhases)[referencePoint]];
+  int32_t laueClass2 = (*m_CrystalStructures)[(*cellPhases)[neighborPoint]];
   // If either of the phases is 999 then we bail out now.
-  if(phase1 >= m_OrientationOps.size() || phase2 >= m_OrientationOps.size())
+  if(laueClass1 >= m_OrientationOps.size() || laueClass2 >= m_OrientationOps.size())
   {
     return group;
   }
@@ -141,7 +141,7 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighbor
 
     if((*cellPhases)[referencePoint] == (*cellPhases)[neighborPoint])
     {
-      OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
+      OrientationF axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
       w = axisAngle[3];
     }
     if(w < m_InputValues->MisorientationTolerance)

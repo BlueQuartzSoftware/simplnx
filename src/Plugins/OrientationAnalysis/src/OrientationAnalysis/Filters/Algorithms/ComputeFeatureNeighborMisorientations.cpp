@@ -55,7 +55,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     quatIndex = i * 4;
 
     QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
-    uint32_t xtalType1 = inXtalStruct[inFeaturePhases[i]];
+    uint32_t laueClass1 = inXtalStruct[inFeaturePhases[i]];
 
     const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
@@ -68,9 +68,9 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       QuatF q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
       uint32_t xtalType2 = inXtalStruct[inFeaturePhases[neighborFeatureId]];
       tempMisoList = featureNeighborList.size();
-      if(xtalType1 == xtalType2 && static_cast<int64_t>(xtalType1) < static_cast<int64_t>(orientationOps.size()))
+      if(laueClass1 == xtalType2 && static_cast<int64_t>(laueClass1) < static_cast<int64_t>(orientationOps.size()))
       {
-        OrientationD axisAngle = orientationOps[xtalType1]->calculateMisorientation(q1, q2);
+        OrientationD axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);
 
         tempMisorientationLists[i][j] = static_cast<float>(axisAngle[3] * nx::core::Constants::k_180OverPiF);
         if(m_InputValues->ComputeAvgMisors)

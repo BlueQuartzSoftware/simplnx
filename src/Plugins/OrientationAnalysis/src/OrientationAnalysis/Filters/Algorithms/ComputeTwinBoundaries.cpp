@@ -19,7 +19,7 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<LaueOps::Pointer>& orientationOps, uint32 crystalStructure, float32 angTolerance,
+bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance,
                     float32 axisTolerance)
 {
   T real = std::numeric_limits<T>::max();
@@ -34,13 +34,13 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
   Eigen::Quaternion<T> s1_misq;
   Eigen::Quaternion<T> s2_misq;
 
-  const int32 nsym = orientationOps[crystalStructure]->getNumSymOps();
+  const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
   misq = quat1 * q2;
 
   for(int32 j = 0; j < nsym; j++)
   {
-    Quaternion<T> jQuat = orientationOps[crystalStructure]->getQuatSymOp(j);
+    Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
     sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
     // calculate crystal direction parallel to normal
@@ -49,7 +49,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
     for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
-      Quaternion<T> kQuat = orientationOps[crystalStructure]->getQuatSymOp(k);
+      Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
       sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
       sym_q = sym_q.conjugate();
       s2_misq = sym_q * s1_misq;
@@ -71,7 +71,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
 
 template <typename T>
 std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2,
-                                             const std::vector<LaueOps::Pointer>& orientationOps, uint32 crystalStructure, float32 angTolerance, float32 axisTolerance)
+                                             const std::vector<LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance, float32 axisTolerance)
 {
   T real = std::numeric_limits<T>::max();
   T axisdiff111;
@@ -87,14 +87,14 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   Eigen::Quaternion<T> s1_misq;
   Eigen::Quaternion<T> s2_misq;
 
-  const int32 nsym = orientationOps[crystalStructure]->getNumSymOps();
+  const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
   misq = quat1 * q2;
 
   bool valid = false;
   for(int32 j = 0; j < nsym; j++)
   {
-    Quaternion<T> jQuat = orientationOps[crystalStructure]->getQuatSymOp(j);
+    Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
     j_sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
     // calculate crystal direction parallel to normal
@@ -103,7 +103,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
     for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
-      Quaternion<T> kQuat = orientationOps[crystalStructure]->getQuatSymOp(k);
+      Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
       sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
       sym_q = sym_q.conjugate();
       s2_misq = sym_q * s1_misq;

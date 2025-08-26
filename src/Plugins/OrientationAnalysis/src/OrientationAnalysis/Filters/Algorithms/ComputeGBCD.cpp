@@ -104,7 +104,7 @@ public:
 
       if(phases[feature1] == phases[feature2] && phases[feature1] > 0)
       {
-        uint32 cryst = crystalStructures[phases[feature1]];
+        uint32 laueClass1 = crystalStructures[phases[feature1]];
         for(int32 q = 0; q < 2; q++)
         {
           if(q == 1)
@@ -126,11 +126,11 @@ public:
 
           OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g2ea, 3)).toGMatrix(g2);
 
-          int32 nSym = m_OrientationOps[cryst]->getNumSymOps();
+          int32 nSym = m_OrientationOps[laueClass1]->getNumSymOps();
           for(int32 j = 0; j < nSym; j++)
           {
             // rotate g1 by symOp
-            m_OrientationOps[cryst]->getMatSymOp(j, sym1);
+            m_OrientationOps[laueClass1]->getMatSymOp(j, sym1);
             MatrixMath::Multiply3x3with3x3(sym1, g1, g1s);
             // get the crystal directions along the triangle normals
             MatrixMath::Multiply3x3with3x1(g1s, normal, xstl1Norm1);
@@ -147,7 +147,7 @@ public:
             for(int32 k = 0; k < nSym; k++)
             {
               // calculate the symmetric misorienation
-              m_OrientationOps[cryst]->getMatSymOp(k, sym2);
+              m_OrientationOps[laueClass1]->getMatSymOp(k, sym2);
               // rotate g2 by symOp
               MatrixMath::Multiply3x3with3x3(sym2, g2, g2s);
               // transpose rotated g2
