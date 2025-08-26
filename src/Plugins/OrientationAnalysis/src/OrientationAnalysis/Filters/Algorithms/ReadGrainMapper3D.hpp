@@ -23,6 +23,7 @@ struct ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DInputValues
   std::string DctCellEnsembleAttributeMatrixName;
   bool ConvertPhaseData;
   bool ConvertOrientationData;
+  bool ConvertIPFColors;
 
   bool ReadAbsorptionData;
   DataPath AbsorptionImageGeometryPath;

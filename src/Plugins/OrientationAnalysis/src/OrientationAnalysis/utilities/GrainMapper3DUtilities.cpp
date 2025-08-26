@@ -17,13 +17,6 @@ namespace GM3DConst = GrainMapper3DUtilities::Constants;
 
 namespace GrainMapper3DUtilities
 {
-
-const std::map<std::string, DataType> k_NameToDataTypeMap = {
-    {GM3DConst::k_CompletenessName, DataType::float32}, {GM3DConst::k_GrainIdName, DataType::int32},      {GM3DConst::k_MaskName, DataType::uint8},
-    {GM3DConst::k_PhaseIdName, DataType::uint8},        {GM3DConst::k_RodriguesName, DataType::float32},  {GM3DConst::k_EulerZXZName, DataType::float32},
-    {GM3DConst::k_EulerZYZName, DataType::float32},     {GM3DConst::k_QuaternionName, DataType::float32}, {GM3DConst::k_IPF001Name, DataType::uint8},
-    {GM3DConst::k_IPF010Name, DataType::uint8},         {GM3DConst::k_IPF100Name, DataType::uint8}};
-
 const std::map<std::string, size_t> k_NameToCompDimMap = {{GM3DConst::k_CompletenessName, 1}, {GM3DConst::k_GrainIdName, 1},  {GM3DConst::k_MaskName, 1},     {GM3DConst::k_PhaseIdName, 1},
                                                           {GM3DConst::k_RodriguesName, 3},    {GM3DConst::k_EulerZXZName, 3}, {GM3DConst::k_EulerZYZName, 3}, {GM3DConst::k_QuaternionName, 4},
                                                           {GM3DConst::k_IPF001Name, 3},       {GM3DConst::k_IPF010Name, 3},   {GM3DConst::k_IPF100Name, 3}};
@@ -31,20 +24,20 @@ const std::map<std::string, size_t> k_NameToCompDimMap = {{GM3DConst::k_Complete
 int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
 {
   // clang-format off
-  std::array<size_t, 32> sgpg =   {1, 2, 3, 6, 10, 16, 25, 47, 75, 81, 83, 89, 99, 111, 123, 143, 147, 149, 156, 162, 168, 174, 175, 177, 183, 187, 191, 195, 200, 207, 215, 221};
-  std::array<size_t, 32> pgLaue = {1, 1, 2, 2, 2,  22, 22, 22, 4,  4,  4,  42, 42, 42,  42,  3,   3,   32,  32,  32,  6,   6,   6,   62,  62,  62,  62,  23,  23,  43,  43,  43};
+  std::array<size_t, 32> spaceGroup =   {1, 2, 3, 6, 10, 16, 25, 47, 75, 81, 83, 89, 99, 111, 123, 143, 147, 149, 156, 162, 168, 174, 175, 177, 183, 187, 191, 195, 200, 207, 215, 221};
+  std::array<size_t, 32> pointGroupLaue = {1, 1, 2, 2, 2,  22, 22, 22, 4,  4,  4,  42, 42, 42,  42,  3,   3,   32,  32,  32,  6,   6,   6,   62,  62,  62,  62,  23,  23,  43,  43,  43};
   // clang-format on
-  size_t pgIndex = sgpg.size() - 1;
-  for(size_t i = 0; i < sgpg.size(); i++)
+  size_t pgIndex = spaceGroup.size() - 1;
+  for(size_t i = 0; i < spaceGroup.size(); i++)
   {
-    if(sgpg[i] > spaceGroupId)
+    if(spaceGroup[i] > spaceGroupId)
     {
       pgIndex = i - 1;
       break;
     }
   }
 
-  size_t value = pgLaue.at(pgIndex);
+  size_t value = pointGroupLaue.at(pgIndex);
   switch(value)
   {
   case 1: // TriclinicOps
@@ -79,6 +72,10 @@ GrainMapperReader::GrainMapperReader(const std::string& filePath, bool readDctDa
 , m_ReadAbsorptionData(readAbsorptionData)
 , m_FileName(filePath)
 {
+  m_NameToDataTypeMap = {{GM3DConst::k_CompletenessName, DataType::float32}, {GM3DConst::k_GrainIdName, DataType::int32},      {GM3DConst::k_MaskName, DataType::uint8},
+                         {GM3DConst::k_PhaseIdName, DataType::uint8},        {GM3DConst::k_RodriguesName, DataType::float32},  {GM3DConst::k_EulerZXZName, DataType::float32},
+                         {GM3DConst::k_EulerZYZName, DataType::float32},     {GM3DConst::k_QuaternionName, DataType::float32}, {GM3DConst::k_IPF001Name, DataType::uint8},
+                         {GM3DConst::k_IPF010Name, DataType::uint8},         {GM3DConst::k_IPF100Name, DataType::uint8}};
 }
 
 GrainMapperReader::~GrainMapperReader() = default;
@@ -135,7 +132,7 @@ std::vector<float> GrainMapperReader::getAbsorptionCTOrigin() const
 
 std::map<std::string, DataType> GrainMapperReader::getNameToDataTypeMap() const
 {
-  return GrainMapper3DUtilities::k_NameToDataTypeMap;
+  return m_NameToDataTypeMap;
 }
 
 std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap() const
@@ -302,11 +299,56 @@ herr_t GrainMapperReader::findAvailableDctDatasets(hid_t labDctGid)
   }
   auto groupSentinel = H5Support::H5ScopedGroupSentinel(dataGid, true);
 
-  for(const auto& entry : GrainMapper3DUtilities::k_NameToDataTypeMap)
+  for(auto& entry : m_NameToDataTypeMap)
   {
     if(H5Lite::datasetExists(dataGid, entry.first))
     {
       m_AvailableDCTDatasets.push_back(entry.first);
+      hid_t dataTypeIdentifier = H5Lite::getDatasetType(dataGid, entry.first);
+
+      // These are slightly out of the normal order for optimization reasons. We know
+      // as of this implementation that the more prevalent data types in the GrainMapper
+      // file are float, int32 and uint8. The others are just here for completeness.
+      if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_FLOAT) > 0)
+      {
+        entry.second = DataType::float32;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT8) > 0 || dataTypeIdentifier == H5T_STRING)
+      {
+        entry.second = DataType::uint8;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT32) > 0)
+      {
+        entry.second = DataType::int32;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT8) > 0)
+      {
+        entry.second = DataType::int8;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT16) > 0)
+      {
+        entry.second = DataType::int16;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT16) > 0)
+      {
+        entry.second = DataType::uint16;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT32) > 0)
+      {
+        entry.second = DataType::uint32;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT64) > 0)
+      {
+        entry.second = DataType::int64;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT64) > 0)
+      {
+        entry.second = DataType::uint64;
+      }
+      else if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_DOUBLE) > 0)
+      {
+        entry.second = DataType::float64;
+      }
     }
   }
   return 0;

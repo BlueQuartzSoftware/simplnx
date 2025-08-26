@@ -25,6 +25,9 @@ order will be changed from wxyz to xyzw and the conjugate will be computed.
 PhaseId data will be converted to "int32" (as an option) to make that data immediately compatible
 with DREAM3D's filters.
 
+IPFColors can be stored as either uint8 or float values. If you want to immediately view the IPF Colors then 
+the user should check the box for "Create Compatible IPF Color Data"
+
 ## Special Notes
 
 The IPF colors (if any) that are read in from the file are *NOT* compatible with the IPF 

@@ -116,6 +116,8 @@ private:
 
   std::vector<std::string> m_AvailableDCTDatasets;
   std::vector<GrainMapperPhase> m_PhaseInfos;
+
+  std::map<std::string, nx::core::DataType> m_NameToDataTypeMap;
 };
 
 }; // namespace GrainMapper3DUtilities
