@@ -34,11 +34,11 @@ class DataArray : public IDataArray
 
 public:
   using store_type = AbstractDataStore<T>;
-  using value_type = store_type::value_type;
-  using reference = store_type::reference;
+  using value_type = typename store_type::value_type;
+  using reference = typename store_type::reference;
   using weak_store = std::weak_ptr<store_type>;
-  using Iterator = store_type::Iterator;
-  using ConstIterator = store_type::ConstIterator;
+  using Iterator = typename store_type::Iterator;
+  using ConstIterator = typename store_type::ConstIterator;
 
   /**
    * @brief Attempts to create a DataArray with the specified values and add
