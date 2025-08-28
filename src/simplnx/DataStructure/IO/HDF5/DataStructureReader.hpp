@@ -2,9 +2,8 @@
 
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
-
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
-
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core::HDF5
@@ -39,7 +38,7 @@ public:
 
   static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
-  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath, IDataAction::Mode mode);
 
   /**
    * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupIO.
@@ -94,7 +93,7 @@ protected:
    */
   std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
 
-  void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
+  void loadRequiredData(const nx::core::HDF5::FileIO& fileReader, IDataAction::Mode mode);
 
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;

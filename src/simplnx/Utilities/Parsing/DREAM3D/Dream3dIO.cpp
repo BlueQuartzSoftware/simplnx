@@ -2003,7 +2003,7 @@ Result<std::vector<std::shared_ptr<DataObject>>> DREAM3D::ImportSelectDataObject
   return {dataObjects};
 }
 
-Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader)
+Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, IDataAction::Mode mode)
 {
   auto dataPtr = dataStructure.getSharedData(dataPath);
   if(dataPtr == nullptr)
@@ -2014,7 +2014,7 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const Data
   const auto fileVersion = GetFileVersion(fileReader);
   if(fileVersion == k_CurrentFileVersion)
   {
-    return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
+    return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath, mode);
   }
   else if(fileVersion == k_LegacyFileVersion)
   {

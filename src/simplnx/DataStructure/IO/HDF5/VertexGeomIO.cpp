@@ -27,7 +27,7 @@ Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const 
   return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geom = dataStructure.getDataAs<VertexGeom>(dataPath);
   if(geom == nullptr)

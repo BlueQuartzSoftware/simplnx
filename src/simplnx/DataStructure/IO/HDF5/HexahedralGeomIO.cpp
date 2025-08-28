@@ -27,7 +27,7 @@ Result<> HexahedralGeomIO::readData(DataStructureReader& structureReader, const 
   return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> HexahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> HexahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geometry = dataStructure.getDataAs<HexahedralGeom>(dataPath);
   if(geometry == nullptr)

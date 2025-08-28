@@ -27,7 +27,7 @@ Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_
   return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geom = dataStructure.getDataAs<QuadGeom>(dataPath);
   if(geom == nullptr)

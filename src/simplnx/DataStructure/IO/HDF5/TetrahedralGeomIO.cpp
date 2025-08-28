@@ -28,7 +28,7 @@ Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const
   return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geom = dataStructure.getDataAs<TetrahedralGeom>(dataPath);
   if(geom == nullptr)

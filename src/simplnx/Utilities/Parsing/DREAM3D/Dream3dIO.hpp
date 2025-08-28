@@ -122,7 +122,7 @@ SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(cons
 
 SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
 
-SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, IDataAction::Mode mode);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
