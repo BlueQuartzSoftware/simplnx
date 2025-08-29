@@ -108,9 +108,9 @@ public:
     origin[2] = static_cast<float32>(bounds[2]) - buffer;
 
     std::array<usize, 3> dims = {};
-    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]);
-    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]);
-    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]);
+    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 1;
+    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 1;
+    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 1;
 
     // Fill the BitMap
     {
@@ -189,17 +189,17 @@ public:
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] |= xMask;
+        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] |= yMask;
+        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
 
         usize zBytePos = zPos + relativeGridBytePos;
         uint8 zMask = 1;
         zMask <<= bitGridOffset;
-        zTable.gridTable[zBytePos] |= zMask;
+        zTable.gridTable[zBytePos] = zMask | zTable.gridTable[zBytePos];
       }
     }
   }
@@ -230,9 +230,8 @@ public:
       }
 
       // Determine the voxel
-      usize pointIdx = i * inputArray.getNumberOfComponents();
-      float32 xVal = inputArray.getValue((pointIdx * 2) + 0);
-      float32 yVal = inputArray.getValue((pointIdx * 2) + 1);
+      float32 xVal = inputArray.getValue((i * 2) + 0);
+      float32 yVal = inputArray.getValue((i * 2) + 1);
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -251,8 +250,8 @@ public:
     origin[1] = static_cast<float32>(bounds[1]) - buffer;
 
     std::array<usize, 2> dims = {};
-    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]);
-    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]);
+    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 1;
+    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 1;
 
     // Fill the BitMap
     {
@@ -267,6 +266,7 @@ public:
           {
             continue;
           }
+
           // Determine the voxel
           usize pointIdx = tup * inputArray.getNumberOfComponents();
           usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
@@ -323,12 +323,12 @@ public:
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] |= xMask;
+        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] |= yMask;
+        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
       }
     }
   }
@@ -347,15 +347,15 @@ void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace,
   {
     for(usize i = 0; i < selectedTable.rowLength; i++)
     {
-      tempGridMask[i] |= selectedTable.gridTable[(pos * selectedTable.rowLength) + i];
+      tempGridMask[i] = tempGridMask[i] | selectedTable.gridTable[(pos * selectedTable.rowLength) + i];
     }
   }
 
   // Narrow down search by overlaying this dimension's search space
   // onto previous dimensions search space
-  for(usize i = 0; selectedTable.rowLength; i++)
+  for(usize i = 0; i < selectedTable.rowLength; i++)
   {
-    outputGridMask[i] &= tempGridMask[i];
+    outputGridMask[i] = tempGridMask[i] & outputGridMask[i];
   }
 }
 
@@ -370,7 +370,7 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
   std::vector<usize> neighborGridIds = {};
 
   // check adjacent positions in the table by sqrt(Dimensions) for grid ids
-  std::vector<uint8> finalGridMask(hyperGridBitMap.gridVoxels.size(), std::numeric_limits<uint8>::max());
+  std::vector<uint8> finalGridMask(hyperGridBitMap.xTable.rowLength, std::numeric_limits<uint8>::max());
 
   // The search loops to find xyzPos can be cut if we opt to store the
   // positions for each grid cell within each cell or in a separate vector
@@ -460,25 +460,7 @@ struct ClusterForest
     for(usize i = 0; i < clusterForestNodes.size(); i++)
     {
       clusterForestNodes[i].parent = i;
-      clusterForestNodes[i].clusterId = i;
-    }
-  }
-
-  void cleanup()
-  {
-    std::vector<usize> clusters = {};
-
-    for(usize i = 0; i < clusterForestNodes.size(); i++)
-    {
-      if(clusterForestNodes[i].parent == i)
-      {
-        clusters.push_back(i);
-      }
-    }
-
-    for(usize i = 0; i < clusters.size(); i++)
-    {
-      clusterForestNodes[clusters[i]].clusterId = static_cast<int32>(i + 1);
+      clusterForestNodes[i].clusterId = static_cast<int32>(i + 1);
     }
   }
 
@@ -499,7 +481,7 @@ struct ClusterForest
 
   void mergeLRC(const std::vector<usize>& gridIds)
   {
-    if(gridIds.empty())
+    if(gridIds.size() < 2)
     {
       return;
     }
@@ -551,6 +533,10 @@ public:
         clusterForest.coreGridIds.push_back(i);
       }
     }
+    if(clusterForest.coreGridIds.empty())
+    {
+      return;
+    }
 
     // Sort Grids to reduce bias
     switch(parseOrder)
@@ -593,45 +579,168 @@ public:
     }
     }
 
-    clusterForest.initialize(clusterForest.coreGridIds.size());
+    /** This is to validate NN Query for debugging
+     * REMOVE LATER
+     */
+//        clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
+//        usize targetCoreGrid = 0;
+//        std::vector<usize> neighborGrids = NeighborGridQuery(clusterForest.coreGridIds[targetCoreGrid], hyperGridBitMap);
+//        for(const usize gridId : neighborGrids)
+//        {
+//          if(canMerge(clusterForest.coreGridIds[targetCoreGrid], gridId))
+//          {
+//            clusterForest.clusterForestNodes[gridId].parent = clusterForest.coreGridIds[targetCoreGrid];
+//          }
+//        }
+//
+//        clusterForest.clusterForestNodes[clusterForest.coreGridIds[targetCoreGrid]].clusterId = 1;
+//
+//        for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
+//        {
+//          if(i == clusterForest.coreGridIds[targetCoreGrid])
+//          {
+//            continue;
+//          }
+//          clusterForest.clusterForestNodes[i].clusterId = 0;
+//        }
+
+    clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     for(usize i = 0; i < clusterForest.coreGridIds.size(); i++)
     {
       std::vector<usize> neighborGrids = NeighborGridQuery(clusterForest.coreGridIds[i], hyperGridBitMap);
 
       std::vector<usize> cluster = {};
-      cluster.push_back(i);
+      cluster.push_back(clusterForest.coreGridIds[i]);
       for(const usize gridId : neighborGrids)
       {
-        if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints)
-        {
-          // Cluster forest only handles Core Grids and this isn't so skip
-          continue;
-        }
-
-        if(clusterForest.infer(clusterForest.coreGridIds[i], clusterForest.coreGridIds[gridId]))
+        if(clusterForest.infer(clusterForest.coreGridIds[i], gridId))
         {
           continue;
         }
 
-        if(canMerge(clusterForest.coreGridIds[i], clusterForest.coreGridIds[gridId]))
+        if(canMerge(clusterForest.coreGridIds[i], gridId))
         {
-          cluster.push_back(gridId);
+          // Check if it's a border grid and check if its unvisited
+          if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
+          {
+            // Border grids can not be their own cluster, which means this
+            // is unvisited currently so merge it into the current cluster
+            clusterForest.clusterForestNodes[gridId].parent = clusterForest.coreGridIds[i];
+          }
+          else
+          {
+            // Either this is a density-reachable core grid
+            // OR
+            // This border grid belongs to another cluster, but the fact it is
+            // reachable here means that the two clusters are one and need to
+            // be merged
+            cluster.push_back(gridId);
+          }
         }
       }
 
       clusterForest.mergeLRC(cluster);
     }
+
+    /**
+     * Re-evaluate core point labeling to account for cluster expansion.
+     * Cluster Expansion:
+     * Starting from an unvisited core point, a new cluster is initiated.
+     * All density-reachable points from this core point (including other core points and border points) are added to this cluster.
+     * This process recursively expands the cluster by considering newly added core points and their density-reachable points.
+     */
+
+    // Now determine if non-core grids are close enough to a cluster to be border else noise
+    for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+    {
+      if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
+      {
+        std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
+
+        for(const usize gridId : neighborGrids)
+        {
+          if(clusterForest.infer(i, gridId))
+          {
+            continue;
+          }
+
+          if(canMerge(i, gridId))
+          {
+            usize activeParent = clusterForest.findClusterRoot(i);
+            usize neighborGridParent = clusterForest.findClusterRoot(gridId);
+            // Check if search grid has been visited
+            if(activeParent == i)
+            {
+              if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+              {
+                // Border grids can not be their own cluster, which means this
+                // is unvisited currently;
+                continue;
+              }
+              clusterForest.clusterForestNodes[i].parent = neighborGridParent;
+            }
+            else
+            {
+              if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+              {
+                clusterForest.clusterForestNodes[gridId].parent = activeParent;
+              }
+              else
+              {
+                // Infer returning false means that they can't have the same cluster id so else must be greater than
+                if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
+                {
+                  clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
+                }
+                else
+                {
+                  clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // clean up cluster forest
+    std::vector<usize> clusters = {};
+    for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
+    {
+      if(clusterForest.clusterForestNodes[i].parent == i)
+      {
+        if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
+        {
+          // Only core nodes can be their own parent
+          clusters.push_back(i);
+        }
+        else
+        {
+          // grid unreachable, label noise
+          clusterForest.clusterForestNodes[i].clusterId = 0;
+        }
+      }
+    }
+
+    for(usize i = 0; i < clusters.size(); i++)
+    {
+      clusterForest.clusterForestNodes[clusters[i]].clusterId = static_cast<int32>(i + 1);
+    }
   }
 
   void label(AbstractDataStore<int32>& fIdsDataStore)
   {
-    clusterForest.cleanup();
-
-    fIdsDataStore.fill(0);
-    for(usize coreGridIdx = 0; coreGridIdx < clusterForest.coreGridIds.size(); coreGridIdx++)
+    if(clusterForest.clusterForestNodes.empty())
     {
-      int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(coreGridIdx)].clusterId;
-      for(usize pointIdx : hyperGridBitMap.gridVoxels[clusterForest.coreGridIds[coreGridIdx]])
+      return;
+    }
+
+    // label
+    fIdsDataStore.fill(0);
+    for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
+    {
+      int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
+      for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
       {
         fIdsDataStore.setValue(pointIdx, featureId);
       }
@@ -657,12 +766,12 @@ private:
 
     while(true)
     {
-      while(hyperGridBitMap.gridVoxels[sorted[front]].size() < threshold)
+      while(hyperGridBitMap.gridVoxels[sorted[front]].size() > threshold)
       {
         front++;
       }
 
-      while(hyperGridBitMap.gridVoxels[sorted[back]].size() > threshold)
+      while(hyperGridBitMap.gridVoxels[sorted[back]].size() < threshold)
       {
         back--;
       }
