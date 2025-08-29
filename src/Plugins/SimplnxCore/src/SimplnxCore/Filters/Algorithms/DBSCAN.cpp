@@ -773,12 +773,12 @@ private:
 
     while(true)
     {
-      while(hyperGridBitMap.gridVoxels[sorted[front]].size() > threshold)
+      while(hyperGridBitMap.gridVoxels[sorted[front]].size() < threshold)
       {
         front++;
       }
 
-      while(hyperGridBitMap.gridVoxels[sorted[back]].size() < threshold)
+      while(hyperGridBitMap.gridVoxels[sorted[back]].size() > threshold)
       {
         back--;
       }
