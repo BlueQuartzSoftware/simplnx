@@ -308,6 +308,7 @@ set(CoreParameters
   BoolParameter
   CalculatorParameter
   ChoicesParameter
+  CropGeometryParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
   DataObjectNameParameter
