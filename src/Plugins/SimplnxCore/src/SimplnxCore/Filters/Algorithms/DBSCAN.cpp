@@ -14,6 +14,23 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * Definitions:
+ * - Core Grid - A grid that contains more than the minPoints
+ * - Border Grid - A grid that contains less than the minPoints,
+ * but is density-reachable from an existing cluster
+ * - Noise Grid - A grid with less than minPoints, and is unreachable
+ * from a valid cluster
+ */
+
+/**
+ * @brief This object packs a sparse matrix into a vector of uint8s. It
+ * represents a singular dimension and must be used in tandem with another
+ * from each dimension in the input array.
+ *
+ * It stores a form of adjacency matrix that is utilized as a look up
+ * table for Nearest Neighbor queries.
+ */
 struct GridBitMap
 {
   std::vector<uint8> gridTable = {};
@@ -25,12 +42,17 @@ struct GridBitMap
   usize rowLength = 0;
 };
 
+/**
+ * @brief This object contains a function for creating GridBitMaps that handles
+ * all the setup for the object. The decision to make it a Factory object comes
+ * from the need to assemble multiple depending on the dimensions of input.
+ */
 struct GridBitMapFactory
 {
   /**
    * Note here we can pack it slightly tighter by not adding buffers at the end of each row (for grid counts not divisible by 8)
    * but this will make calculations more difficult and costly during neighbor search
-   * At most this saves 7/8s of a byte per position worth of space for significant calculation
+   * At most this saves 7/8s of a byte per dimension worth of space for significant calculation
    * and parse cost incursion
    */
   static GridBitMap createGridBitMap(usize numGrids, usize numPositons)
@@ -452,6 +474,10 @@ struct ClusterForest
 {
   std::vector<ClusterNode> clusterForestNodes = {};
 
+  /**
+   * @brief Primes the cluster forest object
+   * @param numGrids the total number of gridVoxels containing points (not just core grids)
+   */
   void initialize(usize numGrids)
   {
     clusterForestNodes.resize(numGrids);
@@ -473,11 +499,30 @@ struct ClusterForest
     return findClusterRoot(clusterForestNodes[gridId].parent);
   }
 
+  /**
+   * @brief Checks if grids are already in the same cluster
+   * Note: NO BOUNDS CHECKING
+   * @param pGridId a valid grid id
+   * @param qGridId a valid grid id
+   * @return bool if true they are in the same cluster
+   */
   bool infer(usize pGridId, usize qGridId)
   {
     return findClusterRoot(pGridId) == findClusterRoot(qGridId);
   }
 
+  /**
+   * @brief This function merges every supplied grid into the cluster with the
+   * lowest cluster id.
+   *
+   * Note: DO NOT PASS IN A BORDER GRID THAT HAS ITSELF AS THE PARENT. This will
+   * collapse all your clusters into unlabeled category. Ids to border grids that
+   * have a valid Core Grid parent are fine.
+   *
+   * The best way to avoid collapse is never make a border grid with itself as
+   * the parent, the parent of another border grid
+   * @param gridIds - a vector of ids representing grids with valid parents to be merged
+   */
   void mergeLRC(const std::vector<usize>& gridIds)
   {
     if(gridIds.size() < 2)
@@ -522,7 +567,7 @@ public:
   {
   }
 
-  void cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
+  Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
     // Identify Core Grids
     std::vector<usize> coreGridIds = {};
@@ -535,7 +580,7 @@ public:
     }
     if(coreGridIds.empty())
     {
-      return;
+      return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
     // Sort Grids to reduce bias
@@ -660,13 +705,13 @@ public:
                 }
                 else
                 {
-                  // Infer returning false means that they can't have the same cluster id so else must be greater than
                   if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
                   {
                     clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
                   }
                   else
                   {
+                    // Infer returning false means that they can't have the same cluster id so must be greater than
                     clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
                   }
                 }
@@ -701,13 +746,15 @@ public:
     {
       clusterForest.clusterForestNodes[clusters[i]].clusterId = static_cast<int32>(i + 1);
     }
+
+    return {};
   }
 
-  void label(AbstractDataStore<int32>& fIdsDataStore)
+  Result<> label(AbstractDataStore<int32>& fIdsDataStore)
   {
     if(clusterForest.clusterForestNodes.empty())
     {
-      return;
+      return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
     // label
@@ -720,6 +767,8 @@ public:
         fIdsDataStore.setValue(pointIdx, featureId);
       }
     }
+
+    return {};
   }
 
 private:
@@ -794,27 +843,48 @@ private:
   }
 };
 
+template <class AlgorithmT, typename T>
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+{
+  messageHelper.sendMessage("Partitioning the input data...");
+  AlgorithmT algorithm = AlgorithmT(inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+
+  if(shouldCancel)
+  {
+    return {};
+  }
+
+  messageHelper.sendMessage("Beginning clustering...");
+  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  if(result.invalid() || !result.warnings().empty())
+  {
+    // If the result has warnings in it the cluster forest is
+    // ill-formed, so skip labeling step.
+    return result;
+  }
+
+  if(shouldCancel)
+  {
+    return {};
+  }
+
+  messageHelper.sendMessage("Labeling - Filling the cluster ids...");
+  return algorithm.label(featureIds.getDataStoreRef());
+}
+
 struct DBSCANFunctor
 {
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds)
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
     if(inputArray.getNumberOfComponents() == 2)
     {
-      GDCF<HyperGridBitMap2D, T> algorithm = GDCF<HyperGridBitMap2D, T>(inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
-
-      algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
-
-      algorithm.label(featureIds.getDataStoreRef());
+      return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
     }
     else if(inputArray.getNumberOfComponents() == 3)
     {
-      GDCF<HyperGridBitMap3D, T> algorithm = GDCF<HyperGridBitMap3D, T>(inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
-
-      algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
-
-      algorithm.label(featureIds.getDataStoreRef());
+      return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
     }
     else
     {
@@ -864,12 +934,12 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds);
+  Result<> result = ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
 
   messageHelper.sendMessage("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(maxCluster + 1)});
 
-  return {};
+  return result;
 }
