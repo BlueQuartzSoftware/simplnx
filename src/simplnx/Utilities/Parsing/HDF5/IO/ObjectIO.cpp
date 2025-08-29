@@ -223,7 +223,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   if(isVariableString == 1)
   {
     H5Aclose(attribId);
-
+    H5Tclose(attrTypeId);
     data.clear();
     std::string ss = fmt::format("Cannot read attribute '{}'. Invalid string type.", attributeName);
     return MakeErrorResult<std::string>(-440, ss);
@@ -254,6 +254,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
     }
   }
   H5Aclose(attribId);
+  H5Tclose(attrTypeId);
   return returnResult;
 }
 
@@ -303,12 +304,13 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
 
 usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
 {
-  size_t typeSize = H5Tget_size(H5Aget_type(attribId));
+  hid_t attribIdTypeId = H5Aget_type(attribId);
+  size_t typeSize = H5Tget_size(attribIdTypeId);
   std::vector<hsize_t> dims;
   hid_t dataspaceId = H5Aget_space(attribId);
   if(dataspaceId >= 0)
   {
-    Type type = getTypeFromId(H5Aget_type(attribId));
+    Type type = getTypeFromId(attribIdTypeId);
     if(type == Type::string)
     {
       size_t rank = 1;
@@ -323,6 +325,8 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
       herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
       if(error < 0)
       {
+        H5Tclose(attribIdTypeId);
+        H5Sclose(dataspaceId);
         std::cout << "Error Getting Attribute dims" << std::endl;
         return 0;
       }
@@ -331,6 +335,8 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
       dims.resize(rank);
       std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
     }
+    H5Tclose(attribIdTypeId);
+    H5Sclose(dataspaceId);
   }
 
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());

@@ -177,11 +177,12 @@ public:
     {
       return MakeErrorResult<std::vector<T>>(attribId, fmt::format("Error Opening Attribute '{}' within '{}'", attributeName, getName()));
     }
-    hid_t typeId = H5Aget_type(attribId);
+    hid_t attribIdType = H5Aget_type(attribId);
     std::vector<T> values(getNumElementsInAttribute(attribId));
 
-    herr_t error = H5Aread(attribId, typeId, values.data());
+    herr_t error = H5Aread(attribId, attribIdType, values.data());
     H5Aclose(attribId);
+    H5Tclose(attribIdType);
     if(error != 0)
     {
       std::string ss = fmt::format("Error Reading Vector Attribute '{}'.", attributeName);
