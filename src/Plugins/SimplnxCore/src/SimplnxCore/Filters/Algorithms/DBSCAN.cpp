@@ -3,6 +3,7 @@
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
@@ -101,16 +102,16 @@ public:
     float32 sideLength = epsilon / std::sqrt(Dimensions);
     std::array<float32, 3> spacing = {sideLength, sideLength, sideLength};
 
-    float32 buffer = sideLength * 0.5f;
+    float32 buffer = sideLength;
     std::array<float32, 3> origin = {};
     origin[0] = static_cast<float32>(bounds[0]) - buffer;
     origin[1] = static_cast<float32>(bounds[1]) - buffer;
     origin[2] = static_cast<float32>(bounds[2]) - buffer;
 
     std::array<usize, 3> dims = {};
-    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 1;
-    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 1;
-    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 1;
+    dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 2;
+    dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 2;
+    dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 2;
 
     // Fill the BitMap
     {
@@ -244,14 +245,14 @@ public:
     float32 sideLength = epsilon / std::sqrt(Dimensions);
     std::array<float32, 2> spacing = {sideLength, sideLength};
 
-    float32 buffer = sideLength * 0.5f;
+    float32 buffer = sideLength;
     std::array<float32, 2> origin = {};
     origin[0] = static_cast<float32>(bounds[0]) - buffer;
     origin[1] = static_cast<float32>(bounds[1]) - buffer;
 
     std::array<usize, 2> dims = {};
-    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 1;
-    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 1;
+    dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
+    dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
 
     // Fill the BitMap
     {
@@ -582,27 +583,27 @@ public:
     /** This is to validate NN Query for debugging
      * REMOVE LATER
      */
-//        clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-//        usize targetCoreGrid = 0;
-//        std::vector<usize> neighborGrids = NeighborGridQuery(clusterForest.coreGridIds[targetCoreGrid], hyperGridBitMap);
-//        for(const usize gridId : neighborGrids)
-//        {
-//          if(canMerge(clusterForest.coreGridIds[targetCoreGrid], gridId))
-//          {
-//            clusterForest.clusterForestNodes[gridId].parent = clusterForest.coreGridIds[targetCoreGrid];
-//          }
-//        }
-//
-//        clusterForest.clusterForestNodes[clusterForest.coreGridIds[targetCoreGrid]].clusterId = 1;
-//
-//        for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
-//        {
-//          if(i == clusterForest.coreGridIds[targetCoreGrid])
-//          {
-//            continue;
-//          }
-//          clusterForest.clusterForestNodes[i].clusterId = 0;
-//        }
+    //        clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
+    //        usize targetCoreGrid = 0;
+    //        std::vector<usize> neighborGrids = NeighborGridQuery(clusterForest.coreGridIds[targetCoreGrid], hyperGridBitMap);
+    //        for(const usize gridId : neighborGrids)
+    //        {
+    //          if(canMerge(clusterForest.coreGridIds[targetCoreGrid], gridId))
+    //          {
+    //            clusterForest.clusterForestNodes[gridId].parent = clusterForest.coreGridIds[targetCoreGrid];
+    //          }
+    //        }
+    //
+    //        clusterForest.clusterForestNodes[clusterForest.coreGridIds[targetCoreGrid]].clusterId = 1;
+    //
+    //        for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
+    //        {
+    //          if(i == clusterForest.coreGridIds[targetCoreGrid])
+    //          {
+    //            continue;
+    //          }
+    //          clusterForest.clusterForestNodes[i].clusterId = 0;
+    //        }
 
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     for(usize i = 0; i < clusterForest.coreGridIds.size(); i++)
@@ -651,57 +652,63 @@ public:
      */
 
     // Now determine if non-core grids are close enough to a cluster to be border else noise
-    for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+    usize operations = 0;
+    do
     {
-      if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
+      operations = 0;
+      for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
-        std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
-
-        for(const usize gridId : neighborGrids)
+        if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
         {
-          if(clusterForest.infer(i, gridId))
-          {
-            continue;
-          }
+          std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
 
-          if(canMerge(i, gridId))
+          for(const usize gridId : neighborGrids)
           {
-            usize activeParent = clusterForest.findClusterRoot(i);
-            usize neighborGridParent = clusterForest.findClusterRoot(gridId);
-            // Check if search grid has been visited
-            if(activeParent == i)
+            if(clusterForest.infer(i, gridId))
             {
-              if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
-              {
-                // Border grids can not be their own cluster, which means this
-                // is unvisited currently;
-                continue;
-              }
-              clusterForest.clusterForestNodes[i].parent = neighborGridParent;
+              continue;
             }
-            else
+
+            if(canMerge(i, gridId))
             {
-              if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+              usize activeParent = clusterForest.findClusterRoot(i);
+              usize neighborGridParent = clusterForest.findClusterRoot(gridId);
+              // Check if search grid has been visited
+              if(activeParent == i)
               {
-                clusterForest.clusterForestNodes[gridId].parent = activeParent;
+                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+                {
+                  // Border grids can not be their own cluster, which means this
+                  // is unvisited currently;
+                  continue;
+                }
+                clusterForest.clusterForestNodes[i].parent = neighborGridParent;
               }
               else
               {
-                // Infer returning false means that they can't have the same cluster id so else must be greater than
-                if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
+                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
-                  clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
+                  clusterForest.clusterForestNodes[gridId].parent = activeParent;
                 }
                 else
                 {
-                  clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
+                  // Infer returning false means that they can't have the same cluster id so else must be greater than
+                  if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
+                  {
+                    clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
+                  }
+                  else
+                  {
+                    clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
+                  }
                 }
               }
+              operations++;
             }
           }
         }
       }
-    }
+    } while(operations > 0);
 
     // clean up cluster forest
     std::vector<usize> clusters = {};
@@ -819,14 +826,102 @@ private:
   }
 };
 
+template <typename T>
+void MakeEdgeGeom(DataStructure& dataStructure, float32 epsilon, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::string&& name)
+{
+  // Load array bounds
+  std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
+                                   std::numeric_limits<float32>::quiet_NaN()};
+  for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
+  {
+    if(!mask->isTrue(i))
+    {
+      continue;
+    }
+
+    // Determine the voxel
+    float32 xVal = inputArray.getValue((i * 2) + 0);
+    float32 yVal = inputArray.getValue((i * 2) + 1);
+
+    bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
+    bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
+
+    bounds[2] = std::isnan(bounds[2]) ? xVal : std::max(bounds[2], xVal);
+    bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
+  }
+
+  // Grid Info
+  float32 sideLength = epsilon / std::sqrt(2);
+  std::array<float32, 2> spacing = {sideLength, sideLength};
+
+  float32 buffer = sideLength;
+  std::array<float32, 2> origin = {};
+  origin[0] = static_cast<float32>(bounds[0]) - buffer;
+  origin[1] = static_cast<float32>(bounds[1]) - buffer;
+
+  std::array<usize, 2> dims = {};
+  dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
+  dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
+
+  auto* edgeGeom = EdgeGeom::Create(dataStructure, name);
+  std::string sharedVertListName = "SharedVertList";
+  size_t numVerts = dims[0] * dims[1];
+  size_t numComps = 3;
+  IGeometry::SharedVertexList* vertices = Float32Array::CreateWithStore<DataStore<float>>(dataStructure, sharedVertListName, {numVerts}, {numComps}, edgeGeom->getId());
+  edgeGeom->setVertices(*vertices);
+
+  std::string sharedEdgeListName = "SharedEdgeList";
+  size_t numEdges = ((dims[0] - 1) * dims[1]) + ((dims[1] - 1) * dims[0]);
+  size_t numEdgeComps = 2;
+  IGeometry::SharedEdgeList* edges = IGeometry::SharedEdgeList::CreateWithStore<DataStore<EdgeGeom::MeshIndexType>>(dataStructure, sharedEdgeListName, {numEdges}, {numEdgeComps}, edgeGeom->getId());
+  edgeGeom->setEdgeList(*edges);
+
+  auto& vertList = edgeGeom->getVerticesRef();
+  auto& edgeList = edgeGeom->getEdgesRef();
+  for(uint64 j = 0; j < dims[1]; j++)
+  {
+    usize yStride = j * dims[0];
+    for(uint64 k = 0; k < dims[0]; k++)
+    {
+      vertList.setValue(((yStride + k) * 3) + 0, k * spacing[0] + origin[0]);
+      vertList.setValue(((yStride + k) * 3) + 1, j * spacing[1] + origin[1]);
+      vertList.setValue(((yStride + k) * 3) + 2, 0);
+    }
+  }
+
+  for(uint64 j = 0; j < dims[1]; j++)
+  {
+    usize yStride = j * dims[0];
+    for(uint64 k = 0; k < dims[0] - 1; k++)
+    {
+      edgeList.setValue(((yStride + k) * 2) + 0, yStride + k);
+      edgeList.setValue(((yStride + k) * 2) + 1, yStride + k + 1);
+    }
+  }
+
+  usize offset = dims[1] * (dims[0] - 1);
+  for(uint64 j = 0; j < dims[1] - 1; j++)
+  {
+    usize yStride = j * dims[0];
+    for(uint64 k = 0; k < dims[0]; k++)
+    {
+      edgeList.setValue(((offset + yStride + k) * 2) + 0, yStride + k);
+      edgeList.setValue(((offset + yStride + k) * 2) + 1, ((j + 1) * dims[0]) + k);
+    }
+  }
+}
+
 struct DBSCANFunctor
 {
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds)
+  Result<> operator()(DataStructure& dataStructure, const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                      Int32Array& featureIds)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
     if(inputArray.getNumberOfComponents() == 2)
     {
+      MakeEdgeGeom(dataStructure, inputValues->Epsilon, inputArray, mask, (clusterArray.getName() + " grid"));
+
       GDCF<HyperGridBitMap2D, T> algorithm = GDCF<HyperGridBitMap2D, T>(inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
 
       algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
@@ -889,7 +984,7 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds);
+  ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_DataStructure, m_InputValues, clusteringArray, maskCompare, featureIds);
 
   messageHelper.sendMessage("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
