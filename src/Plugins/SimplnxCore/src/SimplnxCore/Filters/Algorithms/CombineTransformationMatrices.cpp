@@ -11,10 +11,10 @@ using namespace nx::core;
 
 namespace
 {
-template <typename T>
-Eigen::Matrix<T, 4, 4, Eigen::RowMajor> CreateEigenMatrix(const AbstractDataStore<T>& dataStore)
+template <typename T, typename U>
+Eigen::Matrix<U, 4, 4, Eigen::RowMajor> CreateEigenMatrix(const AbstractDataStore<T>& dataStore)
 {
-  Eigen::Matrix<T, 4, 4, Eigen::RowMajor> matrix;
+  Eigen::Matrix<U, 4, 4, Eigen::RowMajor> matrix;
   matrix.fill(0);
   matrix << dataStore[0], dataStore[1], dataStore[2], dataStore[3], dataStore[4], dataStore[5], dataStore[6], dataStore[7], dataStore[8], dataStore[9], dataStore[10], dataStore[11], dataStore[12],
       dataStore[13], dataStore[14], dataStore[15];
@@ -32,30 +32,28 @@ struct MatrixOperationFunctor
     const auto& array1StoreRef = array1.getIDataStoreRefAs<StoreType>();
     const auto& array2StoreRef = array2.getIDataStoreRefAs<StoreType>();
 
-    auto eigenMatrix1 = CreateEigenMatrix<ScalarType>(array1StoreRef);
-    auto eigenMatrix2 = CreateEigenMatrix<ScalarType>(array2StoreRef);
-
-    MatrixType output = eigenMatrix1 * eigenMatrix2;
+    MatrixType output;
+    if constexpr(std::is_same_v<ScalarType, float32>)
+    {
+      // This exists because x64 and ARM architectures round floating point values
+      // differently during Eigen matrix multiplication, and this makes sure that we
+      // get consistent values on both architectures by doing the multiplication
+      // using float64 matrices and then casting back down to float32
+      using Float64MatrixType = Eigen::Matrix<float64, 4, 4, Eigen::RowMajor>;
+      auto eigenMatrix1 = CreateEigenMatrix<float32, float64>(array1StoreRef);
+      auto eigenMatrix2 = CreateEigenMatrix<float32, float64>(array2StoreRef);
+      Float64MatrixType float64Output = eigenMatrix1 * eigenMatrix2;
+      output = float64Output.cast<float32>();
+    }
+    else
+    {
+      auto eigenMatrix1 = CreateEigenMatrix<ScalarType, ScalarType>(array1StoreRef);
+      auto eigenMatrix2 = CreateEigenMatrix<ScalarType, ScalarType>(array2StoreRef);
+      output = eigenMatrix1 * eigenMatrix2;
+    }
 
     auto& dataStore = outputArray.getIDataStoreRefAs<StoreType>();
-
-    dataStore[0] = output(0, 0);
-    dataStore[1] = output(0, 1);
-    dataStore[2] = output(0, 2);
-    dataStore[3] = output(0, 3);
-    dataStore[4] = output(1, 0);
-    dataStore[5] = output(1, 1);
-    dataStore[6] = output(1, 2);
-    dataStore[7] = output(1, 3);
-    dataStore[8] = output(2, 0);
-    dataStore[9] = output(2, 1);
-    dataStore[10] = output(2, 2);
-    dataStore[11] = output(2, 3);
-    dataStore[12] = output(3, 0);
-    dataStore[13] = output(3, 1);
-    dataStore[14] = output(3, 2);
-    dataStore[15] = output(3, 3);
-
+    std::copy(output.data(), output.data() + output.size(), dataStore.begin());
     return {};
   }
 };

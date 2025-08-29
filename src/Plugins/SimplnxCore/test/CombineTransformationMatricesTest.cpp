@@ -354,24 +354,6 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   CompareGeometries(dataStructure, k_ExemplaryGeom3Path, k_CombinedGeom3Path);
   CompareGeometries(dataStructure, k_ExemplaryGeom4Path, k_CombinedGeom4Path);
 
-  auto exemplaryGeom = dataStructure.getDataAs<ImageGeom>(k_ExemplaryGeomPath);
-  auto combinedGeom = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
-  UnitTest::CompareImageGeometry(exemplaryGeom, combinedGeom);
-
-  REQUIRE_NOTHROW(exemplaryGeom->getCellDataRef());
-  REQUIRE_NOTHROW(combinedGeom->getCellDataRef());
-  auto exemplaryAM = exemplaryGeom->getCellDataRef();
-  auto combinedAM = combinedGeom->getCellDataRef();
-  REQUIRE(exemplaryAM.getShape() == combinedAM.getShape());
-
-  auto exemplaryCellArrayPath = k_ExemplaryGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
-  auto combinedCellArrayPath = k_CombinedGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(combinedCellArrayPath));
-  auto exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
-  auto combinedCellArray = dataStructure.getDataRefAs<UInt32Array>(combinedCellArrayPath);
-  UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, combinedCellArray);
-
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
