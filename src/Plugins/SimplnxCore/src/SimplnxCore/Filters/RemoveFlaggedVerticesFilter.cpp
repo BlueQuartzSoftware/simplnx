@@ -187,6 +187,15 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   {
     for(const auto& childPath : childPaths.value())
     {
+      // Specifically check if we are about to copy the original Shared Vertex List
+      // because we do not want to do that.
+      auto dataObjectId = dataStructure.getId(childPath);
+      if(dataObjectId == verticesId.value())
+      {
+        continue;
+      }
+
+      // If we got past that check, then keep going.
       const std::string copiedChildName = nx::core::StringUtilities::replace(childPath.toString(), vertexGeomPath.getTargetName(), reducedVertexPath.getTargetName());
       const DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
       if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
