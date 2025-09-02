@@ -15,6 +15,12 @@ using namespace nx::core;
 namespace
 {
 /**
+ * Implementation derived from: https://yliu.site/pub/GDCF_PR2019.pdf
+ * Citation:
+ * Thapana Boonchoo, Xiang Ao, Yang Liu, Weizhong Zhao, Fuzhen Zhuang, Qing He,
+ * Grid-based DBSCAN: Indexing and inference,
+ * https://doi.org/10.1016/j.patcog.2019.01.034.
+ *
  * Definitions:
  * - Core Grid - A grid that contains more than the minPoints
  * - Border Grid - A grid that contains less than the minPoints,
@@ -71,6 +77,13 @@ struct GridBitMapFactory
   }
 };
 
+/**
+ * @brief HyperGridBitMap is the superclass for two specializations of 2D and 3D. These
+ * read an input array to define a relevant regular grid. It bins the values in the input
+ * array into cells in the grid then compresses the stored grids to just the ones containing
+ * points (gridVoxels). It then builds several psuedo-adjacentcy maps to preserve the spatial
+ * relationship between grids along each dimension.
+ */
 class HyperGridBitMap
 {
 public:
