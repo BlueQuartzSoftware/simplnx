@@ -205,7 +205,11 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   }
   arrays.push_back(nodeTypesArrayPath);
 
-  dataStructure.validateNumberOfTuples(arrays);
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(arrays);
+  if(!tupleValidityCheck)
+  {
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
 
   // Create Geometry
   usize numFaces = triangleGeom.getNumberOfFaces();
