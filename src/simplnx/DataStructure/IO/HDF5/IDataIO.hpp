@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataFactory.hpp"
-
+#include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 namespace nx::core
@@ -40,7 +40,15 @@ public:
   virtual Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                             const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const = 0;
 
-  virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const;
+  /**
+   *
+   * @param dataStructure
+   * @param dataPath
+   * @param dataStructureGroup
+   * @param mode
+   * @return
+   */
+  virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const;
 
   /**
    * @brief Attempts to write a DataObject to HDF5.

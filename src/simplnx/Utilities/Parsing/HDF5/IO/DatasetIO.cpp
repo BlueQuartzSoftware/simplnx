@@ -627,9 +627,9 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
       return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyperslab.");
     }
 #else
-    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
+    if(H5Sselect_hyperslab(fileSpaceId.id, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
     {
-      return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyperslab.");
+      return MakeErrorResult(-1003, "DatasetReader error: Unable to select hyper slab.");
     }
 #endif
     memDims = std::vector<hsize_t>(count->begin(), count->end());
@@ -649,9 +649,9 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
       return MakeErrorResult(-1004, "DatasetReader error: Unable to select hyperslab.");
     }
 #else
-    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
+    if(H5Sselect_hyperslab(fileSpaceId.id, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
     {
-      return MakeErrorResult(-1004, "DatasetReader error: Unable to select hyperslab.");
+      return MakeErrorResult(-1004, "DatasetReader error: Unable to select hyper slab.");
     }
 #endif
     memDims = countRemaining;
@@ -667,9 +667,9 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
       return MakeErrorResult(-1005, "DatasetReader error: Unable to select hyperslab.");
     }
 #else
-    if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
+    if(H5Sselect_hyperslab(fileSpaceId.id, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
     {
-      return MakeErrorResult(-1005, "DatasetReader error: Unable to select hyperslab.");
+      return MakeErrorResult(-1005, "DatasetReader error: Unable to select hyper slab.");
     }
 #endif
     memDims = std::vector<hsize_t>(count->begin(), count->end());

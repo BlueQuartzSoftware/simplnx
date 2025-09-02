@@ -55,7 +55,7 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   return {};
 }
 
-Result<> IDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> IDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   return {};
 }

@@ -59,7 +59,7 @@ public:
         return std::make_shared<EmptyListStore<T>>(numTuples);
       }
 
-      auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
+      auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader, useEmptyDataStore ? IDataAction::Mode::Preflight : IDataAction::Mode::Execute);
       auto& numNeighborsStore = *numNeighborsPtr.get();
 
       auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
@@ -130,7 +130,7 @@ public:
    * @param dataStructureReader
    * @return Result<>
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup, IDataAction::Mode mode) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -149,7 +149,7 @@ public:
     numNeighborsName = std::move(numNeighborsNameResult.value());
 
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
+    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader, mode);
     auto& numNeighborsStore = *numNeighborsPtr.get();
 
     auto flatDataStorePtr = dataReader.template readAsDataStore<T>();

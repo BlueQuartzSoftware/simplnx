@@ -46,16 +46,17 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
 /**
  * @brief Attempts to read a DataStore<T> from the dataset reader
  * @param datasetReader
+ * @param mode
  * @return std::unique_ptr<DataStore<T>>
  */
 template <typename T>
-inline std::shared_ptr<AbstractDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader)
+inline std::shared_ptr<AbstractDataStore<T>> ReadDataStore(const nx::core::HDF5::DatasetIO& datasetReader, IDataAction::Mode mode)
 {
   auto tupleShape = IDataStoreIO::ReadTupleShape(datasetReader);
   auto componentShape = IDataStoreIO::ReadComponentShape(datasetReader);
 
   // Create DataStore
-  auto dataStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto dataStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, mode);
   dataStore->readHdf5(datasetReader);
   return dataStore;
 }

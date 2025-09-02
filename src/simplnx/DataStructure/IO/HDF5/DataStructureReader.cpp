@@ -32,7 +32,7 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO
 
   if(result.valid())
   {
-    dataStructureReader.loadRequiredData(fileReader);
+    dataStructureReader.loadRequiredData(fileReader, useEmptyDataStores ? IDataAction::Mode::Preflight : IDataAction::Mode::Execute);
   }
   return result;
 }
@@ -61,7 +61,7 @@ Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::co
   return {(*item).second};
 }
 
-Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
+Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath, IDataAction::Mode mode)
 {
   std::shared_ptr<IDataIO> factory = nullptr;
 
@@ -100,7 +100,7 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
   {
     return MakeErrorResult(-23405, fmt::format("Failed to determine import factory type for path '{}'", dataPath.toString()));
   }
-  return factory->finishImportingData(dataStructure, dataPath, parentGroupReader);
+  return factory->finishImportingData(dataStructure, dataPath, parentGroupReader, mode);
 }
 
 Result<DataStructure> DataStructureReader::readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores)
@@ -286,7 +286,7 @@ void DataStructureReader::addRequiredId(DataObject::OptionalId requiredDataId)
   }
 }
 
-void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileReader)
+void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileReader, IDataAction::Mode mode)
 {
   for(auto& id : m_RequiredIds)
   {
@@ -299,7 +299,7 @@ void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileRea
 
   for(const auto& dataPath : m_RequiredPaths)
   {
-    FinishImportingObject(m_CurrentStructure, fileReader, dataPath);
+    FinishImportingObject(m_CurrentStructure, fileReader, dataPath, mode);
   }
 }
 } // namespace nx::core::HDF5

@@ -41,16 +41,18 @@ public:
   static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
                               nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
+    IDataAction::Mode mode = preflight ? IDataAction::Mode::Preflight : IDataAction::Mode::Execute;
     std::shared_ptr<AbstractDataStore<K>> dataStore =
-        preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader));
+        preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader, mode));
     DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
     err = (data == nullptr) ? -400 : 0;
   }
 
   template <typename K>
-  static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
+  static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader, IDataAction::Mode mode)
   {
-    std::shared_ptr<AbstractDataStore<T>> dataStore = DataStoreIO::ReadDataStore<T>(datasetReader);
+    fmt::print("DataArrayIO::importDataStore(dataPath = {})\n", dataPath.toString());
+    std::shared_ptr<AbstractDataStore<T>> dataStore = DataStoreIO::ReadDataStore<T>(datasetReader, mode);
     if(dataStore == nullptr)
     {
       return MakeErrorResult(-150202, fmt::format("Failed to import DataArray data at path '{}'.", dataPath.toString()));
@@ -66,7 +68,7 @@ public:
    * @param dataStructureReader
    * @return Result<>
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader, IDataAction::Mode mode) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -89,34 +91,34 @@ public:
     switch(type)
     {
     case DataType::float32:
-      return importDataStore<float32>(dataArray, dataPath, datasetReader);
+      return importDataStore<float32>(dataArray, dataPath, datasetReader, mode);
     case DataType::float64:
-      return importDataStore<float64>(dataArray, dataPath, datasetReader);
+      return importDataStore<float64>(dataArray, dataPath, datasetReader, mode);
     case DataType::int8:
-      return importDataStore<int8>(dataArray, dataPath, datasetReader);
+      return importDataStore<int8>(dataArray, dataPath, datasetReader, mode);
     case DataType::int16:
-      return importDataStore<int16>(dataArray, dataPath, datasetReader);
+      return importDataStore<int16>(dataArray, dataPath, datasetReader, mode);
     case DataType::int32:
-      return importDataStore<int32>(dataArray, dataPath, datasetReader);
+      return importDataStore<int32>(dataArray, dataPath, datasetReader, mode);
     case DataType::int64:
-      return importDataStore<int64>(dataArray, dataPath, datasetReader);
+      return importDataStore<int64>(dataArray, dataPath, datasetReader, mode);
     case DataType::uint8: {
       if(isBoolArray)
       {
-        return importDataStore<bool>(dataArray, dataPath, datasetReader);
+        return importDataStore<bool>(dataArray, dataPath, datasetReader, mode);
       }
       else
       {
-        return importDataStore<uint8>(dataArray, dataPath, datasetReader);
+        return importDataStore<uint8>(dataArray, dataPath, datasetReader, mode);
       }
     }
     break;
     case DataType::uint16:
-      return importDataStore<uint16>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint16>(dataArray, dataPath, datasetReader, mode);
     case DataType::uint32:
-      return importDataStore<uint32>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint32>(dataArray, dataPath, datasetReader, mode);
     case DataType::uint64:
-      return importDataStore<uint64>(dataArray, dataPath, datasetReader);
+      return importDataStore<uint64>(dataArray, dataPath, datasetReader, mode);
     default:
       return MakeErrorResult(-150209, fmt::format("Undetermined DataArray type: '{}'", dataTypeStr));
     }

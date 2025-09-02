@@ -69,7 +69,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   return {};
 }
 
-Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geom = dataStructure.getDataAs<RectGridGeom>(dataPath);
   if(geom == nullptr)

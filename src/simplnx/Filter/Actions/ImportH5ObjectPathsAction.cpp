@@ -73,7 +73,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     }
     if(mode == Mode::Execute)
     {
-      if(auto result = DREAM3D::FinishImportingObject(dataStructure, targetPath, fileReader); result.invalid())
+      if(auto result = DREAM3D::FinishImportingObject(dataStructure, targetPath, fileReader, mode); result.invalid())
       {
         return result;
       }

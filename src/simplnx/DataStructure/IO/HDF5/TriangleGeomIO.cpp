@@ -28,7 +28,7 @@ Result<> TriangleGeomIO::readData(DataStructureReader& structureReader, const gr
   return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup, IDataAction::Mode mode) const
 {
   auto* geom = dataStructure.getDataAs<TriangleGeom>(dataPath);
   if(geom == nullptr)
