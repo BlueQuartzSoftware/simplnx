@@ -93,7 +93,7 @@ public:
   HyperGridBitMap3D() = delete;
 
   template <typename T>
-  HyperGridBitMap3D(const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     // Load array bounds
@@ -101,6 +101,11 @@ public:
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
     for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
     {
+      if(shouldCancel)
+      {
+        return;
+      }
+
       if(!mask->isTrue(i))
       {
         continue;
@@ -143,6 +148,11 @@ public:
         // Load grid cells
         for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
         {
+          if(shouldCancel)
+          {
+            return;
+          }
+
           if(!mask->isTrue(tup))
           {
             continue;
@@ -192,10 +202,20 @@ public:
         zSet.insert(position[2]);
       }
 
+      if(shouldCancel)
+      {
+        return;
+      }
+
       // Set up hyper bit map
       xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
       yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
       zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
+
+      if(shouldCancel)
+      {
+        return;
+      }
 
       // Not the most efficient fill but due to the random access nature of position
       // we can't load one consecutive mask
@@ -238,7 +258,7 @@ public:
   HyperGridBitMap2D() = delete;
 
   template <typename T>
-  HyperGridBitMap2D(const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     // Load array bounds
@@ -246,6 +266,11 @@ public:
                                      std::numeric_limits<float32>::quiet_NaN()};
     for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
     {
+      if(shouldCancel)
+      {
+        return;
+      }
+
       if(!mask->isTrue(i))
       {
         continue;
@@ -284,6 +309,11 @@ public:
         // Load grid cells
         for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
         {
+          if(shouldCancel)
+          {
+            return;
+          }
+
           if(!mask->isTrue(tup))
           {
             continue;
@@ -328,9 +358,19 @@ public:
         ySet.insert(position[1]);
       }
 
+      if(shouldCancel)
+      {
+        return;
+      }
+
       // Set up hyper bit map
       xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
       yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+
+      if(shouldCancel)
+      {
+        return;
+      }
 
       // Not the most efficient fill but due to the random access nature of position
       // we can't load one consecutive mask
@@ -559,11 +599,13 @@ class GDCF
 {
 public:
   GDCF() = delete;
-  GDCF(const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(inputArray, epsilon, mask))
+  GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+       ClusterUtilities::DistanceMetric distMetric)
+  : hyperGridBitMap(HGBPT(shouldCancel, inputArray, epsilon, mask))
   , m_InputDataStore(inputArray)
   , m_Epsilon(epsilon)
   , m_DistMetric(distMetric)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -581,6 +623,11 @@ public:
     if(coreGridIds.empty())
     {
       return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
+    }
+
+    if(m_ShouldCancel)
+    {
+      return {};
     }
 
     // Sort Grids to reduce bias
@@ -624,9 +671,19 @@ public:
     }
     }
 
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     for(usize coreGridId : coreGridIds)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, hyperGridBitMap);
 
       std::vector<usize> cluster = {};
@@ -671,6 +728,11 @@ public:
       operations = 0;
       for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+
         if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
         {
           std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
@@ -761,6 +823,11 @@ public:
     fIdsDataStore.fill(0);
     for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
       for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
       {
@@ -779,6 +846,7 @@ private:
   float32 m_Epsilon;
   const AbstractDataStore<T>& m_InputDataStore;
   ClusterUtilities::DistanceMetric m_DistMetric;
+  const std::atomic_bool& m_ShouldCancel;
 
   // Uses Hoare's method for speed
   usize ProcessSection(std::vector<usize>& sorted, usize begin, usize end) const
@@ -844,10 +912,11 @@ private:
 };
 
 template <class AlgorithmT, typename T>
-Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+                      MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
 {
   messageHelper.sendMessage("Partitioning the input data...");
-  AlgorithmT algorithm = AlgorithmT(inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
 
   if(shouldCancel)
   {
@@ -875,7 +944,8 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
 struct DBSCANFunctor
 {
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+                      MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
     if(inputArray.getNumberOfComponents() == 2)
@@ -935,6 +1005,15 @@ Result<> DBSCAN::operator()()
   }
 
   Result<> result = ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   messageHelper.sendMessage("Resizing Clustering Attribute Matrix...");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
