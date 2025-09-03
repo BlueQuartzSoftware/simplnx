@@ -8,65 +8,47 @@
 
 #include <string>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
+using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
 
 namespace
 {
 constexpr StringLiteral k_TriangleGeomName = "TriangleGeom";
-constexpr StringLiteral k_InternalTriangleGeomName = "Internal TriangleGeom";
-constexpr StringLiteral k_NodeTypesName = "Node Types";
-constexpr StringLiteral k_VertsListName = "Vert List";
-constexpr StringLiteral k_TriListName = "Tri List";
+constexpr StringLiteral k_ComputedTriangleGeomName = "Internal Surface";
+
 const DataPath k_TriangleGeomPath({k_TriangleGeomName});
-const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});
-const DataPath k_NodeTypesPath = k_TriangleGeomPath.createChildPath(k_NodeTypesName);
-const std::vector<DataPath> k_CopyVertexPaths = {k_TriangleGeomPath.createChildPath(k_VertsListName)};
-const std::vector<DataPath> k_CopyTrianglePaths = {k_TriangleGeomPath.createChildPath(k_TriListName)};
+const DataPath k_ComputedTrianglePath({k_ComputedTriangleGeomName});
+const DataPath k_ExemplarFaceAttrMat({"Exemplar Internal Surface", "Face Data"});
+const DataPath k_ExemplarVertexAttrMat({"Exemplar Internal Surface", "Vertex Data"});
+const DataPath k_ComputedFaceAttrMat({k_ComputedTriangleGeomName, "Face Data"});
+const DataPath k_ComputedVertexAttrMat({k_ComputedTriangleGeomName, "Vertex Data"});
 
-DataStructure createTestData(const std::string& triangleGeomName, const std::string& nodeTypesName)
-{
-  DataStructure dataStructure;
-  auto* triangleGeom = TriangleGeom::Create(dataStructure, triangleGeomName);
+const std::vector<DataPath> k_VertexArrays = {DataPath::FromString("TriangleGeom/Vertex Data/Node Types").value()};
+const std::vector<DataPath> k_TriangleArrays = {DataPath::FromString("TriangleGeom/Face Data/Confidence Index").value(), DataPath::FromString("TriangleGeom/Face Data/EulerAngles").value(),
+                                                DataPath::FromString("TriangleGeom/Face Data/FaceLabels").value()
 
-  Float32Array* vertListdata = UnitTest::CreateTestDataArray<float>(dataStructure, k_VertsListName, {80, 60, 40}, {1}, triangleGeom->getId());
-  auto* triangleList = UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, k_TriListName, {500}, {3}, triangleGeom->getId());
-  auto& triangles = triangleList->getDataStoreRef();
-  triangles.fill(0);
-  triangles[3] = 2;
-  triangles[4] = 3;
-  triangles[5] = 4;
-  triangles[6] = 5;
-  triangles[7] = 6;
-  triangles[8] = 7;
-  triangles[9] = 2;
-  triangles[10] = 7;
-  triangles[11] = 3;
+};
 
-  triangleGeom->setVertices(*vertListdata);
-  triangleGeom->setFaceList(*triangleList);
-
-  auto* nodeArray = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, nodeTypesName, {triangleGeom->getNumberOfFaces()}, {1}, triangleGeom->getId());
-  auto& nodeData = nodeArray->getDataStoreRef();
-  nodeData.fill(2);
-  nodeData[0] = 12;
-
-  return dataStructure;
-}
 } // namespace
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instantiate)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   UnitTest::LoadPlugins();
+  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;
-  DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
 
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_InternalTrianglePath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ComputedTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_VertexArrays[0]));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_VertexArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_TriangleArrays));
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
@@ -76,19 +58,67 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
+TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Vertex Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   UnitTest::LoadPlugins();
+  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;
-  DataStructure dataStructure = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
 
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_InternalTrianglePath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
-  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ComputedTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_VertexArrays[0]));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_TriangleArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_TriangleArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
+
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+}
+
+TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Face Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
+{
+  UnitTest::LoadPlugins();
+  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  ExtractInternalSurfacesFromTriangleGeometryFilter filter;
+  Arguments args;
+
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ComputedTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_VertexArrays[0]));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_VertexArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_VertexArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
+
+  auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+}
+TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
+{
+  LoadPlugins();
+  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  ExtractInternalSurfacesFromTriangleGeometryFilter filter;
+  Arguments args;
+
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ComputedTrianglePath));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key, std::make_any<DataPath>(k_VertexArrays[0]));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_VertexArrays));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_TriangleArrays));
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>("Vertex Data"));
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
@@ -98,31 +128,12 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)"
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  auto* newTrianglesGeom = dataStructure.getDataAs<TriangleGeom>(k_InternalTrianglePath);
-  auto* oldTrianglesGeom = dataStructure.getDataAs<TriangleGeom>(k_TriangleGeomPath);
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/extract_internal_surface_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 
-  REQUIRE(newTrianglesGeom != nullptr);
-  REQUIRE(oldTrianglesGeom != nullptr);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, k_ExemplarFaceAttrMat, dataStructure, k_ComputedFaceAttrMat, true);
+  CompareExemplarToGenerateAttributeMatrix(dataStructure, k_ExemplarVertexAttrMat, dataStructure, k_ComputedVertexAttrMat, true);
 
-  {
-    auto* newVerticesArray = newTrianglesGeom->getVertices();
-    auto* oldVerticesArray = oldTrianglesGeom->getVertices();
-
-    REQUIRE(newVerticesArray != nullptr);
-    REQUIRE(oldVerticesArray != nullptr);
-
-    REQUIRE(newVerticesArray->getSize() == 18);
-  }
-
-  {
-    auto* newTrianglesArray = dataStructure.getDataAs<IDataArray>(newTrianglesGeom->getFaceListDataArrayId());
-    auto* oldTrianglesArray = dataStructure.getDataAs<IDataArray>(oldTrianglesGeom->getFaceListDataArrayId());
-
-    REQUIRE(newTrianglesArray != nullptr);
-    REQUIRE(oldTrianglesArray != nullptr);
-
-    REQUIRE(newTrianglesArray->getNumberOfTuples() == 3);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CheckArraysInheritTupleDims(dataStructure);
 }
