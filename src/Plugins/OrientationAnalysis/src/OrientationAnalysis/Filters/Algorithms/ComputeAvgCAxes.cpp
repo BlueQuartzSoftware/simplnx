@@ -153,13 +153,7 @@ Result<> ComputeAvgCAxes::operator()()
       b /= counter[i];
       c /= counter[i];
 
-      float32 denom = std::sqrt(((a * a) + (b * b) + (c * c)));
-      if(denom != 0)
-      {
-        a /= denom;
-        b /= denom;
-        c /= denom;
-      }
+      MatrixMath::Normalize3x1(a, b, c);
 
       avgCAxes.setValue(tupleIndex, a);
       avgCAxes.setValue(tupleIndex + 1, b);
