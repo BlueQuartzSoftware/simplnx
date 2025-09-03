@@ -59,10 +59,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteINLFileTest.cpp
   WritePoleFigureTest.cpp
   WriteStatsGenOdfAngleFileTest.cpp
+  EMsoftSO3SamplerTest.cpp
 )
 set(DISABLED_TESTS
   CreateLambertSphereTest.cpp
-  EMsoftSO3SamplerTest.cpp
   FindDistsToCharactGBsTest.cpp
   ComputeFeatureReferenceCAxisMisorientationsTest.cpp
   FindTwinBoundariesTest.cpp

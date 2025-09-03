@@ -73,6 +73,7 @@
 #include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
+#include "OrientationAnalysis/Filters/EMsoftSO3SamplerFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -147,6 +148,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), {nx::core::FilterTraits<ComputeGBCDMetricBasedFilter>::uuid, &ComputeGBCDMetricBasedFilter::FromSIMPLJson}}, // ComputeGBCDMetricBased
     {nx::core::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), {nx::core::FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid, &WriteStatsGenOdfAngleFileFilter::FromSIMPLJson}}, // WriteStatsGenOdfAngleFile
     {nx::core::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), {nx::core::FilterTraits<WriteINLFileFilter>::uuid, &WriteINLFileFilter::FromSIMPLJson}}, // INLWriter
+    {nx::core::Uuid::FromString("b78d8825-d3ac-5351-be20-172f07fd2aec").value(), {nx::core::FilterTraits<EMsoftSO3SamplerFilter>::uuid, &EMsoftSO3SamplerFilter::FromSIMPLJson}}, // EMsoftSO3Sampler
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

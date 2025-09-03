@@ -1,0 +1,89 @@
+# EMsoftSO3Sampler #
+
+
+## Group (Subgroup) ##
+
+EMsoftToolbox (EMsoftToolbox)
+
+## Description ##
+
+The EMsoftSO3Sampler filter produces several different types of uniform samples of SO(3): 
+
+| Mode | Description |
+|------|-------------|
+| 0 | a uniform sampling of a Rodrigues fundamental zone (FZ) |
+| 1 | a uniform sampling of orientations at a constant misorientation from a given orientation |
+| 2 | a uniform sampling of orientations at less than a given misorientation from a given orientation. |
+
+All three sampling methods are based on the cubochoric rotation representation, which starts with a cubical grid inside the cubochoric cube.  This cube represents an equal-volume mapping of the quaternion Northern hemisphere (i.e., all 3D rotations with positive scalar quaternion component).  For sampling mode 0, the filter creates a uniform grid of cubochoric vectors, transforms each vector to the Rodrigues representation and determines whether or not the point lies inside the FZ for the point group symmetry set by the user.  The filter then returns an array of Euler angle triplets (Bunge convention) for use in subsequent filters.  The sampling grid can be offset from the center of the cube, in which case the identity orientation will not be part of the sample.
+
+For sampling mode 0, the filter samples the surface of a centered cube inside the cubochoric cube and converts those points to a quadratic surface (prolate spheroid, spheroidal paraboloid, or double-sheet hyperboloid, depending on the parameter choices) in Rodrigues Space; all generated points will have the same misorientation with respect to a user defined reference point.
+
+Sampling mode 2 does the same as mode 1, but now the inside of the starting cube is also filled with sampling points, leading to a uniform sampling of orientations surrounding a user defined orientation with up to a maximum misorientation with respect to that orientation.
+
+Detailed information on the cubo-choric rotation representation can be found in the following paper: D. Rosca, A. Morawiec, and M. De Graef. **"A new method of constructing a grid in the space of 3D rotations and its applications to texture analysis,"** _Modeling and Simulations in Materials Science and Engineering **22**, 075013 (2014)._
+
+Details on the misorientation sampling approach can be found in the following paper: S. Singh and M. De Graef, **"Orientation sampling for dictionary-based diffraction pattern indexing methods"** submitted to _MSMSE (2016)_.
+
+## DREAM3D-NX Laue Group to Point Group Table
+| EbsdLib Laue Group | EbsdLib Laue Group Name | HM Sym | Point Group |
+|--------------------|-------------------------|--------|-------------|
+| 0                  | Hexagonal_High          | 6/mmm  | 27          |
+| 1                  | Cubic_High              | m-3m   | 32          |
+| 2                  | Hexagonal_Low           | 6/m    | 23          |
+| 3                  | Cubic_Low               | m-3    | 29          |
+| 4                  | Triclinic               | -1     | 2           |
+| 5                  | Monoclinic              | 2/m    | 5           |
+| 6                  | OrthoRhombic            | mmm    | 8           |
+| 7                  | Tetragonal_Low          | 4/m    | 11          |
+| 8                  | Tetragonal_High         | 4/mmm  | 15          |
+| 9                  | Trigonal_Low            | -3     | 17          |
+| 10                 | Trigonal_High           | -3m    | 20          |
+
+
+## Point group identifiers ##
+
+Crystallographic point groups are identified by an integer from 1 to 32 according to the International Tables for Crystallography (Volume A). The valid numbers, along with the corresponding Hermann-Mauguin point group symbols (HM Sym), are listed here, along with the point group symbol between double quotation marks, the corresponding rotation group and its order M (in bold face):
+
+[Table adapted from http://pd.chem.ucl.ac.uk/pdnn/symm2/group32.htm](http://pd.chem.ucl.ac.uk/pdnn/symm2/group32.htm)
+
+| Laue Group | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) | ID,HM Sym,Rot.Grp(Order) |
+|------|------|------|------|------|------|------|------|
+| Triclinic | [1], "1", **1(1)** | [2], "-1", **1(1)** | | | | | |
+| Monoclinic | [3], "2", **2(2)**| [4], "m", **2(2)**| [5], "2/m", **2(2)**| | | | |
+| Orthorhombic | [6], "222" , **222(4)**| [7], "mm2" , **222(4)**| [8], "mmm" , **222(4)**| | | | |
+| Tetragonal | [9], "4" , **4(4)** | [10], "-4", **4(4)**  | [11], "4/m", **4(4)** | [12], "422", **422(8)** | [13], "4mm", **422(8)** | [14], "-42m", **422(8)** | [15], "4/mmm", **422(8)** |
+| Trigonal | [16], "3", **3(3)** | [17], "-3", **3(3)** | [18], "32", **32(6)** | [19],  "3m" , **32(6)** | [20], "-3m", **32(6)** | | |
+| Hexagonal  | [21], "6", **6(6)** | [22], "-6" , **6(6)** | [23], "6/m", **6(6)** | [24], "622", **622(12)** | [25], "6mm", **622(12)** | [26], "-6m2", **622(12)**  | [27], "6/mmm", **622(12)** |
+| Cubic | [28], "23", **23(12)**| [29], "m-3", **23(12)** | [30], "432", **432(24)** | [31], "-43m", **432(24)** | [32], "m-3m", **432(24)** | | | |
+
+
+
+## Number of grid points ##
+
+The cubo-choric space is a cube with edge length pi^(2/3) and origin (the identity rotation) at the center of the cube.  The number of sampling points entered by the user represents the number of grid points **along a semi-edge of the cube**.  In other words, if the user requests N=50 sampling points, and the origin is part of the grid (see next item), then there will be 2N+1 actual sampling points along each cube edge.  The total number of sampling points in the grid will then be (2N+1)^3.  For point groups #1 and #2, in the absence of any rotational symmetry, the Rodrigues FZ will correspond to the full cubochoric grid, with (2N+1)^3 grid points.  For any other point group, the Rodrigues FZ will correspond to a portion of the cubochoric grid, and the number of points will be approximately given by (2N+1)^3 /M, where M is the order of the rotation group corresponding to the point group.  In the table above, the rotation group and its order are indicated in bold face.
+
+## Grid offset switch ##
+
+For sampling mode 0, the user has the option to offset the cubochoric grid from the origin by half a grid unit.  In that case, the grid will have a maximum of 8N^3 grid points, and the identity rotation will **not** be part of the sample. The total number of points inside the Rodrigues FZ will then be approximately 8N^3 /M.
+
+## Misorientation sampling ##
+
+For sampling modes 1 and 2, the user must provide a reference orientation in the form of an Euler angle triplet (Bunge convention); this orientation will be used as the reference orientation around which the misorientation sampling will be computed. The output of all three sampling modes will be in Euler angles.
+
+## Funding Acknowledgment ##
+
+This filter was developed with financial support from contract AFRL FA8650-10-D-5210, Task Order 0034.
+
+% Auto generated parameter table will be inserted here
+
+## Example Pipelines ##
+
+
+## License & Copyright
+
+Please see the description file distributed with this **Plugin**
+
+## DREAM3D-NX Help
+
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

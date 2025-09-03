@@ -80,11 +80,11 @@ set(FilterList
   WriteINLFileFilter
   WritePoleFigureFilter
   WriteStatsGenOdfAngleFileFilter
+  EMsoftSO3SamplerFilter
 )
 
 set(STUB_FILTERS
   CreateLambertSphere
-  EMsoftSO3Sampler
   ComputeBoundaryStrengths
   FindDistsToCharactGBs
   ComputeKernelAvgMisorientations
@@ -217,6 +217,7 @@ set(filter_algorithms
   WriteINLFile
   WritePoleFigure
   WriteStatsGenOdfAngleFile
+  EMsoftSO3Sampler
 )
 
 

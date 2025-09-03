@@ -1,0 +1,338 @@
+{
+  "isDisabled": false,
+  "name": "EMsoftSO3Sampler.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Sampling Data",
+          "version": 1
+        },
+        "cell_ensemble_attribute_matrix_path": {
+          "value": "Ensemble Attribute Matrix",
+          "version": 1
+        },
+        "crystal_structure_index": {
+          "value": 3,
+          "version": 1
+        },
+        "mode_1_euler_angle": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "mode_1_misorientation": {
+          "value": 1.0,
+          "version": 1
+        },
+        "mode_2_euler_angle": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "mode_2_misorientation": {
+          "value": 1.0,
+          "version": 1
+        },
+        "number_of_samples": {
+          "value": 50,
+          "version": 1
+        },
+        "offset_grid": {
+          "value": false,
+          "version": 1
+        },
+        "output_euler_angles_path": {
+          "value": "Euler Angles",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "sample_mode_index": {
+          "value": 0,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::EMsoftSO3SamplerFilter",
+        "uuid": "74478e86-ce29-40b8-8c17-d20009195f91"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_orientation_array_path": {
+          "value": "Euler Angles",
+          "version": 1
+        },
+        "input_representation_index": {
+          "value": 0,
+          "version": 1
+        },
+        "output_orientation_array_name": {
+          "value": "SharedVertexList",
+          "version": 1
+        },
+        "output_representation_index": {
+          "value": 7,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ConvertOrientationsFilter",
+        "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_handling_index": {
+          "value": 1,
+          "version": 1
+        },
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "dimensions": {
+          "value": [
+            20,
+            60,
+            200
+          ],
+          "version": 1
+        },
+        "edge_attribute_matrix_name": {
+          "value": "Edge Data",
+          "version": 1
+        },
+        "edge_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "face_attribute_matrix_name": {
+          "value": "Face Data",
+          "version": 1
+        },
+        "geometry_type_index": {
+          "value": 2,
+          "version": 1
+        },
+        "hexahedral_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 7,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "SO3 Sampled Points",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "quadrilateral_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "tetrahedral_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "triangle_list_path": {
+          "value": "",
+          "version": 1
+        },
+        "vertex_attribute_matrix_name": {
+          "value": "Vertex Data",
+          "version": 1
+        },
+        "vertex_list_path": {
+          "value": "SharedVertexList",
+          "version": 1
+        },
+        "warnings_as_errors": {
+          "value": false,
+          "version": 1
+        },
+        "x_bounds_path": {
+          "value": "",
+          "version": 1
+        },
+        "y_bounds_path": {
+          "value": "",
+          "version": 1
+        },
+        "z_bounds_path": {
+          "value": "",
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateGeometryFilter",
+        "uuid": "24768170-5b90-4a9d-82ac-9aeecd9f892e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "destination_parent_path": {
+          "value": "SO3 Sampled Points/Vertex Data",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "source_data_paths": {
+          "value": [
+            "Euler Angles"
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::MoveDataFilter",
+        "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "component_count": {
+          "value": 1,
+          "version": 1
+        },
+        "data_format": {
+          "value": "",
+          "version": 1
+        },
+        "initialization_value_str": {
+          "value": "1",
+          "version": 1
+        },
+        "numeric_type_index": {
+          "value": 4,
+          "version": 1
+        },
+        "output_array_path": {
+          "value": "SO3 Sampled Points/Vertex Data/Phases",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "set_tuple_dimensions": {
+          "value": true,
+          "version": 1
+        },
+        "tuple_dimensions": {
+          "value": [
+            [
+              0.0
+            ]
+          ],
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::CreateDataArrayFilter",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": {
+          "value": "SO3 Sampled Points/Vertex Data/Euler Angles",
+          "version": 1
+        },
+        "cell_ipf_colors_array_name": {
+          "value": "IPFColors",
+          "version": 1
+        },
+        "cell_phases_array_path": {
+          "value": "SO3 Sampled Points/Vertex Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "Ensemble Attribute Matrix/CrystalStructures",
+          "version": 1
+        },
+        "mask_array_path": {
+          "value": "",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "reference_dir": {
+          "value": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "version": 1
+        },
+        "use_mask": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "import_data_object": {
+          "value": {
+            "data_paths": [
+              "Laue_422/Edge Data",
+              "Laue_422/Shared Edge List",
+              "Laue_422/Shared Vertex List",
+              "Laue_422/Vertex Data"
+            ],
+            "file_path": "/Users/Shared/Data/MTR_Data/OrientationSampling/Laue_FZ_Wireframes.dream3d",
+            "path_import_policy": 1
+          },
+          "version": 2
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": true
+    }
+  ],
+  "pipeline_uuid": "3d2f82b9-2d46-4bc1-9c48-d63625374070",
+  "version": 1,
+  "workflowParams": []
+}
