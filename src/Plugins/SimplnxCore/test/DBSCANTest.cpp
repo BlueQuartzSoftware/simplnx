@@ -48,7 +48,7 @@ const std::string k_AMPostFix = " AM";
 const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.dream3d", "/home/nyoung/Downloads"));
 //const fs::path k_2DTestFile(fmt::format("{}/dbscan_tests/7_0_2d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir));
 
-void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, const DataPath& exemplarClusterIds)
+void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds)
 {
   //const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_tests.tar.gz", "dbscan_tests");
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
@@ -65,7 +65,7 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, const DataPat
     // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilonVal));
-    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(3));
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(minPtsVal));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(targetPath));
     args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_GeneratedIdsName));
@@ -108,7 +108,7 @@ std::vector<usize> BinPoints(const Int32Array& dataArray)
   return bins;
 }
 
-void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, const DataPath& exemplarClusterIds, ChoicesParameter::ValueType randomType)
+void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds, ChoicesParameter::ValueType randomType)
 {
   REQUIRE((randomType == to_underlying(DBSCAN::ParseOrder::Random) || randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom)));
 
@@ -131,7 +131,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, const Data
     args.insertOrAssign(DBSCANFilter::k_SeedValue_Key, std::make_any<uint64>(k_Seed)); // Will be ignored if randomType == DBSCAN::ParseOrder::Random
     args.insertOrAssign(DBSCANFilter::k_SeedArrayName_Key, std::make_any<std::string>("seed_array"));
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilonVal));
-    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(3));
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(minPtsVal));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(targetPath));
     args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_GeneratedIdsName));
@@ -192,50 +192,62 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, const Data
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.15f;
+  int32 minPtsVal = 4;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_AnisoArrayPath, 0.15f, k_AnsioClusterArrayPath);
-  ::RandomTestCase2D(k_AnisoArrayPath, 0.15f, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_AnisoArrayPath, 0.15f, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath);
+  ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_AnisoArrayPath, epsVal, minPtsVal, k_AnsioClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_BlobsArrayPath, 0.3f, k_BlobsClusterArrayPath);
-  ::RandomTestCase2D(k_BlobsArrayPath, 0.3f, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_BlobsArrayPath, 0.3f, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath);
+  ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_BlobsArrayPath, epsVal, minPtsVal, k_BlobsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_CirclesArrayPath, 0.3f, k_CirclesClusterArrayPath);
-  ::RandomTestCase2D(k_CirclesArrayPath, 0.3f, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_CirclesArrayPath, 0.3f, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath);
+  ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_CirclesArrayPath, epsVal, minPtsVal, k_CirclesClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_MoonsArrayPath, 0.3f, k_MoonsClusterArrayPath);
-  ::RandomTestCase2D(k_MoonsArrayPath, 0.3f, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_MoonsArrayPath, 0.3f, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath);
+  ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_MoonsArrayPath, epsVal, minPtsVal, k_MoonsClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.3f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_NoStructureArrayPath, 0.3f, k_NoStructureClusterArrayPath);
-  ::RandomTestCase2D(k_NoStructureArrayPath, 0.3f, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_NoStructureArrayPath, 0.3f, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath);
+  ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_NoStructureArrayPath, epsVal, minPtsVal, k_NoStructureClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 {
+  float32 epsVal = 0.18f;
+  int32 minPtsVal = 3;
   // The exemplars were generated with LDF
-  ::LDFTestCase2D(k_VariedArrayPath, 0.18f, k_VariedClusterArrayPath);
-  ::RandomTestCase2D(k_VariedArrayPath, 0.18f, k_VariedClusterArrayPath, DBSCAN::ParseOrder::Random);
-  ::RandomTestCase2D(k_VariedArrayPath, 0.18f, k_VariedClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
+  ::LDFTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath);
+  ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::Random);
+  ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
 //TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")

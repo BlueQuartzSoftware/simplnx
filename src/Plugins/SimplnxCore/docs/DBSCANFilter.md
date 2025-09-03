@@ -35,6 +35,7 @@ An advantage of DBSCAN over other clustering approaches (e.g., [k means](@ref km
 All of the available examples are 2D as they come from [Sci-Kit Learn Toy Datasets](https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html).
 
 Keeping in mind 0 is unlabeled, here is a table of the results:
+*Note: at the time of image capture a bug was showing the yellow as NaNs, but they were labeled with 3 in the cluster array.*
 
 | name | Image |
 |------|-------|
@@ -49,10 +50,10 @@ Here is a table of Hyperparameters used to generate the above images:
 
 | name | `Epsilon` | `Minimum Points` |
 |------|-----------|------------------|
-| `aniso` | 0.15 | 7 |
-| `blobs` | 0.3 | 7 |
+| `aniso` | 0.15 | 4 |
+| `blobs` | 0.3 | 3 |
 | `noisy_circles` | 0.3 | 3 |
-| `noisy_moons` | 0.3 | 7 |
+| `noisy_moons` | 0.3 | 3 |
 | `no_structure` | 0.3 | 3 |
 | `varied` | 0.18 | 3 |
 

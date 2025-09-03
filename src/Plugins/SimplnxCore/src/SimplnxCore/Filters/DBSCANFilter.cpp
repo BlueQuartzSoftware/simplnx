@@ -134,6 +134,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
 {
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pEpsilonValue = filterArgs.value<float32>(k_Epsilon_Key);
+  auto pMinPointsValue = filterArgs.value<int32>(k_MinPoints_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
@@ -143,6 +144,10 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   {
     return MakePreflightErrorResult(-7584, fmt::format("Epsilon value {} must be greater than 0.0.", pEpsilonValue));
   }
+  if(pMinPointsValue <= 0)
+  {
+    return MakePreflightErrorResult(-7585, fmt::format("Minimum Points value {} must be greater than 0.0.", pEpsilonValue));
+  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -150,7 +155,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
   if(clusterArray == nullptr)
   {
-    return MakePreflightErrorResult(-7585, "Array to Cluster MUST be a valid DataPath.");
+    return MakePreflightErrorResult(-7586, "Array to Cluster MUST be a valid DataPath.");
   }
 
   {

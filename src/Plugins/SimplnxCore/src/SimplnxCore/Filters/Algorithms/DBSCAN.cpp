@@ -130,9 +130,9 @@ public:
         continue;
       }
 
-      float32 xVal = inputArray.getValue((i * 3) + 0);
-      float32 yVal = inputArray.getValue((i * 3) + 1);
-      float32 zVal = inputArray.getValue((i * 3) + 2);
+      auto xVal = static_cast<float32>(inputArray.getValue((i * 3) + 0));
+      auto yVal = static_cast<float32>(inputArray.getValue((i * 3) + 1));
+      auto zVal = static_cast<float32>(inputArray.getValue((i * 3) + 2));
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -149,9 +149,9 @@ public:
 
     float32 buffer = sideLength;
     std::array<float32, 3> origin = {};
-    origin[0] = static_cast<float32>(bounds[0]) - buffer;
-    origin[1] = static_cast<float32>(bounds[1]) - buffer;
-    origin[2] = static_cast<float32>(bounds[2]) - buffer;
+    origin[0] = bounds[0] - buffer;
+    origin[1] = bounds[1] - buffer;
+    origin[2] = bounds[2] - buffer;
 
     std::array<usize, 3> dims = {};
     dims[0] = static_cast<usize>(((bounds[3] + buffer) - origin[0]) / spacing[0]) + 2;
@@ -306,8 +306,8 @@ public:
       }
 
       // Determine the voxel
-      float32 xVal = inputArray.getValue((i * 2) + 0);
-      float32 yVal = inputArray.getValue((i * 2) + 1);
+      auto xVal = static_cast<float32>(inputArray.getValue((i * 2) + 0));
+      auto yVal = static_cast<float32>(inputArray.getValue((i * 2) + 1));
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -322,8 +322,8 @@ public:
 
     float32 buffer = sideLength;
     std::array<float32, 2> origin = {};
-    origin[0] = static_cast<float32>(bounds[0]) - buffer;
-    origin[1] = static_cast<float32>(bounds[1]) - buffer;
+    origin[0] = bounds[0] - buffer;
+    origin[1] = bounds[1] - buffer;
 
     std::array<usize, 2> dims = {};
     dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
