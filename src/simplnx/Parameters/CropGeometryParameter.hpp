@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -22,9 +23,12 @@ public:
     bool cropX = true;
     bool cropY = true;
     bool cropZ = true;
-    std::array<int32,2> xBounds;
-    std::array<int32, 2> yBounds;
-    std::array<int32, 2> zBounds;
+    IntVec2Type xBoundVoxels;
+    IntVec2Type yBoundVoxels;
+    IntVec2Type zBoundVoxels;
+    FloatVec2Type xBoundPhysical;
+    FloatVec2Type yBoundPhysical;
+    FloatVec2Type zBoundPhysical;
   };
 
   using ValueType = CropValues;
