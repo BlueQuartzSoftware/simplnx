@@ -45,12 +45,11 @@ const DataPath k_VariedClusterArrayPath = k_VariedGeomPath.createChildPath(Const
 const std::string k_IdsPostFix = " Ids";
 const std::string k_AMPostFix = " AM";
 
-const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.dream3d", "/home/nyoung/Downloads"));
-//const fs::path k_2DTestFile(fmt::format("{}/dbscan_tests/7_0_2d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir));
+const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir));
 
 void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds)
 {
-  //const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_tests.tar.gz", "dbscan_tests");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
 
   const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
@@ -112,7 +111,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 {
   REQUIRE((randomType == to_underlying(DBSCAN::ParseOrder::Random) || randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom)));
 
-  //const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_tests.tar.gz", "dbscan_tests");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
 
   const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
@@ -250,49 +249,53 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
   ::RandomTestCase2D(k_VariedArrayPath, epsVal, minPtsVal, k_VariedClusterArrayPath, DBSCAN::ParseOrder::SeededRandom);
 }
 
-//TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
-//{
-//  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_tests.tar.gz", "dbscan_tests");
-//  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_tests/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
-//
-//  const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
-//  const DataPath k_GeneratedIdsPath = DataPath{{k_GeneratedIdsName}};
-//  const DataPath k_GeneratedAMPath = DataPath{{targetPath.getTargetName() + k_AMPostFix}};
-//
-//  {
-//    // Instantiate the filter and an Arguments Object
-//    DBSCANFilter filter;
-//    Arguments args;
-//
-//    // Create default Parameters for the filter.
-//    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
-//    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilonVal));
-//    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(3));
-//    args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
-//    args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(targetPath));
-//    args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_GeneratedIdsName));
-//    args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_GeneratedAMPath));
-//
-//    // Preflight the filter and check result
-//    auto preflightResult = filter.preflight(dataStructure, args);
-//    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-//
-//    // Execute the filter and check the result
-//    auto executeResult = filter.execute(dataStructure, args);
-//    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-//  }
-//
-//  // Write the DataStructure out to the file system
-//#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-//  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
-//#endif
-//
-//  const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
-//  int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
-//
-//  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumTuples());
-//
-//  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
-//
-//  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-//}
+TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
+
+  const DataPath vertexGeom =  DataPath{{"Reduced Vertex Geom"}};
+  const DataPath targetPath = vertexGeom.createChildPath("Shared Vertex List");
+  const DataPath exemplarClusterIds = vertexGeom.createChildPath("VertexData").createChildPath("Cluster Ids");
+
+  const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
+  const DataPath k_GeneratedIdsPath = DataPath{{k_GeneratedIdsName}};
+  const DataPath k_GeneratedAMPath = DataPath{{targetPath.getTargetName() + k_AMPostFix}};
+
+  {
+    // Instantiate the filter and an Arguments Object
+    DBSCANFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.001));
+    args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(5));
+    args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(targetPath));
+    args.insertOrAssign(DBSCANFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_GeneratedIdsName));
+    args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_GeneratedAMPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+
+  const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
+  int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
+
+  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumTuples());
+
+  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
