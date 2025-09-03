@@ -76,7 +76,7 @@ Result<> WriteGBCDTriangleData::operator()()
     float64 tNorm2 = faceNormals[t * 3 + 2];
 
     fprintf(f, "%0.4f %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f %0.4f\n", euAngRightHand0, euAngRightHand1, euAngRightHand2, euAngLeftHand0, euAngLeftHand1, euAngLeftHand2, tNorm0, tNorm1,
-            tNorm2, faceAreas[t]);
+            tNorm2, faceAreas.getValue(t));
   }
 
   fclose(f);

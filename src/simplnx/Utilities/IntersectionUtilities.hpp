@@ -36,7 +36,7 @@ inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, siz
   nx::core::IGeometry::SharedTriList& triList = tri.getFacesRef();
   // nx::core::IGeometry::SharedVertexList& vertList = tri.getVerticesRef();
 
-  nx::core::uint64* Tri = &triList[triId];
+  // nx::core::uint64* Tri = &triList[triId];
   std::array<nx::core::Point3Df, 3> triCoords;
   tri.getFaceCoordinates(triId, triCoords);
   nx::core::Point3Df vert1 = triCoords[0];

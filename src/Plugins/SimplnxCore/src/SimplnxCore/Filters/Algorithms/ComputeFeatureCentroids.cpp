@@ -46,14 +46,14 @@ public:
             continue;
           }
           // Check if feature ID is Periodic
-          m_RangeXStoreRef[featureId * 2 + 0] = std::min(k, m_RangeXStoreRef[featureId * 2 + 0]);
-          m_RangeXStoreRef[featureId * 2 + 1] = std::max(k, m_RangeXStoreRef[featureId * 2 + 1]);
+          m_RangeXStoreRef[featureId * 2 + 0] = std::min(k, m_RangeXStoreRef.getValue(featureId * 2 + 0));
+          m_RangeXStoreRef[featureId * 2 + 1] = std::max(k, m_RangeXStoreRef.getValue(featureId * 2 + 1));
 
-          m_RangeYStoreRef[featureId * 2 + 0] = std::min(j, m_RangeYStoreRef[featureId * 2 + 0]);
-          m_RangeYStoreRef[featureId * 2 + 1] = std::max(j, m_RangeYStoreRef[featureId * 2 + 1]);
+          m_RangeYStoreRef[featureId * 2 + 0] = std::min(j, m_RangeYStoreRef.getValue(featureId * 2 + 0));
+          m_RangeYStoreRef[featureId * 2 + 1] = std::max(j, m_RangeYStoreRef.getValue(featureId * 2 + 1));
 
-          m_RangeZStoreRef[featureId * 2 + 0] = std::min(i, m_RangeZStoreRef[featureId * 2 + 0]);
-          m_RangeZStoreRef[featureId * 2 + 1] = std::max(i, m_RangeZStoreRef[featureId * 2 + 1]);
+          m_RangeZStoreRef[featureId * 2 + 0] = std::min(i, m_RangeZStoreRef.getValue(featureId * 2 + 0));
+          m_RangeZStoreRef[featureId * 2 + 1] = std::max(i, m_RangeZStoreRef.getValue(featureId * 2 + 1));
 
           // Get the voxel center based on XYZ index from Image Geom
           nx::core::Point3Dd voxel_center = m_ImageGeom.getCoords(k, j, i);
@@ -64,7 +64,7 @@ public:
           double temp = m_Sum[featureId_idx] + componentValue;
           m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
-          m_Count[featureId_idx]++;
+          m_Count[featureId_idx].inc();
 
           // Kahan Sum for Y Coord
           featureId_idx = featureId * 3ULL + 1;
@@ -72,7 +72,7 @@ public:
           temp = m_Sum[featureId_idx] + componentValue;
           m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
-          m_Count[featureId_idx]++;
+          m_Count[featureId_idx].inc();
 
           // Kahan Sum for Z Coord
           featureId_idx = featureId * 3ULL + 2;
@@ -80,7 +80,7 @@ public:
           temp = m_Sum[featureId_idx] + componentValue;
           m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
-          m_Count[featureId_idx]++;
+          m_Count[featureId_idx].inc();
         }
       }
     }

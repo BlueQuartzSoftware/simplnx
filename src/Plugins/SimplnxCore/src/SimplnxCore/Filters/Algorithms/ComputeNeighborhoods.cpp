@@ -121,7 +121,7 @@ const std::atomic_bool& ComputeNeighborhoods::getCancel()
 void ComputeNeighborhoods::updateNeighborHood(usize sourceIndex, usize destIndex)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
-  (*m_Neighborhoods)[sourceIndex]++;
+  (*m_Neighborhoods)[sourceIndex].inc();
   m_LocalNeighborhoodList[sourceIndex].push_back(static_cast<int32_t>(destIndex));
 }
 

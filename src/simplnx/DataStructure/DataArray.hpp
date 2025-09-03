@@ -1,6 +1,5 @@
 #pragma once
 
-#include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -34,13 +33,12 @@ class DataArray : public IDataArray
   friend class NeighborList<T>;
 
 public:
-  using value_type = T;
-  using reference = T&;
-  using const_reference = const T&;
   using store_type = AbstractDataStore<T>;
-  using weak_store = typename std::weak_ptr<AbstractDataStore<T>>;
-  using Iterator = typename AbstractDataStore<T>::Iterator;
-  using ConstIterator = typename AbstractDataStore<T>::ConstIterator;
+  using value_type = typename store_type::value_type;
+  using reference = typename store_type::reference;
+  using weak_store = std::weak_ptr<store_type>;
+  using Iterator = typename store_type::Iterator;
+  using ConstIterator = typename store_type::ConstIterator;
 
   /**
    * @brief Attempts to create a DataArray with the specified values and add
@@ -358,9 +356,9 @@ public:
    */
   void byteSwapElements()
   {
-    for(auto& value : *this)
+    for(auto valueRef : *this)
     {
-      value = nx::core::byteswap(value);
+      valueRef.byteSwap();
     }
   }
 
@@ -371,16 +369,26 @@ public:
    *
    * Throws an exception if the DataStore has not been allocated.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
-  const_reference operator[](usize index) const
+  value_type operator[](usize index) const
   {
     if(m_DataStore == nullptr)
     {
       throw std::runtime_error("DataArray::operator[] requires a valid DataStore");
     }
 
-    return (*m_DataStore.get())[index];
+    return m_DataStore->getValue(index);
+  }
+
+  value_type getValue(usize index) const
+  {
+    if(m_DataStore == nullptr)
+    {
+      throw std::runtime_error("DataArray::operator[] requires a valid DataStore");
+    }
+
+    return m_DataStore->getValue(index);
   }
 
   /**
@@ -390,7 +398,7 @@ public:
    *
    * Throws an exception if the DataStore has not been allocated.
    * @param index
-   * @return const_reference
+   * @return value_type
    */
   value_type at(usize index) const
   {
@@ -399,7 +407,7 @@ public:
       throw std::runtime_error("DataArray::operator[] requires a valid DataStore");
     }
 
-    return m_DataStore->getValue(index);
+    return m_DataStore->at(index);
   }
 
   value_type getComponent(usize tupleIndex, usize componentIndex)

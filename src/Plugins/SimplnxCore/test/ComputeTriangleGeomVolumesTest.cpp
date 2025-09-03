@@ -70,11 +70,12 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
     // exemplar data.
     auto& exemplarData = dataStructure.getDataRefAs<Float32Array>(kExemplarArrayPath);
     auto& resultStore = exemplarData.getIDataStoreRefAs<AbstractDataStore<float32>>();
-    for(auto& value : resultStore)
+    for(auto valueProxy : resultStore)
     {
+      float32 value = valueProxy.getValue();
       if(value < 0)
       {
-        value = std::abs(value);
+        valueProxy = std::abs(value);
       }
     }
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);

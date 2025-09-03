@@ -114,7 +114,7 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
 
   for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)
   {
-    numFeaturesStore[featurePhasesStore[index]]++;
+    numFeaturesStore[featurePhasesStore[index]].inc();
   }
   return {};
 }

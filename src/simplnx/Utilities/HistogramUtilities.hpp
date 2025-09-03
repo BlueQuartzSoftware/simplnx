@@ -141,7 +141,7 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
     const auto bin = CalculateBin(static_cast<Type>(inputStore[i]), rangeMinMax.first, increment);
     if((bin >= 0) && (bin < numBins))
     {
-      histogramCountsStore[bin]++;
+      histogramCountsStore[bin].inc();
     }
     else
     {

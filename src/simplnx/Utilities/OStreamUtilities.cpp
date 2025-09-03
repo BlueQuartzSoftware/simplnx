@@ -139,25 +139,25 @@ struct PrintNeighborList
 struct PrintDataArray
 {
   template <typename ScalarType>
-  Result<> operator()(std::ostream& outputStrm, IDataArray* inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
+  Result<> operator()(std::ostream& outputStrm, const IDataArray& inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
                       int32 tuplesPerLine = 0)
   {
-    auto& dataStore = inputDataArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
+    const auto& dataStore = inputDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto start = std::chrono::steady_clock::now();
-    auto numTuples = dataStore.getNumberOfTuples();
+    auto numTuples = inputDataArray.getNumberOfTuples();
     if(tuplesPerLine == 0)
     {
       tuplesPerLine = 1;
     }
 
-    usize numComps = dataStore.getNumberOfComponents();
+    usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
       auto now = std::chrono::steady_clock::now();
       if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
       {
-        auto string = fmt::format("Processing {}: {}% completed", inputDataArray->getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
+        auto string = fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
         mesgHandler(IFilter::Message::Type::Info, string);
         start = now;
         if(shouldCancel)
@@ -420,7 +420,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
         }
         else
         {
-          ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, dataArray, mesgHandler, shouldCancel, delimiter, tuplesPerLine);
+          ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outStrm, *dataArray, mesgHandler, shouldCancel, delimiter, tuplesPerLine);
         }
       }
       auto* stringArray = dataStructure.getDataAs<StringArray>(dataPath);
@@ -476,7 +476,7 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
   auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
   if(dataArray != nullptr)
   {
-    ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outputStrm, dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
+    ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outputStrm, *dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
   }
   auto* stringArray = dataStructure.getDataAs<StringArray>(objectPath);
   if(stringArray != nullptr)
