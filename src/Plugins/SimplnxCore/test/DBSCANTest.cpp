@@ -4,8 +4,8 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-#include "SimplnxCore/Filters/DBSCANFilter.hpp"
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
+#include "SimplnxCore/Filters/DBSCANFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <filesystem>
@@ -254,7 +254,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
 
-  const DataPath vertexGeom =  DataPath{{"Reduced Vertex Geom"}};
+  const DataPath vertexGeom = DataPath{{"Reduced Vertex Geom"}};
   const DataPath targetPath = vertexGeom.createChildPath("Shared Vertex List");
   const DataPath exemplarClusterIds = vertexGeom.createChildPath("VertexData").createChildPath("Cluster Ids");
 

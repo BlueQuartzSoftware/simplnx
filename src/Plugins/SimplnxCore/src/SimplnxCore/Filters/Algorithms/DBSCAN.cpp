@@ -708,8 +708,8 @@ public:
   GDCF(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
        ClusterUtilities::DistanceMetric distMetric)
   : hyperGridBitMap(HGBPT(shouldCancel, messageHelper, inputArray, epsilon, mask))
-  , m_InputDataStore(inputArray)
   , m_Epsilon(epsilon)
+  , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHelper(messageHelper)
@@ -1099,12 +1099,6 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 
 // -----------------------------------------------------------------------------
 DBSCAN::~DBSCAN() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& DBSCAN::getCancel()
-{
-  return m_ShouldCancel;
-}
 
 // -----------------------------------------------------------------------------
 Result<> DBSCAN::operator()()

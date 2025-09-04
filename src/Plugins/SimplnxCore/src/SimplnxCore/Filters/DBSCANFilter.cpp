@@ -90,7 +90,8 @@ Parameters DBSCANFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes(),
+                                                          ArraySelectionParameter::AllowedComponentShapes{{2}, {3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "Name of the ids array to be created in Attribute Array to Cluster's parent group",

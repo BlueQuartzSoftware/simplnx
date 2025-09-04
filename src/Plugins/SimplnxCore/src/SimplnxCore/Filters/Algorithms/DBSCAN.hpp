@@ -5,10 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 #include <random>
@@ -50,7 +47,6 @@ public:
   };
 
   Result<> operator()();
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;
