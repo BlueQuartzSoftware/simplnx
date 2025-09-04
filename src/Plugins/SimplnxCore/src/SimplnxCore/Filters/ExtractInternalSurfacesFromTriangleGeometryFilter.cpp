@@ -176,36 +176,40 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
   auto faceDataName = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
 
-  std::vector<DataPath> arrays;
   OutputActions actions;
-
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomPath);
 
-  if(triangleGeom.getVertices() == nullptr)
+  // Validate NodeTypes and SharedVertexList all have the same number of tuples
   {
-    std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
+    if(triangleGeom.getVertices() == nullptr)
+    {
+      std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
+      return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
+    }
+    std::vector<DataPath> vertexArrays;
+    vertexArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
+    const auto* nodeTypesPtr = dataStructure.getDataAs<Int8Array>(nodeTypesArrayPath);
+    if(nodeTypesPtr == nullptr)
+    {
+      std::string ss("Node Types array not found at path '{}'. Array must be of type Int8");
+      return {MakeErrorResult<OutputActions>(k_NoNodeTypesArray, ss)};
+    }
+    vertexArrays.push_back(nodeTypesArrayPath);
+
+    auto tupleValidityCheck = dataStructure.validateNumberOfTuples(vertexArrays);
+    if(!tupleValidityCheck)
+    {
+      return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+    }
   }
-  arrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
 
   if(triangleGeom.getFaces() == nullptr)
   {
-    std::string ss = fmt::format("Triangle Geometry does not have an assigned faces array");
+    std::string ss = fmt::format("Triangle Geometry does not a Shared Face List");
     return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
   }
-  arrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
 
   std::vector<usize> cDims(1, 1);
-
-  const auto* nodeTypesPtr = dataStructure.getDataAs<Int8Array>(nodeTypesArrayPath);
-  if(nodeTypesPtr == nullptr)
-  {
-    std::string ss("Node Types array not found at path '{}'. Array must be of type Int8");
-    return {MakeErrorResult<OutputActions>(k_NoNodeTypesArray, ss)};
-  }
-  arrays.push_back(nodeTypesArrayPath);
-
-  dataStructure.validateNumberOfTuples(arrays);
 
   // Create Geometry
   usize numFaces = triangleGeom.getNumberOfFaces();
@@ -219,9 +223,12 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   std::vector<usize> tDims(1, 0);
   std::list<std::string> tempDataArrayList;
 
-  // Create arrays
+  // Create arrays and check number of tuples match their respective face or vertex attribute matrix
+  std::vector<DataPath> copiedArrays;
+  copiedArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
   for(const auto& data_array : copyVertexPaths)
   {
+    copiedArrays.push_back(data_array);
     auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
@@ -238,8 +245,17 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath, dataStoreFormat);
     actions.appendAction(std::move(action));
   }
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(copiedArrays);
+  if(!tupleValidityCheck)
+  {
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
+
+  copiedArrays.clear();
+  copiedArrays.push_back(triangleGeom.getFaces()->getDataPaths().front());
   for(const auto& data_array : copyTrianglePaths)
   {
+    copiedArrays.push_back(data_array);
     auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
@@ -255,6 +271,11 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
 
     auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath, dataStoreFormat);
     actions.appendAction(std::move(action));
+  }
+  tupleValidityCheck = dataStructure.validateNumberOfTuples(copiedArrays);
+  if(!tupleValidityCheck)
+  {
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   return {std::move(actions)};

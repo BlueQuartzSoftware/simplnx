@@ -349,7 +349,11 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
     }
   }
 
-  dataStructure.validateNumberOfTuples(dataArrayPaths);
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
+  {
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
 
   DataPath featureGroupDataPath = numCellsPath.getParent();
   const auto* featureDataGroup = dataStructure.getDataAs<BaseGroup>(featureGroupDataPath);

@@ -147,7 +147,12 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   const DataPath reducedVertexDataPath = reduced->getVertexDataPath();
   resultOutputActions.value().appendAction(std::move(reduced));
 
-  dataStructure.validateNumberOfTuples(dataArrayPaths);
+  auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
+  if(!tupleValidityCheck)
+  {
+    return MakePreflightErrorResult(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
+  }
+
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
 
   // This section gets the cell attribute matrix for the input Image Geometry and
