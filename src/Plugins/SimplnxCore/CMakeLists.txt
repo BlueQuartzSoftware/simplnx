@@ -539,6 +539,13 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
     COPY_DATA
   )
 
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+    ARCHIVE_NAME dbscan_2d_data.tar.gz
+    SHA512 cc887291d92f6733de88019249624fcba2889f7594f988fcf083b642b4b2c55321f870c8f8be61a84e982db752e6e385ade930b80b49d718435c827530f479a6
+    INSTALL
+    COPY_DATA
+  )
+
 endif()
 
 # -----------------------------------------------------------------------

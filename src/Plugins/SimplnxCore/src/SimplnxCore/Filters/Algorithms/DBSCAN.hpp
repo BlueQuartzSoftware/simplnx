@@ -5,10 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 #include <random>
@@ -24,8 +21,7 @@ struct SIMPLNXCORE_EXPORT DBSCANInputValues
   int32 MinPoints;
   ClusterUtilities::DistanceMetric DistanceMetric;
   DataPath FeatureAM;
-  bool AllowCaching;
-  bool UseRandom;
+  ChoicesParameter::ValueType ParseOrder;
   std::mt19937_64::result_type Seed;
 };
 
@@ -43,8 +39,14 @@ public:
   DBSCAN& operator=(const DBSCAN&) = delete;
   DBSCAN& operator=(DBSCAN&&) noexcept = delete;
 
+  enum ParseOrder
+  {
+    LowDensityFirst,
+    Random,
+    SeededRandom
+  };
+
   Result<> operator()();
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

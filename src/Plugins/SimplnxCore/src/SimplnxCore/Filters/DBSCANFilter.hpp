@@ -7,13 +7,6 @@
 
 namespace nx::core
 {
-enum AlgType
-{
-  Iterative,
-  Random,
-  SeededRandom
-};
-
 /**
  * @class DBSCANFilter
  * @brief This filter will ....
@@ -31,10 +24,9 @@ public:
   DBSCANFilter& operator=(DBSCANFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InitTypeIndex_Key = "init_type_index";
+  static inline constexpr StringLiteral k_ParseOrderIndex_Key = "parse_order_index";
   static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_UsePrecaching_Key = "use_precaching";
   static inline constexpr StringLiteral k_Epsilon_Key = "epsilon";
   static inline constexpr StringLiteral k_MinPoints_Key = "min_points";
   static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
