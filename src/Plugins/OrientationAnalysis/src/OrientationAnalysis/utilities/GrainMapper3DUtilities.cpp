@@ -177,8 +177,17 @@ nx::core::Result<> GrainMapperReader::readLabDCTHeader(hid_t fileId)
     return MakeErrorResult(-38604, "GrainMapperReader: Error reading data set /LabDCT/Spacing");
   }
 
-  m_LabDctDimensions =
-      std::vector<size_t>{static_cast<size_t>(extents[0] / m_LabDctSpacing[0]), static_cast<size_t>(extents[1] / m_LabDctSpacing[1]), static_cast<size_t>(extents[2] / m_LabDctSpacing[2])};
+  // Get the Image Geometry dimensions by looking for the "Completeness" data set
+  // which according to Xnovo documentation is a required data set. So it **should** be
+  // in the file. We used to calculate the dims from the spacing and extent but due
+  // to round off during calculations that can lead to dimensions that do not line
+  // up with the actual dimensions of the HDF5 data set.
+  std::vector<hsize_t> dims;
+  H5T_class_t classType;
+  size_t sizeType;
+  H5Lite::getDatasetInfo(labDctGid, "Data/Completeness", dims, classType, sizeType);
+  // Note that we need to flip the order of dimensions from ZYX to XYZ
+  m_LabDctDimensions = {static_cast<size_t>(dims[2]), static_cast<size_t>(dims[1]), static_cast<size_t>(dims[0])};
 
   std::vector<double> center;
   error = H5Lite::readVectorDataset(labDctGid, Constants::k_CenterName, center);
@@ -291,7 +300,6 @@ Result<> GrainMapperReader::readHeaderOnly()
 herr_t GrainMapperReader::findAvailableDctDatasets(hid_t labDctGid)
 {
   // Now check that each of the known data sets exist
-  // Get the Image Geometry Dimensions
   hid_t dataGid = H5Gopen(labDctGid, Constants::k_DataGroupName.c_str(), H5P_DEFAULT);
   if(dataGid < 0)
   {
