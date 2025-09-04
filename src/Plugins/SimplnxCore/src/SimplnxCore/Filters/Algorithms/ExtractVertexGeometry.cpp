@@ -150,44 +150,18 @@ Result<> ExtractVertexGeometry::operator()()
     }
   }
 
-  // If we are copying arrays, either with or without a mask, this code is applicable.
-  if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Copy))
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));
+
+  // Since we made copies of the DataArrays, we can safely resize the entire Attribute Matrix,
+  // which will resize all the contained DataArrays
+  AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();
+  vertexAttrMatrix.resizeTuples({vertexCount});
+  for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));
-
-    // Since we made copies of the DataArrays, we can safely resize the entire Attribute Matrix,
-    // which will resize all the contained DataArrays
-    AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();
-    vertexAttrMatrix.resizeTuples({vertexCount});
-    for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
-    {
-      const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
-      DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
-      auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
-      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
-    }
-  }
-
-  // If we are MOVING DataArrays, and we are NOT using a Mask then the MoveDataAction
-  // took care of renaming/moving the arrays for us and we are done.
-
-  // If we are MOVING arrays AND we are using a mask then we need this code block to execute
-  if(m_InputValues->ArrayHandling == to_underlying(ArrayHandlingType::Move) && m_InputValues->UseMask && vertexCount != cellCount)
-  {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving cell data to vertex geometry"));
-
-    // The arrays have already been moved at this point, so the source and
-    // destinations are the same. This should work.
-    for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
-    {
-      DataPath srcDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(dataArrayPath.getTargetName());
-      DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(dataArrayPath.getTargetName());
-      const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(srcDataArrayPath);
-      auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
-      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
-    }
-    AttributeMatrix& vertexAttrMatrix = vertexGeometry.getVertexAttributeMatrixRef();
-    vertexAttrMatrix.resizeTuples({vertexCount});
+    const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
+    DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
+    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+    ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
   }
 
   return {};
