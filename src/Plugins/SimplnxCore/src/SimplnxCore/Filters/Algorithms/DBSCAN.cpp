@@ -81,7 +81,7 @@ struct GridBitMapFactory
  * @brief HyperGridBitMap is the superclass for two specializations of 2D and 3D. These
  * read an input array to define a relevant regular grid. It bins the values in the input
  * array into cells in the grid then compresses the stored grids to just the ones containing
- * points (gridVoxels). It then builds several psuedo-adjacentcy maps to preserve the spatial
+ * points (gridVoxels). It then builds several psuedo-adjacency maps to preserve the spatial
  * relationship between grids along each dimension.
  */
 class HyperGridBitMap
