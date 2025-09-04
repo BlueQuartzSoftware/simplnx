@@ -164,16 +164,17 @@ public:
       std::vector<std::array<usize, 3>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
-        std::vector<std::vector<usize>> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()));
-        // Load grid cells
-        for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
+        usize numTup = inputArray.getNumberOfTuples();
+        std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
+        // Find num grid cells
+        for(usize tup = 0; tup < numTup; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, inputArray.getNumberOfTuples())); });
+          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
 
           if(!mask->isTrue(tup))
           {
@@ -187,17 +188,20 @@ public:
 
           usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
 
-          grids[bin].push_back(tup);
+          grids[bin] = true;
         }
 
         messageHelper.sendMessage(" - Compressing regular grid...");
         usize zSize = dims[1] * dims[0];
         usize ySize = dims[0];
+        usize activeGridCount = 0;
+        std::vector<usize> gridMap(grids.size());
         for(usize i = 0; i < grids.size(); i++)
         {
-          if(!grids[i].empty())
+          if(grids[i])
           {
-            gridVoxels.push_back(std::move(grids[i]));
+            gridMap[i] = activeGridCount;
+            activeGridCount++;
 
             std::array<usize, 3> position = {}; // Trivially copyable
             position[2] = i / zSize;
@@ -207,7 +211,39 @@ public:
             positions.push_back(position);
           }
         }
+
+        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        // Fill grid cells
+        for(usize tup = 0; tup < numTup; tup++)
+        {
+          if(shouldCancel)
+          {
+            return;
+          }
+
+          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
+
+          if(!mask->isTrue(tup))
+          {
+            continue;
+          }
+          // Determine the voxel
+          usize pointIdx = tup * inputArray.getNumberOfComponents();
+          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+          usize zPos = std::floor((inputArray.getValue(pointIdx + 2) - origin[2]) / spacing[2]);
+
+          usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
+
+          gridVoxels[gridMap[bin]].push_back(tup);
+        }
       } // End of filling non-empty grids and positions vector
+
+      // Pack down memory further (run outside block to clear mem faster)
+      for(auto& grid : gridVoxels)
+      {
+        grid.shrink_to_fit();
+      }
 
       messageHelper.sendMessage(" - Generating adjacency matrix for search...");
       /**
@@ -335,16 +371,17 @@ public:
       std::vector<std::array<usize, 2>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
-        std::vector<std::vector<usize>> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()));
-        // Load grid cells
-        for(usize tup = 0; tup < inputArray.getNumberOfTuples(); tup++)
+        usize numTup = inputArray.getNumberOfTuples();
+        std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
+        // Find num grid cells
+        for(usize tup = 0; tup < numTup; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, inputArray.getNumberOfTuples())); });
+          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
 
           if(!mask->isTrue(tup))
           {
@@ -358,17 +395,20 @@ public:
 
           usize bin = (yPos * dims[0]) + xPos;
 
-          grids[bin].push_back(tup);
+          grids[bin] = true;
         }
 
         messageHelper.sendMessage(" - Compressing regular grid...");
 
         usize ySize = dims[0];
+        usize activeGridCount = 0;
+        std::vector<usize> gridMap(grids.size());
         for(usize i = 0; i < grids.size(); i++)
         {
-          if(!grids[i].empty())
+          if(grids[i])
           {
-            gridVoxels.push_back(std::move(grids[i]));
+            gridMap[i] = activeGridCount;
+            activeGridCount++;
 
             std::array<usize, 2> position = {}; // Trivially copyable
             position[1] = i / ySize;
@@ -376,7 +416,38 @@ public:
             positions.push_back(position);
           }
         }
+
+        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        // Fill grid cells
+        for(usize tup = 0; tup < numTup; tup++)
+        {
+          if(shouldCancel)
+          {
+            return;
+          }
+
+          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
+
+          if(!mask->isTrue(tup))
+          {
+            continue;
+          }
+          // Determine the voxel
+          usize pointIdx = tup * inputArray.getNumberOfComponents();
+          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+
+          usize bin = (yPos * dims[0]) + xPos;
+
+          gridVoxels[gridMap[bin]].push_back(tup);
+        }
       } // End of filling non-empty grids and positions vector
+
+      // Pack down memory further (run outside block to clear mem faster)
+      for(auto& grid : gridVoxels)
+      {
+        grid.shrink_to_fit();
+      }
 
       messageHelper.sendMessage(" - Generating adjacency matrix for search...");
       /**
