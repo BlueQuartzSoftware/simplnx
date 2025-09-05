@@ -19,8 +19,9 @@ set(FilterList
   CombineAttributeArraysFilter
   CombineNodeBasedGeometriesFilter
   CombineStlFilesFilter
-  ComputeArrayHistogramFilter
+  CombineTransformationMatricesFilter
   ComputeArrayHistogramByFeatureFilter
+  ComputeArrayHistogramFilter
   ComputeArrayStatisticsFilter
   ComputeBiasedFeaturesFilter
   ComputeBoundaryCellsFilter
@@ -171,6 +172,7 @@ set(AlgorithmList
   CombineAttributeArrays
   CombineNodeBasedGeometries
   CombineStlFiles
+  CombineTransformationMatrices
   ComputeArrayHistogram
   ComputeArrayHistogramByFeature
   ComputeArrayStatistics

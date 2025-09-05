@@ -155,8 +155,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
     return {MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
-  usize numTuples = 1;
-  auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numTuples}, std::vector<usize>{16}, transformArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
 
   OutputActions actions;
   actions.appendAction(std::move(action));

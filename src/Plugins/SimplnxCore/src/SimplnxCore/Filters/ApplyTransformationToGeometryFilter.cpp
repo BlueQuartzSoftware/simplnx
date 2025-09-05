@@ -205,6 +205,13 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         return {
             MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
       }
+      auto totalElements = precomputedMatrixPtr->getNumberOfTuples() * precomputedMatrixPtr->getNumberOfComponents();
+      if(totalElements != 16)
+      {
+        return {MakeErrorResult<OutputActions>(
+            -82019, fmt::format("Precomputed transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
+                                pComputedTransformationMatrixPath.toString(), totalElements, precomputedMatrixPtr->getNumberOfTuples(), precomputedMatrixPtr->getNumberOfComponents()))};
+      }
       transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
       break;
     }
@@ -354,12 +361,12 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pRemoveOriginalGeometry = true;           // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
       const auto& selectedImageGeom = *imageGeomPtr; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
-      const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
+      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
+      const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
       auto originVec = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-      originVec[0] = rotateArgs.xMinNew;
-      originVec[1] = rotateArgs.yMinNew;
-      originVec[2] = rotateArgs.zMinNew;
+      originVec[0] = rotateArgs.outputXMin;
+      originVec[1] = rotateArgs.outputYMin;
+      originVec[2] = rotateArgs.outputZMin;
 
       if(pRemoveOriginalGeometry)
       {
@@ -474,7 +481,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       return {MakeErrorResult<OutputActions>(-5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
     }
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{16}, std::vector<usize>{1}, transformMatrixDataPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformMatrixDataPath));
   }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

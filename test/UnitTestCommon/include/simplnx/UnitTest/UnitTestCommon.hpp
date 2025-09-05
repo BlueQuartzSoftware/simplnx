@@ -381,11 +381,8 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
  * @param exemplaryDataPath
  * @param computedPath
  */
-inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom, float32 threshold = 0.0f)
 {
-  INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
-  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
-  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
   REQUIRE(exemplarGeom != nullptr);
   REQUIRE(computedGeom != nullptr);
 
@@ -395,11 +392,15 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
 
   const auto exemplarSpacing = exemplarGeom->getSpacing();
   const auto computedSpacing = computedGeom->getSpacing();
-  REQUIRE(exemplarSpacing == computedSpacing);
+  REQUIRE(std::fabs(exemplarSpacing[0] - computedSpacing[0]) <= threshold);
+  REQUIRE(std::fabs(exemplarSpacing[1] - computedSpacing[1]) <= threshold);
+  REQUIRE(std::fabs(exemplarSpacing[2] - computedSpacing[2]) <= threshold);
 
   const auto exemplarOrigin = exemplarGeom->getOrigin();
   const auto computedOrigin = computedGeom->getOrigin();
-  REQUIRE(exemplarOrigin == computedOrigin);
+  REQUIRE(std::fabs(exemplarOrigin[0] - computedOrigin[0]) <= threshold);
+  REQUIRE(std::fabs(exemplarOrigin[1] - computedOrigin[1]) <= threshold);
+  REQUIRE(std::fabs(exemplarOrigin[2] - computedOrigin[2]) <= threshold);
 }
 
 /**
@@ -408,22 +409,12 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
  * @param exemplaryDataPath
  * @param computedPath
  */
-inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom)
+inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, float32 threshold = 0.0f)
 {
-  REQUIRE(exemplarGeom != nullptr);
-  REQUIRE(computedGeom != nullptr);
-
-  const auto exemplarDims = exemplarGeom->getDimensions();
-  const auto computedDims = computedGeom->getDimensions();
-  REQUIRE(exemplarDims == computedDims);
-
-  const auto exemplarSpacing = exemplarGeom->getSpacing();
-  const auto computedSpacing = computedGeom->getSpacing();
-  REQUIRE(exemplarSpacing == computedSpacing);
-
-  const auto exemplarOrigin = exemplarGeom->getOrigin();
-  const auto computedOrigin = computedGeom->getOrigin();
-  REQUIRE(exemplarOrigin == computedOrigin);
+  INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
+  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
+  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
+  CompareImageGeometry(exemplarGeom, computedGeom, threshold);
 }
 
 /**

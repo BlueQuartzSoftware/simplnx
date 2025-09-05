@@ -42,7 +42,7 @@ Uuid WriteDREAM3DFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string WriteDREAM3DFilter::humanName() const
 {
-  return "Write DREAM3D NX File";
+  return "Write DREAM3D-NX File";
 }
 
 //------------------------------------------------------------------------------
