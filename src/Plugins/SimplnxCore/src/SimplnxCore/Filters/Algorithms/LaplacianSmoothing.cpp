@@ -20,7 +20,19 @@ LaplacianSmoothing::~LaplacianSmoothing() noexcept = default;
 
 Result<> LaplacianSmoothing::operator()()
 {
-  return edgeBasedSmoothing();
+  auto result = edgeBasedSmoothing();
+
+  // At the end of the algorithm, the 2D Node Geometry will have edges that are not
+  // needed. This will remove those from the DataStructure
+  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<INodeGeometry1D>(m_InputValues->pTriangleGeometryDataPath);
+  auto edgeListId = nodeGeom1DRef.getEdgeListId();
+  nodeGeom1DRef.setEdgeListId(0);
+  auto edgeDataId = nodeGeom1DRef.getEdgeListDataArrayId();
+  nodeGeom1DRef.setEdgeDataId(0);
+  m_DataStructure.removeData(edgeListId);
+  m_DataStructure.removeData(edgeDataId);
+
+  return result;
 }
 
 // -----------------------------------------------------------------------------
