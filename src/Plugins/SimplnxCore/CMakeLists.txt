@@ -115,6 +115,7 @@ set(FilterList
   ReadTextDataArrayFilter
   ReadVolumeGraphicsFileFilter
   ReadVtkStructuredPointsFilter
+  ReadZeissTxmFileFilter
   RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedEdgesFilter
   RemoveFlaggedFeaturesFilter
@@ -233,6 +234,7 @@ set(AlgorithmList
   ReadStringDataArray
   ReadVolumeGraphicsFile
   ReadVtkStructuredPoints
+  ReadZeissTxmFile
   RegularGridSampleSurfaceMesh
   RemoveFlaggedEdges
   RemoveFlaggedFeatures
@@ -391,14 +393,22 @@ set(PLUGIN_EXTRA_SOURCES
 
 )
 
-target_sources(${PLUGIN_NAME}
-  PRIVATE
-    ${PLUGIN_EXTRA_SOURCES}
+set(OLESS_SOURCES 
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless_common.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.h"
 )
 
-source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME}
-  FILES
-    ${PLUGIN_EXTRA_SOURCES}
+target_sources(${PLUGIN_NAME}
+  PRIVATE
+    ${PLUGIN_EXTRA_SOURCES} ${OLESS_SOURCES}
+)
+
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" 
+            PREFIX ${PLUGIN_NAME}
+            FILES  ${PLUGIN_EXTRA_SOURCES}
 )
 
 #------------------------------------------------------------------------------
@@ -442,10 +452,10 @@ cmpConfigureFileWithMD5Check(CONFIGURED_TEMPLATE_PATH "${${PLUGIN_NAME}_SOURCE_D
                                #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
-# target_include_directories(${PLUGIN_NAME}
-#     PRIVATE
-#     additional include directories here
-# )
+target_include_directories(${PLUGIN_NAME}
+  PUBLIC
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless"
+)
 
 # -----------------------------------------------------------------------
 # Install example pipelines
@@ -562,3 +572,20 @@ install(FILES
   DESTINATION Data/${PLUGIN_NAME}
   COMPONENT Applications
 )
+
+add_executable(txm_reader ${OLESS_SOURCES} ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/txm_reader.cpp)
+target_include_directories(txm_reader PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless)
+
+target_compile_features(txm_reader
+                        PUBLIC
+                        cxx_std_17
+)
+
+set_target_properties(txm_reader
+                      PROPERTIES
+                      DEBUG_POSTFIX "_d"
+)
+# target_include_directories(txm_reader
+#   PUBLIC
+#     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless
+# )
