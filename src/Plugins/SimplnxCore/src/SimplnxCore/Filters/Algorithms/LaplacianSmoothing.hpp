@@ -48,7 +48,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::vector<float> generateLambdaArray();
+  std::vector<float> generateLambdaArray() const;
   Result<> edgeBasedSmoothing();
 };
 
