@@ -7,11 +7,10 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-
-#include "EbsdLib/Core/EbsdLibConstants.h"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include "EbsdLib/Core/EbsdLibConstants.h"
+#include "EbsdLib/Core/EbsdMacros.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace nx::core;
@@ -285,42 +284,49 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
     algArrays.push_back(maskArray);
   }
 
-  // Parallel algorithm
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(quatArray.getNumberOfTuples()));
-  dataAlg.requireArraysInMemory(algArrays);
+  try
+  {
+    // Parallel algorithm
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0ULL, static_cast<size_t>(quatArray.getNumberOfTuples()));
+    dataAlg.requireArraysInMemory(algArrays);
 
-  if(pUseGoodVoxelsValue)
-  {
-    if(maskArray->getDataType() == DataType::boolean)
+    if(pUseGoodVoxelsValue)
     {
-      BoolArray* goodVoxelsArray = dataStructure.getDataAs<BoolArray>(pGoodVoxelsArrayPathValue);
-      dataAlg.execute(::GenerateFZQuatsImpl<BoolArray>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
+      if(maskArray->getDataType() == DataType::boolean)
+      {
+        BoolArray* goodVoxelsArray = dataStructure.getDataAs<BoolArray>(pGoodVoxelsArrayPathValue);
+        dataAlg.execute(::GenerateFZQuatsImpl<BoolArray>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
+      }
+      else if(maskArray->getDataType() == DataType::uint8)
+      {
+        UInt32Array* goodVoxelsArray = dataStructure.getDataAs<UInt32Array>(pGoodVoxelsArrayPathValue);
+        dataAlg.execute(::GenerateFZQuatsImpl<UInt32Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
+      }
+      else if(maskArray->getDataType() == DataType::int8)
+      {
+        Int8Array* goodVoxelsArray = dataStructure.getDataAs<Int8Array>(pGoodVoxelsArrayPathValue);
+        dataAlg.execute(::GenerateFZQuatsImpl<Int8Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
+      }
     }
-    else if(maskArray->getDataType() == DataType::uint8)
+    else
     {
-      UInt32Array* goodVoxelsArray = dataStructure.getDataAs<UInt32Array>(pGoodVoxelsArrayPathValue);
-      dataAlg.execute(::GenerateFZQuatsImpl<UInt32Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
+      dataAlg.execute(::GenerateFZQuatsImpl<Int8Array>(quatArray, phaseArray, xtalArray, numPhases, nullptr, fzQuatArray, shouldCancel, warningCount));
     }
-    else if(maskArray->getDataType() == DataType::int8)
-    {
-      Int8Array* goodVoxelsArray = dataStructure.getDataAs<Int8Array>(pGoodVoxelsArrayPathValue);
-      dataAlg.execute(::GenerateFZQuatsImpl<Int8Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, shouldCancel, warningCount));
-    }
-  }
-  else
-  {
-    dataAlg.execute(::GenerateFZQuatsImpl<Int8Array>(quatArray, phaseArray, xtalArray, numPhases, nullptr, fzQuatArray, shouldCancel, warningCount));
-  }
 
-  if(warningCount > 0)
-  {
-    std::string errorMessage = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
+    if(warningCount > 0)
+    {
+      std::string errorMessage = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
 This indicates a problem with the input cell phase data. DREAM3D-NX may have given INCORRECT RESULTS.",
-                                           numPhases - 1, warningCount.load(), numPhases - 1);
+                                             numPhases - 1, warningCount.load(), numPhases - 1);
 
-    return {MakeErrorResult<>(-49008, errorMessage)};
+      return {MakeErrorResult<>(-49008, errorMessage)};
+    }
+  } catch(const EbsdLib::method_not_implemented& e)
+  {
+    return {MakeErrorResult<>(-49008, fmt::format("EbsdLib threw an exception when computing the fundamental zone data. {}", e.what()))};
   }
+
   return {};
 }
 

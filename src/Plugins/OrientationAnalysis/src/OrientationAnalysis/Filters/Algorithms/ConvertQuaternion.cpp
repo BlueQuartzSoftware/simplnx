@@ -5,6 +5,8 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <EbsdLib/Utilities/EbsdStringUtils.hpp>
+
 using namespace nx::core;
 
 namespace
@@ -13,11 +15,12 @@ namespace
 constexpr ChoicesParameter::ValueType k_ToScalarVector = 0;
 constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 
+template <typename T>
 class ConvertQuaternionImpl
 {
 
 public:
-  ConvertQuaternionImpl(const Float32Array& inputQuat, Float32Array& outputQuat, ChoicesParameter::ValueType conversionType, const std::atomic_bool& shouldCancel)
+  ConvertQuaternionImpl(const DataArray<T>& inputQuat, DataArray<T>& outputQuat, ChoicesParameter::ValueType conversionType, const std::atomic_bool& shouldCancel)
   : m_Input(inputQuat)
   , m_Output(outputQuat)
   , m_ConversionType(conversionType)
@@ -62,8 +65,8 @@ public:
   }
 
 private:
-  const Float32Array& m_Input;
-  Float32Array& m_Output;
+  const DataArray<T>& m_Input;
+  DataArray<T>& m_Output;
   ChoicesParameter::ValueType m_ConversionType = 0;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -91,12 +94,26 @@ const std::atomic_bool& ConvertQuaternion::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertQuaternion::operator()()
 {
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
-  auto& convertedQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+  const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
 
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, quats.getNumberOfTuples());
-  dataAlg.execute(ConvertQuaternionImpl(quats, convertedQuats, m_InputValues->ConversionType, m_ShouldCancel));
+  dataAlg.setRange(0, iDataArray.getNumberOfTuples());
 
+  if(iDataArray.getDataType() == DataType::float32)
+  {
+    const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
+    auto& convertedQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+    dataAlg.execute(ConvertQuaternionImpl<float32>(quats, convertedQuats, m_InputValues->ConversionType, m_ShouldCancel));
+  }
+  else if(iDataArray.getDataType() == DataType::float64)
+  {
+    const auto& quats = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->QuaternionDataArrayPath);
+    auto& convertedQuats = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->OutputDataArrayPath);
+    dataAlg.execute(ConvertQuaternionImpl<float64>(quats, convertedQuats, m_InputValues->ConversionType, m_ShouldCancel));
+  }
+  else
+  {
+    return {MakeErrorResult(-74836, fmt::format("The input and output arrays must be either Float32 or Float64 type"))};
+  }
   return {};
 }
