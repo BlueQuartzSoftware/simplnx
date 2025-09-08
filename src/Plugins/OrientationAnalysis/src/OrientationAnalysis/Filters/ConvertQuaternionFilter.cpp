@@ -68,7 +68,7 @@ Parameters ConvertQuaternionFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Input Quaternions", "Specifies the quaternions to convert", DataPath({"Cell Data", "Quats"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
 
@@ -98,14 +98,14 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Validate the Quats array
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuaternionDataArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<IDataArray>(pQuaternionDataArrayPathValue);
   if(quats.getNumberOfComponents() != 4)
   {
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
   }
 
   {
-    auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
+    auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(quats.getDataType(), quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createConvertedQuatAction));
   }
 
