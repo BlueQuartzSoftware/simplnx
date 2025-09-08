@@ -7,7 +7,7 @@ IO (Read)
 ## Description ##
 
 This filter will read the entire volume or optionally a subvolume from a .txm or .txrm file. These files
-are Zeiss xCT reconstrucion files.
+are Zeiss xCT reconstruction files.
 
 The minimum slice always starts at 1.
 The last slice is inclusive.
