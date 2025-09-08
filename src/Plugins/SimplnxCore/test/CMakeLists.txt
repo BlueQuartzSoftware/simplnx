@@ -156,6 +156,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
+  ReadZeissTxmFileTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -267,6 +268,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME extract_vertex_geometry.tar.gz SHA512 b34c877e6a150eb461aa21afc33529a8cde07e32d4c1e788cb2c98751ebf1d8f82ca9da010c8c3de6f15e53e9a8d030d62c93173815b101fe676edccac59ad0a)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME extract_internal_surface.tar.gz SHA512 86d47a9850d03486a62707f2f0c48fe7bc5d88a0b71fc286f74ad13a1f3c982f36f55ac65dda43b67826b14b4fce0dc2d29dd5adbee6338a887a12f42e879ed7)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME dbscan_test.tar.gz SHA512 77d7886e2550b63176b564e827d7de320b5a28b1c8a55bf107d53acd6962757275bc86b3382ff789f612a6838f55ab8f4af29435aec83a7a804b9487e57a6386)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadZeissTxmFileTest.tar.gz SHA512 35e74a11eccfe838547fce46cad0e36fd29029af11ec322caa2a580a583f6c341bf38dc1a6c853a99733115a9971fef39e6035639af892c3898a109610d2f1e7)
 
 endif()
 
