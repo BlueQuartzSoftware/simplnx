@@ -32,16 +32,19 @@ class CalculateFaceIPFColorsImpl
   const Float64Array& m_Normals;
   const Float32Array& m_Eulers;
   const UInt32Array& m_CrystalStructures;
-  UInt8Array& m_Colors;
+  UInt8Array& m_FirstColors;
+  UInt8Array& m_SecondColors;
 
 public:
-  CalculateFaceIPFColorsImpl(const Int32Array& labels, const Int32Array& phases, const Float64Array& normals, const Float32Array& eulers, const UInt32Array& crystalStructures, UInt8Array& colors)
+  CalculateFaceIPFColorsImpl(const Int32Array& labels, const Int32Array& phases, const Float64Array& normals, const Float32Array& eulers, const UInt32Array& crystalStructures, UInt8Array& firstColors,
+                             UInt8Array& secondColors)
   : m_Labels(labels)
   , m_Phases(phases)
   , m_Normals(normals)
   , m_Eulers(eulers)
   , m_CrystalStructures(crystalStructures)
-  , m_Colors(colors)
+  , m_FirstColors(firstColors)
+  , m_SecondColors(secondColors)
   {
   }
   virtual ~CalculateFaceIPFColorsImpl() = default;
@@ -102,16 +105,16 @@ public:
           refDir[2] = m_Normals[3 * i + 2];
 
           argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false);
-          m_Colors[6 * i] = RgbColor::dRed(argb);
-          m_Colors[6 * i + 1] = RgbColor::dGreen(argb);
-          m_Colors[6 * i + 2] = RgbColor::dBlue(argb);
+          m_FirstColors[3 * i] = RgbColor::dRed(argb);
+          m_FirstColors[3 * i + 1] = RgbColor::dGreen(argb);
+          m_FirstColors[3 * i + 2] = RgbColor::dBlue(argb);
         }
       }
       else // Phase 1 was Zero so assign a black color
       {
-        m_Colors[6 * i + 0] = 0;
-        m_Colors[6 * i + 1] = 0;
-        m_Colors[6 * i + 2] = 0;
+        m_FirstColors[3 * i + 0] = 0;
+        m_FirstColors[3 * i + 1] = 0;
+        m_FirstColors[3 * i + 2] = 0;
       }
 
       // Now compute for Phase 2
@@ -128,16 +131,16 @@ public:
           refDir[2] = -m_Normals[3 * i + 2];
 
           argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false);
-          m_Colors[6 * i + 3] = RgbColor::dRed(argb);
-          m_Colors[6 * i + 4] = RgbColor::dGreen(argb);
-          m_Colors[6 * i + 5] = RgbColor::dBlue(argb);
+          m_SecondColors[3 * i + 0] = RgbColor::dRed(argb);
+          m_SecondColors[3 * i + 1] = RgbColor::dGreen(argb);
+          m_SecondColors[3 * i + 2] = RgbColor::dBlue(argb);
         }
       }
       else
       {
-        m_Colors[6 * i + 3] = 0;
-        m_Colors[6 * i + 4] = 0;
-        m_Colors[6 * i + 5] = 0;
+        m_SecondColors[3 * i + 0] = 0;
+        m_SecondColors[3 * i + 1] = 0;
+        m_SecondColors[3 * i + 2] = 0;
       }
     }
   }
@@ -179,8 +182,10 @@ Result<> ComputeFaceIPFColoring::operator()()
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath faceIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SurfaceMeshFaceIPFColorsArrayName);
-  auto& faceIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(faceIpfColorsArrayPath);
+  DataPath firstIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->FirstFaceIPFColorsArrayName);
+  auto& firstIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(firstIpfColorsArrayPath);
+  DataPath secondIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SecondFaceIPFColorsArrayName);
+  auto& secondIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(secondIpfColorsArrayPath);
   int64 numTriangles = faceLabels.getNumberOfTuples();
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
@@ -189,12 +194,13 @@ Result<> ComputeFaceIPFColoring::operator()()
   algArrays.push_back(&eulerAngles);
   algArrays.push_back(&phases);
   algArrays.push_back(&crystalStructures);
-  algArrays.push_back(&faceIpfColors);
+  algArrays.push_back(&firstIpfColors);
+  algArrays.push_back(&secondIpfColors);
 
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
   parallelTask.requireArraysInMemory(algArrays);
-  parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, faceIpfColors));
+  parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, firstIpfColors, secondIpfColors));
 
   return {};
 }

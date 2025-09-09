@@ -12,7 +12,8 @@ using namespace nx::core::UnitTest;
 namespace
 {
 constexpr StringLiteral k_FaceIPFColors("SurfaceMeshFaceIPFColors");
-constexpr StringLiteral k_NXFaceIPFColors("NXFaceIPFColors");
+constexpr StringLiteral k_FirstNXFaceIPFColors("NXFaceIPFColors 0");
+constexpr StringLiteral k_SecondNXFaceIPFColors("NXFaceIPFColors 1");
 
 DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
 DataPath featureDataPath = smallIn100Group.createChildPath(nx::core::Constants::k_Grain_Data);
@@ -49,7 +50,8 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Valid filter execu
   args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
   args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
   args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceIPFColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceIPFColors));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>(::k_FirstNXFaceIPFColors));
+  args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>(::k_SecondNXFaceIPFColors));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -61,8 +63,23 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Valid filter execu
 
   // compare the resulting face IPF Colors array
   DataPath exemplarPath = faceDataGroup.createChildPath(::k_FaceIPFColors);
-  DataPath generatedPath = faceDataGroup.createChildPath(::k_NXFaceIPFColors);
-  CompareArrays<uint8>(dataStructure, exemplarPath, generatedPath);
+  const auto& exemplarArray = dataStructure.getDataRefAs<UInt8Array>(exemplarPath);
+  DataPath firstGeneratedPath = faceDataGroup.createChildPath(::k_FirstNXFaceIPFColors);
+  const auto& firstArray = dataStructure.getDataRefAs<UInt8Array>(firstGeneratedPath);
+  DataPath secondGeneratedPath = faceDataGroup.createChildPath(::k_SecondNXFaceIPFColors);
+  const auto& secondArray = dataStructure.getDataRefAs<UInt8Array>(secondGeneratedPath);
+
+  // Done this way because original output was segmented into separate arrays for vis
+  for(usize i = 0; i < exemplarArray.getNumberOfTuples(); i++)
+  {
+    REQUIRE(exemplarArray[(i * 6) + 0] == firstArray[(i * 3) + 0]);
+    REQUIRE(exemplarArray[(i * 6) + 1] == firstArray[(i * 3) + 1]);
+    REQUIRE(exemplarArray[(i * 6) + 2] == firstArray[(i * 3) + 2]);
+
+    REQUIRE(exemplarArray[(i * 6) + 3] == secondArray[(i * 3) + 0]);
+    REQUIRE(exemplarArray[(i * 6) + 4] == secondArray[(i * 3) + 1]);
+    REQUIRE(exemplarArray[(i * 6) + 5] == secondArray[(i * 3) + 2]);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -88,7 +105,6 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter exe
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceIPFColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceIPFColors));
   }
   SECTION("Inconsistent cell data tuple dimensions")
   {
@@ -97,7 +113,6 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter exe
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(faceAreas));
     args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceIPFColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceIPFColors));
   }
 
   // Preflight the filter and check result

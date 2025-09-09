@@ -18,7 +18,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFaceIPFColoringInputValues
   DataPath FeatureEulerAnglesArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
-  std::string SurfaceMeshFaceIPFColorsArrayName;
+  std::string FirstFaceIPFColorsArrayName;
+  std::string SecondFaceIPFColorsArrayName;
 };
 
 /**
