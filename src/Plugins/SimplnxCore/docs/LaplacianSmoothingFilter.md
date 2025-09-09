@@ -6,7 +6,7 @@ Surface Meshing (Smoothing)
 
 ## Description
 
-This **Filter** applies Laplacian smoothing to a **Triangle Geometry** that represents a surface mesh. A. Belyaev [2] has a concise explanation of the Laplacian Smoothing as follows:
+This **Filter** applies Laplacian smoothing to any node based geometry except for **vertex**. A. Belyaev [2] has a concise explanation of the Laplacian Smoothing as follows:
 
 ---------------------------
 
@@ -45,13 +45,19 @@ Currently, if you lock the *Default Lambda* value to zero (0), the triple lines 
 
 This **Filter** will create additional internal arrays in order to facilitate the calculations. These arrays are
 
-- Float - &lambda; values (same size as nodes array)
+- Float - lambda values (same size as nodes array)
 - 64 bit integer - unique edges array
 - 8 bit integer for node type (same size as nodes array)
 - Integer for number of connections for each node (same size as nodes array)
 - 64 bit float for delta values (3x size of nodes array)
 
 Due to these array allocations this **Filter** can consume large amounts of memory if the starting mesh has a large number of nodes.
+
+At the conclusion of the filter these extra internal arrays will be reclaimed by the system.
+
+
+### Node Type Values
+
 The values for the *Node Type* array can take one of the following values.
 
     namespace SurfaceMesh {
@@ -65,6 +71,8 @@ The values for the *Node Type* array can take one of the following values.
         const int8_t SurfaceQuadPoint = 14;
       }
     }
+
+If your surface mesh is lacking a `Node Type` array, you can simply create a DataArray inside the Vertex Data Attribute Matrix. The type should be "int8" and have an initialization value of 3. This will allow **all** nodes to move.
 
 For more information on surface meshing, visit the tutorial.
 

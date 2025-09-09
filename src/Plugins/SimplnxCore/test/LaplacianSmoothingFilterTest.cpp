@@ -3,7 +3,6 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -112,11 +111,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  Result<nx::core::HDF5::FileWriter> result = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
-  nx::core::HDF5::FileWriter fileWriter = std::move(result.value());
-
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
+  WriteTestDataStructure(dataStructure, fmt::format("{}/laplacian_smoothing_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

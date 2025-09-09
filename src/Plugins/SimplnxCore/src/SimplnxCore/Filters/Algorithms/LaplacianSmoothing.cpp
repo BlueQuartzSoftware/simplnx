@@ -20,7 +20,20 @@ LaplacianSmoothing::~LaplacianSmoothing() noexcept = default;
 
 Result<> LaplacianSmoothing::operator()()
 {
-  return edgeBasedSmoothing();
+  auto result = edgeBasedSmoothing();
+
+  // At the end of the algorithm, the 2D Node Geometry will have edges that are not
+  // needed. This will remove those from the DataStructure
+  if(auto* nodeGeom2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath); nullptr != nodeGeom2DPtr)
+  {
+    auto edgeListId = nodeGeom2DPtr->getEdgeListId();
+    nodeGeom2DPtr->setEdgeListId(0);
+    auto edgeDataId = nodeGeom2DPtr->getEdgeListDataArrayId();
+    nodeGeom2DPtr->setEdgeDataId(0);
+    m_DataStructure.removeData(edgeListId);
+    m_DataStructure.removeData(edgeDataId);
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -28,32 +41,35 @@ Result<> LaplacianSmoothing::operator()()
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::edgeBasedSmoothing()
 {
-  auto& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
+  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<INodeGeometry1D>(m_InputValues->pTriangleGeometryDataPath);
 
-  if(surfaceMesh.getVertices() == nullptr)
+  if(nodeGeom1DRef.getVertices() == nullptr)
   {
     return MakeErrorResult(-559, "Error finding TriangleGeom vertices.");
   }
 
-  Float32AbstractDataStore& verts = surfaceMesh.getVertices()->getDataStoreRef();
-
-  IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
+  Float32AbstractDataStore& vertDataStoreRef = nodeGeom1DRef.getVertices()->getDataStoreRef();
+  IGeometry::MeshIndexType numberOfVertices = nodeGeom1DRef.getNumberOfVertices();
 
   // Generate the Lambda Array
   std::vector<float> lambdas = generateLambdaArray();
 
-  //  Generate the Unique Edges
-  if(surfaceMesh.findEdges(false) < 0)
+  auto inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  if(nullptr != inode2DPtr)
   {
-    return MakeErrorResult(-560, "Error retrieving the shared edge list");
+    //  Generate the Unique Edges
+    if(inode2DPtr->findEdges(false) < 0)
+    {
+      return MakeErrorResult(-560, "Error retrieving or creating the shared edge list");
+    }
   }
 
-  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edges = surfaceMesh.getEdges()->getDataStoreRef();
+  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edges = nodeGeom1DRef.getEdges()->getDataStoreRef();
   IGeometry::MeshIndexType numEdges = edges.getNumberOfTuples();
 
-  std::vector<int32> numConnections(nvert, 0);
+  std::vector<int32> numConnections(numberOfVertices, 0);
 
-  std::vector<double> deltaArray(nvert * 3);
+  std::vector<double> deltaArray(numberOfVertices * 3);
   double dlta = 0.0;
 
   for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
@@ -72,10 +88,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
 #if 0
-        Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(nvert * 3));
-        Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(nvert * 3));
+        Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
+        Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-        dlta = static_cast<double>(verts[3 * in2 + j] - verts[3 * in1 + j]);
+        dlta = static_cast<double>(vertDataStoreRef[3 * in2 + j] - vertDataStoreRef[3 * in1 + j]);
         deltaArray[3 * in1 + j] += dlta;
         deltaArray[3 * in2 + j] += -1.0 * dlta;
       }
@@ -84,7 +100,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
 
     // Move each point
-    for(IGeometry::MeshIndexType i = 0; i < nvert; i++)
+    for(IGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
     {
       for(IGeometry::MeshIndexType j = 0; j < 3; j++)
       {
@@ -92,7 +108,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         dlta = deltaArray[in0] / numConnections[i];
 
         float ll = lambdas[i];
-        verts[3 * i + j] += ll * dlta;
+        vertDataStoreRef[3 * i + j] += ll * dlta;
         deltaArray[in0] = 0.0; // reset for next iteration
       }
       numConnections[i] = 0; // reset for next iteration
@@ -118,10 +134,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         for(int32_t j = 0; j < 3; j++)
         {
 #if 0
-          Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(nvert * 3));
-          Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(nvert * 3));
+          Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
+          Q_ASSERT(static_cast<size_t>(3 * in2 + j) < static_cast<size_t>(numberOfVertices * 3));
 #endif
-          dlta = verts[3 * in2 + j] - verts[3 * in1 + j];
+          dlta = vertDataStoreRef[3 * in2 + j] - vertDataStoreRef[3 * in1 + j];
           deltaArray[3 * in1 + j] += dlta;
           deltaArray[3 * in2 + j] += -1.0 * dlta;
         }
@@ -129,8 +145,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         numConnections[in2] += 1;
       }
 
-      // MOve the points
-      for(IGeometry::MeshIndexType i = 0; i < nvert; i++)
+      // Move the points
+      for(IGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
       {
         for(IGeometry::MeshIndexType j = 0; j < 3; j++)
         {
@@ -138,7 +154,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           dlta = deltaArray[in0] / numConnections[i];
 
           float ll = lambdas[i] * m_InputValues->pMuFactor;
-          verts[3 * i + j] += ll * dlta;
+          vertDataStoreRef[3 * i + j] += ll * dlta;
           deltaArray[in0] = 0.0; // reset for next iteration
         }
         numConnections[i] = 0; // reset for next iteration
@@ -150,7 +166,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 }
 
 // -----------------------------------------------------------------------------
-std::vector<float> LaplacianSmoothing::generateLambdaArray()
+std::vector<float> LaplacianSmoothing::generateLambdaArray() const
 {
   auto& surfaceMeshNode = m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)->getDataStoreRef();
 
