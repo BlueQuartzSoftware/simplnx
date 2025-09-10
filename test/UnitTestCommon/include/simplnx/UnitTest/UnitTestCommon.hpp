@@ -350,7 +350,7 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
   DataStructure exemplarDataStructure;
   INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
   REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
+  auto result = DREAM3D::ImportDataStructureFromFile(filepath, false);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   return result.value();
 }

@@ -55,7 +55,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
     // This test file was produced by SIMPL/DREAM3D. our results should match theirs
     auto exemplarFilePath = fs::path(fmt::format("{}/so3_cubic_high_ipf_001.dream3d", unit_test::k_TestFilesDir));
     REQUIRE(fs::exists(exemplarFilePath));
-    auto result = DREAM3D::ImportDataStructureFromFile(exemplarFilePath);
+    auto result = DREAM3D::ImportDataStructureFromFile(exemplarFilePath, false);
     REQUIRE(result.valid());
     dataStructure = result.value();
   }

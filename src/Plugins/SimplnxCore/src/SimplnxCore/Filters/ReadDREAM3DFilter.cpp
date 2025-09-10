@@ -17,55 +17,6 @@ namespace
 constexpr nx::core::int32 k_NoImportPathError = -1;
 constexpr nx::core::int32 k_FailedOpenFileIOError = -25;
 constexpr nx::core::int32 k_UnsupportedPathImportPolicyError = -51;
-
-std::vector<nx::core::DataPath> ExpandSelectedPathsToAncestors(const std::vector<nx::core::DataPath>& selectedPaths)
-{
-  std::vector<nx::core::DataPath> finalDataPaths;
-  for(const auto& dataPath : selectedPaths)
-  {
-    auto pathVector = dataPath.getPathVector();
-    for(size_t i = 1; i <= dataPath.getLength(); ++i)
-    {
-      auto dataPathPart = nx::core::DataPath(std::vector<std::string>(pathVector.begin(), pathVector.begin() + i));
-      if(std::find(finalDataPaths.begin(), finalDataPaths.end(), dataPathPart) == finalDataPaths.end())
-      {
-        finalDataPaths.push_back(dataPathPart);
-      }
-    }
-  }
-
-  return finalDataPaths;
-}
-
-std::vector<nx::core::DataPath> ExpandSelectedPathsToDescendants(const std::vector<nx::core::DataPath>& selectedPaths, const std::vector<nx::core::DataPath>& allPaths)
-{
-  std::vector<nx::core::DataPath> expandedDataPaths = selectedPaths;
-  for(const auto& dataPath : selectedPaths)
-  {
-    for(const auto& candidateDataPath : allPaths)
-    {
-      if(candidateDataPath.getLength() <= dataPath.getLength())
-      {
-        continue;
-      }
-
-      bool isEqual = true;
-      for(size_t i = 0; i < dataPath.getPathVector().size(); ++i)
-      {
-        if(dataPath.getPathVector()[i] != candidateDataPath.getPathVector()[i])
-        {
-          isEqual = false;
-        }
-      }
-      if(isEqual)
-      {
-        expandedDataPaths.push_back(candidateDataPath);
-      }
-    }
-  }
-
-  return expandedDataPaths;
-}
 } // namespace
 
 namespace nx::core
@@ -149,8 +100,8 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
     auto allDataPaths = importedDataStructure.getAllDataPaths();
-    std::vector<DataPath> selectedDataPaths = ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
-    selectedDataPaths = ExpandSelectedPathsToAncestors(selectedDataPaths);
+    std::vector<DataPath> selectedDataPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+    selectedDataPaths = DREAM3D::ExpandSelectedPathsToAncestors(selectedDataPaths);
 
     if(selectedDataPaths.empty())
     {
@@ -174,7 +125,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
       }
       else
       {
-        auto expandedDataPaths = ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+        auto expandedDataPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
 
         // Erase the expandedDataPaths from allPaths to create finalDataPaths
         std::vector<nx::core::DataPath> finalDataPaths = allDataPaths;
