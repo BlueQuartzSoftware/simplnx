@@ -61,7 +61,8 @@ result = nx_filter.execute(
     crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     feature_euler_angles_array_path=nx.DataPath("DataContainer/Cell Feature Data/AvgEulerAngles"),
     feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
-    surface_mesh_face_ipf_colors_array_name="FaceIPFColors",
+    first_face_ipf_colors_array_name="FaceIPFColors 0",
+    second_face_ipf_colors_array_name="FaceIPFColors 1",
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
     surface_mesh_face_normals_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceNormals")
 )
