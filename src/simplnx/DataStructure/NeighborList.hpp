@@ -197,6 +197,15 @@ public:
   void addEntry(int32 grainId, value_type value);
 
   /**
+   * @brief updateListEntry changes the value in supplied element position in the supplied grain to the supplied value,
+   * This is a bounds checked function
+   * @param grainId the list to access
+   * @param elementPosition the position in the grain to be updated
+   * @param value the new value
+   */
+  void updateListEntry(int32 grainId, usize elementPosition, value_type value);
+
+  /**
    * @brief Clear All Lists
    */
   void clearAllLists();

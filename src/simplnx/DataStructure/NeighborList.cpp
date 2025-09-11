@@ -167,7 +167,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     return 0;
   }
 
-  usize idxsSize = static_cast<usize>(idxs.size());
+  auto idxsSize = static_cast<usize>(idxs.size());
   if(idxsSize >= getNumberOfTuples())
   {
     resizeTuples(0);
@@ -279,7 +279,6 @@ void NeighborList<T>::initializeWithZeros()
 template <typename T>
 int32 NeighborList<T>::resizeTotalElements(usize size)
 {
-  usize old = m_Store->size();
   m_Store->resizeTuples(size);
   setNumberOfTuples(size);
 
@@ -319,6 +318,13 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
 }
 
 template <typename T>
+void NeighborList<T>::updateListEntry(int32 grainId, usize elementPosition, value_type value)
+{
+  // The store does bound checking
+  m_Store->setValue(grainId, elementPosition, value);
+}
+
+template <typename T>
 void NeighborList<T>::clearAllLists()
 {
   m_Store->clear();
@@ -330,7 +336,6 @@ void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborLis
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Store->size();
     m_Store->resizeTuples(grainId + 1);
     m_IsAllocated = true;
   }
@@ -342,7 +347,6 @@ void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Store->size();
     m_Store->resizeTuples(grainId + 1);
     m_IsAllocated = true;
   }

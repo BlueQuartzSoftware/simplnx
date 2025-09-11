@@ -187,12 +187,10 @@ public:
 
   void setValue(int32 grainId, usize index, T value) override
   {
-    if(grainId >= this->getNumberOfLists())
+    if(grainId < this->getNumberOfLists() && index < m_Array[grainId].size())
     {
-      return;
+      m_Array[grainId][index] = value;
     }
-
-    m_Array[grainId][index] = value;
   }
 
   uint64 getNumberOfLists() const override
