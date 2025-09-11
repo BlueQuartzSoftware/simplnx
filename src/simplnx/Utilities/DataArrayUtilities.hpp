@@ -516,6 +516,34 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
 SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const std::vector<usize>& tupleShape,
                                                                 const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
 
+template <typename T>
+std::vector<std::array<T, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> dataArray)
+{
+  if(dataArray == nullptr)
+  {
+    return {{0, 0}};
+  }
+  const usize numTuples = dataArray->getNumberOfTuples();
+  const usize numComps = dataArray->getNumberOfComponents();
+  std::vector<std::array<T, 2>> componentRanges(numComps, std::array<T, 2>{std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest()});
+  for(int i = 0; i < numTuples; ++i)
+  {
+    for(int j = 0; j < numComps; ++j)
+    {
+      const auto value = dataArray->getValue(i * numComps + j);
+      if(value > componentRanges[j][1])
+      {
+        componentRanges[j][1] = value;
+      }
+      if(value < componentRanges[j][0])
+      {
+        componentRanges[j][0] = value;
+      }
+    }
+  }
+  return componentRanges;
+}
+
 /**
  * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
  *
