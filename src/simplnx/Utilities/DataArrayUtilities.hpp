@@ -517,15 +517,15 @@ SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& d
                                                                 const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
 
 template <typename T>
-std::vector<std::array<double, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> dataArray)
+std::vector<std::array<T, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> dataArray)
 {
   if(dataArray == nullptr)
   {
-    return {{0.0, 0.0}};
+    return {{0, 0}};
   }
   const usize numTuples = dataArray->getNumberOfTuples();
   const usize numComps = dataArray->getNumberOfComponents();
-  std::vector<std::array<double, 2>> componentRanges(numComps, std::array<double, 2>{static_cast<double>(std::numeric_limits<T>::max()), static_cast<double>(std::numeric_limits<T>::lowest())});
+  std::vector<std::array<T, 2>> componentRanges(numComps, std::array<T, 2>{std::numeric_limits<T>::max(), std::numeric_limits<T>::lowest()});
   for(int i = 0; i < numTuples; ++i)
   {
     for(int j = 0; j < numComps; ++j)
