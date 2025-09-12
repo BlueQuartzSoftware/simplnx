@@ -42,8 +42,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
     const usize numTuples = cellDataAM.getNumTuples();
 
     std::vector<std::string> stringArrayValues(numTuples);
-    auto* neighborList = NeighborList<float32>::Create(dataStructure, k_NeighborListArrayName, numTuples, cellDataAM.getId());
-    neighborList->resizeTotalElements(numTuples);
+    auto* neighborList = NeighborList<float32>::Create(dataStructure, k_NeighborListArrayName, cellDataAM.getShape(), cellDataAM.getId());
     for(usize i = 0; i < numTuples; ++i)
     {
       const float32 factor = static_cast<float32>(i) * 0.001;

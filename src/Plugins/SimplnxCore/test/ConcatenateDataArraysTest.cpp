@@ -193,10 +193,10 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 1);
+  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, IListStore::ShapeType{1});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 1);
+  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, IListStore::ShapeType{1});
   typename NeighborList<T>::VectorType inputList2({1, 1, 1});
   inputNeighborList2->setList(0, inputList2);
 
@@ -228,12 +228,12 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 2);
+  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, IListStore::ShapeType{2});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
   inputNeighborList1->setList(1, inputList2);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 2);
+  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, IListStore::ShapeType{2});
   typename NeighborList<T>::VectorType inputList3({1, 1, 1});
   inputNeighborList2->setList(0, inputList3);
   typename NeighborList<T>::VectorType inputList4({0, 0, 1});
@@ -271,14 +271,14 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, 3);
+  auto inputNeighborList1 = NeighborList<T>::Create(dataStructure, k_TestArray1Name, IListStore::ShapeType{3});
   typename NeighborList<T>::VectorType inputList1({0, 1, 0});
   inputNeighborList1->setList(0, inputList1);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
   inputNeighborList1->setList(1, inputList2);
   typename NeighborList<T>::VectorType inputList3({2, 2, 1});
   inputNeighborList1->setList(2, inputList3);
-  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, 3);
+  auto inputNeighborList2 = NeighborList<T>::Create(dataStructure, k_TestArray2Name, IListStore::ShapeType{3});
   typename NeighborList<T>::VectorType inputList4({1, 1, 1});
   inputNeighborList2->setList(0, inputList4);
   typename NeighborList<T>::VectorType inputList5({0, 0, 1});

@@ -8,9 +8,9 @@
 namespace nx::core
 {
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
-: INeighborList(dataStructure, name, numTuples)
-, m_Store(std::make_shared<ListStore<T>>(numTuples))
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape)
+: INeighborList(dataStructure, name)
+, m_Store(std::make_shared<ListStore<T>>(tupleShape))
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
 {
@@ -18,7 +18,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
-: INeighborList(dataStructure, name, dataVector.size(), importId)
+: INeighborList(dataStructure, name, importId)
 , m_Store(std::make_shared<ListStore<T>>(dataVector))
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -27,7 +27,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore, IdType importId)
-: INeighborList(dataStructure, name, dataStore->size(), importId)
+: INeighborList(dataStructure, name, importId)
 , m_Store(dataStore)
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -36,7 +36,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore)
-: INeighborList(dataStructure, name, dataStore->size())
+: INeighborList(dataStructure, name)
 , m_Store(dataStore)
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -44,9 +44,9 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, numTuples));
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, tupleShape));
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -117,10 +117,10 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
 }
 
 template <typename T>
-NeighborList<T>& NeighborList<T>::operator=(NeighborList<T>&& rhs)
+NeighborList<T>& NeighborList<T>::operator=(NeighborList<T>&& rhs) noexcept
 {
   m_Store = std::move(rhs.m_Store);
-  m_IsAllocated = std::move(rhs.m_IsAllocated);
+  m_IsAllocated = rhs.m_IsAllocated; // trivially copyable, move does nothing
   m_InitValue = std::move(rhs.m_InitValue);
 
   return *this;
@@ -141,7 +141,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
     return nullptr;
   }
   // Don't construct with identifier since it will get created when inserting into data structure
-  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
+  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getTupleShape()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Store = m_Store->deepCopy();
   if(dataStruct.insert(copy, copyPath.getParent()))
@@ -167,10 +167,10 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     return 0;
   }
 
-  usize idxsSize = static_cast<usize>(idxs.size());
-  if(idxsSize >= getNumberOfTuples())
+  auto indicesSize = static_cast<usize>(idxs.size());
+  if(indicesSize >= getNumberOfTuples())
   {
-    resizeTuples(0);
+    resizeTuples(ShapeType{0});
     return 0;
   }
 
@@ -186,7 +186,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
   }
 
   auto copy = m_Store->deepCopy();
-  copy->resizeTuples(arraySize - idxsSize);
+  copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
 
   usize idxsIndex = 0;
   usize rIdx = 0;
@@ -200,14 +200,13 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     else
     {
       ++idxsIndex;
-      if(idxsIndex == idxsSize)
+      if(idxsIndex == indicesSize)
       {
         idxsIndex--;
       }
     }
   }
   m_Store = std::move(copy);
-  setNumberOfTuples(m_Store->size());
   return err;
 }
 
@@ -277,36 +276,12 @@ void NeighborList<T>::initializeWithZeros()
 }
 
 template <typename T>
-int32 NeighborList<T>::resizeTotalElements(usize size)
-{
-  usize old = m_Store->size();
-  m_Store->resizeTuples(size);
-  setNumberOfTuples(size);
-
-  if(size == 0)
-  {
-    m_IsAllocated = false;
-  }
-  else
-  {
-    m_IsAllocated = true;
-  }
-  return 1;
-}
-
-template <typename T>
-void NeighborList<T>::resizeTuples(usize numTuples)
-{
-  resizeTotalElements(numTuples);
-}
-
-template <typename T>
 void NeighborList<T>::addEntry(int32 grainId, value_type value)
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
     usize old = m_Store->size();
-    m_Store->resizeTuples(grainId + 1);
+    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
     m_IsAllocated = true;
     // Initialize with zero length Vectors
     for(usize i = old; i < m_Store->size(); ++i)
@@ -315,7 +290,6 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
     }
   }
   m_Store->addEntry(grainId, value);
-  setNumberOfTuples(m_Store->size());
 }
 
 template <typename T>
@@ -330,8 +304,7 @@ void NeighborList<T>::setList(int32 grainId, const SharedVectorType& neighborLis
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Store->size();
-    m_Store->resizeTuples(grainId + 1);
+    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
     m_IsAllocated = true;
   }
   m_Store->setList(grainId, neighborList);
@@ -342,8 +315,7 @@ void NeighborList<T>::setList(int32 grainId, const VectorType& neighborList)
 {
   if(grainId >= static_cast<int32>(m_Store->size()))
   {
-    usize old = m_Store->size();
-    m_Store->resizeTuples(grainId + 1);
+    m_Store->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(grainId + 1)});
     m_IsAllocated = true;
   }
   m_Store->setList(grainId, neighborList);
@@ -358,13 +330,7 @@ void NeighborList<T>::setLists(const std::vector<std::vector<T>>& neighborLists)
 template <typename T>
 T NeighborList<T>::getValue(int32 grainId, int32 index, bool& ok) const
 {
-  VectorType vec = m_Store->at(grainId);
-  if(index < 0 || static_cast<usize>(index) >= vec.size())
-  {
-    ok = false;
-    return static_cast<T>(-1);
-  }
-  return vec[index];
+  return m_Store->getValue(grainId, index, ok);
 }
 
 template <typename T>
@@ -428,11 +394,16 @@ DataObject::Type NeighborList<T>::getDataObjectType() const
   return Type::NeighborList;
 }
 
-template <typename T>
-void NeighborList<T>::resizeTuples(const std::vector<usize>& tupleShape)
+template<typename T>
+IListStore* NeighborList<T>::getIListStore()
 {
-  auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  resizeTotalElements(numTuples);
+  return m_Store.get();
+}
+
+template<typename T>
+const IListStore* NeighborList<T>::getIListStore() const
+{
+  return m_Store.get();
 }
 
 template <typename T>

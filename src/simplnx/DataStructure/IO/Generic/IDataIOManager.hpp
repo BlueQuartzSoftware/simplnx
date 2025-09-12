@@ -29,7 +29,7 @@ public:
   using factory_collection = std::map<factory_id_type, factory_ptr>;
   using DataStoreCreateFnc =
       std::function<std::unique_ptr<IDataStore>(DataType, const typename IDataStore::ShapeType&, const typename IDataStore::ShapeType&, const std::optional<IDataStore::ShapeType>&)>;
-  using ListStoreCreateFnc = std::function<std::unique_ptr<IListStore>(DataType, usize)>;
+  using ListStoreCreateFnc = std::function<std::unique_ptr<IListStore>(DataType, const IListStore::ShapeType&)>;
   using DataStoreCreationMap = std::map<std::string, DataStoreCreateFnc>;
   using ListStoreCreationMap = std::map<std::string, ListStoreCreateFnc>;
 

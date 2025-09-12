@@ -2,6 +2,8 @@
 
 #include "simplnx/Common/Types.hpp"
 
+#include <vector>
+
 namespace nx::core
 {
 namespace HDF5
@@ -12,7 +14,21 @@ class DatasetIO;
 class IListStore
 {
 public:
+  using ShapeValueType = usize;
+  using ShapeType = typename std::vector<ShapeValueType>;
+
   virtual ~IListStore() = default;
+
+  /**
+   * @brief Returns the number of tuples in the DataStore.
+   * @return usize
+   */
+  virtual usize getNumberOfTuples() const = 0;
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  virtual const ShapeType& getTupleShape() const = 0;
 
   /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
@@ -33,7 +49,7 @@ public:
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  virtual void resizeTuples(usize tupleCount) = 0;
+  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   /**
    * @brief Clear All Lists

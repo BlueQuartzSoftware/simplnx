@@ -22,6 +22,7 @@ public:
   {
   public:
     using vector_type = std::vector<T>;
+    using ShapeType = typename IListStore::ShapeType;
     using const_iterator = typename vector_type::const_iterator;
 
     ConstReferenceList(const AbstractListStore<T>& store, usize tupleIndex)
@@ -30,9 +31,7 @@ public:
     , m_Index(tupleIndex)
     {
     }
-    ~ConstReferenceList()
-    {
-    }
+    ~ConstReferenceList() = default;
 
     const T& operator[](usize i) const
     {
@@ -154,9 +153,9 @@ public:
     }
     ReferenceList& operator=(ReferenceList&& rhs)
     {
-      m_Edited = std::move(rhs.m_Edited);
+      m_Edited = rhs.m_Edited;
       m_List = std::move(rhs.m_List);
-      m_Index = std::move(rhs.m_Index);
+      m_Index = rhs.m_Index;
       return *this;
     }
     constexpr void swap(ReferenceList& rhs) noexcept

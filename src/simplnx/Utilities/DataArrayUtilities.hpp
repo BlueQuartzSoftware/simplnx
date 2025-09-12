@@ -171,7 +171,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 
   std::string name = path[last];
 
-  auto neighborList = NeighborList<T>::Create(dataStructure, name, numTuples, dataObjectId);
+  auto neighborList = NeighborList<T>::Create(dataStructure, name, INeighborList::ShapeType{numTuples}, dataObjectId);
   if(neighborList == nullptr)
   {
     return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));

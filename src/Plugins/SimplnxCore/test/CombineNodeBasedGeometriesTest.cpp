@@ -101,7 +101,7 @@ void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 template <typename T>
 NeighborList<T>* CreateNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& nlName)
 {
-  return NeighborList<T>::Create(dataStructure, nlName, attrMatrix.getNumTuples(), attrMatrix.getId());
+  return NeighborList<T>::Create(dataStructure, nlName, attrMatrix.getShape(), attrMatrix.getId());
 }
 
 template <typename T>

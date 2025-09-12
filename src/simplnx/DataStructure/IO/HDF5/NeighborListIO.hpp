@@ -54,9 +54,8 @@ public:
         {
           return nullptr;
         }
-        std::vector<uint64> tupleDims = tupleDimsResult.value();
-        uint64 numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<uint64>(1), std::multiplies<>());
-        return std::make_shared<EmptyListStore<T>>(numTuples);
+
+        return std::make_shared<EmptyListStore<T>>(tupleDimsResult.value());
       }
 
       auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
@@ -76,7 +75,7 @@ public:
 
       usize offset = 0;
       const auto numTuples = numNeighborsStore.getNumberOfTuples();
-      auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numTuples);
+      auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
       AbstractListStore<T>& listStore = *listStorePtr.get();
       for(usize i = 0; i < numTuples; i++)
       {
@@ -165,7 +164,7 @@ public:
 
     usize offset = 0;
     const auto numTuples = numNeighborsStore.getNumberOfTuples();
-    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numTuples);
+    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
     AbstractListStore<T>& listStore = *listStorePtr.get();
     for(usize i = 0; i < numTuples; i++)
     {

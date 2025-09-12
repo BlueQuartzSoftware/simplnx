@@ -10,7 +10,7 @@ template <class T>
 class EmptyListStore : public AbstractListStore<T>
 {
 public:
-  using shape_type = typename std::vector<usize>;
+  using ShapeType = typename std::vector<usize>;
   using value_type = T;
   using parent_type = AbstractListStore<T>;
   using vector_type = typename parent_type::vector_type;
@@ -22,9 +22,10 @@ public:
    * @param tupleShape
    * @param listSize
    */
-  EmptyListStore(usize numTuples)
+  EmptyListStore(const ShapeType& tupleShape)
   : AbstractListStore<T>()
-  , m_NumTuples(numTuples)
+  , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
   }
 
@@ -32,6 +33,24 @@ public:
   EmptyListStore(EmptyListStore&& rhs) = default;
 
   ~EmptyListStore() override = default;
+
+  /**
+   * @brief Returns the number of tuples in the EmptyListStore.
+   * @return usize
+   */
+  usize getNumberOfTuples() const override
+  {
+    return m_NumTuples;
+  }
+
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  const ShapeType& getTupleShape() const override
+  {
+    return m_TupleShape;
+  }
 
   /**
    * @brief Returns a copy of the current list store.
@@ -52,9 +71,10 @@ public:
     throw std::runtime_error("EmptyListStore cannot add values to list");
   }
 
-  void resizeTuples(usize tupleCount) override
+  void resizeTuples(const ShapeType& tupleShape) override
   {
-    m_NumTuples = tupleCount;
+    m_TupleShape = tupleShape;
+    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   }
 
   void clear() override
@@ -67,6 +87,7 @@ public:
    */
   void clearAllLists() override
   {
+    m_TupleShape = ShapeType{0};
     m_NumTuples = 0;
   }
 
@@ -196,9 +217,7 @@ public:
     }
     else
     {
-      std::vector<uint64> tupleDims = tupleDimsResult.value();
-      uint64 numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<uint64>(1), std::multiplies<>());
-      resizeTuples(numTuples);
+      resizeTuples(tupleDimsResult.value());
     }
   }
 
@@ -208,6 +227,7 @@ public:
   }
 
 private:
+  ShapeType m_TupleShape;
   usize m_NumTuples = 0;
 };
 } // namespace nx::core

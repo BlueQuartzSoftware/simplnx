@@ -64,19 +64,19 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 }
 
 template <class T>
-std::shared_ptr<AbstractListStore<T>> CreateListStore(usize tupleCount, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
+std::shared_ptr<AbstractListStore<T>> CreateListStore(const IListStore::ShapeType& tupleShape, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return std::make_unique<EmptyListStore<T>>(tupleCount);
+    return std::make_unique<EmptyListStore<T>>(tupleShape);
   }
   case IDataAction::Mode::Execute: {
-    uint64 dataSize = CalculateDataSize<T>({tupleCount}, {10});
+    uint64 dataSize = CalculateDataSize<T>(tupleShape, {10});
     TryForceLargeDataFormatFromPrefs(dataFormat);
     auto ioCollection = GetIOCollection();
     ioCollection->checkStoreDataFormat(dataSize, dataFormat);
-    return ioCollection->createListStoreWithType<T>(dataFormat, tupleCount);
+    return ioCollection->createListStoreWithType<T>(dataFormat, tupleShape);
   }
   default: {
     throw std::runtime_error("Invalid mode");

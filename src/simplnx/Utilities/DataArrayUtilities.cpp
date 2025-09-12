@@ -63,8 +63,7 @@ struct CreateDefaultValueNeighborListFunctor
   template <typename T>
   Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<DataObject::IdType> parentId)
   {
-    auto numTuples = std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
-    auto newNeighborList = NeighborList<T>::Create(destDataStructure, name, numTuples, parentId);
+    auto newNeighborList = NeighborList<T>::Create(destDataStructure, name, tupleShape, parentId);
     return {newNeighborList};
   }
 };

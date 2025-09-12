@@ -404,7 +404,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
   {
     DataStructure ds;
     auto* am = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
-    auto* nl = NeighborList<T>::Create(ds, "Input NL", 10, am->getId());
+    auto* nl = NeighborList<T>::Create(ds, "Input NL", am->getShape(), am->getId());
     for(usize i = 0; i < 10; ++i)
     {
       nl->setList(i, std::vector<T>{static_cast<T>(i), static_cast<T>(i + 1)});

@@ -151,7 +151,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 2);
+  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, IListStore::ShapeType{2});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
   typename NeighborList<T>::VectorType inputList2({1, 0, 0});
@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid NeighborLists - 
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
+  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, IListStore::ShapeType{1});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
 
@@ -294,7 +294,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
   }
   SECTION("NeighborLists")
   {
-    auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
+    auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, IListStore::ShapeType{1});
     typename NeighborList<T>::VectorType inputList({0, 1, 0});
     inputNeighborList->setList(0, inputList);
 
@@ -329,7 +329,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
   DataStructure dataStructure;
   Arguments args;
 
-  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, 1);
+  auto inputNeighborList = NeighborList<T>::Create(dataStructure, k_TestArrayName, IListStore::ShapeType{1});
   typename NeighborList<T>::VectorType inputList({0, 1, 0});
   inputNeighborList->setList(0, inputList);
 
