@@ -14,6 +14,8 @@ public:
   using value_type = std::string;
   using reference = value_type&;
   using const_reference = const value_type&;
+  using ShapeValueType = usize;
+  using ShapeType = typename std::vector<ShapeValueType>;
 
   class Iterator
   {
@@ -328,7 +330,24 @@ public:
 
   virtual usize size() const = 0;
   virtual bool empty() const = 0;
-  virtual void resize(usize count) = 0;
+
+  /**
+   * @brief Returns the number of tuples in the StringStore.
+   * @return usize
+   */
+  virtual usize getNumberOfTuples() const = 0;
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  virtual const ShapeType& getTupleShape() const = 0;
+
+  /**
+   * @brief This method sets the shape of the dimensions to `tupleShape`.
+   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
+   * from *slowest* to *fastest*.
+   */
+  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   virtual reference operator[](usize index) = 0;
   virtual const_reference operator[](usize index) const = 0;

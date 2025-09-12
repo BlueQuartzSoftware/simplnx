@@ -2,8 +2,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
-#include <fmt/format.h>
-
 #include <numeric>
 #include <stdexcept>
 
@@ -64,8 +62,28 @@ StringArray::StringArray(const StringArray& other)
 {
 }
 
+/*
+ * In a non-delegating constructor, initialization proceeds in the following order:
+ * (13.1) — First, and only for the constructor of the most derived class (1.8), virtual base classes are initialized in the order they appear on
+ * a depth-first left-to-right traversal of the directed acyclic graph of base classes, where “left-to-right” is the order of appearance of the base
+ * classes in the derived class base-specifier-list.
+ * (13.2) — Then, direct base classes are initialized in declaration order as they appear in the base-specifier-list
+ * (regardless of the order of the mem-initializers).
+ * (13.3) — Then, non-static data members are initialized in the order they were declared in the class definition
+ * (again regardless of the order of the mem-initializers).
+ * (13.4) — Finally, the compound-statement of the constructor body is executed.
+ * [ Note: The declaration order is mandated to ensure that base and member subobjects are destroyed in the reverse order of initialization. —end note ]
+ *
+ * The initialization performed by each mem-initializer constitutes a full-expression.
+ * Any expression in a mem-initializer is evaluated as part of the full-expression that performs the initialization.
+ *
+ * Thus, disregard clang-tidy, the second move here is still a valid one because the IArray portion of the object will
+ * be moved first leaving the derived class member variables (m_Strings) in a valid state as only
+ * the base (IArray) has been marked-to-be/or-is destroyed, however, `other` should not be used after ctor initializer list as
+ * it will no longer be in a valid state.
+ */
 StringArray::StringArray(StringArray&& other) noexcept
-: IArray(other)
+: IArray(std::move(other))
 , m_Strings(std::move(other.m_Strings))
 {
 }
@@ -112,33 +130,29 @@ size_t StringArray::size() const
   return m_Strings->size();
 }
 
-const StringArray::collection_type StringArray::values() const
+StringArray::collection_type StringArray::values() const
 {
-  return collection_type(begin(), end());
+  return {begin(), end()};
 }
 
 StringArray::reference StringArray::operator[](usize index)
 {
-  return (*m_Strings)[index];
+  return m_Strings->operator[](index);
 }
 
 StringArray::const_reference StringArray::operator[](usize index) const
 {
-  return (*m_Strings)[index];
+  return m_Strings->operator[](index);
 }
 
 void StringArray::setValue(usize index, const std::string& value)
 {
-  (*m_Strings)[index] = value;
+  m_Strings->setValue(index, value);
 }
 
 StringArray::const_reference StringArray::at(usize index) const
 {
-  if(index >= size())
-  {
-    throw std::out_of_range(fmt::format("Attempting to access string at index {} out of {}", index, size()));
-  }
-  return (*m_Strings)[index];
+  return m_Strings->at(index);
 }
 
 StringArray::iterator StringArray::begin()
@@ -216,11 +230,7 @@ usize StringArray::getNumberOfComponents() const
 
 void StringArray::resizeTuples(const std::vector<usize>& tupleShape)
 {
-  auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  if(numTuples != size())
-  {
-    m_Strings->resize(numTuples);
-  }
+  m_Strings->resizeTuples(tupleShape);
 }
 
 void StringArray::swapTuples(usize index0, usize index1)
