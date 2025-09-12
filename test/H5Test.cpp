@@ -419,10 +419,11 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
 void CreateNeighborList(DataStructure& dataStructure)
 {
   const usize numItems = 50;
+  const std::vector<usize> tupleShape = {numItems};
 
   auto* neighborGroup = DataGroup::Create(dataStructure, k_NeighborGroupName);
   auto* neighborGroup2 = DataGroup::Create(dataStructure, k_NeighborGroupName + "2");
-  auto* neighborList = NeighborList<int64>::Create(dataStructure, "NeighborList", numItems, neighborGroup->getId());
+  auto* neighborList = NeighborList<int64>::Create(dataStructure, "NeighborList", tupleShape, neighborGroup->getId());
   for(usize i = 0; i < numItems; i++)
   {
     for(usize j = 0; j < i + 1; j++)
