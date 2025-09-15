@@ -49,6 +49,7 @@
 #define MM_SURFACE_NET_H
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include <limits>
 #include <memory>
@@ -60,7 +61,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(TriangleGeom& triangleGeometry, Int32Array& labels, int arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // I am unsure of the ownership model of the underlying code, so I am making this

@@ -8,6 +8,7 @@
 #define MM_CELL_MAP_H
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include "MMCellFlag.h"
 #include "MMSurfaceNet.h"
@@ -18,7 +19,7 @@ class MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(int arraySize[3], float voxelSize[3]);
+  MMCellMap(TriangleGeom& triangleGeometry, int arraySize[3], float voxelSize[3]);
 
   ~MMCellMap();
 
@@ -37,7 +38,7 @@ public:
   MMCellFlag::VertexType vertexType(size_t vertexIndex) const;
   bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
   bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t quadVtxIndices[4], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
-  void getVertexPosition(size_t vertexIndex, float position[3]);
+  void getVertexPosition(size_t vertexIndex, float position[3]) const;
 
   MMCellFlag::VertexType cellVertexType(size_t cellArrayIndex) const;
 
@@ -51,7 +52,6 @@ public:
   struct Vertex
   {
     int32_t cellIndex[3];
-    float vertexOffset[3];
   };
 
   Cell* getCell(int cellIndex[3]) const;
@@ -70,6 +70,8 @@ private:
 
   size_t m_numVertices;
   Vertex* m_vertices;
+  // const TriangleGeom& m_TriangleGeometry;
+  INodeGeometry0D::SharedVertexList* m_VertexListPtr = nullptr;
   bool setCellVertices();
 
   // Access cell map

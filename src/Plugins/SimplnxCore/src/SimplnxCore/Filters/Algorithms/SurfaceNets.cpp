@@ -108,7 +108,7 @@ Result<> SurfaceNets::operator()()
 
   using LabelType = int32;
 
-  MMSurfaceNet surfaceNet(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), arraySize.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), arraySize.data(), voxelSize.data());
   if(!surfaceNet.getCellMap()->valid())
   {
     return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal Data Structures"));
@@ -131,7 +131,7 @@ Result<> SurfaceNets::operator()()
   std::array<int, 3> arraySize2 = {0, 0, 0};
   cellMapPtr->getArraySize(arraySize2.data());
 
-  triangleGeom.resizeVertexList(nodeCount);
+  // triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
 
   // Remove and then insert a properly sized int8 for the NodeTypes

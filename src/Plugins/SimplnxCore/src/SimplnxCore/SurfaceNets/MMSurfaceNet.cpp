@@ -16,9 +16,9 @@
 
 #include <time.h>
 
-MMSurfaceNet::MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3])
+MMSurfaceNet::MMSurfaceNet(TriangleGeom& triangleGeometry, Int32Array& labels, int arraySize[3], float voxelSize[3])
 {
-  m_cellMap = std::make_shared<MMCellMap>(arraySize, voxelSize);
+  m_cellMap = std::make_shared<MMCellMap>(triangleGeometry, arraySize, voxelSize);
   if(!m_cellMap->valid())
   {
     return;
