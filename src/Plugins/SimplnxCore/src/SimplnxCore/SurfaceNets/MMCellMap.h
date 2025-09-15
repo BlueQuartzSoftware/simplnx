@@ -22,42 +22,44 @@ public:
 
   ~MMCellMap();
 
-  void init(Int32Array& labels);
+  bool init(Int32Array& labels);
+  bool valid() const;
 
   // Relax vertex positions using relaxation attributes or reset to cell centers
-  void relax(MMSurfaceNet::RelaxAttrs relaxAttrs);
-  void reset();
+  void relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs);
+  void reset() const;
 
   // Data for export
-  void getArraySize(int arraySize[3]);
-  void getVoxelSize(float voxelSize[3]);
-  int numVertices();
-  int numEdgeCrossings();
-  MMCellFlag::VertexType vertexType(int vertexIndex);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], usize quadNxArrayIndices[2]);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2], usize quadNxArrayIndices[2]);
-  void getVertexPosition(int vertexIndex, float position[3]);
+  void getArraySize(int arraySize[3]) const;
+  void getVoxelSize(float voxelSize[3]) const;
+  size_t numVertices() const;
+  size_t numEdgeCrossings() const;
+  MMCellFlag::VertexType vertexType(size_t vertexIndex) const;
+  bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
+  bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t quadVtxIndices[4], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
+  void getVertexPosition(size_t vertexIndex, float position[3]);
 
-  MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
+  MMCellFlag::VertexType cellVertexType(size_t cellArrayIndex) const;
+
   struct Cell
   {
     int32_t label;
-    MMCellFlag flag;
-    int vertexIndex;
     float vertexOffset[3];
+    size_t vertexIndex;
+    MMCellFlag flag;
   };
 
   struct Vertex
   {
-    int cellIndex[3];
+    int32_t cellIndex[3];
   };
 
-  Cell* getCell(int cellIndex[3]);
-  Cell* getCell(int i, int j, int k);
-  Cell* getCell(int cellArrayIndex);
+  Cell* getCell(int cellIndex[3]) const;
+  Cell* getCell(int i, int j, int k) const;
+  Cell* getCell(size_t cellArrayIndex) const;
 
-  void getVertexCellIndex(int vertexIndex, int cellIndex[3]);
-  int cellArrayIndex(int cellIndex[3]);
+  void getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const;
+  size_t cellArrayIndex(int cellIndex[3]) const;
 
 private:
   std::array<int32_t, 3> m_arraySize = {0, 0, 0};
@@ -66,25 +68,25 @@ private:
   std::array<int32_t, 3> m_NxDims = {0, 0, 0};
   Cell* m_cellArray;
 
-  int m_numVertices;
+  size_t m_numVertices;
   Vertex* m_vertices;
-  void setCellVertices();
+  bool setCellVertices();
 
   // Access cell map
 
-  int cellArrayIndex(int i, int j, int k);
-  void getCellLabels(Cell* cell, int32_t labels[8]);
-  bool isEdgeCrossing(int cellArrayIndex, MMCellFlag::Edge edge);
-  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], usize quadNxArrayIndices[2]);
+  size_t cellArrayIndex(int i, int j, int k) const;
+  void getCellLabels(Cell* cell, int32_t labels[8]) const;
+  bool isEdgeCrossing(size_t cellArrayIndex, MMCellFlag::Edge edge) const;
+  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
   void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]);
-  void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, int quadVtxIndices[4]);
+  void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, size_t quadVtxIndices[4]) const;
 
-  usize getNxCellArrayIndex(int vertexIndex);
+  usize getNxCellArrayIndex(int64_t vertexIndex);
 
   // Access vertex data
-  void getVertexPosition(int cellIndex[3], float position[3]);
-  void getVertexPosition(int i, int j, int k, float position[3]);
-  int vertexFaceNeighborVertexIndex(int vertexIndex, MMCellFlag::Face face);
+  void getVertexPosition(int cellIndex[3], float position[3]) const;
+  void getVertexPosition(int i, int j, int k, float position[3]) const;
+  int vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const;
 
   // Access cell neighbors
   Cell* getFaceNeighborCellAndIndex(int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]);

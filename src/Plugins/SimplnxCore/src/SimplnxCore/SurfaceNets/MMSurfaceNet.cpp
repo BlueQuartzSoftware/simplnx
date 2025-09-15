@@ -19,6 +19,10 @@
 MMSurfaceNet::MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3])
 {
   m_cellMap = std::make_shared<MMCellMap>(arraySize, voxelSize);
+  if(!m_cellMap->valid())
+  {
+    return;
+  }
   m_cellMap->init(labels);
 }
 
