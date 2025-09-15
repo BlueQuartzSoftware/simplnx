@@ -19,9 +19,9 @@ void initCell(MMCellMap::Cell& cell, int32_t label)
   cell.label = label;
   cell.flag.clear();
   cell.vertexIndex = -1;
-  cell.vertexOffset[0] = 0.5f;
-  cell.vertexOffset[1] = 0.5f;
-  cell.vertexOffset[2] = 0.5f;
+  // cell.vertexOffset[0] = 0.5f;
+  // cell.vertexOffset[1] = 0.5f;
+  // cell.vertexOffset[2] = 0.5f;
 }
 
 } // namespace
@@ -111,9 +111,11 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs)
           {
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
-            avgP[0] += nbrCell->vertexOffset[0] + static_cast<float>(nbrIdx[0] - cellIdx[0]);
-            avgP[1] += nbrCell->vertexOffset[1] + static_cast<float>(nbrIdx[1] - cellIdx[1]);
-            avgP[2] += nbrCell->vertexOffset[2] + static_cast<float>(nbrIdx[2] - cellIdx[2]);
+            const Vertex* nbrVertex = &(m_vertices[nbrCell->vertexIndex]);
+
+            avgP[0] += nbrVertex->vertexOffset[0] + static_cast<float>(nbrIdx[0] - cellIdx[0]);
+            avgP[1] += nbrVertex->vertexOffset[1] + static_cast<float>(nbrIdx[1] - cellIdx[1]);
+            avgP[2] += nbrVertex->vertexOffset[2] + static_cast<float>(nbrIdx[2] - cellIdx[2]);
             numNeighbors++;
           }
         }
@@ -126,9 +128,11 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs)
           {
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
-            avgP[0] += nbrCell->vertexOffset[0] + static_cast<float>(nbrIdx[0] - cellIdx[0]);
-            avgP[1] += nbrCell->vertexOffset[1] + static_cast<float>(nbrIdx[1] - cellIdx[1]);
-            avgP[2] += nbrCell->vertexOffset[2] + static_cast<float>(nbrIdx[2] - cellIdx[2]);
+            const Vertex* nbrVertex = &(m_vertices[nbrCell->vertexIndex]);
+
+            avgP[0] += nbrVertex->vertexOffset[0] + static_cast<float>(nbrIdx[0] - cellIdx[0]);
+            avgP[1] += nbrVertex->vertexOffset[1] + static_cast<float>(nbrIdx[1] - cellIdx[1]);
+            avgP[2] += nbrVertex->vertexOffset[2] + static_cast<float>(nbrIdx[2] - cellIdx[2]);
             numNeighbors++;
           }
         }
@@ -138,29 +142,31 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs)
       // float* p = pCell->vertexOffset;
       if(numNeighbors > 0)
       {
+        Vertex* pVertex = &(m_vertices[pCell->vertexIndex]);
+
         avgP[0] /= static_cast<float>(numNeighbors);
         avgP[1] /= static_cast<float>(numNeighbors);
         avgP[2] /= static_cast<float>(numNeighbors);
         const float alpha = relaxAttrs.relaxFactor;
-        pCell->vertexOffset[0] = (1.0f - alpha) * pCell->vertexOffset[0] + alpha * avgP[0];
-        pCell->vertexOffset[1] = (1.0f - alpha) * pCell->vertexOffset[1] + alpha * avgP[1];
-        pCell->vertexOffset[2] = (1.0f - alpha) * pCell->vertexOffset[2] + alpha * avgP[2];
+        pVertex->vertexOffset[0] = (1.0f - alpha) * pVertex->vertexOffset[0] + alpha * avgP[0];
+        pVertex->vertexOffset[1] = (1.0f - alpha) * pVertex->vertexOffset[1] + alpha * avgP[1];
+        pVertex->vertexOffset[2] = (1.0f - alpha) * pVertex->vertexOffset[2] + alpha * avgP[2];
 
         // Constrain vertex location to a max distance from the original voxel
         const float min = 0.5 - relaxAttrs.maxDistFromCellCenter;
         const float max = 0.5 + relaxAttrs.maxDistFromCellCenter;
-        if(pCell->vertexOffset[0] < min)
-          pCell->vertexOffset[0] = min;
-        if(pCell->vertexOffset[0] > max)
-          pCell->vertexOffset[0] = max;
-        if(pCell->vertexOffset[1] < min)
-          pCell->vertexOffset[1] = min;
-        if(pCell->vertexOffset[1] > max)
-          pCell->vertexOffset[1] = max;
-        if(pCell->vertexOffset[2] < min)
-          pCell->vertexOffset[2] = min;
-        if(pCell->vertexOffset[2] > max)
-          pCell->vertexOffset[2] = max;
+        if(pVertex->vertexOffset[0] < min)
+          pVertex->vertexOffset[0] = min;
+        if(pVertex->vertexOffset[0] > max)
+          pVertex->vertexOffset[0] = max;
+        if(pVertex->vertexOffset[1] < min)
+          pVertex->vertexOffset[1] = min;
+        if(pVertex->vertexOffset[1] > max)
+          pVertex->vertexOffset[1] = max;
+        if(pVertex->vertexOffset[2] < min)
+          pVertex->vertexOffset[2] = min;
+        if(pVertex->vertexOffset[2] > max)
+          pVertex->vertexOffset[2] = max;
       }
     }
   }
@@ -172,9 +178,9 @@ void MMCellMap::reset() const
     int cellIdx[3];
     getVertexCellIndex(idxVtx, cellIdx);
     Cell* pCell = getCell(cellIdx);
-    pCell->vertexOffset[0] = 0.5f;
-    pCell->vertexOffset[1] = 0.5f;
-    pCell->vertexOffset[2] = 0.5f;
+    // pCell->vertexOffset[0] = 0.5f;
+    // pCell->vertexOffset[1] = 0.5f;
+    // pCell->vertexOffset[2] = 0.5f;
   }
 }
 
@@ -321,6 +327,9 @@ bool MMCellMap::setCellVertices()
           m_vertices[idxVtx].cellIndex[0] = i;
           m_vertices[idxVtx].cellIndex[1] = j;
           m_vertices[idxVtx].cellIndex[2] = k;
+          m_vertices[idxVtx].vertexOffset[0] = 0.5f;
+          m_vertices[idxVtx].vertexOffset[1] = 0.5f;
+          m_vertices[idxVtx].vertexOffset[2] = 0.5f;
           idxVtx++;
         }
       }
@@ -566,16 +575,19 @@ void MMCellMap::getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const
 void MMCellMap::getVertexPosition(int cellIndex[3], float position[3]) const
 {
   Cell* pCell = getCell(cellArrayIndex(cellIndex));
-  position[0] = m_voxelSize[0] * (cellIndex[0] + pCell->vertexOffset[0]);
-  position[1] = m_voxelSize[1] * (cellIndex[1] + pCell->vertexOffset[1]);
-  position[2] = m_voxelSize[2] * (cellIndex[2] + pCell->vertexOffset[2]);
+  const Vertex* pVertex = &(m_vertices[pCell->vertexIndex]);
+
+  position[0] = m_voxelSize[0] * (cellIndex[0] + pVertex->vertexOffset[0]);
+  position[1] = m_voxelSize[1] * (cellIndex[1] + pVertex->vertexOffset[1]);
+  position[2] = m_voxelSize[2] * (cellIndex[2] + pVertex->vertexOffset[2]);
 }
 void MMCellMap::getVertexPosition(int i, int j, int k, float position[3]) const
 {
   Cell* pCell = getCell(i, j, k);
-  position[0] = m_voxelSize[0] * (i + pCell->vertexOffset[0]);
-  position[1] = m_voxelSize[1] * (j + pCell->vertexOffset[1]);
-  position[2] = m_voxelSize[2] * (k + pCell->vertexOffset[2]);
+  const Vertex* pVertex = &(m_vertices[pCell->vertexIndex]);
+  position[0] = m_voxelSize[0] * (i + pVertex->vertexOffset[0]);
+  position[1] = m_voxelSize[1] * (j + pVertex->vertexOffset[1]);
+  position[2] = m_voxelSize[2] * (k + pVertex->vertexOffset[2]);
 }
 int MMCellMap::vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const
 {

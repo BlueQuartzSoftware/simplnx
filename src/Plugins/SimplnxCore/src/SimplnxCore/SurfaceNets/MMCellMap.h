@@ -44,7 +44,6 @@ public:
   struct Cell
   {
     int32_t label;
-    float vertexOffset[3];
     size_t vertexIndex;
     MMCellFlag flag;
   };
@@ -52,6 +51,7 @@ public:
   struct Vertex
   {
     int32_t cellIndex[3];
+    float vertexOffset[3];
   };
 
   Cell* getCell(int cellIndex[3]) const;

@@ -74,8 +74,8 @@ public:
     float relaxFactor;           // Range (0.0, 1.0); larger --> faster but less stable
     float maxDistFromCellCenter; // Maximun displacement of relaxed surface in voxel units
   };
-  void relax(const RelaxAttrs relaxAttrs);
-  void reset();
+  void relax(const RelaxAttrs relaxAttrs) const;
+  void reset() const;
 
   // Label used internally. Not available as a material index.
   enum ReservedLabel

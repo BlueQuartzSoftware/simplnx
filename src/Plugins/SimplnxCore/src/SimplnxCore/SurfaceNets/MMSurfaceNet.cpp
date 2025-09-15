@@ -29,13 +29,13 @@ MMSurfaceNet::MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize
 MMSurfaceNet::~MMSurfaceNet() = default;
 
 // Surface smoothing (relaxation)
-void MMSurfaceNet::relax(const RelaxAttrs relaxAttrs)
+void MMSurfaceNet::relax(const RelaxAttrs relaxAttrs) const
 {
   if(!m_cellMap)
     return;
   m_cellMap->relax(relaxAttrs);
 }
-void MMSurfaceNet::reset()
+void MMSurfaceNet::reset() const
 {
   if(!m_cellMap)
     return;
