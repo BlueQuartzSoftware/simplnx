@@ -71,4 +71,9 @@ std::string CreateArrayAction::dataFormat() const
 {
   return m_DataFormat;
 }
+
+std::string CreateArrayAction::fillValue() const
+{
+  return m_FillValue;
+}
 } // namespace nx::core

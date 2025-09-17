@@ -97,6 +97,16 @@ const CreateImageGeometryAction::SpacingType& CreateImageGeometryAction::spacing
   return m_Spacing;
 }
 
+std::string CreateImageGeometryAction::cellAttributeMatrixName() const
+{
+  return m_CellDataName;
+}
+
+IGeometry::LengthUnit CreateImageGeometryAction::units() const
+{
+  return m_Units;
+}
+
 std::vector<DataPath> CreateImageGeometryAction::getAllCreatedPaths() const
 {
   auto topLevelCreatedPath = getCreatedPath();
