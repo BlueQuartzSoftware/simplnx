@@ -64,9 +64,9 @@ bool InsideNxVolume(const int32* cellIndex, const std::array<size_t, 3>& nxDims)
 } // namespace
 
 // ----------------------------------------------------------------------------
-MMCellMap::MMCellMap(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3])
+MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3])
 : m_cellArray(nullptr)
-, m_TriangleGeometryPtr(triangleGeometry)
+, m_VerticesStoreRef(verticesStore)
 , m_NxLabelsPtr(labels)
 {
   m_NxDims = {arraySize[0], arraySize[1], arraySize[2]};
@@ -205,7 +205,7 @@ bool MMCellMap::setCellVertices()
   // Create cell vertices. There are no vertices in right, front, top faces.
   try
   {
-    m_TriangleGeometryPtr->resizeVertexList(numVertices);
+    m_VerticesStoreRef.resizeTuples(IDataStore::ShapeType{numVertices});
     m_VertexArray.resize(numVertices);
   } catch(std::bad_alloc& ba)
   {
@@ -213,7 +213,6 @@ bool MMCellMap::setCellVertices()
     m_cellArray = nullptr;
     return false;
   }
-  auto& vertexDataStoreRef = m_TriangleGeometryPtr->getVertices()->getDataStoreRef();
   int idxVtx = 0;
   for(int k = 0; k < m_arraySize[2] - 1; k++)
   {
@@ -229,9 +228,9 @@ bool MMCellMap::setCellVertices()
           m_VertexArray[idxVtx].cellIndex[1] = j;
           m_VertexArray[idxVtx].cellIndex[2] = k;
 
-          vertexDataStoreRef.setValue(idxVtx * 3, 0.5f);
-          vertexDataStoreRef.setValue(idxVtx * 3 + 1, 0.5f);
-          vertexDataStoreRef.setValue(idxVtx * 3 + 2, 0.5f);
+          m_VerticesStoreRef.setValue(idxVtx * 3, 0.5f);
+          m_VerticesStoreRef.setValue(idxVtx * 3 + 1, 0.5f);
+          m_VerticesStoreRef.setValue(idxVtx * 3 + 2, 0.5f);
 
           idxVtx++;
         }
@@ -264,7 +263,6 @@ int32_t MMCellMap::label(const int32 cellIndex[3]) const
 // Relax vertex positions using relaxation attributes or reset to cell centers
 void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
 {
-  auto vertexListRef = m_TriangleGeometryPtr->getVertices();
   size_t numVertices = m_VertexArray.size();
   for(int i = 0; i < relaxAttrs.numRelaxIterations; i++)
   {
@@ -284,13 +282,13 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
           {
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
-            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3);
+            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3);
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3 + 1);
+            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 1);
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3 + 2);
+            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 2);
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
 
             numNeighbors++;
@@ -306,13 +304,13 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
             int nbrIdx[3];
             Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
 
-            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3);
+            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3);
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3 + 1);
+            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 1);
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : vertexListRef->getValue(nbrCell->vertexIndex * 3 + 2);
+            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 2);
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
             numNeighbors++;
           }
@@ -331,17 +329,17 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
         avgP[2] /= static_cast<float>(numNeighbors);
         const float alpha = relaxAttrs.relaxFactor;
 
-        float x = (1.0f - alpha) * vertexListRef->getValue(pCell->vertexIndex * 3) + alpha * avgP[0];
+        float x = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3) + alpha * avgP[0];
         x = std::clamp(x, min, max);
-        vertexListRef->setValue(pCell->vertexIndex * 3, x);
+        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3, x);
 
-        float y = (1.0f - alpha) * vertexListRef->getValue(pCell->vertexIndex * 3 + 1) + alpha * avgP[1];
+        float y = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1) + alpha * avgP[1];
         y = std::clamp(y, min, max);
-        vertexListRef->setValue(pCell->vertexIndex * 3 + 1, y);
+        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3 + 1, y);
 
-        float z = (1.0f - alpha) * vertexListRef->getValue(pCell->vertexIndex * 3 + 2) + alpha * avgP[2];
+        float z = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2) + alpha * avgP[2];
         z = std::clamp(z, min, max);
-        vertexListRef->setValue(pCell->vertexIndex * 3 + 2, z);
+        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3 + 2, z);
       }
     }
   }
@@ -735,21 +733,19 @@ void MMCellMap::getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const
 void MMCellMap::getVertexPosition(const int cellIndex[3], float position[3]) const
 {
   const Cell* pCell = getCell(cellArrayIndex(cellIndex));
-  const auto vertexListPtr = m_TriangleGeometryPtr->getVertices(); // THIS IS GOING TO BE A SLOW CALL!!
 
-  position[0] = m_voxelSize[0] * (static_cast<float>(cellIndex[0]) + vertexListPtr->getValue(pCell->vertexIndex * 3));
-  position[1] = m_voxelSize[1] * (static_cast<float>(cellIndex[1]) + vertexListPtr->getValue(pCell->vertexIndex * 3 + 1));
-  position[2] = m_voxelSize[2] * (static_cast<float>(cellIndex[2]) + vertexListPtr->getValue(pCell->vertexIndex * 3 + 2));
+  position[0] = m_voxelSize[0] * (static_cast<float>(cellIndex[0]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3));
+  position[1] = m_voxelSize[1] * (static_cast<float>(cellIndex[1]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1));
+  position[2] = m_voxelSize[2] * (static_cast<float>(cellIndex[2]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2));
 }
 
 void MMCellMap::getVertexPosition(int i, int j, int k, float position[3]) const
 {
   const Cell* pCell = getCell(i, j, k);
-  const auto vertexListPtr = m_TriangleGeometryPtr->getVertices(); // THIS IS GOING TO BE A SLOW CALL!!
 
-  position[0] = m_voxelSize[0] * (i + vertexListPtr->getValue(pCell->vertexIndex * 3));
-  position[1] = m_voxelSize[1] * (j + vertexListPtr->getValue(pCell->vertexIndex * 3 + 1));
-  position[2] = m_voxelSize[2] * (k + vertexListPtr->getValue(pCell->vertexIndex * 3 + 2));
+  position[0] = m_voxelSize[0] * (i + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3));
+  position[1] = m_voxelSize[1] * (j + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1));
+  position[2] = m_voxelSize[2] * (k + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2));
 }
 
 usize MMCellMap::vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const
@@ -778,7 +774,7 @@ usize MMCellMap::vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::F
 }
 
 // Access cell neighbors
-MMCellMap::Cell* MMCellMap::getFaceNeighborCellAndIndex(int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const
+MMCellMap::Cell* MMCellMap::getFaceNeighborCellAndIndex(const int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const
 {
   nbrCellIndex[0] = cellIndex[0];
   nbrCellIndex[1] = cellIndex[1];

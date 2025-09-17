@@ -61,7 +61,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // I am unsure of the ownership model of the underlying code, so I am making this

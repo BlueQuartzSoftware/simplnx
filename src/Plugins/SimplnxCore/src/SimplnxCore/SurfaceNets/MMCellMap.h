@@ -19,7 +19,7 @@ class MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
+  MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3]);
 
   ~MMCellMap();
 
@@ -69,7 +69,7 @@ private:
   Cell* m_cellArray;
 
   std::vector<Vertex> m_VertexArray;
-  TriangleGeom* m_TriangleGeometryPtr = nullptr;
+  TriangleGeom::SharedVertexList::store_type& m_VerticesStoreRef;
   Int32Array* m_NxLabelsPtr = nullptr;
 
   bool setCellVertices();
@@ -90,7 +90,7 @@ private:
   usize vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const;
 
   // Access cell neighbors
-  Cell* getFaceNeighborCellAndIndex(int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const;
+  Cell* getFaceNeighborCellAndIndex(const int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const;
 };
 
 #endif
