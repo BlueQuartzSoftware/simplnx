@@ -1,8 +1,8 @@
 #pragma once
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <string>
@@ -16,7 +16,7 @@ public:
   {
     enum class TypeEnum : uint8
     {
-      EntireVolume = 0,
+      NoCropping = 0,
       VoxelSubvolume,
       PhysicalSubvolume
     } type;
