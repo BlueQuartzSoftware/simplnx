@@ -3,8 +3,6 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 
-#include <chrono>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------

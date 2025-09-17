@@ -34,6 +34,8 @@ const std::atomic_bool& ComputeAvgCAxes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeAvgCAxes::operator()()
 {
+
+  // Figure out if all phases are either Hexagonal-Low 6/m or Hexagonal-High 6/mmm Laue Phases
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
@@ -45,12 +47,15 @@ Result<> ComputeAvgCAxes::operator()()
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
 
+  // If NONE of the phases are hexagonal then bail out now with an error
   if(noPhasesHexagonal)
   {
     return MakeErrorResult(-6402, "Finding the average c-axes requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
   }
 
   Result<> result;
+
+  // Throw a warning for any NON-Hex Laue Phases
   if(!allPhasesHexagonal)
   {
     result.warnings().push_back(
@@ -73,70 +78,75 @@ Result<> ComputeAvgCAxes::operator()()
 
   std::vector<int32> counter(totalFeatures, 0);
 
-  Eigen::Vector3f curCAxis{0.0f, 0.0f, 0.0f};
-  usize cAxesIndex = 0;
-  float32 w = 0.0f;
-
+  // Loop over each cell (this assumes we are on some sort of regular grid
   for(usize i = 0; i < totalPoints; i++)
   {
-    if(featureIds[i] > 0)
+    int32 currentFeatureId = featureIds[i];
+    // If the featureId for a given cell is valid ( > 0) then analyze that value
+    if(currentFeatureId > 0)
     {
-      cAxesIndex = 3 * featureIds[i];
-      const auto crystalStructureType = crystalStructures[cellPhases[i]];
-      if(crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low)
-      {
-        const usize quatIndex = i * 4;
-
-        // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
-        OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
-
-        // Convert the passive rotation matrix to an active rotation matrix
-        g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-
-        // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
-        // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
-        // reference frame
-        c1 = g1T * cAxis;
-
-        // normalize so that the magnitude is 1
-        c1.normalize();
-
-        // Compute the running average c-axis and normalize the result
-        curCAxis[0] = avgCAxes[cAxesIndex] / counter[featureIds[i]];
-        curCAxis[1] = avgCAxes[cAxesIndex + 1] / counter[featureIds[i]];
-        curCAxis[2] = avgCAxes[cAxesIndex + 2] / counter[featureIds[i]];
-        curCAxis.normalize();
-
-        // Ensure that angle between the current point's sample reference frame C-Axis
-        // and the running average sample C-Axis is positive
-        w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
-        if(w < 0)
-        {
-          c1 *= -1.0f;
-        }
-        // Continue summing up the rotations
-        counter[featureIds[i]]++;
-        avgCAxes[cAxesIndex] += c1[0];
-        avgCAxes[cAxesIndex + 1] += c1[1];
-        avgCAxes[cAxesIndex + 2] += c1[2];
-      }
-      else
+      const int32 currentCellPhase = cellPhases[i];                          // Get the current cell phase
+      const auto crystalStructureType = crystalStructures[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
+      const usize cAxesIndex = 3 * currentFeatureId;
+      // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
+      if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
       {
         avgCAxes[cAxesIndex] = NAN;
         avgCAxes[cAxesIndex + 1] = NAN;
         avgCAxes[cAxesIndex + 2] = NAN;
+        continue;
       }
+
+      counter[currentFeatureId]++; // Increment the count
+      const usize quatIndex = i * 4;
+
+      // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
+      OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
+
+      // Convert the passive rotation matrix to an active rotation matrix by taking the transpose
+      g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
+
+      // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
+      // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
+      // reference frame
+      c1 = g1T * cAxis;
+
+      // normalize so that the magnitude is 1
+      c1.normalize();
+
+      // Compute the running average c-axis and normalize the result
+      Eigen::Vector3f curCAxis{0.0f, 0.0f, 0.0f};
+      curCAxis[0] = avgCAxes[cAxesIndex] / static_cast<float32>(counter[currentFeatureId]);
+      curCAxis[1] = avgCAxes[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureId]);
+      curCAxis[2] = avgCAxes[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureId]);
+      curCAxis.normalize();
+
+      // Ensure that angle between the current point's sample reference frame C-Axis
+      // and the running average sample C-Axis is positive
+      float32 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+      if(w < 0)
+      {
+        c1 *= -1.0f;
+      }
+
+      // Continue summing up the rotations
+      std::vector<float> debug = {avgCAxes[cAxesIndex] + c1[0], avgCAxes[cAxesIndex + 1] + c1[1], avgCAxes[cAxesIndex + 2] + c1[2]};
+      avgCAxes[cAxesIndex] += c1[0];
+      avgCAxes[cAxesIndex + 1] += c1[1];
+      avgCAxes[cAxesIndex + 2] += c1[2];
     }
   }
 
   for(size_t i = 1; i < totalFeatures; i++)
   {
     const usize tupleIndex = i * 3;
-    if(std::isnan(avgCAxes[tupleIndex]))
+    float32 avgCAxesValue = avgCAxes[tupleIndex];
+    if(std::isnan(avgCAxesValue))
     {
       continue;
     }
-
+    // If we got passed the last check this could happen if the cell points were
+    // masked out? Maybe?
     if(counter[i] == 0)
     {
       avgCAxes[tupleIndex] = 0;
@@ -145,19 +155,14 @@ Result<> ComputeAvgCAxes::operator()()
     }
     else
     {
-      float32 a = avgCAxes.getValue(tupleIndex);
-      float32 b = avgCAxes.getValue(tupleIndex + 1);
-      float32 c = avgCAxes.getValue(tupleIndex + 2);
+      // Compute the final average c-axis value
+      Eigen::Vector3f curCAxis{avgCAxes[tupleIndex] / static_cast<float32>(counter[i]), avgCAxes[tupleIndex + 1] / static_cast<float32>(counter[i]),
+                               avgCAxes[tupleIndex + 2] / static_cast<float32>(counter[i])};
+      curCAxis.normalize();
 
-      a /= counter[i];
-      b /= counter[i];
-      c /= counter[i];
-
-      MatrixMath::Normalize3x1(a, b, c);
-
-      avgCAxes.setValue(tupleIndex, a);
-      avgCAxes.setValue(tupleIndex + 1, b);
-      avgCAxes.setValue(tupleIndex + 2, c);
+      avgCAxes.setValue(tupleIndex, curCAxis(0));
+      avgCAxes.setValue(tupleIndex + 1, curCAxis(1));
+      avgCAxes.setValue(tupleIndex + 2, curCAxis(2));
     }
   }
   return result;
