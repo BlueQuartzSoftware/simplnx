@@ -293,6 +293,13 @@ void NeighborList<T>::addEntry(int32 grainId, value_type value)
 }
 
 template <typename T>
+void NeighborList<T>::updateListEntry(int32 grainId, usize elementPosition, value_type value)
+{
+  // The store does bound checking
+  m_Store->setValue(grainId, elementPosition, value);
+}
+
+template <typename T>
 void NeighborList<T>::clearAllLists()
 {
   m_Store->clear();
