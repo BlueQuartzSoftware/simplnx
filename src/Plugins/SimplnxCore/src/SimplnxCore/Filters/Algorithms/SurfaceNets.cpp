@@ -99,16 +99,15 @@ Result<> SurfaceNets::operator()()
 
   // Get the Created Triangle Geometry
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
   auto gridDimensions = imageGeom.getDimensions();
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
 
-  IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
-
   using LabelType = int32;
 
-  MMSurfaceNet surfaceNet(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), arraySize.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(triangleGeomPtr, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), gridDimensions.data(), voxelSize.data());
   if(!surfaceNet.getCellMap()->valid())
   {
     return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal Data Structures"));
@@ -166,13 +165,17 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          if(vertIndex > nodeCount)
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+            fmt::print("vertIndex {} > NodeCount {}\n", vertIndex, nodeCount);
+          }
+          if(nodeTypes[vertIndex] < 10)
+          {
+            nodeTypes[vertIndex] += 10;
           }
           else
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+            nodeTypes[vertIndex] += 1;
           }
         }
       }
@@ -184,13 +187,17 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          if(vertIndex > nodeCount)
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+            fmt::print("vertIndex {} > NodeCount {}\n", vertIndex, nodeCount);
+          }
+          if(nodeTypes[vertIndex] < 10)
+          {
+            nodeTypes[vertIndex] += 10;
           }
           else
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+            nodeTypes[vertIndex] += 1;
           }
         }
       }
@@ -202,19 +209,24 @@ Result<> SurfaceNets::operator()()
       {
         for(auto& vertIndex : vertexIndices)
         {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
+          if(vertIndex > nodeCount)
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
+            fmt::print("vertIndex {} > NodeCount {}\n", vertIndex, nodeCount);
+          }
+          if(nodeTypes[vertIndex] < 10)
+          {
+            nodeTypes[vertIndex] += 10;
           }
           else
           {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
+            nodeTypes[vertIndex] += 1;
           }
         }
       }
       triangleCount += 2;
     }
   }
+
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleCount});
 

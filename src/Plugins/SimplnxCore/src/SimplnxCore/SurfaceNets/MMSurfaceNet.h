@@ -61,7 +61,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(TriangleGeom& triangleGeometry, Int32Array& labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // I am unsure of the ownership model of the underlying code, so I am making this
@@ -75,8 +75,7 @@ public:
     float relaxFactor;           // Range (0.0, 1.0); larger --> faster but less stable
     float maxDistFromCellCenter; // Maximun displacement of relaxed surface in voxel units
   };
-  void relax(const RelaxAttrs relaxAttrs) const;
-  void reset() const;
+  void relax(const RelaxAttrs& relaxAttrs) const;
 
   // Label used internally. Not available as a material index.
   enum ReservedLabel

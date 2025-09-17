@@ -19,16 +19,15 @@ class MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(TriangleGeom& triangleGeometry, int arraySize[3], float voxelSize[3]);
+  MMCellMap(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
 
   ~MMCellMap();
 
-  bool init(Int32Array& labels);
+  bool init();
   bool valid() const;
 
   // Relax vertex positions using relaxation attributes or reset to cell centers
-  void relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs);
-  void reset() const;
+  void relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const;
 
   // Data for export
   void getArraySize(int arraySize[3]) const;
@@ -37,61 +36,61 @@ public:
   size_t numEdgeCrossings() const;
   MMCellFlag::VertexType vertexType(size_t vertexIndex) const;
   bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
-  bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t quadVtxIndices[4], int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
+  bool getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t quadVtxIndices[4], int32_t quadLabels[2], size_t quadNxArrayIndices[2]) const;
   void getVertexPosition(size_t vertexIndex, float position[3]) const;
 
   MMCellFlag::VertexType cellVertexType(size_t cellArrayIndex) const;
-
-  struct Cell
-  {
-    int32_t label;
-    size_t vertexIndex;
-    MMCellFlag flag;
-  };
 
   struct Vertex
   {
     int32_t cellIndex[3];
   };
 
+  struct Cell
+  {
+    size_t vertexIndex;
+    MMCellFlag flag;
+  };
+
+  int32_t label(const int32 cellIndex[3]) const;
+
   Cell* getCell(int cellIndex[3]) const;
   Cell* getCell(int i, int j, int k) const;
   Cell* getCell(size_t cellArrayIndex) const;
 
   void getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const;
-  size_t cellArrayIndex(int cellIndex[3]) const;
+  size_t cellArrayIndex(const int cellIndex[3]) const;
 
 private:
-  std::array<int32_t, 3> m_arraySize = {0, 0, 0};
+  std::array<size_t, 3> m_arraySize = {0, 0, 0};
   std::array<float, 3> m_voxelSize = {1.0f, 1.0f, 1.0f};
+  std::array<size_t, 3> m_NxDims = {0, 0, 0};
 
-  std::array<int32_t, 3> m_NxDims = {0, 0, 0};
   Cell* m_cellArray;
 
-  size_t m_numVertices;
-  Vertex* m_vertices;
-  // const TriangleGeom& m_TriangleGeometry;
-  INodeGeometry0D::SharedVertexList* m_VertexListPtr = nullptr;
+  std::vector<Vertex> m_VertexArray;
+  TriangleGeom* m_TriangleGeometryPtr = nullptr;
+  Int32Array* m_NxLabelsPtr = nullptr;
+
   bool setCellVertices();
 
   // Access cell map
-
   size_t cellArrayIndex(int i, int j, int k) const;
   void getCellLabels(Cell* cell, int32_t labels[8]) const;
   bool isEdgeCrossing(size_t cellArrayIndex, MMCellFlag::Edge edge) const;
-  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], size_t quadNxArrayIndices[2]);
-  void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]);
+  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2], size_t quadNxArrayIndices[2]) const;
+  void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]) const;
   void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, size_t quadVtxIndices[4]) const;
 
-  usize getNxCellArrayIndex(int64_t vertexIndex);
+  usize getNxCellArrayIndex(size_t vertexIndex) const;
 
   // Access vertex data
-  void getVertexPosition(int cellIndex[3], float position[3]) const;
+  void getVertexPosition(const int cellIndex[3], float position[3]) const;
   void getVertexPosition(int i, int j, int k, float position[3]) const;
-  int vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const;
+  usize vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const;
 
   // Access cell neighbors
-  Cell* getFaceNeighborCellAndIndex(int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]);
+  Cell* getFaceNeighborCellAndIndex(int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const;
 };
 
 #endif

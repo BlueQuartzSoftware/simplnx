@@ -16,30 +16,24 @@
 
 #include <time.h>
 
-MMSurfaceNet::MMSurfaceNet(TriangleGeom& triangleGeometry, Int32Array& labels, int arraySize[3], float voxelSize[3])
+MMSurfaceNet::MMSurfaceNet(TriangleGeom* triangleGeometry, Int32Array* labels, size_t arraySize[3], float voxelSize[3])
 {
-  m_cellMap = std::make_shared<MMCellMap>(triangleGeometry, arraySize, voxelSize);
+  m_cellMap = std::make_shared<MMCellMap>(triangleGeometry, labels, arraySize, voxelSize);
   if(!m_cellMap->valid())
   {
     return;
   }
-  m_cellMap->init(labels);
+  m_cellMap->init();
 }
 
 MMSurfaceNet::~MMSurfaceNet() = default;
 
 // Surface smoothing (relaxation)
-void MMSurfaceNet::relax(const RelaxAttrs relaxAttrs) const
+void MMSurfaceNet::relax(const RelaxAttrs& relaxAttrs) const
 {
   if(!m_cellMap)
     return;
   m_cellMap->relax(relaxAttrs);
-}
-void MMSurfaceNet::reset() const
-{
-  if(!m_cellMap)
-    return;
-  m_cellMap->reset();
 }
 
 #if 0
