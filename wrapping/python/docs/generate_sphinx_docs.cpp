@@ -59,6 +59,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(simplnx.GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b")
   ADD_PARAMETER_TRAIT(simplnx.DataPathSelectionParameter, "cd12d081-fbf0-46c4-8f4a-15e2e06e98b8")
   ADD_PARAMETER_TRAIT(simplnx.CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77")
+  ADD_PARAMETER_TRAIT(simplnx.CropGeometryParameter, "32b03ebf-02a5-40c7-a41c-2380722caeb7")
   ADD_PARAMETER_TRAIT(simplnx.ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45")
 
   ADD_PARAMETER_TRAIT(simplnx.MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8")
