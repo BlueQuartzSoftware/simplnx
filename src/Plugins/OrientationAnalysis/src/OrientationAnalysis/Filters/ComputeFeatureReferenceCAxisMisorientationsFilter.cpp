@@ -150,9 +150,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientationsFilter::executeImpl(DataStru
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.AvgCAxesArrayPath = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureAvgCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
-  inputValues.FeatureStdevCAxisMisorientationsArrayName = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
-  inputValues.FeatureReferenceCAxisMisorientationsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
+  // Output Cell data
+  inputValues.FeatureReferenceCAxisMisorientationsArrayPath = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
+  // Output Feature data
+  inputValues.FeatureAvgCAxisMisorientationsArrayPath = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
+  inputValues.FeatureStdevCAxisMisorientationsArrayPath = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
 
   return ComputeFeatureReferenceCAxisMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
