@@ -198,7 +198,7 @@ DataStructure createTestDataStructure()
     std::vector<usize> vertTupleShape = {4};
     AttributeMatrix* vertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeom->getId());
     vertexGeom->setVertexAttributeMatrix(*vertAttMatrix);
-    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
+    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrix->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeom->getId());
     (*vertListArray)[0] = 0;
     (*vertListArray)[1] = 0;

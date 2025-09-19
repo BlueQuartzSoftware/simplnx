@@ -48,7 +48,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
   usize totalTuples = std::accumulate(m_Dims.cbegin(), m_Dims.cend(), static_cast<usize>(1), std::multiplies<>());
 
   std::vector<std::string> values(totalTuples, m_InitializeValue);
-  StringArray* array = StringArray::CreateWithValues(dataStructure, name, values, dataObjectId);
+  StringArray* array = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);
   if(array == nullptr)
   {
     if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)

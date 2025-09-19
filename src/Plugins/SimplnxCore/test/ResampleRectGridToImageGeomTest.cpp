@@ -51,7 +51,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
       stringArrayValues[i] = "String_" + StringUtilities::number(factor);
     }
 
-    const auto* stringArray = StringArray::CreateWithValues(dataStructure, k_StringArrayName, stringArrayValues, cellDataAM.getId());
+    const auto* stringArray = StringArray::CreateWithValues(dataStructure, k_StringArrayName, cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
   }
 
   // Create default Parameters for the filter.

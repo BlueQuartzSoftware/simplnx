@@ -315,10 +315,9 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
           auto inputINeighborlist = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
           auto destINeighborlist = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
           auto dataType = inputINeighborlist != nullptr ? inputINeighborlist->getDataType() : destINeighborlist->getDataType();
-          const usize numDestCellDataTuples = std::accumulate(destCellDataDims.cbegin(), destCellDataDims.cend(), static_cast<size_t>(1), std::multiplies<>());
-          auto numCellDataTuples = pSaveAsNewGeometry ? numNewCellDataTuples : numDestCellDataTuples;
+          auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
           auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
-          auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType, numCellDataTuples, cellArrayPath);
+          auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType, cellDataDims, cellArrayPath);
           resultOutputActions.value().appendAction(std::move(createArrayAction));
         }
         if(arrayType == IArray::ArrayType::StringArray)

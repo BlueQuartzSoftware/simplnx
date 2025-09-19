@@ -108,7 +108,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
     stringArrayValues[i] = "String_" + StringUtilities::number(factor);
   }
 
-  const auto* stringArray = StringArray::CreateWithValues(dataStructure, "StringArray", stringArrayValues, cellDataAM.getId());
+  const auto* stringArray = StringArray::CreateWithValues(dataStructure, "StringArray", cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
 
   const auto& croppedTopAM = dataStructure.getDataRefAs<AttributeMatrix>(topPath.createChildPath(k_CellData));
   const auto& croppedMiddleAM = dataStructure.getDataRefAs<AttributeMatrix>(middlePath.createChildPath(k_CellData));
@@ -139,7 +139,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       }
     }
   }
-  StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesBottom, croppedBottomAM.getId());
+  StringArray::CreateWithValues(dataStructure, "StringArray", croppedBottomAM.getShape(), stringValuesBottom, croppedBottomAM.getId());
 
   auto* neighborListMiddle = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedMiddleAM.getShape(), croppedMiddleAM.getId());
   std::vector<std::string> stringValuesMiddle(numTuplesMiddle);
@@ -159,7 +159,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       }
     }
   }
-  StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesMiddle, croppedMiddleAM.getId());
+  StringArray::CreateWithValues(dataStructure, "StringArray", croppedMiddleAM.getShape(), stringValuesMiddle, croppedMiddleAM.getId());
 
   auto* neighborListTop = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedTopAM.getShape(), croppedTopAM.getId());
   std::vector<std::string> stringValueTop(numTuplesTop);
@@ -179,7 +179,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       }
     }
   }
-  StringArray::CreateWithValues(dataStructure, "StringArray", stringValueTop, croppedTopAM.getId());
+  StringArray::CreateWithValues(dataStructure, "StringArray", croppedTopAM.getShape(), stringValueTop, croppedTopAM.getId());
 }
 
 void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt,
@@ -318,7 +318,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")

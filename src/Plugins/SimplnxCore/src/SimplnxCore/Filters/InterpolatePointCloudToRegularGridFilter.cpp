@@ -270,7 +270,6 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   const SizeVec3 imageDims = image->getDimensions();
   std::vector<usize> tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
-  const usize numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
 
   // Create the attribute matrix for storing the interpolated/copied arrays
   {
@@ -295,7 +294,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     if(dataType != DataType::boolean)
     {
       auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName());
-      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, numTuples, neighborPath);
+      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, tupleDims, neighborPath);
       actions.appendAction(std::move(neighborAction));
     }
   }
@@ -315,7 +314,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     if(dataType != DataType::boolean)
     {
       auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName());
-      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, numTuples, neighborPath);
+      auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, tupleDims, neighborPath);
       actions.appendAction(std::move(neighborAction));
     }
   }
@@ -335,7 +334,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // Create the neighbor list array for storing the kernel distances
   if(storeKernelDistances)
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(filterArgs.value<std::string>(k_KernelDistancesArrayName_Key)));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleDims, interpolatedGroupPath.createChildPath(filterArgs.value<std::string>(k_KernelDistancesArrayName_Key)));
     actions.appendAction(std::move(action));
   }
 

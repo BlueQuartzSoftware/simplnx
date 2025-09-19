@@ -1,6 +1,8 @@
 #pragma once
 
+#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Output.hpp"
+
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
@@ -14,7 +16,7 @@ class SIMPLNX_EXPORT CreateNeighborListAction : public IDataCreationAction
 public:
   CreateNeighborListAction() = delete;
 
-  CreateNeighborListAction(DataType type, usize tupleCount, const DataPath& path);
+  CreateNeighborListAction(DataType type, const INeighborList::ShapeType& tupleShape, const DataPath& path);
 
   ~CreateNeighborListAction() noexcept override;
 
@@ -44,10 +46,10 @@ public:
   DataType type() const;
 
   /**
-   * @brief Returns the number of tuples for the NeighborList to be created.
+   * @brief Returns the shape of tuples for the NeighborList to be created.
    * @return usize
    */
-  usize tupleCount() const;
+  const INeighborList::ShapeType& tupleShape() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
@@ -63,6 +65,6 @@ public:
 
 private:
   DataType m_Type;
-  usize m_TupleCount;
+  INeighborList::ShapeType m_TupleShape;
 };
 } // namespace nx::core

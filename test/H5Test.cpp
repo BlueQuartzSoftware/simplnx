@@ -457,7 +457,7 @@ void CreateArrayTypes(DataStructure& dataStructure)
   DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Float32Array", tupleShape, componentShape);
   DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStructure, "Float64Array", tupleShape, componentShape);
 
-  StringArray::CreateWithValues(dataStructure, "StringArray", {"Foo", "Bar", "Bazz"});
+  StringArray::CreateWithValues(dataStructure, "StringArray", StringArray::ShapeType{3}, {"Foo", "Bar", "Bazz"});
 }
 
 //------------------------------------------------------------------------------

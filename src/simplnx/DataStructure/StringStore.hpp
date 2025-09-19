@@ -10,15 +10,10 @@ namespace nx::core
 class StringStore : public AbstractStringStore
 {
 public:
-<<<<<<< refs/remotes/upstream/develop
-  StringStore(uint64 count = 0);
-  StringStore(std::vector<std::string> strings);
-=======
   using ShapeType = typename std::vector<usize>;
 
   explicit StringStore(const ShapeType& tupleShape);
-  explicit StringStore(const std::vector<std::string>& strings);
->>>>>>> Rework StringArray to work from multidimensional tuples
+  explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);
   ~StringStore();
 
   std::unique_ptr<AbstractStringStore> deepCopy() const override;

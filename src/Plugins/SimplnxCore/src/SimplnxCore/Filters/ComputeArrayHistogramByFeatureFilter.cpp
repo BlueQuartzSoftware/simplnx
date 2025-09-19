@@ -186,7 +186,7 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     }
     if(pCalculateModalBinRanges)
     {
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArray->getDataType(), 1, arrayGroupPath.createChildPath(pBinModalBinRangesName));
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataArray->getDataType(), std::vector<usize>{1}, arrayGroupPath.createChildPath(pBinModalBinRangesName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }

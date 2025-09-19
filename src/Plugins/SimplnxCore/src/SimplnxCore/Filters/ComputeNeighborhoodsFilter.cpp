@@ -131,7 +131,7 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getNumTuples(), pFeaturePhasesArrayPathValue.replaceName(pNeighborhoodListArrayNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getShape(), pFeaturePhasesArrayPathValue.replaceName(pNeighborhoodListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 

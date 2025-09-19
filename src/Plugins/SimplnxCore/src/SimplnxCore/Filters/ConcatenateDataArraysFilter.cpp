@@ -147,7 +147,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
   }
   case IArray::ArrayType::NeighborListArray: {
     const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPaths[0]);
-    auto action = std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), numTuples, outputArrayPath);
+    auto action = std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
     break;
   }

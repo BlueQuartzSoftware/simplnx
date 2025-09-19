@@ -85,8 +85,7 @@ void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const Da
   if(calculateMode)
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_ModeName_Key);
-    usize tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
-    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, outputAMPath.createChildPath(arrayPath));
+    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleDims, outputAMPath.createChildPath(arrayPath));
     resultOutputActions.value().appendAction(std::move(action));
   }
   if(calculateStdDeviation)

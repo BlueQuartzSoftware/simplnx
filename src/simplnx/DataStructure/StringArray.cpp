@@ -9,13 +9,13 @@ namespace nx::core
 {
 StringArray* StringArray::Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId)
 {
-  return CreateWithValues(dataStructure, name, {}, parentId);
+  return CreateWithValues(dataStructure, name,{0}, {}, parentId);
 }
 
-StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
-  data->m_Strings = std::make_shared<StringStore>(strings);
+  data->m_Strings = std::make_shared<StringStore>(strings, tupleShape);
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -23,9 +23,9 @@ StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const s
   return data.get();
 }
 
-StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), importId, std::move(strings)));
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
   if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
@@ -38,10 +38,10 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name)
 {
 }
 
-StringArray::StringArray(DataStructure& dataStructure, std::string name, collection_type strings)
+StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings)
 : IArray(dataStructure, std::move(name))
 {
-  m_Strings = std::make_shared<StringStore>(strings);
+  m_Strings = std::make_shared<StringStore>(strings, tupleShape);
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store)
@@ -50,10 +50,10 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name, std::sh
 {
 }
 
-StringArray::StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings)
+StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings)
 : IArray(dataStructure, std::move(name), importId)
 {
-  m_Strings = std::make_shared<StringStore>(strings);
+  m_Strings = std::make_shared<StringStore>(strings, tupleShape);
 }
 
 StringArray::StringArray(const StringArray& other)
@@ -210,7 +210,7 @@ bool StringArray::empty() const
 
 IArray::ShapeType StringArray::getTupleShape() const
 {
-  return {size()};
+  return m_Strings->getTupleShape();
 }
 
 IArray::ShapeType StringArray::getComponentShape() const

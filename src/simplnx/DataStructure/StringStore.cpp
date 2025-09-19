@@ -12,9 +12,9 @@ StringStore::StringStore(const ShapeType& tupleShape)
 {
 }
 
-StringStore::StringStore(std::vector<std::string> strings)
+StringStore::StringStore(std::vector<std::string> strings, const ShapeType& tupleShape)
 : AbstractStringStore()
-, m_TupleShape(ShapeType{strings.size()})
+, m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
 , m_NumTuples(strings.size())
 , m_Data(std::move(strings))
 {
@@ -74,12 +74,13 @@ void StringStore::setValue(usize index, const value_type& value)
 
 std::unique_ptr<AbstractStringStore> StringStore::deepCopy() const
 {
-  return std::make_unique<StringStore>(m_Data);
+  return std::make_unique<StringStore>(m_Data, m_TupleShape);
 }
 
 AbstractStringStore& StringStore::operator=(const std::vector<std::string>& values)
 {
   m_Data = values;
+  m_TupleShape = ShapeType{values.size()};
   return *this;
 }
 } // namespace nx::core

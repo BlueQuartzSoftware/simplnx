@@ -876,12 +876,12 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
     auto numElements =
         std::accumulate(tDims.cbegin(), tDims.cend(), static_cast<usize>(1), std::multiplies<>()) * std::accumulate(cDims.cbegin(), cDims.cend(), static_cast<usize>(1), std::multiplies<>());
     const std::vector<std::string> strings(numElements);
-    StringArray::CreateWithValues(dataStructure, daName, strings, parentId);
+    StringArray::CreateWithValues(dataStructure, daName, tDims, strings, parentId);
   }
   else
   {
     const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-    StringArray::CreateWithValues(dataStructure, daName, strings, parentId);
+    StringArray::CreateWithValues(dataStructure, daName, StringArray::ShapeType{strings.size()}, strings, parentId);
   }
   return {};
 }
@@ -895,7 +895,14 @@ Result<> finishImportingLegacyStringArray(DataStructure& dataStructure, const nx
   }
 
   const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-  existingArray->setStore(std::make_shared<StringStore>(strings));
+  StringArray::ShapeType tupShape = existingArray->getTupleShape();
+  if(existingArray->getNumberOfTuples() != strings.size())
+  {
+    tupShape = StringArray::ShapeType{strings.size()};
+  }
+
+  existingArray->setStore(std::make_shared<StringStore>(strings, tupShape));
+
   return {};
 }
 

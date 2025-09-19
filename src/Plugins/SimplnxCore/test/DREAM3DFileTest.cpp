@@ -447,7 +447,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(ds, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
@@ -553,5 +553,5 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }

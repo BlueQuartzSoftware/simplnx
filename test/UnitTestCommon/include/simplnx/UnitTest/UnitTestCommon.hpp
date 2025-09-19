@@ -1338,14 +1338,14 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   return dataStructure;
 }
 
-inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure)
+inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, std::vector<DataPath> ignoredPaths = {})
 {
   std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
   REQUIRE(amPathsOpt.has_value());
   for(const auto& amPath : amPathsOpt.value())
   {
     const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
-    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildDataPaths(dataStructure, amPath, DataObject::Type::DataArray);
+    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildArrayDataPaths(dataStructure, amPath, ignoredPaths);
     REQUIRE(daPathsOpt.has_value());
     for(const auto& daPath : daPathsOpt.value())
     {
@@ -1370,6 +1370,33 @@ const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_Simp
 
 namespace SmallIn100
 {
+// These paths are excluded because they come from a version prior to
+// NeighborList and StringArray having multidimensional tuple capability
+const std::vector<DataPath> k_TupleCheckIgnoredPaths{{{"MirroredXDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredXDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredXInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredXInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"MirroredYDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredYDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredYInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredYInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"MirroredZDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredZDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredZInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredZInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"XDataContainer", "CellData", "NeighborList"}},
+                                                     {{"XDataContainer", "CellData", "StringArray"}},
+                                                     {{"XInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"XInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"YDataContainer", "CellData", "NeighborList"}},
+                                                     {{"YDataContainer", "CellData", "StringArray"}},
+                                                     {{"YInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"YInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"ZDataContainer", "CellData", "NeighborList"}},
+                                                     {{"ZDataContainer", "CellData", "StringArray"}},
+                                                     {{"ZInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"ZInconsistentArrays", "CellData", "StringArray"}}};
+
 //------------------------------------------------------------------------------
 inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
 {
@@ -1409,7 +1436,8 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
 //------------------------------------------------------------------------------
@@ -1436,6 +1464,7 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 } // namespace SmallIn100

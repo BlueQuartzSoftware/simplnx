@@ -461,7 +461,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     {
       strings.push_back(fmt::format("str{}", i));
     }
-    auto* strArray = StringArray::CreateWithValues(ds, "Input Strings", strings, am->getId());
+    auto* strArray = StringArray::CreateWithValues(ds, "Input Strings", am->getShape(), strings, am->getId());
 
     // Execute filter
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({k_AttributeMatrixName, "Input Strings"})));

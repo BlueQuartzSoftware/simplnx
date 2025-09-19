@@ -151,7 +151,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   }
 
   // Create the NeighborList array
-  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuats->getNumberOfTuples(), pMisorientationListArrayPath);
+  auto createArrayAction = std::make_unique<CreateNeighborListAction>(nx::core::DataType::float32, avgQuats->getTupleShape(), pMisorientationListArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;

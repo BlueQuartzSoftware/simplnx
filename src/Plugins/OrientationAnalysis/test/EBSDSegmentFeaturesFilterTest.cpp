@@ -97,5 +97,5 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Valid Execution", "[Orienta
     UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }

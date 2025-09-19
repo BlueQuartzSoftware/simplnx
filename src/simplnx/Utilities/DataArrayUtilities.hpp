@@ -149,7 +149,7 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
  * @return
  */
 template <class T>
-Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateNeighbors(DataStructure& dataStructure, const INeighborList::ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode)
 {
   static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
@@ -171,7 +171,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
 
   std::string name = path[last];
 
-  auto neighborList = NeighborList<T>::Create(dataStructure, name, INeighborList::ShapeType{numTuples}, dataObjectId);
+  auto neighborList = NeighborList<T>::Create(dataStructure, name, tupleShape, dataObjectId);
   if(neighborList == nullptr)
   {
     return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));

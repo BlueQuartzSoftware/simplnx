@@ -139,19 +139,19 @@ public:
     auto datasetReader = parentGroup.openDataset(dataArrayName);
 
     auto typeResult = datasetReader.getDataType();
-    const auto type = std::move(typeResult.value());
+    const auto type = typeResult.value();
 
     std::string dataTypeStr;
     auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
     dataTypeStr = std::move(dataTypeStrResult.value());
-    const bool isBoolArray = (dataTypeStr.compare("DataArray<bool>") == 0);
+    const bool isBoolArray = (dataTypeStr == "DataArray<bool>");
 
     // Check ability to import the data
     int32 importable = 0;
     auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
     if(importableResult.valid())
     {
-      importable = std::move(importableResult.value());
+      importable = importableResult.value();
     }
     if(importable == 0)
     {

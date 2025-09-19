@@ -219,7 +219,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - S
   std::string value5 = "Buzz";
   std::string value6 = "FizzBuzz";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArrayName, {value1, value2, value3, value4, value5, value6});
+  StringArray::CreateWithValues(dataStructure, k_TestArrayName, StringArray::ShapeType{6}, {value1, value2, value3, value4, value5, value6});
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{4.0}}));
@@ -248,7 +248,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Valid StringArrays - E
   std::string value1 = "Foo";
   std::string value2 = "Bar";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArrayName, {value1, value2});
+  StringArray::CreateWithValues(dataStructure, k_TestArrayName, StringArray::ShapeType{2}, {value1, value2});
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{4.0}}));
@@ -306,7 +306,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid - Same Size", 
     std::string value1 = "Foo";
     std::string value2 = "Bar";
 
-    StringArray::CreateWithValues(dataStructure, k_TestArrayName, {value1, value2});
+    StringArray::CreateWithValues(dataStructure, k_TestArrayName, StringArray::ShapeType{2}, {value1, value2});
 
     args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
     args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0}}));
@@ -338,13 +338,11 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: NeighborList Warning -
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings()[0].code == to_underlying(ReshapeDataArray::WarningCodes::NeighborListMultipleTupleDims));
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(k_InputArrayPath));
   auto reshapedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(k_InputArrayPath);
 
-  REQUIRE(reshapedNeighborList.getTupleShape() == std::vector<usize>{4});
+  REQUIRE(reshapedNeighborList.getTupleShape() == std::vector<usize>{2, 2});
   auto reshapedList1 = reshapedNeighborList.getList(0);
   auto reshapedList2 = reshapedNeighborList.getList(1);
   auto reshapedList3 = reshapedNeighborList.getList(2);
@@ -367,20 +365,18 @@ TEMPLATE_TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: StringArray Warning - 
   std::string value1 = "Foo";
   std::string value2 = "Bar";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArrayName, {value1, value2});
+  StringArray::CreateWithValues(dataStructure, k_TestArrayName, StringArray::ShapeType{2}, {value1, value2});
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{2.0, 3.0}}));
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE(result.result.warnings().size() == 1);
-  REQUIRE(result.result.warnings()[0].code == to_underlying(ReshapeDataArray::WarningCodes::StringArrayMultipleTupleDims));
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_InputArrayPath));
   auto reshapedArray = dataStructure.getDataRefAs<StringArray>(k_InputArrayPath);
 
-  REQUIRE(reshapedArray.getTupleShape() == std::vector<usize>{6});
+  REQUIRE(reshapedArray.getTupleShape() == std::vector<usize>{2, 3});
   REQUIRE(reshapedArray[0] == value1);
   REQUIRE(reshapedArray[1] == value2);
   REQUIRE(reshapedArray[2].empty());
@@ -400,7 +396,7 @@ TEST_CASE("SimplnxCore::ReshapeDataArraysFilter: Invalid Tuple Dimensions", "[Si
   std::string value1 = "Foo";
   std::string value2 = "Bar";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArrayName, {value1, value2});
+  StringArray::CreateWithValues(dataStructure, k_TestArrayName, StringArray::ShapeType{2}, {value1, value2});
 
   args.insert(ReshapeDataArrayFilter::k_Input_Array_Key, std::make_any<DataPath>(k_InputArrayPath));
   args.insert(ReshapeDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{0.0, 3.0}}));

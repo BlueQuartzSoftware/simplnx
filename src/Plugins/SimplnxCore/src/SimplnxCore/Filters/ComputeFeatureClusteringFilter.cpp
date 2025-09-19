@@ -152,7 +152,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   {
     const DataPath featureAttributeMatrixPath = pFeaturePhasesArrayPathValue.getParent();
     const auto& cellFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
-    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, cellFeatureAM.getNumTuples(), featureAttributeMatrixPath.createChildPath(pClusteringListArrayNameValue));
+    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, cellFeatureAM.getShape(), featureAttributeMatrixPath.createChildPath(pClusteringListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

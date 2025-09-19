@@ -112,8 +112,6 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
                                                 fmt::join(inputArrayTupleShape, ",")));
   }
 
-  usize numTuples = std::accumulate(tDims.begin(), tDims.end(), static_cast<usize>(1), std::multiplies<>());
-
   // Reshape the array
   auto inputArrayType = inputArray.getArrayType();
   auto outputArrayPath = inputArrayPath.getParent().createChildPath(fmt::format(".{}", inputArrayPath.getTargetName()));
@@ -127,49 +125,10 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   }
   case IArray::ArrayType::NeighborListArray: {
     auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
-    if(tDims.size() > 1)
-    {
-      if(numTuples == inputNeighborList.getNumberOfTuples())
-      {
-        return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::TupleShapesEqual),
-                                        fmt::format("The input array '{}' is a neighbor list, which does not support multiple tuple dimensions. "
-                                                    "The selected tuple shape [{}] cannot be converted to [{}] because it matches the neighbor list's tuple shape ([{}]). "
-                                                    "Please choose a tuple shape that results in a different number of tuples than the neighbor list.",
-                                                    inputArrayPath.toString(), fmt::join(tDims, ","), numTuples, numTuples));
-      }
-      else
-      {
-        resultOutputActions.warnings().push_back(
-            Warning{to_underlying(ReshapeDataArray::WarningCodes::NeighborListMultipleTupleDims),
-                    fmt::format("The input array '{}' is a neighbor list, and neighbor lists do not support multiple tuple dimensions.  The neighbor list will be reshaped to [{}] instead.",
-                                inputArrayPath.toString(), numTuples)});
-      }
-    }
-
-    resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), numTuples, outputArrayPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath));
     break;
   }
   case IArray::ArrayType::StringArray: {
-    auto& inputStringArray = dataStructure.getDataRefAs<StringArray>(inputArrayPath);
-    if(tDims.size() > 1)
-    {
-      if(numTuples == inputStringArray.getNumberOfTuples())
-      {
-        return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::TupleShapesEqual),
-                                        fmt::format("The input array '{}' is a string array, which does not support multiple tuple dimensions. "
-                                                    "The selected tuple shape [{}] cannot be converted to [{}] because it matches the string array's tuple shape ([{}]). "
-                                                    "Please choose a tuple shape that results in a different number of tuples than the string array.",
-                                                    inputArrayPath.toString(), fmt::join(tDims, ","), numTuples, numTuples));
-      }
-      else
-      {
-        resultOutputActions.warnings().push_back(
-            Warning{to_underlying(ReshapeDataArray::WarningCodes::StringArrayMultipleTupleDims),
-                    fmt::format("The input array '{}' is a string array, and string arrays do not support multiple tuple dimensions.  The string array will be reshaped to [{}] instead.",
-                                inputArrayPath.toString(), numTuples)});
-      }
-    }
-
     resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tDims, outputArrayPath));
     break;
   }

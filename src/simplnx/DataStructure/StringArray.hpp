@@ -21,9 +21,9 @@ public:
   static inline constexpr StringLiteral k_TypeName = "StringArray";
 
   static StringArray* Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId = {});
-  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId = {});
 
-  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings, const std::optional<IdType>& parentId = {});
 
   StringArray(const StringArray& other);
   StringArray(StringArray&& other) noexcept;
@@ -114,9 +114,9 @@ public:
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
-  StringArray(DataStructure& dataStructure, std::string name, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings);
   StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store);
-  StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings);
 
 private:
   std::shared_ptr<AbstractStringStore> m_Strings = nullptr;

@@ -54,8 +54,6 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto destinationAttributeMatrixValue = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 
-  size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
-
   OutputActions actions;
 
   auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
@@ -123,7 +121,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   if(findMode)
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeArrayStatisticsFilter::k_ModeArrayName_Key);
-    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
+    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleDims, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)

@@ -475,8 +475,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
     }
     case IArray::ArrayType::NeighborListArray: {
       auto iInputNeighborList = dynamic_cast<const INeighborList*>(inputArray);
-      usize tupleCount = std::accumulate(tupleShapes[i].begin(), tupleShapes[i].end(), 1, std::multiplies<>());
-      resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleCount, arrayPaths[i]));
+      resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleShapes[i], arrayPaths[i]));
       break;
     }
     case IArray::ArrayType::StringArray: {

@@ -322,8 +322,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
   std::string value1 = "Foo";
   std::string value2 = "Bar";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, {value1});
-  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, {value2});
+  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, StringArray::ShapeType{1}, {value1});
+  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, StringArray::ShapeType{1}, {value2});
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -354,8 +354,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
   std::string value3 = "Baz";
   std::string value4 = "Fizzle";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, {value1, value2});
-  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, {value3, value4});
+  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, StringArray::ShapeType{2},{value1, value2});
+  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, StringArray::ShapeType{2}, {value3, value4});
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -390,8 +390,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
   std::string value5 = "Sizzle";
   std::string value6 = "Twizzler";
 
-  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, {value1, value2, value3});
-  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, {value4, value5, value6});
+  StringArray::CreateWithValues(dataStructure, k_TestArray1Name, StringArray::ShapeType{3}, {value1, value2, value3});
+  StringArray::CreateWithValues(dataStructure, k_TestArray2Name, StringArray::ShapeType{3}, {value4, value5, value6});
 
   args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(k_InputArrayPaths));
   args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -464,7 +464,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
   SECTION("Mismatching Type Names 2")
   {
     Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
-    StringArray::CreateWithValues(dataStructure, k_TestArray2Name, {"Foo"});
+    StringArray::CreateWithValues(dataStructure, k_TestArray2Name, StringArray::ShapeType{1}, {"Foo"});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
