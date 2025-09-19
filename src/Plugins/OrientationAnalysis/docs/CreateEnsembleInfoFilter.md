@@ -10,20 +10,20 @@ This **Filter** allows the user to enter basic crystallographic information abou
 
 ### Crystal Structure
 
-| String Name | Internal Value | Laue Name |
-| ------------|----------------|----------|
-| Hexagonal_High | 0 |  Hexagonal-High 6/mmm |
-| Cubic_High | 1 |  Cubic Cubic-High m3m |
-| Hexagonal_Low | 2 |  Hexagonal-Low 6/m |
-| Cubic_Low | 3 |  Cubic Cubic-Low m3 (Tetrahedral) |
-| Triclinic | 4 |  Triclinic -1 |
-| Monoclinic | 5 |  Monoclinic 2/m |
-| OrthoRhombic | 6 |  Orthorhombic mmm |
-| Tetragonal_Low | 7 |  Tetragonal-Low 4/m |
-| Tetragonal_High | 8 |  Tetragonal-High 4/mmm |
-| Trigonal_Low | 9 |  Trigonal-Low -3 |
-| Trigonal_High | 10 |  Trigonal-High -3m |
-| UnknownCrystalStructure | 999 |  Undefined Crystal Structure |
+| String Name | Internal Value | Laue Name | Rotation Point Group |
+| ------------|----------------|----------|-----------------------|
+| Hexagonal_High | 0 |  Hexagonal-High 6/mmm | 622 |
+| Cubic_High | 1 |  Cubic-High m3m | 432 |
+| Hexagonal_Low | 2 |  Hexagonal-Low 6/m | 6 |
+| Cubic_Low | 3 |  Cubic-Low m3 (Tetrahedral) | 23 |
+| Triclinic | 4 |  Triclinic -1 | 1 |
+| Monoclinic | 5 |  Monoclinic 2/m | 2 |
+| OrthoRhombic | 6 |  Orthorhombic mmm | 222 |
+| Tetragonal_Low | 7 |  Tetragonal-Low 4/m | 4 |
+| Tetragonal_High | 8 |  Tetragonal-High 4/mmm | 422 |
+| Trigonal_Low | 9 |  Trigonal-Low -3 | 3 |
+| Trigonal_High | 10 |  Trigonal-High -3m | 32 |
+| UnknownCrystalStructure | 999 |  Undefined Crystal Structure |  |
 
 ### Phase Type
 
