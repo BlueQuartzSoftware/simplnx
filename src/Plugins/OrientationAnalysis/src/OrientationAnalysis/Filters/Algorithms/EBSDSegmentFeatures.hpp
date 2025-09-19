@@ -10,7 +10,7 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/SegmentFeatures.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <vector>
 

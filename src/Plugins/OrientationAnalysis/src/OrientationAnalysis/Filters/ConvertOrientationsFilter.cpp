@@ -11,8 +11,8 @@
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
 #include "EbsdLib/OrientationMath/OrientationConverter.hpp"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 

@@ -7,10 +7,10 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
+#include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/Core/OrientationTransformation.hpp>
 #include <EbsdLib/Core/Quaternion.hpp>
-#include <EbsdLib/Core/EbsdDataArray.hpp>
 
 #include <algorithm>
 

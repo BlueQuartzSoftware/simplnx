@@ -7,7 +7,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <catch2/catch.hpp>
 

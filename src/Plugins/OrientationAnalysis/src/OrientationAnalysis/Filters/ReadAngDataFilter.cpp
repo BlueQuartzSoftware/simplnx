@@ -15,10 +15,10 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "EbsdLib/IO/TSL/AngFields.h"
-#include "EbsdLib/IO/TSL/AngPhase.h"
-#include "EbsdLib/IO/TSL/AngReader.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/IO/TSL/AngFields.h>
+#include <EbsdLib/IO/TSL/AngPhase.h>
+#include <EbsdLib/IO/TSL/AngReader.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
 

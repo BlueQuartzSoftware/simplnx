@@ -8,9 +8,9 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-#include "EbsdLib/IO/HKL/CtfConstants.h"
-#include "EbsdLib/IO/TSL/AngConstants.h"
-#include "EbsdLib/IO/TSL/AngReader.h"
+#include <EbsdLib/IO/HKL/CtfConstants.h>
+#include <EbsdLib/IO/TSL/AngConstants.h>
+#include <EbsdLib/IO/TSL/AngReader.h>
 
 #include <filesystem>
 #include <sstream>

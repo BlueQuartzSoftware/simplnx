@@ -7,8 +7,8 @@
 #include "simplnx/Utilities/FilePathGenerator.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "EbsdLib/IO/TSL/AngConstants.h"
-#include "EbsdLib/IO/TSL/AngReader.h"
+#include <EbsdLib/IO/TSL/AngConstants.h>
+#include <EbsdLib/IO/TSL/AngReader.h>
 
 #include <fstream>
 #include <sstream>

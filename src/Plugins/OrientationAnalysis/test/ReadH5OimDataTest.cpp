@@ -10,7 +10,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
 
-#include "EbsdLib/IO/TSL/AngFields.h"
+#include <EbsdLib/IO/TSL/AngFields.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;

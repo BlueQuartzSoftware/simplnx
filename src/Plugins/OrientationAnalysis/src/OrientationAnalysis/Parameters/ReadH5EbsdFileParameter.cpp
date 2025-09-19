@@ -4,9 +4,9 @@
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 
-#include "EbsdLib/IO/H5EbsdVolumeInfo.h"
-#include "EbsdLib/IO/HKL/CtfFields.h"
-#include "EbsdLib/IO/TSL/AngFields.h"
+#include <EbsdLib/IO/H5EbsdVolumeInfo.h>
+#include <EbsdLib/IO/HKL/CtfFields.h>
+#include <EbsdLib/IO/TSL/AngFields.h>
 
 #include <fmt/core.h>
 

@@ -7,7 +7,7 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <chrono>
 

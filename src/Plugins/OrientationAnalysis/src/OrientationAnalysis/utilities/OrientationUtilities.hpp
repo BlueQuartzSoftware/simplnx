@@ -1,7 +1,7 @@
 #pragma once
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/Orientation.hpp"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <Eigen/Dense>
 

@@ -9,7 +9,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
-#include "EbsdLib/IO/HKL/CprReader.h"
+#include <EbsdLib/IO/HKL/CprReader.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;

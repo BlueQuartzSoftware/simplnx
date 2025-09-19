@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 

@@ -6,7 +6,7 @@
 
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;

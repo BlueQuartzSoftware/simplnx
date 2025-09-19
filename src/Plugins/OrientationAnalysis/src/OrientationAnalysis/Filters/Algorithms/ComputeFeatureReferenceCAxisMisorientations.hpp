@@ -32,7 +32,6 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsInp
   // Output Feature Data
   DataPath FeatureAvgCAxisMisorientationsArrayPath;
   DataPath FeatureStdevCAxisMisorientationsArrayPath;
-
 };
 
 /**

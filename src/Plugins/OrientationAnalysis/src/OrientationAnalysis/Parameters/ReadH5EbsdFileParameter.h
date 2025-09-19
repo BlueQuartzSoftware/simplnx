@@ -5,7 +5,7 @@
 #include "simplnx/Utilities/FilePathGenerator.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <string>
 

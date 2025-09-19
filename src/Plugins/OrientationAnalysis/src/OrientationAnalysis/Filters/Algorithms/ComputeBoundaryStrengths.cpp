@@ -5,7 +5,7 @@
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 

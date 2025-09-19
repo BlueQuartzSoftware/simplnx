@@ -8,7 +8,7 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;

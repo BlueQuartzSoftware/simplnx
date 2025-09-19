@@ -14,14 +14,14 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "EbsdLib/IO/HKL/CtfFields.h"
-#include "EbsdLib/IO/HKL/H5CtfVolumeReader.h"
-#include "EbsdLib/IO/TSL/AngFields.h"
+#include <EbsdLib/IO/HKL/CtfFields.h>
+#include <EbsdLib/IO/HKL/H5CtfVolumeReader.h>
+#include <EbsdLib/IO/TSL/AngFields.h>
 
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "EbsdLib/IO/TSL/H5AngVolumeReader.h"
+#include <EbsdLib/IO/TSL/H5AngVolumeReader.h>
 
 using namespace nx::core;
 

@@ -7,8 +7,8 @@
 #include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/IO/TSL/AngConstants.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/IO/TSL/AngConstants.h>
 
 #include <fstream>
 

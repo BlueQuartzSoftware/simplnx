@@ -16,11 +16,11 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "EbsdLib/IO/HKL/CprReader.h"
-#include "EbsdLib/IO/HKL/CtfConstants.h"
-#include "EbsdLib/IO/HKL/CtfFields.h"
-#include "EbsdLib/IO/HKL/CtfPhase.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/IO/HKL/CprReader.h>
+#include <EbsdLib/IO/HKL/CtfConstants.h>
+#include <EbsdLib/IO/HKL/CtfFields.h>
+#include <EbsdLib/IO/HKL/CtfPhase.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
 

@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 
