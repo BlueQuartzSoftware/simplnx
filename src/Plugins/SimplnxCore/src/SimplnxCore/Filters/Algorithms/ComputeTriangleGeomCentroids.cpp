@@ -48,7 +48,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   if(featAttrMat.getNumTuples() < *maxFeatureId + 1)
   {
     m_MessageHandler(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
-    featAttrMat.resizeTuples(AttributeMatrix::ShapeType{static_cast<usize>(*maxFeatureId + 1)});
+    featAttrMat.resizeTuples(ShapeType{static_cast<usize>(*maxFeatureId + 1)});
   }
   MeshIndexType numFeatures = featAttrMat.getNumTuples();
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();

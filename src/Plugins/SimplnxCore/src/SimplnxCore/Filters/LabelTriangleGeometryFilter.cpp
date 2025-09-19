@@ -105,7 +105,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   DataPath triAMPath = pTriangleGeomPathValue.createChildPath(pTriangleAMNameValue);
-  std::vector<usize> tDims(1, 1);
+  ShapeType tDims(1, 1);
   {
     auto createAMAction = std::make_unique<CreateAttributeMatrixAction>(triAMPath, tDims);
     resultOutputActions.value().appendAction(std::move(createAMAction));

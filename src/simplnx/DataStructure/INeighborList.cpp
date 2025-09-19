@@ -64,7 +64,7 @@ usize INeighborList::getNumberOfTuples() const
   return getIListStoreRef().getNumberOfTuples();
 }
 
-void INeighborList::resizeTuples(const std::vector<usize>& tupleShape)
+void INeighborList::resizeTuples(const ShapeType& tupleShape)
 {
   getIListStoreRef().resizeTuples(tupleShape);
 }
@@ -74,12 +74,12 @@ usize INeighborList::getNumberOfComponents() const
   return 1;
 }
 
-IArray::ShapeType INeighborList::getTupleShape() const
+ShapeType INeighborList::getTupleShape() const
 {
   return getIListStoreRef().getTupleShape();
 }
 
-IArray::ShapeType INeighborList::getComponentShape() const
+ShapeType INeighborList::getComponentShape() const
 {
   return {1};
 }

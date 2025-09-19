@@ -189,8 +189,8 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     // We need to insert this small data set for the XDMF to work correctly.
     DataPath xdmfVertsDataPath = vertGeometryDataPath.createChildPath("Verts");
     DataObject::IdType parentId = dataStructure.getId(vertGeometryDataPath).value();
-    std::vector<usize> tupleShape = {vertGeom.getNumberOfVertices()};
-    std::vector<usize> componentShape = {1};
+    ShapeType tupleShape = {vertGeom.getNumberOfVertices()};
+    ShapeType componentShape = {1};
     DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataStructure, "Verts", tupleShape, componentShape, parentId);
     for(int64_t i = 0; i < tupleShape[0]; i++)
     {

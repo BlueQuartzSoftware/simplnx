@@ -75,7 +75,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
     // DataArray dimensions are stored slowest to fastest, the opposite of ImageGeometry
     std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
 
-    std::vector<usize> cDims = {nComponents};
+    ShapeType cDims = {nComponents};
 
     actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), origin.toContainer<CreateImageGeometryAction::OriginType>(),
                                                                      spacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName));

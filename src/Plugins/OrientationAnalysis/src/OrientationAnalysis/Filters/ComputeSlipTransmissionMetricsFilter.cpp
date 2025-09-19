@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeSlipTransmissionMetricsFilter::preflightImpl(con
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  INeighborList::ShapeType tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getTupleShape();
+  ShapeType tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getTupleShape();
 
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pF1ListNameValue));

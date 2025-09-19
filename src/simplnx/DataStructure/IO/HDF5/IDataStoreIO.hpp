@@ -16,7 +16,7 @@ namespace IDataStoreIO
  * @param datasetReader
  * @return Result<>
  */
-typename IDataStore::ShapeType SIMPLNX_EXPORT ReadTupleShape(const nx::core::HDF5::DatasetIO& datasetReader);
+ShapeType SIMPLNX_EXPORT ReadTupleShape(const nx::core::HDF5::DatasetIO& datasetReader);
 
 /**
  * @brief Attempts to read the DataStore component shape from HDF5.
@@ -24,7 +24,7 @@ typename IDataStore::ShapeType SIMPLNX_EXPORT ReadTupleShape(const nx::core::HDF
  * @param datasetReader
  * @return Result<>
  */
-typename IDataStore::ShapeType SIMPLNX_EXPORT ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader);
+ShapeType SIMPLNX_EXPORT ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader);
 } // namespace IDataStoreIO
 } // namespace HDF5
 } // namespace nx::core

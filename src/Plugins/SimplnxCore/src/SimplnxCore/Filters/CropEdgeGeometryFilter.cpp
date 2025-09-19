@@ -209,7 +209,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newEdgeAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
     }
@@ -230,7 +230,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newVertexAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, std::move(componentShape), dataArrayPath));
     }

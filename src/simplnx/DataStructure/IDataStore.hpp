@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -22,9 +23,6 @@ namespace nx::core
 class SIMPLNX_EXPORT IDataStore
 {
 public:
-  using ShapeValueType = usize;
-  using ShapeType = typename std::vector<ShapeValueType>;
-
   enum class StoreType : int32
   {
     InMemory = 0,

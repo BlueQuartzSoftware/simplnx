@@ -14,7 +14,7 @@ class SIMPLNX_EXPORT ArrayThresholdsParameter : public MutableDataParameter
 {
 public:
   using ValueType = ArrayThresholdSet;
-  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
+  using AllowedComponentShapes = std::vector<ShapeType>;
 
   ArrayThresholdsParameter() = delete;
   ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, AllowedComponentShapes requiredComps = {});

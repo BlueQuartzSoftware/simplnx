@@ -53,7 +53,7 @@ Result<> EBSDSegmentFeatures::operator()()
   }
 
   // Resize the Feature Attribute Matrix
-  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
+  ShapeType tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
   auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 

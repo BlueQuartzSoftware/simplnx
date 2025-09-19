@@ -140,7 +140,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
 
   // create the Image Geometry and it's attribute matrices
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()), pSelectedScanNamesValue.scanNames.size()};
-  const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
+  const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), pZSpacingValue};
 

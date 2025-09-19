@@ -407,7 +407,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
   }
 
   // Create the arrays
-  std::vector<usize> tupleDims(readCSVData.tupleDims.size());
+  ShapeType tupleDims(readCSVData.tupleDims.size());
   std::transform(readCSVData.tupleDims.begin(), readCSVData.tupleDims.end(), tupleDims.begin(), [](usize d) { return d; });
   if(useExistingGroupOrAM)
   {

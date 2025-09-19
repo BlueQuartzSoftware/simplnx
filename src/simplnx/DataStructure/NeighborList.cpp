@@ -8,7 +8,7 @@
 namespace nx::core
 {
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape)
 : INeighborList(dataStructure, name)
 , m_Store(std::make_shared<ListStore<T>>(tupleShape))
 , m_IsAllocated(false)
@@ -44,7 +44,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, tupleShape));
   if(!AttemptToAddObject(dataStructure, data, parentId))
@@ -401,13 +401,13 @@ DataObject::Type NeighborList<T>::getDataObjectType() const
   return Type::NeighborList;
 }
 
-template<typename T>
+template <typename T>
 IListStore* NeighborList<T>::getIListStore()
 {
   return m_Store.get();
 }
 
-template<typename T>
+template <typename T>
 const IListStore* NeighborList<T>::getIListStore() const
 {
   return m_Store.get();

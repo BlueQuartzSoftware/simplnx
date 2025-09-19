@@ -104,8 +104,8 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
     return {MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
   }
 
-  std::vector<usize> tdims = inputArray->getIDataStoreRef().getTupleShape();
-  std::vector<usize> cdims(1, 1);
+  ShapeType tDims = inputArray->getIDataStoreRef().getTupleShape();
+  ShapeType cDims(1, 1);
 
   if(pSelectComponents)
   {
@@ -121,7 +121,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tDims, cDims, newArrayPath));
     }
   }
   else
@@ -130,7 +130,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
     {
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(i, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tDims, cDims, newArrayPath));
     }
   }
 
@@ -152,7 +152,7 @@ Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructu
   if(filterArgs.value<bool>(k_SelectComponents_Key))
   {
     auto pExtractComponents = filterArgs.value<DynamicTableParameter::ValueType>(k_ComponentsToExtract_Key)[0];
-    std::vector<usize> components;
+    ShapeType components;
     inputValues.ExtractComponents.reserve(pExtractComponents.size());
     for(auto floatValue : pExtractComponents)
     {

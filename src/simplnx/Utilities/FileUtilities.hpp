@@ -200,7 +200,7 @@ SIMPLNX_EXPORT Result<> ParseLine(std::fstream& inStream, const ParsersVector& d
  * @param tupleDims
  * @return
  */
-SIMPLNX_EXPORT std::string TupleDimsToString(const std::vector<usize>& tupleDims);
+SIMPLNX_EXPORT std::string TupleDimsToString(const ShapeType& tupleDims);
 
 /**
  *

@@ -34,9 +34,9 @@ DataStructure CreateTestDataStructure()
   std::vector<usize> dims = {20, 1, 1};
   image->setDimensions(dims);
 
-  std::vector<usize> tDims = {20};
-  std::vector<usize> cDims = {1};
-  std::vector<usize> cDimsMulti = {3};
+  ShapeType tDims = {20};
+  ShapeType cDims = {1};
+  ShapeType cDimsMulti = {3};
   float fnum = 0.0f;
   int inum = 0;
   AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_CellData, tDims, image->getId());

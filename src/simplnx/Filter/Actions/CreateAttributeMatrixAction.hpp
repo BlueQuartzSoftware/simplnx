@@ -15,7 +15,7 @@ class SIMPLNX_EXPORT CreateAttributeMatrixAction : public IDataCreationAction
 public:
   CreateAttributeMatrixAction() = delete;
 
-  CreateAttributeMatrixAction(const DataPath& path, const AttributeMatrix::ShapeType& shape);
+  CreateAttributeMatrixAction(const DataPath& path, const ShapeType& shape);
 
   ~CreateAttributeMatrixAction() noexcept override;
 
@@ -45,6 +45,6 @@ public:
   std::vector<DataPath> getAllCreatedPaths() const override;
 
 private:
-  AttributeMatrix::ShapeType m_TupleShape;
+  ShapeType m_TupleShape;
 };
 } // namespace nx::core

@@ -84,7 +84,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
   DataPath featureRectArrayPath = pFeatureDataAttributeMatrixPathValue.createChildPath(pFeatureRectArrayNameValue);
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pFeatureDataAttributeMatrixPathValue);
-  std::vector<usize> tDims = attrMatrix.getShape();
+  ShapeType tDims = attrMatrix.getShape();
 
   /*
    * This output Feature Rect array assumes that the original dataset has dimensions that are no larger than uint32.

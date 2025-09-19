@@ -122,7 +122,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
     return MakePreflightErrorResult(-13003, fmt::format("The {} in the {} group must be greater than 0", ReadEnsembleInfo::k_NumberPhases, ReadEnsembleInfo::k_EnsembleInfo));
   }
 
-  std::vector<usize> tupleDims(1, numPhases + 1);
+  ShapeType tupleDims(1, numPhases + 1);
   auto attributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAttributeMatrixPath, tupleDims);
   resultOutputActions.value().appendAction(std::move(attributeMatrixAction));
 

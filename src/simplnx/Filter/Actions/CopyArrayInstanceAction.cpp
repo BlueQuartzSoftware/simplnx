@@ -17,8 +17,8 @@ template <typename T>
 Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPath&& path, IDataAction::Mode mode)
 {
   auto* castInputArray = dynamic_cast<DataArray<T>*>(inputDataArray);
-  IDataStore::ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();
-  IDataStore::ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();
+  ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();
+  ShapeType componentShape = castInputArray->getDataStore()->getComponentShape();
   return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, path, mode);
 }
 } // namespace

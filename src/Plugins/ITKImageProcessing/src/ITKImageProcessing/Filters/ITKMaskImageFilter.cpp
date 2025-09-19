@@ -72,7 +72,7 @@ typename MaskImageT<Dimension>::Pointer CastIDataStoreToUInt32Image(IDataStore& 
 template <class InputPixelT, class OutputPixelT>
 OutputPixelT MakeOutsideValue(float64 value)
 {
-  std::vector<usize> cDims = ITK::GetComponentDimensions<InputPixelT>();
+  ShapeType cDims = ITK::GetComponentDimensions<InputPixelT>();
   usize numComponents = std::accumulate(cDims.cbegin(), cDims.cend(), static_cast<usize>(1), std::multiplies<>());
   OutputPixelT outsideValue{};
   itk::NumericTraits<OutputPixelT>::SetLength(outsideValue, numComponents);

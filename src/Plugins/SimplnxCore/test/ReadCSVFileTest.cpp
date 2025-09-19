@@ -96,7 +96,7 @@ void CreateTestDataFile(const fs::path& inputFilePath, nonstd::span<std::string>
  * @return
  */
 Arguments createArguments(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                          const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
+                          const std::vector<std::string>& customHeaders, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
                           nonstd::span<std::string> values, const std::string& newGroupName)
 {
   Arguments args;
@@ -199,7 +199,7 @@ void TestCase_TestPrimitives_Error(nonstd::span<std::string> values, int32 expec
 
 // -----------------------------------------------------------------------------
 void TestCase_TestImporterData_Error(const std::string& inputFilePath, usize startImportRow, ReadCSVData::HeaderMode headerMode, usize headersLine, const std::vector<char>& delimiters,
-                                     const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const std::vector<usize>& tupleDims,
+                                     const std::vector<std::string>& headers, const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrayMask, const ShapeType& tupleDims,
                                      nonstd::span<std::string> values, int32 expectedErrorCode)
 {
   std::string newGroupName = "New Group";
@@ -423,7 +423,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 5): Invalid filter execution - I
   std::vector<std::string> v = {std::to_string(std::numeric_limits<int8>::min()), std::to_string(std::numeric_limits<int8>::max())};
   fs::create_directories(k_TestInput.parent_path());
   CreateTestDataFile(k_TestInput, v, {"Array"});
-  std::vector<usize> tupleDims = {static_cast<usize>(v.size())};
+  ShapeType tupleDims = {static_cast<usize>(v.size())};
 
   // Empty input file path
   TestCase_TestImporterData_Error("", 2, ReadCSVData::HeaderMode::LINE, 1, {','}, {}, {CSVType::int8}, {false}, tupleDims, v, k_EmptyFile);

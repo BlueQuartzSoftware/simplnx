@@ -104,8 +104,7 @@ DataStructure GetTestDataStructure()
 }
 
 template <typename T>
-DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
-                                  DataObject::IdType parentId)
+DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -132,7 +131,7 @@ DataStructure CreateDataStructure()
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   usize numComponents = 1;
-  std::vector<usize> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
+  ShapeType tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
   Float32Array* ci_data = CreateTestDataArray<float>("Confidence Index", dataStructure, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>("FeatureIds", dataStructure, tupleShape, {numComponents}, scanData->getId());
@@ -193,7 +192,7 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
   // Now create some "Cell" data for the Vertex Geometry
-  std::vector<usize> tupleShape = {vertexGeometry->getNumberOfVertices()};
+  ShapeType tupleShape = {vertexGeometry->getNumberOfVertices()};
   usize numComponents = 1;
   Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
   Float32Array* power_data = CreateTestDataArray<float>("Power", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
@@ -419,7 +418,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
 void CreateNeighborList(DataStructure& dataStructure)
 {
   const usize numItems = 50;
-  const std::vector<usize> tupleShape = {numItems};
+  const ShapeType tupleShape = {numItems};
 
   auto* neighborGroup = DataGroup::Create(dataStructure, k_NeighborGroupName);
   auto* neighborGroup2 = DataGroup::Create(dataStructure, k_NeighborGroupName + "2");
@@ -436,8 +435,8 @@ void CreateNeighborList(DataStructure& dataStructure)
 
 void CreateArrayTypes(DataStructure& dataStructure)
 {
-  const std::vector<usize> tupleShape = {2};
-  const std::vector<usize> componentShape = {1};
+  const ShapeType tupleShape = {2};
+  const ShapeType componentShape = {1};
 
   auto* boolArray = DataArray<bool>::CreateWithStore<DataStore<bool>>(dataStructure, "BoolArray", tupleShape, componentShape);
   AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
@@ -457,7 +456,7 @@ void CreateArrayTypes(DataStructure& dataStructure)
   DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Float32Array", tupleShape, componentShape);
   DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStructure, "Float64Array", tupleShape, componentShape);
 
-  StringArray::CreateWithValues(dataStructure, "StringArray", StringArray::ShapeType{3}, {"Foo", "Bar", "Bazz"});
+  StringArray::CreateWithValues(dataStructure, "StringArray", ShapeType{3}, {"Foo", "Bar", "Bazz"});
 }
 
 //------------------------------------------------------------------------------
@@ -903,7 +902,7 @@ TEST_CASE("xdmf")
   std::mt19937 generator(randomDevice());
   std::uniform_int_distribution<> intDistribution(0, 100);
   std::uniform_real_distribution<> realDistribution(-10.0f, 10.0f);
-  auto vertsDataStore = std::make_unique<DataStore<float32>>(IDataStore::ShapeType{numVerts}, IDataStore::ShapeType{3}, 0.0f);
+  auto vertsDataStore = std::make_unique<DataStore<float32>>(ShapeType{numVerts}, ShapeType{3}, 0.0f);
   for(auto& item : vertsDataStore->createSpan())
   {
     item = realDistribution(generator);

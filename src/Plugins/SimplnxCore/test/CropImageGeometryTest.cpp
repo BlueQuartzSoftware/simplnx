@@ -40,7 +40,7 @@ DataStructure CreateDataStructure()
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
   auto imageDimsArray = imageGeomDims.toArray();
-  AttributeMatrix::ShapeType cellDataDims{imageDimsArray.crbegin(), imageDimsArray.crend()};
+  ShapeType cellDataDims{imageDimsArray.crbegin(), imageDimsArray.crend()};
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellAttributeMatrixName, cellDataDims, imageGeom->getId());
   imageGeom->setCellData(*cellDataPtr);
 

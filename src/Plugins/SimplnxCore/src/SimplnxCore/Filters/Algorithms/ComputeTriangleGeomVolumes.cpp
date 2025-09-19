@@ -40,7 +40,7 @@ Result<> ComputeTriangleGeomVolumes::operator()()
 
   auto maxFaceLabel = std::max_element(faceLabels.begin(), faceLabels.end()); // Ensure the max value is set.
 
-  AttributeMatrix::ShapeType tDims = {static_cast<usize>(*maxFaceLabel) + 1ULL};
+  ShapeType tDims = {static_cast<usize>(*maxFaceLabel) + 1ULL};
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
   featAttrMat.resizeTuples(tDims);
   auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();

@@ -209,7 +209,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     return {MakeErrorResult<OutputActions>(k_MissingTriangleFacesArray, ss)};
   }
 
-  std::vector<usize> cDims(1, 1);
+  ShapeType cDims(1, 1);
 
   // Create Geometry
   usize numFaces = triangleGeom.getNumberOfFaces();
@@ -220,7 +220,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   DataPath internalFaceDataPath = createInternalTrianglesAction->getFaceDataPath();
   actions.appendAction(std::move(createInternalTrianglesAction));
 
-  std::vector<usize> tDims(1, 0);
+  ShapeType tDims(1, 0);
   std::list<std::string> tempDataArrayList;
 
   // Create arrays and check number of tuples match their respective face or vertex attribute matrix

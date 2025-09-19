@@ -150,8 +150,8 @@ Result<> ComputeFeatureCentroids::operator()()
   size_t yPoints = imageGeom.getNumYCells();
   size_t zPoints = imageGeom.getNumZCells();
 
-  IDataStore::ShapeType tupleShape{totalFeatures};
-  IDataStore::ShapeType componentShape{3};
+  ShapeType tupleShape{totalFeatures};
+  ShapeType componentShape{3};
 
   auto sumPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
   auto centerPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);

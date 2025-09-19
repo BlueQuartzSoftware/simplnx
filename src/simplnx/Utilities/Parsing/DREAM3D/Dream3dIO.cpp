@@ -483,7 +483,7 @@ std::string GetXdmfArrayType(usize numComp)
 void WriteXdmfAttributeDataHelper(std::ostream& out, usize numComp, std::string_view attrType, std::string_view dataContainerName, const IDataArray& array, std::string_view centering, usize precision,
                                   std::string_view xdmfTypeName, std::string_view hdf5FilePath)
 {
-  IDataStore::ShapeType tupleDims = array.getTupleShape();
+  ShapeType tupleDims = array.getTupleShape();
 
   std::string tupleStr = fmt::format("{}", fmt::join(tupleDims.crbegin(), tupleDims.crend(), " "));
 
@@ -865,8 +865,8 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
 
   if(preflight)
   {
-    std::vector<usize> tDims;
-    std::vector<usize> cDims;
+    ShapeType tDims;
+    ShapeType cDims;
     auto result = readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
     if(result.invalid())
     {
@@ -881,7 +881,7 @@ Result<> readLegacyStringArray(DataStructure& dataStructure, const nx::core::HDF
   else
   {
     const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-    StringArray::CreateWithValues(dataStructure, daName, StringArray::ShapeType{strings.size()}, strings, parentId);
+    StringArray::CreateWithValues(dataStructure, daName, ShapeType{strings.size()}, strings, parentId);
   }
   return {};
 }
@@ -895,10 +895,10 @@ Result<> finishImportingLegacyStringArray(DataStructure& dataStructure, const nx
   }
 
   const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-  StringArray::ShapeType tupShape = existingArray->getTupleShape();
+  ShapeType tupShape = existingArray->getTupleShape();
   if(existingArray->getNumberOfTuples() != strings.size())
   {
-    tupShape = StringArray::ShapeType{strings.size()};
+    tupShape = ShapeType{strings.size()};
   }
 
   existingArray->setStore(std::make_shared<StringStore>(strings, tupShape));
@@ -916,8 +916,8 @@ Result<IDataArray*> readLegacyDataArray(DataStructure& dataStructure, const nx::
   }
   auto dataType = std::move(dataTypeResult.value());
 
-  std::vector<usize> tDims;
-  std::vector<usize> cDims;
+  ShapeType tDims;
+  ShapeType cDims;
   Result<> dimsResult = readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
   if(dimsResult.invalid())
   {
@@ -1072,8 +1072,8 @@ Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure
   HDF5::DatasetIO dataArrayReader = geomGroup.openDataset(arrayName);
   DataObject::IdType parentId = geometry->getId();
 
-  std::vector<usize> tDims;
-  std::vector<usize> cDims;
+  ShapeType tDims;
+  ShapeType cDims;
   Result<> result = readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
   if(result.invalid())
   {
@@ -1094,7 +1094,7 @@ Result<UInt64Array*> readLegacyNodeConnectivityList(DataStructure& dataStructure
 
 template <typename T>
 Result<> createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const nx::core::HDF5::GroupIO& parentReader, const nx::core::HDF5::DatasetIO& datasetReader,
-                                  const std::vector<usize>& tupleDims)
+                                  const ShapeType& tupleDims)
 {
   auto listStore = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
   auto* neighborList = NeighborList<T>::Create(dataStructure, datasetReader.getName(), listStore, parentId);
@@ -1115,7 +1115,7 @@ Result<> readLegacyNeighborList(DataStructure& dataStructure, const nx::core::HD
   }
   auto dataType = dataTypeResult.value();
 
-  std::vector<usize> tDims;
+  ShapeType tDims;
   auto tDimsResult = datasetReader.readVectorAttribute<usize>(Legacy::TupleDims);
   tDims = std::move(tDimsResult.value());
 
@@ -1292,7 +1292,7 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
     return ConvertResult(std::move(tDimsResult));
   }
   std::vector<uint64> tDims = std::move(tDimsResult.value());
-  auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
+  auto reversedTDims = ShapeType(tDims.crbegin(), tDims.crend());
 
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, reversedTDims, parentId);
 

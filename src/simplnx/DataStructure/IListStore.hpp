@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 
 #include <vector>
@@ -14,9 +15,6 @@ class DatasetIO;
 class IListStore
 {
 public:
-  using ShapeValueType = usize;
-  using ShapeType = typename std::vector<ShapeValueType>;
-
   virtual ~IListStore() = default;
 
   /**

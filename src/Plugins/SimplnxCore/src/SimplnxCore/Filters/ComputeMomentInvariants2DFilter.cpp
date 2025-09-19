@@ -115,9 +115,9 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
                                                        pGeometryPathValue.toString()));
   }
 
-  std::vector<usize> componentDims(1, 1);
+  ShapeType componentDims(1, 1);
   const auto& cellFeatureAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pFeatureAttributeMatrixPathValue);
-  const std::vector<usize>& tupleDims = cellFeatureAttributeMatrix.getShape();
+  const ShapeType& tupleDims = cellFeatureAttributeMatrix.getShape();
 
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, componentDims, omega1Path);

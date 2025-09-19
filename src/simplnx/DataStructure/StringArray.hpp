@@ -23,7 +23,8 @@ public:
   static StringArray* Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId = {});
   static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId = {});
 
-  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
+                             const std::optional<IdType>& parentId = {});
 
   StringArray(const StringArray& other);
   StringArray(StringArray&& other) noexcept;
@@ -108,7 +109,7 @@ public:
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  void resizeTuples(const std::vector<usize>& tupleShape) override;
+  void resizeTuples(const ShapeType& tupleShape) override;
 
   void setStore(const std::shared_ptr<AbstractStringStore>& newStore);
 

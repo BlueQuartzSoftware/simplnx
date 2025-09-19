@@ -476,7 +476,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
@@ -506,7 +506,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {
         DataType dataType = srcArray->getDataType();
-        IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
+        ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
         DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }

@@ -88,7 +88,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<usize> tDims = {};
+  ShapeType tDims = {};
   const auto& rowData = tupleDimsData.at(0);
   tDims.reserve(rowData.size());
   for(usize i = 0; i < rowData.size(); ++i)

@@ -2,6 +2,7 @@
 
 #include "simplnx/simplnx_export.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Output.hpp"
@@ -60,7 +61,7 @@ public:
    * @brief Returns the component dimensions of the DataArray to be created.
    * @return const std::vector<usize>&
    */
-  const std::vector<usize>& componentDims() const;
+  const ShapeType& componentDims() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.

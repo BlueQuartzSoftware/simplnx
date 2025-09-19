@@ -26,7 +26,7 @@ SIMPLNX_EXPORT void TryForceLargeDataFormatFromPrefs(std::string& dataFormat);
 SIMPLNX_EXPORT std::shared_ptr<DataIOCollection> GetIOCollection();
 
 template <class T>
-uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataStore::ShapeType& componentShape)
+uint64 CalculateDataSize(const ShapeType& tupleShape, const ShapeType& componentShape)
 {
   uint64 numValues = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
   uint64 numComponents = std::accumulate(componentShape.begin(), componentShape.end(), 1ULL, std::multiplies<>());
@@ -42,8 +42,7 @@ uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataSto
  * @return
  */
 template <class T>
-std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode,
-                                                      std::string dataFormat = "")
+std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, IDataAction::Mode mode, std::string dataFormat = "")
 {
   switch(mode)
   {
@@ -64,7 +63,7 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 }
 
 template <class T>
-std::shared_ptr<AbstractListStore<T>> CreateListStore(const IListStore::ShapeType& tupleShape, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
+std::shared_ptr<AbstractListStore<T>> CreateListStore(const ShapeType& tupleShape, IDataAction::Mode mode = IDataAction::Mode::Execute, std::string dataFormat = "")
 {
   switch(mode)
   {

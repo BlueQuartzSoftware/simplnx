@@ -181,8 +181,8 @@ Result<> readDataChunk(DataStructure* dataStructurePtr, std::istream& in, bool b
   using DataArrayType = DataArray<T>;
 
   auto& dataArrayRef = dataStructurePtr->getDataRefAs<DataArrayType>(dataArrayPath);
-  std::vector<usize> tDims = dataArrayRef.getTupleShape();
-  std::vector<usize> cDims = dataArrayRef.getComponentShape();
+  ShapeType tDims = dataArrayRef.getTupleShape();
+  ShapeType cDims = dataArrayRef.getComponentShape();
 
   dataArrayRef.fill(static_cast<T>(0));
   if(binary)
@@ -1025,7 +1025,7 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
     }
     nx::core::DataType nxDType = nxDTypeResult.value();
 
-    std::vector<usize> tupleShape = {m_CurrentGeomDims[2], m_CurrentGeomDims[1], m_CurrentGeomDims[0]};
+    ShapeType tupleShape = {m_CurrentGeomDims[2], m_CurrentGeomDims[1], m_CurrentGeomDims[0]};
     auto createArrayAction = std::make_unique<CreateArrayAction>(nxDType, tupleShape, std::vector<usize>{numComp}, arrayDataPath);
     m_OutputActions.value().appendAction(std::move(createArrayAction));
     preflightSkipVolume(nxDType, in, m_FileIsBinary, numPts * numComp);

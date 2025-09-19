@@ -38,7 +38,7 @@ std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
 Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
 {
   UnitTest::LoadPlugins();
-  std::vector<usize> compShape = {3};
+  ShapeType compShape = {3};
   DataPath k_EulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
 
   DataGroup* dgPtr = DataGroup::Create(dataStructure, fmt::format("{}", xtal));

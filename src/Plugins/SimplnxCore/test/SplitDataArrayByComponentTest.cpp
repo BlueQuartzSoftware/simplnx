@@ -102,7 +102,7 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
   SplitDataArrayByComponentFilter filter;
 
   DataPath arrayPath({"AttributeMatrix", "MultiComponent Array " + dataType});
-  std::vector<usize> compsToCheck;
+  ShapeType compsToCheck;
 
   Arguments args;
   // read in the exemplar shift data file

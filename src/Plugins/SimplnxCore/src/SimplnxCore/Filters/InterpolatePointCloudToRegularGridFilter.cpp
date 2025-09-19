@@ -269,7 +269,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
   auto image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   const SizeVec3 imageDims = image->getDimensions();
-  std::vector<usize> tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
+  ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
   // Create the attribute matrix for storing the interpolated/copied arrays
   {

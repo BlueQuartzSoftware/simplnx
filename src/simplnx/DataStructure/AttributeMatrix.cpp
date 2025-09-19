@@ -1,5 +1,6 @@
 #include "AttributeMatrix.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 
@@ -92,7 +93,7 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
     return false;
   }
 
-  const IArray::ShapeType arrayTupleShape = arrayObjectPtr->getTupleShape();
+  const ShapeType arrayTupleShape = arrayObjectPtr->getTupleShape();
 
   const usize totalTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   const usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
@@ -100,7 +101,7 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
   return (totalTuples == incomingTupleCount);
 }
 
-const AttributeMatrix::ShapeType& AttributeMatrix::getShape() const
+const ShapeType& AttributeMatrix::getShape() const
 {
   return m_TupleShape;
 }

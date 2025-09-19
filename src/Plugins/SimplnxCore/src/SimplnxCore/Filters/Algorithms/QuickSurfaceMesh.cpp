@@ -365,7 +365,7 @@ Result<> QuickSurfaceMesh::operator()()
   }
 
   // now create node and triangle arrays knowing the number that will be needed
-  std::vector<usize> tupleShape = {triangleCount};
+  ShapeType tupleShape = {triangleCount};
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getFaceAttributeMatrix()->resizeTuples(tupleShape);

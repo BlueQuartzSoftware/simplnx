@@ -172,7 +172,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<usize> compDims(compDimsData[0].size());
+  ShapeType compDims(compDimsData[0].size());
   std::transform(compDimsData[0].begin(), compDimsData[0].end(), compDims.begin(), [](double val) { return static_cast<usize>(val); });
   usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
   if(numComponents <= 0)
@@ -183,7 +183,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
         fmt::format("The chosen component dimensions ({}) results in 0 total components.  Please choose component dimensions that result in a positive number of total components.", compDimsStr));
   }
 
-  std::vector<usize> tupleDims = {};
+  ShapeType tupleDims = {};
 
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
   if(parentAM == nullptr)

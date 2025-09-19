@@ -126,9 +126,9 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   OutputActions actions;
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  std::vector<usize> tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
+  ShapeType tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
 
-  const std::vector<usize> cDims{1};
+  const ShapeType cDims{1};
 
   // Create output Cell Data Arrays (if the user requested it)
   if(storeBoundaryCells)

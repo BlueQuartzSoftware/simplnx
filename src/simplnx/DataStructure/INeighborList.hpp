@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/DataStructure/IListStore.hpp"
 
@@ -152,7 +153,7 @@ public:
   /**
    * @brief Resizes the internal array to accommodate
    */
-  void resizeTuples(const std::vector<usize>& tupleShape) override;
+  void resizeTuples(const ShapeType& tupleShape) override;
 
 protected:
   /**

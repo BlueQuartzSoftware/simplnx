@@ -22,8 +22,6 @@ using namespace nx::core;
 
 namespace
 {
-using ShapeType = std::vector<usize>;
-
 template <class T>
 std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
 {

@@ -17,10 +17,10 @@ using namespace nx::core;
 namespace
 {
 template <class T>
-Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, const std::vector<usize>& tupleShape, IDataAction::Mode mode, const IDataArray& inputDataArray)
+Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, const ShapeType& tupleShape, IDataAction::Mode mode, const IDataArray& inputDataArray)
 {
   auto& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
-  const IDataStore::ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
+  const ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
   dataStructure.removeData(dataPath);
   return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
 }
@@ -41,7 +41,7 @@ struct InitializeNeighborListFunctor
 struct CreateDefaultValueDataArrayFunctor
 {
   template <typename T>
-  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape, const std::string& defaultValue,
+  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::string& defaultValue,
                              const std::optional<DataObject::IdType> parentId)
   {
     auto newDataArray = DataArray<T>::template CreateWithStore<DataStore<T>>(destDataStructure, name, tupleShape, componentShape, parentId);
@@ -61,7 +61,7 @@ struct CreateDefaultValueDataArrayFunctor
 struct CreateDefaultValueNeighborListFunctor
 {
   template <typename T>
-  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<DataObject::IdType> parentId)
+  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<DataObject::IdType> parentId)
   {
     auto newNeighborList = NeighborList<T>::Create(destDataStructure, name, tupleShape, parentId);
     return {newNeighborList};
@@ -104,7 +104,7 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
 }
 
 //-----------------------------------------------------------------------------
-Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode)
+Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, ShapeType& tupleShape, IDataAction::Mode mode)
 {
   auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
 
@@ -237,8 +237,8 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
   }
 }
 
-Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const std::vector<usize>& tupleShape,
-                                                 const std::string& defaultValue, const std::optional<DataObject::IdType> parentId)
+Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape, const std::string& defaultValue,
+                                                 const std::optional<DataObject::IdType> parentId)
 {
   switch(array->getArrayType())
   {
@@ -309,7 +309,7 @@ void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeM
   {
     const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
     DataType dataType = srcArray.getDataType();
-    IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+    ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
     DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
   }

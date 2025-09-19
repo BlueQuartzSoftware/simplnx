@@ -97,7 +97,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
   }
 
   // Check for unequal array types, data types, and component dimensions
-  std::vector<usize> cDims;
+  ShapeType cDims;
   IArray::ArrayType arrayType;
   std::string arrayTypeName;
   usize numTuples = 0;
@@ -145,7 +145,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
 
   // create the destination array for the calculated results
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, IArray::ShapeType{4, 4}, IArray::ShapeType{1}, outputArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ShapeType{4, 4}, ShapeType{1}, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

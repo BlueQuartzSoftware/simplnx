@@ -9,7 +9,7 @@ namespace nx::core
 {
 StringArray* StringArray::Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId)
 {
-  return CreateWithValues(dataStructure, name,{0}, {}, parentId);
+  return CreateWithValues(dataStructure, name, {0}, {}, parentId);
 }
 
 StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId)
@@ -23,7 +23,8 @@ StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const s
   return data.get();
 }
 
-StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
+                                 const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), tupleShape, importId, std::move(strings)));
   if(!AttemptToAddObject(dataStructure, data, parentId))
@@ -208,12 +209,12 @@ bool StringArray::empty() const
   return m_Strings->empty();
 }
 
-IArray::ShapeType StringArray::getTupleShape() const
+ShapeType StringArray::getTupleShape() const
 {
   return m_Strings->getTupleShape();
 }
 
-IArray::ShapeType StringArray::getComponentShape() const
+ShapeType StringArray::getComponentShape() const
 {
   return {1};
 }
@@ -228,7 +229,7 @@ usize StringArray::getNumberOfComponents() const
   return 1;
 }
 
-void StringArray::resizeTuples(const std::vector<usize>& tupleShape)
+void StringArray::resizeTuples(const ShapeType& tupleShape)
 {
   m_Strings->resizeTuples(tupleShape);
 }

@@ -16,7 +16,7 @@ public:
   using ValueType = std::vector<DataPath>;
   using AllowedTypes = std::set<IArray::ArrayType>;
   using AllowedDataTypes = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
+  using AllowedComponentShapes = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
   MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,

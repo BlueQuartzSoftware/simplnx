@@ -36,7 +36,7 @@ struct IsIntegerType
   }
 };
 
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, std::vector<usize> tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims)
 {
   auto findLength = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);
@@ -358,7 +358,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-57203, fmt::format("Input array must be a scalar array"));
   }
 
-  AttributeMatrix::ShapeType tupleDims = {1};
+  ShapeType tupleDims = {1};
   const Int32Array* featureIdsPtr = nullptr;
   if(pComputeByIndexValue)
   {

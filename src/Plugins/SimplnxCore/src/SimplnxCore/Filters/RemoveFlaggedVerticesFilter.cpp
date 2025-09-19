@@ -177,8 +177,8 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       const DataType dataType = srcArray.getDataType();
-      const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      const IDataStore::ShapeType tupleShape = srcArray.getIDataStoreRef().getTupleShape();
+      const ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      const ShapeType tupleShape = srcArray.getIDataStoreRef().getTupleShape();
       const DataPath dataArrayPath = reducedVertGeomAttrMatPath.createChildPath(srcArray.getName());
       const std::string dataStoreFormat = srcArray.getDataFormat();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleShape, componentShape, dataArrayPath, dataStoreFormat));
@@ -253,7 +253,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   const size_t numVerticesToKeep = maskCompare->getNumberOfTuples() - maskCompare->countTrueValues(); // We don't need component size since it must be 1
   const size_t numberOfVertices = vertexGeom.getNumberOfVertices();
 
-  const std::vector<usize> tDims = {numVerticesToKeep};
+  const ShapeType tDims = {numVerticesToKeep};
 
   // Resize the reduced vertex geometry object
   auto& reducedVertexGeom = dataStructure.getDataRefAs<VertexGeom>(reducedVertexPath);

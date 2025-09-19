@@ -10,8 +10,6 @@ namespace nx::core
 class StringStore : public AbstractStringStore
 {
 public:
-  using ShapeType = typename std::vector<usize>;
-
   explicit StringStore(const ShapeType& tupleShape);
   explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);
   ~StringStore();

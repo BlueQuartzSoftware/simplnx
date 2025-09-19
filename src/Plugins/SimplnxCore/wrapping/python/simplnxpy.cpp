@@ -169,13 +169,13 @@ template <class T>
 auto BindDataStore(py::handle scope, const char* name)
 {
   py::class_<DataStore<T>, AbstractDataStore<T>, std::shared_ptr<DataStore<T>>> dataStore(scope, name);
-  dataStore.def(py::init<const IDataStore::ShapeType&, const IDataStore::ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
+  dataStore.def(py::init<const ShapeType&, const ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
   dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   dataStore.def(
       "npview",
       [](DataStore<T>& dataStore) {
-        IDataStore::ShapeType shape = dataStore.getTupleShape();
-        IDataStore::ShapeType componentShape = dataStore.getComponentShape();
+        ShapeType shape = dataStore.getTupleShape();
+        ShapeType componentShape = dataStore.getComponentShape();
         shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
         return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
       },
@@ -198,8 +198,8 @@ auto BindDataArray(py::handle scope, const char* name)
         using DataStoreType = DataStore<T>;
         const typename DataArrayType::store_type& abstractDataStore = dataArray.getDataStoreRef();
         const DataStoreType& dataStore = dynamic_cast<const DataStoreType&>(abstractDataStore);
-        IDataStore::ShapeType shape = dataStore.getTupleShape();
-        IDataStore::ShapeType componentShape = dataStore.getComponentShape();
+        ShapeType shape = dataStore.getTupleShape();
+        ShapeType componentShape = dataStore.getComponentShape();
         shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
         return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
       },
@@ -1139,7 +1139,7 @@ PYBIND11_MODULE(simplnx, mod)
                         "data_format"_a = std::string(""));
 
   auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, IDataCreationAction);
-  createAttributeMatrixAction.def(py::init<const DataPath&, const AttributeMatrix::ShapeType&>(), "path"_a, "shape"_a);
+  createAttributeMatrixAction.def(py::init<const DataPath&, const ShapeType&>(), "path"_a, "shape"_a);
 
   auto createDataGroupAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateDataGroupAction, IDataCreationAction);
   createDataGroupAction.def(py::init<const DataPath&>(), "path"_a);

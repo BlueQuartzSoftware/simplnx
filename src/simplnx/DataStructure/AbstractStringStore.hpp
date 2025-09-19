@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
 
 #include <memory>
@@ -14,8 +15,6 @@ public:
   using value_type = std::string;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using ShapeValueType = usize;
-  using ShapeType = typename std::vector<ShapeValueType>;
 
   class Iterator
   {

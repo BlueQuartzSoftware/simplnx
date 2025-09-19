@@ -149,7 +149,7 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
  * @return
  */
 template <class T>
-Result<> CreateNeighbors(DataStructure& dataStructure, const INeighborList::ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode)
 {
   static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
@@ -265,7 +265,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
  * @return
  */
 template <typename T>
-DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
+DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& componentShape,
                                    DataObject::IdType parentId = {})
 {
   // std::cout << "  Reading file " << filename << std::endl;
@@ -332,7 +332,7 @@ Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, 
  * @param mode The mode: Preflight or Execute
  * @return
  */
-SIMPLNX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode);
+SIMPLNX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, ShapeType& tupleShape, IDataAction::Mode mode);
 
 /**
  * @brief This method will ensure that all the arrays are of the same type
@@ -513,7 +513,7 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
  * can be converted to the proper type needed for the new array, and an error result is returned otherwise.
  * @return
  */
-SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const std::vector<usize>& tupleShape,
+SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
                                                                 const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
 
 template <typename T>

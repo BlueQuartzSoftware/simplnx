@@ -26,8 +26,7 @@ void CoreDataIOManager::addCoreFactories()
 
 void CoreDataIOManager::addDataStoreFnc()
 {
-  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape,
-                                       const std::optional<IDataStore::ShapeType>& chunkShape) {
+  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<ShapeType>& chunkShape) {
     std::unique_ptr<IDataStore> dataStore = nullptr;
     switch(numericType)
     {
@@ -72,7 +71,7 @@ void CoreDataIOManager::addDataStoreFnc()
 
 void CoreDataIOManager::addListStoreFnc()
 {
-  ListStoreCreateFnc listStoreFnc = [](nx::core::DataType numericType, const IListStore::ShapeType& tupleShape) {
+  ListStoreCreateFnc listStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape) {
     std::unique_ptr<IListStore> listStore = nullptr;
     switch(numericType)
     {

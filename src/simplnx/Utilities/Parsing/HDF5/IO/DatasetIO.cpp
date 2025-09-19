@@ -463,8 +463,6 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
 template <typename T>
 std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore() const
 {
-  using ShapeType = typename IDataStore::ShapeType;
-
   auto dataset = open();
   size_t numElements = getNumElements();
 
@@ -477,10 +475,8 @@ std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore() const
 }
 
 template <typename T>
-std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore(const IDataStore::ShapeType& tupleShape, const IDataStore::ShapeType& componentShape) const
+std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore(const ShapeType& tupleShape, const ShapeType& componentShape) const
 {
-  using ShapeType = typename IDataStore::ShapeType;
-
   auto dataset = open();
   size_t numElements = getNumElements();
 
@@ -1471,20 +1467,20 @@ template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<bool>> DatasetIO::read
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>() const;
 template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>() const;
 
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int8_t>> DatasetIO::readAsDataStore<int8_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int16_t>> DatasetIO::readAsDataStore<int16_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int32_t>> DatasetIO::readAsDataStore<int32_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int64_t>> DatasetIO::readAsDataStore<int64_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint8_t>> DatasetIO::readAsDataStore<uint8_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDataStore<uint16_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int8_t>> DatasetIO::readAsDataStore<int8_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int16_t>> DatasetIO::readAsDataStore<int16_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int32_t>> DatasetIO::readAsDataStore<int32_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<int64_t>> DatasetIO::readAsDataStore<int64_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint8_t>> DatasetIO::readAsDataStore<uint8_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDataStore<uint16_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>(const ShapeType&, const ShapeType&) const;
 #ifdef __APPLE__
-// template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+// template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>(const ShapeType&, const ShapeType&) const;
 #endif
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>(const ShapeType&, const ShapeType&) const;
+template SIMPLNX_EXPORT std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>(const ShapeType&, const ShapeType&) const;
 
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
 template SIMPLNX_EXPORT Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;

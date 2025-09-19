@@ -73,7 +73,7 @@ Result<> CAxisSegmentFeatures::operator()()
   }
 
   // Resize the Feature Attribute Matrix
-  std::vector<usize> tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
+  ShapeType tDims = {static_cast<usize>(this->m_FoundFeatures + 1)};
   auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 
@@ -125,7 +125,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   {
     auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
     featureIds[static_cast<usize>(seed)] = gnum;
-    const std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
+    const ShapeType tDims = {static_cast<usize>(gnum) + 1};
     cellFeatureAM.resizeTuples(tDims); // This will resize the active array
   }
   return seed;

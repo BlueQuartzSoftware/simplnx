@@ -895,8 +895,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
-                                  DataObject::IdType parentId = {})
+DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -935,7 +934,7 @@ inline DataStructure CreateDataStructure()
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   usize numComponents = 1;
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
@@ -969,7 +968,7 @@ inline DataStructure CreateDataStructure()
  * other group has a DataArray of each primitive type with 3 components.
  * @return
  */
-inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShape)
+inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
 {
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
@@ -988,7 +987,7 @@ inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
 
   // DataStore<usize>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   // Create Scalar type data
-  DataStore<uint64>::ShapeType componentShape = {1ULL};
+  ShapeType componentShape = {1ULL};
 
   CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
   CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);

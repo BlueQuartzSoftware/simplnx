@@ -16,7 +16,7 @@ class SIMPLNX_EXPORT CreateNeighborListAction : public IDataCreationAction
 public:
   CreateNeighborListAction() = delete;
 
-  CreateNeighborListAction(DataType type, const INeighborList::ShapeType& tupleShape, const DataPath& path);
+  CreateNeighborListAction(DataType type, const ShapeType& tupleShape, const DataPath& path);
 
   ~CreateNeighborListAction() noexcept override;
 
@@ -49,7 +49,7 @@ public:
    * @brief Returns the shape of tuples for the NeighborList to be created.
    * @return usize
    */
-  const INeighborList::ShapeType& tupleShape() const;
+  const ShapeType& tupleShape() const;
 
   /**
    * @brief Returns the path of the DataArray to be created.
@@ -65,6 +65,6 @@ public:
 
 private:
   DataType m_Type;
-  INeighborList::ShapeType m_TupleShape;
+  ShapeType m_TupleShape;
 };
 } // namespace nx::core

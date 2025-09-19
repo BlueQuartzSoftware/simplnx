@@ -278,7 +278,7 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::vector<usize> tupleDims = std::vector<usize>{1};
+  ShapeType tupleDims = std::vector<usize>{1};
   if(const auto& surfaceFeaturesParent = dataStructure.getDataAs<AttributeMatrix>(pCellFeaturesAttributeMatrixPathValue); surfaceFeaturesParent != nullptr)
   {
     tupleDims = surfaceFeaturesParent->getShape();

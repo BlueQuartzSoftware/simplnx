@@ -36,7 +36,7 @@ public:
    * @tparam T
    * @return NeighborList<T>*
    */
-  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::optional<IdType>& parentId = {});
+  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -393,7 +393,7 @@ protected:
   /**
    * @brief NeighborList
    */
-  NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape);
+  NeighborList(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape);
 
   /**
    * @brief NeighborList

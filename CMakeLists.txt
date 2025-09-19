@@ -334,6 +334,7 @@ set(CoreParameters
 set(SIMPLNX_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/simplnx)
 
 set(SIMPLNX_HDRS
+  ${SIMPLNX_SOURCE_DIR}/Common/Aliases.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Any.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Array.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/AtomicFile.hpp

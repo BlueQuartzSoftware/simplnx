@@ -140,7 +140,7 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-74353, fmt::format("Could not find triangle geometry array at path '{}'", pTriangleGeometryPathValue.toString()))};
   }
 
-  std::vector<usize> tupleShape(1, crystalStructures->getNumberOfTuples());
+  ShapeType tupleShape(1, crystalStructures->getNumberOfTuples());
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(faceEnsembleAttributeMatrixPath, tupleShape);
   resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
 
@@ -159,7 +159,7 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
 
   // call the sizeGBCD function to get the GBCD ranges, dimensions, etc.  Note that the input parameters do not affect the size and can be dummy values here;
   SizeGBCD sizeGbcd(0, 0, pGBCDResValue);
-  std::vector<usize> componentShape(6);
+  ShapeType componentShape(6);
   componentShape[0] = sizeGbcd.m_GbcdSizes[0];
   componentShape[1] = sizeGbcd.m_GbcdSizes[1];
   componentShape[2] = sizeGbcd.m_GbcdSizes[2];

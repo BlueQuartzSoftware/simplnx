@@ -125,7 +125,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(-12802, "Centroids Feature Data Array is not of the correct type")};
   }
 
-  IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();
+  ShapeType tupleShape = featureAttrMatrix->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {

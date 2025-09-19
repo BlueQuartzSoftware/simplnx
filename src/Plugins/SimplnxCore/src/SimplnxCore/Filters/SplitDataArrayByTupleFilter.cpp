@@ -185,7 +185,7 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
   }
 
   arrayPaths.reserve(splitArrayTupleShapes.size());
-  std::vector<usize> tupleShapeColSums(splitArrayTupleShapes[0].size(), 0);
+  ShapeType tupleShapeColSums(splitArrayTupleShapes[0].size(), 0);
   std::string tupleShapesOutputStr;
   for(usize i = 0; i < splitArrayTupleShapes.size(); i++)
   {
@@ -218,7 +218,7 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
                                    const std::vector<usize>& inputArrayTupleShape, const std::vector<float64>& newAttrMatrixTupleShape, usize splitDimension, const DataStructure& dataStructure,
                                    std::vector<DataPath>& arrayPaths, std::vector<std::vector<usize>>& tupleShapes, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
-  std::vector<usize> tupleShape;
+  ShapeType tupleShape;
   if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
   {
     for(usize j = 0; j < newAttrMatrixTupleShape.size(); ++j)
@@ -469,7 +469,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
     {
     case IArray::ArrayType::DataArray: {
       auto iInputDataArray = dynamic_cast<const IDataArray*>(inputArray);
-      std::vector<usize> cDims = iInputDataArray->getComponentShape();
+      ShapeType cDims = iInputDataArray->getComponentShape();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArray->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
       break;
     }

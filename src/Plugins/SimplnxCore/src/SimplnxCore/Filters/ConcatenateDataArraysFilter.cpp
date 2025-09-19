@@ -92,7 +92,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
   }
 
   // Check for unequal array types, data types, and component dimensions
-  std::vector<usize> cDims;
+  ShapeType cDims;
   IArray::ArrayType arrayType;
   std::string arrayTypeName;
   usize numTuples = 0;
@@ -127,7 +127,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
     numTuples += std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
   }
 
-  std::vector<usize> tDims = {numTuples};
+  ShapeType tDims = {numTuples};
 
   // Create the output array
   nx::core::Result<OutputActions> resultOutputActions;

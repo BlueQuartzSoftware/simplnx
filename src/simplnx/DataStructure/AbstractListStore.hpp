@@ -22,7 +22,6 @@ public:
   {
   public:
     using vector_type = std::vector<T>;
-    using ShapeType = typename IListStore::ShapeType;
     using const_iterator = typename vector_type::const_iterator;
 
     ConstReferenceList(const AbstractListStore<T>& store, usize tupleIndex)

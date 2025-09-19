@@ -27,7 +27,7 @@ usize StringStore::getNumberOfTuples() const
   return m_NumTuples;
 }
 
-const StringStore::ShapeType& StringStore::getTupleShape() const
+const ShapeType& StringStore::getTupleShape() const
 {
   return m_TupleShape;
 }

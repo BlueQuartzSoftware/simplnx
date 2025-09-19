@@ -9,7 +9,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-CreateNeighborListAction::CreateNeighborListAction(DataType type, const INeighborList::ShapeType& tupleShape, const DataPath& path)
+CreateNeighborListAction::CreateNeighborListAction(DataType type, const ShapeType& tupleShape, const DataPath& path)
 : IDataCreationAction(path)
 , m_Type(type)
 , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
@@ -68,7 +68,7 @@ DataType CreateNeighborListAction::type() const
   return m_Type;
 }
 
-const INeighborList::ShapeType& CreateNeighborListAction::tupleShape() const
+const ShapeType& CreateNeighborListAction::tupleShape() const
 {
   return m_TupleShape;
 }

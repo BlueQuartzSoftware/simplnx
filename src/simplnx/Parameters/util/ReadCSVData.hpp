@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
@@ -387,7 +388,7 @@ public:
   std::vector<bool> skippedArrayMask;
   usize headersLine = 1;
   HeaderMode headerMode = HeaderMode::CUSTOM;
-  std::vector<usize> tupleDims = {1};
+  ShapeType tupleDims = {1};
   std::vector<char> delimiters = {};
   bool consecutiveDelimiters = false;
 };

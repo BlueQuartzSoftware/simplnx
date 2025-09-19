@@ -10,7 +10,6 @@ template <class T>
 class EmptyListStore : public AbstractListStore<T>
 {
 public:
-  using ShapeType = typename std::vector<usize>;
   using value_type = T;
   using parent_type = AbstractListStore<T>;
   using vector_type = typename parent_type::vector_type;

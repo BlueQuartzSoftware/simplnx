@@ -132,7 +132,7 @@ public:
    * @return std::shared_ptr<AbstractDataStore<T>>
    */
   template <typename T>
-  std::shared_ptr<AbstractDataStore<T>> readAsDataStore(const IDataStore::ShapeType& tupleDims, const IDataStore::ShapeType& componentDims) const;
+  std::shared_ptr<AbstractDataStore<T>> readAsDataStore(const ShapeType& tupleDims, const ShapeType& componentDims) const;
 
   /**
    * @brief Reads the dataset into the given span. Requires the span to be the
@@ -539,20 +539,20 @@ extern template std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataS
 extern template std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>() const;
 extern template std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>() const;
 
-extern template std::shared_ptr<AbstractDataStore<int8_t>> DatasetIO::readAsDataStore<int8_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<int16_t>> DatasetIO::readAsDataStore<int16_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<int32_t>> DatasetIO::readAsDataStore<int32_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<int64_t>> DatasetIO::readAsDataStore<int64_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<uint8_t>> DatasetIO::readAsDataStore<uint8_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDataStore<uint16_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<int8_t>> DatasetIO::readAsDataStore<int8_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<int16_t>> DatasetIO::readAsDataStore<int16_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<int32_t>> DatasetIO::readAsDataStore<int32_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<int64_t>> DatasetIO::readAsDataStore<int64_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<uint8_t>> DatasetIO::readAsDataStore<uint8_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<uint16_t>> DatasetIO::readAsDataStore<uint16_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<uint32_t>> DatasetIO::readAsDataStore<uint32_t>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<uint64_t>> DatasetIO::readAsDataStore<uint64_t>(const ShapeType&, const ShapeType&) const;
 #ifdef __APPLE__
-// extern template std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+// extern template std::shared_ptr<AbstractDataStore<size_t>> DatasetIO::readAsDataStore<size_t>(const ShapeType&, const ShapeType&) const;
 #endif
-extern template std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
-extern template std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>(const IDataStore::ShapeType&, const IDataStore::ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<float>> DatasetIO::readAsDataStore<float>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<double>> DatasetIO::readAsDataStore<double>(const ShapeType&, const ShapeType&) const;
+extern template std::shared_ptr<AbstractDataStore<bool>> DatasetIO::readAsDataStore<bool>(const ShapeType&, const ShapeType&) const;
 
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>) const;

@@ -703,7 +703,7 @@ Result<> WritePoleFigure::operator()()
   // Create the Image Geometry that will serve as the final storage location for each
   // pole figure. We are just giving it a default size for now, it will be resized
   // further down the algorithm.
-  std::vector<usize> tupleShape = {1, static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize)};
+  ShapeType tupleShape = {1, static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize)};
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
   auto cellAttrMatPath = imageGeom.getCellDataPath();
   imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});

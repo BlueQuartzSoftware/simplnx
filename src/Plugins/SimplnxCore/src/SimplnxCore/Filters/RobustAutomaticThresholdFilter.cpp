@@ -131,7 +131,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   }
   dataPaths.push_back(gradientArrayPath);
 
-  std::vector<usize> tupleDims = {inputArray.getTupleShape()};
+  ShapeType tupleDims = {inputArray.getTupleShape()};
   usize numComponents = inputArray.getNumberOfComponents();
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);

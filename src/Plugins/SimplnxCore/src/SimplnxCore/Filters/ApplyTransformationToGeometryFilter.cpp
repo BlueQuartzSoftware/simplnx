@@ -173,7 +173,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     return {MakeErrorResult<OutputActions>(-82000, "Input Geometry must be either ImageGeom or Vertex, Edge, Triangle, Quad, Hexahedron, Tetrahedron.")};
   }
 
-  const std::vector<usize> cDims = {4, 4};
+  const ShapeType cDims = {4, 4};
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
   ImageRotationUtilities::Matrix4fR transformationMatrix;
@@ -399,7 +399,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         {
           const DataPath srcCellArrayDataPath = srcImagePath.createChildPath(cellDataName).createChildPath(cellArrayName);
           const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcCellArrayDataPath);
-          const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+          const ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
           const std::string dataStoreFormat = srcArray.getDataFormat();
           resultOutputActions.value().appendAction(
               std::make_unique<CreateArrayAction>(srcArray.getDataType(), dataArrayShape, componentShape, targetCellAttrMatrix.createChildPath(srcArray.getName()), dataStoreFormat));

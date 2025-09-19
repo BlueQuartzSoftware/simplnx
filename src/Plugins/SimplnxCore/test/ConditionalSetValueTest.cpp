@@ -103,7 +103,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
   ciDataArray->fill(10.0);
 
   // Create a bool array where every value is TRUE
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
@@ -150,7 +150,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm UInt8", "[Cond
   float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
@@ -191,7 +191,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Int8", "[Condi
   float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
@@ -240,7 +240,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Overflow/Underflow", "[Condit
   UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelTwoGroup);
 
   // Create a bool array where every value is TRUE
-  std::vector<usize> tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
+  ShapeType tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
   BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
   conditionalArray1->fill(true);
   BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
@@ -372,7 +372,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Inverted Mask Algorithm 
   float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(false);
 

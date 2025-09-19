@@ -46,7 +46,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     return {};
   }
 
-  std::vector<usize> tupleShape;
+  ShapeType tupleShape;
   auto tupleShapeResult = datasetReader.readVectorAttribute<usize>(k_TupleDimsAttrName);
   if(tupleShapeResult.valid())
   {

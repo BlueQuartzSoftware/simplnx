@@ -166,7 +166,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     }
 
     // Reverse the DCT Image Dimensions
-    const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
+    const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
 
     // Get the available Data sets
     DataPath cellAMPath = pLabDCTImageGeometryPath.createChildPath(pLabDCTCellAttributeMatrixNameValue);
@@ -251,7 +251,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     }
 
     // Reverse the ABSORPTION Image Dimensions
-    const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
+    const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
     // Create the 'Data' data array
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(
         DataType::uint16, tupleDims, std::vector<usize>{1ULL},

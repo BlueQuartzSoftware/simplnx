@@ -88,7 +88,7 @@ void fillDataArray(DataArray<T>& inputArray)
 }
 
 template <typename T>
-DataStructure createDataStructure(const std::vector<usize>& tupleShape, const std::vector<usize>& compShape)
+DataStructure createDataStructure(const ShapeType& tupleShape, const ShapeType& compShape)
 {
   DataStructure ds;
 

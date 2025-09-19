@@ -241,7 +241,7 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
   auto& crop = dataStructure.getDataRefAs<VertexGeom>(croppedGeomPath);
   usize numTuples = croppedPoints.size();
   crop.resizeVertexList(numTuples);
-  std::vector<usize> tDims = {numTuples};
+  ShapeType tDims = {numTuples};
 
   DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(vertexDataName);
   auto& vertedDataAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);

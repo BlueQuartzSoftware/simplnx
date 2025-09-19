@@ -52,18 +52,18 @@ public:
   std::vector<std::string> getFormatNames() const;
 
   bool hasDataStoreCreationFunction(const std::string& type) const;
-  std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape);
+  std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape);
   template <typename T>
-  std::shared_ptr<AbstractDataStore<T>> createDataStoreWithType(const std::string& type, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape)
+  std::shared_ptr<AbstractDataStore<T>> createDataStoreWithType(const std::string& type, const ShapeType& tupleShape, const ShapeType& componentShape)
   {
     DataType numericType = GetDataType<T>();
     std::shared_ptr<IDataStore> dataStore = createDataStore(type, numericType, tupleShape, componentShape);
     return std::dynamic_pointer_cast<AbstractDataStore<T>>(dataStore);
   }
 
-  std::unique_ptr<IListStore> createListStore(const std::string& type, DataType numericType, const IListStore::ShapeType& tupleShape) const;
+  std::unique_ptr<IListStore> createListStore(const std::string& type, DataType numericType, const ShapeType& tupleShape) const;
   template <typename T>
-  std::shared_ptr<AbstractListStore<T>> createListStoreWithType(const std::string& dataFormat, const IListStore::ShapeType& tupleShape) const
+  std::shared_ptr<AbstractListStore<T>> createListStoreWithType(const std::string& dataFormat, const ShapeType& tupleShape) const
   {
     DataType numericType = GetDataType<T>();
     std::shared_ptr<IListStore> listStore = createListStore(dataFormat, numericType, tupleShape);

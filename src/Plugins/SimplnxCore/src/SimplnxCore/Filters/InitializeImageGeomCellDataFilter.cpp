@@ -295,7 +295,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
   for(const DataPath& path : cellArrayPaths)
   {
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    std::vector<usize> tupleShape = dataArray.getIDataStoreRef().getTupleShape();
+    ShapeType tupleShape = dataArray.getIDataStoreRef().getTupleShape();
 
     if(tupleShape.size() != reversedImageDims.size())
     {

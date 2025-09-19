@@ -114,7 +114,7 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
     return {MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  std::vector<usize> tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
+  ShapeType tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
   {
     auto createArrayAction =
         std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pFeatureIdsArrayPathValue.replaceName(pFeatureReferenceCAxisMisorientationsArrayNameValue));

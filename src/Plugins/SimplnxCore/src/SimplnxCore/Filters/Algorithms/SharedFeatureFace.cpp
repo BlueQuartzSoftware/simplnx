@@ -191,7 +191,7 @@ Result<> SharedFeatureFace::operator()()
   // resize + update pointers
   // Grain Boundary Attribute Matrix
   auto& faceFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->GrainBoundaryAttributeMatrixPath);
-  std::vector<usize> tDims = {static_cast<usize>(index)};
+  ShapeType tDims = {static_cast<usize>(index)};
   faceFeatureAttrMat.resizeTuples(tDims);
 
   auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath)->getDataStoreRef();

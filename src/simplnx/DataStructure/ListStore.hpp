@@ -20,7 +20,6 @@ public:
   using const_reference = typename parent_type::const_reference;
   using iterator = typename parent_type::iterator;
   using const_iterator = typename parent_type::const_iterator;
-  using ShapeType = typename std::vector<usize>;
 
   /**
    * @brief Constructs a ListStore using the specified tuple shape and list size.
