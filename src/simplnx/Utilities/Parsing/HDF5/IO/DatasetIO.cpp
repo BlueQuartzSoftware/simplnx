@@ -261,6 +261,12 @@ Result<nx::core::DataType> DatasetIO::getDataType() const
     return MakeErrorResult<nx::core::DataType>(-20013, fmt::format("The selected data set '{}' could not be opened.", getNamePath()));
   }
   hid_t typeId = H5Dget_type(datasetId);
+
+  H5T_class_t classType = H5Tget_class(typeId);
+  if(classType == H5T_COMPOUND)
+  {
+    return MakeErrorResult<nx::core::DataType>(-20016, fmt::format("H5T_COMPOUND data type is not supported for importing.", getNamePath()));
+  }
   auto type = getTypeFromId(typeId);
   if(type == Type::unknown)
   {

@@ -287,13 +287,16 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       stream << "The selected dataset '" << pSelectedAttributeMatrixValue.value().toString() << "/" << objectName << "' already exists.";
       return MakePreflightErrorResult(-20014, stream.str());
     }
-    else
+
+    Result<DataType> typeResult = datasetReader.getDataType();
+    if(typeResult.invalid())
     {
-      Result<DataType> typeResult = datasetReader.getDataType();
-      DataType dataType = std::move(typeResult.value());
-      auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
-      resultOutputActions.value().appendAction(std::move(action));
+      return {nonstd::make_unexpected(typeResult.errors())};
     }
+    DataType dataType = std::move(typeResult.value());
+    auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
+    resultOutputActions.value().appendAction(std::move(action));
+
   } // End For Loop over dataset imoprt info list
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
