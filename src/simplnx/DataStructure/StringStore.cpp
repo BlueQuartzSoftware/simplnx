@@ -8,9 +8,9 @@ StringStore::StringStore(uint64 size)
 {
 }
 
-StringStore::StringStore(const std::vector<std::string>& strings)
+StringStore::StringStore(std::vector<std::string> strings)
 : AbstractStringStore()
-, m_Data(strings)
+, m_Data(std::move(strings))
 {
 }
 
