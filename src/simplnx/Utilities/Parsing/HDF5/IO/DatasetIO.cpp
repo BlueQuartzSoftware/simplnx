@@ -382,6 +382,7 @@ std::string DatasetIO::readAsString() const
 
 std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
 {
+  auto datasetId = open();
   if(!isValid())
   {
     return {};
@@ -389,7 +390,6 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
   // auto dataset = openH5Dataset();
 
   std::vector<std::string> strings;
-  auto datasetId = open();
 
   hid_t typeID = H5Dget_type(datasetId);
 
