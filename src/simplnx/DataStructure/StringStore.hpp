@@ -11,7 +11,7 @@ class StringStore : public AbstractStringStore
 {
 public:
   StringStore(uint64 count = 0);
-  StringStore(const std::vector<std::string>& strings);
+  StringStore(std::vector<std::string> strings);
   ~StringStore();
 
   std::unique_ptr<AbstractStringStore> deepCopy() const override;

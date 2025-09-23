@@ -1,6 +1,8 @@
 #include "SimplnxCore/Filters/CreateDataArrayFilter.hpp"
 #include "SimplnxCore/Filters/CreateImageGeometryFilter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
+#include "SimplnxCore/Filters/WriteDREAM3DFilter.hpp"
+
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
@@ -302,6 +304,41 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
+}
+
+TEST_CASE("DREAM3DFileTest::StringArray")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  fs::path path = GetDataDir(*app) / "StringArray.dream3d";
+
+  DataStructure exportDataStructure;
+
+  DataPath stringArrayPath({"StringArray"});
+
+  std::vector<std::string> values = {"foo", "bar", "baz"};
+
+  REQUIRE(StringArray::CreateWithValues(exportDataStructure, stringArrayPath.getTargetName(), values) != nullptr);
+
+  WriteDREAM3DFilter writeDream3dFilter;
+  Arguments writeArgs;
+  writeArgs.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, path);
+  writeArgs.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  Result<> writeResult = writeDream3dFilter.execute(exportDataStructure, writeArgs).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  DataStructure importDataStructure;
+
+  ReadDREAM3DFilter readDream3dFilter;
+  Arguments readArgs;
+  Dream3dImportParameter::ImportData importData(path);
+  readArgs.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, importData);
+  Result<> readResult = readDream3dFilter.execute(importDataStructure, readArgs).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+
+  const StringArray* stringArray = importDataStructure.getDataAs<StringArray>(stringArrayPath);
+  REQUIRE(stringArray != nullptr);
+  REQUIRE(std::equal(stringArray->begin(), stringArray->end(), values.begin(), values.end()));
 }
 
 TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
