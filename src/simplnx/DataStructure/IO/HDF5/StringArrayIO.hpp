@@ -49,6 +49,15 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable) const;
 
   /**
+   * @brief Replaces the AbstractDataStore using data from the HDF5 dataset.
+   * @param dataStructure
+   * @param dataPath
+   * @param dataStructureReader
+   * @return Result<>
+   */
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override;
+
+  /**
    * @brief Attempts to write the DataObject to HDF5.
    * Returns an error if the DataObject cannot be cast to a StringArray.
    * Otherwise, this method returns writeData(...)

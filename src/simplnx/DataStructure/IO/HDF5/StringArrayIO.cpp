@@ -2,6 +2,7 @@
 
 #include "DataStructureReader.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/DataStructure/StringStore.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
@@ -85,6 +86,26 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
   }
 
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
+}
+
+Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const
+{
+  if(!dataStructure.containsData(dataPath))
+  {
+    return MakeErrorResult(-151200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
+  }
+
+  auto* stringArray = dataStructure.getDataAs<data_type>(dataPath);
+  if(stringArray == nullptr)
+  {
+    return MakeErrorResult(-151201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
+  }
+
+  auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
+  std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
+  auto stringStore = std::make_shared<StringStore>(std::move(strings));
+  stringArray->setStore(stringStore);
+  return {};
 }
 
 Result<> StringArrayIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
