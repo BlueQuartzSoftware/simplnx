@@ -2003,23 +2003,42 @@ Result<std::vector<std::shared_ptr<DataObject>>> DREAM3D::ImportSelectDataObject
   return {dataObjects};
 }
 
-Result<> DREAM3D::FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader)
+Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight)
 {
-  auto dataPtr = dataStructure.getSharedData(dataPath);
-  if(dataPtr == nullptr)
+  if(!importStructure.containsData(dataPath))
   {
-    return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at path '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
+    return MakeErrorResult(-6200, fmt::format("DataStructure Object Path '{}' does not exist for importing.", dataPath.toString()));
+  }
+  const auto importObject = importStructure.getSharedData(dataPath);
+  const auto importData = std::shared_ptr<DataObject>(importObject->shallowCopy());
+  // Clear all children before inserting into the DataStructure
+  if(const auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
+  {
+    importGroup->clear();
   }
 
-  const auto fileVersion = GetFileVersion(fileReader);
-  if(fileVersion == k_CurrentFileVersion)
+  if(!dataStructure.insert(importData, dataPath.getParent()))
   {
-    return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
+    return MakeErrorResult(-6202, fmt::format("Unable to import DataObject at '{}'", dataPath.toString()));
   }
-  else if(fileVersion == k_LegacyFileVersion)
+  if(!preflight)
   {
-    auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-    return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
+    const auto dataPtr = dataStructure.getSharedData(dataPath);
+    if(dataPtr == nullptr)
+    {
+      return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at path '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
+    }
+
+    const auto fileVersion = GetFileVersion(fileReader);
+    if(fileVersion == k_CurrentFileVersion)
+    {
+      return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
+    }
+    else if(fileVersion == k_LegacyFileVersion)
+    {
+      const auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
+      return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
+    }
   }
   return {};
 }
@@ -2145,4 +2164,53 @@ Result<> DREAM3D::AppendFile(const std::filesystem::path& path, const DataStruct
     return MakeErrorResult(-2, fmt::format("DREAM3D::AppendFile: Incompatible file version '{}'. Expected '{}'", fileVersion, k_CurrentFileVersion));
   }
   return HDF5::DataStructureWriter::AppendFile(file, dataStructure, dataPath);
+}
+
+std::vector<nx::core::DataPath> DREAM3D::ExpandSelectedPathsToAncestors(const std::vector<nx::core::DataPath>& selectedPaths)
+{
+  std::vector<nx::core::DataPath> finalDataPaths;
+  for(const auto& dataPath : selectedPaths)
+  {
+    auto pathVector = dataPath.getPathVector();
+    for(size_t i = 1; i <= dataPath.getLength(); ++i)
+    {
+      auto dataPathPart = nx::core::DataPath(std::vector<std::string>(pathVector.begin(), pathVector.begin() + i));
+      if(std::find(finalDataPaths.begin(), finalDataPaths.end(), dataPathPart) == finalDataPaths.end())
+      {
+        finalDataPaths.push_back(dataPathPart);
+      }
+    }
+  }
+
+  return finalDataPaths;
+}
+
+std::vector<nx::core::DataPath> DREAM3D::ExpandSelectedPathsToDescendants(const std::vector<nx::core::DataPath>& selectedPaths, const std::vector<nx::core::DataPath>& allPaths)
+{
+  std::vector<nx::core::DataPath> expandedDataPaths = selectedPaths;
+  for(const auto& dataPath : selectedPaths)
+  {
+    for(const auto& candidateDataPath : allPaths)
+    {
+      if(candidateDataPath.getLength() <= dataPath.getLength())
+      {
+        continue;
+      }
+
+      bool isEqual = true;
+      for(size_t i = 0; i < dataPath.getPathVector().size(); ++i)
+      {
+        if(dataPath.getPathVector()[i] != candidateDataPath.getPathVector()[i])
+        {
+          isEqual = false;
+        }
+      }
+      if(isEqual)
+      {
+        expandedDataPaths.push_back(candidateDataPath);
+      }
+    }
+  }
+
+  return expandedDataPaths;
 }

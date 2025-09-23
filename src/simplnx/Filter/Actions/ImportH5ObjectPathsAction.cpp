@@ -15,8 +15,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::int32 k_InsertFailureError = -6202;
-
 void sortImportPaths(std::vector<DataPath>& importPaths)
 {
   std::sort(importPaths.begin(), importPaths.end(), [](const DataPath& first, const DataPath& second) { return first.getLength() < second.getLength(); });
@@ -38,9 +36,9 @@ ImportH5ObjectPathsAction::~ImportH5ObjectPathsAction() noexcept = default;
 Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mode) const
 {
   static constexpr StringLiteral prefix = "ImportH5ObjectPathsAction: ";
-  bool preflighting = (mode == Mode::Preflight);
 
   auto fileReader = nx::core::HDF5::FileIO::ReadFile(m_H5FilePath);
+  // Import as a preflight data structure to start to conserve memory and only allocate the data you want later
   Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
   if(dataStructureResult.invalid())
   {
@@ -51,31 +49,16 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   DataStructure importStructure = std::move(dataStructureResult.value());
   importStructure.resetIds(dataStructure.getNextId());
 
+  const bool preflighting = mode == Mode::Preflight;
   std::stringstream errorMessages;
   for(const auto& targetPath : m_Paths)
   {
-    if(!importStructure.containsData(targetPath))
+    auto result = DREAM3D::FinishImportingObject(importStructure, dataStructure, targetPath, fileReader, preflighting);
+    if(result.invalid())
     {
-      errorMessages << fmt::format("{}DataStructure Object Path '{}' does not exist for importing.", prefix, targetPath.toString()) << std::endl;
-      continue;
-    }
-    auto importObject = importStructure.getSharedData(targetPath);
-    auto importData = std::shared_ptr<DataObject>(importObject->shallowCopy());
-    // Clear all children before inserting into the DataStructure
-    if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
-    {
-      importGroup->clear();
-    }
-
-    if(!dataStructure.insert(importData, targetPath.getParent()))
-    {
-      return MakeErrorResult(k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString()));
-    }
-    if(mode == Mode::Execute)
-    {
-      if(auto result = DREAM3D::FinishImportingObject(dataStructure, targetPath, fileReader); result.invalid())
+      for(const auto& errorResult : result.errors())
       {
-        return result;
+        errorMessages << errorResult.message << std::endl;
       }
     }
   }

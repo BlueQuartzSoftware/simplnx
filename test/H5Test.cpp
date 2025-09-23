@@ -1038,7 +1038,7 @@ TEST_CASE("DataStructureAppend")
   Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath);
+  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, false);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   DataStructure exemplarDataStructure = std::move(readResult.value());
 
@@ -1050,7 +1050,7 @@ TEST_CASE("DataStructureAppend")
     auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
-    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath);
+    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath, false);
     SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
 
     DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());

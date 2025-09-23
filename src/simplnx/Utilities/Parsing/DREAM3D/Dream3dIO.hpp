@@ -116,13 +116,13 @@ SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const Data
  * @param preflight = false
  * @return DataStructure
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight);
 
 SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
 SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
 
-SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
@@ -130,7 +130,7 @@ SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& dataStructure, cons
  * @param filePath
  * @return DataStructure
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight = false);
+SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
@@ -175,5 +175,10 @@ SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const std::filesystem::pa
  * @return
  */
 SIMPLNX_EXPORT void WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath);
+
+SIMPLNX_EXPORT std::vector<nx::core::DataPath> ExpandSelectedPathsToAncestors(const std::vector<nx::core::DataPath>& selectedPaths);
+
+SIMPLNX_EXPORT std::vector<nx::core::DataPath> ExpandSelectedPathsToDescendants(const std::vector<nx::core::DataPath>& selectedPaths, const std::vector<nx::core::DataPath>& allPaths);
+
 } // namespace DREAM3D
 } // namespace nx::core
