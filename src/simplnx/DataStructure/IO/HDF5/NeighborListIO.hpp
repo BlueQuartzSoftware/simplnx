@@ -49,7 +49,7 @@ public:
 
       if(useEmptyDataStore)
       {
-        auto tupleDimsResult = numNeighborsReader.readVectorAttribute<uint64>("TupleDimensions");
+        auto tupleDimsResult = numNeighborsReader.readVectorAttribute<usize>("TupleDimensions");
         if(tupleDimsResult.invalid())
         {
           return nullptr;

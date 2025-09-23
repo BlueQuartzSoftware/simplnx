@@ -1,5 +1,6 @@
 #include "Dream3dIO.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -1286,12 +1287,12 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
 
-  auto tDimsResult = amGroupReader.readVectorAttribute<uint64>("TupleDimensions");
+  auto tDimsResult = amGroupReader.readVectorAttribute<usize>("TupleDimensions");
   if(tDimsResult.invalid())
   {
     return ConvertResult(std::move(tDimsResult));
   }
-  std::vector<uint64> tDims = std::move(tDimsResult.value());
+  ShapeType tDims = std::move(tDimsResult.value());
   auto reversedTDims = ShapeType(tDims.crbegin(), tDims.crend());
 
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, reversedTDims, parentId);

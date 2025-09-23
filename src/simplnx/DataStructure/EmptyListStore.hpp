@@ -209,7 +209,7 @@ public:
 
   void readHdf5(const HDF5::DatasetIO& datasetReader) override
   {
-    auto tupleDimsResult = datasetReader.readVectorAttribute<uint64>("TupleDimensions");
+    auto tupleDimsResult = datasetReader.readVectorAttribute<usize>("TupleDimensions");
     if(tupleDimsResult.invalid())
     {
       clear();
