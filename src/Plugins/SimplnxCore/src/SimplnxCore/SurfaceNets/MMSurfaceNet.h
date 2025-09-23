@@ -49,6 +49,7 @@
 #define MM_SURFACE_NET_H
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include <limits>
 #include <memory>
@@ -60,7 +61,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(Int32Array& labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // I am unsure of the ownership model of the underlying code, so I am making this
@@ -74,8 +75,7 @@ public:
     float relaxFactor;           // Range (0.0, 1.0); larger --> faster but less stable
     float maxDistFromCellCenter; // Maximun displacement of relaxed surface in voxel units
   };
-  void relax(const RelaxAttrs relaxAttrs);
-  void reset();
+  void relax(const RelaxAttrs& relaxAttrs) const;
 
   // Label used internally. Not available as a material index.
   enum ReservedLabel

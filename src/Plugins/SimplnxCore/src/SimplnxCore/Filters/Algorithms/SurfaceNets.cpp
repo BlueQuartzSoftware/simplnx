@@ -17,9 +17,23 @@ using namespace nx::core;
 
 namespace
 {
+using LabelType = int32;
+constexpr inline int8 CalculatePadding(int8 value)
+{
+  return value + ((9 * static_cast<int8>(value < 10)) + 1);
+}
+
+inline void HandlePadding(std::array<size_t, 4> vertexIndices, AbstractDataStore<int8>& nodeTypes)
+{
+  nodeTypes.setValue(vertexIndices[0], CalculatePadding(nodeTypes.getValue(vertexIndices[0])));
+  nodeTypes.setValue(vertexIndices[1], CalculatePadding(nodeTypes.getValue(vertexIndices[1])));
+  nodeTypes.setValue(vertexIndices[2], CalculatePadding(nodeTypes.getValue(vertexIndices[2])));
+  nodeTypes.setValue(vertexIndices[3], CalculatePadding(nodeTypes.getValue(vertexIndices[3])));
+};
+
 struct VertexData
 {
-  int VertexId;
+  size_t VertexId;
   std::array<float32, 3> Position;
 };
 
@@ -41,7 +55,7 @@ float triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1,
   return 0.5f * magCP;
 }
 
-void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<int32, 6>& triangleVtxIDs)
+void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<size_t, 6>& triangleVtxIDs)
 {
   // Order quad vertices so quad is front facing
   if(!isQuadFrontFacing)
@@ -99,16 +113,17 @@ Result<> SurfaceNets::operator()()
 
   // Get the Created Triangle Geometry
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
 
   auto gridDimensions = imageGeom.getDimensions();
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
 
-  IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
-
-  using LabelType = int32;
-
-  MMSurfaceNet surfaceNet(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), arraySize.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), gridDimensions.data(), voxelSize.data());
+  if(!surfaceNet.getCellMap()->valid())
+  {
+    return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal Data Structures"));
+  }
 
   // Use current parameters to relax the SurfaceNet
   if(m_InputValues->ApplySmoothing)
@@ -122,12 +137,11 @@ Result<> SurfaceNets::operator()()
   }
 
   auto cellMapPtr = surfaceNet.getCellMap();
-  const int nodeCount = cellMapPtr->numVertices();
+  const size_t nodeCount = cellMapPtr->numVertices();
 
   std::array<int, 3> arraySize2 = {0, 0, 0};
   cellMapPtr->getArraySize(arraySize2.data());
 
-  triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
 
   // Remove and then insert a properly sized int8 for the NodeTypes
@@ -137,7 +151,7 @@ Result<> SurfaceNets::operator()()
   Point3Df position = {0.0f, 0.0f, 0.0f};
 
   std::array<int, 3> vertCellIndex = {0, 0, 0};
-  for(int32 vertIndex = 0; vertIndex < nodeCount; vertIndex++)
+  for(size_t vertIndex = 0; vertIndex < nodeCount; vertIndex++)
   {
     cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
@@ -148,29 +162,20 @@ Result<> SurfaceNets::operator()()
     MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
   }
+
   usize triangleCount = 0;
   std::array<usize, 2> quadNxArrayIndices = {0, 0};
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
-    std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
-    std::array<LabelType, 2> quadLabels = {0, 0};
+    std::array<size_t, 4> vertexIndices = {0, 0, 0, 0};
+    std::array<::LabelType, 2> quadLabels = {0, 0};
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
-        for(auto& vertIndex : vertexIndices)
-        {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
-          }
-          else
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
-          }
-        }
+        HandlePadding(vertexIndices, nodeTypes);
       }
       triangleCount += 2;
     }
@@ -178,17 +183,7 @@ Result<> SurfaceNets::operator()()
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
-        for(auto& vertIndex : vertexIndices)
-        {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
-          }
-          else
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
-          }
-        }
+        HandlePadding(vertexIndices, nodeTypes);
       }
       triangleCount += 2;
     }
@@ -196,21 +191,12 @@ Result<> SurfaceNets::operator()()
     {
       if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
       {
-        for(auto& vertIndex : vertexIndices)
-        {
-          if(nodeTypes[static_cast<usize>(vertIndex)] < 10)
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 10;
-          }
-          else
-          {
-            nodeTypes[static_cast<usize>(vertIndex)] += 1;
-          }
-        }
+        HandlePadding(vertexIndices, nodeTypes);
       }
       triangleCount += 2;
     }
   }
+
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleCount});
 
@@ -242,11 +228,11 @@ Result<> SurfaceNets::operator()()
   //   be handled when neighboring cells that share edges with this cell are visited.
   std::array<usize, 3> t1 = {0, 0, 0};
   std::array<usize, 3> t2 = {0, 0, 0};
-  std::array<int, 6> triangleVtxIDs = {0, 0, 0, 0, 0, 0};
-  std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
+  std::array<size_t, 6> triangleVtxIDs = {0, 0, 0, 0, 0, 0};
+  std::array<size_t, 4> vertexIndices = {0, 0, 0, 0};
   std::array<LabelType, 2> quadLabels = {0, 0};
   std::array<VertexData, 4> vData{};
-  std::array<int, 3> cellIndex = {0, 0, 0};
+  std::array<int32_t, 3> cellIndex = {0, 0, 0};
 
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
