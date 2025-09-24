@@ -3,9 +3,10 @@ import simplnx as nx
 ds = nx.DataStructure()
 
 SIZE = 42
+tuple_dims = [[SIZE]]
 PATH = nx.DataPath(['foo'])
 
-action = nx.CreateNeighborListAction(nx.DataType.int32, SIZE, PATH)
+action = nx.CreateNeighborListAction(nx.DataType.int32, tuple_dims, PATH)
 
 assert action.apply(ds, nx.IDataAction.Mode.Execute)
 
