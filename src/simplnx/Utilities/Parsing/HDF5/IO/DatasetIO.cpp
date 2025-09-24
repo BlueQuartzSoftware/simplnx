@@ -1180,8 +1180,8 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
 
         if(chunkShape != trueChunkDims)
         {
-          DimsType chunkOffset(rank, 0);
-          DimsType count(rank, 1);
+          std::vector<hsize_t> chunkOffset(rank, 0);
+          std::vector<hsize_t> count(rank, 1);
 
           error = H5Sselect_hyperslab(memspace_id, H5S_SELECT_SET, chunkOffset.data(), nullptr, count.data(), trueChunkShapeVec.data());
         }
