@@ -291,13 +291,13 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     Result<DataType> typeResult = datasetReader.getDataType();
     if(typeResult.invalid())
     {
-      return {nonstd::make_unexpected(typeResult.errors())};
+      return {ConvertInvalidResult<OutputActions>(std::move(typeResult))};
     }
-    DataType dataType = std::move(typeResult.value());
+    DataType dataType = typeResult.value();
     auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
 
-  } // End For Loop over dataset imoprt info list
+  } // End For Loop over dataset import info list
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
