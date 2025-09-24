@@ -104,7 +104,7 @@ Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const 
 
   auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
   std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-  auto stringStore = std::make_shared<StringStore>(std::move(strings));
+  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArray->getTupleShape());
   stringArray->setStore(stringStore);
   return {};
 }

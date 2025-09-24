@@ -318,7 +318,7 @@ TEST_CASE("DREAM3DFileTest::StringArray")
 
   std::vector<std::string> values = {"foo", "bar", "baz"};
 
-  REQUIRE(StringArray::CreateWithValues(exportDataStructure, stringArrayPath.getTargetName(), values) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(exportDataStructure, stringArrayPath.getTargetName(), ShapeType{3}, values) != nullptr);
 
   WriteDREAM3DFilter writeDream3dFilter;
   Arguments writeArgs;

@@ -205,7 +205,7 @@ bool MMCellMap::setCellVertices()
   // Create cell vertices. There are no vertices in right, front, top faces.
   try
   {
-    m_VerticesStoreRef.resizeTuples(IDataStore::ShapeType{numVertices});
+    m_VerticesStoreRef.resizeTuples(ShapeType{numVertices});
     m_VertexArray.resize(numVertices);
   } catch(std::bad_alloc& ba)
   {
