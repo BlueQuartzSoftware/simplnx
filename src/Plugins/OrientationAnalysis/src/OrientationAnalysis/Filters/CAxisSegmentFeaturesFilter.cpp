@@ -185,9 +185,6 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  resultOutputActions.warnings().push_back(
-      {-8361, "Segmenting features via c-axis mis-orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
-
   return {resultOutputActions, preflightUpdatedValues};
 }
 
