@@ -147,7 +147,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
     {
       std::string message = fmt::format("Features Found: {}", gnum);
-      m_MessageHandler(nx::core::IFilter::ProgressMessage{nx::core::IFilter::Message::Type::Info, message, 0});
+      m_MessageHandler({nx::core::IFilter::Message::Type::Info, message});
       start = std::chrono::steady_clock::now();
     }
 
