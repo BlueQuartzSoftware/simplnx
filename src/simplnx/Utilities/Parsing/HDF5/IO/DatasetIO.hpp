@@ -235,7 +235,8 @@ public:
    * @return nx::core::Result<>
    */
   template <typename T>
-  nx::core::Result<> writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, const DimsType& trueChunkDims, nonstd::span<const usize> offset);
+  nx::core::Result<> writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, const DimsType& trueChunkDims,
+                                nonstd::span<const usize> offset);
 
 #if 0
   /**
