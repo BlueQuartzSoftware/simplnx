@@ -1127,7 +1127,8 @@ Result<> DatasetIO::readChunk<bool>(const ChunkedDataInfo& chunkInfo, const Dims
 }
 
 template <typename T>
-Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, const DimsType& trueChunkDims,
+                               nonstd::span<const usize> offset)
 {
   if(chunkShape.size() != dims.size())
   {
@@ -1171,10 +1172,19 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
         // Select hyperslab
         std::vector<hsize_t> offsetVec(offset.begin(), offset.end());
         std::vector<hsize_t> chunkShapeVec(chunkShape.begin(), chunkShape.end());
-        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShapeVec.data(), NULL);
+        std::vector<hsize_t> trueChunkShapeVec(trueChunkDims.begin(), trueChunkDims.end());
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, trueChunkShapeVec.data(), NULL);
 
         // Create memory dataspace for the hyperslab
         hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
+
+        if(chunkShape != trueChunkDims)
+        {
+          std::vector<hsize_t> chunkOffset(rank, 0);
+          std::vector<hsize_t> count(rank, 1);
+
+          error = H5Sselect_hyperslab(memspace_id, H5S_SELECT_SET, chunkOffset.data(), nullptr, count.data(), trueChunkShapeVec.data());
+        }
 
         // Read hyperslab from the dataset
         error = H5Dwrite(h5Id, HdfTypeForPrimitive<T>(), memspace_id, dataspaceId, H5P_DEFAULT, data);
@@ -1206,12 +1216,13 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
 }
 
 template <>
-nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const bool> values, const DimsType& chunkShape, nonstd::span<const usize> offset)
+nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo& chunkInfo, const DimsType& dims, nonstd::span<const bool> values, const DimsType& chunkShape, const DimsType& trueChunkDims,
+                                               nonstd::span<const usize> offset)
 {
   std::vector<H5_BOOL_TYPE> h5ValuesVec(values.begin(), values.end());
   nonstd::span<const H5_BOOL_TYPE> h5Values(h5ValuesVec.data(), h5ValuesVec.size());
 
-  return writeChunk(chunkInfo, dims, h5Values, chunkShape, offset);
+  return writeChunk(chunkInfo, dims, h5Values, chunkShape, trueChunkDims, offset);
 }
 
 nx::core::Result<> DatasetIO::writeString(const std::string& text)
@@ -1565,18 +1576,18 @@ template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<char>(const ChunkedDataInf
 template SIMPLNX_EXPORT Result<> DatasetIO::readChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<bool>, const DimsType&, nonstd::span<const usize>) const;
 #endif
 
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const usize>);
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int8_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int16_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int32_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<int64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const int64_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint8_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint8_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint16_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint16_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint32_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint32_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<uint64_t>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const uint64_t>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<float>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const float>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<double>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const double>, const DimsType&, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<char>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const char>, const DimsType&, const DimsType&, nonstd::span<const usize>);
 #ifdef _WIN32
-template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const usize>);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, const DimsType&, nonstd::span<const usize>);
 #endif
 } // namespace nx::core::HDF5
