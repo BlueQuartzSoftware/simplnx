@@ -9,7 +9,7 @@ using namespace nx::core;
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHelper(mesgHandler)
 {
 }
 
@@ -58,8 +58,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     periodicPoints[5] = -(dims[0] * dims[1]) * (dims[2] - 1);
   }
 
-  auto start = std::chrono::steady_clock::now();
-
+  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
   while(seed >= 0)
   {
     if(m_ShouldCancel)
@@ -142,14 +141,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     voxelsList.assign(initialVoxelsListSize, -1);
     gnum++;
 
-    auto now = std::chrono::steady_clock::now();
-    // Only send updates every 1 second
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
-    {
-      std::string message = fmt::format("Features Found: {}", gnum);
-      m_MessageHandler({nx::core::IFilter::Message::Type::Info, message});
-      start = std::chrono::steady_clock::now();
-    }
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Features Found: {}", gnum); });
 
     nextSeed = seed + 1;
     seed = getSeed(gnum, nextSeed);
@@ -157,10 +149,10 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   if(hasNonContiguousFeature)
   {
-    m_MessageHandler({IFilter::Message::Type::Info, "SegmentFeatures found Non-Contiguous Features."});
+    m_MessageHelper.sendMessage("SegmentFeatures found Non-Contiguous Features.");
   }
 
-  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Total Features Found: {}", gnum)});
+  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
   m_FoundFeatures = gnum;
   return {};
 }
@@ -182,8 +174,8 @@ SegmentFeatures::SeedGenerator SegmentFeatures::initializeStaticVoxelSeedGenerat
 }
 
 // -----------------------------------------------------------------------------
-void SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures) const
+void SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
 {
-  m_MessageHandler(IFilter::Message::Type::Info, "Randomizing Feature Ids");
+  m_MessageHelper.sendMessage("Randomizing Feature Ids");
   ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

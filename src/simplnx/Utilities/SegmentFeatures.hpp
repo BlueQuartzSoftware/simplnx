@@ -1,11 +1,13 @@
 #pragma once
 
+#include "simplnx/simplnx_export.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/simplnx_export.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 #include <vector>
@@ -64,7 +66,7 @@ public:
    * @param totalFeatures
    * @param distribution
    */
-  virtual void randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures) const;
+  void randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures);
 
   /**
    * @brief
@@ -92,7 +94,7 @@ protected:
   DataStructure& m_DataStructure;
   bool m_IsPeriodic = false;
   const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
+  MessageHelper m_MessageHelper;
   int32 m_FoundFeatures = 0;
 
 private:
