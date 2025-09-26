@@ -195,11 +195,6 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
 
   for(const auto& [cx, cy, cz] : kFlagOrder)
   {
-    if(!(cx || cy || cz))
-    {
-      return {}; // require at least one axis cropped
-    }
-
     std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
     std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
     std::vector<std::optional<IntVec2Type>> zOpts = cz ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
@@ -234,11 +229,6 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   }
   for(const auto& [cx, cy, cz] : kFlagOrder)
   {
-    if(!(cx || cy || cz))
-    {
-      return {};
-    }
-
     std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
     std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
     std::vector<std::optional<FloatVec2Type>> zOpts = cz ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
